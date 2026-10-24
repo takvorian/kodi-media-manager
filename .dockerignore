@@ -1,0 +1,9 @@
+**/target/
+**/node_modules/
+kmm-ui/node/
+kmm-ui/.angular/
+.git/
+.idea/
+.vscode/
+docker/data/
+docker/.env

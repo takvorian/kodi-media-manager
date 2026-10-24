@@ -1,0 +1,45 @@
+name: kodi-media-manager
+
+services:
+  db:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_DATABASE: kmm
+      MARIADB_USER: kmm
+      MARIADB_PASSWORD: ${KMM_DB_PASSWORD:?KMM_DB_PASSWORD fehlt (siehe .env.example)}
+      MARIADB_ROOT_PASSWORD: ${MARIADB_ROOT_PASSWORD:?MARIADB_ROOT_PASSWORD fehlt (siehe .env.example)}
+    volumes:
+      - db-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    image: kodi-media-manager:latest
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # Läuft mit den Rechten des Besitzers der Mediendateien (NAS: z. B. 1026:100 bei Synology).
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      KMM_DB_PASSWORD: ${KMM_DB_PASSWORD}
+      KMM_ADMIN_USER: ${KMM_ADMIN_USER:-admin}
+      KMM_ADMIN_PASSWORD: ${KMM_ADMIN_PASSWORD:?KMM_ADMIN_PASSWORD fehlt (siehe .env.example)}
+      TZ: ${TZ:-Europe/Berlin}
+    ports:
+      - "${KMM_PORT:-8080}:8080"
+    volumes:
+      - ${KMM_CONFIG_DIR:-./data/config}:/config
+      - ${KMM_MEDIA_DIR:-./data/media}:/media
+      # Ember-Profil (Profiles/Default) für die Migration, nur lesend
+      - ${EMBER_PROFILE_DIR:-./data/ember}:/import/ember:ro
+
+volumes:
+  db-data:

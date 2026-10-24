@@ -1,0 +1,26 @@
+# Build
+target/
+!.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.project
+.classpath
+.settings/
+
+# Frontend
+kmm-ui/node/
+kmm-ui/node_modules/
+kmm-ui/dist/
+kmm-ui/.angular/
+
+# Runtime
+*.log
+.env
+data/
+
+# OS
+.DS_Store
+Thumbs.db

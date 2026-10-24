@@ -1,0 +1,32 @@
+<mat-toolbar>
+  <h1 class="title">{{ title }}</h1>
+</mat-toolbar>
+
+<main class="content">
+  <mat-card appearance="outlined" class="system-info">
+    <mat-card-header>
+      <mat-card-title>System</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @let state = systemInfo();
+      @if (state.status === 'loaded') {
+        <dl class="facts">
+          <dt>Version</dt>
+          <dd class="version">{{ state.info.version }}</dd>
+          <dt>Java</dt>
+          <dd>{{ state.info.javaVersion }}</dd>
+          <dt>Datenbank</dt>
+          <dd class="database">{{ state.info.database }}</dd>
+          <dt>Profile</dt>
+          <dd>{{ state.info.activeProfiles.join(', ') }}</dd>
+        </dl>
+      } @else if (state.status === 'failed') {
+        <p class="status error">Das Backend ist nicht erreichbar.</p>
+      } @else {
+        <p class="status">Lade Systeminformationen …</p>
+      }
+    </mat-card-content>
+  </mat-card>
+
+  <router-outlet />
+</main>

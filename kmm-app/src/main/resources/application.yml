@@ -1,0 +1,45 @@
+spring:
+  application:
+    name: Kodi Media Manager
+  profiles:
+    default: standalone
+  threads:
+    virtual:
+      enabled: true
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: validate
+  flyway:
+    locations: classpath:db/migration/{vendor}
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: ${KMM_PORT:8080}
+  shutdown: graceful
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
+
+springdoc:
+  api-docs:
+    path: /v3/api-docs
+  swagger-ui:
+    path: /swagger-ui.html
+
+kmm:
+  # Arbeitsverzeichnis für Datenbank (H2), Plugins und Cache
+  home: ${KMM_HOME:${user.home}/.kodi-media-manager}
+  plugins:
+    directory: ${kmm.home}/plugins
+  security:
+    enabled: true

@@ -1,0 +1,14 @@
+# Standalone-Betrieb: eingebettete H2-Datenbank, nur lokal erreichbar, ohne Anmeldung.
+# Eine andere Datenbank lässt sich per spring.datasource.* (oder SPRING_DATASOURCE_URL usw.) setzen.
+spring:
+  datasource:
+    url: jdbc:h2:file:${kmm.home}/db/kmm
+    username: sa
+    password: ""
+
+server:
+  address: ${KMM_BIND_ADDRESS:127.0.0.1}
+
+kmm:
+  security:
+    enabled: false

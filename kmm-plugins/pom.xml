@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <parent>
+        <groupId>de.tiktak.kmm</groupId>
+        <artifactId>kmm-parent</artifactId>
+        <version>0.1.0-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>kmm-plugins</artifactId>
+    <packaging>pom</packaging>
+    <name>KMM Plugins</name>
+    <description>Mitgelieferte PF4J-Plugins. Jedes Plugin ist ein eigenständiges JAR mit PF4J-Manifest.</description>
+
+    <modules>
+        <module>kmm-plugin-testdata</module>
+    </modules>
+
+    <properties>
+        <plugin.provider>tiktak.de</plugin.provider>
+    </properties>
+
+    <dependencies>
+        <!-- provided: Die API kommt zur Laufzeit aus der Anwendung, nicht aus dem Plugin-JAR. -->
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-plugin-api</artifactId>
+            <scope>provided</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.pf4j</groupId>
+            <artifactId>pf4j</artifactId>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <pluginManagement>
+            <plugins>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-compiler-plugin</artifactId>
+                    <configuration>
+                        <annotationProcessorPaths combine.children="append">
+                            <!-- Erzeugt META-INF/extensions.idx aus den @Extension-Annotationen. -->
+                            <path>
+                                <groupId>org.pf4j</groupId>
+                                <artifactId>pf4j</artifactId>
+                                <version>${pf4j.version}</version>
+                            </path>
+                        </annotationProcessorPaths>
+                    </configuration>
+                </plugin>
+                <plugin>
+                    <groupId>org.apache.maven.plugins</groupId>
+                    <artifactId>maven-jar-plugin</artifactId>
+                    <configuration>
+                        <archive>
+                            <manifestEntries>
+                                <Plugin-Id>${plugin.id}</Plugin-Id>
+                                <Plugin-Version>${project.version}</Plugin-Version>
+                                <Plugin-Provider>${plugin.provider}</Plugin-Provider>
+                                <Plugin-Description>${project.description}</Plugin-Description>
+                            </manifestEntries>
+                        </archive>
+                    </configuration>
+                </plugin>
+            </plugins>
+        </pluginManagement>
+    </build>
+</project>

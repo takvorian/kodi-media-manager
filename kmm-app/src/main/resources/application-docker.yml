@@ -1,0 +1,15 @@
+# Docker-Betrieb: MariaDB, Anmeldung erforderlich. Zugangsdaten kommen aus Umgebungsvariablen.
+spring:
+  datasource:
+    url: jdbc:mariadb://${KMM_DB_HOST:db}:${KMM_DB_PORT:3306}/${KMM_DB_NAME:kmm}
+    username: ${KMM_DB_USER:kmm}
+    password: ${KMM_DB_PASSWORD}
+  security:
+    user:
+      name: ${KMM_ADMIN_USER:admin}
+      password: ${KMM_ADMIN_PASSWORD}
+
+kmm:
+  home: /config
+  security:
+    enabled: true

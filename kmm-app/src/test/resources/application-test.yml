@@ -1,0 +1,14 @@
+spring:
+  datasource:
+    url: jdbc:h2:mem:kmm-test;DB_CLOSE_DELAY=-1
+    username: sa
+    password: ""
+  security:
+    user:
+      name: tester
+      password: test-password
+
+kmm:
+  home: ${java.io.tmpdir}/kmm-test-home
+  security:
+    enabled: true
