@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { MoviePage, MovieQuery } from './movie';
+import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
 
 export const MOVIES_URL = '/api/v1/movies';
 const SORT_BY_TITLE = 'title,asc';
@@ -18,5 +18,14 @@ export class MovieService {
       params = params.set('search', search);
     }
     return this.http.get<MoviePage>(MOVIES_URL, { params });
+  }
+
+  findMovie(movieId: number): Observable<MovieDetails> {
+    return this.http.get<MovieDetails>(`${MOVIES_URL}/${movieId}`);
+  }
+
+  /** Speichert die Metadaten; das Backend schreibt sie zugleich in die NFO. */
+  updateMetadata(movieId: number, metadata: MovieMetadata): Observable<MovieDetails> {
+    return this.http.put<MovieDetails>(`${MOVIES_URL}/${movieId}/metadata`, metadata);
   }
 }

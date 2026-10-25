@@ -29,6 +29,12 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 | Datei-Output | Kodi-NFO, Artwork nach Kodi-Namenskonvention, extrafanart, Trailer | ja, Kern-Feature |
 | Medien-Info | MediaInfo/FFprobe | ja, über `ffprobe` (im Docker-Image enthalten) |
 
+**NFO-Regeln (umgesetzt):**
+- Dateiname: `Film.mkv` → `Film.nfo`; Stapel `Film-cd1.avi` → `Film.nfo`; DVD → `VIDEO_TS/VIDEO_TS.nfo`; Blu-ray → `BDMV/index.nfo`. Eine vorhandene `movie.nfo` im Filmordner wird gelesen und an Ort und Stelle aktualisiert.
+- KMM verwaltet Titel, Original-/Sortiertitel, Jahr, Erstaufführung, Handlung, Kurzinhalt, Tagline, Laufzeit, Altersfreigabe, Genres sowie IMDb-/TMDB-IDs. Alle anderen Elemente (Schauspieler, Bewertungen, `fileinfo`, IDs weiterer Anbieter …) bleiben beim Schreiben unverändert.
+- Beim Speichern wird zuerst die NFO geschrieben (atomar über eine temporäre Datei); scheitert das, bleibt auch die Datenbank unverändert.
+- Ein erneuter Scan liest eine NFO nur ein, wenn sich ihre Änderungszeit geändert hat. Unlesbare NFOs werden gezählt und gemeldet, der Film bleibt erhalten.
+
 **Kernprinzip:** Die Wahrheit liegt im Dateisystem (NFO + Bilder neben der Mediendatei). Die Datenbank ist Index, Cache und Arbeitszustand und lässt sich per Rescan neu aufbauen. Deshalb ist die Wahl der Datenbank unkritisch.
 
 ---
@@ -97,13 +103,15 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 ```
 kodi-media-manager/            groupId de.tiktak.kmm
 ├─ kmm-plugin-api              Plugin-Schnittstelle (PF4J Extension Points)
-├─ kmm-scanner                 Filmsuche im Dateisystem: Stapel (cd1/cd2), DVD/Blu-ray-Ordner, Titel/Jahr aus Namen
+├─ kmm-scanner                 Filmsuche im Dateisystem: Stapel (cd1/cd2), DVD/Blu-ray-Ordner, Titel/Jahr aus Namen,
+│                              Kodi-Namen für Begleitdateien (NFO, später Artwork)
+├─ kmm-nfo                     Kodi-NFO lesen/schreiben (DOM, unbekannte Elemente bleiben erhalten, XXE-sicher)
 ├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite + Settings.xml), Pfad-Mapping
 ├─ kmm-plugins/                mitgelieferte Plugins (aktuell: kmm-plugin-testdata, nur für Tests)
 ├─ kmm-ui                      Angular-SPA → static/ im JAR
 ├─ kmm-app                     Spring Boot: REST, Security, Plugins, Persistenz, Profile
 └─ docker/                     Dockerfile, docker-compose.yml
-geplant: kmm-core, kmm-nfo, kmm-media, kmm-kodi; Scraper-Plugins tmdb, tvdb, omdb, fanarttv
+geplant: kmm-core, kmm-media, kmm-kodi; Scraper-Plugins tmdb, tvdb, omdb, fanarttv
 ```
 
 Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von `kmm-app` prüft Spring Modulith (`ModularityTests`).
@@ -144,7 +152,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 1. **Fundament** ✅: Projektgerüst, Profile H2/MariaDB, Flyway, Docker, Security, Plugin-Mechanismus, Analyse von Ember-Profilen.
 2. **Filme MVP** (in Inkrementen):
    1. Quellen, Scan, Filmliste ✅
-   2. NFO lesen/schreiben (`<dateiname>.nfo`, Kodi 19–21)
+   2. NFO lesen/schreiben ✅ (`<dateiname>.nfo`, Kodi 19–21; Scan übernimmt NFO-Inhalte, Detailseite bearbeitet und schreibt sie zurück)
    3. Job-Framework + Fortschritt per SSE
    4. TMDB-Plugin (API-Key aus `KMM_TMDB_API_KEY`)
    5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen (`<dateiname>-poster.jpg` …)

@@ -5,10 +5,12 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -46,6 +48,9 @@ class MovieControllerTest {
 
     @MockitoBean
     private MovieScanService scanService;
+
+    @MockitoBean
+    private MovieMetadataService metadataService;
 
     @Test
     void listsMoviesSortedByTitleWithDefaultPageSize() {
@@ -91,14 +96,70 @@ class MovieControllerTest {
 
     @Test
     void scansSource() {
-        when(scanService.scan(1L)).thenReturn(new ScanResult(1L, 3, 1, 10));
+        when(scanService.scan(1L)).thenReturn(new ScanResult(1L, 3, 2, 1, 10, 1));
 
         assertThat(mockMvc.post().uri(MovieController.SCAN_PATH, 1L).with(csrf()))
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        {"sourceId": 1, "added": 3, "removed": 1, "unchanged": 10}
+                        {"sourceId": 1, "added": 3, "updated": 2, "removed": 1, "unchanged": 10, "nfoErrors": 1}
                         """);
+    }
+
+    @Test
+    void returnsMovieDetails() {
+        when(metadataService.findDetails(5L)).thenReturn(details());
+
+        assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, 5L))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"id": 5, "metadata": {"title": "Heat", "year": 1995, "genres": ["Krimi"], "imdbId": "tt0113277"},
+                         "nfo": {"path": "/media/Heat.nfo", "exists": true}}
+                        """);
+    }
+
+    @Test
+    void answersUnknownMovieWithNotFound() {
+        when(metadataService.findDetails(9L)).thenThrow(new MovieNotFoundException(9L));
+
+        assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, 9L)).hasStatus(404);
+    }
+
+    @Test
+    void updatesMetadata() {
+        when(metadataService.update(eq(5L), any())).thenReturn(details());
+
+        assertThat(mockMvc.put().uri(MovieController.METADATA_PATH, 5L).with(csrf())
+                .contentType("application/json")
+                .content("""
+                        {"title": " Heat ", "year": 1995, "premiered": "1995-12-15", "genres": ["Krimi"],
+                         "imdbId": "tt0113277"}
+                        """))
+                .hasStatusOk();
+
+        ArgumentCaptor<MovieMetadata> metadata = ArgumentCaptor.forClass(MovieMetadata.class);
+        verify(metadataService).update(eq(5L), metadata.capture());
+        assertThat(metadata.getValue().title()).isEqualTo("Heat");
+        assertThat(metadata.getValue().premiered()).isEqualTo(LocalDate.of(1995, 12, 15));
+    }
+
+    @Test
+    void rejectsInvalidMetadata() {
+        assertThat(mockMvc.put().uri(MovieController.METADATA_PATH, 5L).with(csrf())
+                .contentType("application/json")
+                .content("""
+                        {"title": "", "genres": [], "imdbId": "falsch"}
+                        """))
+                .hasStatus(400);
+        verifyNoInteractions(metadataService);
+    }
+
+    private static MovieDetails details() {
+        var metadata = new MovieMetadata("Heat", null, null, 1995, null, null, null, null, null, null,
+                List.of("Krimi"), "tt0113277", null);
+        return new MovieDetails(5L, 1L, "/media/Heat.mkv", DiscFormat.FILE, 1, Instant.parse("2026-10-25T10:00:00Z"),
+                metadata, new MovieDetails.NfoInfo("/media/Heat.nfo", true, Instant.parse("2026-10-25T11:00:00Z")));
     }
 
     @Test

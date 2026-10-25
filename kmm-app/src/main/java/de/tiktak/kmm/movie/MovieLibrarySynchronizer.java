@@ -1,7 +1,7 @@
 package de.tiktak.kmm.movie;
 
 import java.time.Clock;
-import java.util.Collection;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -11,53 +11,96 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.nfo.MovieNfo;
+import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.scanner.MovieCandidate;
 import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 /**
  * Gleicht die Filme einer Quelle in der Datenbank mit dem Scan-Ergebnis ab: Neue Dateien werden
- * angelegt, verschwundene entfernt. Bekannte Filme bleiben unverändert, damit gepflegte
- * Metadaten nicht überschrieben werden.
+ * angelegt, verschwundene entfernt. Metadaten kommen aus der NFO; bekannte Filme werden nur
+ * aktualisiert, wenn sich ihre NFO seit dem letzten Einlesen geändert hat.
  */
+@Slf4j
 @Component
 @RequiredArgsConstructor
 class MovieLibrarySynchronizer {
 
     private final MovieRepository movieRepository;
     private final MediaSourceService sourceService;
+    private final MovieNfoFiles nfoFiles;
     private final Clock clock;
 
     @Transactional
-    ScanResult synchronize(long sourceId, List<MovieCandidate> candidates) {
+    ScanResult synchronize(long sourceId, List<ScannedMovie> scannedMovies) {
         Map<String, Movie> known = movieRepository.findBySourceId(sourceId).stream()
                 .collect(Collectors.toMap(Movie::getFilePath, Function.identity()));
-        Set<String> found = candidates.stream().map(MovieLibrarySynchronizer::pathOf).collect(Collectors.toSet());
+        Set<String> found = scannedMovies.stream().map(ScannedMovie::path).collect(Collectors.toSet());
+        Outcome outcome = new Outcome();
 
-        List<Movie> added = candidates.stream()
-                .filter(candidate -> !known.containsKey(pathOf(candidate)))
-                .map(candidate -> toMovie(sourceId, candidate))
-                .toList();
+        for (ScannedMovie scanned : scannedMovies) {
+            Movie movie = known.get(scanned.path());
+            if (movie == null) {
+                outcome.added.add(newMovie(sourceId, scanned, outcome));
+            } else if (nfoChanged(movie, scanned)
+                    && applyNfo(movie, scanned, movie.getTitle(), movie.getReleaseYear(), outcome)) {
+                outcome.updated++;
+            }
+        }
         List<Movie> removed = known.values().stream()
                 .filter(movie -> !found.contains(movie.getFilePath()))
                 .toList();
 
-        movieRepository.saveAll(added);
+        movieRepository.saveAll(outcome.added);
         movieRepository.deleteAll(removed);
         sourceService.markScanned(sourceId, clock.instant());
-        return new ScanResult(sourceId, added.size(), removed.size(), unchangedCount(known.values(), removed));
+        int unchanged = known.size() - removed.size() - outcome.updated;
+        return new ScanResult(sourceId, outcome.added.size(), outcome.updated, removed.size(), unchanged,
+                outcome.nfoErrors);
     }
 
-    private static int unchangedCount(Collection<Movie> known, List<Movie> removed) {
-        return known.size() - removed.size();
-    }
-
-    private static Movie toMovie(long sourceId, MovieCandidate candidate) {
-        return new Movie(sourceId, pathOf(candidate), candidate.title(), candidate.year(), candidate.format(),
+    private Movie newMovie(long sourceId, ScannedMovie scanned, Outcome outcome) {
+        MovieCandidate candidate = scanned.candidate();
+        Movie movie = new Movie(sourceId, scanned.path(), candidate.title(), candidate.year(), candidate.format(),
                 candidate.partCount());
+        applyNfo(movie, scanned, candidate.title(), candidate.year(), outcome);
+        return movie;
     }
 
-    private static String pathOf(MovieCandidate candidate) {
-        return candidate.file().toAbsolutePath().normalize().toString();
+    private static boolean nfoChanged(Movie movie, ScannedMovie scanned) {
+        return scanned.nfo()
+                .map(nfo -> !nfo.modifiedAt().equals(movie.getNfoModifiedAt()))
+                .orElse(false);
+    }
+
+    /**
+     * @return {@code true}, wenn die NFO übernommen wurde
+     */
+    private boolean applyNfo(Movie movie, ScannedMovie scanned, String fallbackTitle, Integer fallbackYear,
+            Outcome outcome) {
+        if (scanned.nfo().isEmpty()) {
+            return false;
+        }
+        NfoFileState nfoFile = scanned.nfo().get();
+        try {
+            MovieNfo nfo = nfoFiles.read(nfoFile);
+            movie.applyMetadata(MovieNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
+            movie.markNfoSynchronized(nfoFile.modifiedAt());
+            return true;
+        } catch (NfoException e) {
+            log.warn("Skipping unreadable NFO: {}", e.getMessage());
+            outcome.nfoErrors++;
+            return false;
+        }
+    }
+
+    /** Zwischenstand eines Abgleichs. */
+    private static final class Outcome {
+
+        private final List<Movie> added = new ArrayList<>();
+        private int updated;
+        private int nfoErrors;
     }
 }

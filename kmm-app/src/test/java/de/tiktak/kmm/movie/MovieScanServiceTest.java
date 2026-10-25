@@ -13,7 +13,9 @@ import static org.mockito.Mockito.when;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -24,6 +26,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.scanner.CompanionFiles;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.MovieCandidate;
 import de.tiktak.kmm.scanner.MovieDirectoryScanner;
@@ -44,6 +47,9 @@ class MovieScanServiceTest {
     @Mock
     private MovieLibrarySynchronizer synchronizer;
 
+    @Mock
+    private MovieNfoFiles nfoFiles;
+
     @InjectMocks
     private MovieScanService service;
 
@@ -51,12 +57,14 @@ class MovieScanServiceTest {
     Path directory;
 
     @Test
-    void scansDirectoryAndSynchronizesResult() {
+    void scansDirectoryLooksUpNfosAndSynchronizesResult() {
         givenSource(MediaType.MOVIE, directory);
-        var candidates = List.of(new MovieCandidate(directory.resolve("Heat.mkv"), "Heat", 1995, DiscFormat.FILE, 1));
-        var expected = new ScanResult(SOURCE_ID, 1, 0, 0);
-        when(scanner.scan(directory)).thenReturn(candidates);
-        when(synchronizer.synchronize(SOURCE_ID, candidates)).thenReturn(expected);
+        var heat = new MovieCandidate(directory.resolve("Heat.mkv"), "Heat", 1995, DiscFormat.FILE, 1);
+        var nfo = new NfoFileState(directory.resolve("Heat.nfo"), Instant.parse("2026-10-20T08:00:00Z"));
+        var expected = new ScanResult(SOURCE_ID, 1, 0, 0, 0, 0);
+        when(scanner.scan(directory)).thenReturn(List.of(heat));
+        when(nfoFiles.find(CompanionFiles.of(heat.file(), DiscFormat.FILE, 1))).thenReturn(Optional.of(nfo));
+        when(synchronizer.synchronize(SOURCE_ID, List.of(new ScannedMovie(heat, Optional.of(nfo))))).thenReturn(expected);
 
         assertThat(service.scan(SOURCE_ID)).isEqualTo(expected);
     }

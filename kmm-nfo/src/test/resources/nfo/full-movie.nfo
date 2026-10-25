@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!-- Eigenes Testbeispiel im Format von Kodi 19+ bzw. Ember Media Manager -->
+<movie>
+  <title>Heat</title>
+  <originaltitle>Heat</originaltitle>
+  <sorttitle>Heat</sorttitle>
+  <ratings>
+    <rating name="imdb" max="10" default="true">
+      <value>8.3</value>
+      <votes>650000</votes>
+    </rating>
+  </ratings>
+  <userrating>9</userrating>
+  <outline>Ein Meisterdieb und ein Polizist.</outline>
+  <plot>Der Berufsverbrecher Neil McCauley plant mit seiner Crew einen letzten großen Coup.</plot>
+  <tagline>A Los Angeles Crime Saga</tagline>
+  <runtime>170</runtime>
+  <thumb aspect="poster">https://image.example.org/heat-poster.jpg</thumb>
+  <mpaa>FSK 16</mpaa>
+  <playcount>2</playcount>
+  <uniqueid type="imdb" default="true">tt0113277</uniqueid>
+  <uniqueid type="tmdb">949</uniqueid>
+  <genre>Krimi</genre>
+  <genre>Drama</genre>
+  <genre>Thriller</genre>
+  <director>Michael Mann</director>
+  <premiered>1995-12-15</premiered>
+  <year>1995</year>
+  <studio>Warner Bros.</studio>
+  <actor>
+    <name>Al Pacino</name>
+    <role>Lt. Vincent Hanna</role>
+    <order>0</order>
+  </actor>
+  <actor>
+    <name>Robert De Niro</name>
+    <role>Neil McCauley</role>
+    <order>1</order>
+  </actor>
+  <fileinfo>
+    <streamdetails>
+      <video>
+        <codec>h264</codec>
+        <width>1920</width>
+        <height>1080</height>
+      </video>
+    </streamdetails>
+  </fileinfo>
+</movie>

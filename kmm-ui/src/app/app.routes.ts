@@ -4,6 +4,11 @@ export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'movies' },
   { path: 'movies', title: 'Filme – KMM', loadComponent: () => import('./movies/movie-list').then((m) => m.MovieList) },
   {
+    path: 'movies/:id',
+    title: 'Film – KMM',
+    loadComponent: () => import('./movies/movie-detail').then((m) => m.MovieDetail),
+  },
+  {
     path: 'sources',
     title: 'Quellen – KMM',
     loadComponent: () => import('./sources/source-list').then((m) => m.SourceList),

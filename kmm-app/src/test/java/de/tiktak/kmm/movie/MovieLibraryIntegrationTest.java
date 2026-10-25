@@ -6,6 +6,8 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
+import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.Test;
@@ -52,11 +54,11 @@ class MovieLibraryIntegrationTest {
     void scansSourceAndKeepsLibraryInSync() throws IOException {
         Path heat = createFile("Heat (1995)/Heat (1995).mkv");
         createFile("The.Matrix.1999.1080p.BluRay.x264.mp4");
-        createFile("Heat (1995)/Heat (1995).nfo");
+        Files.writeString(library.resolve("Heat (1995)/Heat (1995).nfo"), "<movie><title>kaputt</movie>");
         long sourceId = createSource();
 
         assertThat(scan(sourceId)).bodyJson().isLenientlyEqualTo("""
-                {"added": 2, "removed": 0, "unchanged": 0}
+                {"added": 2, "updated": 0, "removed": 0, "unchanged": 0, "nfoErrors": 1}
                 """);
         assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH))
                 .bodyJson().isLenientlyEqualTo("""
@@ -68,7 +70,7 @@ class MovieLibraryIntegrationTest {
         Files.delete(heat);
         createFile("Ronin (1998).mkv");
         assertThat(scan(sourceId)).bodyJson().isLenientlyEqualTo("""
-                {"added": 1, "removed": 1, "unchanged": 1}
+                {"added": 1, "updated": 0, "removed": 1, "unchanged": 1, "nfoErrors": 0}
                 """);
         assertThat(mockMvc.get().uri(MediaSourceController.BASE_PATH))
                 .bodyJson().extractingPath("$[0].lastScannedAt").isNotNull();
@@ -76,6 +78,45 @@ class MovieLibraryIntegrationTest {
         assertThat(mockMvc.delete().uri(MediaSourceController.BASE_PATH + "/" + sourceId).with(csrf())).hasStatus(204);
         movieRepository.flush();
         assertThat(movieRepository.count()).isZero();
+    }
+
+    @Test
+    void readsNfoOnScanAndWritesEditedMetadataBack() throws IOException {
+        createFile("Heat (1995)/Heat (1995).mkv");
+        Path nfo = library.resolve("Heat (1995)/Heat (1995).nfo");
+        Files.writeString(nfo, """
+                <movie>
+                  <title>Heat – aus der NFO</title>
+                  <uniqueid type="imdb" default="true">tt0113277</uniqueid>
+                  <actor><name>Al Pacino</name></actor>
+                </movie>
+                """);
+        long sourceId = createSource();
+        scan(sourceId);
+
+        long movieId = objectMapper.readTree(mockMvc.get().uri(MovieController.MOVIES_PATH).exchange()
+                .getResponse().getContentAsByteArray()).get("content").get(0).get("id").asLong();
+        assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId)).bodyJson().isLenientlyEqualTo("""
+                {"metadata": {"title": "Heat – aus der NFO", "year": 1995, "imdbId": "tt0113277"},
+                 "nfo": {"exists": true}}
+                """);
+
+        assertThat(mockMvc.put().uri(MovieController.METADATA_PATH, movieId).with(csrf()).contentType(JSON)
+                .content("""
+                        {"title": "Heat (Director's Cut)", "year": 1995, "genres": ["Krimi"], "imdbId": "tt0113277",
+                         "tmdbId": "949"}
+                        """))
+                .hasStatusOk();
+        String written = Files.readString(nfo);
+        assertThat(written).contains("<title>Heat (Director's Cut)</title>", "<genre>Krimi</genre>",
+                "<name>Al Pacino</name>", ">949</uniqueid>");
+        assertThat(scan(sourceId)).bodyJson().extractingPath("$.updated").isEqualTo(0);
+
+        Files.writeString(nfo, written.replace("Director's Cut", "Extended"));
+        Files.setLastModifiedTime(nfo, FileTime.from(Instant.now().plusSeconds(5)));
+        assertThat(scan(sourceId)).bodyJson().extractingPath("$.updated").isEqualTo(1);
+        assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId))
+                .bodyJson().extractingPath("$.metadata.title").isEqualTo("Heat (Extended)");
     }
 
     @Test

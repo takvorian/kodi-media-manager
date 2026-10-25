@@ -2,7 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { MoviePage } from './movie';
+import { MovieMetadata, MoviePage } from './movie';
 import { MOVIES_URL, MovieService } from './movie.service';
 
 describe('MovieService', () => {
@@ -40,5 +40,21 @@ describe('MovieService', () => {
     request.flush(emptyPage);
 
     expect(request.request.params.get('search')).toBe('matrix');
+  });
+
+  it('loads the details of a movie', () => {
+    service.findMovie(5).subscribe();
+
+    httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5` }).flush({});
+  });
+
+  it('saves the metadata of a movie', () => {
+    const metadata = { title: 'Heat', genres: ['Krimi'] } as unknown as MovieMetadata;
+
+    service.updateMetadata(5, metadata).subscribe();
+    const request = httpTesting.expectOne({ method: 'PUT', url: `${MOVIES_URL}/5/metadata` });
+    request.flush({});
+
+    expect(request.request.body).toEqual(metadata);
   });
 });

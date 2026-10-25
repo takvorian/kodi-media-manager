@@ -31,6 +31,10 @@
         </dependency>
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-nfo</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
             <artifactId>kmm-migration-ember</artifactId>
         </dependency>
         <dependency>
@@ -133,6 +137,11 @@
         <dependency>
             <groupId>org.testcontainers</groupId>
             <artifactId>testcontainers-mariadb</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>org.testcontainers</groupId>
+            <artifactId>testcontainers-postgresql</artifactId>
             <scope>test</scope>
         </dependency>
         <dependency>

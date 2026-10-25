@@ -8,6 +8,7 @@ COPY .mvn/ .mvn/
 COPY mvnw pom.xml lombok.config ./
 COPY kmm-plugin-api/ kmm-plugin-api/
 COPY kmm-scanner/ kmm-scanner/
+COPY kmm-nfo/ kmm-nfo/
 COPY kmm-migration-ember/ kmm-migration-ember/
 COPY kmm-plugins/ kmm-plugins/
 COPY kmm-ui/ kmm-ui/
