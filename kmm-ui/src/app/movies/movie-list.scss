@@ -1,0 +1,18 @@
+.search-field {
+  width: min(480px, 100%);
+}
+
+.movie-table {
+  width: 100%;
+}
+
+.path {
+  font-family: monospace;
+  font-size: 0.85em;
+  word-break: break-all;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

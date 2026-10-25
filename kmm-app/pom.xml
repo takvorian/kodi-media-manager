@@ -27,6 +27,10 @@
         </dependency>
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-scanner</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
             <artifactId>kmm-migration-ember</artifactId>
         </dependency>
         <dependency>

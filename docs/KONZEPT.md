@@ -97,12 +97,13 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 ```
 kodi-media-manager/            groupId de.tiktak.kmm
 ├─ kmm-plugin-api              Plugin-Schnittstelle (PF4J Extension Points)
+├─ kmm-scanner                 Filmsuche im Dateisystem: Stapel (cd1/cd2), DVD/Blu-ray-Ordner, Titel/Jahr aus Namen
 ├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite + Settings.xml), Pfad-Mapping
 ├─ kmm-plugins/                mitgelieferte Plugins (aktuell: kmm-plugin-testdata, nur für Tests)
 ├─ kmm-ui                      Angular-SPA → static/ im JAR
 ├─ kmm-app                     Spring Boot: REST, Security, Plugins, Persistenz, Profile
 └─ docker/                     Dockerfile, docker-compose.yml
-geplant: kmm-core, kmm-scanner, kmm-nfo, kmm-media, kmm-kodi; Scraper-Plugins tmdb, tvdb, omdb, fanarttv
+geplant: kmm-core, kmm-nfo, kmm-media, kmm-kodi; Scraper-Plugins tmdb, tvdb, omdb, fanarttv
 ```
 
 Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von `kmm-app` prüft Spring Modulith (`ModularityTests`).
@@ -141,7 +142,12 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 ## 7. Roadmap
 
 1. **Fundament** ✅: Projektgerüst, Profile H2/MariaDB, Flyway, Docker, Security, Plugin-Mechanismus, Analyse von Ember-Profilen.
-2. **Filme MVP:** Quellen, Scan, NFO lesen/schreiben, TMDB-Plugin, Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen. Dazu Job-Framework + SSE.
+2. **Filme MVP** (in Inkrementen):
+   1. Quellen, Scan, Filmliste ✅
+   2. NFO lesen/schreiben (`<dateiname>.nfo`, Kodi 19–21)
+   3. Job-Framework + Fortschritt per SSE
+   4. TMDB-Plugin (API-Key aus `KMM_TMDB_API_KEY`)
+   5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen (`<dateiname>-poster.jpg` …)
    - **2a. Ember-Migration I:** Filme, Sets, Personen, Genres, Artwork, Quellen und Settings, mit Dry-Run und Report.
 3. **Kodi-Integration:** JSON-RPC, Pfad-Mapping, Library-Update.
 4. **Serien:** TVDB/TMDB-TV, Staffeln/Episoden. Dazu **Ember-Migration II** (Serien, Stream-Details, restliche Settings, Kodi-Hosts, Scraper-Keys).

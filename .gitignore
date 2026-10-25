@@ -24,3 +24,6 @@ data/
 # OS
 .DS_Store
 Thumbs.db
+
+# Git-Bash-Absturzprotokolle
+*.stackdump

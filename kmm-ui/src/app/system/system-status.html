@@ -1,0 +1,23 @@
+<h2 class="page-title">System</h2>
+
+<mat-card appearance="outlined" class="system-info">
+  <mat-card-content>
+    @if (systemInfo.error()) {
+      <p class="status error">Das Backend ist nicht erreichbar.</p>
+    } @else if (systemInfo.hasValue()) {
+      @let info = systemInfo.value();
+      <dl class="facts">
+        <dt>Version</dt>
+        <dd class="version">{{ info.version }}</dd>
+        <dt>Java</dt>
+        <dd>{{ info.javaVersion }}</dd>
+        <dt>Datenbank</dt>
+        <dd class="database">{{ info.database }}</dd>
+        <dt>Profile</dt>
+        <dd>{{ info.activeProfiles.join(', ') }}</dd>
+      </dl>
+    } @else {
+      <p class="status">Lade Systeminformationen …</p>
+    }
+  </mat-card-content>
+</mat-card>

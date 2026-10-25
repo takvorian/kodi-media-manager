@@ -43,10 +43,17 @@ public class MediaSource {
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
+    @Column(name = "last_scanned_at")
+    private Instant lastScannedAt;
+
     public MediaSource(String name, String path, MediaType mediaType) {
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.path = Objects.requireNonNull(path, "path must not be null");
         this.mediaType = Objects.requireNonNull(mediaType, "mediaType must not be null");
+    }
+
+    void markScanned(Instant scannedAt) {
+        this.lastScannedAt = Objects.requireNonNull(scannedAt, "scannedAt must not be null");
     }
 
     @PrePersist

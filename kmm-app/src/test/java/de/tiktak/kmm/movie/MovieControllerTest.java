@@ -1,0 +1,109 @@
+package de.tiktak.kmm.movie;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+
+import java.time.Instant;
+import java.util.List;
+
+import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.data.core.PropertyReferenceException;
+import org.springframework.data.core.TypeInformation;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.test.context.support.WithAnonymousUser;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
+
+import de.tiktak.kmm.scanner.DiscFormat;
+import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+
+@WebMvcTest(controllers = MovieController.class, properties = "kmm.security.enabled=true")
+@Import(WebSecurityTestConfiguration.class)
+@WithMockUser
+class MovieControllerTest {
+
+    private static final MovieSummary HEAT = new MovieSummary(
+            5L, 1L, "Heat", 1995, "/media/Heat.mkv", DiscFormat.FILE, 1, Instant.parse("2026-10-25T10:00:00Z"));
+
+    @Autowired
+    private MockMvcTester mockMvc;
+
+    @MockitoBean
+    private MovieQueryService queryService;
+
+    @MockitoBean
+    private MovieScanService scanService;
+
+    @Test
+    void listsMoviesSortedByTitleWithDefaultPageSize() {
+        when(queryService.findMovies(isNull(), any()))
+                .thenReturn(new PageImpl<>(List.of(HEAT), PageRequest.of(0, MovieController.DEFAULT_PAGE_SIZE), 1));
+
+        assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"content": [{"id": 5, "title": "Heat", "year": 1995, "discFormat": "FILE", "partCount": 1}],
+                         "page": 0, "size": 50, "totalElements": 1, "totalPages": 1}
+                        """);
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(queryService).findMovies(isNull(), pageable.capture());
+        assertThat(pageable.getValue().getSort().getOrderFor("title")).isNotNull()
+                .extracting(Sort.Order::getDirection).isEqualTo(Sort.Direction.ASC);
+    }
+
+    @Test
+    void passesSearchAndPagingParameters() {
+        when(queryService.findMovies(eq("heat"), any())).thenReturn(new PageImpl<>(List.of()));
+
+        assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH)
+                .param("search", "heat").param("page", "2").param("size", "20")).hasStatusOk();
+
+        ArgumentCaptor<Pageable> pageable = ArgumentCaptor.forClass(Pageable.class);
+        verify(queryService).findMovies(eq("heat"), pageable.capture());
+        assertThat(pageable.getValue().getPageNumber()).isEqualTo(2);
+        assertThat(pageable.getValue().getPageSize()).isEqualTo(20);
+    }
+
+    @Test
+    void answersUnknownSortPropertyWithBadRequest() {
+        when(queryService.findMovies(any(), any())).thenThrow(
+                new PropertyReferenceException("foo", TypeInformation.of(Movie.class), List.of()));
+
+        assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH).param("sort", "foo"))
+                .hasStatus(400)
+                .bodyJson()
+                .extractingPath("$.title").isEqualTo(MovieController.INVALID_SORT_TITLE);
+    }
+
+    @Test
+    void scansSource() {
+        when(scanService.scan(1L)).thenReturn(new ScanResult(1L, 3, 1, 10));
+
+        assertThat(mockMvc.post().uri(MovieController.SCAN_PATH, 1L).with(csrf()))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"sourceId": 1, "added": 3, "removed": 1, "unchanged": 10}
+                        """);
+    }
+
+    @Test
+    @WithAnonymousUser
+    void requiresAuthenticationForScan() {
+        assertThat(mockMvc.post().uri(MovieController.SCAN_PATH, 1L).with(csrf())).hasStatus(401);
+    }
+}

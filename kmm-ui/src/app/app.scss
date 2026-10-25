@@ -1,31 +1,22 @@
+.toolbar {
+  gap: 24px;
+}
+
 .title {
   font: var(--mat-sys-title-large);
   margin: 0;
 }
 
+.navigation {
+  display: flex;
+  gap: 4px;
+}
+
+.active {
+  background-color: var(--mat-sys-secondary-container);
+  color: var(--mat-sys-on-secondary-container);
+}
+
 .content {
   padding: 24px;
-}
-
-.system-info {
-  max-width: 480px;
-}
-
-.facts {
-  display: grid;
-  grid-template-columns: max-content 1fr;
-  gap: 8px 24px;
-  margin: 0;
-
-  dt {
-    font-weight: 500;
-  }
-
-  dd {
-    margin: 0;
-  }
-}
-
-.error {
-  color: var(--mat-sys-error);
 }

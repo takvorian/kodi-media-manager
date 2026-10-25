@@ -1,0 +1,57 @@
+<h2 class="page-title">Filme</h2>
+
+<mat-form-field class="search-field">
+  <mat-label>Suche nach Titel</mat-label>
+  <input matInput type="search" name="search" [value]="searchInput()" (input)="onSearch($event)" />
+</mat-form-field>
+
+@if (movies.error()) {
+  <p class="error">Die Filme konnten nicht geladen werden.</p>
+} @else if (movies.hasValue()) {
+  @let page = movies.value();
+  @if (page.totalElements === 0) {
+    @if (searchInput()) {
+      <p class="empty">Keine Filme gefunden.</p>
+    } @else {
+      <p class="empty">
+        Die Bibliothek ist noch leer. Lege unter <a routerLink="/sources">Quellen</a> ein Verzeichnis an und scanne es.
+      </p>
+    }
+  } @else {
+    <table mat-table [dataSource]="page.content" class="movie-table">
+      <ng-container matColumnDef="title">
+        <th mat-header-cell *matHeaderCellDef>Titel</th>
+        <td mat-cell *matCellDef="let movie" class="movie-title">{{ movie.title }}</td>
+      </ng-container>
+      <ng-container matColumnDef="year">
+        <th mat-header-cell *matHeaderCellDef>Jahr</th>
+        <td mat-cell *matCellDef="let movie">{{ movie.year ?? '–' }}</td>
+      </ng-container>
+      <ng-container matColumnDef="discFormat">
+        <th mat-header-cell *matHeaderCellDef>Format</th>
+        <td mat-cell *matCellDef="let movie">
+          {{ discFormatLabel(movie.discFormat) }}
+          @if (movie.partCount > 1) {
+            ({{ movie.partCount }} Teile)
+          }
+        </td>
+      </ng-container>
+      <ng-container matColumnDef="filePath">
+        <th mat-header-cell *matHeaderCellDef>Datei</th>
+        <td mat-cell *matCellDef="let movie" class="path">{{ movie.filePath }}</td>
+      </ng-container>
+
+      <tr mat-header-row *matHeaderRowDef="columns"></tr>
+      <tr mat-row *matRowDef="let row; columns: columns"></tr>
+    </table>
+  }
+  <mat-paginator
+    [length]="page.totalElements"
+    [pageIndex]="pageIndex()"
+    [pageSize]="pageSize()"
+    [pageSizeOptions]="pageSizes"
+    (page)="onPage($event)"
+  />
+} @else {
+  <p class="loading">Lade Filme …</p>
+}

@@ -1,0 +1,32 @@
+.create-card {
+  margin-bottom: 24px;
+}
+
+.create-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  align-items: baseline;
+}
+
+.path-field {
+  flex: 1 1 320px;
+}
+
+.source-table {
+  width: 100%;
+}
+
+.path {
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.actions {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

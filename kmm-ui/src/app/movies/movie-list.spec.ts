@@ -1,0 +1,130 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { MoviePage, MovieSummary } from './movie';
+import { DEFAULT_PAGE_SIZE, MovieList, SEARCH_DEBOUNCE_MS } from './movie-list';
+import { MOVIES_URL } from './movie.service';
+
+const DEBOUNCE_SAFETY_MARGIN_MS = 50;
+
+describe('MovieList', () => {
+  const heat: MovieSummary = {
+    id: 1,
+    sourceId: 1,
+    title: 'Heat',
+    year: 1995,
+    filePath: '/media/filme/Heat.mkv',
+    discFormat: 'FILE',
+    partCount: 1,
+    addedAt: '2026-10-25T10:00:00Z',
+  };
+  const ronin: MovieSummary = { ...heat, id: 2, title: 'Ronin', year: null, discFormat: 'DVD', partCount: 2 };
+
+  let fixture: ComponentFixture<MovieList>;
+  let httpTesting: HttpTestingController;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      imports: [MovieList],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+    });
+    httpTesting = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(MovieList);
+  });
+
+  afterEach(() => httpTesting.verify());
+
+  function page(content: MovieSummary[], totalElements = content.length): MoviePage {
+    return { content, page: 0, size: DEFAULT_PAGE_SIZE, totalElements, totalPages: 1 };
+  }
+
+  function expectMovies(): TestRequest {
+    return httpTesting.expectOne((request) => request.url === MOVIES_URL);
+  }
+
+  function element(): HTMLElement {
+    return fixture.nativeElement as HTMLElement;
+  }
+
+  async function respond(moviePage: MoviePage): Promise<TestRequest> {
+    fixture.detectChanges();
+    const request = expectMovies();
+    request.flush(moviePage);
+    await fixture.whenStable();
+    return request;
+  }
+
+  /** Tippt einen Suchbegriff und lässt die Entprellzeit verstreichen. */
+  async function typeSearch(term: string): Promise<void> {
+    const input = element().querySelector<HTMLInputElement>('input[name="search"]')!;
+    input.value = term;
+    input.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve, SEARCH_DEBOUNCE_MS + DEBOUNCE_SAFETY_MARGIN_MS));
+  }
+
+  it('loads the first page sorted by title', async () => {
+    const request = await respond(page([heat, ronin]));
+
+    expect(request.request.params.get('page')).toBe('0');
+    expect(request.request.params.get('size')).toBe(String(DEFAULT_PAGE_SIZE));
+    expect(Array.from(element().querySelectorAll('.movie-title')).map((cell) => cell.textContent)).toEqual([
+      'Heat',
+      'Ronin',
+    ]);
+  });
+
+  it('shows year, format and number of parts', async () => {
+    await respond(page([ronin]));
+
+    const cells = Array.from(element().querySelectorAll('td')).map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim());
+    expect(cells).toContain('–');
+    expect(cells).toContain('DVD (2 Teile)');
+  });
+
+  it('points to the sources page when the library is empty', async () => {
+    await respond(page([]));
+
+    expect(element().querySelector('.empty a')?.getAttribute('href')).toBe('/sources');
+  });
+
+  it('shows an error when the movies cannot be loaded', async () => {
+    fixture.detectChanges();
+    expectMovies().flush('boom', { status: 500, statusText: 'Server Error' });
+    await fixture.whenStable();
+
+    expect(element().querySelector('.error')).not.toBeNull();
+  });
+
+  it('searches after a pause in typing and starts at the first page', async () => {
+    await respond(page([heat, ronin]));
+
+    await typeSearch('ron');
+    const request = await respond(page([ronin]));
+
+    expect(request.request.params.get('search')).toBe('ron');
+    expect(request.request.params.get('page')).toBe('0');
+    expect(element().querySelectorAll('.movie-title')).toHaveLength(1);
+  });
+
+  it('shows a hint when the search finds nothing', async () => {
+    await respond(page([heat]));
+
+    await typeSearch('xyz');
+    await respond(page([]));
+
+    expect(element().querySelector('.empty')?.textContent).toContain('Keine Filme gefunden');
+  });
+
+  it('loads another page when paging', async () => {
+    await respond(page([heat], 120));
+
+    const nextButton = element().querySelector<HTMLButtonElement>('.mat-mdc-paginator-navigation-next')!;
+    nextButton.click();
+    const request = await respond(page([ronin], 120));
+
+    expect(request.request.params.get('page')).toBe('1');
+  });
+});

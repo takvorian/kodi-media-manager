@@ -1,0 +1,22 @@
+.system-info {
+  max-width: 480px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 0;
+
+  dt {
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.error {
+  color: var(--mat-sys-error);
+}
