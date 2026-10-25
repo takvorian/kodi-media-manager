@@ -1,11 +1,14 @@
 package de.tiktak.kmm.movie;
 
+import java.net.URI;
+
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +18,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.tiktak.kmm.job.JobController;
+import de.tiktak.kmm.job.JobSnapshot;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -53,9 +58,13 @@ public class MovieController {
         return metadataService.update(movieId, metadata);
     }
 
+    /**
+     * Startet den Scan einer Quelle im Hintergrund. Fortschritt und Ergebnis liefert die Job-API.
+     */
     @PostMapping(SCAN_PATH)
-    public ScanResult scan(@PathVariable long sourceId) {
-        return scanService.scan(sourceId);
+    public ResponseEntity<JobSnapshot> scan(@PathVariable long sourceId) {
+        JobSnapshot job = scanService.startScan(sourceId);
+        return ResponseEntity.accepted().location(URI.create(JobController.BASE_PATH + "/" + job.id())).body(job);
     }
 
     @ExceptionHandler(PropertyReferenceException.class)

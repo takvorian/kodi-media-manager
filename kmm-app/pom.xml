@@ -154,6 +154,11 @@
             <artifactId>junit-jupiter-params</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.awaitility</groupId>
+            <artifactId>awaitility</artifactId>
+            <scope>test</scope>
+        </dependency>
         <!--
             Das Test-Plugin wird nur in target/test-plugins kopiert und dort von PF4J geladen. Auf dem
             Test-Classpath darf es nicht liegen, sonst fände PF4J die Extension doppelt.

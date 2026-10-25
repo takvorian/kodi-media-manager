@@ -47,3 +47,10 @@ kmm:
     directory: ${kmm.home}/plugins
   security:
     enabled: true
+  jobs:
+    # beendete Jobs, die in der Oberfläche sichtbar bleiben
+    history-size: 50
+    # Mindestabstand zwischen Fortschrittsmeldungen eines Jobs
+    progress-interval: 250ms
+    # Lebenszeichen auf offenen SSE-Verbindungen
+    heartbeat-interval: 30s

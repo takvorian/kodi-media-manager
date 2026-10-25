@@ -22,10 +22,19 @@ export interface CreateMediaSource {
   readonly mediaType: MediaType;
 }
 
-/** Antwort von POST /api/v1/sources/{id}/scan. */
+/** Präfix des Job-Schlüssels eines Scans; muss zu MovieScanService.JOB_KEY_PREFIX passen. */
+export const SCAN_JOB_KEY_PREFIX = 'movie-scan:';
+
+export function scanJobKey(sourceId: number): string {
+  return `${SCAN_JOB_KEY_PREFIX}${sourceId}`;
+}
+
+/** Ergebnis eines erfolgreichen Scan-Jobs. */
 export interface ScanResult {
   readonly sourceId: number;
   readonly added: number;
+  readonly updated: number;
   readonly removed: number;
   readonly unchanged: number;
+  readonly nfoErrors: number;
 }

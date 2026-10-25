@@ -52,7 +52,7 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
   - NFO: Jackson XML
   - Bilder: ImageIO/TwelveMonkeys
   - Scanner: `java.nio.file`
-  - Jobs: eigene Job-Verwaltung mit Fortschritt über SSE
+  - Jobs: eigene Job-Verwaltung auf virtuellen Threads, Fortschritt und Ergebnis per REST (`/api/v1/jobs`) und SSE (`/api/v1/jobs/events`), gedrosselt auf höchstens eine Meldung je 250 ms und Job, ein Job je fachlichem Schlüssel (z. B. ein Scan pro Quelle). Laufende und die letzten 50 beendeten Jobs werden im Speicher gehalten.
 - **Kodi:** JSON-RPC (`VideoLibrary.Scan`/`Refresh`), Pfad-Mapping Container ↔ Kodi.
 - **Security:** Spring Security, CSRF für die SPA (Cookie `XSRF-TOKEN`).
 - **Betrieb:** Actuator (Health/Probes), OpenAPI (springdoc, `/swagger-ui.html`).
@@ -153,7 +153,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 2. **Filme MVP** (in Inkrementen):
    1. Quellen, Scan, Filmliste ✅
    2. NFO lesen/schreiben ✅ (`<dateiname>.nfo`, Kodi 19–21; Scan übernimmt NFO-Inhalte, Detailseite bearbeitet und schreibt sie zurück)
-   3. Job-Framework + Fortschritt per SSE
+   3. Job-Framework + Fortschritt per SSE ✅ (Scan läuft als Hintergrund-Job, Abbruch möglich, Live-Fortschritt in der UI)
    4. TMDB-Plugin (API-Key aus `KMM_TMDB_API_KEY`)
    5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen (`<dateiname>-poster.jpg` …)
    - **2a. Ember-Migration I:** Filme, Sets, Personen, Genres, Artwork, Quellen und Settings, mit Dry-Run und Report.

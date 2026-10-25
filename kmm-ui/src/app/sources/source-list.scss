@@ -27,6 +27,22 @@
   white-space: nowrap;
 }
 
+.scan-progress {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  width: 220px;
+  vertical-align: middle;
+  text-align: left;
+}
+
+.scan-message {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 .error {
   color: var(--mat-sys-error);
 }

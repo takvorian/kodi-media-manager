@@ -12,6 +12,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
@@ -29,6 +30,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.job.JobAlreadyRunningException;
+import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 
@@ -95,15 +99,30 @@ class MovieControllerTest {
     }
 
     @Test
-    void scansSource() {
-        when(scanService.scan(1L)).thenReturn(new ScanResult(1L, 3, 2, 1, 10, 1));
+    void startsScanAsJob() {
+        UUID jobId = UUID.fromString("7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f00");
+        when(scanService.startScan(1L)).thenReturn(new JobSnapshot(jobId, "movie-scan:1", "Scan „Filme“",
+                JobStatus.RUNNING, 0, 0, null, null, Instant.parse("2026-10-25T12:00:00Z"), null));
 
         assertThat(mockMvc.post().uri(MovieController.SCAN_PATH, 1L).with(csrf()))
-                .hasStatusOk()
+                .hasStatus(202)
+                .hasHeader("Location", "/api/v1/jobs/" + jobId)
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        {"sourceId": 1, "added": 3, "updated": 2, "removed": 1, "unchanged": 10, "nfoErrors": 1}
+                        {"id": "7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f00", "key": "movie-scan:1", "status": "RUNNING"}
                         """);
+    }
+
+    @Test
+    void answersSecondScanOfSameSourceWithConflict() {
+        JobSnapshot running = new JobSnapshot(UUID.randomUUID(), "movie-scan:1", "Scan „Filme“", JobStatus.RUNNING,
+                0, 0, null, null, Instant.parse("2026-10-25T12:00:00Z"), null);
+        when(scanService.startScan(1L)).thenThrow(new JobAlreadyRunningException(running));
+
+        assertThat(mockMvc.post().uri(MovieController.SCAN_PATH, 1L).with(csrf()))
+                .hasStatus(409)
+                .bodyJson()
+                .extractingPath("$.detail").isEqualTo("Scan „Filme“ läuft bereits.");
     }
 
     @Test

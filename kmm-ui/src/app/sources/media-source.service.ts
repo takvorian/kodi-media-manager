@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { CreateMediaSource, MediaSource, ScanResult } from './media-source';
+import { Job } from '../jobs/job';
+import { CreateMediaSource, MediaSource } from './media-source';
 
 export const SOURCES_URL = '/api/v1/sources';
 
@@ -22,7 +23,8 @@ export class MediaSourceService {
     return this.http.delete<void>(`${SOURCES_URL}/${sourceId}`);
   }
 
-  scan(sourceId: number): Observable<ScanResult> {
-    return this.http.post<ScanResult>(`${SOURCES_URL}/${sourceId}/scan`, null);
+  /** Startet den Scan im Hintergrund und liefert den gestarteten Job. */
+  scan(sourceId: number): Observable<Job> {
+    return this.http.post<Job>(`${SOURCES_URL}/${sourceId}/scan`, null);
   }
 }

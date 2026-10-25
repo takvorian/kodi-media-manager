@@ -1,42 +1,48 @@
 package de.tiktak.kmm.movie;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.Map;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
-import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
  * Durchläuft den kompletten Weg über die REST-API: Quelle anlegen, scannen, Filme abfragen,
- * erneut scannen und Quelle löschen.
+ * erneut scannen und Quelle löschen. Der Scan läuft als echter Hintergrund-Job; deshalb arbeitet
+ * der Test ohne umschließende Transaktion und räumt die Datenbank danach selbst auf.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @WithMockUser
-@Transactional
 class MovieLibraryIntegrationTest {
 
     private static final String JSON = "application/json";
+    private static final Duration JOB_TIMEOUT = Duration.ofSeconds(10);
 
     @Autowired
     private MockMvcTester mockMvc;
@@ -47,8 +53,17 @@ class MovieLibraryIntegrationTest {
     @Autowired
     private MovieRepository movieRepository;
 
+    @Autowired
+    private JdbcClient jdbcClient;
+
     @TempDir
     Path library;
+
+    @AfterEach
+    void deleteLibrary() {
+        // Filme und Genres folgen per ON DELETE CASCADE.
+        jdbcClient.sql("DELETE FROM media_source").update();
+    }
 
     @Test
     void scansSourceAndKeepsLibraryInSync() throws IOException {
@@ -57,9 +72,7 @@ class MovieLibraryIntegrationTest {
         Files.writeString(library.resolve("Heat (1995)/Heat (1995).nfo"), "<movie><title>kaputt</movie>");
         long sourceId = createSource();
 
-        assertThat(scan(sourceId)).bodyJson().isLenientlyEqualTo("""
-                {"added": 2, "updated": 0, "removed": 0, "unchanged": 0, "nfoErrors": 1}
-                """);
+        assertThat(scan(sourceId)).isEqualTo(new ScanResult(sourceId, 2, 0, 0, 0, 1));
         assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH))
                 .bodyJson().isLenientlyEqualTo("""
                         {"totalElements": 2, "content": [{"title": "Heat", "year": 1995}, {"title": "The Matrix", "year": 1999}]}
@@ -69,14 +82,11 @@ class MovieLibraryIntegrationTest {
 
         Files.delete(heat);
         createFile("Ronin (1998).mkv");
-        assertThat(scan(sourceId)).bodyJson().isLenientlyEqualTo("""
-                {"added": 1, "updated": 0, "removed": 1, "unchanged": 1, "nfoErrors": 0}
-                """);
+        assertThat(scan(sourceId)).isEqualTo(new ScanResult(sourceId, 1, 0, 1, 1, 0));
         assertThat(mockMvc.get().uri(MediaSourceController.BASE_PATH))
                 .bodyJson().extractingPath("$[0].lastScannedAt").isNotNull();
 
         assertThat(mockMvc.delete().uri(MediaSourceController.BASE_PATH + "/" + sourceId).with(csrf())).hasStatus(204);
-        movieRepository.flush();
         assertThat(movieRepository.count()).isZero();
     }
 
@@ -110,11 +120,11 @@ class MovieLibraryIntegrationTest {
         String written = Files.readString(nfo);
         assertThat(written).contains("<title>Heat (Director's Cut)</title>", "<genre>Krimi</genre>",
                 "<name>Al Pacino</name>", ">949</uniqueid>");
-        assertThat(scan(sourceId)).bodyJson().extractingPath("$.updated").isEqualTo(0);
+        assertThat(scan(sourceId).updated()).isZero();
 
         Files.writeString(nfo, written.replace("Director's Cut", "Extended"));
         Files.setLastModifiedTime(nfo, FileTime.from(Instant.now().plusSeconds(5)));
-        assertThat(scan(sourceId)).bodyJson().extractingPath("$.updated").isEqualTo(1);
+        assertThat(scan(sourceId).updated()).isEqualTo(1);
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId))
                 .bodyJson().extractingPath("$.metadata.title").isEqualTo("Heat (Extended)");
     }
@@ -142,10 +152,29 @@ class MovieLibraryIntegrationTest {
         return body.get("id").asLong();
     }
 
-    private MvcTestResult scan(long sourceId) {
+    /** Startet den Scan, wartet auf das Ende des Jobs und liefert sein Ergebnis. */
+    private ScanResult scan(long sourceId) {
+        JsonNode job = startScan(sourceId);
+        return objectMapper.treeToValue(awaitResult(job.get("id").asString()), ScanResult.class);
+    }
+
+    private JsonNode startScan(long sourceId) {
         MvcTestResult result = mockMvc.post().uri(MovieController.SCAN_PATH, sourceId).with(csrf()).exchange();
-        assertThat(result).hasStatusOk();
-        return result;
+        assertThat(result).hasStatus(HttpStatus.ACCEPTED);
+        return objectMapper.readTree(result.getResponse().getContentAsByteArray());
+    }
+
+    private JsonNode awaitResult(String jobId) {
+        // Im Test-Thread abfragen, damit der Security-Kontext von @WithMockUser gilt.
+        JsonNode job = await().atMost(JOB_TIMEOUT).pollInSameThread()
+                .until(() -> readJob(jobId), node -> !"RUNNING".equals(node.get("status").asString()));
+        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job.get("result");
+    }
+
+    private JsonNode readJob(String jobId) {
+        MvcTestResult result = mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange();
+        return objectMapper.readTree(result.getResponse().getContentAsByteArray());
     }
 
     private String sourceJson(String name, Path path) {

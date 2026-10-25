@@ -2,7 +2,8 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { MediaSource, ScanResult } from './media-source';
+import { Job } from '../jobs/job';
+import { MediaSource } from './media-source';
 import { MediaSourceService, SOURCES_URL } from './media-source.service';
 
 describe('MediaSourceService', () => {
@@ -51,13 +52,13 @@ describe('MediaSourceService', () => {
     httpTesting.expectOne({ method: 'DELETE', url: `${SOURCES_URL}/7` }).flush(null, { status: 204, statusText: 'No Content' });
   });
 
-  it('scans a source', () => {
-    const result: ScanResult = { sourceId: 7, added: 2, removed: 0, unchanged: 5 };
-    let received: ScanResult | undefined;
+  it('starts a scan job', () => {
+    const job = { id: 'job-1', key: 'movie-scan:7', status: 'RUNNING' } as Job;
+    let received: Job | undefined;
 
-    service.scan(7).subscribe((scan) => (received = scan));
-    httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/7/scan` }).flush(result);
+    service.scan(7).subscribe((started) => (received = started));
+    httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/7/scan` }).flush(job);
 
-    expect(received).toEqual(result);
+    expect(received).toEqual(job);
   });
 });

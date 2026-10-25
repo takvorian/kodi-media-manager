@@ -1,0 +1,18 @@
+@let job = firstRunning();
+@if (job) {
+  <div class="job-indicator" role="status">
+    <mat-progress-bar [mode]="percent() === null ? 'indeterminate' : 'determinate'" [value]="percent() ?? 0" />
+    <span class="job-text">
+      {{ job.title }}
+      @if (job.message) {
+        – {{ job.message }}
+      }
+      @if (percent() !== null) {
+        ({{ percent() }} %)
+      }
+      @if (otherCount() > 0) {
+        · {{ otherCount() }} weitere
+      }
+    </span>
+  </div>
+}

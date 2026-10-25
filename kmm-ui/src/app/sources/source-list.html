@@ -51,12 +51,20 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let source" class="actions">
-        @if (isScannable(source)) {
-          <button matButton class="scan-button" (click)="scan(source)" [disabled]="scanningSourceId() !== null">
-            {{ scanningSourceId() === source.id ? 'Scanne …' : 'Scannen' }}
-          </button>
+        @let job = scanJob(source);
+        @if (job) {
+          <div class="scan-progress">
+            <mat-progress-bar
+              [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
+              [value]="percent(job) ?? 0"
+            />
+            <span class="scan-message">{{ job.message }}@if (percent(job) !== null) { ({{ percent(job) }} %)}</span>
+          </div>
+          <button matButton class="cancel-button" (click)="cancelScan(job)">Abbrechen</button>
+        } @else if (isScannable(source)) {
+          <button matButton class="scan-button" (click)="scan(source)">Scannen</button>
         }
-        <button matButton class="delete-button" (click)="delete(source)">Entfernen</button>
+        <button matButton class="delete-button" (click)="delete(source)" [disabled]="!!job">Entfernen</button>
       </td>
     </ng-container>
 

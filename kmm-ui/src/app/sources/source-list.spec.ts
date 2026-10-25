@@ -3,6 +3,7 @@ import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@a
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
+import { FakeJobEvents, job } from '../jobs/fake-job-events';
 import { CONFIRM } from '../shared/confirm';
 import { MediaSource } from './media-source';
 import { SOURCES_URL } from './media-source.service';
@@ -23,10 +24,12 @@ describe('SourceList', () => {
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
   let confirmAnswer: boolean;
+  let events: FakeJobEvents;
 
   beforeEach(() => {
     snackBarMessages = [];
     confirmAnswer = true;
+    events = new FakeJobEvents();
     TestBed.configureTestingModule({
       imports: [SourceList],
       providers: [
@@ -34,6 +37,7 @@ describe('SourceList', () => {
         provideHttpClientTesting(),
         { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
         { provide: CONFIRM, useValue: () => confirmAnswer },
+        events.provider(),
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -139,32 +143,90 @@ describe('SourceList', () => {
     expect(button('.create-button').disabled).toBe(false);
   });
 
-  it('scans a source and reports the result', async () => {
+  it('starts a scan and shows its progress instead of the scan button', async () => {
     await loadSources([films]);
 
     button('.scan-button').click();
+    httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/1/scan` }).flush(job());
+    events.emit(job({ done: 1, total: 4, message: 'NFOs werden geprüft' }));
     fixture.detectChanges();
-    expect(button('.scan-button').textContent).toContain('Scanne');
-    httpTesting
-      .expectOne({ method: 'POST', url: `${SOURCES_URL}/1/scan` })
-      .flush({ sourceId: 1, added: 3, removed: 1, unchanged: 7 });
-    await answerReload([{ ...films, lastScannedAt: '2026-10-25T12:00:00Z' }]);
 
-    expect(snackBarMessages).toEqual(['„Filme“ gescannt: 3 neu, 1 entfernt, 7 unverändert.']);
-    expect(button('.scan-button').textContent).toContain('Scannen');
+    expect(element().querySelector('.scan-button')).toBeNull();
+    expect(element().querySelector('.scan-message')?.textContent).toContain('NFOs werden geprüft (25 %)');
+    expect(button('.delete-button').disabled).toBe(true);
   });
 
-  it('reports a failed scan', async () => {
+  it('reports the result when the scan finishes and reloads the sources', async () => {
+    await loadSources([films]);
+    events.emit(job());
+
+    events.emit(
+      job({
+        status: 'SUCCEEDED',
+        result: { sourceId: 1, added: 3, updated: 2, removed: 1, unchanged: 7, nfoErrors: 1 },
+      }),
+    );
+    await answerReload([{ ...films, lastScannedAt: '2026-10-25T12:00:00Z' }]);
+
+    expect(snackBarMessages).toEqual([
+      'Scan „Filme“ abgeschlossen: 3 neu, 2 aktualisiert, 1 entfernt, 7 unverändert, 1 NFO-Fehler.',
+    ]);
+    expect(element().querySelector('.scan-button')).not.toBeNull();
+  });
+
+  it('reports failed and cancelled scans', async () => {
+    await loadSources([films]);
+    events.emit(job());
+    events.emit(job({ status: 'FAILED', message: 'Verzeichnis weg' }));
+    await answerReload([films]);
+    events.emit(job({ id: 'job-2' }));
+    events.emit(job({ id: 'job-2', status: 'CANCELLED' }));
+    await answerReload([films]);
+
+    expect(snackBarMessages).toEqual(['Scan „Filme“ fehlgeschlagen: Verzeichnis weg', 'Scan „Filme“ abgebrochen.']);
+  });
+
+  it('ignores jobs of other kinds', async () => {
+    await loadSources([films]);
+    events.emit(job({ key: 'other:1' }));
+    events.emit(job({ key: 'other:1', status: 'SUCCEEDED' }));
+
+    expect(snackBarMessages).toEqual([]);
+  });
+
+  it('cancels a running scan', async () => {
+    await loadSources([films]);
+    events.emit(job());
+    fixture.detectChanges();
+
+    button('.cancel-button').click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/jobs/job-1/cancel' }).flush(job());
+
+    expect(snackBarMessages).toEqual([]);
+  });
+
+  it('reports a scan that cannot be started', async () => {
     await loadSources([films]);
 
     button('.scan-button').click();
     httpTesting
       .expectOne({ method: 'POST', url: `${SOURCES_URL}/1/scan` })
       .flush({ detail: 'nicht erreichbar' }, { status: 422, statusText: 'Unprocessable' });
-    await fixture.whenStable();
 
     expect(snackBarMessages).toEqual(['nicht erreichbar']);
-    expect(button('.scan-button').disabled).toBe(false);
+  });
+
+  it('reports a failed cancellation', async () => {
+    await loadSources([films]);
+    events.emit(job());
+    fixture.detectChanges();
+
+    button('.cancel-button').click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/jobs/job-1/cancel' })
+      .flush({ title: 'Job nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+
+    expect(snackBarMessages).toEqual(['Job nicht gefunden']);
   });
 
   it('deletes a source after confirmation', async () => {

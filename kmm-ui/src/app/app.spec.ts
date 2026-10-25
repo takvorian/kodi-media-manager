@@ -5,12 +5,13 @@ import { provideRouter } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { App } from './app';
+import { FakeJobEvents } from './jobs/fake-job-events';
 import { routes } from './app.routes';
 
 describe('App', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting(), new FakeJobEvents().provider()],
     });
   });
 
