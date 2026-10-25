@@ -25,6 +25,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.ArgumentCaptor;
@@ -69,6 +70,9 @@ class MovieScanServiceTest {
 
     @Mock
     private JobService jobService;
+
+    @Mock
+    private ApplicationEventPublisher events;
 
     @InjectMocks
     private MovieScanService service;
@@ -126,6 +130,7 @@ class MovieScanServiceTest {
                 "1/2 " + MovieScanService.CHECKING_NFOS_MESSAGE,
                 "2/2 " + MovieScanService.CHECKING_NFOS_MESSAGE,
                 "2/2 " + MovieScanService.SYNCHRONIZING_MESSAGE);
+        verify(events).publishEvent(new MovieSourceScannedEvent(SOURCE_ID, 2, 0));
     }
 
     @Test

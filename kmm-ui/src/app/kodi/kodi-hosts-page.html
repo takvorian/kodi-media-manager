@@ -31,6 +31,11 @@
         } @else {
           <p class="warning no-mappings">Ohne Pfad-Zuordnung kann KMM keine Filme in Kodi aktualisieren.</p>
         }
+        @if (host.lastSync; as sync) {
+          <p class="last-sync" [class.error]="failed(sync)">
+            Letzter Abgleich {{ sync.at | date: 'short' }}: {{ sync.message }}
+          </p>
+        }
         @if (connectionResult(host); as result) {
           <p class="connection-result" [class.ok]="result.ok" [class.error]="!result.ok">{{ result.message }}</p>
         }

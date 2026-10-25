@@ -6,9 +6,14 @@
   @let details = movie.value();
   <div class="title-row">
     <h2 class="page-title">{{ details.metadata.title }}</h2>
-    <button matButton="tonal" type="button" class="online-search-button" (click)="toggleOnlineSearch()">
-      {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
-    </button>
+    <div class="title-actions">
+      <button matButton type="button" class="kodi-refresh-button" [disabled]="refreshingKodi()" (click)="refreshInKodi()">
+        In Kodi aktualisieren
+      </button>
+      <button matButton="tonal" type="button" class="online-search-button" (click)="toggleOnlineSearch()">
+        {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
+      </button>
+    </div>
   </div>
 
   @if (searchingOnline()) {

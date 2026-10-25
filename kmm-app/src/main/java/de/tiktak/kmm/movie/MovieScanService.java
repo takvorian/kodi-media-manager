@@ -6,6 +6,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.job.JobContext;
@@ -41,6 +42,7 @@ public class MovieScanService {
     private final MovieLibrarySynchronizer synchronizer;
     private final MovieNfoFiles nfoFiles;
     private final JobService jobService;
+    private final ApplicationEventPublisher events;
 
     /**
      * Prüft die Quelle und startet den Scan im Hintergrund.
@@ -64,6 +66,7 @@ public class MovieScanService {
         log.info("Scanned source '{}': {} added, {} updated, {} removed, {} unchanged, {} NFO errors",
                 source.getName(), result.added(), result.updated(), result.removed(), result.unchanged(),
                 result.nfoErrors());
+        events.publishEvent(new MovieSourceScannedEvent(source.getId(), result.added(), result.removed()));
         return result;
     }
 

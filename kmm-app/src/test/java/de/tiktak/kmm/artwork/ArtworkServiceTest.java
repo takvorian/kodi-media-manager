@@ -9,6 +9,7 @@ import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
@@ -20,6 +21,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -27,6 +29,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import de.tiktak.kmm.movie.MovieDetails;
+import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieSupplement;
 import de.tiktak.kmm.movie.MovieMetadataService;
@@ -53,6 +56,9 @@ class ArtworkServiceTest {
 
     @Mock
     private ImageDownloader downloader;
+
+    @Mock
+    private ApplicationEventPublisher events;
 
     @InjectMocks
     private ArtworkService service;
@@ -119,6 +125,7 @@ class ArtworkServiceTest {
         ArtworkInfo info = service.apply(MOVIE_ID, ImageType.FANART, " https://img.example.org/fanart.jpg ");
 
         assertThat(info).isEqualTo(new ArtworkInfo(ImageType.FANART, true, saved.toString(), MODIFIED));
+        verify(events).publishEvent(new MovieFilesChangedEvent(MOVIE_ID));
     }
 
     @Test
@@ -134,6 +141,7 @@ class ArtworkServiceTest {
         service.remove(MOVIE_ID, ImageType.CLEARART);
 
         verify(artworkFiles).delete(FILES, ImageType.CLEARART);
+        verify(events).publishEvent(new MovieFilesChangedEvent(MOVIE_ID));
     }
 
     @Test
@@ -169,6 +177,7 @@ class ArtworkServiceTest {
         verify(artworkFiles).save(FILES, ImageType.FANART, image);
         verify(artworkFiles).save(FILES, ImageType.CLEARLOGO, image);
         verify(downloader, never()).download(URI.create("https://img/p.jpg"));
+        verify(events).publishEvent(new MovieFilesChangedEvent(MOVIE_ID));
     }
 
     @Test
@@ -187,6 +196,7 @@ class ArtworkServiceTest {
         assertThat(result.saved()).isZero();
         assertThat(result.warnings()).singleElement().asString().startsWith("BANNER: ").contains("HTTP 404");
         verify(downloader, times(3)).download(any());
+        verifyNoInteractions(events);
     }
 
     @Test

@@ -24,7 +24,7 @@ import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiVersion;
 
 @DataJpaTest
-@Import(KodiHostService.class)
+@Import({KodiHostService.class, KodiSyncLog.class})
 class KodiHostServiceTest {
 
     private static final KodiPathMapping FILME = new KodiPathMapping("/media/filme", "smb://nas/filme/");

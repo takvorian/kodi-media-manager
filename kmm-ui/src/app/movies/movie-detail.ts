@@ -9,6 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
+import { kodiSyncSummary } from '../kodi/kodi';
+import { KodiService } from '../kodi/kodi.service';
 import { problemMessage } from '../shared/problem-message';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
@@ -38,6 +40,7 @@ const SNACKBAR_DURATION_MS = 5000;
 })
 export class MovieDetail {
   private readonly movieService = inject(MovieService);
+  private readonly kodiService = inject(KodiService);
   private readonly snackBar = inject(MatSnackBar);
 
   /** Film-ID aus der Route {@code /movies/:id}. */
@@ -48,6 +51,7 @@ export class MovieDetail {
   protected readonly form = createMovieMetadataForm(inject(NonNullableFormBuilder));
   protected readonly saving = signal(false);
   protected readonly searchingOnline = signal(false);
+  protected readonly refreshingKodi = signal(false);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),
@@ -90,6 +94,21 @@ export class MovieDetail {
     this.form.markAsDirty();
     this.searchingOnline.set(false);
     this.notify(`Daten von ${proposal.scraperName} übernommen – bitte prüfen und speichern.`);
+  }
+
+  /** Lässt Kodi NFO und Bilder des Films neu einlesen, unabhängig vom Echtzeit-Sync. */
+  protected refreshInKodi(): void {
+    this.refreshingKodi.set(true);
+    this.kodiService.refreshMovie(this.id()).subscribe({
+      next: (results) => {
+        this.refreshingKodi.set(false);
+        this.notify(kodiSyncSummary(results));
+      },
+      error: (error: unknown) => {
+        this.refreshingKodi.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
   }
 
   protected reset(): void {

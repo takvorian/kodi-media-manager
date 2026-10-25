@@ -20,6 +20,13 @@ describe('KodiHostsPage', () => {
     passwordSet: true,
     realtimeSync: true,
     pathMappings: [{ localPath: '/media/filme', kodiPath: 'smb://nas/filme/' }],
+    lastSync: {
+      hostId: 3,
+      host: 'Wohnzimmer',
+      outcome: 'REFRESHED',
+      message: '„Heat“ aktualisiert.',
+      at: '2026-10-25T20:00:00Z',
+    },
   };
   const bedroom: KodiHost = {
     ...livingRoom,
@@ -29,6 +36,7 @@ describe('KodiHostsPage', () => {
     passwordSet: false,
     realtimeSync: false,
     pathMappings: [],
+    lastSync: { hostId: 4, host: 'Schlafzimmer', outcome: 'FAILED', message: 'nicht erreichbar.', at: '2026-10-25T20:00:00Z' },
   };
   const films: MediaSource = {
     id: 1,
@@ -113,6 +121,8 @@ describe('KodiHostsPage', () => {
     ]);
     expect(texts('.mappings li')).toEqual(['/media/filme → smb://nas/filme/']);
     expect(element().querySelectorAll('.no-mappings')).toHaveLength(1);
+    expect(texts('.last-sync')[0]).toMatch(/^Letzter Abgleich .+: „Heat“ aktualisiert\.$/);
+    expect(element().querySelectorAll('.last-sync.error')).toHaveLength(1);
   });
 
   it('shows an empty list and a load error', async () => {

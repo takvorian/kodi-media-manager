@@ -31,7 +31,7 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 class KodiHostControllerTest {
 
     private static final KodiHostResponse HOST = new KodiHostResponse(3, "Wohnzimmer", "kodi.local", 8080, "kodi",
-            true, true, List.of(new KodiHostCommand.PathMapping("/media/filme", "smb://nas/filme/")));
+            true, true, List.of(new KodiHostCommand.PathMapping("/media/filme", "smb://nas/filme/")), null);
     private static final String VALID_HOST = """
             {"name": "Wohnzimmer", "address": "kodi.local", "port": 8080, "username": "kodi", "password": null,
              "realtimeSync": true, "pathMappings": [{"localPath": "/media/filme", "kodiPath": "smb://nas/filme/"}]}

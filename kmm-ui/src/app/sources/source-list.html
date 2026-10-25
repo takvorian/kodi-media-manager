@@ -64,6 +64,7 @@
         } @else if (hasMovies(source)) {
           <button matButton class="scan-button" (click)="scan(source)">Scannen</button>
           <button matButton class="scrape-button" (click)="autoScrape(source)">Scrapen</button>
+          <button matButton class="kodi-scan-button" (click)="scanInKodi(source)">Kodi-Scan</button>
         }
         <button matButton class="delete-button" (click)="delete(source)" [disabled]="!!job">Entfernen</button>
       </td>

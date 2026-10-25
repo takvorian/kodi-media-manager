@@ -26,9 +26,15 @@ public class KodiHostService {
 
     private final KodiHostRepository repository;
     private final KodiClient kodiClient;
+    private final KodiSyncLog syncLog;
 
     public List<KodiHostResponse> findAll() {
-        return repository.findAll(BY_NAME).stream().map(KodiHostResponse::from).toList();
+        return repository.findAll(BY_NAME).stream().map(this::toResponse).toList();
+    }
+
+    /** Stand aller Geräte für einen Abgleich. */
+    List<KodiTarget> targets() {
+        return repository.findAll(BY_NAME).stream().map(KodiTarget::of).toList();
     }
 
     @Transactional
@@ -36,7 +42,7 @@ public class KodiHostService {
         requireUniqueName(settings.name(), null);
         KodiHost host = repository.save(new KodiHost(settings));
         log.info("Kodi host '{}' created for {}:{}", host.getName(), host.getAddress(), host.getPort());
-        return KodiHostResponse.from(host);
+        return toResponse(host);
     }
 
     @Transactional
@@ -45,13 +51,14 @@ public class KodiHostService {
         requireUniqueName(settings.name(), hostId);
         host.apply(settings);
         log.info("Kodi host '{}' updated", host.getName());
-        return KodiHostResponse.from(host);
+        return toResponse(host);
     }
 
     @Transactional
     public void delete(long hostId) {
         KodiHost host = require(hostId);
         repository.delete(host);
+        syncLog.forget(hostId);
         log.info("Kodi host '{}' deleted", host.getName());
     }
 
@@ -85,6 +92,10 @@ public class KodiHostService {
         } catch (KodiException e) {
             throw KodiProblemException.unavailable(e);
         }
+    }
+
+    private KodiHostResponse toResponse(KodiHost host) {
+        return KodiHostResponse.from(host, syncLog.lastResult(host.getId()));
     }
 
     private KodiHost require(long hostId) {

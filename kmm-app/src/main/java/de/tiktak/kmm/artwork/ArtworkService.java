@@ -8,9 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.movie.MovieDetails;
+import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.plugin.api.ImageType;
@@ -20,7 +22,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Bilder eines Films: anzeigen, online suchen, übernehmen und entfernen. Die Bilder liegen als
- * Dateien neben dem Film; KMM speichert sie nicht in der Datenbank.
+ * Dateien neben dem Film; KMM speichert sie nicht in der Datenbank. Jede Änderung wird als
+ * {@link MovieFilesChangedEvent} veröffentlicht.
  */
 @Slf4j
 @Service
@@ -36,6 +39,7 @@ public class ArtworkService {
     private final MovieArtworkFiles artworkFiles;
     private final ArtworkCandidateFinder candidateFinder;
     private final ImageDownloader downloader;
+    private final ApplicationEventPublisher events;
 
     public List<ArtworkInfo> artwork(long movieId) {
         CompanionFiles files = companionFiles(metadataService.findDetails(movieId));
@@ -69,6 +73,7 @@ public class ArtworkService {
         DownloadedImage image = downloader.download(parse(url));
         ArtworkFile saved = artworkFiles.save(files, type, image);
         log.info("Saved {} of movie {} to {}", type, movieId, saved.file());
+        events.publishEvent(new MovieFilesChangedEvent(movieId));
         return ArtworkInfo.of(type, Optional.of(saved));
     }
 
@@ -95,6 +100,9 @@ public class ArtworkService {
             if (saveBest(files, type, search.candidatesOf(type), warnings)) {
                 saved++;
             }
+        }
+        if (saved > 0) {
+            events.publishEvent(new MovieFilesChangedEvent(movieId));
         }
         return new ArtworkFillResult(saved, warnings);
     }
@@ -125,6 +133,7 @@ public class ArtworkService {
     public void remove(long movieId, ImageType type) {
         requireSupported(type);
         artworkFiles.delete(companionFiles(metadataService.findDetails(movieId)), type);
+        events.publishEvent(new MovieFilesChangedEvent(movieId));
     }
 
     private static Map<String, String> uniqueIds(MovieMetadata metadata) {

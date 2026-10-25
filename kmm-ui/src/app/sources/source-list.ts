@@ -14,6 +14,8 @@ import { Observable, filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
+import { kodiSyncSummary } from '../kodi/kodi';
+import { KodiService } from '../kodi/kodi.service';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import {
@@ -56,6 +58,7 @@ export interface ScrapeReport {
 export class SourceList {
   private readonly sourceService = inject(MediaSourceService);
   private readonly jobStore = inject(JobStore);
+  private readonly kodiService = inject(KodiService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
 
@@ -129,6 +132,14 @@ export class SourceList {
 
   protected autoScrape(source: MediaSource): void {
     this.track(this.sourceService.autoScrape(source.id));
+  }
+
+  /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen durchsuchen. */
+  protected scanInKodi(source: MediaSource): void {
+    this.kodiService.scanSource(source.id).subscribe({
+      next: (results) => this.notify(kodiSyncSummary(results)),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
   }
 
   protected closeScrapeReport(): void {

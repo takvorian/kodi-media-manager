@@ -1,3 +1,4 @@
+import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -11,7 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
-import { KodiHost } from './kodi';
+import { KodiHost, KodiSyncResult, syncFailed } from './kodi';
 import { createKodiHostForm, createPathMappingForm, fillKodiHostForm, toKodiHostCommand } from './kodi-host-form';
 import { KodiService } from './kodi.service';
 
@@ -29,6 +30,7 @@ type Editing = KodiHost | 'new' | null;
 @Component({
   selector: 'app-kodi-hosts-page',
   imports: [
+    DatePipe,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
@@ -124,6 +126,10 @@ export class KodiHostsPage {
       next: (result) => this.showConnectionResult(host, { ok: true, message: `Verbunden mit ${result.version}` }),
       error: (error: unknown) => this.showConnectionResult(host, { ok: false, message: problemMessage(error) }),
     });
+  }
+
+  protected failed(result: KodiSyncResult): boolean {
+    return syncFailed(result);
   }
 
   protected isTesting(host: KodiHost): boolean {

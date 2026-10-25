@@ -72,6 +72,11 @@ kmm:
     preferred-metadata-scraper: tmdb
   artwork:
     max-download-size: 25MB
+  kodi:
+    # Wartezeit nach einer Änderung, bevor KMM Kodi aktualisiert; fasst Metadaten und Bilder zusammen
+    sync-delay: 5s
+    connect-timeout: 5s
+    request-timeout: 15s
   security:
     enabled: true
   jobs:

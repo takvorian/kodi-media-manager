@@ -96,6 +96,22 @@ describe('SourceList', () => {
     expect(element().querySelectorAll('.scrape-button')).toHaveLength(1);
   });
 
+  it('lets Kodi scan a movie source', async () => {
+    await loadSources([films, series]);
+    expect(element().querySelectorAll('.kodi-scan-button')).toHaveLength(1);
+
+    button('.kodi-scan-button').click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' }).flush([
+      { hostId: 1, host: 'Wohnzimmer', outcome: 'SCAN_STARTED', message: 'Kodi sucht nach neuen Filmen.', at: '' },
+    ]);
+    button('.kodi-scan-button').click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' })
+      .flush({ detail: 'Quelle nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+
+    expect(snackBarMessages).toEqual(['Wohnzimmer: Kodi sucht nach neuen Filmen.', 'Quelle nicht gefunden']);
+  });
+
   it('shows a hint without sources', async () => {
     await loadSources([]);
 

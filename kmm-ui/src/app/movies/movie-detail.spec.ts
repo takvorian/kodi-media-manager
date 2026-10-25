@@ -109,6 +109,34 @@ describe('MovieDetail', () => {
     expect(button('.save-button').disabled).toBe(true);
   });
 
+  it('refreshes the movie in Kodi and reports each host', async () => {
+    await load(heat);
+
+    button('.kodi-refresh-button').click();
+    fixture.detectChanges();
+    expect(button('.kodi-refresh-button').disabled).toBe(true);
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/refresh' }).flush([
+      { hostId: 1, host: 'Wohnzimmer', outcome: 'REFRESHED', message: '„Heat“ aktualisiert.', at: '' },
+      { hostId: 2, host: 'Küche', outcome: 'FAILED', message: 'nicht erreichbar.', at: '' },
+    ]);
+    fixture.detectChanges();
+    button('.kodi-refresh-button').click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/refresh' }).flush([]);
+    fixture.detectChanges();
+    button('.kodi-refresh-button').click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/refresh' })
+      .flush({ detail: 'Film nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+    fixture.detectChanges();
+
+    expect(snackBarMessages).toEqual([
+      'Wohnzimmer: „Heat“ aktualisiert. Küche: nicht erreichbar.',
+      'Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.',
+      'Film nicht gefunden',
+    ]);
+    expect(button('.kodi-refresh-button').disabled).toBe(false);
+  });
+
   it('announces where a missing NFO will be created', async () => {
     await load({ ...heat, nfo: { path: '/media/filme/Heat.nfo', exists: false, modifiedAt: null } });
 

@@ -14,6 +14,8 @@ export interface KodiHost {
   readonly passwordSet: boolean;
   readonly realtimeSync: boolean;
   readonly pathMappings: readonly KodiPathMapping[];
+  /** Letzter Abgleich seit dem Start von KMM. */
+  readonly lastSync: KodiSyncResult | null;
 }
 
 /** Anlegen oder Ändern; ein fehlendes Passwort (`null`) behält das gespeicherte. */
@@ -29,4 +31,27 @@ export interface KodiHostCommand {
 
 export interface KodiConnectionTest {
   readonly version: string;
+}
+
+export type KodiSyncOutcome = 'REFRESHED' | 'SCAN_STARTED' | 'NOT_MAPPED' | 'FAILED';
+
+/** Ergebnis eines Abgleichs mit einem Kodi-Gerät. */
+export interface KodiSyncResult {
+  readonly hostId: number;
+  readonly host: string;
+  readonly outcome: KodiSyncOutcome;
+  readonly message: string;
+  readonly at: string;
+}
+
+export function syncFailed(result: KodiSyncResult): boolean {
+  return result.outcome === 'FAILED' || result.outcome === 'NOT_MAPPED';
+}
+
+/** Fasst die Ergebnisse aller Geräte für eine Snackbar-Meldung zusammen. */
+export function kodiSyncSummary(results: readonly KodiSyncResult[]): string {
+  if (results.length === 0) {
+    return 'Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.';
+  }
+  return results.map((result) => `${result.host}: ${result.message}`).join(' ');
 }

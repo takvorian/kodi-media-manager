@@ -10,6 +10,11 @@
   flex-wrap: wrap;
 }
 
+.title-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .file-card,
 .supplement-card,
 .artwork-card,

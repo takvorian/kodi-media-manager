@@ -3,6 +3,7 @@ package de.tiktak.kmm.movie;
 import java.time.Clock;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -14,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 /**
  * Liest und ändert die Metadaten eines Films. Änderungen werden zuerst in die NFO geschrieben;
  * schlägt das fehl, bleibt auch die Datenbank unverändert. Die NFO ist die maßgebliche Quelle.
+ * Nach dem Speichern wird ein {@link MovieFilesChangedEvent} veröffentlicht.
  */
 @Slf4j
 @Service
@@ -24,6 +26,7 @@ public class MovieMetadataService {
     private final MovieRepository movieRepository;
     private final MovieNfoFiles nfoFiles;
     private final Clock clock;
+    private final ApplicationEventPublisher events;
 
     public MovieDetails findDetails(long movieId) {
         Movie movie = require(movieId);
@@ -37,6 +40,7 @@ public class MovieMetadataService {
         movie.applyMetadata(metadata);
         movie.markNfoSynchronized(written.modifiedAt());
         log.info("Metadata of movie {} saved to {}", movieId, written.file());
+        events.publishEvent(new MovieFilesChangedEvent(movieId));
         return MovieDetails.from(movie, Optional.of(written));
     }
 

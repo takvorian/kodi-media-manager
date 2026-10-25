@@ -6,6 +6,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
@@ -18,6 +20,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
@@ -44,11 +47,14 @@ class MovieMetadataServiceTest {
     @Mock
     private MovieNfoFiles nfoFiles;
 
+    @Mock
+    private ApplicationEventPublisher events;
+
     private MovieMetadataService service;
 
     @BeforeEach
     void setUp() {
-        service = new MovieMetadataService(movieRepository, nfoFiles, Clock.fixed(NFO_TIME, ZoneOffset.UTC));
+        service = new MovieMetadataService(movieRepository, nfoFiles, Clock.fixed(NFO_TIME, ZoneOffset.UTC), events);
     }
 
     @Test
@@ -86,6 +92,7 @@ class MovieMetadataServiceTest {
         assertThat(movie.getGenres()).containsExactly("Krimi", "Drama");
         assertThat(movie.getNfoModifiedAt()).isEqualTo(NFO_TIME);
         assertThat(details.nfo().exists()).isTrue();
+        verify(events).publishEvent(new MovieFilesChangedEvent(MOVIE_ID));
     }
 
     @Test
@@ -116,6 +123,7 @@ class MovieMetadataServiceTest {
                     assertThat(exception.getBody().getDetail()).contains("Schreibrechte");
                 });
         assertThat(movie.getTitle()).isEqualTo("Heat");
+        verifyNoInteractions(events);
     }
 
     @Test
