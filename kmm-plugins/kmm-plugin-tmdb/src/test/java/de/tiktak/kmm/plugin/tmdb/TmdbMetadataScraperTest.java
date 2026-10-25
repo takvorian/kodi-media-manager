@@ -175,7 +175,7 @@ class TmdbMetadataScraperTest {
     void reportsMissingApiKey() {
         scraper = initializedScraper("  ");
 
-        assertThat(scraper.missingConfiguration()).contains(TmdbMetadataScraper.MISSING_API_KEY);
+        assertThat(scraper.missingConfiguration()).contains(AbstractTmdbScraper.MISSING_API_KEY);
         assertThatThrownBy(() -> scraper.search(new SearchQuery(MediaType.MOVIE, "Heat", null)))
                 .isInstanceOf(ScraperException.class)
                 .hasMessageContaining("KMM_TMDB_API_KEY");

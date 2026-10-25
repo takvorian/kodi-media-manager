@@ -17,7 +17,7 @@
     <properties>
         <test-plugins.directory>${project.build.directory}/test-plugins</test-plugins.directory>
         <test-plugin.artifactId>kmm-plugin-testdata</test-plugin.artifactId>
-        <bundled-plugins.artifactIds>kmm-plugin-tmdb</bundled-plugins.artifactIds>
+        <bundled-plugins.artifactIds>kmm-plugin-tmdb,kmm-plugin-fanarttv</bundled-plugins.artifactIds>
         <bundled-plugins.directory>${project.build.outputDirectory}/bundled-plugins</bundled-plugins.directory>
     </properties>
 
@@ -179,6 +179,11 @@
             <artifactId>kmm-plugin-tmdb</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-plugin-fanarttv</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -232,6 +237,7 @@
                     <classpathDependencyExcludes>
                         <classpathDependencyExclude>de.tiktak.kmm:${test-plugin.artifactId}</classpathDependencyExclude>
                         <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-tmdb</classpathDependencyExclude>
+                        <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-fanarttv</classpathDependencyExclude>
                     </classpathDependencyExcludes>
                     <systemPropertyVariables>
                         <kmm.test-plugins.directory>${test-plugins.directory}</kmm.test-plugins.directory>

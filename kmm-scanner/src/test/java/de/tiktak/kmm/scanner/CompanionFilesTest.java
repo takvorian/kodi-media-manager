@@ -57,6 +57,26 @@ class CompanionFilesTest {
     }
 
     @Test
+    void namesArtworkAfterTheMovieFile() {
+        var files = CompanionFiles.of(MOVIE_DIRECTORY.resolve("Heat (1995)-cd1.avi"), DiscFormat.FILE, 2);
+
+        assertThat(files.artworkFile("poster", "jpg")).isEqualTo(MOVIE_DIRECTORY.resolve("Heat (1995)-poster.jpg"));
+        assertThat(files.artworkCandidates("clearlogo")).containsExactly(
+                MOVIE_DIRECTORY.resolve("Heat (1995)-clearlogo.jpg"),
+                MOVIE_DIRECTORY.resolve("Heat (1995)-clearlogo.jpeg"),
+                MOVIE_DIRECTORY.resolve("Heat (1995)-clearlogo.png"));
+    }
+
+    @Test
+    void placesDiscArtworkInTheMovieDirectory() {
+        var dvd = CompanionFiles.of(MOVIE_DIRECTORY.resolve("VIDEO_TS").resolve("VIDEO_TS.IFO"), DiscFormat.DVD, 1);
+        var bluray = CompanionFiles.of(MOVIE_DIRECTORY.resolve("BDMV").resolve("index.bdmv"), DiscFormat.BLURAY, 1);
+
+        assertThat(dvd.artworkFile("poster", "jpg")).isEqualTo(MOVIE_DIRECTORY.resolve("poster.jpg"));
+        assertThat(bluray.artworkFile("fanart", "png")).isEqualTo(MOVIE_DIRECTORY.resolve("fanart.png"));
+    }
+
+    @Test
     void comparesByValue() {
         Path file = MOVIE_DIRECTORY.resolve("Heat.mkv");
 

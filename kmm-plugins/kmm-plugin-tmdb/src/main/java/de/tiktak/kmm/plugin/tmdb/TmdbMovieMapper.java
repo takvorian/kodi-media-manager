@@ -19,8 +19,7 @@ import tools.jackson.databind.JsonNode;
 @RequiredArgsConstructor
 class TmdbMovieMapper {
 
-    static final String IMDB = "imdb";
-    static final String TMDB = "tmdb";
+    private static final String SEARCH_POSTER_SIZE = "w185";
 
     private final TmdbSettings settings;
 
@@ -69,13 +68,13 @@ class TmdbMovieMapper {
 
     private static Map<String, String> uniqueIds(JsonNode movie) {
         Map<String, String> ids = new LinkedHashMap<>();
-        text(movie, "imdb_id").ifPresent(imdbId -> ids.put(IMDB, imdbId));
-        ids.put(TMDB, movie.path("id").asString());
+        text(movie, "imdb_id").ifPresent(imdbId -> ids.put(TmdbApi.IMDB, imdbId));
+        ids.put(TmdbApi.TMDB, movie.path("id").asString());
         return ids;
     }
 
     private URI posterUrl(String posterPath) {
-        return URI.create(settings.imageBaseUrl().toString().replaceAll("/+$", "") + posterPath);
+        return settings.imageUrl(SEARCH_POSTER_SIZE, posterPath);
     }
 
     private static Optional<LocalDate> releaseDate(JsonNode movie) {

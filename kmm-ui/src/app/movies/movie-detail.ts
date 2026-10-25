@@ -11,6 +11,7 @@ import { RouterLink } from '@angular/router';
 
 import { problemMessage } from '../shared/problem-message';
 import { MovieDetails } from './movie';
+import { MovieArtwork } from './movie-artwork';
 import { MAX_YEAR, MIN_YEAR, createMovieMetadataForm, toFormValue, toMetadata } from './movie-metadata-form';
 import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
 import { MovieService } from './movie.service';
@@ -27,6 +28,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MovieArtwork,
     MovieOnlineSearch,
   ],
   templateUrl: './movie-detail.html',

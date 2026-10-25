@@ -1,0 +1,70 @@
+@if (artwork.error()) {
+  <p class="error">Die Bilder konnten nicht geladen werden.</p>
+} @else if (artwork.hasValue()) {
+  <div class="tiles">
+    @for (item of artwork.value(); track item.type) {
+      <div class="tile" [class.selected]="selectedType() === item.type" [attr.data-type]="item.type">
+        <span class="tile-label">{{ labels[item.type] }}</span>
+        <div class="tile-image" [class]="'shape-' + item.type.toLowerCase()">
+          @if (item.exists) {
+            <img [src]="imageUrl(item)" [alt]="labels[item.type]" loading="lazy" />
+          } @else {
+            <span class="missing">fehlt</span>
+          }
+        </div>
+        <div class="tile-actions">
+          <button matButton type="button" class="change-button" (click)="select(item.type)">
+            {{ item.exists ? 'Ändern' : 'Suchen' }}
+          </button>
+          @if (item.exists) {
+            <button matButton type="button" class="remove-button" (click)="remove(item)">Löschen</button>
+          }
+        </div>
+      </div>
+    }
+  </div>
+
+  @let type = selectedType();
+  @if (type) {
+    <section class="selection" aria-live="polite">
+      <div class="selection-header">
+        <h3>{{ labels[type] }} auswählen</h3>
+        <button matButton type="button" class="close-button" (click)="closeSelection()">Schließen</button>
+      </div>
+      @if (candidatesError()) {
+        <p class="error">{{ candidatesError() }}</p>
+      } @else if (candidates(); as result) {
+        @for (warning of result.warnings; track warning) {
+          <p class="warning">{{ warning }}</p>
+        }
+        @if (result.candidates.length === 0) {
+          <p class="hint no-candidates">Keine Bilder gefunden.</p>
+        } @else {
+          <div class="candidates" [class]="'shape-' + type.toLowerCase()">
+            @for (candidate of result.candidates; track candidate.url) {
+              <button
+                type="button"
+                class="candidate"
+                [disabled]="busy()"
+                (click)="apply(candidate)"
+                [title]="'Von ' + candidate.scraperName + ' übernehmen'"
+              >
+                <img [src]="candidate.previewUrl" alt="" loading="lazy" />
+                <span class="candidate-meta">
+                  {{ candidate.scraperName }} · {{ languageLabel(candidate) }}
+                  @if (candidate.width && candidate.height) {
+                    · {{ candidate.width }}×{{ candidate.height }}
+                  }
+                </span>
+              </button>
+            }
+          </div>
+        }
+      } @else {
+        <p class="hint loading-candidates">Suche Bilder bei allen Anbietern …</p>
+      }
+    </section>
+  }
+} @else {
+  <p class="hint">Lade Bilder …</p>
+}

@@ -1,0 +1,14 @@
+{
+  "id": 949,
+  "posters": [
+    {"file_path": "/poster-de.jpg", "width": 1000, "height": 1500, "iso_639_1": "de", "vote_average": 5.4},
+    {"file_path": "/poster-en.jpg", "width": 2000, "height": 3000, "iso_639_1": "en", "vote_average": 5.9}
+  ],
+  "backdrops": [
+    {"file_path": "/backdrop.jpg", "width": 3840, "height": 2160, "iso_639_1": null, "vote_average": 6.1}
+  ],
+  "logos": [
+    {"file_path": "/logo.png", "width": 800, "height": 310, "iso_639_1": "en", "vote_average": 0},
+    {"file_path": "/logo.svg", "width": 800, "height": 310, "iso_639_1": "en", "vote_average": 0}
+  ]
+}

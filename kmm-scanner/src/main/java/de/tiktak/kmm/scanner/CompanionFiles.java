@@ -17,6 +17,9 @@ import lombok.ToString;
  * <li>Blu-ray-Ordner → {@code BDMV/index.nfo}</li>
  * </ul>
  * Kodi akzeptiert außerdem eine {@code movie.nfo} im Filmordner; sie wird beim Lesen berücksichtigt.
+ * <p>
+ * Bilder heißen {@code <basisname>-poster.jpg}, {@code -fanart.jpg} usw.; bei DVD- und Blu-ray-Ordnern
+ * liegen sie als {@code poster.jpg} usw. im Filmordner, wo Kodi sie bei Disc-Strukturen sucht.
  */
 @EqualsAndHashCode
 @ToString
@@ -24,14 +27,19 @@ public final class CompanionFiles {
 
     static final String NFO_EXTENSION = ".nfo";
     static final String FOLDER_NFO = "movie.nfo";
+    /** Bildformate, die Kodi als lokales Artwork liest. */
+    static final List<String> ARTWORK_EXTENSIONS = List.of("jpg", "jpeg", "png");
     private static final char EXTENSION_SEPARATOR = '.';
+    private static final char ARTWORK_SEPARATOR = '-';
 
     private final Path base;
     private final Path movieDirectory;
+    private final boolean disc;
 
-    private CompanionFiles(Path base, Path movieDirectory) {
+    private CompanionFiles(Path base, Path movieDirectory, boolean disc) {
         this.base = base;
         this.movieDirectory = movieDirectory;
+        this.disc = disc;
     }
 
     /**
@@ -44,8 +52,9 @@ public final class CompanionFiles {
         Objects.requireNonNull(format, "format must not be null");
         Path directory = mainFile.toAbsolutePath().normalize().getParent();
         String baseName = baseName(mainFile, partCount > 1);
-        Path movieDirectory = format == DiscFormat.FILE ? directory : directory.getParent();
-        return new CompanionFiles(directory.resolve(baseName), movieDirectory);
+        boolean disc = format != DiscFormat.FILE;
+        Path movieDirectory = disc ? directory.getParent() : directory;
+        return new CompanionFiles(directory.resolve(baseName), movieDirectory, disc);
     }
 
     /** Die NFO, die KMM neu anlegt. */
@@ -56,6 +65,22 @@ public final class CompanionFiles {
     /** Mögliche vorhandene NFOs in der Reihenfolge, in der sie gelesen werden. */
     public List<Path> nfoCandidates() {
         return List.of(nfoFile(), movieDirectory.resolve(FOLDER_NFO));
+    }
+
+    /**
+     * Datei, unter der ein Bild gespeichert wird.
+     *
+     * @param kodiName  Kodi-Bezeichnung der Bildart, z. B. {@code poster}, {@code clearlogo}
+     * @param extension Dateiendung ohne Punkt, z. B. {@code jpg}
+     */
+    public Path artworkFile(String kodiName, String extension) {
+        String fileName = kodiName + EXTENSION_SEPARATOR + extension;
+        return disc ? movieDirectory.resolve(fileName) : withSuffix(ARTWORK_SEPARATOR + fileName);
+    }
+
+    /** Alle Dateien, unter denen ein vorhandenes Bild dieser Art liegen kann. */
+    public List<Path> artworkCandidates(String kodiName) {
+        return ARTWORK_EXTENSIONS.stream().map(extension -> artworkFile(kodiName, extension)).toList();
     }
 
     private Path withSuffix(String suffix) {

@@ -13,7 +13,7 @@ import de.tiktak.kmm.plugin.api.PluginContext;
  * @param certificationCountry Land, dessen Altersfreigabe übernommen wird, z. B. {@code DE}
  * @param certificationPrefix  Präfix der Altersfreigabe in der NFO, z. B. {@code FSK }
  * @param baseUrl              Basis-URL der TMDB-API
- * @param imageBaseUrl         Basis-URL für Vorschaubilder
+ * @param imageHost            Basis-URL der TMDB-Bilder; die Größe (z. B. {@code w185}) wird angehängt
  */
 record TmdbSettings(
         String apiKey,
@@ -21,20 +21,21 @@ record TmdbSettings(
         String certificationCountry,
         String certificationPrefix,
         URI baseUrl,
-        URI imageBaseUrl) {
+        URI imageHost) {
 
     static final String API_KEY = "api-key";
     static final String LANGUAGE = "language";
     static final String CERTIFICATION_COUNTRY = "certification-country";
     static final String CERTIFICATION_PREFIX = "certification-prefix";
     static final String BASE_URL = "base-url";
-    static final String IMAGE_BASE_URL = "image-base-url";
+    static final String IMAGE_HOST = "image-host";
 
     static final String DEFAULT_LANGUAGE = "de-DE";
     static final String DEFAULT_CERTIFICATION_COUNTRY = "DE";
     static final String DEFAULT_CERTIFICATION_PREFIX = "FSK ";
     static final String DEFAULT_BASE_URL = "https://api.themoviedb.org/3";
-    static final String DEFAULT_IMAGE_BASE_URL = "https://image.tmdb.org/t/p/w185";
+    static final String DEFAULT_IMAGE_HOST = "https://image.tmdb.org/t/p";
+    private static final char LANGUAGE_REGION_SEPARATOR = '-';
 
     static TmdbSettings from(PluginContext context) {
         return new TmdbSettings(
@@ -43,11 +44,22 @@ record TmdbSettings(
                 setting(context, CERTIFICATION_COUNTRY, DEFAULT_CERTIFICATION_COUNTRY),
                 context.setting(CERTIFICATION_PREFIX).orElse(DEFAULT_CERTIFICATION_PREFIX),
                 URI.create(setting(context, BASE_URL, DEFAULT_BASE_URL)),
-                URI.create(setting(context, IMAGE_BASE_URL, DEFAULT_IMAGE_BASE_URL)));
+                URI.create(setting(context, IMAGE_HOST, DEFAULT_IMAGE_HOST)));
     }
 
     boolean hasApiKey() {
         return !apiKey.isEmpty();
+    }
+
+    /** Sprache ohne Region für Bilder, z. B. {@code de} aus {@code de-DE}. */
+    String imageLanguage() {
+        int separator = language.indexOf(LANGUAGE_REGION_SEPARATOR);
+        return separator > 0 ? language.substring(0, separator) : language;
+    }
+
+    /** URL eines Bildes in einer TMDB-Größe, z. B. {@code w185} oder {@code original}. */
+    URI imageUrl(String size, String filePath) {
+        return URI.create(imageHost.toString().replaceAll("/+$", "") + "/" + size + filePath);
     }
 
     private static String setting(PluginContext context, String name, String defaultValue) {

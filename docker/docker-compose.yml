@@ -35,6 +35,8 @@ services:
       TZ: ${TZ:-Europe/Berlin}
       KMM_TMDB_API_KEY: ${KMM_TMDB_API_KEY:-}
       KMM_TMDB_LANGUAGE: ${KMM_TMDB_LANGUAGE:-de-DE}
+      KMM_FANARTTV_API_KEY: ${KMM_FANARTTV_API_KEY:-}
+      KMM_ARTWORK_LANGUAGE: ${KMM_ARTWORK_LANGUAGE:-de}
     ports:
       - "${KMM_PORT:-8080}:8080"
     volumes:

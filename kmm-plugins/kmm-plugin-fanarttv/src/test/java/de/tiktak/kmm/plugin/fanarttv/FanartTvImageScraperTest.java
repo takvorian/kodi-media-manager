@@ -1,0 +1,169 @@
+package de.tiktak.kmm.plugin.fanarttv;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatIllegalStateException;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.assertj.core.api.Assertions.tuple;
+
+import java.net.URI;
+import java.util.Map;
+
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
+
+import de.tiktak.kmm.plugin.api.ImageCandidate;
+import de.tiktak.kmm.plugin.api.ImageType;
+import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.ScraperException;
+
+class FanartTvImageScraperTest {
+
+    private static final String API_KEY = "fanart-project-key";
+
+    private FakeFanartTvServer fanart;
+    private FanartTvImageScraper scraper;
+
+    @BeforeEach
+    void setUp() {
+        fanart = new FakeFanartTvServer().respond("/v3/movies/949", "movie-949.json")
+                .respond("/v3/movies/tt0113277", "movie-949.json");
+        scraper = initialized(new TestPluginContext().with("api-key", API_KEY));
+    }
+
+    @AfterEach
+    void tearDown() {
+        fanart.close();
+    }
+
+    @Test
+    void describesItself() {
+        assertThat(scraper.id()).isEqualTo("fanarttv");
+        assertThat(scraper.displayName()).isEqualTo("fanart.tv");
+        assertThat(scraper.supportedMediaTypes()).containsExactly(MediaType.MOVIE);
+        assertThat(scraper.missingConfiguration()).isEmpty();
+    }
+
+    @Test
+    void mapsAllImageKindsToKodiTypes() {
+        var images = scraper.findImages(request(Map.of("tmdb", "949")));
+
+        assertThat(images)
+                .extracting(ImageCandidate::type, ImageCandidate::language, ImageCandidate::rating)
+                .containsExactly(
+                        tuple(ImageType.POSTER, "de", 3.0),
+                        tuple(ImageType.FANART, null, 4.0),
+                        tuple(ImageType.CLEARLOGO, "en", 7.0),
+                        tuple(ImageType.CLEARLOGO, "de", 2.0),
+                        tuple(ImageType.CLEARLOGO, "en", 1.0),
+                        tuple(ImageType.CLEARART, "en", 0.0),
+                        tuple(ImageType.DISCART, "en", null),
+                        tuple(ImageType.BANNER, "en", 1.0),
+                        tuple(ImageType.LANDSCAPE, "de", 2.0));
+    }
+
+    @Test
+    void derivesPreviewFromImageUrl() {
+        var logo = scraper.findImages(request(Map.of("tmdb", "949"))).get(2);
+
+        assertThat(logo.url()).isEqualTo(URI.create("https://assets.fanart.tv/fanart/movies/949/hdmovielogo/heat-1.png"));
+        assertThat(logo.previewUrl())
+                .isEqualTo(URI.create("https://assets.fanart.tv/preview/movies/949/hdmovielogo/heat-1.png"));
+    }
+
+    @Test
+    void sendsApiKeyAndOptionalClientKey() {
+        scraper = initialized(new TestPluginContext().with("api-key", API_KEY).with("client-key", "persoenlich"));
+
+        scraper.findImages(request(Map.of("tmdb", "949")));
+
+        assertThat(fanart.requests().getFirst().query()).isEqualTo("api_key=" + API_KEY + "&client_key=persoenlich");
+        assertThat(fanart.requests().getFirst().userAgent()).isEqualTo(TestPluginContext.USER_AGENT);
+    }
+
+    @Test
+    void prefersTmdbIdAndFallsBackToImdbId() {
+        scraper.findImages(request(Map.of("tmdb", "949", "imdb", "tt0113277")));
+        scraper.findImages(request(Map.of("imdb", "tt0113277")));
+
+        assertThat(fanart.requests()).extracting(FakeFanartTvServer.HttpExchangeRecord::path)
+                .containsExactly("/v3/movies/949", "/v3/movies/tt0113277");
+    }
+
+    @Test
+    void returnsNothingWithoutUsableIdOrForUnknownMovie() {
+        assertThat(scraper.findImages(request(Map.of()))).isEmpty();
+        assertThat(scraper.findImages(request(Map.of("tmdb", "../x")))).isEmpty();
+        assertThat(scraper.findImages(request(Map.of("tmdb", "404")))).isEmpty();
+        assertThat(fanart.requests()).hasSize(1);
+    }
+
+    @Test
+    void returnsNothingForUnsupportedMediaType() {
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "Lost", null, Map.of("tmdb", "1")))).isEmpty();
+    }
+
+    @Test
+    void reportsMissingApiKey() {
+        scraper = initialized(new TestPluginContext().with("api-key", " "));
+
+        assertThat(scraper.missingConfiguration()).contains(FanartTvImageScraper.MISSING_API_KEY);
+        assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
+                .isInstanceOf(ScraperException.class)
+                .hasMessageContaining("KMM_FANARTTV_API_KEY");
+    }
+
+    @Test
+    void rejectsUseBeforeInitialization() {
+        var uninitialized = new FanartTvImageScraper();
+
+        assertThat(uninitialized.missingConfiguration()).isPresent();
+        assertThatIllegalStateException().isThrownBy(() -> uninitialized.findImages(request(Map.of("tmdb", "949"))));
+    }
+
+    @ParameterizedTest(name = "HTTP {0}")
+    @CsvSource(delimiter = '|', value = {"401 | API-Key", "403 | API-Key", "500 | Fehler 500"})
+    void translatesErrorResponses(int status, String expectedMessage) {
+        fanart.respondWithStatus("/v3/movies/949", status);
+
+        assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
+                .isInstanceOf(ScraperException.class)
+                .hasMessageContaining(expectedMessage);
+    }
+
+    @Test
+    void reportsUnexpectedResponse() {
+        fanart.respond("/v3/movies/949", "invalid.json");
+
+        assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
+                .isInstanceOf(ScraperException.class)
+                .hasMessageContaining("unerwartete Antwort");
+    }
+
+    @Test
+    void reportsUnreachableServer() {
+        URI unreachable = fanart.baseUrl();
+        fanart.close();
+        scraper = initialized(new TestPluginContext().with("api-key", API_KEY).with("base-url", unreachable.toString()));
+
+        assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
+                .isInstanceOf(ScraperException.class)
+                .hasMessageContaining("nicht erreichbar");
+    }
+
+    private FanartTvImageScraper initialized(TestPluginContext context) {
+        if (context.setting("base-url").isEmpty()) {
+            context.with("base-url", fanart.baseUrl().toString());
+        }
+        var fanartScraper = new FanartTvImageScraper();
+        fanartScraper.initialize(context);
+        return fanartScraper;
+    }
+
+    private static ScrapeRequest request(Map<String, String> uniqueIds) {
+        return new ScrapeRequest(MediaType.MOVIE, "Heat", 1995, uniqueIds);
+    }
+}

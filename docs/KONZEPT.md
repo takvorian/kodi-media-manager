@@ -35,6 +35,12 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 - Beim Speichern wird zuerst die NFO geschrieben (atomar über eine temporäre Datei); scheitert das, bleibt auch die Datenbank unverändert.
 - Ein erneuter Scan liest eine NFO nur ein, wenn sich ihre Änderungszeit geändert hat. Unlesbare NFOs werden gezählt und gemeldet, der Film bleibt erhalten.
 
+**Bild-Regeln (umgesetzt):**
+- Verwaltete Bildarten: Poster, Fanart, Clearlogo, Clearart, Disc, Banner, Landscape.
+- Dateinamen: `Film-poster.jpg`, `Film-clearlogo.png` …; bei DVD-/Blu-ray-Ordnern `poster.jpg` … im Filmordner. Ein neues Bild ersetzt Varianten mit anderer Endung.
+- Die Bildsuche fragt alle Bild-Scraper parallel über TMDB- bzw. IMDb-ID ab; Ausfälle einzelner Anbieter erscheinen als Hinweis. Sortierung: bevorzugte Sprache (Standard `de`), dann sprachneutral, Englisch, Rest; bei Fanart sprachneutrale (textlose) Bilder zuerst; innerhalb der Gruppen nach Beliebtheit.
+- Download nur über http(s), nur JPEG/PNG, höchstens 25 MB, atomar gespeichert.
+
 **Kernprinzip:** Die Wahrheit liegt im Dateisystem (NFO + Bilder neben der Mediendatei). Die Datenbank ist Index, Cache und Arbeitszustand und lässt sich per Rescan neu aufbauen. Deshalb ist die Wahl der Datenbank unkritisch.
 
 ---
@@ -109,11 +115,12 @@ kodi-media-manager/            groupId de.tiktak.kmm
 │                              Kodi-Namen für Begleitdateien (NFO, später Artwork)
 ├─ kmm-nfo                     Kodi-NFO lesen/schreiben (DOM, unbekannte Elemente bleiben erhalten, XXE-sicher)
 ├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite + Settings.xml), Pfad-Mapping
-├─ kmm-plugins/                mitgelieferte Plugins: kmm-plugin-tmdb; kmm-plugin-testdata nur für Tests
+├─ kmm-plugins/                mitgelieferte Plugins: kmm-plugin-tmdb (Metadaten + Bilder), kmm-plugin-fanarttv (Bilder);
+│                              kmm-plugin-testdata nur für Tests
 ├─ kmm-ui                      Angular-SPA → static/ im JAR
 ├─ kmm-app                     Spring Boot: REST, Security, Plugins, Persistenz, Profile
 └─ docker/                     Dockerfile, docker-compose.yml
-geplant: kmm-core, kmm-media, kmm-kodi; Scraper-Plugins tvdb, omdb, fanarttv
+geplant: kmm-core, kmm-media, kmm-kodi; Scraper-Plugins tvdb, omdb
 ```
 
 Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von `kmm-app` prüft Spring Modulith (`ModularityTests`).
@@ -157,7 +164,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
    2. NFO lesen/schreiben ✅ (`<dateiname>.nfo`, Kodi 19–21; Scan übernimmt NFO-Inhalte, Detailseite bearbeitet und schreibt sie zurück)
    3. Job-Framework + Fortschritt per SSE ✅ (Scan läuft als Hintergrund-Job, Abbruch möglich, Live-Fortschritt in der UI)
    4. TMDB-Plugin ✅ (API-Key aus `KMM_TMDB_API_KEY`; Online-Suche auf der Detailseite, Übernahme ins Formular)
-   5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen (`<dateiname>-poster.jpg` …)
+   5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen ✅ (`<dateiname>-poster.jpg` …, bei DVD/Blu-ray `poster.jpg` im Filmordner)
    - **2a. Ember-Migration I:** Filme, Sets, Personen, Genres, Artwork, Quellen und Settings, mit Dry-Run und Report.
 3. **Kodi-Integration:** JSON-RPC, Pfad-Mapping, Library-Update.
 4. **Serien:** TVDB/TMDB-TV, Staffeln/Episoden. Dazu **Ember-Migration II** (Serien, Stream-Details, restliche Settings, Kodi-Hosts, Scraper-Keys).

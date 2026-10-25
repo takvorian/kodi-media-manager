@@ -10,27 +10,38 @@ import org.junit.jupiter.api.Test;
 class ImageCandidateTest {
 
     private static final URI POSTER_URL = URI.create("https://image.example.org/poster.jpg");
+    private static final URI PREVIEW_URL = URI.create("https://image.example.org/preview/poster.jpg");
 
     @Test
-    void createsCandidateWithOptionalValuesMissing() {
-        var candidate = new ImageCandidate(ImageType.POSTER, POSTER_URL, null, null, null);
+    void usesFullImageAsPreviewWhenNoneIsGiven() {
+        var candidate = ImageCandidate.builder().type(ImageType.POSTER).url(POSTER_URL).build();
 
-        assertThat(candidate.type()).isEqualTo(ImageType.POSTER);
-        assertThat(candidate.url()).isEqualTo(POSTER_URL);
+        assertThat(candidate.previewUrl()).isEqualTo(POSTER_URL);
         assertThat(candidate.language()).isNull();
+        assertThat(candidate.rating()).isNull();
+    }
+
+    @Test
+    void keepsAllValues() {
+        var candidate = ImageCandidate.builder().type(ImageType.FANART).url(POSTER_URL).previewUrl(PREVIEW_URL)
+                .width(1920).height(1080).language("de").rating(7.5).build();
+
+        assertThat(candidate.previewUrl()).isEqualTo(PREVIEW_URL);
+        assertThat(candidate.width()).isEqualTo(1920);
+        assertThat(candidate.rating()).isEqualTo(7.5);
     }
 
     @Test
     void rejectsMissingType() {
         assertThatNullPointerException()
-                .isThrownBy(() -> new ImageCandidate(null, POSTER_URL, 1000, 1500, "de"))
+                .isThrownBy(() -> ImageCandidate.builder().url(POSTER_URL).build())
                 .withMessageContaining("type");
     }
 
     @Test
     void rejectsMissingUrl() {
         assertThatNullPointerException()
-                .isThrownBy(() -> new ImageCandidate(ImageType.FANART, null, 1920, 1080, null))
+                .isThrownBy(() -> ImageCandidate.builder().type(ImageType.FANART).build())
                 .withMessageContaining("url");
     }
 }

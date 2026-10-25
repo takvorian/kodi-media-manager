@@ -71,7 +71,19 @@ describe('MovieDetail', () => {
   async function load(details: MovieDetails): Promise<void> {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5` }).flush(details);
+    // Der Bild-Bereich lädt seine Daten beim Rendern selbst; hier genügt eine leere Liste.
+    await renderPendingChanges();
+    httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5/artwork` }).flush([]);
     await fixture.whenStable();
+  }
+
+  /** Rendert, bis die gerade beantwortete Anfrage im Template angekommen ist. */
+  async function renderPendingChanges(): Promise<void> {
+    const renderPasses = 2;
+    for (let pass = 0; pass < renderPasses; pass++) {
+      await Promise.resolve();
+      fixture.detectChanges();
+    }
   }
 
   async function type(name: string, value: string): Promise<void> {
