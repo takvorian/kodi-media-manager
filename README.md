@@ -3,7 +3,7 @@
 Medienverwaltung für [Kodi](https://kodi.tv) als Java-Nachfolger von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper).
 KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter H2-Datenbank) und bringt eine Weboberfläche mit.
 
-> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
+> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen sowie alle Filme einer Quelle automatisch scrapen (nur fehlende Daten) funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
 
 ## Technik
 
@@ -90,6 +90,7 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/system/info`
 - `GET /api/v1/sources`, `POST /api/v1/sources`, `DELETE /api/v1/sources/{id}`
 - `POST /api/v1/sources/{id}/scan` → `202 Accepted` mit dem gestarteten Job
+- `POST /api/v1/sources/{id}/auto-scrape` → `202 Accepted`; ergänzt fehlende Metadaten und Bilder aller Filme der Quelle
 - `GET /api/v1/jobs`, `GET /api/v1/jobs/{id}`, `POST /api/v1/jobs/{id}/cancel`
 - `GET /api/v1/jobs/events` (Server-Sent Events, Ereignis `job`)
 - `GET /api/v1/movies?search=…&page=…&size=…`

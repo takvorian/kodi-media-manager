@@ -38,3 +38,21 @@ export interface ScanResult {
   readonly unchanged: number;
   readonly nfoErrors: number;
 }
+
+/** Präfix des Job-Schlüssels beim automatischen Scrapen; muss zu AutoScrapeService.JOB_KEY_PREFIX passen. */
+export const AUTO_SCRAPE_JOB_KEY_PREFIX = 'auto-scrape:';
+
+export function autoScrapeJobKey(sourceId: number): string {
+  return `${AUTO_SCRAPE_JOB_KEY_PREFIX}${sourceId}`;
+}
+
+/** Ergebnis eines erfolgreichen Scrape-Jobs; die Listen sind serverseitig gekürzt. */
+export interface AutoScrapeResult {
+  readonly movies: number;
+  readonly scraped: number;
+  readonly unmatched: number;
+  readonly imagesSaved: number;
+  readonly unmatchedTitles: readonly string[];
+  readonly failures: readonly string[];
+  readonly warnings: readonly string[];
+}

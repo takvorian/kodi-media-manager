@@ -61,4 +61,14 @@ describe('MediaSourceService', () => {
 
     expect(received).toEqual(job);
   });
+
+  it('starts an auto-scrape job', () => {
+    const job = { id: 'job-2', key: 'auto-scrape:7', status: 'RUNNING' } as Job;
+    let received: Job | undefined;
+
+    service.autoScrape(7).subscribe((started) => (received = started));
+    httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/7/auto-scrape` }).flush(job);
+
+    expect(received).toEqual(job);
+  });
 });

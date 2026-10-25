@@ -38,19 +38,19 @@ class ImageDownloader {
 
     DownloadedImage download(URI url) {
         if (url.getScheme() == null || !ALLOWED_SCHEMES.contains(url.getScheme().toLowerCase(Locale.ROOT))) {
-            throw ArtworkProblemException.invalidUrl(url.toString());
+            throw ImageDownloadException.invalidUrl(url.toString());
         }
         HttpResponse<InputStream> response = send(url);
         try (InputStream body = response.body()) {
             if (response.statusCode() != OK) {
-                throw ArtworkProblemException.downloadFailed(url, "HTTP " + response.statusCode(), null);
+                throw ImageDownloadException.downloadFailed(url, "HTTP " + response.statusCode(), null);
             }
             String contentType = contentType(response);
             String extension = Optional.ofNullable(EXTENSIONS.get(contentType))
-                    .orElseThrow(() -> ArtworkProblemException.notAnImage(url, contentType));
+                    .orElseThrow(() -> ImageDownloadException.notAnImage(url, contentType));
             return new DownloadedImage(readLimited(body, url), extension);
         } catch (IOException e) {
-            throw ArtworkProblemException.downloadFailed(url, e.getMessage(), e);
+            throw ImageDownloadException.downloadFailed(url, e.getMessage(), e);
         }
     }
 
@@ -59,10 +59,10 @@ class ImageDownloader {
             HttpRequest request = HttpRequest.newBuilder(url).timeout(TIMEOUT).GET().build();
             return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (IOException e) {
-            throw ArtworkProblemException.downloadFailed(url, e.getMessage(), e);
+            throw ImageDownloadException.downloadFailed(url, e.getMessage(), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw ArtworkProblemException.downloadFailed(url, "Download unterbrochen", e);
+            throw ImageDownloadException.downloadFailed(url, "Download unterbrochen", e);
         }
     }
 
@@ -70,7 +70,7 @@ class ImageDownloader {
         long maxBytes = properties.maxDownloadSize().toBytes();
         byte[] content = body.readNBytes(Math.toIntExact(maxBytes + 1));
         if (content.length > maxBytes) {
-            throw ArtworkProblemException.tooLarge(url, maxBytes);
+            throw ImageDownloadException.tooLarge(url, maxBytes);
         }
         return content;
     }

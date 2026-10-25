@@ -4,8 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
+import { Job } from '../jobs/job';
 import { CONFIRM } from '../shared/confirm';
-import { MediaSource } from './media-source';
+import { AutoScrapeResult, MediaSource } from './media-source';
 import { SOURCES_URL } from './media-source.service';
 import { SourceList } from './source-list';
 
@@ -88,10 +89,11 @@ describe('SourceList', () => {
     ]);
   });
 
-  it('offers scanning only for movie sources', async () => {
+  it('offers scanning and scraping only for movie sources', async () => {
     await loadSources([films, series]);
 
     expect(element().querySelectorAll('.scan-button')).toHaveLength(1);
+    expect(element().querySelectorAll('.scrape-button')).toHaveLength(1);
   });
 
   it('shows a hint without sources', async () => {
@@ -152,7 +154,7 @@ describe('SourceList', () => {
     fixture.detectChanges();
 
     expect(element().querySelector('.scan-button')).toBeNull();
-    expect(element().querySelector('.scan-message')?.textContent).toContain('NFOs werden geprüft (25 %)');
+    expect(element().querySelector('.job-message')?.textContent).toContain('NFOs werden geprüft (25 %)');
     expect(button('.delete-button').disabled).toBe(true);
   });
 
@@ -258,5 +260,113 @@ describe('SourceList', () => {
     await fixture.whenStable();
 
     expect(snackBarMessages).toEqual(['Quelle nicht gefunden']);
+  });
+
+  describe('auto-scrape', () => {
+    const scrapeJob = (overrides: Partial<Job> = {}): Job =>
+      job({ id: 'job-9', key: 'auto-scrape:1', title: 'Scrapen „Filme“', ...overrides });
+    const result: AutoScrapeResult = {
+      movies: 4,
+      scraped: 1,
+      unmatched: 1,
+      imagesSaved: 9,
+      unmatchedTitles: ['Unbekannt'],
+      failures: ['Kaputt: TMDB ist nicht erreichbar'],
+      warnings: ['fanart.tv: Key fehlt'],
+    };
+
+    function texts(selector: string): (string | undefined)[] {
+      return Array.from(element().querySelectorAll(selector)).map((item) => item.textContent?.trim());
+    }
+
+    it('starts scraping and shows its progress instead of the action buttons', async () => {
+      await loadSources([films]);
+
+      button('.scrape-button').click();
+      httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/1/auto-scrape` }).flush(scrapeJob());
+      events.emit(scrapeJob({ done: 1, total: 4, message: 'Heat' }));
+      fixture.detectChanges();
+
+      expect(element().querySelector('.scrape-button')).toBeNull();
+      expect(element().querySelector('.scan-button')).toBeNull();
+      expect(element().querySelector('.job-message')?.textContent).toContain('Heat (25 %)');
+    });
+
+    it('cancels a running scrape', async () => {
+      await loadSources([films]);
+      events.emit(scrapeJob());
+      fixture.detectChanges();
+
+      button('.cancel-button').click();
+
+      httpTesting.expectOne({ method: 'POST', url: '/api/v1/jobs/job-9/cancel' }).flush(scrapeJob());
+    });
+
+    it('summarizes the result and lists what still needs attention', async () => {
+      await loadSources([films]);
+      events.emit(scrapeJob());
+
+      events.emit(scrapeJob({ status: 'SUCCEEDED', result }));
+      fixture.detectChanges();
+
+      expect(snackBarMessages).toEqual([
+        'Scrapen „Filme“ abgeschlossen: 4 Filme, 1 neu zugeordnet, 1 ohne Treffer, 9 Bilder gespeichert, 1 Fehler.',
+      ]);
+      expect(texts('.unmatched-titles li')).toEqual(['Unbekannt']);
+      expect(texts('.failures li')).toEqual(['Kaputt: TMDB ist nicht erreichbar']);
+      expect(texts('.warnings li')).toEqual(['fanart.tv: Key fehlt']);
+    });
+
+    it('closes the report', async () => {
+      await loadSources([films]);
+      events.emit(scrapeJob());
+      events.emit(scrapeJob({ status: 'SUCCEEDED', result }));
+      fixture.detectChanges();
+
+      button('.close-report-button').click();
+      fixture.detectChanges();
+
+      expect(element().querySelector('.scrape-report')).toBeNull();
+    });
+
+    it('shows no report when everything was done', async () => {
+      await loadSources([films]);
+      events.emit(scrapeJob());
+
+      events.emit(
+        scrapeJob({
+          status: 'SUCCEEDED',
+          result: { ...result, unmatched: 0, unmatchedTitles: [], failures: [], warnings: [] },
+        }),
+      );
+      fixture.detectChanges();
+
+      expect(snackBarMessages).toEqual([
+        'Scrapen „Filme“ abgeschlossen: 4 Filme, 1 neu zugeordnet, 0 ohne Treffer, 9 Bilder gespeichert.',
+      ]);
+      expect(element().querySelector('.scrape-report')).toBeNull();
+    });
+
+    it('reports failed scrapes without a report', async () => {
+      await loadSources([films]);
+      events.emit(scrapeJob());
+
+      events.emit(scrapeJob({ status: 'FAILED', message: 'Quelle fehlt' }));
+      fixture.detectChanges();
+
+      expect(snackBarMessages).toEqual(['Scrapen „Filme“ fehlgeschlagen: Quelle fehlt']);
+      expect(element().querySelector('.scrape-report')).toBeNull();
+    });
+
+    it('reports a scrape that cannot be started', async () => {
+      await loadSources([films]);
+
+      button('.scrape-button').click();
+      httpTesting
+        .expectOne({ method: 'POST', url: `${SOURCES_URL}/1/auto-scrape` })
+        .flush({ detail: 'Läuft bereits' }, { status: 409, statusText: 'Conflict' });
+
+      expect(snackBarMessages).toEqual(['Läuft bereits']);
+    });
   });
 });

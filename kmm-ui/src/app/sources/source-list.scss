@@ -27,7 +27,7 @@
   white-space: nowrap;
 }
 
-.scan-progress {
+.job-progress {
   display: inline-flex;
   flex-direction: column;
   gap: 2px;
@@ -36,11 +36,26 @@
   text-align: left;
 }
 
-.scan-message {
+.job-message {
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.scrape-report {
+  margin-top: 24px;
+
+  h3 {
+    margin: 16px 0 4px;
+    font: var(--mat-sys-title-small);
+  }
+
+  ul {
+    margin: 0;
+    max-height: 240px;
+    overflow-y: auto;
+  }
 }
 
 .error {

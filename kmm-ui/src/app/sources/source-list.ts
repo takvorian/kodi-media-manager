@@ -10,16 +10,32 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
-import { filter } from 'rxjs';
+import { Observable, filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
-import { MediaSource, MediaType, SCAN_JOB_KEY_PREFIX, SOURCE_MEDIA_TYPES, ScanResult, scanJobKey } from './media-source';
+import {
+  AUTO_SCRAPE_JOB_KEY_PREFIX,
+  AutoScrapeResult,
+  MediaSource,
+  MediaType,
+  SCAN_JOB_KEY_PREFIX,
+  SOURCE_MEDIA_TYPES,
+  ScanResult,
+  autoScrapeJobKey,
+  scanJobKey,
+} from './media-source';
 import { MediaSourceService } from './media-source.service';
 
 const SNACKBAR_DURATION_MS = 5000;
+
+/** Bericht des letzten Scrape-Laufs, solange er Titel ohne Treffer, Fehler oder Hinweise enthält. */
+export interface ScrapeReport {
+  readonly title: string;
+  readonly result: AutoScrapeResult;
+}
 
 @Component({
   selector: 'app-source-list',
@@ -47,6 +63,7 @@ export class SourceList {
   protected readonly columns = ['name', 'path', 'mediaType', 'lastScannedAt', 'actions'];
   protected readonly sources = rxResource({ stream: () => this.sourceService.findAll() });
   protected readonly saving = signal(false);
+  protected readonly scrapeReport = signal<ScrapeReport | null>(null);
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: ['', Validators.required],
@@ -62,18 +79,25 @@ export class SourceList {
         takeUntilDestroyed(),
       )
       .subscribe((job) => this.onScanFinished(job));
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key.startsWith(AUTO_SCRAPE_JOB_KEY_PREFIX)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => this.onAutoScrapeFinished(job));
   }
 
   protected mediaTypeLabel(mediaType: MediaType): string {
     return this.mediaTypes.find((type) => type.value === mediaType)?.label ?? mediaType;
   }
 
-  protected isScannable(source: MediaSource): boolean {
+  protected hasMovies(source: MediaSource): boolean {
     return source.mediaType === 'MOVIE';
   }
 
-  protected scanJob(source: MediaSource): Job | undefined {
-    return this.jobStore.runningJob(scanJobKey(source.id));
+  /** Laufender Scan oder laufendes Scrapen der Quelle; beide schließen sich in der Oberfläche aus. */
+  protected runningJob(source: MediaSource): Job | undefined {
+    return this.jobStore.runningJob(scanJobKey(source.id)) ?? this.jobStore.runningJob(autoScrapeJobKey(source.id));
   }
 
   protected percent(job: Job): number | null {
@@ -100,13 +124,18 @@ export class SourceList {
   }
 
   protected scan(source: MediaSource): void {
-    this.sourceService.scan(source.id).subscribe({
-      next: (job) => this.jobStore.update(job),
-      error: (error: unknown) => this.notify(problemMessage(error)),
-    });
+    this.track(this.sourceService.scan(source.id));
   }
 
-  protected cancelScan(job: Job): void {
+  protected autoScrape(source: MediaSource): void {
+    this.track(this.sourceService.autoScrape(source.id));
+  }
+
+  protected closeScrapeReport(): void {
+    this.scrapeReport.set(null);
+  }
+
+  protected cancelJob(job: Job): void {
     this.jobStore.cancel(job.id).subscribe({
       next: (updated) => this.jobStore.update(updated),
       error: (error: unknown) => this.notify(problemMessage(error)),
@@ -126,6 +155,19 @@ export class SourceList {
     });
   }
 
+  private track(start: Observable<Job>): void {
+    start.subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  private onAutoScrapeFinished(job: Job): void {
+    this.notify(autoScrapeSummary(job));
+    const result = job.status === 'SUCCEEDED' ? (job.result as AutoScrapeResult) : null;
+    this.scrapeReport.set(result && hasDetails(result) ? { title: job.title, result } : null);
+  }
+
   private onScanFinished(job: Job): void {
     this.notify(scanSummary(job));
     this.sources.reload();
@@ -137,18 +179,35 @@ export class SourceList {
 }
 
 function scanSummary(job: Job): string {
-  switch (job.status) {
-    case 'SUCCEEDED': {
-      const result = job.result as ScanResult;
-      const errors = result.nfoErrors > 0 ? `, ${result.nfoErrors} NFO-Fehler` : '';
-      return (
-        `${job.title} abgeschlossen: ${result.added} neu, ${result.updated} aktualisiert, ` +
-        `${result.removed} entfernt, ${result.unchanged} unverändert${errors}.`
-      );
-    }
-    case 'CANCELLED':
-      return `${job.title} abgebrochen.`;
-    default:
-      return `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+  if (job.status === 'SUCCEEDED') {
+    const result = job.result as ScanResult;
+    const errors = result.nfoErrors > 0 ? `, ${result.nfoErrors} NFO-Fehler` : '';
+    return (
+      `${job.title} abgeschlossen: ${result.added} neu, ${result.updated} aktualisiert, ` +
+      `${result.removed} entfernt, ${result.unchanged} unverändert${errors}.`
+    );
   }
+  return unsuccessfulSummary(job);
+}
+
+function autoScrapeSummary(job: Job): string {
+  if (job.status === 'SUCCEEDED') {
+    const result = job.result as AutoScrapeResult;
+    const errors = result.failures.length > 0 ? `, ${result.failures.length} Fehler` : '';
+    return (
+      `${job.title} abgeschlossen: ${result.movies} Filme, ${result.scraped} neu zugeordnet, ` +
+      `${result.unmatched} ohne Treffer, ${result.imagesSaved} Bilder gespeichert${errors}.`
+    );
+  }
+  return unsuccessfulSummary(job);
+}
+
+function hasDetails(result: AutoScrapeResult): boolean {
+  return result.unmatchedTitles.length + result.failures.length + result.warnings.length > 0;
+}
+
+function unsuccessfulSummary(job: Job): string {
+  return job.status === 'CANCELLED'
+    ? `${job.title} abgebrochen.`
+    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
 }

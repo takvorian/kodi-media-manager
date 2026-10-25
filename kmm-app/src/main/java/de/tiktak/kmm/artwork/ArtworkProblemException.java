@@ -1,6 +1,5 @@
 package de.tiktak.kmm.artwork;
 
-import java.net.URI;
 import java.nio.file.Path;
 
 import org.springframework.http.HttpStatus;
@@ -13,9 +12,7 @@ import de.tiktak.kmm.plugin.api.ImageType;
  */
 public class ArtworkProblemException extends ErrorResponseException {
 
-    private static final long BYTES_PER_MEGABYTE = 1024L * 1024L;
-
-    private ArtworkProblemException(HttpStatus status, String title, String detail, Throwable cause) {
+    protected ArtworkProblemException(HttpStatus status, String title, String detail, Throwable cause) {
         super(status, cause);
         getBody().setTitle(title);
         getBody().setDetail(detail);
@@ -35,26 +32,6 @@ public class ArtworkProblemException extends ErrorResponseException {
     static ArtworkProblemException imageMissing(ImageType type) {
         return new ArtworkProblemException(HttpStatus.NOT_FOUND, "Kein Bild vorhanden",
                 "Für diesen Film gibt es kein Bild der Art %s.".formatted(type), null);
-    }
-
-    static ArtworkProblemException invalidUrl(String url) {
-        return new ArtworkProblemException(HttpStatus.BAD_REQUEST, "Ungültige Bildadresse",
-                "'%s' ist keine gültige http(s)-Adresse.".formatted(url), null);
-    }
-
-    static ArtworkProblemException downloadFailed(URI url, String reason, Throwable cause) {
-        return new ArtworkProblemException(HttpStatus.BAD_GATEWAY, "Bild konnte nicht geladen werden",
-                "%s: %s".formatted(url, reason), cause);
-    }
-
-    static ArtworkProblemException notAnImage(URI url, String contentType) {
-        return new ArtworkProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein unterstütztes Bild",
-                "%s liefert '%s' statt JPEG oder PNG.".formatted(url, contentType), null);
-    }
-
-    static ArtworkProblemException tooLarge(URI url, long maxBytes) {
-        return new ArtworkProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Bild zu groß",
-                "%s ist größer als %d MB.".formatted(url, maxBytes / BYTES_PER_MEGABYTE), null);
     }
 
     static ArtworkProblemException unwritable(Path file, Throwable cause) {

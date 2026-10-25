@@ -7,6 +7,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -141,6 +142,67 @@ class ArtworkServiceTest {
                         exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_REQUEST));
         verify(downloader, never()).download(any());
         verify(candidateFinder, never()).find(any(), anyString(), any(), any());
+    }
+
+    @Test
+    void fillsOnlyMissingTypesWithTheBestLoadableCandidate() {
+        when(artworkFiles.find(eq(FILES), any())).thenReturn(Optional.empty());
+        when(artworkFiles.find(FILES, ImageType.POSTER))
+                .thenReturn(Optional.of(new ArtworkFile(ImageType.POSTER, MOVIE_FILE, MODIFIED)));
+        ArtworkCandidate broken = candidate(ImageType.FANART, "https://img/broken.jpg");
+        ArtworkCandidate fanart = candidate(ImageType.FANART, "https://img/fanart.jpg");
+        ArtworkCandidate logo = candidate(ImageType.CLEARLOGO, "https://img/logo.png");
+        when(candidateFinder.findAll("Heat", 1995, Map.of("tmdb", "949", "imdb", "tt0113277"))).thenReturn(
+                new ArtworkSearch(Map.of(ImageType.FANART, List.of(broken, fanart), ImageType.CLEARLOGO, List.of(logo),
+                        ImageType.POSTER, List.of(candidate(ImageType.POSTER, "https://img/p.jpg"))),
+                        List.of("fanart.tv: Key fehlt")));
+        var image = new DownloadedImage(new byte[] {1}, "jpg");
+        when(downloader.download(broken.url())).thenThrow(ImageDownloadException.downloadFailed(broken.url(), "HTTP 500", null));
+        when(downloader.download(fanart.url())).thenReturn(image);
+        when(downloader.download(logo.url())).thenReturn(image);
+
+        ArtworkFillResult result = service.fillMissing(MOVIE_ID);
+
+        assertThat(result.saved()).isEqualTo(2);
+        assertThat(result.warnings()).containsExactly("fanart.tv: Key fehlt");
+        verify(artworkFiles).save(FILES, ImageType.FANART, image);
+        verify(artworkFiles).save(FILES, ImageType.CLEARLOGO, image);
+        verify(downloader, never()).download(URI.create("https://img/p.jpg"));
+    }
+
+    @Test
+    void reportsTypesWhoseCandidatesCannotBeLoaded() {
+        when(artworkFiles.find(eq(FILES), any())).thenReturn(Optional.empty());
+        List<ArtworkCandidate> broken = List.of(candidate(ImageType.BANNER, "https://img/1.jpg"),
+                candidate(ImageType.BANNER, "https://img/2.jpg"), candidate(ImageType.BANNER, "https://img/3.jpg"),
+                candidate(ImageType.BANNER, "https://img/4.jpg"));
+        when(candidateFinder.findAll(anyString(), any(), any()))
+                .thenReturn(new ArtworkSearch(Map.of(ImageType.BANNER, broken), List.of()));
+        when(downloader.download(any())).thenThrow(ImageDownloadException.downloadFailed(URI.create("https://img"),
+                "HTTP 404", null));
+
+        ArtworkFillResult result = service.fillMissing(MOVIE_ID);
+
+        assertThat(result.saved()).isZero();
+        assertThat(result.warnings()).singleElement().asString().startsWith("BANNER: ").contains("HTTP 404");
+        verify(downloader, times(3)).download(any());
+    }
+
+    @Test
+    void searchesNothingWhenAllArtworkExistsOrIdsAreMissing() {
+        when(artworkFiles.find(eq(FILES), any()))
+                .thenAnswer(invocation -> Optional.of(new ArtworkFile(invocation.getArgument(1), MOVIE_FILE, MODIFIED)));
+
+        assertThat(service.fillMissing(MOVIE_ID)).isEqualTo(new ArtworkFillResult(0, List.of()));
+
+        givenMovie(null, null);
+        when(artworkFiles.find(eq(FILES), any())).thenReturn(Optional.empty());
+        assertThat(service.fillMissing(MOVIE_ID).saved()).isZero();
+        verify(candidateFinder, never()).findAll(any(), any(), any());
+    }
+
+    private static ArtworkCandidate candidate(ImageType type, String url) {
+        return new ArtworkCandidate("tmdb", "TMDB", type, URI.create(url), URI.create(url), null, null, "de", 1.0);
     }
 
     private void givenMovie(String tmdbId, String imdbId) {

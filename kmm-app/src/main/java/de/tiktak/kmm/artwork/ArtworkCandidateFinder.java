@@ -2,6 +2,7 @@ package de.tiktak.kmm.artwork;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -23,8 +24,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Fragt alle aktiven Bild-Scraper gleichzeitig ab und führt die Treffer zusammen. Ein ausgefallener
- * Anbieter verhindert nicht die Treffer der anderen, sondern erscheint als Hinweis.
+ * Fragt alle aktiven Bild-Scraper gleichzeitig ab und führt die Treffer zusammen. Jeder Scraper
+ * wird pro Film nur einmal gefragt; er liefert alle Bildarten auf einmal. Ein ausgefallener Anbieter
+ * verhindert nicht die Treffer der anderen, sondern erscheint als Hinweis.
  */
 @Slf4j
 @Component
@@ -43,6 +45,14 @@ class ArtworkCandidateFinder {
     private final ArtworkProperties properties;
 
     ArtworkCandidates find(ImageType type, String title, Integer year, Map<String, String> uniqueIds) {
+        ArtworkSearch search = findAll(title, year, uniqueIds);
+        return new ArtworkCandidates(search.candidatesOf(type), search.warnings());
+    }
+
+    /**
+     * @return die Treffer aller Bildarten, je Art in der Reihenfolge der Auswahl
+     */
+    ArtworkSearch findAll(String title, Integer year, Map<String, String> uniqueIds) {
         ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, title, year, uniqueIds);
         List<ArtworkCandidate> candidates = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
@@ -52,19 +62,17 @@ class ArtworkCandidateFinder {
         }
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<List<ArtworkCandidate>>> results = ready.stream()
-                    .map(scraper -> executor.submit(() -> query(scraper, request, type)))
+                    .map(scraper -> executor.submit(() -> query(scraper, request)))
                     .toList();
             for (int index = 0; index < results.size(); index++) {
                 collect(ready.get(index), results.get(index), candidates, warnings);
             }
         }
-        candidates.sort(order(type));
-        return new ArtworkCandidates(candidates, warnings);
+        return new ArtworkSearch(groupAndSort(candidates), warnings);
     }
 
-    private static List<ArtworkCandidate> query(ImageScraper scraper, ScrapeRequest request, ImageType type) {
+    private static List<ArtworkCandidate> query(ImageScraper scraper, ScrapeRequest request) {
         return scraper.findImages(request).stream()
-                .filter(image -> image.type() == type)
                 .map(image -> ArtworkCandidate.from(scraper, image))
                 .toList();
     }
@@ -83,6 +91,15 @@ class ArtworkCandidateFinder {
             Thread.currentThread().interrupt();
             warnings.add("%s: Abfrage unterbrochen".formatted(scraper.displayName()));
         }
+    }
+
+    private Map<ImageType, List<ArtworkCandidate>> groupAndSort(List<ArtworkCandidate> candidates) {
+        Map<ImageType, List<ArtworkCandidate>> byType = new EnumMap<>(ImageType.class);
+        for (ArtworkCandidate candidate : candidates) {
+            byType.computeIfAbsent(candidate.type(), type -> new ArrayList<>()).add(candidate);
+        }
+        byType.forEach((type, list) -> list.sort(order(type)));
+        return byType;
     }
 
     /**

@@ -2,6 +2,7 @@ package de.tiktak.kmm.artwork;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 public class ArtworkService {
 
     private static final String TMDB = "tmdb";
+    /** Versuche je Bildart, falls Downloads fehlschlagen. */
+    private static final int MAX_DOWNLOAD_ATTEMPTS = 3;
     private static final String IMDB = "imdb";
 
     private final MovieMetadataService metadataService;
@@ -69,6 +72,56 @@ public class ArtworkService {
         return ArtworkInfo.of(type, Optional.of(saved));
     }
 
+    /**
+     * Holt für jede fehlende Bildart den besten Treffer. Vorhandene Bilder bleiben unverändert;
+     * schlägt ein Download fehl, wird der nächste Treffer versucht.
+     *
+     * @return Anzahl gespeicherter Bilder und Hinweise; ohne TMDB-/IMDb-ID wird nichts gesucht
+     */
+    public ArtworkFillResult fillMissing(long movieId) {
+        MovieDetails movie = metadataService.findDetails(movieId);
+        CompanionFiles files = companionFiles(movie);
+        List<ImageType> missing = ArtworkTypes.MOVIE_TYPES.stream()
+                .filter(type -> artworkFiles.find(files, type).isEmpty())
+                .toList();
+        Map<String, String> uniqueIds = uniqueIds(movie.metadata());
+        if (missing.isEmpty() || uniqueIds.isEmpty()) {
+            return new ArtworkFillResult(0, List.of());
+        }
+        ArtworkSearch search = candidateFinder.findAll(movie.metadata().title(), movie.metadata().year(), uniqueIds);
+        List<String> warnings = new ArrayList<>(search.warnings());
+        int saved = 0;
+        for (ImageType type : missing) {
+            if (saveBest(files, type, search.candidatesOf(type), warnings)) {
+                saved++;
+            }
+        }
+        return new ArtworkFillResult(saved, warnings);
+    }
+
+    /**
+     * Speichert den ersten Treffer, der sich laden lässt. Ein Schreibfehler im Filmordner wird nicht
+     * abgefangen, weil weitere Versuche daran nichts ändern.
+     */
+    private boolean saveBest(CompanionFiles files, ImageType type, List<ArtworkCandidate> candidates,
+            List<String> warnings) {
+        String lastProblem = null;
+        for (ArtworkCandidate candidate : candidates.stream().limit(MAX_DOWNLOAD_ATTEMPTS).toList()) {
+            try {
+                DownloadedImage image = downloader.download(candidate.url());
+                artworkFiles.save(files, type, image);
+                return true;
+            } catch (ImageDownloadException e) {
+                log.warn("Could not download {} from {}: {}", type, candidate.url(), e.getMessage());
+                lastProblem = e.getMessage();
+            }
+        }
+        if (lastProblem != null) {
+            warnings.add("%s: %s".formatted(type, lastProblem));
+        }
+        return false;
+    }
+
     public void remove(long movieId, ImageType type) {
         requireSupported(type);
         artworkFiles.delete(companionFiles(metadataService.findDetails(movieId)), type);
@@ -93,7 +146,7 @@ public class ArtworkService {
         try {
             return URI.create(url.strip());
         } catch (IllegalArgumentException e) {
-            throw ArtworkProblemException.invalidUrl(url);
+            throw ImageDownloadException.invalidUrl(url);
         }
     }
 

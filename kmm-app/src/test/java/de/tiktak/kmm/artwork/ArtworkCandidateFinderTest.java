@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -96,6 +97,22 @@ class ArtworkCandidateFinderTest {
         assertThat(result.warnings()).containsExactly(
                 "Für fanart.tv fehlt ein API-Key.", "Kaputt: nicht erreichbar", "Absturz: unerwarteter Fehler");
         verify(unconfigured, never()).findImages(any());
+    }
+
+    @Test
+    void groupsAllTypesWithOneRequestPerScraper() {
+        ImageScraper tmdb = scraper("tmdb", "TMDB", List.of(
+                image(ImageType.POSTER, "de", 1.0, "poster"),
+                image(ImageType.FANART, null, 2.0, "fanart"),
+                image(ImageType.CLEARLOGO, "en", 3.0, "logo")));
+        when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of(tmdb));
+
+        ArtworkSearch search = finder.findAll("Heat", 1995, IDS);
+
+        assertThat(search.candidatesOf(ImageType.POSTER)).hasSize(1);
+        assertThat(search.candidatesOf(ImageType.CLEARLOGO)).hasSize(1);
+        assertThat(search.candidatesOf(ImageType.BANNER)).isEmpty();
+        verify(tmdb, times(1)).findImages(any());
     }
 
     @Test

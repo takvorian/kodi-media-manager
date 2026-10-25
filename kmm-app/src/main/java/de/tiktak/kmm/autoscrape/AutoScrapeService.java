@@ -1,0 +1,93 @@
+package de.tiktak.kmm.autoscrape;
+
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.artwork.ArtworkFillResult;
+import de.tiktak.kmm.artwork.ArtworkService;
+import de.tiktak.kmm.job.JobContext;
+import de.tiktak.kmm.job.JobService;
+import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.movie.MovieMetadataService;
+import de.tiktak.kmm.movie.MovieQueryService;
+import de.tiktak.kmm.movie.MovieScrapeService;
+import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.source.MediaSource;
+import de.tiktak.kmm.source.MediaSourceService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Scrapt alle Filme einer Quelle im Hintergrund: fehlende Metadaten (nur bei sicherem Treffer) und
+ * fehlende Bilder. Vorhandene Daten und Bilder bleiben unverändert. Die Filme werden nacheinander
+ * bearbeitet, um die Anfragelimits der Anbieter zu schonen.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class AutoScrapeService {
+
+    /** Präfix des Job-Schlüssels; pro Quelle läuft höchstens ein automatisches Scrapen. */
+    public static final String JOB_KEY_PREFIX = "auto-scrape:";
+    static final String NO_METADATA_SCRAPER = "Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.";
+    private static final String UNEXPECTED_ERROR = "unerwarteter Fehler";
+
+    private final MediaSourceService sourceService;
+    private final MovieQueryService queryService;
+    private final MovieMetadataService metadataService;
+    private final MovieScrapeService scrapeService;
+    private final ArtworkService artworkService;
+    private final JobService jobService;
+
+    /**
+     * @throws AutoScrapeNotPossibleException wenn die Quelle keine Filmquelle ist
+     */
+    public JobSnapshot start(long sourceId) {
+        MediaSource source = sourceService.require(sourceId);
+        if (source.getMediaType() != MediaType.MOVIE) {
+            throw new AutoScrapeNotPossibleException(source);
+        }
+        return jobService.submit(JOB_KEY_PREFIX + sourceId, "Scrapen „%s“".formatted(source.getName()),
+                context -> run(sourceId, context));
+    }
+
+    AutoScrapeResult run(long sourceId, JobContext context) {
+        List<Long> movieIds = queryService.findMovieIds(sourceId);
+        AutoScrapeProgress progress = new AutoScrapeProgress(movieIds.size());
+        for (int index = 0; index < movieIds.size(); index++) {
+            context.throwIfCancellationRequested();
+            long movieId = movieIds.get(index);
+            String title = metadataService.findDetails(movieId).metadata().title();
+            context.reportProgress(index, movieIds.size(), title);
+            scrapeMovie(movieId, title, progress);
+        }
+        context.reportProgress(movieIds.size(), movieIds.size(), null);
+        AutoScrapeResult result = progress.toResult();
+        log.info("Auto-scraped source {}: {} movies, {} scraped, {} unmatched, {} images, {} failures", sourceId,
+                result.movies(), result.scraped(), result.unmatched(), result.imagesSaved(), result.failures().size());
+        return result;
+    }
+
+    private void scrapeMovie(long movieId, String title, AutoScrapeProgress progress) {
+        try {
+            switch (scrapeService.scrapeMissingMetadata(movieId)) {
+                case SCRAPED -> progress.scraped();
+                case NO_MATCH -> progress.unmatched(title);
+                case NO_SCRAPER -> progress.warn(NO_METADATA_SCRAPER);
+                case ALREADY_IDENTIFIED -> {
+                    // Gepflegte Metadaten bleiben unverändert.
+                }
+            }
+            ArtworkFillResult artwork = artworkService.fillMissing(movieId);
+            progress.imagesSaved(artwork.saved());
+            artwork.warnings().forEach(progress::warn);
+        } catch (ErrorResponseException e) {
+            progress.failed(title, e.getBody().getDetail());
+        } catch (RuntimeException e) {
+            log.warn("Auto-scraping movie {} failed", movieId, e);
+            progress.failed(title, UNEXPECTED_ERROR);
+        }
+    }
+}

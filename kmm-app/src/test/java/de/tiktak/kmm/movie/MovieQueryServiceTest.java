@@ -57,6 +57,15 @@ class MovieQueryServiceTest {
         assertThat(page.getContent().getFirst().year()).isEqualTo(1995);
     }
 
+    @Test
+    void listsMovieIdsOfSourceSortedByTitle() {
+        Movie ronin = new Movie(1L, "/media/Ronin.mkv", "ronin", 1998, DiscFormat.FILE, 1);
+        ReflectionTestUtils.setField(ronin, "id", 7L);
+        when(movieRepository.findBySourceId(1L)).thenReturn(List.of(ronin, HEAT));
+
+        assertThat(service.findMovieIds(1L)).containsExactly(5L, 7L);
+    }
+
     private static Movie persistedMovie() {
         var movie = new Movie(1L, "/media/Heat.mkv", "Heat", 1995, DiscFormat.FILE, 1);
         ReflectionTestUtils.setField(movie, "id", 5L);

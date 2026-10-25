@@ -41,6 +41,12 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 - Die Bildsuche fragt alle Bild-Scraper parallel über TMDB- bzw. IMDb-ID ab; Ausfälle einzelner Anbieter erscheinen als Hinweis. Sortierung: bevorzugte Sprache (Standard `de`), dann sprachneutral, Englisch, Rest; bei Fanart sprachneutrale (textlose) Bilder zuerst; innerhalb der Gruppen nach Beliebtheit.
 - Download nur über http(s), nur JPEG/PNG, höchstens 25 MB, atomar gespeichert.
 
+**Automatisches Scrapen (umgesetzt):**
+- Läuft pro Filmquelle als Hintergrund-Job (`auto-scrape:<quelle>`) und füllt nur **fehlende** Daten; Gepflegtes bleibt unangetastet.
+- Metadaten nur für Filme ohne TMDB-ID, über den bevorzugten Scraper (`kmm.scraping.preferred-metadata-scraper`, Standard `tmdb`). Übernommen wird nur ein sicherer Treffer (bekannte IMDb-ID oder genau passender Titel/Originaltitel mit Jahr); sonst landet der Film in der Liste „ohne Treffer“ zur Handsuche.
+- Danach alle sieben Bildarten, soweit sie fehlen: eine Kandidatensuche je Film, je Art der beste Kandidat (Sortierung wie bei der Bildsuche). Scheitert ein Download, werden bis zu drei Kandidaten probiert.
+- Fehler einzelner Filme brechen den Lauf nicht ab. Das Ergebnis enthält Zähler, Titel ohne Treffer, Fehler und Hinweise (z. B. nicht eingerichtete Anbieter).
+
 **Kernprinzip:** Die Wahrheit liegt im Dateisystem (NFO + Bilder neben der Mediendatei). Die Datenbank ist Index, Cache und Arbeitszustand und lässt sich per Rescan neu aufbauen. Deshalb ist die Wahl der Datenbank unkritisch.
 
 ---
@@ -165,6 +171,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
    3. Job-Framework + Fortschritt per SSE ✅ (Scan läuft als Hintergrund-Job, Abbruch möglich, Live-Fortschritt in der UI)
    4. TMDB-Plugin ✅ (API-Key aus `KMM_TMDB_API_KEY`; Online-Suche auf der Detailseite, Übernahme ins Formular)
    5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen ✅ (`<dateiname>-poster.jpg` …, bei DVD/Blu-ray `poster.jpg` im Filmordner)
+   6. Automatisches Scrapen aller Filme einer Quelle ✅ (nur fehlende Metadaten und Bilder, Bericht mit Titeln ohne Treffer)
    - **2a. Ember-Migration I:** Filme, Sets, Personen, Genres, Artwork, Quellen und Settings, mit Dry-Run und Report.
 3. **Kodi-Integration:** JSON-RPC, Pfad-Mapping, Library-Update.
 4. **Serien:** TVDB/TMDB-TV, Staffeln/Episoden. Dazu **Ember-Migration II** (Serien, Stream-Details, restliche Settings, Kodi-Hosts, Scraper-Keys).

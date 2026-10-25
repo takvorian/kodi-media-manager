@@ -51,18 +51,19 @@
     <ng-container matColumnDef="actions">
       <th mat-header-cell *matHeaderCellDef></th>
       <td mat-cell *matCellDef="let source" class="actions">
-        @let job = scanJob(source);
+        @let job = runningJob(source);
         @if (job) {
-          <div class="scan-progress">
+          <div class="job-progress">
             <mat-progress-bar
               [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
               [value]="percent(job) ?? 0"
             />
-            <span class="scan-message">{{ job.message }}@if (percent(job) !== null) { ({{ percent(job) }} %)}</span>
+            <span class="job-message">{{ job.message }}@if (percent(job) !== null) { ({{ percent(job) }} %)}</span>
           </div>
-          <button matButton class="cancel-button" (click)="cancelScan(job)">Abbrechen</button>
-        } @else if (isScannable(source)) {
+          <button matButton class="cancel-button" (click)="cancelJob(job)">Abbrechen</button>
+        } @else if (hasMovies(source)) {
           <button matButton class="scan-button" (click)="scan(source)">Scannen</button>
+          <button matButton class="scrape-button" (click)="autoScrape(source)">Scrapen</button>
         }
         <button matButton class="delete-button" (click)="delete(source)" [disabled]="!!job">Entfernen</button>
       </td>
@@ -73,4 +74,41 @@
   </table>
 } @else {
   <p class="loading">Lade Quellen …</p>
+}
+
+@if (scrapeReport(); as report) {
+  <mat-card appearance="outlined" class="scrape-report">
+    <mat-card-header>
+      <mat-card-title>{{ report.title }}: nicht alles erledigt</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (report.result.unmatchedTitles.length > 0) {
+        <h3>Ohne eindeutigen Treffer – bitte einzeln suchen</h3>
+        <ul class="unmatched-titles">
+          @for (title of report.result.unmatchedTitles; track $index) {
+            <li>{{ title }}</li>
+          }
+        </ul>
+      }
+      @if (report.result.failures.length > 0) {
+        <h3>Fehler</h3>
+        <ul class="failures">
+          @for (failure of report.result.failures; track $index) {
+            <li>{{ failure }}</li>
+          }
+        </ul>
+      }
+      @if (report.result.warnings.length > 0) {
+        <h3>Hinweise</h3>
+        <ul class="warnings">
+          @for (warning of report.result.warnings; track $index) {
+            <li>{{ warning }}</li>
+          }
+        </ul>
+      }
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button matButton class="close-report-button" (click)="closeScrapeReport()">Schließen</button>
+    </mat-card-actions>
+  </mat-card>
 }

@@ -57,6 +57,9 @@ kmm:
         api-key: ${KMM_FANARTTV_API_KEY:}
         # optionaler persönlicher Key: neue Bilder erscheinen damit früher
         client-key: ${KMM_FANARTTV_CLIENT_KEY:}
+  scraping:
+    # Metadaten-Scraper für das automatische Scrapen (Fallback: erster eingerichteter)
+    preferred-metadata-scraper: tmdb
   artwork:
     # Bilder dieser Sprache (ISO 639-1) erscheinen in der Auswahl zuerst
     preferred-language: ${KMM_ARTWORK_LANGUAGE:de}

@@ -27,4 +27,9 @@ export class MediaSourceService {
   scan(sourceId: number): Observable<Job> {
     return this.http.post<Job>(`${SOURCES_URL}/${sourceId}/scan`, null);
   }
+
+  /** Startet das automatische Scrapen fehlender Daten im Hintergrund und liefert den gestarteten Job. */
+  autoScrape(sourceId: number): Observable<Job> {
+    return this.http.post<Job>(`${SOURCES_URL}/${sourceId}/auto-scrape`, null);
+  }
 }
