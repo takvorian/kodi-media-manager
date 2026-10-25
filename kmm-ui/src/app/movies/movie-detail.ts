@@ -12,6 +12,7 @@ import { RouterLink } from '@angular/router';
 import { problemMessage } from '../shared/problem-message';
 import { MovieDetails } from './movie';
 import { MAX_YEAR, MIN_YEAR, createMovieMetadataForm, toFormValue, toMetadata } from './movie-metadata-form';
+import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
 import { MovieService } from './movie.service';
 
 const SNACKBAR_DURATION_MS = 5000;
@@ -26,6 +27,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MovieOnlineSearch,
   ],
   templateUrl: './movie-detail.html',
   styleUrl: './movie-detail.scss',
@@ -41,6 +43,7 @@ export class MovieDetail {
   protected readonly maxYear = MAX_YEAR;
   protected readonly form = createMovieMetadataForm(inject(NonNullableFormBuilder));
   protected readonly saving = signal(false);
+  protected readonly searchingOnline = signal(false);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),
@@ -71,6 +74,18 @@ export class MovieDetail {
         this.notify(problemMessage(error));
       },
     });
+  }
+
+  protected toggleOnlineSearch(): void {
+    this.searchingOnline.update((open) => !open);
+  }
+
+  /** Übernimmt einen Vorschlag ins Formular; gespeichert wird erst mit „Speichern“. */
+  protected adoptProposal(proposal: ScrapedProposal): void {
+    this.form.patchValue(toFormValue(proposal.metadata));
+    this.form.markAsDirty();
+    this.searchingOnline.set(false);
+    this.notify(`Daten von ${proposal.scraperName} übernommen – bitte prüfen und speichern.`);
   }
 
   protected reset(): void {

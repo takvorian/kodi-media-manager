@@ -6,6 +6,7 @@ import org.junit.jupiter.api.Test;
 
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.SearchQuery;
 
 class TestdataMetadataScraperTest {
 
@@ -31,8 +32,15 @@ class TestdataMetadataScraperTest {
 
     @Test
     void returnsNothingForUnsupportedMediaType() {
-        var result = scraper.scrape(new ScrapeRequest(MediaType.TV_SHOW, "Lost", null, null));
+        assertThat(scraper.scrape(new ScrapeRequest(MediaType.TV_SHOW, "Lost", null, null))).isEmpty();
+        assertThat(scraper.search(new SearchQuery(MediaType.TV_SHOW, "Lost", null))).isEmpty();
+    }
 
-        assertThat(result).isEmpty();
+    @Test
+    void findsTitleAndFetchesItById() {
+        var hits = scraper.search(new SearchQuery(MediaType.MOVIE, "Heat", 1995));
+
+        assertThat(hits).singleElement().satisfies(hit -> assertThat(hit.providerId()).isEqualTo("Heat"));
+        assertThat(scraper.fetch("Heat")).hasValueSatisfying(metadata -> assertThat(metadata.title()).isEqualTo("Heat"));
     }
 }

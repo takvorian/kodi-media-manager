@@ -41,4 +41,21 @@ class ScraperTest {
     void doesNotSupportUndeclaredMediaType() {
         assertThat(movieOnlyScraper.supports(MediaType.TV_SHOW)).isFalse();
     }
+
+    @Test
+    void isReadyAndIgnoresContextByDefault() {
+        movieOnlyScraper.initialize(null);
+
+        assertThat(movieOnlyScraper.missingConfiguration()).isEmpty();
+    }
+
+    @Test
+    void carriesUserFacingMessage() {
+        var cause = new IllegalStateException("io");
+
+        assertThat(new ScraperException("TMDB nicht erreichbar", cause))
+                .hasMessage("TMDB nicht erreichbar")
+                .hasCause(cause);
+        assertThat(new ScraperException("Ungültiger API-Key")).hasNoCause();
+    }
 }

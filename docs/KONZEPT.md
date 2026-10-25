@@ -77,7 +77,9 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
   - `PluginManagerConfiguration` und `PluginLifecycle`: Laden und Entladen sind an den Spring-Lifecycle gebunden
   - `ScraperRegistry`: kapselt PF4J vor dem Rest der Anwendung
   - `PluginService` und `PluginController`: `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`. Der Zustand übersteht Neustarts.
-- Plugins sehen den Spring-Context nicht. Dienste wie HTTP-Client und Settings reicht die App später über ein schmales `PluginContext`-Interface herein.
+- Plugins sehen den Spring-Context nicht. Dienste reicht die App über das schmale `PluginContext`-Interface herein: Einstellungen (`kmm.plugins.settings.<plugin-id>.<name>`), gemeinsamer `HttpClient`, User-Agent. Eine eigene `ExtensionFactory` ruft dafür `Scraper.initialize(context)` auf.
+- Laufzeit-Plattform für Plugins: Plugin-API, PF4J, SLF4J und Jackson 3 stellt die App bereit (im Plugin `provided`); weitere Bibliotheken müssen Plugins selbst mitbringen.
+- Mitgelieferte Plugins (aktuell TMDB) liegen als Datei unter `bundled-plugins/` im JAR und werden beim Start ins Plugin-Verzeichnis kopiert bzw. aktualisiert (`kmm.plugins.install-bundled`).
 - Mitgelieferte Plugins liegen unter `kmm-plugins/`. Plugin-Verzeichnis: `/config/plugins` (Docker) bzw. `~/.kodi-media-manager/plugins` (Standalone).
 
 ---
@@ -107,11 +109,11 @@ kodi-media-manager/            groupId de.tiktak.kmm
 │                              Kodi-Namen für Begleitdateien (NFO, später Artwork)
 ├─ kmm-nfo                     Kodi-NFO lesen/schreiben (DOM, unbekannte Elemente bleiben erhalten, XXE-sicher)
 ├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite + Settings.xml), Pfad-Mapping
-├─ kmm-plugins/                mitgelieferte Plugins (aktuell: kmm-plugin-testdata, nur für Tests)
+├─ kmm-plugins/                mitgelieferte Plugins: kmm-plugin-tmdb; kmm-plugin-testdata nur für Tests
 ├─ kmm-ui                      Angular-SPA → static/ im JAR
 ├─ kmm-app                     Spring Boot: REST, Security, Plugins, Persistenz, Profile
 └─ docker/                     Dockerfile, docker-compose.yml
-geplant: kmm-core, kmm-media, kmm-kodi; Scraper-Plugins tmdb, tvdb, omdb, fanarttv
+geplant: kmm-core, kmm-media, kmm-kodi; Scraper-Plugins tvdb, omdb, fanarttv
 ```
 
 Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von `kmm-app` prüft Spring Modulith (`ModularityTests`).
@@ -154,7 +156,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
    1. Quellen, Scan, Filmliste ✅
    2. NFO lesen/schreiben ✅ (`<dateiname>.nfo`, Kodi 19–21; Scan übernimmt NFO-Inhalte, Detailseite bearbeitet und schreibt sie zurück)
    3. Job-Framework + Fortschritt per SSE ✅ (Scan läuft als Hintergrund-Job, Abbruch möglich, Live-Fortschritt in der UI)
-   4. TMDB-Plugin (API-Key aus `KMM_TMDB_API_KEY`)
+   4. TMDB-Plugin ✅ (API-Key aus `KMM_TMDB_API_KEY`; Online-Suche auf der Detailseite, Übernahme ins Formular)
    5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen (`<dateiname>-poster.jpg` …)
    - **2a. Ember-Migration I:** Filme, Sets, Personen, Genres, Artwork, Quellen und Settings, mit Dry-Run und Report.
 3. **Kodi-Integration:** JSON-RPC, Pfad-Mapping, Library-Update.

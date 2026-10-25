@@ -1,6 +1,7 @@
 package de.tiktak.kmm.plugin;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.pf4j.PluginManager;
 import org.springframework.stereotype.Component;
@@ -35,6 +36,12 @@ public class ScraperRegistry {
 
     public List<ImageScraper> imageScrapersFor(MediaType mediaType) {
         return supporting(imageScrapers(), mediaType);
+    }
+
+    public Optional<MetadataScraper> metadataScraper(String scraperId) {
+        return metadataScrapers().stream()
+                .filter(scraper -> scraper.id().equals(scraperId))
+                .findFirst();
     }
 
     private static <T extends Scraper> List<T> supporting(List<T> scrapers, MediaType mediaType) {

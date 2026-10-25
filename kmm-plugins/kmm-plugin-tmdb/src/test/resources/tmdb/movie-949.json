@@ -1,0 +1,17 @@
+{
+  "id": 949,
+  "imdb_id": "tt0113277",
+  "title": "Heat",
+  "original_title": "Heat",
+  "tagline": "A Los Angeles Crime Saga",
+  "overview": "Der Berufsverbrecher Neil McCauley plant einen letzten Coup.",
+  "release_date": "1995-12-15",
+  "runtime": 170,
+  "genres": [{"id": 80, "name": "Krimi"}, {"id": 18, "name": "Drama"}, {"id": 53, "name": "Thriller"}],
+  "release_dates": {
+    "results": [
+      {"iso_3166_1": "US", "release_dates": [{"certification": "R", "type": 3}]},
+      {"iso_3166_1": "DE", "release_dates": [{"certification": "", "type": 1}, {"certification": "16", "type": 3}]}
+    ]
+  }
+}

@@ -3,8 +3,10 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
+import { ScrapeCandidate, ScraperInfo } from './scraper';
 
 export const MOVIES_URL = '/api/v1/movies';
+export const METADATA_SCRAPERS_URL = '/api/v1/scrapers/metadata';
 const SORT_BY_TITLE = 'title,asc';
 
 @Injectable({ providedIn: 'root' })
@@ -22,6 +24,28 @@ export class MovieService {
 
   findMovie(movieId: number): Observable<MovieDetails> {
     return this.http.get<MovieDetails>(`${MOVIES_URL}/${movieId}`);
+  }
+
+  metadataScrapers(): Observable<ScraperInfo[]> {
+    return this.http.get<ScraperInfo[]>(METADATA_SCRAPERS_URL);
+  }
+
+  /** Sucht online; ohne Titel nimmt das Backend Titel und Jahr des Films. */
+  searchOnline(movieId: number, scraper: string, title: string, year: number | null): Observable<ScrapeCandidate[]> {
+    let params = new HttpParams().set('scraper', scraper);
+    if (title.trim()) {
+      params = params.set('title', title.trim());
+      if (year !== null) {
+        params = params.set('year', year);
+      }
+    }
+    return this.http.get<ScrapeCandidate[]>(`${MOVIES_URL}/${movieId}/scraper-search`, { params });
+  }
+
+  /** Vorhandene Metadaten, überlagert mit den Daten des gewählten Treffers; speichert nichts. */
+  proposal(movieId: number, scraper: string, providerId: string): Observable<MovieMetadata> {
+    const params = new HttpParams().set('scraper', scraper).set('providerId', providerId);
+    return this.http.get<MovieMetadata>(`${MOVIES_URL}/${movieId}/scraper-proposal`, { params });
   }
 
   /** Speichert die Metadaten; das Backend schreibt sie zugleich in die NFO. */

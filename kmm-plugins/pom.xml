@@ -17,6 +17,7 @@
 
     <modules>
         <module>kmm-plugin-testdata</module>
+        <module>kmm-plugin-tmdb</module>
     </modules>
 
     <properties>

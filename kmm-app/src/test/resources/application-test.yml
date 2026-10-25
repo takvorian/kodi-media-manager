@@ -10,5 +10,8 @@ spring:
 
 kmm:
   home: ${java.io.tmpdir}/kmm-test-home
+  plugins:
+    # Tests laden Plugins gezielt; das mitgelieferte TMDB-Plugin prüft ein eigener Test.
+    install-bundled: false
   security:
     enabled: true

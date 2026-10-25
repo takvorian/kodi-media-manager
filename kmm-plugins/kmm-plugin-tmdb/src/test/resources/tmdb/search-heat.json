@@ -1,0 +1,11 @@
+{
+  "page": 1,
+  "results": [
+    {"id": 949, "title": "Heat", "original_title": "Heat", "release_date": "1995-12-15",
+     "overview": "Ein Meisterdieb und ein Polizist.", "poster_path": "/heat.jpg"},
+    {"id": 12345, "title": "Heat", "original_title": "Heat", "release_date": "1986-03-14",
+     "overview": null, "poster_path": null},
+    {"id": 777, "title": "Heat Wave", "original_title": "Heat Wave", "release_date": "", "overview": ""}
+  ],
+  "total_results": 3
+}

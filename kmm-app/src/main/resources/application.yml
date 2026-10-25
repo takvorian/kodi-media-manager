@@ -45,6 +45,13 @@ kmm:
   home: ${KMM_HOME:${user.home}/.kodi-media-manager}
   plugins:
     directory: ${kmm.home}/plugins
+    install-bundled: true
+    settings:
+      tmdb:
+        # TMDB-API-Key (v3) oder Lese-Token (v4): https://www.themoviedb.org/settings/api
+        api-key: ${KMM_TMDB_API_KEY:}
+        language: ${KMM_TMDB_LANGUAGE:de-DE}
+        certification-country: ${KMM_TMDB_CERTIFICATION_COUNTRY:DE}
   security:
     enabled: true
   jobs:

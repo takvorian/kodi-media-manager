@@ -17,6 +17,8 @@
     <properties>
         <test-plugins.directory>${project.build.directory}/test-plugins</test-plugins.directory>
         <test-plugin.artifactId>kmm-plugin-testdata</test-plugin.artifactId>
+        <bundled-plugins.artifactIds>kmm-plugin-tmdb</bundled-plugins.artifactIds>
+        <bundled-plugins.directory>${project.build.outputDirectory}/bundled-plugins</bundled-plugins.directory>
     </properties>
 
     <dependencies>
@@ -168,6 +170,15 @@
             <artifactId>kmm-plugin-testdata</artifactId>
             <scope>test</scope>
         </dependency>
+        <!--
+            Mitgelieferte Plugins: werden als Datei unter bundled-plugins/ ins JAR gelegt und beim Start
+            ins Plugin-Verzeichnis installiert. Der Scope test sorgt nur für die Build-Reihenfolge.
+        -->
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-plugin-tmdb</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -189,13 +200,25 @@
                 <artifactId>maven-dependency-plugin</artifactId>
                 <executions>
                     <execution>
+                        <id>copy-bundled-plugins</id>
+                        <phase>process-resources</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <includeArtifactIds>${bundled-plugins.artifactIds}</includeArtifactIds>
+                            <outputDirectory>${bundled-plugins.directory}</outputDirectory>
+                            <stripVersion>true</stripVersion>
+                        </configuration>
+                    </execution>
+                    <execution>
                         <id>copy-test-plugins</id>
                         <phase>process-test-resources</phase>
                         <goals>
                             <goal>copy-dependencies</goal>
                         </goals>
                         <configuration>
-                            <includeArtifactIds>${test-plugin.artifactId}</includeArtifactIds>
+                            <includeArtifactIds>${test-plugin.artifactId},${bundled-plugins.artifactIds}</includeArtifactIds>
                             <outputDirectory>${test-plugins.directory}</outputDirectory>
                             <stripVersion>true</stripVersion>
                         </configuration>
@@ -208,6 +231,7 @@
                 <configuration>
                     <classpathDependencyExcludes>
                         <classpathDependencyExclude>de.tiktak.kmm:${test-plugin.artifactId}</classpathDependencyExclude>
+                        <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-tmdb</classpathDependencyExclude>
                     </classpathDependencyExcludes>
                     <systemPropertyVariables>
                         <kmm.test-plugins.directory>${test-plugins.directory}</kmm.test-plugins.directory>

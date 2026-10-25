@@ -3,7 +3,7 @@
 Medienverwaltung für [Kodi](https://kodi.tv) als Java-Nachfolger von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper).
 KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter H2-Datenbank) und bringt eine Weboberfläche mit.
 
-> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste sowie Kodi-NFOs lesen, bearbeiten und schreiben funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
+> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben sowie Metadaten von TMDB suchen und übernehmen funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
 
 ## Technik
 
@@ -20,7 +20,7 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 | `kmm-scanner` | Filmsuche im Dateisystem, Titel/Jahr aus Datei- und Ordnernamen |
 | `kmm-nfo` | Kodi-NFOs lesen und schreiben (unbekannte Elemente bleiben erhalten) |
 | `kmm-migration-ember` | Lesen von Ember-Profilen (Datenbank + `Settings.xml`), Pfad-Mapping |
-| `kmm-plugins` | mitgelieferte Plugins |
+| `kmm-plugins` | mitgelieferte Plugins, u. a. `kmm-plugin-tmdb` (The Movie Database) |
 | `kmm-ui` | Angular-Oberfläche |
 | `kmm-app` | Spring-Boot-Anwendung |
 
@@ -66,6 +66,16 @@ docker compose up -d --build
 | `/media` | Medienbibliothek |
 | `/import/ember` | Ember-Profil für die Migration (read-only) |
 
+## TMDB
+
+Für die Online-Suche wird ein kostenloser API-Key von [TMDB](https://www.themoviedb.org/settings/api) benötigt
+(v3-API-Key oder v4-Lese-Token):
+
+```bash
+export KMM_TMDB_API_KEY=…          # Docker: in docker/.env eintragen
+export KMM_TMDB_LANGUAGE=de-DE     # optional, Standard de-DE
+```
+
 ## Entwicklung
 
 ```bash
@@ -83,5 +93,7 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/jobs/events` (Server-Sent Events, Ereignis `job`)
 - `GET /api/v1/movies?search=…&page=…&size=…`
 - `GET /api/v1/movies/{id}`, `PUT /api/v1/movies/{id}/metadata` (schreibt die NFO)
+- `GET /api/v1/movies/{id}/scraper-search?scraper=tmdb&title=…&year=…`, `GET /api/v1/movies/{id}/scraper-proposal?scraper=tmdb&providerId=…`
+- `GET /api/v1/scrapers/metadata`
 - `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`
 - `GET /api/v1/migrations/ember/inspect?path=…`

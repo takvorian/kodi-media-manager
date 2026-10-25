@@ -154,6 +154,46 @@ describe('MovieDetail', () => {
     expect(input('title').value).toBe('Heat');
   });
 
+  it('takes over online data into the form without saving', async () => {
+    await load(heat);
+
+    button('.online-search-button').click();
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/v1/scrapers/metadata').flush([
+      { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['MOVIE'], missingConfiguration: null },
+    ]);
+    await fixture.whenStable();
+    button('.search-button').click();
+    httpTesting
+      .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-search`)
+      .flush([{ providerId: '949', title: 'Heat', originalTitle: 'Heat', year: 1995, overview: null, posterUrl: null }]);
+    await fixture.whenStable();
+    button('.adopt-button').click();
+    httpTesting
+      .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-proposal`)
+      .flush({ ...heat.metadata, runtime: 171, mpaa: 'FSK 16', tmdbId: '949' });
+    await fixture.whenStable();
+
+    expect(element().querySelector('app-movie-online-search')).toBeNull();
+    expect(input('mpaa').value).toBe('FSK 16');
+    expect(input('tmdbId').value).toBe('949');
+    expect(button('.save-button').disabled).toBe(false);
+    expect(snackBarMessages).toEqual(['Daten von TMDB übernommen – bitte prüfen und speichern.']);
+    httpTesting.expectNone({ method: 'PUT' });
+  });
+
+  it('closes the online search again', async () => {
+    await load(heat);
+
+    button('.online-search-button').click();
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/v1/scrapers/metadata').flush([]);
+    button('.online-search-button').click();
+    await fixture.whenStable();
+
+    expect(element().querySelector('app-movie-online-search')).toBeNull();
+  });
+
   it('shows an error when the movie cannot be loaded', async () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${MOVIES_URL}/5`).flush({ title: 'Film nicht gefunden' }, { status: 404, statusText: 'Not Found' });

@@ -4,7 +4,25 @@
   <p class="error">Der Film konnte nicht geladen werden.</p>
 } @else if (movie.hasValue()) {
   @let details = movie.value();
-  <h2 class="page-title">{{ details.metadata.title }}</h2>
+  <div class="title-row">
+    <h2 class="page-title">{{ details.metadata.title }}</h2>
+    <button matButton="tonal" type="button" class="online-search-button" (click)="toggleOnlineSearch()">
+      {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
+    </button>
+  </div>
+
+  @if (searchingOnline()) {
+    <mat-card appearance="outlined" class="online-search-card">
+      <mat-card-content>
+        <app-movie-online-search
+          [movieId]="details.id"
+          [title]="details.metadata.title"
+          [year]="details.metadata.year"
+          (proposed)="adoptProposal($event)"
+        />
+      </mat-card-content>
+    </mat-card>
+  }
 
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>

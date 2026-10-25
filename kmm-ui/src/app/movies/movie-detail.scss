@@ -2,7 +2,16 @@
   margin-bottom: 8px;
 }
 
-.file-card {
+.title-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.file-card,
+.online-search-card {
   margin-bottom: 24px;
 }
 

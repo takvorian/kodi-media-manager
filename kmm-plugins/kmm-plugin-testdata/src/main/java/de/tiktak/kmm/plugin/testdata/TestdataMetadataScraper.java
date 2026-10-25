@@ -1,5 +1,6 @@
 package de.tiktak.kmm.plugin.testdata;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -10,6 +11,8 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataResult;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.SearchQuery;
+import de.tiktak.kmm.plugin.api.SearchResult;
 
 /**
  * Liefert für jeden Film den angefragten Titel als Ergebnis zurück. Dient nur dazu, den
@@ -37,16 +40,34 @@ public class TestdataMetadataScraper implements MetadataScraper {
         return Set.of(MediaType.MOVIE);
     }
 
+    /** Der Titel dient zugleich als Anbieter-ID. */
+    @Override
+    public List<SearchResult> search(SearchQuery query) {
+        if (!supports(query.mediaType())) {
+            return List.of();
+        }
+        return List.of(new SearchResult(query.title(), query.title(), query.title(), query.year(), null, null));
+    }
+
+    @Override
+    public Optional<MetadataResult> fetch(String providerId) {
+        return Optional.of(result(providerId, null));
+    }
+
     @Override
     public Optional<MetadataResult> scrape(ScrapeRequest request) {
         if (!supports(request.mediaType())) {
             return Optional.empty();
         }
-        return Optional.of(new MetadataResult(
-                request.title(),
-                request.title(),
-                request.year(),
-                null,
-                Map.of(UNIQUE_ID_KEY, request.title())));
+        return Optional.of(result(request.title(), request.year()));
+    }
+
+    private static MetadataResult result(String title, Integer year) {
+        return MetadataResult.builder()
+                .title(title)
+                .originalTitle(title)
+                .year(year)
+                .uniqueIds(Map.of(UNIQUE_ID_KEY, title))
+                .build();
     }
 }

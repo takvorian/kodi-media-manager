@@ -63,6 +63,16 @@ class ScraperRegistryTest {
     }
 
     @Test
+    void findsMetadataScraperById() {
+        MetadataScraper tmdb = mock(MetadataScraper.class);
+        when(tmdb.id()).thenReturn("tmdb");
+        when(pluginManager.getExtensions(MetadataScraper.class)).thenReturn(List.of(tmdb));
+
+        assertThat(registry.metadataScraper("tmdb")).contains(tmdb);
+        assertThat(registry.metadataScraper("imdb")).isEmpty();
+    }
+
+    @Test
     void returnsNothingWithoutPlugins() {
         when(pluginManager.getExtensions(MetadataScraper.class)).thenReturn(List.of());
 
