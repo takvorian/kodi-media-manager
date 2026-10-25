@@ -73,9 +73,22 @@ Für die Online-Suche werden kostenlose API-Keys benötigt (Docker: in `docker/.
 ```bash
 export KMM_TMDB_API_KEY=…          # https://www.themoviedb.org/settings/api (v3-Key oder v4-Lese-Token)
 export KMM_FANARTTV_API_KEY=…      # https://fanart.tv/get-an-api-key/
-export KMM_TMDB_LANGUAGE=de-DE     # optional, Standard de-DE
-export KMM_ARTWORK_LANGUAGE=de     # optional, bevorzugte Sprache der Bilder
 ```
+
+## Einstellungen
+
+Sprache der Metadaten und Bilder, Video-Dateiendungen, ausgeschlossene Ordner und ein Proxy werden auf der Seite
+**Einstellungen** gepflegt und in der Datenbank gespeichert. Umgebungsvariablen haben Vorrang; damit festgelegte
+Werte sind in der Oberfläche gesperrt:
+
+```bash
+export KMM_TMDB_LANGUAGE=de-DE     # Sprache der Metadaten
+export KMM_ARTWORK_LANGUAGE=de     # bevorzugte Sprache der Bilder
+export KMM_PROXY_HOST=proxy.local  # Proxy für Online-Dienste, dazu KMM_PROXY_PORT/_USERNAME/_PASSWORD
+```
+
+Hinweis: Java sendet Proxy-Zugangsdaten bei HTTPS-Verbindungen nur, wenn die JVM mit
+`-Djdk.http.auth.tunneling.disabledSchemes=` gestartet wird.
 
 ## Entwicklung
 
@@ -99,5 +112,6 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/movies/{id}/artwork`, `GET …/artwork/{TYP}/image`, `GET …/artwork/{TYP}/candidates`,
   `PUT …/artwork/{TYP}` (`{"url": …}`), `DELETE …/artwork/{TYP}` – TYP: POSTER, FANART, CLEARLOGO, CLEARART, DISCART, BANNER, LANDSCAPE
 - `GET /api/v1/scrapers/metadata`
+- `GET /api/v1/settings`, `PUT /api/v1/settings` (Proxy-Passwort `null` = unverändert)
 - `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`
 - `GET /api/v1/migrations/ember/inspect?path=…`

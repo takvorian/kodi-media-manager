@@ -70,7 +70,7 @@ public class MovieDirectoryScanner {
                 return FileVisitResult.CONTINUE;
             }
             String name = directory.getFileName().toString();
-            if (rules.isIgnoredDirectory(name)) {
+            if (rules.isIgnoredDirectory(name) || rules.isExcludedDirectory(directory)) {
                 return FileVisitResult.SKIP_SUBTREE;
             }
             Optional<MovieCandidate> disc = discIn(directory, name);

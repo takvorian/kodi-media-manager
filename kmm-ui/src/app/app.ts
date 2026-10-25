@@ -16,6 +16,7 @@ export class App {
   protected readonly navigation = [
     { path: '/movies', label: 'Filme' },
     { path: '/sources', label: 'Quellen' },
+    { path: '/settings', label: 'Einstellungen' },
     { path: '/system', label: 'System' },
   ];
 }

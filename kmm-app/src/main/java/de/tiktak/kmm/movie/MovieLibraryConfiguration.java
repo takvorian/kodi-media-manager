@@ -5,9 +5,7 @@ import org.springframework.context.annotation.Configuration;
 
 import de.tiktak.kmm.nfo.NfoReader;
 import de.tiktak.kmm.nfo.NfoWriter;
-import de.tiktak.kmm.scanner.MovieDirectoryScanner;
 import de.tiktak.kmm.scanner.MovieNameParser;
-import de.tiktak.kmm.scanner.ScanRules;
 
 /**
  * Verdrahtet die frameworkfreien Bibliotheken {@code kmm-scanner} und {@code kmm-nfo} als Spring-Beans.
@@ -16,8 +14,8 @@ import de.tiktak.kmm.scanner.ScanRules;
 class MovieLibraryConfiguration {
 
     @Bean
-    MovieDirectoryScanner movieDirectoryScanner() {
-        return new MovieDirectoryScanner(ScanRules.defaults(), new MovieNameParser());
+    MovieNameParser movieNameParser() {
+        return new MovieNameParser();
     }
 
     @Bean

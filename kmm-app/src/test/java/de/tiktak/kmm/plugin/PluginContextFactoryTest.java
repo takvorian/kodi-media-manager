@@ -29,9 +29,12 @@ class PluginContextFactoryTest {
         build.setProperty("version", "1.2.3");
         when(buildProperties.getIfAvailable()).thenReturn(new BuildProperties(build));
 
-        PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties).contextFor("tmdb");
+        PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties,
+                () -> Map.of("language", "en-US", "region", "US")).contextFor("tmdb");
 
         assertThat(context.setting("api-key")).contains("geheim");
+        assertThat(context.setting("language")).as("eigene Einstellung hat Vorrang").contains("de-DE");
+        assertThat(context.setting("region")).contains("US");
         assertThat(context.setting("unbekannt")).isEmpty();
         assertThat(context.httpClient()).isSameAs(httpClient);
         assertThat(context.userAgent()).startsWith("KodiMediaManager/1.2.3");
@@ -42,7 +45,8 @@ class PluginContextFactoryTest {
     void givesPluginsWithoutSettingsAnEmptyConfiguration() {
         ObjectProvider<BuildProperties> buildProperties = mock(ObjectProvider.class);
 
-        PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties).contextFor("andere");
+        PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties, Map::of)
+                .contextFor("andere");
 
         assertThat(context.setting("api-key")).isEmpty();
         assertThat(context.userAgent()).startsWith("KodiMediaManager/dev");

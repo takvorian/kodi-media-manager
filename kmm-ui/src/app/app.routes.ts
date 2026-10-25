@@ -14,6 +14,11 @@ export const routes: Routes = [
     loadComponent: () => import('./sources/source-list').then((m) => m.SourceList),
   },
   {
+    path: 'settings',
+    title: 'Einstellungen – KMM',
+    loadComponent: () => import('./settings/settings-page').then((m) => m.SettingsPage),
+  },
+  {
     path: 'system',
     title: 'System – KMM',
     loadComponent: () => import('./system/system-status').then((m) => m.SystemStatus),

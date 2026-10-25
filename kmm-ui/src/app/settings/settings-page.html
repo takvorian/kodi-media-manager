@@ -1,0 +1,106 @@
+<h2 class="page-title">Einstellungen</h2>
+
+@if (settings.error()) {
+  <p class="error">Die Einstellungen konnten nicht geladen werden.</p>
+} @else if (settings.hasValue()) {
+  <form [formGroup]="form" (ngSubmit)="save()" class="settings-form">
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Sprache</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="row">
+        <mat-form-field>
+          <mat-label>Metadaten</mat-label>
+          <input matInput formControlName="metadataLanguage" name="metadataLanguage" placeholder="de-DE" />
+          @if (isOverridden('METADATA_LANGUAGE')) {
+            <mat-hint class="overridden-hint">Durch die Konfiguration festgelegt</mat-hint>
+          } @else {
+            <mat-hint>z. B. de-DE oder en-US</mat-hint>
+          }
+          <mat-error>Format: de oder de-DE</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Bevorzugte Bildsprache</mat-label>
+          <input matInput formControlName="artworkLanguage" name="artworkLanguage" placeholder="de" />
+          @if (isOverridden('ARTWORK_LANGUAGE')) {
+            <mat-hint class="overridden-hint">Durch die Konfiguration festgelegt</mat-hint>
+          } @else {
+            <mat-hint>Zweistelliger Sprachcode, z. B. de</mat-hint>
+          }
+          <mat-error>Format: zwei Kleinbuchstaben, z. B. de</mat-error>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Scan</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field class="full">
+          <mat-label>Video-Dateiendungen</mat-label>
+          <input matInput formControlName="videoExtensions" name="videoExtensions" />
+          <mat-hint>Durch Komma getrennt, z. B. mkv, mp4, avi</mat-hint>
+          <mat-error>Mindestens eine Endung aus Buchstaben oder Ziffern</mat-error>
+        </mat-form-field>
+        <mat-form-field class="full">
+          <mat-label>Ausgeschlossene Ordner</mat-label>
+          <textarea matInput formControlName="excludedPaths" name="excludedPaths" rows="4"></textarea>
+          <mat-hint>Ein vollständiger Pfad pro Zeile; der Scan überspringt diese Ordner samt Inhalt</mat-hint>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
+        <mat-card-title>Proxy</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (isOverridden('PROXY')) {
+          <p class="overridden-hint proxy-overridden">Der Proxy ist durch die Konfiguration festgelegt.</p>
+        }
+        <mat-checkbox formControlName="proxyEnabled" name="proxyEnabled">Proxy für Online-Dienste verwenden</mat-checkbox>
+        @if (form.controls.proxyEnabled.value) {
+          <div class="row">
+            <mat-form-field class="wide">
+              <mat-label>Host</mat-label>
+              <input matInput formControlName="proxyHost" name="proxyHost" placeholder="proxy.local" />
+              <mat-error>Der Host ist erforderlich.</mat-error>
+            </mat-form-field>
+            <mat-form-field class="narrow">
+              <mat-label>Port</mat-label>
+              <input matInput type="number" formControlName="proxyPort" name="proxyPort" min="1" max="65535" />
+              <mat-error>1 bis 65535</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Benutzer</mat-label>
+              <input matInput formControlName="proxyUsername" name="proxyUsername" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Passwort</mat-label>
+              <input
+                matInput
+                type="password"
+                formControlName="proxyPassword"
+                name="proxyPassword"
+                autocomplete="new-password"
+                [placeholder]="passwordSet() ? 'unverändert' : ''"
+              />
+            </mat-form-field>
+          </div>
+        }
+      </mat-card-content>
+    </mat-card>
+
+    <div class="actions">
+      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
+        Verwerfen
+      </button>
+      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving()">
+        {{ saving() ? 'Speichere …' : 'Speichern' }}
+      </button>
+    </div>
+  </form>
+} @else {
+  <p class="loading">Lade Einstellungen …</p>
+}

@@ -1,0 +1,38 @@
+.settings-form {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 900px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.wide {
+  flex: 2 1 240px;
+}
+
+.narrow {
+  flex: 0 1 120px;
+}
+
+.full {
+  width: 100%;
+}
+
+.overridden-hint {
+  color: var(--mat-sys-tertiary);
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

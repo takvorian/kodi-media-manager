@@ -49,6 +49,11 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 - Danach alle sieben Bildarten, soweit sie fehlen: eine Kandidatensuche je Film, je Art der beste Kandidat (Sortierung wie bei der Bildsuche). Scheitert ein Download, werden bis zu drei Kandidaten probiert.
 - Fehler einzelner Filme brechen den Lauf nicht ab. Das Ergebnis enthält Zähler, Titel ohne Treffer, Fehler und Hinweise (z. B. nicht eingerichtete Anbieter).
 
+**Einstellungen (umgesetzt):**
+- Benutzereinstellungen liegen in der Tabelle `app_setting` (Schlüssel/Wert): Sprache der Metadaten (an Plugins als gemeinsame Einstellung `language`), bevorzugte Bildsprache, Video-Dateiendungen, ausgeschlossene Ordner, Proxy.
+- Wirksam ist zuerst die Konfiguration (`kmm.settings.*` bzw. Umgebungsvariablen, in der UI gesperrt), dann der gespeicherte Wert, dann der Standard.
+- Änderungen wirken ohne Neustart: PF4J erzeugt Extensions bei jeder Abfrage neu (mit aktuellem Plugin-Kontext), der HTTP-Client wählt den Proxy pro Verbindung, der Scanner wird pro Scan erzeugt.
+
 **Kernprinzip:** Die Wahrheit liegt im Dateisystem (NFO + Bilder neben der Mediendatei). Die Datenbank ist Index, Cache und Arbeitszustand und lässt sich per Rescan neu aufbauen. Deshalb ist die Wahl der Datenbank unkritisch.
 
 ---

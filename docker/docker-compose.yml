@@ -34,9 +34,14 @@ services:
       KMM_ADMIN_PASSWORD: ${KMM_ADMIN_PASSWORD:?KMM_ADMIN_PASSWORD fehlt (siehe .env.example)}
       TZ: ${TZ:-Europe/Berlin}
       KMM_TMDB_API_KEY: ${KMM_TMDB_API_KEY:-}
-      KMM_TMDB_LANGUAGE: ${KMM_TMDB_LANGUAGE:-de-DE}
       KMM_FANARTTV_API_KEY: ${KMM_FANARTTV_API_KEY:-}
-      KMM_ARTWORK_LANGUAGE: ${KMM_ARTWORK_LANGUAGE:-de}
+      # Optional: gesetzte Werte haben Vorrang vor der Einstellungsseite und sind dort gesperrt.
+      KMM_TMDB_LANGUAGE: ${KMM_TMDB_LANGUAGE:-}
+      KMM_ARTWORK_LANGUAGE: ${KMM_ARTWORK_LANGUAGE:-}
+      KMM_PROXY_HOST: ${KMM_PROXY_HOST:-}
+      KMM_PROXY_PORT: ${KMM_PROXY_PORT:-8080}
+      KMM_PROXY_USERNAME: ${KMM_PROXY_USERNAME:-}
+      KMM_PROXY_PASSWORD: ${KMM_PROXY_PASSWORD:-}
     ports:
       - "${KMM_PORT:-8080}:8080"
     volumes:

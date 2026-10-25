@@ -14,7 +14,6 @@ import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import de.tiktak.kmm.scanner.MovieCandidate;
-import de.tiktak.kmm.scanner.MovieDirectoryScanner;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
@@ -38,7 +37,7 @@ public class MovieScanService {
     private static final int UNKNOWN_TOTAL = 0;
 
     private final MediaSourceService sourceService;
-    private final MovieDirectoryScanner scanner;
+    private final MovieScannerFactory scannerFactory;
     private final MovieLibrarySynchronizer synchronizer;
     private final MovieNfoFiles nfoFiles;
     private final JobService jobService;
@@ -93,7 +92,7 @@ public class MovieScanService {
 
     private List<MovieCandidate> findCandidates(MediaSource source, Path directory) {
         try {
-            return scanner.scan(directory);
+            return scannerFactory.create().scan(directory);
         } catch (UncheckedIOException e) {
             log.warn("Scanning source '{}' failed", source.getName(), e);
             throw SourceNotScannableException.unreachable(source);

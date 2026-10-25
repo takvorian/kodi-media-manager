@@ -19,6 +19,7 @@ import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -42,7 +43,7 @@ class ArtworkCandidateFinder {
     private static final Set<ImageType> TEXTLESS_PREFERRED = Set.of(ImageType.FANART);
 
     private final ScraperRegistry scraperRegistry;
-    private final ArtworkProperties properties;
+    private final SettingsService settingsService;
 
     ArtworkCandidates find(ImageType type, String title, Integer year, Map<String, String> uniqueIds) {
         ArtworkSearch search = findAll(title, year, uniqueIds);
@@ -117,7 +118,7 @@ class ArtworkCandidateFinder {
         if (candidate.language() == null) {
             return textlessFirst ? FIRST : SECOND;
         }
-        if (candidate.language().equalsIgnoreCase(properties.preferredLanguage())) {
+        if (candidate.language().equalsIgnoreCase(settingsService.current().artworkLanguage())) {
             return textlessFirst ? SECOND : FIRST;
         }
         return candidate.language().equalsIgnoreCase(ENGLISH_LANGUAGE) ? ENGLISH : OTHER_LANGUAGE;

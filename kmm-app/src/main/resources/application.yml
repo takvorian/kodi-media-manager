@@ -50,19 +50,27 @@ kmm:
       tmdb:
         # TMDB-API-Key (v3) oder Lese-Token (v4): https://www.themoviedb.org/settings/api
         api-key: ${KMM_TMDB_API_KEY:}
-        language: ${KMM_TMDB_LANGUAGE:de-DE}
         certification-country: ${KMM_TMDB_CERTIFICATION_COUNTRY:DE}
       fanarttv:
         # Projekt-API-Key: https://fanart.tv/get-an-api-key/
         api-key: ${KMM_FANARTTV_API_KEY:}
         # optionaler persönlicher Key: neue Bilder erscheinen damit früher
         client-key: ${KMM_FANARTTV_CLIENT_KEY:}
+  settings:
+    # Gesetzte Werte haben Vorrang vor den Einstellungen in der Oberfläche und sind dort gesperrt.
+    # Sprache der Metadaten beim Scrapen, z. B. de-DE
+    metadata-language: ${KMM_TMDB_LANGUAGE:}
+    # Bilder dieser Sprache (ISO 639-1) erscheinen in der Auswahl zuerst, z. B. de
+    artwork-language: ${KMM_ARTWORK_LANGUAGE:}
+    # HTTP-Proxy für Online-Dienste
+    proxy-host: ${KMM_PROXY_HOST:}
+    proxy-port: ${KMM_PROXY_PORT:8080}
+    proxy-username: ${KMM_PROXY_USERNAME:}
+    proxy-password: ${KMM_PROXY_PASSWORD:}
   scraping:
     # Metadaten-Scraper für das automatische Scrapen (Fallback: erster eingerichteter)
     preferred-metadata-scraper: tmdb
   artwork:
-    # Bilder dieser Sprache (ISO 639-1) erscheinen in der Auswahl zuerst
-    preferred-language: ${KMM_ARTWORK_LANGUAGE:de}
     max-download-size: 25MB
   security:
     enabled: true

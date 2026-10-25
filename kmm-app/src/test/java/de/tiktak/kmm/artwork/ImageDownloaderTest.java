@@ -36,7 +36,7 @@ class ImageDownloaderTest {
         serve("/huge.jpg", 200, "image/jpeg", new byte[2048]);
         server.start();
         downloader = new ImageDownloader(HttpClient.newHttpClient(),
-                new ArtworkProperties("de", DataSize.ofKilobytes(1)));
+                new ArtworkProperties(DataSize.ofKilobytes(1)));
     }
 
     @AfterEach

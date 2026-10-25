@@ -14,7 +14,6 @@ import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
-import org.springframework.util.unit.DataSize;
 
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ImageCandidate;
@@ -23,14 +22,15 @@ import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.settings.KmmSettings;
+import de.tiktak.kmm.settings.SettingsService;
 
 class ArtworkCandidateFinderTest {
 
     private static final Map<String, String> IDS = Map.of("tmdb", "949");
 
     private final ScraperRegistry registry = mock(ScraperRegistry.class);
-    private final ArtworkCandidateFinder finder =
-            new ArtworkCandidateFinder(registry, new ArtworkProperties("de", DataSize.ofMegabytes(25)));
+    private final ArtworkCandidateFinder finder = new ArtworkCandidateFinder(registry, settings());
 
     @Test
     void mergesScrapersAndSortsByLanguageThenRating() {
@@ -134,5 +134,11 @@ class ArtworkCandidateFinderTest {
     private static ImageCandidate image(ImageType type, String language, Double rating, String path) {
         return ImageCandidate.builder().type(type).url(URI.create("https://img.example.org/" + path))
                 .language(language).rating(rating).build();
+    }
+
+    private static SettingsService settings() {
+        SettingsService settings = mock(SettingsService.class);
+        when(settings.current()).thenReturn(KmmSettings.DEFAULTS);
+        return settings;
     }
 }

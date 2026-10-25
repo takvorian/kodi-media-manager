@@ -166,6 +166,16 @@ class MovieDirectoryScannerTest {
                 .containsExactly("Heat.xyz");
     }
 
+    @Test
+    void skipsExcludedDirectoriesWithTheirSubdirectories() throws IOException {
+        file("Heat (1995)/Heat.mkv");
+        file("Privat/Urlaub/Urlaub.mkv");
+        var customScanner = new MovieDirectoryScanner(new ScanRules(ScanRules.DEFAULT_VIDEO_EXTENSIONS,
+                ScanRules.DEFAULT_IGNORED_DIRECTORIES, Set.of(root.resolve("Privat"))), new MovieNameParser());
+
+        assertThat(customScanner.scan(root)).extracting(MovieCandidate::title).containsExactly("Heat");
+    }
+
     private Path file(String relativePath) throws IOException {
         Path file = root.resolve(relativePath);
         Files.createDirectories(file.getParent());
