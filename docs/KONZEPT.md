@@ -72,7 +72,7 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
   - Bilder: ImageIO/TwelveMonkeys
   - Scanner: `java.nio.file`
   - Jobs: eigene Job-Verwaltung auf virtuellen Threads, Fortschritt und Ergebnis per REST (`/api/v1/jobs`) und SSE (`/api/v1/jobs/events`), gedrosselt auf höchstens eine Meldung je 250 ms und Job, ein Job je fachlichem Schlüssel (z. B. ein Scan pro Quelle). Laufende und die letzten 50 beendeten Jobs werden im Speicher gehalten.
-- **Kodi:** JSON-RPC (`VideoLibrary.Scan`/`Refresh`), Pfad-Mapping Container ↔ Kodi.
+- **Kodi:** JSON-RPC über HTTP (`kmm-kodi`, ohne Proxy): `VideoLibrary.GetMovies` (Suche über Verzeichnis und Datei, auch Stapel), `RefreshMovie`, `Scan`; Pfad-Zuordnung je Gerät (Container/KMM ↔ Kodi). Echtzeit-Sync über Ereignisse (`MovieFilesChangedEvent`, `MovieSourceScannedEvent`) nach dem Commit, verzögert und je Film entprellt auf einem eigenen virtuellen Thread.
 - **Security:** Spring Security, CSRF für die SPA (Cookie `XSRF-TOKEN`).
 - **Betrieb:** Actuator (Health/Probes), OpenAPI (springdoc, `/swagger-ui.html`).
 
@@ -127,13 +127,15 @@ kodi-media-manager/            groupId de.tiktak.kmm
 ├─ kmm-scanner                 Filmsuche im Dateisystem: Stapel (cd1/cd2), DVD/Blu-ray-Ordner, Titel/Jahr aus Namen,
 │                              Kodi-Namen für Begleitdateien (NFO, später Artwork)
 ├─ kmm-nfo                     Kodi-NFO lesen/schreiben (DOM, unbekannte Elemente bleiben erhalten, XXE-sicher)
-├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite + Settings.xml), Pfad-Mapping
+├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite, Settings.xml, Interface.Kodi.xml), Pfad-Mapping
+├─ kmm-kodi                    JSON-RPC-Client für Kodi (Version, Film suchen, RefreshMovie, Scan),
+│                              Zuordnung KMM-Pfad → Kodi-Pfad (smb://, nfs://, Windows, POSIX)
 ├─ kmm-plugins/                mitgelieferte Plugins: kmm-plugin-tmdb (Metadaten + Bilder), kmm-plugin-fanarttv (Bilder);
 │                              kmm-plugin-testdata nur für Tests
 ├─ kmm-ui                      Angular-SPA → static/ im JAR
 ├─ kmm-app                     Spring Boot: REST, Security, Plugins, Persistenz, Profile
 └─ docker/                     Dockerfile, docker-compose.yml
-geplant: kmm-core, kmm-media, kmm-kodi; Scraper-Plugins tvdb, omdb
+geplant: kmm-core, kmm-media; Scraper-Plugins tvdb, omdb
 ```
 
 Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von `kmm-app` prüft Spring Modulith (`ModularityTests`).
@@ -169,7 +171,8 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 - **Probelauf:** führt den Import vollständig in einer Transaktion aus und rollt sie zurück; Einstellungen werden nur berechnet. Der Bericht zeigt also genau, was der Import ändern würde.
 - **Umrechnungen:** `Germany:16` → `FSK 16`; leere Bewertungen (0 ohne Stimmen) und eigene Bewertung 0 entfallen; Unix-Zeitstempel werden zu Hinzugefügt-Datum und „zuletzt gesehen“; Pfade, die auf dem Zielsystem ungültig sind, werden übersprungen und gemeldet.
 - **Einstellungen:** Sprache der Film-Metadaten, erzwungene Bildsprache, Video-Dateiendungen, ausgeschlossene Ordner (über die Pfad-Zuordnung) und Proxy (ohne Passwort) gehen in den KMM-Einstellungsspeicher; durch die Konfiguration festgelegte Werte bleiben unverändert.
-- **Nicht übernommen (Ember-Migration II):** Serien, Stream-Details, Embers Artwork-Pfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren/Markierungen, Kodi-Hosts und Scraper-Keys.
+- **Kodi-Geräte** (`Interface.Kodi.xml`): Name, Adresse, Port, Zugangsdaten, Echtzeit-Sync und Pfad-Zuordnungen; Embers lokale Pfade laufen über die Pfad-Zuordnung des Imports, Zuordnungen ohne passende Regel entfallen mit Hinweis. Geräte werden über den Namen erkannt.
+- **Nicht übernommen (Ember-Migration II):** Serien, Stream-Details, Embers Artwork-Pfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren/Markierungen, Scraper-Keys, Kodi-Optionen zum Gesehen-Status.
 
 **Schema-Versionen:** Direkt unterstützt wird v48. Ältere Profile werden einmal mit der letzten Ember-Version geöffnet, die sie selbst aktualisiert.
 
@@ -186,8 +189,8 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
    5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen ✅ (`<dateiname>-poster.jpg` …, bei DVD/Blu-ray `poster.jpg` im Filmordner)
    6. Automatisches Scrapen aller Filme einer Quelle ✅ (nur fehlende Metadaten und Bilder, Bericht mit Titeln ohne Treffer)
    - **2a. Ember-Migration I** ✅: erweitertes Filmmodell (Personen, Sets, Studios, Länder, Tags, Bewertungen, Nutzerdaten), Einstellungsspeicher, Import von Quellen, Filmen, Sets und Einstellungen mit Probelauf und Bericht.
-3. **Kodi-Integration:** JSON-RPC, Pfad-Mapping, Library-Update.
-4. **Serien:** TVDB/TMDB-TV, Staffeln/Episoden. Dazu **Ember-Migration II** (Serien, Stream-Details, restliche Settings, Kodi-Hosts, Scraper-Keys).
+3. **Kodi-Integration** ✅: Kodi-Geräte mit Pfad-Zuordnung und Verbindungstest, Echtzeit-Sync wie in Ember (RefreshMovie bzw. Scan des Ordners, entprellt im Hintergrund), manueller Abgleich je Film und Quelle, Übernahme der Kodi-Geräte aus Ember. Später: Gesehen-Status aus Kodi holen, Bibliothek bereinigen (`VideoLibrary.Clean`).
+4. **Serien:** TVDB/TMDB-TV, Staffeln/Episoden. Dazu **Ember-Migration II** (Serien, Stream-Details, restliche Settings, Scraper-Keys).
 5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.
 6. **Erweiterungen:** Trailer/Themes, Trakt.tv, Export, HTML-Scraper, Installer (jpackage).
 

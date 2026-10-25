@@ -2,10 +2,14 @@ package de.tiktak.kmm.kodi.rpc;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.time.Duration;
 import java.util.Base64;
 
@@ -151,6 +155,16 @@ class KodiClientTest {
             assertThatThrownBy(() -> impatient.version(new KodiEndpoint("127.0.0.1", silent.getLocalPort(), null, null)))
                     .hasMessage("Kodi unter 127.0.0.1 antwortet nicht rechtzeitig.");
         }
+    }
+
+    @Test
+    void reportsAConnectTimeoutAsUnreachable() throws Exception {
+        HttpClient silent = mock(HttpClient.class);
+        when(silent.send(any(), any())).thenThrow(new HttpConnectTimeoutException("connect timed out"));
+        KodiClient unreachable = new KodiClient(silent, Duration.ofSeconds(1));
+
+        assertThatThrownBy(() -> unreachable.version(new KodiEndpoint("firetv.local", 8080, null, null)))
+                .hasMessageStartingWith("Kodi unter firetv.local:8080 ist nicht erreichbar.");
     }
 
     @Test

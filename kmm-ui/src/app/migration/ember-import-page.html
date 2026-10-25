@@ -40,6 +40,14 @@
           {{ found.library.movies }} Filme, {{ found.library.movieSets }} Filmsets, {{ found.library.tvShows }} Serien
           <span class="hint">(Serien folgen in einem späteren Schritt)</span>
         </dd>
+        @if (found.kodiHosts.length > 0) {
+          <dt>Kodi-Geräte</dt>
+          <dd class="kodi-hosts">
+            @for (host of found.kodiHosts; track $index) {
+              <div>{{ host.name ?? host.address }} ({{ host.address }}:{{ host.port || 8080 }})</div>
+            }
+          </dd>
+        }
         @if (found.settings; as settings) {
           <dt>Einstellungen</dt>
           <dd class="settings">
@@ -81,6 +89,11 @@
       <mat-checkbox [formControl]="importSettings" name="importSettings">
         Einstellungen übernehmen (Sprache, Dateiendungen, ausgeschlossene Ordner, Proxy)
       </mat-checkbox>
+      @if (found.kodiHosts.length > 0) {
+        <mat-checkbox [formControl]="importKodiHosts" name="importKodiHosts" class="kodi-hosts-checkbox">
+          Kodi-Geräte mit Zugangsdaten übernehmen (Pfade über die Zuordnung oben)
+        </mat-checkbox>
+      }
     </mat-card-content>
     <mat-card-actions align="end">
       @if (runningJob(); as job) {
@@ -113,6 +126,10 @@
         <dd class="report-movies">
           {{ result.moviesCreated }} neu, {{ result.moviesUpdated }} aktualisiert, {{ result.moviesSkipped }} übersprungen
         </dd>
+        @if (result.kodiHostsCreated + result.kodiHostsUpdated > 0) {
+          <dt>Kodi-Geräte</dt>
+          <dd class="report-kodi-hosts">{{ result.kodiHostsCreated }} neu, {{ result.kodiHostsUpdated }} aktualisiert</dd>
+        }
         <dt>Ohne NFO</dt>
         <dd class="report-missing">{{ result.moviesWithoutNfo }}</dd>
       </dl>

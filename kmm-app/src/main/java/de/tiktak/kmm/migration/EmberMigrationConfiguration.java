@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Configuration;
 import de.tiktak.kmm.migration.ember.EmberDatabaseInspector;
 import de.tiktak.kmm.migration.ember.EmberProfileDetector;
 import de.tiktak.kmm.migration.ember.EmberProfileInspector;
+import de.tiktak.kmm.migration.ember.kodi.EmberKodiHostsReader;
 import de.tiktak.kmm.migration.ember.library.EmberLibraryReader;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
 
@@ -23,6 +24,11 @@ class EmberMigrationConfiguration {
     @Bean
     EmberSettingsReader emberSettingsReader() {
         return new EmberSettingsReader();
+    }
+
+    @Bean
+    EmberKodiHostsReader emberKodiHostsReader() {
+        return new EmberKodiHostsReader();
     }
 
     @Bean

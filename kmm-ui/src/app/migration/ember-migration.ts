@@ -15,6 +15,14 @@ export interface EmberSource {
   readonly path: string | null;
 }
 
+/** Kodi-Gerät aus Ember, ohne Zugangsdaten. */
+export interface EmberKodiHost {
+  readonly name: string | null;
+  readonly address: string;
+  readonly port: number;
+  readonly pathMappings: number;
+}
+
 export interface EmberSettingsSummary {
   readonly movieLanguage: string | null;
   readonly movieImageLanguage: string | null;
@@ -27,6 +35,7 @@ export interface EmberInspection {
   readonly schemaVersion: number;
   readonly library: EmberLibraryStatistics;
   readonly sources: readonly EmberSource[];
+  readonly kodiHosts: readonly EmberKodiHost[];
   readonly settings: EmberSettingsSummary | null;
 }
 
@@ -40,6 +49,7 @@ export interface EmberImportRequest {
   readonly profilePath: string;
   readonly pathMappings: readonly PathMapping[];
   readonly importSettings: boolean;
+  readonly importKodiHosts: boolean;
   readonly dryRun: boolean;
 }
 
@@ -52,6 +62,8 @@ export interface EmberImportReport {
   readonly moviesUpdated: number;
   readonly moviesSkipped: number;
   readonly moviesWithoutNfo: number;
+  readonly kodiHostsCreated: number;
+  readonly kodiHostsUpdated: number;
   readonly settingsChanges: readonly string[];
   readonly skippedSources: readonly string[];
   readonly missingFiles: readonly string[];

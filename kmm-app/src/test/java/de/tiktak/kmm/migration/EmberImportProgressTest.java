@@ -21,6 +21,9 @@ class EmberImportProgressTest {
         progress.sourceImported(false);
         progress.movieSkipped();
         progress.settingsChanged(List.of("Sprache"));
+        progress.kodiHostImported(true);
+        progress.kodiHostImported(false);
+        progress.kodiHostImported(false);
 
         EmberImportReport report = progress.toReport();
 
@@ -31,6 +34,8 @@ class EmberImportProgressTest {
         assertThat(report.moviesWithoutNfo()).isEqualTo(150);
         assertThat(report.sourcesCreated()).isEqualTo(1);
         assertThat(report.sourcesReused()).isEqualTo(1);
+        assertThat(report.kodiHostsCreated()).isEqualTo(1);
+        assertThat(report.kodiHostsUpdated()).isEqualTo(2);
         assertThat(report.missingFiles()).hasSize(EmberImportProgress.MAX_LISTED_ENTRIES);
         assertThat(report.skippedSources()).hasSize(EmberImportProgress.MAX_LISTED_ENTRIES);
         assertThat(report.warnings()).hasSize(EmberImportProgress.MAX_LISTED_ENTRIES);

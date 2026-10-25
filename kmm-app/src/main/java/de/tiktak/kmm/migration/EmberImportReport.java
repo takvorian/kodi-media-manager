@@ -12,6 +12,8 @@ import java.util.List;
  * @param moviesUpdated    vorhandene Filme, deren Angaben aus Ember übernommen wurden
  * @param moviesSkipped    Filme ohne Pfad-Zuordnung oder ohne übernommene Quelle
  * @param moviesWithoutNfo Filme, deren Datei oder NFO KMM nicht gefunden hat
+ * @param kodiHostsCreated neu angelegte Kodi-Geräte
+ * @param kodiHostsUpdated vorhandene Kodi-Geräte mit demselben Namen, die aktualisiert wurden
  * @param settingsChanges  übernommene Einstellungen in lesbarer Form
  * @param skippedSources   Quellen, die nicht übernommen wurden, mit Grund
  * @param missingFiles     Filme ohne gefundene NFO (gekürzt)
@@ -25,6 +27,8 @@ public record EmberImportReport(
         int moviesUpdated,
         int moviesSkipped,
         int moviesWithoutNfo,
+        int kodiHostsCreated,
+        int kodiHostsUpdated,
         List<String> settingsChanges,
         List<String> skippedSources,
         List<String> missingFiles,

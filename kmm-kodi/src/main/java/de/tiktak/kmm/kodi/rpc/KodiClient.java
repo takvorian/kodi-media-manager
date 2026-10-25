@@ -2,6 +2,7 @@ package de.tiktak.kmm.kodi.rpc;
 
 import java.io.IOException;
 import java.net.http.HttpClient;
+import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
@@ -129,15 +130,21 @@ public class KodiClient {
     private HttpResponse<String> send(KodiEndpoint endpoint, HttpRequest request) {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
+        } catch (HttpConnectTimeoutException e) {
+            throw unreachable(endpoint, e);
         } catch (HttpTimeoutException e) {
             throw new KodiException("Kodi unter %s antwortet nicht rechtzeitig.".formatted(endpoint.address()), e);
         } catch (IOException e) {
-            throw new KodiException(("Kodi unter %s:%d ist nicht erreichbar. Läuft Kodi, und ist "
-                    + "„Steuerung über HTTP erlauben“ aktiviert?").formatted(endpoint.address(), endpoint.port()), e);
+            throw unreachable(endpoint, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             throw new KodiException("Die Anfrage an Kodi wurde unterbrochen.", e);
         }
+    }
+
+    private static KodiException unreachable(KodiEndpoint endpoint, IOException cause) {
+        return new KodiException(("Kodi unter %s:%d ist nicht erreichbar. Läuft Kodi, und ist "
+                + "„Steuerung über HTTP erlauben“ aktiviert?").formatted(endpoint.address(), endpoint.port()), cause);
     }
 
     private JsonNode parse(KodiEndpoint endpoint, String body) {

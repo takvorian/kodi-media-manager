@@ -19,6 +19,10 @@ describe('EmberImportPage', () => {
       { name: 'filme', path: 'a:\\medien\\filme' },
       { name: 'ohne Pfad', path: null },
     ],
+    kodiHosts: [
+      { name: 'FireKodi', address: 'firetv.local', port: 8080, pathMappings: 2 },
+      { name: null, address: '192.168.1.20', port: 0, pathMappings: 0 },
+    ],
     settings: { movieLanguage: 'de-DE', movieImageLanguage: 'de', videoExtensions: ['.mkv', '.avi'] },
   };
   const report: EmberImportReport = {
@@ -29,6 +33,8 @@ describe('EmberImportPage', () => {
     moviesUpdated: 0,
     moviesSkipped: 2,
     moviesWithoutNfo: 1,
+    kodiHostsCreated: 2,
+    kodiHostsUpdated: 0,
     settingsChanges: ['Sprache der Metadaten: de-DE'],
     skippedSources: ['serien: keine Zuordnung'],
     missingFiles: ['Heat'],
@@ -97,6 +103,7 @@ describe('EmberImportPage', () => {
     expect(field('emberPath0').value).toBe('a:\\medien\\filme');
     expect(field('kmmPath0').value).toBe('a:\\medien\\filme');
     expect(field('emberPath1')).toBeNull();
+    expect(texts('.kodi-hosts div')).toEqual(['FireKodi (firetv.local:8080)', '192.168.1.20 (192.168.1.20:8080)']);
   });
 
   it('reports a profile that cannot be analyzed', async () => {
@@ -128,6 +135,7 @@ describe('EmberImportPage', () => {
       profilePath: 'C:\\Ember\\Profiles\\Default',
       pathMappings: [{ emberPath: 'a:\\medien\\filme', kmmPath: '/media/filme' }],
       importSettings: true,
+      importKodiHosts: true,
       dryRun: true,
     });
   });
@@ -155,6 +163,7 @@ describe('EmberImportPage', () => {
   it('imports without settings after confirmation', async () => {
     await analyze();
     element().querySelector<HTMLInputElement>('mat-checkbox input')!.click();
+    element().querySelector<HTMLInputElement>('.kodi-hosts-checkbox input')!.click();
     await fixture.whenStable();
 
     button('.import-button').click();
@@ -163,6 +172,7 @@ describe('EmberImportPage', () => {
 
     expect(request.request.body.dryRun).toBe(false);
     expect(request.request.body.importSettings).toBe(false);
+    expect(request.request.body.importKodiHosts).toBe(false);
   });
 
   it('shows progress, can cancel and presents the report', async () => {
@@ -181,6 +191,7 @@ describe('EmberImportPage', () => {
     expect(element().querySelector('.report mat-card-title')?.textContent).toContain('Probelauf');
     expect(element().querySelector('.report-movies')?.textContent).toContain('1169 neu, 0 aktualisiert, 2 übersprungen');
     expect(texts('.settings-changes li')).toEqual(['Sprache der Metadaten: de-DE']);
+    expect(element().querySelector('.report-kodi-hosts')?.textContent).toContain('2 neu, 0 aktualisiert');
     expect(texts('.skipped-sources li')).toEqual(['serien: keine Zuordnung']);
     expect(texts('.warnings li')).toEqual(['Verzeichnis nicht erreichbar']);
     expect(texts('.missing-files li')).toEqual(['Heat']);

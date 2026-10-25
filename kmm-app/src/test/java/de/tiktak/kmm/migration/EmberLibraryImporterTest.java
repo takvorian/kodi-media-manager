@@ -140,9 +140,9 @@ class EmberLibraryImporterTest {
         when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS);
         EmberLibrary withExcluded = new EmberLibrary(List.of(), List.of(), List.of(), List.of("D:\\Filme\\Privat"));
 
-        EmberImportReport dryRun = run(withExcluded, new EmberImportRequest("ember", mappings(), true, true));
+        EmberImportReport dryRun = run(withExcluded, new EmberImportRequest("ember", mappings(), true, false, true));
         verify(settingsService, never()).update(any());
-        EmberImportReport real = run(withExcluded, new EmberImportRequest("ember", mappings(), true, false));
+        EmberImportReport real = run(withExcluded, new EmberImportRequest("ember", mappings(), true, false, false));
 
         assertThat(dryRun.settingsChanges()).isEqualTo(real.settingsChanges()).hasSize(1);
         verify(settingsService).update(any());
@@ -181,7 +181,7 @@ class EmberLibraryImporterTest {
     }
 
     private static EmberImportRequest request(List<EmberImportRequest.PathMapping> mappings) {
-        return new EmberImportRequest("ember", mappings, false, false);
+        return new EmberImportRequest("ember", mappings, false, false, false);
     }
 
     private static EmberLibrary library(EmberMovieSource source, EmberMovie movie) {

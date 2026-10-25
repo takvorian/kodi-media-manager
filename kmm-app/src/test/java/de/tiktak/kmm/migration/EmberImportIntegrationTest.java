@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.migration.ember.EmberFixtures;
+import de.tiktak.kmm.kodi.KodiHostController;
 import de.tiktak.kmm.movie.MovieController;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.SettingsController;
@@ -83,6 +84,7 @@ class EmberImportIntegrationTest {
     void deleteLibrary() {
         jdbcClient.sql("DELETE FROM media_source").update();
         jdbcClient.sql("DELETE FROM movie_set").update();
+        jdbcClient.sql("DELETE FROM kodi_host").update();
         settingsService.update(KmmSettings.DEFAULTS);
     }
 
@@ -98,6 +100,8 @@ class EmberImportIntegrationTest {
         assertThat(count("media_source")).isZero();
         assertThat(count("movie")).isZero();
         assertThat(count("movie_set")).isZero();
+        assertThat(report.get("kodiHostsCreated").asInt()).isEqualTo(2);
+        assertThat(count("kodi_host")).isZero();
         assertThat(mockMvc.get().uri(SettingsController.BASE_PATH)).bodyJson()
                 .extractingPath("$.videoExtensions").asArray().contains("iso");
     }
@@ -132,6 +136,7 @@ class EmberImportIntegrationTest {
         assertThat(repeated.get("moviesCreated").asInt()).isZero();
         assertThat(repeated.get("moviesUpdated").asInt()).isEqualTo(3);
         assertThat(repeated.get("sourcesReused").asInt()).isEqualTo(1);
+        assertThat(repeated.get("kodiHostsUpdated").asInt()).isEqualTo(2);
         assertThat(count("movie")).isEqualTo(3);
     }
 
@@ -160,10 +165,25 @@ class EmberImportIntegrationTest {
     }
 
     @Test
+    void importsKodiHostsWithCredentialsAndMappedPaths() {
+        JsonNode report = awaitJob(startImport(false));
+
+        assertThat(report.get("warnings").toString()).contains("Wohnzimmer").contains("smb://nas/medien/serien/");
+        assertThat(mockMvc.get().uri(KodiHostController.BASE_PATH)).bodyJson().isLenientlyEqualTo("""
+                [{"name": "192.168.1.20", "address": "192.168.1.20", "port": 8080, "passwordSet": false,
+                  "realtimeSync": false, "pathMappings": []},
+                 {"name": "Wohnzimmer", "address": "kodi.example.org", "port": 8080, "username": "kodi",
+                  "passwordSet": true, "realtimeSync": true,
+                  "pathMappings": [{"localPath": "%s", "kodiPath": "smb://nas/medien/filme/"}]}]
+                """.formatted(json(library.toString())));
+    }
+
+    @Test
     void rejectsInvalidProfile() {
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("profilePath", library.toString(),
-                        "pathMappings", List.of(), "importSettings", false, "dryRun", true))))
+                        "pathMappings", List.of(), "importSettings", false, "importKodiHosts", false,
+                        "dryRun", true))))
                 .hasStatus(422);
     }
 
@@ -171,7 +191,9 @@ class EmberImportIntegrationTest {
     void listsEmberSourcesForPathMappings() {
         assertThat(mockMvc.get().uri(EmberMigrationController.BASE_PATH + "/inspect").param("path", profile.toString()))
                 .bodyJson().isLenientlyEqualTo("""
-                        {"sources": [{"name": "Filme", "path": "D:\\\\Filme"}]}
+                        {"sources": [{"name": "Filme", "path": "D:\\\\Filme"}],
+                         "kodiHosts": [{"name": "Wohnzimmer", "address": "kodi.example.org", "pathMappings": 2},
+                                       {"name": null, "address": "192.168.1.20", "port": 0}]}
                         """);
     }
 
@@ -181,6 +203,7 @@ class EmberImportIntegrationTest {
                         "profilePath", profile.toString(),
                         "pathMappings", List.of(Map.of("emberPath", "D:\\Filme", "kmmPath", library.toString())),
                         "importSettings", true,
+                        "importKodiHosts", true,
                         "dryRun", dryRun)))
                 .exchange();
         assertThat(result).hasStatus(202);

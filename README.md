@@ -3,7 +3,7 @@
 Medienverwaltung für [Kodi](https://kodi.tv) als Java-Nachfolger von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper).
 KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter H2-Datenbank) und bringt eine Weboberfläche mit.
 
-> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten) sowie Filme, Sets und Einstellungen aus Ember Media Manager übernehmen (mit Probelauf) funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
+> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten), Filme, Sets, Einstellungen und Kodi-Geräte aus Ember Media Manager übernehmen (mit Probelauf) sowie Kodi nach Änderungen automatisch aktualisieren funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
 
 ## Technik
 
@@ -20,6 +20,7 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 | `kmm-scanner` | Filmsuche im Dateisystem, Titel/Jahr aus Datei- und Ordnernamen |
 | `kmm-nfo` | Kodi-NFOs lesen und schreiben (unbekannte Elemente bleiben erhalten) |
 | `kmm-migration-ember` | Lesen von Ember-Profilen (Datenbank + `Settings.xml`), Pfad-Mapping; Import über die Seite **Ember-Import** |
+| `kmm-kodi` | JSON-RPC-Client für Kodi, Zuordnung von KMM-Pfaden zu Kodi-Pfaden |
 | `kmm-plugins` | mitgelieferte Plugins: `kmm-plugin-tmdb` (Metadaten und Bilder), `kmm-plugin-fanarttv` (Bilder) |
 | `kmm-ui` | Angular-Oberfläche |
 | `kmm-app` | Spring-Boot-Anwendung |
@@ -87,6 +88,20 @@ export KMM_ARTWORK_LANGUAGE=de     # bevorzugte Sprache der Bilder
 export KMM_PROXY_HOST=proxy.local  # Proxy für Online-Dienste, dazu KMM_PROXY_PORT/_USERNAME/_PASSWORD
 ```
 
+## Kodi
+
+Auf der Seite **Kodi** werden Kodi-Geräte mit Adresse, Port, Zugangsdaten und Pfad-Zuordnung angelegt (in Kodi:
+*Einstellungen → Dienste → Steuerung → Steuerung über HTTP erlauben*). Die Pfad-Zuordnung übersetzt die Verzeichnisse
+der KMM-Quellen in Kodis Pfade, z. B. `/media/filme` → `smb://nas/medien/filme/`.
+
+- **Echtzeit-Sync:** Nach dem Speichern von Metadaten oder Bildern lässt KMM Kodi den Film neu einlesen
+  (`VideoLibrary.RefreshMovie`); kennt Kodi ihn noch nicht, scannt Kodi seinen Ordner. Findet ein Scan in KMM neue
+  Filme, durchsucht Kodi die Quelle. Mehrere Änderungen kurz hintereinander lösen nur eine Aktualisierung aus
+  (`kmm.kodi.sync-delay`, Standard 5 s).
+- **Manuell:** „In Kodi aktualisieren“ auf der Detailseite und „Kodi-Scan“ je Quelle wirken auf alle Geräte.
+- Kodi wird ohne den Proxy aus den Einstellungen angesprochen. Aus KMM entfernte Filme bleiben in Kodi, bis dort die
+  Bibliothek bereinigt wird.
+
 Hinweis: Java sendet Proxy-Zugangsdaten bei HTTPS-Verbindungen nur, wenn die JVM mit
 `-Djdk.http.auth.tunneling.disabledSchemes=` gestartet wird.
 
@@ -114,5 +129,8 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/scrapers/metadata`
 - `GET /api/v1/settings`, `PUT /api/v1/settings` (Proxy-Passwort `null` = unverändert)
 - `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`
+- `GET /api/v1/kodi/hosts`, `POST /api/v1/kodi/hosts`, `PUT|DELETE /api/v1/kodi/hosts/{id}` (Passwort `null` = unverändert),
+  `POST /api/v1/kodi/hosts/{id}/test`
+- `POST /api/v1/kodi/movies/{id}/refresh`, `POST /api/v1/kodi/sources/{id}/scan` (alle Kodi-Geräte, Ergebnis je Gerät)
 - `GET /api/v1/migrations/ember/inspect?path=…`, `POST /api/v1/migrations/ember/import` → `202 Accepted` mit dem gestarteten Job
-  (`{"profilePath": …, "pathMappings": [{"emberPath": "a:\\filme", "kmmPath": "/media/filme"}], "importSettings": true, "dryRun": true}`)
+  (`{"profilePath": …, "pathMappings": [{"emberPath": "a:\\filme", "kmmPath": "/media/filme"}], "importSettings": true, "importKodiHosts": true, "dryRun": true}`)

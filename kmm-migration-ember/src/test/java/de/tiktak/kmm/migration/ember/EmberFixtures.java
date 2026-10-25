@@ -27,6 +27,8 @@ public final class EmberFixtures {
 
     private static final String FIXTURE_SQL = "/ember/MyVideos48-fixture.sql";
     private static final String FIXTURE_SETTINGS = "/ember/Settings.xml";
+    private static final String FIXTURE_KODI_SETTINGS = "/ember/Interface.Kodi.xml";
+    private static final String KODI_SETTINGS_FILE_NAME = "Interface.Kodi.xml";
     private static final String STATEMENT_SEPARATOR = ";";
     private static final String SQL_COMMENT_PREFIX = "--";
 
@@ -36,6 +38,7 @@ public final class EmberFixtures {
     public static Path createProfile(Path directory) {
         createDatabase(directory, DATABASE_FILE_NAME);
         copySettings(directory);
+        copyKodiSettings(directory);
         return directory;
     }
 
@@ -53,8 +56,16 @@ public final class EmberFixtures {
     }
 
     public static Path copySettings(Path directory) {
-        Path target = directory.resolve(EmberProfileDetector.SETTINGS_FILE_NAME);
-        try (InputStream input = EmberFixtures.class.getResourceAsStream(FIXTURE_SETTINGS)) {
+        return copy(FIXTURE_SETTINGS, directory.resolve(EmberProfileDetector.SETTINGS_FILE_NAME));
+    }
+
+    /** Zwei Kodi-Geräte: „Wohnzimmer“ mit Zugangsdaten und Pfad-Zuordnungen, ein zweites ohne Namen. */
+    public static Path copyKodiSettings(Path directory) {
+        return copy(FIXTURE_KODI_SETTINGS, directory.resolve(KODI_SETTINGS_FILE_NAME));
+    }
+
+    private static Path copy(String fixture, Path target) {
+        try (InputStream input = EmberFixtures.class.getResourceAsStream(fixture)) {
             Files.copy(input, target);
         } catch (IOException e) {
             throw new UncheckedIOException(e);

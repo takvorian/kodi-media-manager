@@ -41,4 +41,9 @@ public class EmberProfileException extends RuntimeException {
         return new EmberProfileException(
                 "Die Ember-Datenbank '%s' kann nicht gelesen werden.".formatted(databaseFile), cause);
     }
+
+    public static EmberProfileException unreadableKodiSettings(Path file, Throwable cause) {
+        return new EmberProfileException(
+                "Die Ember-Einstellungen für Kodi '%s' können nicht gelesen werden.".formatted(file), cause);
+    }
 }

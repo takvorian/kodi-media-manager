@@ -46,6 +46,7 @@ export class EmberImportPage {
   protected readonly profilePath = this.formBuilder.control('', Validators.required);
   protected readonly mappings = this.formBuilder.array<MappingForm>([]);
   protected readonly importSettings = this.formBuilder.control(true);
+  protected readonly importKodiHosts = this.formBuilder.control(true);
   protected readonly inspection = signal<EmberInspection | null>(null);
   protected readonly inspecting = signal(false);
   protected readonly report = signal<EmberImportReport | null>(null);
@@ -103,6 +104,7 @@ export class EmberImportPage {
         profilePath: inspection.profileDirectory,
         pathMappings: this.mappings.getRawValue().map(trimmed),
         importSettings: this.importSettings.value,
+        importKodiHosts: this.importKodiHosts.value,
         dryRun,
       })
       .subscribe({

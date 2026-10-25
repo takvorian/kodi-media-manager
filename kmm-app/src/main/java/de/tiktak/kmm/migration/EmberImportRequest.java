@@ -12,13 +12,15 @@ import jakarta.validation.constraints.Size;
  *
  * @param profilePath    Ember-Profil- oder Installationsverzeichnis
  * @param pathMappings   Zuordnung der Ember-Pfade zu Pfaden in KMM; ohne Zuordnung bleiben Pfade unverändert
- * @param importSettings ob Embers Einstellungen übernommen werden
+ * @param importSettings  ob Embers Einstellungen übernommen werden
+ * @param importKodiHosts ob Embers Kodi-Geräte samt Zugangsdaten übernommen werden
  * @param dryRun         Probelauf: alles prüfen und berichten, aber nichts speichern
  */
 public record EmberImportRequest(
         @NotBlank String profilePath,
         @NotNull @Size(max = MAX_MAPPINGS) List<@Valid PathMapping> pathMappings,
         boolean importSettings,
+        boolean importKodiHosts,
         boolean dryRun) {
 
     static final int MAX_MAPPINGS = 50;

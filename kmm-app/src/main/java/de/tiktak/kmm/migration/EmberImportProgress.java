@@ -20,6 +20,8 @@ final class EmberImportProgress {
     private int moviesUpdated;
     private int moviesSkipped;
     private int moviesWithoutNfo;
+    private int kodiHostsCreated;
+    private int kodiHostsUpdated;
     private final List<String> settingsChanges = new ArrayList<>();
     private final List<String> skippedSources = new ArrayList<>();
     private final List<String> missingFiles = new ArrayList<>();
@@ -53,6 +55,14 @@ final class EmberImportProgress {
         moviesSkipped++;
     }
 
+    void kodiHostImported(boolean created) {
+        if (created) {
+            kodiHostsCreated++;
+        } else {
+            kodiHostsUpdated++;
+        }
+    }
+
     void nfoMissing(String movie) {
         moviesWithoutNfo++;
         addLimited(missingFiles, movie);
@@ -70,7 +80,7 @@ final class EmberImportProgress {
 
     EmberImportReport toReport() {
         return new EmberImportReport(dryRun, sourcesCreated, sourcesReused, moviesCreated, moviesUpdated,
-                moviesSkipped, moviesWithoutNfo, settingsChanges, skippedSources, missingFiles, List.copyOf(warnings));
+                moviesSkipped, moviesWithoutNfo, kodiHostsCreated, kodiHostsUpdated, settingsChanges, skippedSources, missingFiles, List.copyOf(warnings));
     }
 
     private static void addLimited(List<String> list, String entry) {

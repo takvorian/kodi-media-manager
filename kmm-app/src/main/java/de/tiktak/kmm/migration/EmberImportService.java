@@ -12,7 +12,10 @@ import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.migration.ember.EmberProfile;
 import de.tiktak.kmm.migration.ember.EmberProfileDetector;
+import de.tiktak.kmm.migration.ember.EmberProfileException;
 import de.tiktak.kmm.migration.ember.EmberProfileInspector;
+import de.tiktak.kmm.migration.ember.kodi.EmberKodiHost;
+import de.tiktak.kmm.migration.ember.kodi.EmberKodiHostsReader;
 import de.tiktak.kmm.migration.ember.library.EmberLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberLibraryReader;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
@@ -39,14 +42,16 @@ public class EmberImportService {
     private final EmberProfileDetector profileDetector;
     private final EmberLibraryReader libraryReader;
     private final EmberSettingsReader settingsReader;
+    private final EmberKodiHostsReader kodiHostsReader;
     private final EmberLibraryImporter importer;
+    private final EmberKodiHostImporter kodiHostImporter;
     private final JobService jobService;
     private final TransactionTemplate transactionTemplate;
 
     public EmberInspectionResponse inspect(Path directory) {
         var inspection = profileInspector.inspect(directory);
         List<EmberMovieSource> sources = libraryReader.readSources(inspection.profile().databaseFile());
-        return EmberInspectionResponse.from(inspection, sources);
+        return EmberInspectionResponse.from(inspection, sources, inspectKodiHosts(inspection.profile()));
     }
 
     /**
@@ -65,8 +70,10 @@ public class EmberImportService {
         EmberImportProgress progress = new EmberImportProgress(request.dryRun());
         EmberLibrary library = libraryReader.read(profile.databaseFile());
         Optional<EmberSettings> settings = readSettings(profile, request, progress);
+        List<EmberKodiHost> kodiHosts = readKodiHosts(profile, request, progress);
         transactionTemplate.executeWithoutResult(status -> {
             importer.importLibrary(library, settings, request, progress, context);
+            kodiHostImporter.importHosts(kodiHosts, EmberPathTranslator.of(request.pathMappings()), progress);
             if (request.dryRun()) {
                 status.setRollbackOnly();
             }
@@ -76,6 +83,29 @@ public class EmberImportService {
                 request.dryRun() ? " (dry run)" : "", report.moviesCreated(), report.moviesUpdated(),
                 report.moviesSkipped());
         return report;
+    }
+
+    /** Fehlerhafte Kodi-Einstellungen sollen die Analyse des übrigen Profils nicht verhindern. */
+    private List<EmberKodiHost> inspectKodiHosts(EmberProfile profile) {
+        try {
+            return kodiHostsReader.read(profile);
+        } catch (EmberProfileException e) {
+            log.warn("Ember Kodi settings could not be read", e);
+            return List.of();
+        }
+    }
+
+    private List<EmberKodiHost> readKodiHosts(EmberProfile profile, EmberImportRequest request,
+            EmberImportProgress progress) {
+        if (!request.importKodiHosts()) {
+            return List.of();
+        }
+        try {
+            return kodiHostsReader.read(profile);
+        } catch (EmberProfileException e) {
+            progress.warn("Die Kodi-Geräte konnten nicht gelesen werden: " + e.getMessage());
+            return List.of();
+        }
     }
 
     private Optional<EmberSettings> readSettings(EmberProfile profile, EmberImportRequest request,

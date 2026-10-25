@@ -8,7 +8,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 
 import org.springframework.stereotype.Component;
 
@@ -17,8 +16,6 @@ import de.tiktak.kmm.migration.ember.library.EmberLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberMovie;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSet;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
-import de.tiktak.kmm.migration.ember.path.PathMapper;
-import de.tiktak.kmm.migration.ember.path.PathMappingRule;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.movie.MovieImportResult;
 import de.tiktak.kmm.movie.MovieImportService;
@@ -49,7 +46,7 @@ class EmberLibraryImporter {
 
     void importLibrary(EmberLibrary library, Optional<EmberSettings> settings, EmberImportRequest request,
             EmberImportProgress progress, JobContext context) {
-        Function<String, Optional<String>> paths = pathMapping(request.pathMappings());
+        EmberPathTranslator paths = EmberPathTranslator.of(request.pathMappings());
         Map<Long, Long> sourceIds = importSources(library.sources(), paths, progress);
         importMovies(library, sourceIds, paths, progress, context);
         if (request.importSettings()) {
@@ -57,12 +54,12 @@ class EmberLibraryImporter {
         }
     }
 
-    private Map<Long, Long> importSources(List<EmberMovieSource> sources, Function<String, Optional<String>> paths,
+    private Map<Long, Long> importSources(List<EmberMovieSource> sources, EmberPathTranslator paths,
             EmberImportProgress progress) {
         Map<Long, Long> sourceIds = new HashMap<>();
         for (EmberMovieSource source : sources) {
             String name = source.name() == null ? DEFAULT_SOURCE_NAME : source.name();
-            Optional<String> directory = source.path() == null ? Optional.empty() : target(paths, source.path());
+            Optional<String> directory = source.path() == null ? Optional.empty() : paths.translate(source.path());
             if (directory.isEmpty()) {
                 progress.sourceSkipped("%s (%s): keine gültige Pfad-Zuordnung auf diesem System"
                         .formatted(name, source.path()));
@@ -83,12 +80,12 @@ class EmberLibraryImporter {
         return sourceIds;
     }
 
-    private void importMovies(EmberLibrary library, Map<Long, Long> sourceIds,
-            Function<String, Optional<String>> paths, EmberImportProgress progress, JobContext context) {
+    private void importMovies(EmberLibrary library, Map<Long, Long> sourceIds, EmberPathTranslator paths,
+            EmberImportProgress progress, JobContext context) {
         Map<EmberMovie, String> filePaths = new LinkedHashMap<>();
         for (EmberMovie movie : library.movies()) {
             Optional<String> filePath = sourceIds.containsKey(movie.sourceId()) && movie.path() != null
-                    ? target(paths, movie.path())
+                    ? paths.translate(movie.path())
                     : Optional.empty();
             filePath.ifPresentOrElse(path -> filePaths.put(movie, path), progress::movieSkipped);
         }
@@ -122,40 +119,15 @@ class EmberLibraryImporter {
     }
 
     private void importSettings(Optional<EmberSettings> settings, List<String> excludedDirectories,
-            Function<String, Optional<String>> paths, EmberImportProgress progress, boolean dryRun) {
+            EmberPathTranslator paths, EmberImportProgress progress, boolean dryRun) {
         List<String> excluded = excludedDirectories.stream()
-                .map(directory -> target(paths, directory))
+                .map(paths::translate)
                 .flatMap(Optional::stream)
                 .toList();
         var imported = EmberSettingsMapper.map(settingsService.current(), settings, excluded);
         progress.settingsChanged(imported.changes());
         if (!dryRun && !imported.changes().isEmpty()) {
             settingsService.update(imported.settings());
-        }
-    }
-
-    /** Ohne Regeln bleiben die Pfade unverändert (KMM läuft auf demselben Rechner wie Ember). */
-    private static Function<String, Optional<String>> pathMapping(List<EmberImportRequest.PathMapping> mappings) {
-        if (mappings.isEmpty()) {
-            return Optional::of;
-        }
-        PathMapper mapper = new PathMapper(mappings.stream()
-                .map(mapping -> new PathMappingRule(mapping.emberPath(), mapping.kmmPath()))
-                .toList());
-        return mapper::map;
-    }
-
-    /** Zugeordneter Pfad, sofern er auf diesem System ein absoluter Pfad ist. */
-    private static Optional<String> target(Function<String, Optional<String>> paths, String emberPath) {
-        return paths.apply(emberPath).flatMap(EmberLibraryImporter::absolute);
-    }
-
-    private static Optional<String> absolute(String path) {
-        try {
-            Path target = Path.of(path);
-            return target.isAbsolute() ? Optional.of(target.normalize().toString()) : Optional.empty();
-        } catch (InvalidPathException e) {
-            return Optional.empty();
         }
     }
 }

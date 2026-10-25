@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8"?>
+<interface.kodi xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <getwatchedstate>false</getwatchedstate>
+  <getwatchedstatehost />
+  <host>
+    <label>Wohnzimmer</label>
+    <address>kodi.example.org</address>
+    <port>8080</port>
+    <username>kodi</username>
+    <password>test-passwort</password>
+    <realtimesync>true</realtimesync>
+    <moviesetartworkspath>smb://nas/medien/filme/_filmsets</moviesetartworkspath>
+    <source>
+      <contenttype>Movie</contenttype>
+      <localpath>D:\Filme</localpath>
+      <remotepath>smb://nas/medien/filme/</remotepath>
+    </source>
+    <source>
+      <contenttype>TV</contenttype>
+      <localpath>D:\Serien</localpath>
+      <remotepath>smb://nas/medien/serien/</remotepath>
+    </source>
+  </host>
+  <host>
+    <label />
+    <address>192.168.1.20</address>
+    <username />
+    <password />
+    <realtimesync>false</realtimesync>
+  </host>
+  <sendnotifications>true</sendnotifications>
+</interface.kodi>
