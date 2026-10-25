@@ -1,0 +1,126 @@
+<h2 class="page-title">Kodi</h2>
+
+<p class="hint">
+  KMM aktualisiert Kodi nach Änderungen an Filmen über die JSON-RPC-Schnittstelle. In Kodi dafür unter
+  <em>Einstellungen → Dienste → Steuerung</em> „Steuerung über HTTP erlauben“ aktivieren und Port, Benutzer und
+  Passwort hier eintragen. Über die Pfad-Zuordnung findet KMM die Filme unter Kodis eigenen Pfaden, z. B.
+  <code>smb://nas/filme/</code>.
+</p>
+
+@if (hosts.error()) {
+  <p class="error">Die Kodi-Geräte konnten nicht geladen werden.</p>
+} @else if (hosts.hasValue()) {
+  @for (host of hosts.value(); track host.id) {
+    <mat-card appearance="outlined" class="host">
+      <mat-card-header>
+        <mat-card-title class="host-name">{{ host.name }}</mat-card-title>
+        <mat-card-subtitle class="host-address">
+          {{ host.address }}:{{ host.port }}@if (host.username) { · Benutzer {{ host.username }}}
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="realtime">
+          {{ host.realtimeSync ? 'Echtzeit-Sync: Kodi wird nach jeder Änderung aktualisiert.' : 'Kein Echtzeit-Sync.' }}
+        </p>
+        @if (host.pathMappings.length > 0) {
+          <ul class="mappings">
+            @for (mapping of host.pathMappings; track $index) {
+              <li><span class="path">{{ mapping.localPath }}</span> → <span class="path">{{ mapping.kodiPath }}</span></li>
+            }
+          </ul>
+        } @else {
+          <p class="warning no-mappings">Ohne Pfad-Zuordnung kann KMM keine Filme in Kodi aktualisieren.</p>
+        }
+        @if (connectionResult(host); as result) {
+          <p class="connection-result" [class.ok]="result.ok" [class.error]="!result.ok">{{ result.message }}</p>
+        }
+      </mat-card-content>
+      <mat-card-actions align="end">
+        <button matButton class="test-button" [disabled]="isTesting(host)" (click)="testConnection(host)">
+          {{ isTesting(host) ? 'Teste …' : 'Verbindung testen' }}
+        </button>
+        <button matButton class="edit-button" [disabled]="editing() !== null" (click)="edit(host)">Bearbeiten</button>
+        <button matButton class="delete-button" (click)="delete(host)">Entfernen</button>
+      </mat-card-actions>
+    </mat-card>
+  } @empty {
+    <p class="empty">Noch kein Kodi-Gerät eingerichtet.</p>
+  }
+
+  @if (editing() === null) {
+    <div class="add-row">
+      <button matButton="filled" class="add-button" (click)="add()">Kodi-Gerät hinzufügen</button>
+    </div>
+  } @else {
+    <form [formGroup]="form" (ngSubmit)="save()">
+      <mat-card appearance="outlined" class="editor">
+        <mat-card-header>
+          <mat-card-title>{{ editedHost() ? 'Kodi-Gerät bearbeiten' : 'Neues Kodi-Gerät' }}</mat-card-title>
+        </mat-card-header>
+        <mat-card-content>
+          <div class="row">
+            <mat-form-field class="wide">
+              <mat-label>Name</mat-label>
+              <input matInput formControlName="name" name="name" placeholder="z. B. Wohnzimmer" />
+              <mat-error>Bitte einen Namen angeben.</mat-error>
+            </mat-form-field>
+            <mat-form-field class="wide">
+              <mat-label>Adresse</mat-label>
+              <input matInput formControlName="address" name="address" placeholder="z. B. kodi.fritz.box" />
+              <mat-error>Rechnername oder IP-Adresse ohne http://</mat-error>
+            </mat-form-field>
+            <mat-form-field class="narrow">
+              <mat-label>Port</mat-label>
+              <input matInput type="number" formControlName="port" name="port" min="1" max="65535" />
+              <mat-error>1 bis 65535</mat-error>
+            </mat-form-field>
+          </div>
+          <div class="row">
+            <mat-form-field class="wide">
+              <mat-label>Benutzer</mat-label>
+              <input matInput formControlName="username" name="username" autocomplete="off" />
+            </mat-form-field>
+            <mat-form-field class="wide">
+              <mat-label>Passwort</mat-label>
+              <input matInput type="password" formControlName="password" name="password" autocomplete="new-password" />
+              @if (editedHost()?.passwordSet) {
+                <mat-hint>Leer lassen, um das gespeicherte Passwort zu behalten</mat-hint>
+              }
+            </mat-form-field>
+          </div>
+          <mat-checkbox formControlName="realtimeSync" name="realtimeSync">
+            Echtzeit-Sync: Kodi nach jeder Änderung automatisch aktualisieren
+          </mat-checkbox>
+
+          <h3>Pfad-Zuordnung</h3>
+          <p class="hint">Verzeichnisse der KMM-Quellen und wie Kodi sie erreicht.</p>
+          @for (mapping of form.controls.pathMappings.controls; track mapping) {
+            <div class="row mapping" [formGroup]="mapping">
+              <mat-form-field class="wide">
+                <mat-label>Pfad in KMM</mat-label>
+                <input matInput formControlName="localPath" [name]="'localPath' + $index" />
+                <mat-error>Bitte einen Pfad angeben.</mat-error>
+              </mat-form-field>
+              <span class="arrow">→</span>
+              <mat-form-field class="wide">
+                <mat-label>Pfad in Kodi</mat-label>
+                <input matInput formControlName="kodiPath" [name]="'kodiPath' + $index" placeholder="smb://nas/filme/" />
+                <mat-error>Bitte einen Pfad angeben.</mat-error>
+              </mat-form-field>
+              <button matButton type="button" class="remove-mapping-button" (click)="removeMapping($index)">
+                Entfernen
+              </button>
+            </div>
+          }
+          <button matButton type="button" class="add-mapping-button" (click)="addMapping()">Zuordnung hinzufügen</button>
+        </mat-card-content>
+        <mat-card-actions align="end">
+          <button matButton type="button" class="cancel-button" (click)="cancelEditing()">Abbrechen</button>
+          <button matButton="filled" type="submit" class="save-button" [disabled]="saving()">Speichern</button>
+        </mat-card-actions>
+      </mat-card>
+    </form>
+  }
+} @else {
+  <p class="loading">Lade Kodi-Geräte …</p>
+}

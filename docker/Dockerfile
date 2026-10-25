@@ -10,6 +10,7 @@ COPY kmm-plugin-api/ kmm-plugin-api/
 COPY kmm-scanner/ kmm-scanner/
 COPY kmm-nfo/ kmm-nfo/
 COPY kmm-migration-ember/ kmm-migration-ember/
+COPY kmm-kodi/ kmm-kodi/
 COPY kmm-plugins/ kmm-plugins/
 COPY kmm-ui/ kmm-ui/
 COPY kmm-app/ kmm-app/

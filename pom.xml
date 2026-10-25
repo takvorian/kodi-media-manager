@@ -24,6 +24,7 @@
         <module>kmm-scanner</module>
         <module>kmm-nfo</module>
         <module>kmm-migration-ember</module>
+        <module>kmm-kodi</module>
         <module>kmm-plugins</module>
         <module>kmm-ui</module>
         <module>kmm-app</module>
@@ -72,6 +73,11 @@
             <dependency>
                 <groupId>de.tiktak.kmm</groupId>
                 <artifactId>kmm-migration-ember</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.tiktak.kmm</groupId>
+                <artifactId>kmm-kodi</artifactId>
                 <version>${project.version}</version>
             </dependency>
             <dependency>

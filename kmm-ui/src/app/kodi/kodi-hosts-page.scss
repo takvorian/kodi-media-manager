@@ -1,0 +1,58 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  max-width: 1000px;
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 16px;
+}
+
+.wide {
+  flex: 1 1 240px;
+}
+
+.narrow {
+  flex: 0 1 120px;
+}
+
+.arrow {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.mappings {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.path {
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.ok {
+  color: var(--mat-sys-primary);
+}
+
+.error,
+.warning {
+  color: var(--mat-sys-error);
+}
+
+.editor h3 {
+  margin: 16px 0 0;
+  font: var(--mat-sys-title-small);
+}
+
+.add-row {
+  display: flex;
+  justify-content: flex-end;
+}

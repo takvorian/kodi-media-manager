@@ -14,6 +14,11 @@ export const routes: Routes = [
     loadComponent: () => import('./sources/source-list').then((m) => m.SourceList),
   },
   {
+    path: 'kodi',
+    title: 'Kodi – KMM',
+    loadComponent: () => import('./kodi/kodi-hosts-page').then((m) => m.KodiHostsPage),
+  },
+  {
     path: 'settings',
     title: 'Einstellungen – KMM',
     loadComponent: () => import('./settings/settings-page').then((m) => m.SettingsPage),

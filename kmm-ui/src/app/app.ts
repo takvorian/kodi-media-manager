@@ -16,6 +16,7 @@ export class App {
   protected readonly navigation = [
     { path: '/movies', label: 'Filme' },
     { path: '/sources', label: 'Quellen' },
+    { path: '/kodi', label: 'Kodi' },
     { path: '/settings', label: 'Einstellungen' },
     { path: '/migration', label: 'Ember-Import' },
     { path: '/system', label: 'System' },
