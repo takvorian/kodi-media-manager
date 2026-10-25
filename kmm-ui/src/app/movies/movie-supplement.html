@@ -1,0 +1,80 @@
+@let data = supplement();
+<dl class="facts">
+  @if (data.set) {
+    <dt>Filmset</dt>
+    <dd class="movie-set">
+      {{ data.set.name }}
+      @if (data.set.overview) {
+        <span class="hint set-overview">– {{ data.set.overview }}</span>
+      }
+    </dd>
+  }
+  @if (data.ratings.length > 0) {
+    <dt>Bewertungen</dt>
+    <dd>
+      <ul class="inline-list ratings">
+        @for (rating of data.ratings; track rating.source) {
+          <li [class.default-rating]="rating.defaultRating">
+            {{ ratingLabel(rating) }} {{ rating.value | number: '1.1-1' }}@if (rating.max) {/{{ rating.max }}}
+            @if (rating.votes) {
+              <span class="hint"> ({{ rating.votes | number }} Stimmen)</span>
+            }
+          </li>
+        }
+      </ul>
+    </dd>
+  }
+  @if (data.userRating) {
+    <dt>Eigene Bewertung</dt>
+    <dd class="user-rating">{{ data.userRating }}/10</dd>
+  }
+  @if (data.directors.length > 0) {
+    <dt>Regie</dt>
+    <dd class="directors">{{ data.directors.join(', ') }}</dd>
+  }
+  @if (data.writers.length > 0) {
+    <dt>Drehbuch</dt>
+    <dd class="writers">{{ data.writers.join(', ') }}</dd>
+  }
+  @if (data.studios.length > 0) {
+    <dt>Studios</dt>
+    <dd class="studios">{{ data.studios.join(', ') }}</dd>
+  }
+  @if (data.countries.length > 0) {
+    <dt>Länder</dt>
+    <dd class="countries">{{ data.countries.join(', ') }}</dd>
+  }
+  @if (data.tags.length > 0) {
+    <dt>Tags</dt>
+    <dd class="tags">{{ data.tags.join(', ') }}</dd>
+  }
+  <dt>Hinzugefügt</dt>
+  <dd class="added-at">{{ addedAt() | date: 'mediumDate' }}</dd>
+  <dt>Gesehen</dt>
+  <dd class="play-state">
+    @if (data.playCount) {
+      {{ data.playCount }}×@if (data.lastPlayed) {, zuletzt am {{ data.lastPlayed | date: 'mediumDate' }}}
+    } @else {
+      <span class="hint">noch nicht</span>
+    }
+  </dd>
+</dl>
+
+@if (data.actors.length > 0) {
+  <h3 class="cast-title">Besetzung</h3>
+  <ul class="cast">
+    @for (actor of visibleActors(); track $index) {
+      <li>
+        <span class="actor-name">{{ actor.name }}</span>
+        @if (actor.role) {
+          <span class="hint actor-role">{{ actor.role }}</span>
+        }
+      </li>
+    }
+  </ul>
+  @if (data.actors.length > visibleActorLimit) {
+    <button matButton type="button" class="toggle-actors" (click)="toggleActors()">
+      {{ showAllActors() ? 'Weniger anzeigen' : 'Alle anzeigen (' + hiddenActorCount() + ' weitere)' }}
+    </button>
+  }
+}

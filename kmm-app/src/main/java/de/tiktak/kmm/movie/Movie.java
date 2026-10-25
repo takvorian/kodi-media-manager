@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Stream;
 
 import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
@@ -19,10 +20,12 @@ import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -61,7 +64,7 @@ public class Movie {
     @Column(name = "part_count", nullable = false)
     private int partCount;
 
-    @Column(name = "added_at", nullable = false, updatable = false)
+    @Column(name = "added_at", nullable = false)
     private Instant addedAt;
 
     @Column(nullable = false, length = MovieMetadata.MAX_TITLE_LENGTH)
@@ -107,6 +110,58 @@ public class Movie {
     @Column(name = "genre", nullable = false, length = MovieMetadata.MAX_GENRE_LENGTH)
     private List<String> genres = new ArrayList<>();
 
+    @ElementCollection
+    @CollectionTable(name = "movie_credit", joinColumns = @JoinColumn(name = "movie_id"))
+    @OrderColumn(name = "credit_order")
+    private List<MovieCredit> credits = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "movie_studio", joinColumns = @JoinColumn(name = "movie_id"))
+    @OrderColumn(name = "studio_order")
+    @Column(name = "studio", nullable = false, length = MovieSupplement.MAX_LABEL_LENGTH)
+    private List<String> studios = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "movie_country", joinColumns = @JoinColumn(name = "movie_id"))
+    @OrderColumn(name = "country_order")
+    @Column(name = "country", nullable = false, length = MovieSupplement.MAX_LABEL_LENGTH)
+    private List<String> countries = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "movie_tag", joinColumns = @JoinColumn(name = "movie_id"))
+    @OrderColumn(name = "tag_order")
+    @Column(name = "tag", nullable = false, length = MovieSupplement.MAX_LABEL_LENGTH)
+    private List<String> tags = new ArrayList<>();
+
+    @ElementCollection
+    @CollectionTable(name = "movie_rating", joinColumns = @JoinColumn(name = "movie_id"))
+    @OrderColumn(name = "rating_order")
+    private List<MovieRating> ratings = new ArrayList<>();
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "movie_set_id")
+    private MovieSet movieSet;
+
+    /** Position im Filmset oder {@code null}, wenn unbekannt. */
+    @Column(name = "set_order")
+    private Integer setOrder;
+
+    @Column(name = "user_rating")
+    private Integer userRating;
+
+    @Column(name = "play_count")
+    private Integer playCount;
+
+    @Column(name = "last_played_at")
+    private Instant lastPlayedAt;
+
+    /**
+     * Ob die weiteren Angaben (Darsteller, Bewertungen …) bekannt sind. Fehlen sie, weil die NFO
+     * noch nicht neu eingelesen wurde, darf KMM sie beim Schreiben der NFO nicht löschen.
+     */
+    @Column(name = "supplement_known", nullable = false)
+    private boolean supplementKnown;
+
     /** Änderungszeit der NFO beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
@@ -143,6 +198,56 @@ public class Movie {
         this.genres.addAll(metadata.genres());
     }
 
+    public MovieSupplement supplement() {
+        return new MovieSupplement(
+                creditsOf(CreditType.ACTOR).map(MovieCredit::toActor).toList(),
+                creditsOf(CreditType.DIRECTOR).map(MovieCredit::getName).toList(),
+                creditsOf(CreditType.WRITER).map(MovieCredit::getName).toList(),
+                List.copyOf(studios),
+                List.copyOf(countries),
+                List.copyOf(tags),
+                ratings.stream().map(MovieRating::toRating).toList(),
+                movieSet == null ? null : movieSet.toReference(),
+                userRating,
+                playCount,
+                lastPlayedAt);
+    }
+
+    /**
+     * Übernimmt die weiteren Angaben.
+     *
+     * @param set das zum Verweis des Supplements gehörende Set oder {@code null}
+     */
+    void applySupplement(MovieSupplement supplement, MovieSet set) {
+        credits.clear();
+        supplement.actors().forEach(actor -> credits.add(MovieCredit.of(actor)));
+        supplement.directors().forEach(name -> credits.add(MovieCredit.of(CreditType.DIRECTOR, name)));
+        supplement.writers().forEach(name -> credits.add(MovieCredit.of(CreditType.WRITER, name)));
+        replace(studios, supplement.studios());
+        replace(countries, supplement.countries());
+        replace(tags, supplement.tags());
+        ratings.clear();
+        supplement.ratings().forEach(rating -> ratings.add(MovieRating.of(rating)));
+        if (set != movieSet) {
+            movieSet = set;
+            setOrder = null;
+        }
+        userRating = supplement.userRating();
+        playCount = supplement.playCount();
+        lastPlayedAt = supplement.lastPlayed();
+        supplementKnown = true;
+    }
+
+    /** Ordnet den Film einem Set an der angegebenen Position zu. */
+    void assignSet(MovieSet set, Integer order) {
+        movieSet = set;
+        setOrder = set == null ? null : order;
+    }
+
+    void changeAddedAt(Instant newAddedAt) {
+        this.addedAt = Objects.requireNonNull(newAddedAt, "addedAt must not be null");
+    }
+
     void markNfoSynchronized(Instant nfoModifiedAt) {
         this.nfoModifiedAt = Objects.requireNonNull(nfoModifiedAt, "nfoModifiedAt must not be null");
     }
@@ -151,8 +256,19 @@ public class Movie {
         return CompanionFiles.of(Path.of(filePath), discFormat, partCount);
     }
 
+    private Stream<MovieCredit> creditsOf(CreditType type) {
+        return credits.stream().filter(credit -> credit.getType() == type);
+    }
+
+    private static void replace(List<String> target, List<String> values) {
+        target.clear();
+        target.addAll(values);
+    }
+
     @PrePersist
     void onCreate() {
-        addedAt = Instant.now();
+        if (addedAt == null) {
+            addedAt = Instant.now();
+        }
     }
 }

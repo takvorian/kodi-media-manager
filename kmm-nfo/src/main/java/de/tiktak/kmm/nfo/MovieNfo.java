@@ -13,6 +13,8 @@ import java.util.Optional;
  *
  * @param runtime   Laufzeit in Minuten
  * @param uniqueIds IDs je Anbieter in Reihenfolge, Schlüssel klein geschrieben (z. B. {@code imdb}, {@code tmdb})
+ * @param supplement weitere Angaben; {@code null} heißt „unbekannt“: Beim Schreiben bleiben die
+ *                   entsprechenden Elemente einer vorhandenen NFO dann unverändert
  */
 public record MovieNfo(
         String title,
@@ -26,7 +28,8 @@ public record MovieNfo(
         Integer runtime,
         String mpaa,
         List<String> genres,
-        Map<String, String> uniqueIds) {
+        Map<String, String> uniqueIds,
+        MovieNfoSupplement supplement) {
 
     public static final String IMDB = "imdb";
     public static final String TMDB = "tmdb";
@@ -34,6 +37,14 @@ public record MovieNfo(
     public MovieNfo {
         genres = genres == null ? List.of() : List.copyOf(genres);
         uniqueIds = uniqueIds == null ? Map.of() : lowerCaseKeysInOrder(uniqueIds);
+    }
+
+    /** NFO-Inhalt ohne bekannte weitere Angaben. */
+    public MovieNfo(String title, String originalTitle, String sortTitle, Integer year, LocalDate premiered,
+            String plot, String outline, String tagline, Integer runtime, String mpaa, List<String> genres,
+            Map<String, String> uniqueIds) {
+        this(title, originalTitle, sortTitle, year, premiered, plot, outline, tagline, runtime, mpaa, genres,
+                uniqueIds, null);
     }
 
     /** Die Reihenfolge bleibt erhalten: Die erste ID wird beim Schreiben zur Standard-ID ({@code default}). */

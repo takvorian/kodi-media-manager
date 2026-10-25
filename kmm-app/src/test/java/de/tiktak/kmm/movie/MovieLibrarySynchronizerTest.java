@@ -10,6 +10,7 @@ import static org.mockito.Mockito.when;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
@@ -24,6 +25,9 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.nfo.MovieNfo;
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
+import de.tiktak.kmm.nfo.NfoActor;
+import de.tiktak.kmm.nfo.NfoMovieSet;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.MovieCandidate;
@@ -46,6 +50,9 @@ class MovieLibrarySynchronizerTest {
     @Mock
     private MovieNfoFiles nfoFiles;
 
+    @Mock
+    private MovieSets movieSets;
+
     @Captor
     private ArgumentCaptor<List<Movie>> moviesCaptor;
 
@@ -53,7 +60,7 @@ class MovieLibrarySynchronizerTest {
 
     @BeforeEach
     void setUp() {
-        synchronizer = new MovieLibrarySynchronizer(movieRepository, sourceService, nfoFiles,
+        synchronizer = new MovieLibrarySynchronizer(movieRepository, sourceService, nfoFiles, movieSets,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -94,6 +101,40 @@ class MovieLibrarySynchronizerTest {
         assertThat(movie.getTitle()).isEqualTo("Heat – Die Saga");
         assertThat(movie.getImdbId()).isEqualTo("tt0113277");
         assertThat(movie.getNfoModifiedAt()).isEqualTo(NFO_TIME);
+    }
+
+    @Test
+    void takesSupplementSetAndDateAddedFromNfo() {
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of());
+        ScannedMovie scanned = scannedWithNfo("Heat.mkv", "Heat", null);
+        MovieSet set = new MovieSet("Mann Collection");
+        when(movieSets.resolve(new MovieSupplement.SetReference("Mann Collection", null))).thenReturn(set);
+        when(nfoFiles.read(scanned.nfo().orElseThrow())).thenReturn(withSupplement(nfo("Heat", 1995, null),
+                new MovieNfoSupplement(List.of(new NfoActor("Al Pacino", "Hanna", 0, null)), List.of("Michael Mann"),
+                        List.of(), List.of(), List.of(), List.of(), List.of(), new NfoMovieSet("Mann Collection", null),
+                        null, 2, null, LocalDateTime.of(2016, 11, 30, 1, 20, 15))));
+
+        synchronizer.synchronize(SOURCE_ID, List.of(scanned));
+
+        verify(movieRepository).saveAll(moviesCaptor.capture());
+        Movie movie = moviesCaptor.getValue().getFirst();
+        assertThat(movie.supplement().actors()).extracting(MovieSupplement.Actor::name).containsExactly("Al Pacino");
+        assertThat(movie.supplement().directors()).containsExactly("Michael Mann");
+        assertThat(movie.getMovieSet()).isSameAs(set);
+        assertThat(movie.getPlayCount()).isEqualTo(2);
+        assertThat(movie.getAddedAt()).isEqualTo(Instant.parse("2016-11-30T01:20:15Z"));
+    }
+
+    @Test
+    void treatsSupplementOfNewMovieWithoutNfoAsKnownButNotWithUnreadableNfo() {
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of());
+        ScannedMovie broken = scannedWithNfo("Ronin.mkv", "Ronin", null);
+        when(nfoFiles.read(broken.nfo().orElseThrow())).thenThrow(unreadableNfo());
+
+        synchronizer.synchronize(SOURCE_ID, List.of(scanned("Heat.mkv", "Heat", null), broken));
+
+        verify(movieRepository).saveAll(moviesCaptor.capture());
+        assertThat(moviesCaptor.getValue()).extracting(Movie::isSupplementKnown).containsExactly(true, false);
     }
 
     @Test
@@ -196,6 +237,11 @@ class MovieLibrarySynchronizerTest {
     private static MovieNfo nfo(String title, Integer year, String imdbId) {
         Map<String, String> ids = imdbId == null ? Map.of() : Map.of(MovieNfo.IMDB, imdbId);
         return new MovieNfo(title, null, null, year, null, null, null, null, null, null, List.of("Krimi"), ids);
+    }
+
+    private static MovieNfo withSupplement(MovieNfo nfo, MovieNfoSupplement supplement) {
+        return new MovieNfo(nfo.title(), nfo.originalTitle(), nfo.sortTitle(), nfo.year(), nfo.premiered(), nfo.plot(),
+                nfo.outline(), nfo.tagline(), nfo.runtime(), nfo.mpaa(), nfo.genres(), nfo.uniqueIds(), supplement);
     }
 
     private static NfoException unreadableNfo() {

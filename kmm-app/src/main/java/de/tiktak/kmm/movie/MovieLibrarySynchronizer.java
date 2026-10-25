@@ -1,6 +1,7 @@
 package de.tiktak.kmm.movie;
 
 import java.time.Clock;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.MovieNfo;
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.scanner.MovieCandidate;
 import de.tiktak.kmm.source.MediaSourceService;
@@ -31,6 +33,7 @@ class MovieLibrarySynchronizer {
     private final MovieRepository movieRepository;
     private final MediaSourceService sourceService;
     private final MovieNfoFiles nfoFiles;
+    private final MovieSets movieSets;
     private final Clock clock;
 
     @Transactional
@@ -65,7 +68,9 @@ class MovieLibrarySynchronizer {
         MovieCandidate candidate = scanned.candidate();
         Movie movie = new Movie(sourceId, scanned.path(), candidate.title(), candidate.year(), candidate.format(),
                 candidate.partCount());
-        applyNfo(movie, scanned, candidate.title(), candidate.year(), outcome);
+        if (!applyNfo(movie, scanned, candidate.title(), candidate.year(), outcome) && scanned.nfo().isEmpty()) {
+            movie.applySupplement(MovieSupplement.EMPTY, null);
+        }
         return movie;
     }
 
@@ -87,12 +92,25 @@ class MovieLibrarySynchronizer {
         try {
             MovieNfo nfo = nfoFiles.read(nfoFile);
             movie.applyMetadata(MovieNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
+            applySupplement(movie, nfo.supplement());
             movie.markNfoSynchronized(nfoFile.modifiedAt());
             return true;
         } catch (NfoException e) {
             log.warn("Skipping unreadable NFO: {}", e.getMessage());
             outcome.nfoErrors++;
             return false;
+        }
+    }
+
+    private void applySupplement(Movie movie, MovieNfoSupplement nfoSupplement) {
+        if (nfoSupplement == null) {
+            return;
+        }
+        MovieSupplement supplement = MovieNfoMapper.toSupplement(nfoSupplement, clock.getZone());
+        movie.applySupplement(supplement, movieSets.resolve(supplement.set()));
+        Instant dateAdded = MovieNfoMapper.toInstant(nfoSupplement.dateAdded(), clock.getZone());
+        if (dateAdded != null) {
+            movie.changeAddedAt(dateAdded);
         }
     }
 

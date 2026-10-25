@@ -7,6 +7,7 @@ import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -27,7 +28,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Schreibt Kodi-Film-NFOs. Ist bereits eine NFO vorhanden, werden nur die von KMM verwalteten
- * Elemente ersetzt; alles andere (Schauspieler, Bewertungen, Stream-Details …) bleibt erhalten.
+ * Elemente ersetzt; alles andere (Stream-Details, Trailer, Bild-URLs …) bleibt erhalten. Ohne bekannte
+ * weitere Angaben ({@link MovieNfo#supplement()}) bleiben auch Darsteller, Bewertungen usw. unverändert.
  * Die Datei wird über eine temporäre Datei ersetzt, damit bei Fehlern keine halbe NFO entsteht.
  */
 @Slf4j
@@ -49,18 +51,21 @@ public class NfoWriter {
     }
 
     private static void apply(Document document, Element movie, MovieNfo nfo) {
-        setText(document, movie, NfoElements.TITLE, nfo.title());
-        setText(document, movie, NfoElements.ORIGINAL_TITLE, nfo.originalTitle());
-        setText(document, movie, NfoElements.SORT_TITLE, nfo.sortTitle());
-        setText(document, movie, NfoElements.YEAR, toText(nfo.effectiveYear()));
-        setText(document, movie, NfoElements.PREMIERED, toText(nfo.premiered()));
-        setText(document, movie, NfoElements.PLOT, nfo.plot());
-        setText(document, movie, NfoElements.OUTLINE, nfo.outline());
-        setText(document, movie, NfoElements.TAGLINE, nfo.tagline());
-        setText(document, movie, NfoElements.RUNTIME, toText(nfo.runtime()));
-        setText(document, movie, NfoElements.MPAA, nfo.mpaa());
-        setTexts(document, movie, NfoElements.GENRE, nfo.genres());
+        NfoDomEditor.setText(document, movie, NfoElements.TITLE, nfo.title());
+        NfoDomEditor.setText(document, movie, NfoElements.ORIGINAL_TITLE, nfo.originalTitle());
+        NfoDomEditor.setText(document, movie, NfoElements.SORT_TITLE, nfo.sortTitle());
+        NfoDomEditor.setText(document, movie, NfoElements.YEAR, toText(nfo.effectiveYear()));
+        NfoDomEditor.setText(document, movie, NfoElements.PREMIERED, toText(nfo.premiered()));
+        NfoDomEditor.setText(document, movie, NfoElements.PLOT, nfo.plot());
+        NfoDomEditor.setText(document, movie, NfoElements.OUTLINE, nfo.outline());
+        NfoDomEditor.setText(document, movie, NfoElements.TAGLINE, nfo.tagline());
+        NfoDomEditor.setText(document, movie, NfoElements.RUNTIME, toText(nfo.runtime()));
+        NfoDomEditor.setText(document, movie, NfoElements.MPAA, nfo.mpaa());
+        NfoDomEditor.setTexts(document, movie, NfoElements.GENRE, nfo.genres());
         setUniqueIds(document, movie, nfo.uniqueIds());
+        if (nfo.supplement() != null) {
+            NfoSupplementWriter.write(document, movie, nfo.supplement());
+        }
     }
 
     private static Optional<Document> existingDocument(Path nfoFile) {
@@ -83,53 +88,18 @@ public class NfoWriter {
         return document;
     }
 
-    /** Ersetzt das erste Element des Namens oder legt es an; {@code null} entfernt alle. */
-    private static void setText(Document document, Element movie, String name, String value) {
-        List<Element> existing = NfoDocuments.children(movie, name);
-        if (value == null || value.isBlank()) {
-            existing.forEach(movie::removeChild);
-            return;
-        }
-        Element element = existing.isEmpty() ? appendChild(document, movie, name) : existing.getFirst();
-        element.setTextContent(value.strip());
-        existing.stream().skip(1).forEach(movie::removeChild);
-    }
-
-    /** Ersetzt alle Elemente des Namens an der Position des ersten vorhandenen. */
-    private static void setTexts(Document document, Element movie, String name, List<String> values) {
-        List<Element> existing = NfoDocuments.children(movie, name);
-        Node position = existing.isEmpty() ? null : existing.getFirst();
-        for (String value : values) {
-            Element element = document.createElement(name);
-            element.setTextContent(value.strip());
-            movie.insertBefore(element, position);
-        }
-        existing.forEach(movie::removeChild);
-    }
-
     private static void setUniqueIds(Document document, Element movie, Map<String, String> uniqueIds) {
-        List<Element> existing = NfoDocuments.children(movie, NfoElements.UNIQUE_ID);
-        Node position = existing.isEmpty() ? null : existing.getFirst();
-        boolean first = true;
+        List<Element> elements = new ArrayList<>();
         for (Map.Entry<String, String> id : uniqueIds.entrySet()) {
-            Element element = document.createElement(NfoElements.UNIQUE_ID);
+            Element element = NfoDomEditor.textElement(document, NfoElements.UNIQUE_ID, id.getValue());
             element.setAttribute(NfoElements.TYPE_ATTRIBUTE, id.getKey());
-            if (first) {
+            if (elements.isEmpty()) {
                 element.setAttribute(NfoElements.DEFAULT_ATTRIBUTE, TRUE);
-                first = false;
             }
-            element.setTextContent(id.getValue());
-            movie.insertBefore(element, position);
+            elements.add(element);
         }
-        existing.forEach(movie::removeChild);
+        NfoDomEditor.replaceAll(movie, NfoElements.UNIQUE_ID, elements);
     }
-
-    private static Element appendChild(Document document, Element movie, String name) {
-        Element element = document.createElement(name);
-        movie.appendChild(element);
-        return element;
-    }
-
 
     /** Entfernt Einrückungen der alten Datei, damit der Transformer sauber neu einrücken kann. */
     private static void removeWhitespaceText(Node node) {

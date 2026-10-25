@@ -3,22 +3,30 @@ package de.tiktak.kmm.movie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
+import java.time.Clock;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
+import de.tiktak.kmm.nfo.NfoActor;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.scanner.DiscFormat;
 
@@ -36,8 +44,12 @@ class MovieMetadataServiceTest {
     @Mock
     private MovieNfoFiles nfoFiles;
 
-    @InjectMocks
     private MovieMetadataService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new MovieMetadataService(movieRepository, nfoFiles, Clock.fixed(NFO_TIME, ZoneOffset.UTC));
+    }
 
     @Test
     void returnsDetailsWithExistingNfo() {
@@ -65,7 +77,8 @@ class MovieMetadataServiceTest {
     void writesNfoAndStoresMetadata() {
         Movie movie = givenMovie();
         MovieMetadata metadata = metadata("Heat (Director's Cut)");
-        when(nfoFiles.write(movie.companionFiles(), metadata)).thenReturn(new NfoFileState(NFO_FILE, NFO_TIME));
+        when(nfoFiles.write(eq(movie.companionFiles()), eq(metadata), isNull()))
+                .thenReturn(new NfoFileState(NFO_FILE, NFO_TIME));
 
         MovieDetails details = service.update(MOVIE_ID, metadata);
 
@@ -76,9 +89,26 @@ class MovieMetadataServiceTest {
     }
 
     @Test
+    void writesKnownSupplementWithDateAddedIntoTheNfo() {
+        Movie movie = givenMovie();
+        movie.applySupplement(new MovieSupplement(List.of(new MovieSupplement.Actor("Al Pacino", "Hanna", null)),
+                List.of(), List.of(), List.of(), List.of(), List.of(), List.of(), null, 9, null, null), null);
+        movie.changeAddedAt(Instant.parse("2016-11-30T01:20:15Z"));
+        ArgumentCaptor<MovieNfoSupplement> written = ArgumentCaptor.forClass(MovieNfoSupplement.class);
+        when(nfoFiles.write(any(), any(), written.capture())).thenReturn(new NfoFileState(NFO_FILE, NFO_TIME));
+
+        MovieDetails details = service.update(MOVIE_ID, metadata("Heat"));
+
+        assertThat(written.getValue().actors()).containsExactly(new NfoActor("Al Pacino", "Hanna", 0, null));
+        assertThat(written.getValue().userRating()).isEqualTo(9);
+        assertThat(written.getValue().dateAdded()).isEqualTo(LocalDateTime.of(2016, 11, 30, 1, 20, 15));
+        assertThat(details.supplement().actors()).extracting(MovieSupplement.Actor::name).containsExactly("Al Pacino");
+    }
+
+    @Test
     void keepsDatabaseUnchangedWhenNfoCannotBeWritten() {
         Movie movie = givenMovie();
-        when(nfoFiles.write(any(), any())).thenThrow(mock(NfoException.class));
+        when(nfoFiles.write(any(), any(), any())).thenThrow(mock(NfoException.class));
 
         assertThatThrownBy(() -> service.update(MOVIE_ID, metadata("Neu")))
                 .isInstanceOfSatisfying(NfoNotWritableException.class, exception -> {

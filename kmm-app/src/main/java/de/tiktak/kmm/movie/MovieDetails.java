@@ -18,6 +18,7 @@ public record MovieDetails(
         int partCount,
         Instant addedAt,
         MovieMetadata metadata,
+        MovieSupplement supplement,
         NfoInfo nfo) {
 
     static MovieDetails from(Movie movie, Optional<NfoFileState> nfoFile) {
@@ -25,7 +26,7 @@ public record MovieDetails(
                 .map(state -> new NfoInfo(state.file().toString(), true, state.modifiedAt()))
                 .orElseGet(() -> new NfoInfo(movie.companionFiles().nfoFile().toString(), false, null));
         return new MovieDetails(movie.getId(), movie.getSourceId(), movie.getFilePath(), movie.getDiscFormat(),
-                movie.getPartCount(), movie.getAddedAt(), movie.metadata(), nfo);
+                movie.getPartCount(), movie.getAddedAt(), movie.metadata(), movie.supplement(), nfo);
     }
 
     /**

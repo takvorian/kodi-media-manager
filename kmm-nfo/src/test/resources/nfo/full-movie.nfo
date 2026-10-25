@@ -18,19 +18,29 @@
   <thumb aspect="poster">https://image.example.org/heat-poster.jpg</thumb>
   <mpaa>FSK 16</mpaa>
   <playcount>2</playcount>
+  <lastplayed>2024-05-01 20:15:00</lastplayed>
   <uniqueid type="imdb" default="true">tt0113277</uniqueid>
   <uniqueid type="tmdb">949</uniqueid>
   <genre>Krimi</genre>
   <genre>Drama</genre>
   <genre>Thriller</genre>
   <director>Michael Mann</director>
+  <credits>Michael Mann</credits>
   <premiered>1995-12-15</premiered>
   <year>1995</year>
   <studio>Warner Bros.</studio>
+  <country>USA</country>
+  <tag>Heist</tag>
+  <set>
+    <name>Michael Mann Collection</name>
+    <overview>Filme von Michael Mann</overview>
+  </set>
+  <dateadded>2016-11-30 01:20:15</dateadded>
   <actor>
     <name>Al Pacino</name>
     <role>Lt. Vincent Hanna</role>
     <order>0</order>
+    <thumb>https://image.example.org/pacino.jpg</thumb>
   </actor>
   <actor>
     <name>Robert De Niro</name>

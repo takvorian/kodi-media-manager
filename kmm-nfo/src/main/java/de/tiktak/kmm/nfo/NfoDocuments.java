@@ -46,6 +46,24 @@ final class NfoDocuments {
         return SecureXml.documentBuilder().parse(new InputSource(new StringReader(xml)));
     }
 
+    /** Getrimmter Text des ersten Kind-Elements oder {@code null}, wenn es fehlt oder leer ist. */
+    static String text(Element parent, String name) {
+        List<Element> elements = children(parent, name);
+        if (elements.isEmpty()) {
+            return null;
+        }
+        String value = elements.getFirst().getTextContent().strip();
+        return value.isEmpty() ? null : value;
+    }
+
+    /** Getrimmte, nicht leere Texte aller Kind-Elemente des Namens. */
+    static List<String> texts(Element parent, String name) {
+        return children(parent, name).stream()
+                .map(element -> element.getTextContent().strip())
+                .filter(value -> !value.isEmpty())
+                .toList();
+    }
+
     /** Direkte Kind-Elemente mit dem Namen, ohne Beachtung der Groß-/Kleinschreibung. */
     static List<Element> children(Element parent, String name) {
         List<Element> elements = new ArrayList<>();

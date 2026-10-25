@@ -27,3 +27,6 @@ Thumbs.db
 
 # Git-Bash-Absturzprotokolle
 *.stackdump
+
+# Lokale Testdaten (z. B. kopierte Ember-Installation mit privaten Daten)
+misc/

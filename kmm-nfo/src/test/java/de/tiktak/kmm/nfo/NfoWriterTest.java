@@ -9,6 +9,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,7 +32,7 @@ class NfoWriterTest {
 
         writer.write(nfoFile, nfo);
 
-        assertThat(reader.read(nfoFile)).isEqualTo(nfo);
+        assertThat(reader.read(nfoFile)).isEqualTo(withSupplement(nfo, MovieNfoSupplement.EMPTY));
         String content = Files.readString(nfoFile);
         assertThat(content).startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
         assertThat(content).contains("<uniqueid default=\"true\" type=\"imdb\">tt0113277</uniqueid>");
@@ -72,7 +73,42 @@ class NfoWriterTest {
         String content = Files.readString(nfoFile);
         assertThat(content).doesNotContain("<genre>Krimi</genre>", "<tagline>", "<plot>", "<premiered>", "tt0113277");
         assertThat(content).contains("<genre>Action</genre>", "<uniqueid default=\"true\" type=\"tmdb\">949</uniqueid>");
-        assertThat(reader.read(nfoFile)).isEqualTo(changed);
+        assertThat(reader.read(nfoFile)).usingRecursiveComparison().ignoringFields("supplement").isEqualTo(changed);
+    }
+
+    @Test
+    void writesSupplementThatReadsBackIdentically() throws IOException {
+        Path nfoFile = directory.resolve("Heat.nfo");
+        MovieNfo nfo = withSupplement(heat("Heat"), supplement());
+
+        writer.write(nfoFile, nfo);
+
+        assertThat(reader.read(nfoFile)).isEqualTo(nfo);
+        assertThat(Files.readString(nfoFile)).contains(
+                "<rating default=\"true\" max=\"10\" name=\"imdb\">", "<value>8.3</value>",
+                "<lastplayed>2024-05-01 20:15:00</lastplayed>");
+    }
+
+    @Test
+    void replacesSupplementOfExistingNfoAndKeepsTheRest() throws IOException {
+        Path nfoFile = copyFixture("full-movie.nfo");
+
+        writer.write(nfoFile, withSupplement(heat("Heat"), supplement()));
+
+        String content = Files.readString(nfoFile);
+        assertThat(content).contains("<name>Val Kilmer</name>", "<codec>h264</codec>");
+        assertThat(content).doesNotContain("Al Pacino", "<studio>Warner Bros.</studio>", "<userrating>");
+        assertThat(content).containsOnlyOnce("<ratings>");
+    }
+
+    @Test
+    void emptySupplementRemovesTheElements() throws IOException {
+        Path nfoFile = copyFixture("full-movie.nfo");
+
+        writer.write(nfoFile, withSupplement(heat("Heat"), MovieNfoSupplement.EMPTY));
+
+        assertThat(reader.read(nfoFile).supplement()).isEqualTo(MovieNfoSupplement.EMPTY);
+        assertThat(Files.readString(nfoFile)).contains("<codec>h264</codec>");
     }
 
     @Test
@@ -147,6 +183,22 @@ class NfoWriterTest {
         ids.put("tmdb", "949");
         return new MovieNfo(title, "Heat", "Heat", 1995, LocalDate.of(1995, 12, 15), "Handlung", "Kurz",
                 "A Los Angeles Crime Saga", 170, "FSK 16", List.of("Krimi", "Drama"), ids);
+    }
+
+    private static MovieNfo withSupplement(MovieNfo nfo, MovieNfoSupplement supplement) {
+        return new MovieNfo(nfo.title(), nfo.originalTitle(), nfo.sortTitle(), nfo.year(), nfo.premiered(), nfo.plot(),
+                nfo.outline(), nfo.tagline(), nfo.runtime(), nfo.mpaa(), nfo.genres(), nfo.uniqueIds(), supplement);
+    }
+
+    private static MovieNfoSupplement supplement() {
+        return new MovieNfoSupplement(
+                List.of(new NfoActor("Val Kilmer", "Chris Shiherlis", 0, null), new NfoActor("Jon Voight", null, null,
+                        "https://image.example.org/voight.jpg")),
+                List.of("Michael Mann"), List.of("Michael Mann"), List.of("Regency"), List.of("USA"),
+                List.of("Heist", "Los Angeles"), List.of(new NfoRating("imdb", 8.3, 10, 650000, true),
+                        new NfoRating("themoviedb", 7.9, 10, null, false)),
+                new NfoMovieSet("Michael Mann Collection", null), null, 3, LocalDateTime.of(2024, 5, 1, 20, 15),
+                LocalDateTime.of(2016, 11, 30, 1, 20, 15));
     }
 
     private Path copyFixture(String name) throws IOException {

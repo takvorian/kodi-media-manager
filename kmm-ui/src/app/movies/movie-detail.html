@@ -43,6 +43,15 @@
     </mat-card-content>
   </mat-card>
 
+  <mat-card appearance="outlined" class="supplement-card">
+    <mat-card-header>
+      <mat-card-title>Weitere Angaben</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <app-movie-supplement [supplement]="details.supplement" [addedAt]="details.addedAt" />
+    </mat-card-content>
+  </mat-card>
+
   <mat-card appearance="outlined" class="artwork-card">
     <mat-card-header>
       <mat-card-title>Bilder</mat-card-title>

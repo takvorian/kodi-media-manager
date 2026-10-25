@@ -31,7 +31,9 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 
 **NFO-Regeln (umgesetzt):**
 - Dateiname: `Film.mkv` → `Film.nfo`; Stapel `Film-cd1.avi` → `Film.nfo`; DVD → `VIDEO_TS/VIDEO_TS.nfo`; Blu-ray → `BDMV/index.nfo`. Eine vorhandene `movie.nfo` im Filmordner wird gelesen und an Ort und Stelle aktualisiert.
-- KMM verwaltet Titel, Original-/Sortiertitel, Jahr, Erstaufführung, Handlung, Kurzinhalt, Tagline, Laufzeit, Altersfreigabe, Genres sowie IMDb-/TMDB-IDs. Alle anderen Elemente (Schauspieler, Bewertungen, `fileinfo`, IDs weiterer Anbieter …) bleiben beim Schreiben unverändert.
+- KMM verwaltet Titel, Original-/Sortiertitel, Jahr, Erstaufführung, Handlung, Kurzinhalt, Tagline, Laufzeit, Altersfreigabe, Genres sowie IMDb-/TMDB-IDs (bearbeitbar).
+- Außerdem liest und schreibt KMM die weiteren Angaben (derzeit nur angezeigt): Darsteller mit Rolle, Reihenfolge und Bild, Regie (`director`), Drehbuch (`credits`), Studios, Länder, Tags, Bewertungen (`ratings`), Filmset (`set` mit `name`/`overview`, Sets sind über den Namen eindeutig), eigene Bewertung, Wiedergaben, zuletzt gesehen und Hinzugefügt-Datum (`dateadded`, lokale Zeit).
+- Alle anderen Elemente (`fileinfo`, Trailer, Bild-URLs, IDs weiterer Anbieter …) bleiben beim Schreiben unverändert. Sind die weiteren Angaben eines Films noch nicht eingelesen (z. B. vor dem ersten Scan nach einem Update), lässt KMM auch diese Elemente unverändert.
 - Beim Speichern wird zuerst die NFO geschrieben (atomar über eine temporäre Datei); scheitert das, bleibt auch die Datenbank unverändert.
 - Ein erneuter Scan liest eine NFO nur ein, wenn sich ihre Änderungszeit geändert hat. Unlesbare NFOs werden gezählt und gemeldet, der Film bleibt erhalten.
 

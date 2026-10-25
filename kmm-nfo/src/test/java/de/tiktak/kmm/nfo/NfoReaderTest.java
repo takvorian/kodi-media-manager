@@ -8,6 +8,7 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -35,6 +36,59 @@ class NfoReaderTest {
         assertThat(nfo.mpaa()).isEqualTo("FSK 16");
         assertThat(nfo.genres()).containsExactly("Krimi", "Drama", "Thriller");
         assertThat(nfo.uniqueIds()).containsEntry("imdb", "tt0113277").containsEntry("tmdb", "949");
+    }
+
+    @Test
+    void readsSupplement() throws IOException {
+        MovieNfoSupplement supplement = reader.read(copyFixture("full-movie.nfo")).supplement();
+
+        assertThat(supplement.actors()).containsExactly(
+                new NfoActor("Al Pacino", "Lt. Vincent Hanna", 0, "https://image.example.org/pacino.jpg"),
+                new NfoActor("Robert De Niro", "Neil McCauley", 1, null));
+        assertThat(supplement.directors()).containsExactly("Michael Mann");
+        assertThat(supplement.writers()).containsExactly("Michael Mann");
+        assertThat(supplement.studios()).containsExactly("Warner Bros.");
+        assertThat(supplement.countries()).containsExactly("USA");
+        assertThat(supplement.tags()).containsExactly("Heist");
+        assertThat(supplement.ratings()).containsExactly(new NfoRating("imdb", 8.3, 10, 650000, true));
+        assertThat(supplement.set()).isEqualTo(new NfoMovieSet("Michael Mann Collection", "Filme von Michael Mann"));
+        assertThat(supplement.userRating()).isEqualTo(9);
+        assertThat(supplement.playCount()).isEqualTo(2);
+        assertThat(supplement.lastPlayed()).isEqualTo(LocalDateTime.of(2024, 5, 1, 20, 15));
+        assertThat(supplement.dateAdded()).isEqualTo(LocalDateTime.of(2016, 11, 30, 1, 20, 15));
+    }
+
+    @Test
+    void readsLegacySetNameAndDateWithoutTime() throws IOException {
+        MovieNfoSupplement supplement = reader.read(write(
+                "<movie><set> Matrix Collection </set><dateadded>2016-11-30</dateadded></movie>")).supplement();
+
+        assertThat(supplement.set()).isEqualTo(new NfoMovieSet("Matrix Collection", null));
+        assertThat(supplement.dateAdded()).isEqualTo(LocalDateTime.of(2016, 11, 30, 0, 0));
+    }
+
+    @Test
+    void readsRatingsWithDecimalCommaAndGroupedVotes() throws IOException {
+        MovieNfoSupplement supplement = reader.read(write("""
+                <movie><ratings>
+                  <rating name="themoviedb"><value>7,5</value><votes>12.345</votes></rating>
+                  <rating name="leer"><value>-</value></rating>
+                  <rating><value>5</value></rating>
+                </ratings></movie>
+                """)).supplement();
+
+        assertThat(supplement.ratings()).containsExactly(new NfoRating("themoviedb", 7.5, null, 12345, false));
+    }
+
+    @Test
+    void ignoresMalformedSupplementValues() throws IOException {
+        MovieNfoSupplement supplement = reader.read(write("""
+                <movie><actor><role>ohne Namen</role></actor><set><name> </name></set>
+                <playcount>oft</playcount><userrating>99999999999</userrating>
+                <lastplayed>gestern</lastplayed><dateadded>2016</dateadded></movie>
+                """)).supplement();
+
+        assertThat(supplement).isEqualTo(MovieNfoSupplement.EMPTY);
     }
 
     @Test
@@ -103,6 +157,7 @@ class NfoReaderTest {
 
         assertThat(nfo.title()).isNull();
         assertThat(nfo.uniqueId("imdb")).contains("tt0113277");
+        assertThat(nfo.supplement()).isEqualTo(MovieNfoSupplement.EMPTY);
     }
 
     @Test

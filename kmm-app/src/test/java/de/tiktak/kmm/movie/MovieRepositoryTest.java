@@ -3,6 +3,9 @@ package de.tiktak.kmm.movie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 
+import java.time.Instant;
+import java.util.List;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +44,28 @@ class MovieRepositoryTest {
             assertThat(movie.getAddedAt()).isNotNull();
             assertThat(movie.getDiscFormat()).isEqualTo(DiscFormat.FILE);
             assertThat(movie.getFilePathHash()).hasSize(64);
+        });
+    }
+
+    @Test
+    void persistsSupplementAndSet() {
+        MovieSet set = entityManager.persistAndFlush(new MovieSet("Mann Collection"));
+        Movie movie = movie("/media/filme/Heat.mkv", "Heat");
+        var supplement = new MovieSupplement(List.of(new MovieSupplement.Actor("Al Pacino", "Hanna", "pacino.jpg"),
+                new MovieSupplement.Actor("Robert De Niro", "McCauley", null)), List.of("Michael Mann"),
+                List.of("Michael Mann"), List.of("Warner"), List.of("USA"), List.of("Heist"),
+                List.of(new MovieSupplement.Rating("imdb", 8.3, 10, 650000, true),
+                        new MovieSupplement.Rating("themoviedb", 7.9, 10, null, false)),
+                new MovieSupplement.SetReference("Mann Collection", null), 9, 2, Instant.parse("2024-05-01T18:15:00Z"));
+        movie.applySupplement(supplement, set);
+        movie.assignSet(set, 1);
+        Movie saved = repository.saveAndFlush(movie);
+        entityManager.clear();
+
+        assertThat(repository.findById(saved.getId())).hasValueSatisfying(loaded -> {
+            assertThat(loaded.supplement()).isEqualTo(supplement);
+            assertThat(loaded.getSetOrder()).isEqualTo(1);
+            assertThat(loaded.isSupplementKnown()).isTrue();
         });
     }
 

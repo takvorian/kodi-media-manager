@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 
-import { MovieDetails } from './movie';
+import { EMPTY_SUPPLEMENT, MovieDetails } from './movie';
 import { MovieDetail } from './movie-detail';
 import { MOVIES_URL } from './movie.service';
 
@@ -31,6 +31,7 @@ describe('MovieDetail', () => {
       imdbId: 'tt0113277',
       tmdbId: null,
     },
+    supplement: { ...EMPTY_SUPPLEMENT, directors: ['Michael Mann'] },
     nfo: { path: '/media/filme/Heat.nfo', exists: true, modifiedAt: '2026-10-25T11:00:00Z' },
   };
 

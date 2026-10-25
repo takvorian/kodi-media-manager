@@ -44,7 +44,8 @@ public class NfoReader {
         Map<String, String> urlIds = idsFromUrls(NfoDocuments.outsideMovieXml(content));
         Optional<String> xml = NfoDocuments.movieXml(content);
         if (xml.isEmpty()) {
-            return new MovieNfo(null, null, null, null, null, null, null, null, null, null, List.of(), urlIds);
+            return new MovieNfo(null, null, null, null, null, null, null, null, null, null, List.of(), urlIds,
+                    MovieNfoSupplement.EMPTY);
         }
         Document document = NfoDocuments.parse(xml.get());
         return fromXml(document.getDocumentElement(), urlIds);
@@ -55,18 +56,19 @@ public class NfoReader {
         uniqueIds.putAll(legacyIds(movie));
         uniqueIds.putAll(uniqueIds(movie));
         return new MovieNfo(
-                text(movie, NfoElements.TITLE),
-                text(movie, NfoElements.ORIGINAL_TITLE),
-                text(movie, NfoElements.SORT_TITLE),
-                year(text(movie, NfoElements.YEAR)),
-                date(text(movie, NfoElements.PREMIERED)),
-                text(movie, NfoElements.PLOT),
-                text(movie, NfoElements.OUTLINE),
-                text(movie, NfoElements.TAGLINE),
-                number(text(movie, NfoElements.RUNTIME)),
-                text(movie, NfoElements.MPAA),
-                texts(movie, NfoElements.GENRE),
-                uniqueIds);
+                NfoDocuments.text(movie, NfoElements.TITLE),
+                NfoDocuments.text(movie, NfoElements.ORIGINAL_TITLE),
+                NfoDocuments.text(movie, NfoElements.SORT_TITLE),
+                year(NfoDocuments.text(movie, NfoElements.YEAR)),
+                date(NfoDocuments.text(movie, NfoElements.PREMIERED)),
+                NfoDocuments.text(movie, NfoElements.PLOT),
+                NfoDocuments.text(movie, NfoElements.OUTLINE),
+                NfoDocuments.text(movie, NfoElements.TAGLINE),
+                number(NfoDocuments.text(movie, NfoElements.RUNTIME)),
+                NfoDocuments.text(movie, NfoElements.MPAA),
+                NfoDocuments.texts(movie, NfoElements.GENRE),
+                uniqueIds,
+                NfoSupplementReader.read(movie));
     }
 
     private static Map<String, String> uniqueIds(Element movie) {
@@ -83,12 +85,12 @@ public class NfoReader {
 
     private static Map<String, String> legacyIds(Element movie) {
         Map<String, String> ids = new LinkedHashMap<>();
-        String id = text(movie, NfoElements.LEGACY_ID);
+        String id = NfoDocuments.text(movie, NfoElements.LEGACY_ID);
         if (id != null && IMDB_ID.matcher(id).matches()) {
             ids.put(MovieNfo.IMDB, id);
         }
-        putIfPresent(ids, MovieNfo.IMDB, text(movie, NfoElements.LEGACY_IMDB_ID));
-        putIfPresent(ids, MovieNfo.TMDB, text(movie, NfoElements.LEGACY_TMDB_ID));
+        putIfPresent(ids, MovieNfo.IMDB, NfoDocuments.text(movie, NfoElements.LEGACY_IMDB_ID));
+        putIfPresent(ids, MovieNfo.TMDB, NfoDocuments.text(movie, NfoElements.LEGACY_TMDB_ID));
         return ids;
     }
 
@@ -110,23 +112,6 @@ public class NfoReader {
             ids.put(type, value);
         }
     }
-
-    private static String text(Element parent, String name) {
-        List<Element> elements = NfoDocuments.children(parent, name);
-        if (elements.isEmpty()) {
-            return null;
-        }
-        String value = elements.getFirst().getTextContent().strip();
-        return value.isEmpty() ? null : value;
-    }
-
-    private static List<String> texts(Element parent, String name) {
-        return NfoDocuments.children(parent, name).stream()
-                .map(element -> element.getTextContent().strip())
-                .filter(value -> !value.isEmpty())
-                .toList();
-    }
-
 
     private static Integer year(String value) {
         return value != null && YEAR.matcher(value).matches() ? Integer.valueOf(value) : null;

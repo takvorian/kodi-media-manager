@@ -14,6 +14,7 @@ import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
 import { MAX_YEAR, MIN_YEAR, createMovieMetadataForm, toFormValue, toMetadata } from './movie-metadata-form';
 import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
+import { MovieSupplementView } from './movie-supplement';
 import { MovieService } from './movie.service';
 
 const SNACKBAR_DURATION_MS = 5000;
@@ -30,6 +31,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatInputModule,
     MovieArtwork,
     MovieOnlineSearch,
+    MovieSupplementView,
   ],
   templateUrl: './movie-detail.html',
   styleUrl: './movie-detail.scss',

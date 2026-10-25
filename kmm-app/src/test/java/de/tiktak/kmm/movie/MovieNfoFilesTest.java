@@ -51,7 +51,7 @@ class MovieNfoFilesTest {
 
     @Test
     void createsNfoNamedAfterMovieFile() {
-        NfoFileState written = nfoFiles.write(companionFiles(), metadata("tt0113277"));
+        NfoFileState written = nfoFiles.write(companionFiles(), metadata("tt0113277"), null);
 
         assertThat(written.file()).isEqualTo(directory.resolve("Heat.nfo"));
         assertThat(reader.read(written.file()).title()).isEqualTo("Heat");
@@ -63,7 +63,7 @@ class MovieNfoFilesTest {
         Path folderNfo = Files.writeString(directory.resolve("movie.nfo"),
                 "<movie><title>Alt</title><uniqueid type=\"tvdb\">42</uniqueid><director>Michael Mann</director></movie>");
 
-        NfoFileState written = nfoFiles.write(companionFiles(), metadata("tt0113277"));
+        NfoFileState written = nfoFiles.write(companionFiles(), metadata("tt0113277"), null);
 
         assertThat(written.file()).isEqualTo(folderNfo);
         assertThat(directory.resolve("Heat.nfo")).doesNotExist();
@@ -75,7 +75,7 @@ class MovieNfoFilesTest {
     void replacesUnreadableExistingNfo() throws IOException {
         Files.writeString(directory.resolve("Heat.nfo"), "<movie><title>kaputt</movie>");
 
-        NfoFileState written = nfoFiles.write(companionFiles(), metadata(null));
+        NfoFileState written = nfoFiles.write(companionFiles(), metadata(null), null);
 
         assertThat(reader.read(written.file()).title()).isEqualTo("Heat");
     }
@@ -85,7 +85,7 @@ class MovieNfoFilesTest {
         CompanionFiles missingDirectory = CompanionFiles.of(
                 directory.resolve("fehlt").resolve("Heat.mkv"), DiscFormat.FILE, 1);
 
-        assertThatThrownBy(() -> nfoFiles.write(missingDirectory, metadata(null))).isInstanceOf(NfoException.class);
+        assertThatThrownBy(() -> nfoFiles.write(missingDirectory, metadata(null), null)).isInstanceOf(NfoException.class);
     }
 
     private CompanionFiles companionFiles() {

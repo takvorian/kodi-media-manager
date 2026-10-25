@@ -98,7 +98,9 @@ class MovieLibraryIntegrationTest {
                 <movie>
                   <title>Heat – aus der NFO</title>
                   <uniqueid type="imdb" default="true">tt0113277</uniqueid>
-                  <actor><name>Al Pacino</name></actor>
+                  <actor><name>Al Pacino</name><role>Hanna</role></actor>
+                  <set><name>Michael Mann Collection</name></set>
+                  <playcount>2</playcount>
                 </movie>
                 """);
         long sourceId = createSource();
@@ -108,6 +110,8 @@ class MovieLibraryIntegrationTest {
                 .getResponse().getContentAsByteArray()).get("content").get(0).get("id").asLong();
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId)).bodyJson().isLenientlyEqualTo("""
                 {"metadata": {"title": "Heat – aus der NFO", "year": 1995, "imdbId": "tt0113277"},
+                 "supplement": {"actors": [{"name": "Al Pacino", "role": "Hanna"}],
+                                "set": {"name": "Michael Mann Collection"}, "playCount": 2},
                  "nfo": {"exists": true}}
                 """);
 
@@ -119,7 +123,8 @@ class MovieLibraryIntegrationTest {
                 .hasStatusOk();
         String written = Files.readString(nfo);
         assertThat(written).contains("<title>Heat (Director's Cut)</title>", "<genre>Krimi</genre>",
-                "<name>Al Pacino</name>", ">949</uniqueid>");
+                "<name>Al Pacino</name>", "<role>Hanna</role>", "<name>Michael Mann Collection</name>",
+                "<playcount>2</playcount>", "<dateadded>", ">949</uniqueid>");
         assertThat(scan(sourceId).updated()).isZero();
 
         Files.writeString(nfo, written.replace("Director's Cut", "Extended"));

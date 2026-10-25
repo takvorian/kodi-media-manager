@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Component;
 
 import de.tiktak.kmm.nfo.MovieNfo;
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.NfoReader;
 import de.tiktak.kmm.nfo.NfoWriter;
@@ -43,13 +44,14 @@ class MovieNfoFiles {
     /**
      * Schreibt die Metadaten in die NFO des Films.
      *
+     * @param supplement weitere Angaben oder {@code null}, um die vorhandenen in der Datei zu belassen
      * @return Zustand der geschriebenen Datei
      * @throws NfoException wenn die Datei nicht geschrieben werden kann
      */
-    NfoFileState write(CompanionFiles companionFiles, MovieMetadata metadata) {
+    NfoFileState write(CompanionFiles companionFiles, MovieMetadata metadata, MovieNfoSupplement supplement) {
         Optional<NfoFileState> existing = find(companionFiles);
         Path target = existing.map(NfoFileState::file).orElseGet(companionFiles::nfoFile);
-        MovieNfo nfo = MovieNfoMapper.toNfo(metadata, existingUniqueIds(existing));
+        MovieNfo nfo = MovieNfoMapper.toNfo(metadata, supplement, existingUniqueIds(existing));
         writer.write(target, nfo);
         return state(target).orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + target));
     }

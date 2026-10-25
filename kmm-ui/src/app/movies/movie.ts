@@ -43,6 +43,54 @@ export interface MovieMetadata {
   readonly tmdbId: string | null;
 }
 
+export interface MovieActor {
+  readonly name: string;
+  readonly role: string | null;
+  readonly thumb: string | null;
+}
+
+export interface MovieRating {
+  readonly source: string;
+  readonly value: number;
+  readonly max: number | null;
+  readonly votes: number | null;
+  readonly defaultRating: boolean;
+}
+
+export interface MovieSetReference {
+  readonly name: string;
+  readonly overview: string | null;
+}
+
+/** Weitere Angaben neben den bearbeitbaren Metadaten (derzeit nur lesend). */
+export interface MovieSupplement {
+  readonly actors: readonly MovieActor[];
+  readonly directors: readonly string[];
+  readonly writers: readonly string[];
+  readonly studios: readonly string[];
+  readonly countries: readonly string[];
+  readonly tags: readonly string[];
+  readonly ratings: readonly MovieRating[];
+  readonly set: MovieSetReference | null;
+  readonly userRating: number | null;
+  readonly playCount: number | null;
+  readonly lastPlayed: string | null;
+}
+
+export const EMPTY_SUPPLEMENT: MovieSupplement = {
+  actors: [],
+  directors: [],
+  writers: [],
+  studios: [],
+  countries: [],
+  tags: [],
+  ratings: [],
+  set: null,
+  userRating: null,
+  playCount: null,
+  lastPlayed: null,
+};
+
 export interface NfoInfo {
   readonly path: string;
   readonly exists: boolean;
@@ -58,5 +106,6 @@ export interface MovieDetails {
   readonly partCount: number;
   readonly addedAt: string;
   readonly metadata: MovieMetadata;
+  readonly supplement: MovieSupplement;
   readonly nfo: NfoInfo;
 }

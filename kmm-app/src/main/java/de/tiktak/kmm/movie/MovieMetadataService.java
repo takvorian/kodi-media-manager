@@ -1,10 +1,12 @@
 package de.tiktak.kmm.movie;
 
+import java.time.Clock;
 import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,6 +23,7 @@ public class MovieMetadataService {
 
     private final MovieRepository movieRepository;
     private final MovieNfoFiles nfoFiles;
+    private final Clock clock;
 
     public MovieDetails findDetails(long movieId) {
         Movie movie = require(movieId);
@@ -39,10 +42,16 @@ public class MovieMetadataService {
 
     private NfoFileState writeNfo(Movie movie, MovieMetadata metadata) {
         try {
-            return nfoFiles.write(movie.companionFiles(), metadata);
+            return nfoFiles.write(movie.companionFiles(), metadata, knownSupplement(movie));
         } catch (NfoException e) {
             throw new NfoNotWritableException(e);
         }
+    }
+
+    private MovieNfoSupplement knownSupplement(Movie movie) {
+        return movie.isSupplementKnown()
+                ? MovieNfoMapper.toNfoSupplement(movie.supplement(), movie.getAddedAt(), clock.getZone())
+                : null;
     }
 
     private Movie require(long movieId) {

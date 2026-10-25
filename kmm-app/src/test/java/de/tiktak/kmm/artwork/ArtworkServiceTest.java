@@ -28,6 +28,7 @@ import org.springframework.http.HttpStatus;
 
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadata;
+import de.tiktak.kmm.movie.MovieSupplement;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.scanner.CompanionFiles;
@@ -210,6 +211,6 @@ class ArtworkServiceTest {
                 imdbId, tmdbId);
         lenient().when(metadataService.findDetails(MOVIE_ID)).thenReturn(new MovieDetails(
                 MOVIE_ID, 1L, MOVIE_FILE.toString(), DiscFormat.FILE, 1, MODIFIED, metadata,
-                new MovieDetails.NfoInfo("Heat.nfo", false, null)));
+                MovieSupplement.EMPTY, new MovieDetails.NfoInfo("Heat.nfo", false, null)));
     }
 }

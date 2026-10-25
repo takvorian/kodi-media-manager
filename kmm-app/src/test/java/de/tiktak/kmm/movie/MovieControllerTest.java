@@ -178,7 +178,7 @@ class MovieControllerTest {
         var metadata = new MovieMetadata("Heat", null, null, 1995, null, null, null, null, null, null,
                 List.of("Krimi"), "tt0113277", null);
         return new MovieDetails(5L, 1L, "/media/Heat.mkv", DiscFormat.FILE, 1, Instant.parse("2026-10-25T10:00:00Z"),
-                metadata, new MovieDetails.NfoInfo("/media/Heat.nfo", true, Instant.parse("2026-10-25T11:00:00Z")));
+                metadata, MovieSupplement.EMPTY, new MovieDetails.NfoInfo("/media/Heat.nfo", true, Instant.parse("2026-10-25T11:00:00Z")));
     }
 
     @Test
