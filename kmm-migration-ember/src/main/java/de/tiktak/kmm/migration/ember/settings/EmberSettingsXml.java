@@ -40,13 +40,24 @@ class EmberSettingsXml {
     @JsonProperty("ProxyCredentials")
     private CredentialsXml proxyCredentials;
 
+    @JsonProperty("MovieGeneralLanguage")
+    private String movieLanguage;
+
+    @JsonProperty("MovieImagesForceLanguage")
+    private boolean movieImagesForceLanguage;
+
+    @JsonProperty("MovieImagesForcedLanguage")
+    private String movieImagesForcedLanguage;
+
     EmberSettings toSettings() {
         return new EmberSettings(
                 version,
                 generalLanguage,
                 StringArrayXml.valuesOf(validVideoExtensions),
                 StringArrayXml.valuesOf(validSubtitleExtensions),
-                toProxySettings());
+                toProxySettings(),
+                blankToNull(movieLanguage),
+                movieImagesForceLanguage ? blankToNull(movieImagesForcedLanguage) : null);
     }
 
     private Optional<EmberProxySettings> toProxySettings() {
@@ -61,6 +72,10 @@ class EmberSettingsXml {
             return null;
         }
         return proxyCredentials.getUserName();
+    }
+
+    private static String blankToNull(String value) {
+        return isBlank(value) ? null : value.strip();
     }
 
     private static boolean isBlank(String value) {

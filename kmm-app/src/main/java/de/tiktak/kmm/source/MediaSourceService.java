@@ -10,6 +10,8 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.plugin.api.MediaType;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -45,6 +47,29 @@ public class MediaSourceService {
         return source;
     }
 
+    /**
+     * Übernimmt eine Quelle aus einer Migration. Gibt es bereits eine Quelle mit demselben Verzeichnis,
+     * wird diese verwendet. Anders als beim Anlegen muss das Verzeichnis nicht erreichbar sein (z. B.
+     * ein gerade nicht verbundenes Netzlaufwerk); ist der Name vergeben, erhält er einen Zusatz.
+     *
+     * @param path absoluter Pfad des Verzeichnisses
+     * @throws MediaSourceConflictException wenn sich das Verzeichnis mit einer anderen Quelle überschneidet
+     */
+    @Transactional
+    public ImportedSource importSource(String name, String path, MediaType mediaType) {
+        Path directory = Path.of(path.strip()).toAbsolutePath().normalize();
+        var existing = repository.findAll().stream()
+                .filter(source -> Path.of(source.getPath()).equals(directory))
+                .findFirst();
+        if (existing.isPresent()) {
+            return new ImportedSource(existing.get(), false);
+        }
+        requireNoOverlap(directory);
+        MediaSource source = repository.save(new MediaSource(freeName(name.strip()), directory.toString(), mediaType));
+        log.info("Media source '{}' imported for {}", source.getName(), source.getPath());
+        return new ImportedSource(source, true);
+    }
+
     @Transactional
     public void delete(long sourceId) {
         MediaSource source = require(sourceId);
@@ -74,6 +99,14 @@ public class MediaSourceService {
         if (repository.existsByNameIgnoreCase(name)) {
             throw MediaSourceConflictException.nameTaken(name);
         }
+    }
+
+    private String freeName(String name) {
+        String candidate = name;
+        for (int suffix = 2; repository.existsByNameIgnoreCase(candidate); suffix++) {
+            candidate = "%s (%d)".formatted(name, suffix);
+        }
+        return candidate;
     }
 
     private void requireNoOverlap(Path directory) {

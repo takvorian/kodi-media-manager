@@ -3,7 +3,7 @@
 Medienverwaltung für [Kodi](https://kodi.tv) als Java-Nachfolger von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper).
 KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter H2-Datenbank) und bringt eine Weboberfläche mit.
 
-> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen sowie alle Filme einer Quelle automatisch scrapen (nur fehlende Daten) funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
+> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten) sowie Filme, Sets und Einstellungen aus Ember Media Manager übernehmen (mit Probelauf) funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
 
 ## Technik
 
@@ -19,7 +19,7 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 | `kmm-plugin-api` | Schnittstelle für Scraper-Plugins |
 | `kmm-scanner` | Filmsuche im Dateisystem, Titel/Jahr aus Datei- und Ordnernamen |
 | `kmm-nfo` | Kodi-NFOs lesen und schreiben (unbekannte Elemente bleiben erhalten) |
-| `kmm-migration-ember` | Lesen von Ember-Profilen (Datenbank + `Settings.xml`), Pfad-Mapping |
+| `kmm-migration-ember` | Lesen von Ember-Profilen (Datenbank + `Settings.xml`), Pfad-Mapping; Import über die Seite **Ember-Import** |
 | `kmm-plugins` | mitgelieferte Plugins: `kmm-plugin-tmdb` (Metadaten und Bilder), `kmm-plugin-fanarttv` (Bilder) |
 | `kmm-ui` | Angular-Oberfläche |
 | `kmm-app` | Spring-Boot-Anwendung |
@@ -114,4 +114,5 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/scrapers/metadata`
 - `GET /api/v1/settings`, `PUT /api/v1/settings` (Proxy-Passwort `null` = unverändert)
 - `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`
-- `GET /api/v1/migrations/ember/inspect?path=…`
+- `GET /api/v1/migrations/ember/inspect?path=…`, `POST /api/v1/migrations/ember/import` → `202 Accepted` mit dem gestarteten Job
+  (`{"profilePath": …, "pathMappings": [{"emberPath": "a:\\filme", "kmmPath": "/media/filme"}], "importSettings": true, "dryRun": true}`)

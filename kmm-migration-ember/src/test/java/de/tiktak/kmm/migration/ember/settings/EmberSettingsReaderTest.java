@@ -33,6 +33,20 @@ class EmberSettingsReaderTest {
         assertThat(settings.videoExtensions()).containsExactly(".mkv", ".mp4", ".avi");
         assertThat(settings.subtitleExtensions()).containsExactly(".srt", ".sub");
         assertThat(settings.proxy()).contains(new EmberProxySettings("http://proxy.local", 3128, "proxyuser"));
+        assertThat(settings.movieLanguage()).isEqualTo("de-DE");
+        assertThat(settings.movieImageLanguage()).isEqualTo("de");
+    }
+
+    @Test
+    void ignoresImageLanguageThatIsNotEnforced() throws IOException {
+        Path settingsFile = writeSettings("""
+                <Settings version="1">
+                  <MovieImagesForceLanguage>false</MovieImagesForceLanguage>
+                  <MovieImagesForcedLanguage>de</MovieImagesForcedLanguage>
+                </Settings>
+                """);
+
+        assertThat(reader.read(settingsFile).movieImageLanguage()).isNull();
     }
 
     @Test

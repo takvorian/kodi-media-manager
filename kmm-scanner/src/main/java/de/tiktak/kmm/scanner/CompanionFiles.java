@@ -32,12 +32,19 @@ public final class CompanionFiles {
     private static final char EXTENSION_SEPARATOR = '.';
     private static final char ARTWORK_SEPARATOR = '-';
 
-    private final Path base;
+    /** Ordner der Hauptdatei. */
+    private final Path directory;
+    /**
+     * Basisname als Text, nicht als Pfad: Windows erlaubt kein Leerzeichen am Ende eines Pfadteils,
+     * wohl aber vor der Endung ({@code Film .mkv} → {@code Film .nfo}).
+     */
+    private final String baseName;
     private final Path movieDirectory;
     private final boolean disc;
 
-    private CompanionFiles(Path base, Path movieDirectory, boolean disc) {
-        this.base = base;
+    private CompanionFiles(Path directory, String baseName, Path movieDirectory, boolean disc) {
+        this.directory = directory;
+        this.baseName = baseName;
         this.movieDirectory = movieDirectory;
         this.disc = disc;
     }
@@ -54,7 +61,7 @@ public final class CompanionFiles {
         String baseName = baseName(mainFile, partCount > 1);
         boolean disc = format != DiscFormat.FILE;
         Path movieDirectory = disc ? directory.getParent() : directory;
-        return new CompanionFiles(directory.resolve(baseName), movieDirectory, disc);
+        return new CompanionFiles(directory, baseName, movieDirectory, disc);
     }
 
     /** Die NFO, die KMM neu anlegt. */
@@ -84,7 +91,7 @@ public final class CompanionFiles {
     }
 
     private Path withSuffix(String suffix) {
-        return base.resolveSibling(base.getFileName() + suffix);
+        return directory.resolve(baseName + suffix);
     }
 
     private static String baseName(Path mainFile, boolean stacked) {

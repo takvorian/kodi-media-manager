@@ -93,4 +93,31 @@ class MovieMetadataTest {
         return new MovieMetadata(title, null, null, year, null, null, null, null, 120, null, List.of("Krimi"),
                 imdbId, tmdbId);
     }
+
+    @Test
+    void cutsForeignDataToTheLimitsOfTheDatabase() {
+        var foreign = new MovieMetadata("x".repeat(600), null, null, 1500, null, "p".repeat(30_000), null, null, -5,
+                "m".repeat(100), java.util.stream.IntStream.range(0, 60).mapToObj(index -> "Genre " + index).toList(),
+                "0113277", "949a");
+
+        MovieMetadata limited = foreign.withinLimits();
+
+        assertThat(limited.title()).hasSize(MovieMetadata.MAX_TITLE_LENGTH);
+        assertThat(limited.plot()).hasSize(MovieMetadata.MAX_PLOT_LENGTH);
+        assertThat(limited.mpaa()).hasSize(MovieMetadata.MAX_MPAA_LENGTH);
+        assertThat(limited.genres()).hasSize(MovieMetadata.MAX_GENRES);
+        assertThat(limited.year()).isNull();
+        assertThat(limited.runtime()).isNull();
+        assertThat(limited.imdbId()).isNull();
+        assertThat(limited.tmdbId()).isNull();
+        assertThat(validator.validate(limited)).isEmpty();
+    }
+
+    @Test
+    void keepsValidValuesWithinLimits() {
+        var valid = new MovieMetadata("Heat", null, null, 1995, null, null, null, null, 170, "FSK 16", List.of("Krimi"),
+                "tt0113277", "949");
+
+        assertThat(valid.withinLimits()).isEqualTo(valid);
+    }
 }

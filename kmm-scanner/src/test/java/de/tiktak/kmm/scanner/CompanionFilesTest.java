@@ -91,4 +91,12 @@ class CompanionFilesTest {
         assertThatNullPointerException().isThrownBy(() -> CompanionFiles.of(null, DiscFormat.FILE, 1));
         assertThatNullPointerException().isThrownBy(() -> CompanionFiles.of(MOVIE_DIRECTORY, null, 1));
     }
+
+    @Test
+    void keepsSpaceBeforeTheExtensionOfTheMovieFile() {
+        CompanionFiles files = CompanionFiles.of(Path.of("Filme", "Film .mkv"), DiscFormat.FILE, 1);
+
+        assertThat(files.nfoFile().getFileName().toString()).isEqualTo("Film .nfo");
+        assertThat(files.artworkFile("poster", "jpg").getFileName().toString()).isEqualTo("Film -poster.jpg");
+    }
 }

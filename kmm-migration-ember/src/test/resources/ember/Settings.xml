@@ -16,6 +16,9 @@
     <string>.sub</string>
   </FileSystemValidSubtitlesExts>
   <GeneralLanguage>de-DE</GeneralLanguage>
+  <MovieGeneralLanguage>de-DE</MovieGeneralLanguage>
+  <MovieImagesForceLanguage>true</MovieImagesForceLanguage>
+  <MovieImagesForcedLanguage>de</MovieImagesForcedLanguage>
   <ProxyCredentials>
     <UserName>proxyuser</UserName>
     <Password>secret</Password>

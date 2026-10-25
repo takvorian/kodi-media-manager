@@ -10,21 +10,17 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import org.sqlite.SQLiteConfig;
-import org.sqlite.SQLiteOpenMode;
-
 /**
  * Prüft eine Ember-Datenbank und ermittelt den Umfang der Bibliothek. Die Datenbank wird
  * ausschließlich lesend geöffnet, das Ember-Profil bleibt unverändert.
  */
 public class EmberDatabaseInspector {
 
-    private static final String JDBC_URL_PREFIX = "jdbc:sqlite:";
     private static final String TABLE_NAMES_QUERY = "SELECT name FROM sqlite_master WHERE type = 'table'";
     private static final String COUNT_QUERY_TEMPLATE = "SELECT COUNT(*) FROM %s";
 
     public EmberLibraryStatistics inspect(Path databaseFile) {
-        try (Connection connection = openReadOnly(databaseFile)) {
+        try (Connection connection = EmberDatabases.openReadOnly(databaseFile)) {
             requireEmberTables(connection, databaseFile);
             return new EmberLibraryStatistics(
                     count(connection, EmberTable.MOVIE),
@@ -36,13 +32,6 @@ public class EmberDatabaseInspector {
         } catch (SQLException e) {
             throw EmberProfileException.unreadableDatabase(databaseFile, e);
         }
-    }
-
-    private Connection openReadOnly(Path databaseFile) throws SQLException {
-        SQLiteConfig config = new SQLiteConfig();
-        config.setReadOnly(true);
-        config.resetOpenMode(SQLiteOpenMode.CREATE);
-        return config.createConnection(JDBC_URL_PREFIX + databaseFile.toAbsolutePath());
     }
 
     private void requireEmberTables(Connection connection, Path databaseFile) throws SQLException {

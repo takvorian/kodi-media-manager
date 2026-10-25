@@ -14,7 +14,7 @@ class EmberSettingsTest {
     @Test
     void copiesExtensionListsDefensively() {
         List<String> videoExtensions = new ArrayList<>(List.of(".mkv"));
-        var settings = new EmberSettings(1, "de-DE", videoExtensions, List.of(), Optional.empty());
+        var settings = new EmberSettings(1, "de-DE", videoExtensions, List.of(), Optional.empty(), null, null);
 
         videoExtensions.add(".avi");
 
@@ -24,7 +24,7 @@ class EmberSettingsTest {
     @Test
     void rejectsNullInsteadOfEmptyProxy() {
         assertThatNullPointerException()
-                .isThrownBy(() -> new EmberSettings(1, "de-DE", List.of(), List.of(), null))
+                .isThrownBy(() -> new EmberSettings(1, "de-DE", List.of(), List.of(), null, null, null))
                 .withMessageContaining("proxy");
     }
 }

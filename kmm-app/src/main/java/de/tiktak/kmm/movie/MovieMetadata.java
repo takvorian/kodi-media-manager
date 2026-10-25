@@ -59,6 +59,32 @@ public record MovieMetadata(
                 .toList();
     }
 
+    /**
+     * Kopie für Daten aus Fremdquellen, die die Grenzen der Datenbank einhält: Texte werden gekürzt,
+     * ungültige Jahre, Laufzeiten und IDs entfallen.
+     */
+    public MovieMetadata withinLimits() {
+        return new MovieMetadata(
+                Texts.clean(title, MAX_TITLE_LENGTH),
+                Texts.clean(originalTitle, MAX_TITLE_LENGTH),
+                Texts.clean(sortTitle, MAX_TITLE_LENGTH),
+                year != null && year >= MIN_YEAR && year <= MAX_YEAR ? year : null,
+                premiered,
+                Texts.clean(plot, MAX_PLOT_LENGTH),
+                Texts.clean(outline, MAX_OUTLINE_LENGTH),
+                Texts.clean(tagline, MAX_TITLE_LENGTH),
+                runtime != null && runtime >= 0 ? runtime : null,
+                Texts.clean(mpaa, MAX_MPAA_LENGTH),
+                genres == null ? List.of() : genres.stream()
+                        .map(genre -> Texts.clean(genre, MAX_GENRE_LENGTH))
+                        .filter(Objects::nonNull)
+                        .distinct()
+                        .limit(MAX_GENRES)
+                        .toList(),
+                imdbId != null && imdbId.matches(IMDB_ID_PATTERN) ? imdbId : null,
+                tmdbId != null && tmdbId.matches(TMDB_ID_PATTERN) ? tmdbId : null);
+    }
+
     private static String trimToNull(String value) {
         if (value == null) {
             return null;

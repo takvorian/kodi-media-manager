@@ -25,6 +25,7 @@ describe('App', () => {
       'Filme',
       'Quellen',
       'Einstellungen',
+      'Ember-Import',
       'System',
     ]);
   });

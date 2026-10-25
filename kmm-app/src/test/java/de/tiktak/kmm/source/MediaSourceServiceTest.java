@@ -155,4 +155,51 @@ class MediaSourceServiceTest {
 
         assertThat(source.getLastScannedAt()).isEqualTo(scannedAt);
     }
+
+    @Test
+    void importsSourceEvenIfItsDirectoryIsCurrentlyUnreachable() {
+        when(repository.findAll()).thenReturn(List.of());
+        when(repository.existsByNameIgnoreCase(any())).thenReturn(false);
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        String unreachable = directory.resolve("netzlaufwerk").toString();
+
+        ImportedSource imported = service.importSource(" Filme ", unreachable, MediaType.MOVIE);
+
+        assertThat(imported.created()).isTrue();
+        assertThat(imported.source().getName()).isEqualTo("Filme");
+        assertThat(imported.source().getPath()).isEqualTo(unreachable);
+    }
+
+    @Test
+    void reusesSourceWithTheSameDirectory() {
+        MediaSource existing = new MediaSource("Meine Filme", directory.toString(), MediaType.MOVIE);
+        when(repository.findAll()).thenReturn(List.of(existing));
+
+        ImportedSource imported = service.importSource("filme", directory.resolve(".").toString(), MediaType.MOVIE);
+
+        assertThat(imported.created()).isFalse();
+        assertThat(imported.source()).isSameAs(existing);
+        verify(repository, never()).save(any());
+    }
+
+    @Test
+    void addsSuffixToTakenNameOnImport() {
+        when(repository.findAll()).thenReturn(List.of());
+        when(repository.existsByNameIgnoreCase("Filme")).thenReturn(true);
+        when(repository.existsByNameIgnoreCase("Filme (2)")).thenReturn(true);
+        when(repository.existsByNameIgnoreCase("Filme (3)")).thenReturn(false);
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        assertThat(service.importSource("Filme", directory.toString(), MediaType.MOVIE).source().getName())
+                .isEqualTo("Filme (3)");
+    }
+
+    @Test
+    void rejectsImportOfOverlappingSource() {
+        when(repository.findAll()).thenReturn(List.of(new MediaSource("Alle", directory.toString(), MediaType.MOVIE)));
+        String nested = directory.resolve("Filme").toString();
+
+        assertThatThrownBy(() -> service.importSource("Filme", nested, MediaType.MOVIE))
+                .isInstanceOf(MediaSourceConflictException.class);
+    }
 }

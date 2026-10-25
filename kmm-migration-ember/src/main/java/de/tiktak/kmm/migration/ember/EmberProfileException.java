@@ -37,7 +37,7 @@ public class EmberProfileException extends RuntimeException {
                 .formatted(databaseFile, String.join(", ", tables)));
     }
 
-    static EmberProfileException unreadableDatabase(Path databaseFile, Throwable cause) {
+    public static EmberProfileException unreadableDatabase(Path databaseFile, Throwable cause) {
         return new EmberProfileException(
                 "Die Ember-Datenbank '%s' kann nicht gelesen werden.".formatted(databaseFile), cause);
     }

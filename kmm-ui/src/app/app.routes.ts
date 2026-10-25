@@ -19,6 +19,11 @@ export const routes: Routes = [
     loadComponent: () => import('./settings/settings-page').then((m) => m.SettingsPage),
   },
   {
+    path: 'migration',
+    title: 'Ember-Import – KMM',
+    loadComponent: () => import('./migration/ember-import-page').then((m) => m.EmberImportPage),
+  },
+  {
     path: 'system',
     title: 'System – KMM',
     loadComponent: () => import('./system/system-status').then((m) => m.SystemStatus),

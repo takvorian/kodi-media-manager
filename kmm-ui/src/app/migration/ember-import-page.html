@@ -1,0 +1,157 @@
+<h2 class="page-title">Ember-Import</h2>
+
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>1. Ember-Profil</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="hint">
+      Ember-Installations- oder Profilverzeichnis (enthält <code>MyVideos48.emm</code>). Ember wird nur gelesen, nie
+      verändert. Unter Docker ist das Profil unter <code>/import/ember</code> eingebunden.
+    </p>
+    <div class="row">
+      <mat-form-field class="wide">
+        <mat-label>Verzeichnis</mat-label>
+        <input
+          matInput
+          [formControl]="profilePath"
+          name="profilePath"
+          placeholder="z. B. C:\Ember Media Manager"
+          (keydown.enter)="inspect()"
+        />
+      </mat-form-field>
+      <button
+        matButton="tonal"
+        type="button"
+        class="inspect-button"
+        [disabled]="profilePath.invalid || inspecting()"
+        (click)="inspect()"
+      >
+        {{ inspecting() ? 'Analysiere …' : 'Analysieren' }}
+      </button>
+    </div>
+
+    @if (inspection(); as found) {
+      <dl class="facts inspection">
+        <dt>Profil</dt>
+        <dd class="path">{{ found.profileDirectory }} (Schema v{{ found.schemaVersion }})</dd>
+        <dt>Bestand</dt>
+        <dd class="library">
+          {{ found.library.movies }} Filme, {{ found.library.movieSets }} Filmsets, {{ found.library.tvShows }} Serien
+          <span class="hint">(Serien folgen in einem späteren Schritt)</span>
+        </dd>
+        @if (found.settings; as settings) {
+          <dt>Einstellungen</dt>
+          <dd class="settings">
+            Sprache {{ settings.movieLanguage ?? '–' }}, Bilder {{ settings.movieImageLanguage ?? '–' }},
+            {{ settings.videoExtensions.length }} Dateiendungen
+          </dd>
+        }
+      </dl>
+    }
+  </mat-card-content>
+</mat-card>
+
+@if (inspection(); as found) {
+  <mat-card appearance="outlined">
+    <mat-card-header>
+      <mat-card-title>2. Pfade zuordnen</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <p class="hint">
+        Wo liegen Embers Filmquellen aus Sicht von KMM? Läuft KMM auf demselben Rechner, bleiben die Pfade gleich;
+        unter Docker z. B. <code>/media/filme</code> eintragen.
+      </p>
+      @for (mapping of mappings.controls; track $index) {
+        <div class="row mapping" [formGroup]="mapping">
+          <mat-form-field class="wide">
+            <mat-label>Pfad in Ember</mat-label>
+            <input matInput formControlName="emberPath" [name]="'emberPath' + $index" />
+          </mat-form-field>
+          <span class="arrow">→</span>
+          <mat-form-field class="wide">
+            <mat-label>Pfad in KMM</mat-label>
+            <input matInput formControlName="kmmPath" [name]="'kmmPath' + $index" />
+            <mat-error>Bitte einen Pfad angeben.</mat-error>
+          </mat-form-field>
+        </div>
+      } @empty {
+        <p class="hint">Das Profil enthält keine Filmquellen.</p>
+      }
+      <mat-checkbox [formControl]="importSettings" name="importSettings">
+        Einstellungen übernehmen (Sprache, Dateiendungen, ausgeschlossene Ordner, Proxy)
+      </mat-checkbox>
+    </mat-card-content>
+    <mat-card-actions align="end">
+      @if (runningJob(); as job) {
+        <div class="job-progress">
+          <mat-progress-bar
+            [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
+            [value]="percent(job) ?? 0"
+          />
+          <span class="job-message">{{ job.title }}: {{ job.message }}@if (percent(job) !== null) { ({{ percent(job) }} %)}</span>
+        </div>
+        <button matButton class="cancel-button" (click)="cancel(job)">Abbrechen</button>
+      } @else {
+        <button matButton="tonal" class="dry-run-button" (click)="start(true)">Probelauf</button>
+        <button matButton="filled" class="import-button" (click)="start(false)">Importieren</button>
+      }
+    </mat-card-actions>
+  </mat-card>
+}
+
+@if (report(); as result) {
+  <mat-card appearance="outlined" class="report">
+    <mat-card-header>
+      <mat-card-title>{{ result.dryRun ? 'Ergebnis des Probelaufs (nichts gespeichert)' : 'Ergebnis des Imports' }}</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <dl class="facts">
+        <dt>Quellen</dt>
+        <dd class="report-sources">{{ result.sourcesCreated }} neu, {{ result.sourcesReused }} vorhanden</dd>
+        <dt>Filme</dt>
+        <dd class="report-movies">
+          {{ result.moviesCreated }} neu, {{ result.moviesUpdated }} aktualisiert, {{ result.moviesSkipped }} übersprungen
+        </dd>
+        <dt>Ohne NFO</dt>
+        <dd class="report-missing">{{ result.moviesWithoutNfo }}</dd>
+      </dl>
+      @if (result.settingsChanges.length > 0) {
+        <h3>Einstellungen</h3>
+        <ul class="settings-changes">
+          @for (change of result.settingsChanges; track $index) {
+            <li>{{ change }}</li>
+          }
+        </ul>
+      }
+      @if (result.skippedSources.length > 0) {
+        <h3>Nicht übernommene Quellen</h3>
+        <ul class="skipped-sources">
+          @for (source of result.skippedSources; track $index) {
+            <li>{{ source }}</li>
+          }
+        </ul>
+      }
+      @if (result.warnings.length > 0) {
+        <h3>Hinweise</h3>
+        <ul class="warnings">
+          @for (warning of result.warnings; track $index) {
+            <li>{{ warning }}</li>
+          }
+        </ul>
+      }
+      @if (result.missingFiles.length > 0) {
+        <h3>Filme ohne gefundene NFO</h3>
+        <p class="hint">
+          Meist ist das Verzeichnis gerade nicht erreichbar oder die Pfad-Zuordnung stimmt nicht. Die Angaben aus Ember
+          sind trotzdem übernommen.
+        </p>
+        <ul class="missing-files">
+          @for (movie of result.missingFiles; track $index) {
+            <li>{{ movie }}</li>
+          }
+        </ul>
+      }
+    </mat-card-content>
+  </mat-card>
+}

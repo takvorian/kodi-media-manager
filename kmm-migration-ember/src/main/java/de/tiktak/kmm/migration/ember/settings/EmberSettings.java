@@ -12,13 +12,18 @@ import java.util.Optional;
  * @param videoExtensions    gültige Video-Dateiendungen
  * @param subtitleExtensions gültige Untertitel-Dateiendungen
  * @param proxy              Proxy, sofern in Ember konfiguriert
+ * @param movieLanguage      Sprache der Film-Metadaten, z. B. {@code de-DE}, oder {@code null}
+ * @param movieImageLanguage erzwungene Sprache der Filmbilder (ISO 639-1) oder {@code null}, wenn
+ *                           Ember keine Sprache erzwingt
  */
 public record EmberSettings(
         int version,
         String language,
         List<String> videoExtensions,
         List<String> subtitleExtensions,
-        Optional<EmberProxySettings> proxy) {
+        Optional<EmberProxySettings> proxy,
+        String movieLanguage,
+        String movieImageLanguage) {
 
     public EmberSettings {
         videoExtensions = List.copyOf(videoExtensions);

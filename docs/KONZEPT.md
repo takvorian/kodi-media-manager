@@ -158,12 +158,18 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 - `EmberDatabaseInspector`: öffnet die Datenbank **read-only** (das Ember-Profil bleibt unverändert), prüft die Tabellen und zählt die Bibliothek.
 - `EmberSettingsReader`: liest `Settings.xml` in ein Teil-Modell. Unbekannte Elemente werden ignoriert. Das Proxy-Passwort wird bewusst nicht übernommen.
 - `PathMapper`: übersetzt Windows- und UNC-Pfade (`D:\Filme`, `\\nas\serien`) per Präfix-Regel (längster Präfix gewinnt) in Zielpfade (`/media/filme`).
-- `GET /api/v1/migrations/ember/inspect?path=…`: Analyse ohne Import (Version, Umfang, Einstellungen).
+- `EmberLibraryReader`: liest Quellen, Filme mit allen Verknüpfungen (IDs, Genres, Darsteller mit Rolle und Bild, Regie, Drehbuch, Studios, Länder, Tags, Bewertungen, Sets mit Reihenfolge, Nutzerdaten) und ausgeschlossene Ordner, je Tabelle mit einer Abfrage (1169 Filme in unter einer Sekunde).
+- `GET /api/v1/migrations/ember/inspect?path=…`: Analyse ohne Import (Version, Umfang, Filmquellen, Einstellungen).
 
-**Geplant:**
-- `EmberMigrationJob` als Hintergrund-Job mit Fortschritt über SSE, Dry-Run-Modus und `MigrationReport`
-- idempotente Läufe: Die Ember-IDs werden als `legacy_ember_id` gespeichert
-- Wizard in der UI: Profil wählen → Pfad-Mapping → Dry-Run → Import
+**Import (Ember-Migration I, umgesetzt):**
+- `POST /api/v1/migrations/ember/import` startet einen Hintergrund-Job (`ember-import`) mit Live-Fortschritt; Assistent in der UI: Profil analysieren → Pfade zuordnen → Probelauf → Import → Bericht.
+- **Ember-DB gewinnt, Dateien bleiben:** Metadaten und weitere Angaben kommen aus der Ember-Datenbank; NFOs und Bilder werden nicht verändert. Die NFO gilt nach dem Import als eingelesen, damit der nächste Scan die Ember-Daten nicht mit dem Datei-Inhalt überschreibt.
+- **Quellen:** Embers Filmquellen werden über die Pfad-Zuordnung übernommen (ohne Regeln unverändert, z. B. bei KMM auf demselben Rechner). Das Verzeichnis muss nicht erreichbar sein (Hinweis im Bericht); vorhandene Quellen mit demselben Verzeichnis werden verwendet.
+- **Idempotent:** Filme werden über den Dateipfad erkannt, Sets über den Namen; ein erneuter Import aktualisiert statt zu duplizieren. Kodi kennt nur ein Set je Film, übernommen wird das erste (Hinweis im Bericht).
+- **Probelauf:** führt den Import vollständig in einer Transaktion aus und rollt sie zurück; Einstellungen werden nur berechnet. Der Bericht zeigt also genau, was der Import ändern würde.
+- **Umrechnungen:** `Germany:16` → `FSK 16`; leere Bewertungen (0 ohne Stimmen) und eigene Bewertung 0 entfallen; Unix-Zeitstempel werden zu Hinzugefügt-Datum und „zuletzt gesehen“; Pfade, die auf dem Zielsystem ungültig sind, werden übersprungen und gemeldet.
+- **Einstellungen:** Sprache der Film-Metadaten, erzwungene Bildsprache, Video-Dateiendungen, ausgeschlossene Ordner (über die Pfad-Zuordnung) und Proxy (ohne Passwort) gehen in den KMM-Einstellungsspeicher; durch die Konfiguration festgelegte Werte bleiben unverändert.
+- **Nicht übernommen (Ember-Migration II):** Serien, Stream-Details, Embers Artwork-Pfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren/Markierungen, Kodi-Hosts und Scraper-Keys.
 
 **Schema-Versionen:** Direkt unterstützt wird v48. Ältere Profile werden einmal mit der letzten Ember-Version geöffnet, die sie selbst aktualisiert.
 
@@ -179,7 +185,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
    4. TMDB-Plugin ✅ (API-Key aus `KMM_TMDB_API_KEY`; Online-Suche auf der Detailseite, Übernahme ins Formular)
    5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen ✅ (`<dateiname>-poster.jpg` …, bei DVD/Blu-ray `poster.jpg` im Filmordner)
    6. Automatisches Scrapen aller Filme einer Quelle ✅ (nur fehlende Metadaten und Bilder, Bericht mit Titeln ohne Treffer)
-   - **2a. Ember-Migration I:** Filme, Sets, Personen, Genres, Artwork, Quellen und Settings, mit Dry-Run und Report.
+   - **2a. Ember-Migration I** ✅: erweitertes Filmmodell (Personen, Sets, Studios, Länder, Tags, Bewertungen, Nutzerdaten), Einstellungsspeicher, Import von Quellen, Filmen, Sets und Einstellungen mit Probelauf und Bericht.
 3. **Kodi-Integration:** JSON-RPC, Pfad-Mapping, Library-Update.
 4. **Serien:** TVDB/TMDB-TV, Staffeln/Episoden. Dazu **Ember-Migration II** (Serien, Stream-Details, restliche Settings, Kodi-Hosts, Scraper-Keys).
 5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.

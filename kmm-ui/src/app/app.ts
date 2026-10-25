@@ -17,6 +17,7 @@ export class App {
     { path: '/movies', label: 'Filme' },
     { path: '/sources', label: 'Quellen' },
     { path: '/settings', label: 'Einstellungen' },
+    { path: '/migration', label: 'Ember-Import' },
     { path: '/system', label: 'System' },
   ];
 }
