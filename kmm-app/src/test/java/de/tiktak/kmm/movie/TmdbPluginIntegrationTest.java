@@ -115,6 +115,16 @@ class TmdbPluginIntegrationTest {
     }
 
     @Test
+    void listsTheTmdbPluginAsTvShowScraper() {
+        assertThat(mockMvc.get().uri(ScraperController.TV_SHOW_SCRAPERS_PATH))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        [{"id": "tmdb", "mediaTypes": ["TV_SHOW"], "missingConfiguration": null, "attribution": null}]
+                        """);
+    }
+
+    @Test
     void searchesAndProposesMetadataThroughThePlugin() {
         assertThat(mockMvc.get().uri(MovieScrapeController.SEARCH_PATH, movieId).param("scraper", "tmdb"))
                 .hasStatusOk()

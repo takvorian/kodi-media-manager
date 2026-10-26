@@ -17,6 +17,8 @@ import org.springframework.core.io.support.ResourcePatternResolver;
 import de.tiktak.kmm.settings.ApiKeyService;
 import de.tiktak.kmm.settings.SettingsProxyAuthenticator;
 import de.tiktak.kmm.settings.SettingsProxySelector;
+import de.tiktak.kmm.plugin.api.TvShowScraper;
+import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 
@@ -46,7 +48,15 @@ class PluginManagerConfiguration {
         Path directory = Files.createDirectories(properties.directory());
         log.info("Loading plugins from {}", directory.toAbsolutePath());
         return new KmmPluginManager(directory, new PluginContextFactory(properties, pluginHttpClient, buildProperties,
-                () -> Map.of(LANGUAGE_SETTING, settingsService.current().metadataLanguage()), apiKeyService::overlay));
+                () -> sharedSettings(settingsService.current()), apiKeyService::overlay));
+    }
+
+    /** Sprachen und Episodenreihenfolge aus dem Einstellungsspeicher, für alle Plugins gleich. */
+    static Map<String, String> sharedSettings(KmmSettings settings) {
+        return Map.of(
+                LANGUAGE_SETTING, settings.metadataLanguage(),
+                TvShowScraper.TV_LANGUAGE_SETTING, settings.tv().metadataLanguage(),
+                TvShowScraper.EPISODE_ORDERING_SETTING, settings.tv().episodeOrdering().name());
     }
 
     @Bean

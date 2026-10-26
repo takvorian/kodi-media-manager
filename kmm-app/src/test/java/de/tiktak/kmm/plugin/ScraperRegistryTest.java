@@ -18,6 +18,7 @@ import org.pf4j.PluginManager;
 import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
+import de.tiktak.kmm.plugin.api.TvShowScraper;
 
 @ExtendWith(MockitoExtension.class)
 class ScraperRegistryTest {
@@ -34,6 +35,17 @@ class ScraperRegistryTest {
         when(pluginManager.getExtensions(MetadataScraper.class)).thenReturn(List.of(scraper));
 
         assertThat(registry.metadataScrapers()).containsExactly(scraper);
+    }
+
+    @Test
+    void returnsAndFindsTvShowScrapers() {
+        TvShowScraper tvdb = mock(TvShowScraper.class);
+        when(tvdb.id()).thenReturn("tvdb");
+        when(pluginManager.getExtensions(TvShowScraper.class)).thenReturn(List.of(tvdb));
+
+        assertThat(registry.tvShowScrapers()).containsExactly(tvdb);
+        assertThat(registry.tvShowScraper("tvdb")).contains(tvdb);
+        assertThat(registry.tvShowScraper("tmdb")).isEmpty();
     }
 
     @Test

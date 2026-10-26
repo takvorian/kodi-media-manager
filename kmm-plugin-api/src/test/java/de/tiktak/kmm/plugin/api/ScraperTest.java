@@ -47,6 +47,7 @@ class ScraperTest {
         movieOnlyScraper.initialize(null);
 
         assertThat(movieOnlyScraper.missingConfiguration()).isEmpty();
+        assertThat(movieOnlyScraper.attribution()).isEmpty();
     }
 
     @Test

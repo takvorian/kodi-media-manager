@@ -4,12 +4,14 @@ import java.net.URI;
 import java.util.Optional;
 
 import de.tiktak.kmm.plugin.api.PluginContext;
+import de.tiktak.kmm.plugin.api.TvShowScraper;
 
 /**
  * Einstellungen des Plugins ({@code kmm.plugins.settings.tmdb.*}).
  *
  * @param apiKey               TMDB-API-Key (v3) oder Lese-Token (v4); leer, wenn nicht konfiguriert
  * @param language             Sprache der Texte, z. B. {@code de-DE}
+ * @param tvLanguage           Sprache der Serientexte; ohne eigene Einstellung wie {@code language}
  * @param certificationCountry Land, dessen Altersfreigabe übernommen wird, z. B. {@code DE}
  * @param certificationPrefix  Präfix der Altersfreigabe in der NFO, z. B. {@code FSK }
  * @param baseUrl              Basis-URL der TMDB-API
@@ -18,6 +20,7 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 record TmdbSettings(
         String apiKey,
         String language,
+        String tvLanguage,
         String certificationCountry,
         String certificationPrefix,
         URI baseUrl,
@@ -38,9 +41,11 @@ record TmdbSettings(
     private static final char LANGUAGE_REGION_SEPARATOR = '-';
 
     static TmdbSettings from(PluginContext context) {
+        String language = setting(context, LANGUAGE, DEFAULT_LANGUAGE);
         return new TmdbSettings(
                 context.setting(API_KEY).map(String::strip).orElse(""),
-                setting(context, LANGUAGE, DEFAULT_LANGUAGE),
+                language,
+                setting(context, TvShowScraper.TV_LANGUAGE_SETTING, language),
                 setting(context, CERTIFICATION_COUNTRY, DEFAULT_CERTIFICATION_COUNTRY),
                 context.setting(CERTIFICATION_PREFIX).orElse(DEFAULT_CERTIFICATION_PREFIX),
                 URI.create(setting(context, BASE_URL, DEFAULT_BASE_URL)),

@@ -1,0 +1,7 @@
+{"page": 1, "results": [
+  {"id": 4607, "name": "Lost", "original_name": "Lost", "first_air_date": "2004-09-22",
+   "overview": "Überlebende eines Flugzeugabsturzes.", "poster_path": "/lost.jpg"},
+  {"id": 72710, "name": "Lost in Space", "original_name": "Lost in Space", "first_air_date": "2018-04-13",
+   "overview": "", "poster_path": null},
+  {"id": 99999, "name": "Lost", "original_name": "Lost", "first_air_date": "", "overview": null}
+], "total_results": 3}

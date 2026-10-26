@@ -36,4 +36,11 @@ public interface Scraper extends ExtensionPoint {
     default Optional<String> missingConfiguration() {
         return Optional.empty();
     }
+
+    /**
+     * @return Hinweis auf die Datenquelle, den der Anbieter verlangt, oder leer
+     */
+    default Optional<Attribution> attribution() {
+        return Optional.empty();
+    }
 }

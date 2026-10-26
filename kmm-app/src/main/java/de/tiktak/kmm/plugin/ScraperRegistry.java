@@ -10,6 +10,7 @@ import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
 import de.tiktak.kmm.plugin.api.Scraper;
+import de.tiktak.kmm.plugin.api.TvShowScraper;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -28,6 +29,16 @@ public class ScraperRegistry {
 
     public List<ImageScraper> imageScrapers() {
         return pluginManager.getExtensions(ImageScraper.class);
+    }
+
+    public List<TvShowScraper> tvShowScrapers() {
+        return pluginManager.getExtensions(TvShowScraper.class);
+    }
+
+    public Optional<TvShowScraper> tvShowScraper(String scraperId) {
+        return tvShowScrapers().stream()
+                .filter(scraper -> scraper.id().equals(scraperId))
+                .findFirst();
     }
 
     public List<MetadataScraper> metadataScrapersFor(MediaType mediaType) {

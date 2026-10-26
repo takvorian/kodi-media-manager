@@ -1,0 +1,10 @@
+{"id": 4607, "name": "Lost", "original_name": "Lost", "first_air_date": "2004-09-22",
+ "overview": "Überlebende eines Flugzeugabsturzes.", "episode_run_time": [0, 45], "status": "Ended",
+ "genres": [{"id": 18, "name": "Drama"}, {"id": 9648, "name": "Mystery"}],
+ "networks": [{"id": 2, "name": "ABC"}], "vote_average": 7.9, "vote_count": 3000,
+ "seasons": [{"season_number": 0}, {"season_number": 1}, {"season_number": 2}],
+ "external_ids": {"imdb_id": "tt0411008", "tvdb_id": 73739},
+ "content_ratings": {"results": [{"iso_3166_1": "US", "rating": "TV-14"}, {"iso_3166_1": "DE", "rating": "16"}]},
+ "credits": {"cast": [{"name": "Matthew Fox", "character": "Jack Shephard", "profile_path": "/fox.jpg"},
+                      {"name": "Evangeline Lilly", "character": "", "profile_path": null},
+                      {"name": "", "character": "Niemand"}]}}

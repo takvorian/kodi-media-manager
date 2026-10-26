@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
+import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,7 +17,9 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.plugin.api.Attribution;
 import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.plugin.api.TvShowScraper;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 
@@ -43,6 +46,25 @@ class ScraperControllerTest {
                 .isLenientlyEqualTo("""
                         [{"id": "imdb", "displayName": "IMDb", "mediaTypes": ["MOVIE"], "missingConfiguration": null},
                          {"id": "tmdb", "missingConfiguration": "API-Key fehlt"}]
+                        """);
+    }
+
+    @Test
+    void listsTvShowScrapersWithAttribution() {
+        TvShowScraper tvdb = mock(TvShowScraper.class);
+        when(tvdb.id()).thenReturn("tvdb");
+        when(tvdb.displayName()).thenReturn("TheTVDB");
+        when(tvdb.supportedMediaTypes()).thenReturn(Set.of(MediaType.TV_SHOW));
+        when(tvdb.attribution()).thenReturn(Optional.of(
+                new Attribution("Metadata provided by TheTVDB.", URI.create("https://thetvdb.com"))));
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(tvdb));
+
+        assertThat(mockMvc.get().uri(ScraperController.TV_SHOW_SCRAPERS_PATH))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        [{"id": "tvdb", "mediaTypes": ["TV_SHOW"], "missingConfiguration": null,
+                          "attribution": {"text": "Metadata provided by TheTVDB.", "link": "https://thetvdb.com"}}]
                         """);
     }
 

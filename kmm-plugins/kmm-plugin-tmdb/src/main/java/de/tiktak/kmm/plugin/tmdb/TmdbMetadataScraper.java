@@ -1,7 +1,6 @@
 package de.tiktak.kmm.plugin.tmdb;
 
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 
 import org.pf4j.Extension;
@@ -49,28 +48,11 @@ public class TmdbMetadataScraper extends AbstractTmdbScraper implements Metadata
         if (request.uniqueIds().containsKey(TmdbApi.TMDB) || request.uniqueIds().containsKey(TmdbApi.IMDB)) {
             return api.tmdbIdOf(request.uniqueIds());
         }
-        return bestMatch(search(new SearchQuery(request.mediaType(), request.title(), request.year())), request)
-                .map(SearchResult::providerId);
-    }
-
-    /**
-     * Nur ein Treffer mit gleichem Titel (bzw. Originaltitel) und passendem Jahr gilt als sicher;
-     * lieber kein Ergebnis als ein falsches.
-     */
-    private static Optional<SearchResult> bestMatch(List<SearchResult> results, ScrapeRequest request) {
-        String title = normalize(request.title());
-        return results.stream()
-                .filter(result -> title.equals(normalize(result.title()))
-                        || (result.originalTitle() != null && title.equals(normalize(result.originalTitle()))))
-                .filter(result -> request.year() == null || request.year().equals(result.year()))
-                .findFirst();
+        List<SearchResult> results = search(new SearchQuery(request.mediaType(), request.title(), request.year()));
+        return SearchMatches.bestMatch(results, request).map(SearchResult::providerId);
     }
 
     private TmdbMovieMapper mapper() {
         return new TmdbMovieMapper(settings());
-    }
-
-    private static String normalize(String title) {
-        return title.strip().toLowerCase(Locale.ROOT);
     }
 }

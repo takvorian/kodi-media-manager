@@ -201,7 +201,12 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 4. **Serien** (in Inkrementen):
    1. Modell, Scan, NFOs, Liste und Detailseiten ✅ (jeder Ordner unter der Quelle ist eine Serie, Episoden beliebig tief; Staffel/Episode aus dem Dateinamen; Mehrfachepisoden als mehrere Episoden mit derselben Datei; `tvshow.nfo` und Episoden-NFOs werden gelesen und beim Bearbeiten geschrieben)
    2. **Ember-Migration II** ✅: Serien, Staffeln, Episoden, Stream-Details (Filme und Episoden), Serien-Einstellungen, API-Keys im Einstellungsspeicher; Embers fehlende Episoden ohne Datei werden nicht übernommen
-   3. Scraper TMDB-TV und TVDB v4 (mit TVDB-Attribution), Bilder für Serien, Staffeln und Episoden, automatisches Scrapen
+   3. Scraper und Bilder (Vorgabe TVDB, TMDB-TV wählbar; Episoden bekommen beim Übernehmen nur leere Felder gefüllt; fehlende Episoden werden nur angezeigt; Bilder von TMDB, TVDB und fanart.tv):
+      - 3a ✅ Plugin-Schnittstelle `TvShowScraper` (Serie mit Staffeln und Episoden, Attribution je Scraper) und TMDB-TV-Scraper (nur Ausstrahlungsreihenfolge)
+      - 3b TVDB-v4-Plugin mit Episodenreihenfolge und Attribution
+      - 3c Online-Suche und Übernahme auf der Seriendetailseite, fehlende Episoden
+      - 3d Bilder für Serien, Staffeln und Episoden
+      - 3e automatisches Scrapen einer Serienquelle
    4. Kodi-Sync für Serien
 5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.
 6. **Erweiterungen:** Trailer/Themes, Trakt.tv, Export, HTML-Scraper, Installer (jpackage).
