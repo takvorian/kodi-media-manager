@@ -1,0 +1,172 @@
+<a matButton routerLink="/tvshows" class="back-link">← Zur Serienliste</a>
+
+@if (show.error()) {
+  <p class="error">Die Serie konnte nicht geladen werden.</p>
+} @else if (show.hasValue()) {
+  @let details = show.value();
+  <h2 class="page-title">{{ details.metadata.title }}</h2>
+
+  <mat-card appearance="outlined" class="file-card">
+    <mat-card-content>
+      <dl class="facts">
+        <dt>Ordner</dt>
+        <dd class="path directory">{{ details.directoryPath }}</dd>
+        <dt>NFO</dt>
+        <dd class="nfo-status">
+          @if (details.nfo.exists) {
+            <span class="path">{{ details.nfo.path }}</span>
+            <span class="hint"> (geändert {{ details.nfo.modifiedAt | date: 'short' }})</span>
+          } @else {
+            <span class="hint">Noch keine tvshow.nfo – wird beim Speichern angelegt:</span>
+            <span class="path">{{ details.nfo.path }}</span>
+          }
+        </dd>
+        <dt>Hinzugefügt</dt>
+        <dd>{{ details.addedAt | date: 'short' }}</dd>
+      </dl>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card appearance="outlined" class="seasons-card">
+    <mat-card-header>
+      <mat-card-title>Staffeln und Episoden</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @if (seasons().length === 0) {
+        <p class="hint empty-seasons">Keine Episoden gefunden.</p>
+      }
+      <mat-accordion multi>
+        @for (group of seasons(); track group.season.number) {
+          <mat-expansion-panel class="season">
+            <mat-expansion-panel-header>
+              <mat-panel-title class="season-title">{{ label(group.season) }}</mat-panel-title>
+              <mat-panel-description>{{ group.season.episodeCount }} Episoden</mat-panel-description>
+            </mat-expansion-panel-header>
+            <ul class="episodes">
+              @for (episode of group.episodes; track episode.id) {
+                <li class="episode">
+                  <span class="code">{{ code(episode) }}</span>
+                  <a [routerLink]="['/episodes', episode.id]">{{ episode.title }}</a>
+                  @if (episode.aired) {
+                    <span class="hint"> · {{ episode.aired | date: 'mediumDate' }}</span>
+                  }
+                  @if (episode.playCount) {
+                    <span class="hint watched"> · gesehen</span>
+                  }
+                </li>
+              }
+            </ul>
+          </mat-expansion-panel>
+        }
+      </mat-accordion>
+    </mat-card-content>
+  </mat-card>
+
+  @if (details.extras.actors.length > 0 || details.extras.ratings.length > 0) {
+    <mat-card appearance="outlined" class="people-card">
+      <mat-card-header>
+        <mat-card-title>Weitere Angaben</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <app-tv-people [actors]="details.extras.actors" [ratings]="details.extras.ratings" />
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="metadata-form">
+    <div class="row">
+      <mat-form-field class="wide">
+        <mat-label>Titel</mat-label>
+        <input matInput formControlName="title" name="title" required />
+        <mat-error>Der Titel ist erforderlich.</mat-error>
+      </mat-form-field>
+      <mat-form-field class="wide">
+        <mat-label>Originaltitel</mat-label>
+        <input matInput formControlName="originalTitle" name="originalTitle" />
+      </mat-form-field>
+      <mat-form-field class="wide">
+        <mat-label>Sortiertitel</mat-label>
+        <input matInput formControlName="sortTitle" name="sortTitle" />
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field class="narrow">
+        <mat-label>Jahr</mat-label>
+        <input matInput type="number" formControlName="year" name="year" [min]="minYear" [max]="maxYear" />
+        <mat-error>Zwischen {{ minYear }} und {{ maxYear }}.</mat-error>
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>Erstausstrahlung</mat-label>
+        <input matInput type="date" formControlName="premiered" name="premiered" />
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>Episodenlänge (Minuten)</mat-label>
+        <input matInput type="number" formControlName="runtime" name="runtime" min="0" />
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>Altersfreigabe</mat-label>
+        <input matInput formControlName="mpaa" name="mpaa" placeholder="z. B. FSK 12" />
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>Status</mat-label>
+        <input matInput formControlName="status" name="status" placeholder="Continuing oder Ended" />
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field class="wide">
+        <mat-label>Genres</mat-label>
+        <input matInput formControlName="genres" name="genres" />
+        <mat-hint>Mehrere durch Komma trennen</mat-hint>
+      </mat-form-field>
+      <mat-form-field class="wide">
+        <mat-label>Sender/Studios</mat-label>
+        <input matInput formControlName="studios" name="studios" />
+      </mat-form-field>
+      <mat-form-field class="wide">
+        <mat-label>Tags</mat-label>
+        <input matInput formControlName="tags" name="tags" />
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field class="narrow">
+        <mat-label>TVDB-ID</mat-label>
+        <input matInput formControlName="tvdbId" name="tvdbId" />
+        <mat-error>Nur Ziffern</mat-error>
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>TMDB-ID</mat-label>
+        <input matInput formControlName="tmdbId" name="tmdbId" />
+        <mat-error>Nur Ziffern</mat-error>
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>IMDb-ID</mat-label>
+        <input matInput formControlName="imdbId" name="imdbId" placeholder="tt0090390" />
+        <mat-error>Format: tt gefolgt von 7–10 Ziffern</mat-error>
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>Eigene Bewertung</mat-label>
+        <input matInput type="number" formControlName="userRating" name="userRating" min="1" max="10" />
+        <mat-error>1 bis 10</mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field class="full">
+      <mat-label>Handlung</mat-label>
+      <textarea matInput formControlName="plot" name="plot" rows="6"></textarea>
+    </mat-form-field>
+
+    <div class="actions">
+      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
+        Verwerfen
+      </button>
+      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving()">
+        {{ saving() ? 'Speichere …' : 'Speichern' }}
+      </button>
+    </div>
+  </form>
+} @else {
+  <p class="loading">Lade Serie …</p>
+}

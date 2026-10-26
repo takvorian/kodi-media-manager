@@ -124,9 +124,11 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 ```
 kodi-media-manager/            groupId de.tiktak.kmm
 ├─ kmm-plugin-api              Plugin-Schnittstelle (PF4J Extension Points)
-├─ kmm-scanner                 Filmsuche im Dateisystem: Stapel (cd1/cd2), DVD/Blu-ray-Ordner, Titel/Jahr aus Namen,
+├─ kmm-scanner                 Film- und Seriensuche: Stapel (cd1/cd2), DVD/Blu-ray-Ordner, Titel/Jahr aus Namen,
+│                              Staffel/Episode nach Kodis Regeln (S01E02, 1x02, …-102, Mehrfachepisoden),
 │                              Kodi-Namen für Begleitdateien (NFO, später Artwork)
-├─ kmm-nfo                     Kodi-NFO lesen/schreiben (DOM, unbekannte Elemente bleiben erhalten, XXE-sicher)
+├─ kmm-nfo                     Kodi-NFO für Filme, Serien und Episoden lesen/schreiben (DOM, unbekannte Elemente
+│                              bleiben erhalten, XXE-sicher, mehrere <episodedetails> je Datei)
 ├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite, Settings.xml, Interface.Kodi.xml), Pfad-Mapping
 ├─ kmm-kodi                    JSON-RPC-Client für Kodi (Version, Film suchen, RefreshMovie, Scan),
 │                              Zuordnung KMM-Pfad → Kodi-Pfad (smb://, nfs://, Windows, POSIX)
@@ -190,7 +192,11 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
    6. Automatisches Scrapen aller Filme einer Quelle ✅ (nur fehlende Metadaten und Bilder, Bericht mit Titeln ohne Treffer)
    - **2a. Ember-Migration I** ✅: erweitertes Filmmodell (Personen, Sets, Studios, Länder, Tags, Bewertungen, Nutzerdaten), Einstellungsspeicher, Import von Quellen, Filmen, Sets und Einstellungen mit Probelauf und Bericht.
 3. **Kodi-Integration** ✅: Kodi-Geräte mit Pfad-Zuordnung und Verbindungstest, Echtzeit-Sync wie in Ember (RefreshMovie bzw. Scan des Ordners, entprellt im Hintergrund), manueller Abgleich je Film und Quelle, Übernahme der Kodi-Geräte aus Ember. Später: Gesehen-Status aus Kodi holen, Bibliothek bereinigen (`VideoLibrary.Clean`).
-4. **Serien:** TVDB/TMDB-TV, Staffeln/Episoden. Dazu **Ember-Migration II** (Serien, Stream-Details, restliche Settings, Scraper-Keys).
+4. **Serien** (in Inkrementen):
+   1. Modell, Scan, NFOs, Liste und Detailseiten ✅ (jeder Ordner unter der Quelle ist eine Serie, Episoden beliebig tief; Staffel/Episode aus dem Dateinamen; Mehrfachepisoden als mehrere Episoden mit derselben Datei; `tvshow.nfo` und Episoden-NFOs werden gelesen und beim Bearbeiten geschrieben)
+   2. **Ember-Migration II**: Serien, Staffeln, Episoden, Stream-Details (Filme und Episoden), restliche Einstellungen; Embers fehlende Episoden ohne Datei werden nicht übernommen
+   3. Scraper TMDB-TV und TVDB v4 (mit TVDB-Attribution), Bilder für Serien, Staffeln und Episoden, automatisches Scrapen
+   4. Kodi-Sync für Serien
 5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.
 6. **Erweiterungen:** Trailer/Themes, Trakt.tv, Export, HTML-Scraper, Installer (jpackage).
 

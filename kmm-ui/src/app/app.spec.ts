@@ -23,6 +23,7 @@ describe('App', () => {
     expect(element.querySelector('h1')?.textContent).toContain('Kodi Media Manager');
     expect(Array.from(element.querySelectorAll('nav a')).map((link) => link.textContent?.trim())).toEqual([
       'Filme',
+      'Serien',
       'Quellen',
       'Kodi',
       'Einstellungen',

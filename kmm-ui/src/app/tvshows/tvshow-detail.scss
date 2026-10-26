@@ -1,0 +1,82 @@
+.back-link {
+  margin-bottom: 8px;
+}
+
+.file-card,
+.seasons-card,
+.people-card {
+  margin-bottom: 24px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 0;
+
+  dt {
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+  }
+}
+
+.episodes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.episode {
+  padding: 2px 0;
+}
+
+.code {
+  display: inline-block;
+  min-width: 72px;
+  font-family: monospace;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.path {
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.metadata-form {
+  max-width: 1100px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.wide {
+  flex: 2 1 280px;
+}
+
+.narrow {
+  flex: 1 1 160px;
+}
+
+.full {
+  width: 100%;
+}
+
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

@@ -89,11 +89,30 @@ describe('SourceList', () => {
     ]);
   });
 
-  it('offers scanning and scraping only for movie sources', async () => {
-    await loadSources([films, series]);
+  it('offers scanning for movie and TV sources but scraping only for movies', async () => {
+    await loadSources([films, series, { ...films, id: 3, name: 'Sets', mediaType: 'MOVIE_SET' }]);
 
-    expect(element().querySelectorAll('.scan-button')).toHaveLength(1);
+    expect(element().querySelectorAll('.scan-button')).toHaveLength(2);
     expect(element().querySelectorAll('.scrape-button')).toHaveLength(1);
+  });
+
+  it('reports episodes without recognizable number after a TV scan', async () => {
+    await loadSources([series]);
+    events.emit(job({ key: 'scan:2', title: 'Scan „Serien“' }));
+
+    events.emit(
+      job({
+        key: 'scan:2',
+        title: 'Scan „Serien“',
+        status: 'SUCCEEDED',
+        result: { sourceId: 2, added: 4, updated: 0, removed: 0, unchanged: 0, nfoErrors: 0, unrecognizedFiles: ['x.avi'] },
+      }),
+    );
+    await answerReload([series]);
+
+    expect(snackBarMessages).toEqual([
+      'Scan „Serien“ abgeschlossen: 4 neu, 0 aktualisiert, 0 entfernt, 0 unverändert, 1 Dateien ohne erkennbare Episode.',
+    ]);
   });
 
   it('lets Kodi scan a movie source', async () => {

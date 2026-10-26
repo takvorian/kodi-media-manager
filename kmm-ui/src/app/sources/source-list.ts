@@ -94,6 +94,11 @@ export class SourceList {
     return this.mediaTypes.find((type) => type.value === mediaType)?.label ?? mediaType;
   }
 
+  /** Film- und Serienquellen lassen sich scannen. */
+  protected canScan(source: MediaSource): boolean {
+    return source.mediaType === 'MOVIE' || source.mediaType === 'TV_SHOW';
+  }
+
   protected hasMovies(source: MediaSource): boolean {
     return source.mediaType === 'MOVIE';
   }
@@ -193,9 +198,12 @@ function scanSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as ScanResult;
     const errors = result.nfoErrors > 0 ? `, ${result.nfoErrors} NFO-Fehler` : '';
+    const unrecognized = result.unrecognizedFiles?.length
+      ? `, ${result.unrecognizedFiles.length} Dateien ohne erkennbare Episode`
+      : '';
     return (
       `${job.title} abgeschlossen: ${result.added} neu, ${result.updated} aktualisiert, ` +
-      `${result.removed} entfernt, ${result.unchanged} unverändert${errors}.`
+      `${result.removed} entfernt, ${result.unchanged} unverändert${errors}${unrecognized}.`
     );
   }
   return unsuccessfulSummary(job);

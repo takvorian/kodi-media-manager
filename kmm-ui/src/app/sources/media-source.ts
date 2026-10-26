@@ -22,7 +22,7 @@ export interface CreateMediaSource {
   readonly mediaType: MediaType;
 }
 
-/** Präfix des Job-Schlüssels eines Scans; muss zu MovieScanService.JOB_KEY_PREFIX passen. */
+/** Präfix des Job-Schlüssels eines Scans; muss zu MediaSourceService.SCAN_JOB_KEY_PREFIX passen. */
 export const SCAN_JOB_KEY_PREFIX = 'scan:';
 
 export function scanJobKey(sourceId: number): string {
@@ -30,6 +30,7 @@ export function scanJobKey(sourceId: number): string {
 }
 
 /** Ergebnis eines erfolgreichen Scan-Jobs. */
+/** Ergebnis eines Scans; bei Serienquellen zählen die Felder Episoden. */
 export interface ScanResult {
   readonly sourceId: number;
   readonly added: number;
@@ -37,6 +38,8 @@ export interface ScanResult {
   readonly removed: number;
   readonly unchanged: number;
   readonly nfoErrors: number;
+  /** Nur bei Serien: Videodateien ohne erkennbare Staffel und Episode. */
+  readonly unrecognizedFiles?: readonly string[];
 }
 
 /** Präfix des Job-Schlüssels beim automatischen Scrapen; muss zu AutoScrapeService.JOB_KEY_PREFIX passen. */

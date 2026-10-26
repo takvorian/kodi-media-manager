@@ -1,0 +1,117 @@
+@if (episode.error()) {
+  <a matButton routerLink="/tvshows" class="back-link">← Zur Serienliste</a>
+  <p class="error">Die Episode konnte nicht geladen werden.</p>
+} @else if (episode.hasValue()) {
+  @let details = episode.value();
+  <a matButton [routerLink]="['/tvshows', details.tvShowId]" class="back-link">← {{ details.showTitle }}</a>
+  <h2 class="page-title">
+    <span class="code">{{ code(details) }}</span> {{ details.metadata.title }}
+  </h2>
+
+  <mat-card appearance="outlined" class="file-card">
+    <mat-card-content>
+      <dl class="facts">
+        <dt>Datei</dt>
+        <dd class="path file-path">{{ details.filePath }}</dd>
+        <dt>NFO</dt>
+        <dd class="nfo-status">
+          @if (details.nfo.exists) {
+            <span class="path">{{ details.nfo.path }}</span>
+            <span class="hint"> (geändert {{ details.nfo.modifiedAt | date: 'short' }})</span>
+          } @else {
+            <span class="hint">Noch keine NFO – wird beim Speichern angelegt:</span>
+            <span class="path">{{ details.nfo.path }}</span>
+          }
+        </dd>
+        <dt>Hinzugefügt</dt>
+        <dd>{{ details.addedAt | date: 'short' }}</dd>
+        @if (details.extras.directors.length > 0) {
+          <dt>Regie</dt>
+          <dd class="directors">{{ details.extras.directors.join(', ') }}</dd>
+        }
+        @if (details.extras.writers.length > 0) {
+          <dt>Drehbuch</dt>
+          <dd class="writers">{{ details.extras.writers.join(', ') }}</dd>
+        }
+        @if (details.extras.playCount) {
+          <dt>Gesehen</dt>
+          <dd class="play-count">
+            {{ details.extras.playCount }}×@if (details.extras.lastPlayed) {, zuletzt {{ details.extras.lastPlayed | date: 'short' }}}
+          </dd>
+        }
+      </dl>
+    </mat-card-content>
+  </mat-card>
+
+  @if (details.extras.actors.length > 0 || details.extras.ratings.length > 0) {
+    <mat-card appearance="outlined" class="people-card">
+      <mat-card-content>
+        <app-tv-people [actors]="details.extras.actors" [ratings]="details.extras.ratings" />
+      </mat-card-content>
+    </mat-card>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="metadata-form">
+    <div class="row">
+      <mat-form-field class="wide">
+        <mat-label>Titel</mat-label>
+        <input matInput formControlName="title" name="title" required />
+        <mat-error>Der Titel ist erforderlich.</mat-error>
+      </mat-form-field>
+      <mat-form-field class="wide">
+        <mat-label>Originaltitel</mat-label>
+        <input matInput formControlName="originalTitle" name="originalTitle" />
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field class="narrow">
+        <mat-label>Erstausstrahlung</mat-label>
+        <input matInput type="date" formControlName="aired" name="aired" />
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>Laufzeit (Minuten)</mat-label>
+        <input matInput type="number" formControlName="runtime" name="runtime" min="0" />
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>Eigene Bewertung</mat-label>
+        <input matInput type="number" formControlName="userRating" name="userRating" min="1" max="10" />
+        <mat-error>1 bis 10</mat-error>
+      </mat-form-field>
+    </div>
+
+    <div class="row">
+      <mat-form-field class="narrow">
+        <mat-label>TVDB-ID</mat-label>
+        <input matInput formControlName="tvdbId" name="tvdbId" />
+        <mat-error>Nur Ziffern</mat-error>
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>TMDB-ID</mat-label>
+        <input matInput formControlName="tmdbId" name="tmdbId" />
+        <mat-error>Nur Ziffern</mat-error>
+      </mat-form-field>
+      <mat-form-field class="narrow">
+        <mat-label>IMDb-ID</mat-label>
+        <input matInput formControlName="imdbId" name="imdbId" />
+        <mat-error>Format: tt gefolgt von 7–10 Ziffern</mat-error>
+      </mat-form-field>
+    </div>
+
+    <mat-form-field class="full">
+      <mat-label>Handlung</mat-label>
+      <textarea matInput formControlName="plot" name="plot" rows="5"></textarea>
+    </mat-form-field>
+
+    <div class="actions">
+      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
+        Verwerfen
+      </button>
+      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving()">
+        {{ saving() ? 'Speichere …' : 'Speichern' }}
+      </button>
+    </div>
+  </form>
+} @else {
+  <p class="loading">Lade Episode …</p>
+}

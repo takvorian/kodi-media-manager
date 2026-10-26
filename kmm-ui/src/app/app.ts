@@ -15,6 +15,7 @@ export class App {
   protected readonly title = 'Kodi Media Manager';
   protected readonly navigation = [
     { path: '/movies', label: 'Filme' },
+    { path: '/tvshows', label: 'Serien' },
     { path: '/sources', label: 'Quellen' },
     { path: '/kodi', label: 'Kodi' },
     { path: '/settings', label: 'Einstellungen' },

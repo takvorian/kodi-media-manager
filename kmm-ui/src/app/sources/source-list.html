@@ -61,10 +61,14 @@
             <span class="job-message">{{ job.message }}@if (percent(job) !== null) { ({{ percent(job) }} %)}</span>
           </div>
           <button matButton class="cancel-button" (click)="cancelJob(job)">Abbrechen</button>
-        } @else if (hasMovies(source)) {
-          <button matButton class="scan-button" (click)="scan(source)">Scannen</button>
-          <button matButton class="scrape-button" (click)="autoScrape(source)">Scrapen</button>
-          <button matButton class="kodi-scan-button" (click)="scanInKodi(source)">Kodi-Scan</button>
+        } @else {
+          @if (canScan(source)) {
+            <button matButton class="scan-button" (click)="scan(source)">Scannen</button>
+          }
+          @if (hasMovies(source)) {
+            <button matButton class="scrape-button" (click)="autoScrape(source)">Scrapen</button>
+            <button matButton class="kodi-scan-button" (click)="scanInKodi(source)">Kodi-Scan</button>
+          }
         }
         <button matButton class="delete-button" (click)="delete(source)" [disabled]="!!job">Entfernen</button>
       </td>

@@ -3,7 +3,7 @@
 Medienverwaltung für [Kodi](https://kodi.tv) als Java-Nachfolger von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper).
 KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter H2-Datenbank) und bringt eine Weboberfläche mit.
 
-> **Status:** Filme-MVP in Arbeit – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten), Filme, Sets, Einstellungen und Kodi-Geräte aus Ember Media Manager übernehmen (mit Probelauf) sowie Kodi nach Änderungen automatisch aktualisieren funktionieren. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
+> **Status:** Filme und erste Serienfunktionen – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten), Filme, Sets, Einstellungen und Kodi-Geräte aus Ember Media Manager übernehmen (mit Probelauf) sowie Kodi nach Änderungen automatisch aktualisieren funktionieren. Serienquellen lassen sich scannen; Serien, Staffeln und Episoden (auch Mehrfachepisoden) werden aus den NFOs gelesen, angezeigt und bearbeitet. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
 
 ## Technik
 
@@ -17,8 +17,8 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 | Modul | Inhalt |
 |---|---|
 | `kmm-plugin-api` | Schnittstelle für Scraper-Plugins |
-| `kmm-scanner` | Filmsuche im Dateisystem, Titel/Jahr aus Datei- und Ordnernamen |
-| `kmm-nfo` | Kodi-NFOs lesen und schreiben (unbekannte Elemente bleiben erhalten) |
+| `kmm-scanner` | Film- und Seriensuche im Dateisystem, Titel/Jahr aus Namen, Staffel/Episode wie Kodi (`S01E02`, `1x02`, `…-102`) |
+| `kmm-nfo` | Kodi-NFOs für Filme, Serien und Episoden lesen und schreiben (unbekannte Elemente bleiben erhalten) |
 | `kmm-migration-ember` | Lesen von Ember-Profilen (Datenbank + `Settings.xml`), Pfad-Mapping; Import über die Seite **Ember-Import** |
 | `kmm-kodi` | JSON-RPC-Client für Kodi, Zuordnung von KMM-Pfaden zu Kodi-Pfaden |
 | `kmm-plugins` | mitgelieferte Plugins: `kmm-plugin-tmdb` (Metadaten und Bilder), `kmm-plugin-fanarttv` (Bilder) |
@@ -117,12 +117,16 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - OpenAPI/Swagger UI: `/swagger-ui.html` (im Docker-Profil mit Anmeldung)
 - `GET /api/v1/system/info`
 - `GET /api/v1/sources`, `POST /api/v1/sources`, `DELETE /api/v1/sources/{id}`
-- `POST /api/v1/sources/{id}/scan` → `202 Accepted` mit dem gestarteten Job
+- `POST /api/v1/sources/{id}/scan` → `202 Accepted` mit dem gestarteten Job (Film- oder Serien-Scan je nach Quelle)
 - `POST /api/v1/sources/{id}/auto-scrape` → `202 Accepted`; ergänzt fehlende Metadaten und Bilder aller Filme der Quelle
 - `GET /api/v1/jobs`, `GET /api/v1/jobs/{id}`, `POST /api/v1/jobs/{id}/cancel`
 - `GET /api/v1/jobs/events` (Server-Sent Events, Ereignis `job`)
 - `GET /api/v1/movies?search=…&page=…&size=…`
 - `GET /api/v1/movies/{id}`, `PUT /api/v1/movies/{id}/metadata` (schreibt die NFO)
+- `GET /api/v1/tvshows?search=…&page=…&size=…`, `GET /api/v1/tvshows/{id}` (mit Staffeln und Episoden),
+  `PUT /api/v1/tvshows/{id}/metadata` (schreibt die `tvshow.nfo`)
+- `GET /api/v1/episodes/{id}`, `PUT /api/v1/episodes/{id}/metadata` (schreibt die Episoden-NFO, bei Mehrfachepisoden
+  alle Episoden der Datei)
 - `GET /api/v1/movies/{id}/scraper-search?scraper=tmdb&title=…&year=…`, `GET /api/v1/movies/{id}/scraper-proposal?scraper=tmdb&providerId=…`
 - `GET /api/v1/movies/{id}/artwork`, `GET …/artwork/{TYP}/image`, `GET …/artwork/{TYP}/candidates`,
   `PUT …/artwork/{TYP}` (`{"url": …}`), `DELETE …/artwork/{TYP}` – TYP: POSTER, FANART, CLEARLOGO, CLEARART, DISCART, BANNER, LANDSCAPE

@@ -9,6 +9,21 @@ export const routes: Routes = [
     loadComponent: () => import('./movies/movie-detail').then((m) => m.MovieDetail),
   },
   {
+    path: 'tvshows',
+    title: 'Serien – KMM',
+    loadComponent: () => import('./tvshows/tvshow-list').then((m) => m.TvShowList),
+  },
+  {
+    path: 'tvshows/:id',
+    title: 'Serie – KMM',
+    loadComponent: () => import('./tvshows/tvshow-detail').then((m) => m.TvShowDetail),
+  },
+  {
+    path: 'episodes/:id',
+    title: 'Episode – KMM',
+    loadComponent: () => import('./tvshows/episode-detail').then((m) => m.EpisodeDetail),
+  },
+  {
     path: 'sources',
     title: 'Quellen – KMM',
     loadComponent: () => import('./sources/source-list').then((m) => m.SourceList),
