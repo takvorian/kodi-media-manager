@@ -18,8 +18,8 @@ import org.xml.sax.SAXException;
  */
 final class NfoDocuments {
 
-    private static final String MOVIE_START = "<" + NfoElements.MOVIE;
-    private static final String MOVIE_END = "</" + NfoElements.MOVIE + ">";
+    /** Künstliches Element, unter dem mehrere Wurzelelemente einer NFO geparst werden. */
+    static final String CONTAINER = "kmm-nfo";
 
     private NfoDocuments() {
     }
@@ -29,12 +29,22 @@ final class NfoDocuments {
      * XML-Deklaration und danach eine URL, die beim Parsen sonst stören würden.
      */
     static Optional<String> movieXml(String content) {
-        int start = content.indexOf(MOVIE_START);
-        int end = content.lastIndexOf(MOVIE_END);
+        return rootXml(content, NfoElements.MOVIE);
+    }
+
+    /**
+     * Schneidet alle Elemente des Namens aus dem Dateiinhalt, vom ersten Anfang bis zum letzten Ende.
+     * Mehrfachepisoden enthalten mehrere {@code <episodedetails>} hintereinander.
+     */
+    static Optional<String> rootXml(String content, String rootName) {
+        String startTag = "<" + rootName;
+        String endTag = "</" + rootName + ">";
+        int start = content.indexOf(startTag);
+        int end = content.lastIndexOf(endTag);
         if (start < 0 || end < start) {
             return Optional.empty();
         }
-        return Optional.of(content.substring(start, end + MOVIE_END.length()));
+        return Optional.of(content.substring(start, end + endTag.length()));
     }
 
     /** Dateiinhalt ohne das {@code <movie>}-Element, z. B. eine angehängte URL. */
@@ -44,6 +54,11 @@ final class NfoDocuments {
 
     static Document parse(String xml) throws IOException, SAXException {
         return SecureXml.documentBuilder().parse(new InputSource(new StringReader(xml)));
+    }
+
+    /** Parst ein oder mehrere aufeinanderfolgende Elemente unter dem {@link #CONTAINER}. */
+    static Document parseAll(String xml) throws IOException, SAXException {
+        return parse("<" + CONTAINER + ">" + xml + "</" + CONTAINER + ">");
     }
 
     /** Getrimmter Text des ersten Kind-Elements oder {@code null}, wenn es fehlt oder leer ist. */

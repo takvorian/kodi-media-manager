@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8"?>
+<episodedetails>
+  <title>Gestatten – Teil 1</title>
+  <runtime>30</runtime>
+  <aired>1987-02-09</aired>
+  <season>1</season>
+  <episode>16</episode>
+  <plot>Der erste Teil.</plot>
+  <uniqueid type="tvdb" default="true">110001</uniqueid>
+  <credits>Bob Bendetson</credits>
+  <playcount>1</playcount>
+  <lastplayed>2014-05-25 01:21:47</lastplayed>
+  <director>Tom Patchett</director>
+  <actor>
+    <name>Bill Daily</name>
+    <role>Dr. Larry Dykstra</role>
+  </actor>
+  <fileinfo>
+    <streamdetails>
+      <audio>
+        <codec>ac3</codec>
+        <channels>1</channels>
+      </audio>
+    </streamdetails>
+  </fileinfo>
+</episodedetails>
+
+<episodedetails>
+  <title>Gestatten – Teil 2</title>
+  <aired>1987-02-16</aired>
+  <season>1</season>
+  <episode>17</episode>
+  <plot>Der zweite Teil.</plot>
+</episodedetails>

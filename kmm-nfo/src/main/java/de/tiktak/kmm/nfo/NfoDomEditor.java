@@ -1,16 +1,20 @@
 package de.tiktak.kmm.nfo;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Ersetzt Kind-Elemente des {@code <movie>}-Elements. Neue Elemente landen an der Position der
- * bisherigen, damit die Reihenfolge einer vorhandenen NFO erhalten bleibt.
+ * Ersetzt Kind-Elemente eines NFO-Wurzelelements ({@code <movie>}, {@code <tvshow>} …). Neue Elemente
+ * landen an der Position der bisherigen, damit die Reihenfolge einer vorhandenen NFO erhalten bleibt.
  */
 final class NfoDomEditor {
+
+    private static final String TRUE = "true";
 
     private NfoDomEditor() {
     }
@@ -50,5 +54,19 @@ final class NfoDomEditor {
         Element element = document.createElement(name);
         parent.appendChild(element);
         return element;
+    }
+
+    /** Ersetzt die IDs; die erste gilt als Standard-ID. */
+    static void setUniqueIds(Document document, Element parent, Map<String, String> uniqueIds) {
+        List<Element> elements = new ArrayList<>();
+        for (Map.Entry<String, String> id : uniqueIds.entrySet()) {
+            Element element = textElement(document, NfoElements.UNIQUE_ID, id.getValue());
+            element.setAttribute(NfoElements.TYPE_ATTRIBUTE, id.getKey());
+            if (elements.isEmpty()) {
+                element.setAttribute(NfoElements.DEFAULT_ATTRIBUTE, TRUE);
+            }
+            elements.add(element);
+        }
+        replaceAll(parent, NfoElements.UNIQUE_ID, elements);
     }
 }

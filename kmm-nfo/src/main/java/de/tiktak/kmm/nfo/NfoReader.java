@@ -71,7 +71,7 @@ public class NfoReader {
                 NfoSupplementReader.read(movie));
     }
 
-    private static Map<String, String> uniqueIds(Element movie) {
+    static Map<String, String> uniqueIds(Element movie) {
         Map<String, String> ids = new LinkedHashMap<>();
         for (Element uniqueId : NfoDocuments.children(movie, NfoElements.UNIQUE_ID)) {
             String type = uniqueId.getAttribute(NfoElements.TYPE_ATTRIBUTE).strip().toLowerCase(Locale.ROOT);
@@ -113,12 +113,12 @@ public class NfoReader {
         }
     }
 
-    private static Integer year(String value) {
+    static Integer year(String value) {
         return value != null && YEAR.matcher(value).matches() ? Integer.valueOf(value) : null;
     }
 
     /** Kodi schreibt die Laufzeit in Minuten, ältere Scraper teils als „120 min“. */
-    private static Integer number(String value) {
+    static Integer number(String value) {
         if (value == null) {
             return null;
         }
@@ -126,7 +126,7 @@ public class NfoReader {
         return matcher.find() ? Integer.valueOf(matcher.group()) : null;
     }
 
-    private static LocalDate date(String value) {
+    static LocalDate date(String value) {
         if (value == null || value.length() < DATE_LENGTH) {
             return null;
         }

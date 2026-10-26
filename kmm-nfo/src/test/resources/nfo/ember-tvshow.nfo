@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<tvshow xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <title>Die Testserie</title>
+  <originaltitle>The Test Show</originaltitle>
+  <id>78020</id>
+  <imdb>tt0090390</imdb>
+  <tmdb>4658</tmdb>
+  <language>de-DE</language>
+  <genre>Komödie</genre>
+  <genre>Familie</genre>
+  <mpaa>Germany:6</mpaa>
+  <premiered>1986-09-22</premiered>
+  <studio>NBC</studio>
+  <status>Ended</status>
+  <plot>Ein Außerirdischer landet in der Garage.</plot>
+  <runtime>30 min</runtime>
+  <ratings>
+    <rating name="tvdb" max="10" default="true">
+      <value>7.3</value>
+      <votes>38</votes>
+    </rating>
+  </ratings>
+  <namedseason number="1">Die Ankunft</namedseason>
+  <namedseason number="0">Specials</namedseason>
+  <actor>
+    <name>Benji Gregory</name>
+    <role>Brian Tanner</role>
+    <order>0</order>
+    <thumb>http://image.example.org/benji.jpg</thumb>
+  </actor>
+  <actor>
+    <name>Andrea Elson</name>
+    <role>Lynn Tanner</role>
+  </actor>
+  <episodeguide>
+    <url cache="78020.xml">https://example.org/guide/78020</url>
+  </episodeguide>
+</tvshow>

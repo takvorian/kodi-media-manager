@@ -34,7 +34,7 @@ final class NfoSupplementWriter {
                 supplement.actors().stream().map(actor -> actor(document, actor)).toList());
     }
 
-    private static List<Element> ratings(Document document, List<NfoRating> ratings) {
+    static List<Element> ratings(Document document, List<NfoRating> ratings) {
         if (ratings.isEmpty()) {
             return List.of();
         }
@@ -66,7 +66,7 @@ final class NfoSupplementWriter {
         return List.of(element);
     }
 
-    private static Element actor(Document document, NfoActor actor) {
+    static Element actor(Document document, NfoActor actor) {
         Element element = document.createElement(NfoElements.ACTOR);
         appendIfPresent(document, element, NfoElements.NAME, actor.name());
         appendIfPresent(document, element, NfoElements.ROLE, actor.role());
@@ -81,7 +81,7 @@ final class NfoSupplementWriter {
         }
     }
 
-    private static String toText(Object value) {
+    static String toText(Object value) {
         if (value instanceof LocalDateTime dateTime) {
             return NfoSupplementReader.DATE_TIME.format(dateTime);
         }

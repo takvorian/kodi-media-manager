@@ -41,7 +41,7 @@ final class NfoSupplementReader {
                 dateTime(NfoDocuments.text(movie, NfoElements.DATE_ADDED)));
     }
 
-    private static List<NfoActor> actors(Element movie) {
+    static List<NfoActor> actors(Element movie) {
         List<NfoActor> actors = new ArrayList<>();
         for (Element actor : NfoDocuments.children(movie, NfoElements.ACTOR)) {
             String name = NfoDocuments.text(actor, NfoElements.NAME);
@@ -54,7 +54,7 @@ final class NfoSupplementReader {
         return actors;
     }
 
-    private static List<NfoRating> ratings(Element movie) {
+    static List<NfoRating> ratings(Element movie) {
         List<NfoRating> ratings = new ArrayList<>();
         for (Element container : NfoDocuments.children(movie, NfoElements.RATINGS)) {
             for (Element rating : NfoDocuments.children(container, NfoElements.RATING)) {
@@ -83,7 +83,7 @@ final class NfoSupplementReader {
     }
 
     /** Ganze Zahl; Tausendertrennzeichen („650,000“) werden ignoriert. */
-    private static Integer integer(String value) {
+    static Integer integer(String value) {
         if (value == null) {
             return null;
         }
@@ -106,7 +106,7 @@ final class NfoSupplementReader {
         }
     }
 
-    private static LocalDateTime dateTime(String value) {
+    static LocalDateTime dateTime(String value) {
         if (value == null) {
             return null;
         }
