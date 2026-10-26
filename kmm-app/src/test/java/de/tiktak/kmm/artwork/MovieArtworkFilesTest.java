@@ -56,6 +56,19 @@ class MovieArtworkFilesTest {
     }
 
     @Test
+    void findsAndReplacesStackArtworkNamedAfterTheFirstPart() throws IOException {
+        Files.writeString(directory.resolve("Heat Part 1-poster.jpg"), "ember");
+        CompanionFiles stack = CompanionFiles.of(directory.resolve("Heat Part 1.mkv"), DiscFormat.FILE, 2);
+
+        assertThat(artworkFiles.find(stack, ImageType.POSTER)).hasValueSatisfying(
+                file -> assertThat(file.file()).isEqualTo(directory.resolve("Heat Part 1-poster.jpg")));
+        ArtworkFile saved = artworkFiles.save(stack, ImageType.POSTER, image("neu", "jpg"));
+
+        assertThat(saved.file()).isEqualTo(directory.resolve("Heat-poster.jpg"));
+        assertThat(directory.resolve("Heat Part 1-poster.jpg")).doesNotExist();
+    }
+
+    @Test
     void savesDiscArtworkAsPlainNameInMovieDirectory() {
         Path videoTs = directory.resolve("VIDEO_TS").resolve("VIDEO_TS.IFO");
         CompanionFiles dvd = CompanionFiles.of(videoTs, DiscFormat.DVD, 1);

@@ -28,6 +28,23 @@ class CompanionFilesTest {
     }
 
     @Test
+    void alsoReadsCompanionFilesNamedAfterTheFirstPartLikeEmber() {
+        var files = CompanionFiles.of(MOVIE_DIRECTORY.resolve("Category 6 Part 1.mkv"), DiscFormat.FILE, 2);
+
+        assertThat(files.nfoFile()).isEqualTo(MOVIE_DIRECTORY.resolve("Category 6.nfo"));
+        assertThat(files.nfoCandidates()).containsExactly(MOVIE_DIRECTORY.resolve("Category 6.nfo"),
+                MOVIE_DIRECTORY.resolve("Category 6 Part 1.nfo"), MOVIE_DIRECTORY.resolve("movie.nfo"));
+        assertThat(files.artworkFile("poster", "jpg")).isEqualTo(MOVIE_DIRECTORY.resolve("Category 6-poster.jpg"));
+        assertThat(files.artworkCandidates("poster")).containsExactly(
+                MOVIE_DIRECTORY.resolve("Category 6-poster.jpg"),
+                MOVIE_DIRECTORY.resolve("Category 6-poster.jpeg"),
+                MOVIE_DIRECTORY.resolve("Category 6-poster.png"),
+                MOVIE_DIRECTORY.resolve("Category 6 Part 1-poster.jpg"),
+                MOVIE_DIRECTORY.resolve("Category 6 Part 1-poster.jpeg"),
+                MOVIE_DIRECTORY.resolve("Category 6 Part 1-poster.png"));
+    }
+
+    @Test
     void keepsPartLikeTitleForSingleFile() {
         var files = CompanionFiles.of(MOVIE_DIRECTORY.resolve("Kill Bill Part 2.mkv"), DiscFormat.FILE, 1);
 
@@ -58,7 +75,7 @@ class CompanionFilesTest {
 
     @Test
     void namesArtworkAfterTheMovieFile() {
-        var files = CompanionFiles.of(MOVIE_DIRECTORY.resolve("Heat (1995)-cd1.avi"), DiscFormat.FILE, 2);
+        var files = CompanionFiles.of(MOVIE_DIRECTORY.resolve("Heat (1995).avi"), DiscFormat.FILE, 1);
 
         assertThat(files.artworkFile("poster", "jpg")).isEqualTo(MOVIE_DIRECTORY.resolve("Heat (1995)-poster.jpg"));
         assertThat(files.artworkCandidates("clearlogo")).containsExactly(

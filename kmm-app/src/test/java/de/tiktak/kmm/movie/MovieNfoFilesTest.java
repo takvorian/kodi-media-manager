@@ -72,6 +72,18 @@ class MovieNfoFilesTest {
     }
 
     @Test
+    void updatesAnNfoNamedAfterTheFirstPartInPlace() throws IOException {
+        Path emberNfo = Files.writeString(directory.resolve("Heat Part 1.nfo"), "<movie><title>Alt</title></movie>");
+        CompanionFiles stack = CompanionFiles.of(directory.resolve("Heat Part 1.mkv"), DiscFormat.FILE, 2);
+
+        NfoFileState written = nfoFiles.write(stack, metadata(null), null);
+
+        assertThat(written.file()).isEqualTo(emberNfo);
+        assertThat(directory.resolve("Heat.nfo")).doesNotExist();
+        assertThat(reader.read(emberNfo).title()).isEqualTo("Heat");
+    }
+
+    @Test
     void replacesUnreadableExistingNfo() throws IOException {
         Files.writeString(directory.resolve("Heat.nfo"), "<movie><title>kaputt</movie>");
 
