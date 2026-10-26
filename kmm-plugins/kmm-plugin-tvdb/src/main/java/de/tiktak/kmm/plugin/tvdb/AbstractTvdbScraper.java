@@ -50,7 +50,8 @@ abstract class AbstractTvdbScraper implements Scraper {
     @Override
     public void initialize(PluginContext context) {
         settings = TvdbSettings.from(context);
-        api = new TvdbApi(new TvdbClient(context.httpClient(), settings, context.userAgent(), clock), settings);
+        TvdbClient client = new TvdbClient(context.httpClient(), settings, context.userAgent(), clock);
+        api = new TvdbApi(client, settings, clock);
     }
 
     @Override

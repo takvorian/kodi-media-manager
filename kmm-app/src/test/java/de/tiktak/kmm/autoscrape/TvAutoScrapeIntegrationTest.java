@@ -128,6 +128,7 @@ class TvAutoScrapeIntegrationTest {
             return request.title().equals("Lost") ? Optional.of(lost) : Optional.empty();
         });
         when(tvdb.fetch("73739")).thenReturn(Optional.of(lost));
+        when(tvdb.episodeDetails(any())).thenAnswer(invocation -> invocation.getArgument(0));
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(tvdb));
 
         ImageScraper images = mock(ImageScraper.class);

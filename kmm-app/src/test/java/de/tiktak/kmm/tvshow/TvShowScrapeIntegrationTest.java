@@ -3,7 +3,9 @@ package de.tiktak.kmm.tvshow;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.awaitility.Awaitility.await;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -103,6 +105,14 @@ class TvShowScrapeIntegrationTest {
         when(scraper.displayName()).thenReturn("Stub");
         when(scraper.supportedMediaTypes()).thenReturn(Set.of(MediaType.TV_SHOW));
         when(scraper.fetch(providerId)).thenReturn(Optional.of(lost()));
+        when(scraper.episodeDetails(any())).thenAnswer(invocation -> {
+            EpisodeResult episode = invocation.getArgument(0);
+            return episode.episode() == 2
+                    ? EpisodeResult.builder().season(1).episode(2).title(episode.title())
+                            .uniqueIds(episode.uniqueIds()).directors(List.of("Jack Bender"))
+                            .writers(List.of("Damon Lindelof")).build()
+                    : episode;
+        });
         when(scraperRegistry.tvShowScraper(SCRAPER)).thenReturn(Optional.of(scraper));
     }
 
@@ -155,9 +165,15 @@ class TvShowScrapeIntegrationTest {
                 {"metadata": {"title": "Gestrandet (1)", "aired": "2004-09-22", "tvdbId": "127131"},
                  "extras": {"ratings": [{"source": "tvdb", "value": 8.1}]}}""");
 
+        assertThat(multiNfo).contains("<director>Jack Bender</director>", "<credits>Damon Lindelof</credits>");
+        verify(scraper, never()).episodeDetails(argThat(episode -> episode.episode() == 1));
+        verify(scraper).episodeDetails(argThat(episode -> episode.episode() == 2));
+        verify(scraper).episodeDetails(argThat(episode -> episode.episode() == 3));
+
         assertThat(fill().toString()).as("zweite Übernahme ändert nichts").isEqualTo(
                 "{\"updated\":0,\"unchanged\":3,\"unmatched\":1,\"failedFiles\":[]}");
         verify(scraper, times(1)).fetch(providerId);
+        verify(scraper).episodeDetails(argThat(episode -> episode.episode() == 2));
     }
 
     @Test

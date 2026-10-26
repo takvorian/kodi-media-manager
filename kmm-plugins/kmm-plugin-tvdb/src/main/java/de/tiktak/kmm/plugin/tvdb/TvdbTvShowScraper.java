@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.SearchQuery;
 import de.tiktak.kmm.plugin.api.SearchResult;
@@ -52,6 +53,17 @@ public class TvdbTvShowScraper extends AbstractTvdbScraper implements TvShowScra
             return Optional.empty();
         }
         return tvdbId(tvdb, request).flatMap(this::fetch);
+    }
+
+    /** TVDB liefert Regie, Drehbuch und Gaststars nur in den Details jeder einzelnen Episode. */
+    @Override
+    public EpisodeResult episodeDetails(EpisodeResult episode) {
+        String tvdbId = episode.uniqueIds().get(TvdbApi.TVDB);
+        if (tvdbId == null) {
+            return episode;
+        }
+        return api().episode(tvdbId).map(details -> new TvdbMapper(settings()).withCrew(episode, details))
+                .orElse(episode);
     }
 
     /** Über bekannte TVDB-, IMDb- oder TMDB-ID, sonst der eindeutig passende Suchtreffer. */

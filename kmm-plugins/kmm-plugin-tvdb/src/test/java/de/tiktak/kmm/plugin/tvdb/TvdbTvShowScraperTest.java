@@ -11,6 +11,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -168,6 +169,39 @@ class TvdbTvShowScraperTest {
         assertThat(lost.title()).isEqualTo("Lost");
         assertThat(lost.plot()).isEqualTo("Stranded on an island.");
         assertThat(lost.episodes().getFirst().title()).isEqualTo("Pilot (1)");
+    }
+
+    @Test
+    void addsCrewAndGuestStarsFromTheEpisodeDetailsOnceAndCachesThem() {
+        tvdb.respond("/v4/episodes/127131/extended", "episode-127131.json");
+        EpisodeResult pilot = EpisodeResult.builder().season(1).episode(1).title("Gestrandet (1)")
+                .uniqueIds(Map.of("tvdb", "127131")).build();
+
+        EpisodeResult detailed = scraper.episodeDetails(pilot);
+        scraper.episodeDetails(pilot);
+
+        assertThat(detailed.title()).isEqualTo("Gestrandet (1)");
+        assertThat(detailed.directors()).containsExactly("J.J. Abrams");
+        assertThat(detailed.writers()).containsExactly("J.J. Abrams", "Damon Lindelof");
+        assertThat(detailed.guestStars()).containsExactly(
+                new CastMember("Greg Grunberg", "Pilot",
+                        URI.create("https://artworks.thetvdb.com/banners/person/grunberg.jpg")),
+                new CastMember("John Dixon", null, null));
+        assertThat(tvdb.requestsTo("/v4/episodes/127131/extended")).isEqualTo(1);
+    }
+
+    @Test
+    void keepsEpisodesWithoutTvdbIdOrDetailsAndKnownCrew() {
+        EpisodeResult withoutId = EpisodeResult.builder().season(1).episode(1).build();
+        EpisodeResult unknown = EpisodeResult.builder().season(1).episode(2).uniqueIds(Map.of("tvdb", "999")).build();
+        tvdb.respond("/v4/episodes/127131/extended", "episode-127131.json");
+        EpisodeResult withCrew = EpisodeResult.builder().season(1).episode(1).directors(List.of("Jack Bender"))
+                .uniqueIds(Map.of("tvdb", "127131")).build();
+
+        assertThat(scraper.episodeDetails(withoutId)).isSameAs(withoutId);
+        assertThat(scraper.episodeDetails(unknown)).isSameAs(unknown);
+        assertThat(scraper.episodeDetails(withCrew).directors()).containsExactly("Jack Bender");
+        assertThat(scraper.episodeDetails(withCrew).writers()).containsExactly("J.J. Abrams", "Damon Lindelof");
     }
 
     @Test

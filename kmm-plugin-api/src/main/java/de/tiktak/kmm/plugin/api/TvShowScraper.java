@@ -38,4 +38,16 @@ public interface TvShowScraper extends Scraper {
      * @return leer, wenn kein Treffer eindeutig genug ist
      */
     Optional<TvShowResult> scrape(ScrapeRequest request);
+
+    /**
+     * Ergänzt Angaben, die der Anbieter nur je Episode liefert (bei TVDB Regie, Drehbuch und Gaststars).
+     * KMM fragt nur Episoden an, denen diese Angaben fehlen, weil jede Anfrage den Anbieter belastet.
+     *
+     * @param episode eine Episode aus {@link #fetch(String)} bzw. {@link #scrape(ScrapeRequest)}
+     * @return die ergänzte Episode; ohne weitere Angaben die übergebene
+     * @throws ScraperException wenn der Anbieter nicht erreichbar ist oder die Anfrage ablehnt
+     */
+    default EpisodeResult episodeDetails(EpisodeResult episode) {
+        return episode;
+    }
 }

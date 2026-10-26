@@ -7,6 +7,8 @@ import java.net.URI;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
@@ -58,5 +60,43 @@ class TvShowResultTest {
         assertThatNullPointerException().isThrownBy(() -> new ProviderRating(null, 8.1, 10, null));
         assertThatNullPointerException().isThrownBy(() -> new Attribution(null, URI.create("https://thetvdb.com")));
         assertThatNullPointerException().isThrownBy(() -> new Attribution("TheTVDB", null));
+    }
+
+    @Test
+    void returnsEpisodesUnchangedWithoutDetails() {
+        TvShowScraper scraper = new TvShowScraper() {
+            @Override
+            public String id() {
+                return "stub";
+            }
+
+            @Override
+            public String displayName() {
+                return "Stub";
+            }
+
+            @Override
+            public Set<MediaType> supportedMediaTypes() {
+                return Set.of(MediaType.TV_SHOW);
+            }
+
+            @Override
+            public List<SearchResult> search(SearchQuery query) {
+                return List.of();
+            }
+
+            @Override
+            public Optional<TvShowResult> fetch(String providerId) {
+                return Optional.empty();
+            }
+
+            @Override
+            public Optional<TvShowResult> scrape(ScrapeRequest request) {
+                return Optional.empty();
+            }
+        };
+        EpisodeResult pilot = EpisodeResult.builder().season(1).episode(1).build();
+
+        assertThat(scraper.episodeDetails(pilot)).isSameAs(pilot);
     }
 }

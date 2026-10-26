@@ -21,6 +21,7 @@ import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CastMember;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
+import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.TvShowResult;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 
@@ -58,6 +59,7 @@ class TvShowScrapeServiceTest {
                 .episodes(List.of(EpisodeResult.builder().season(1).episode(1).title("Pilot")
                         .aired(LocalDate.of(2004, 9, 22)).build()))
                 .build()));
+        when(scraper.episodeDetails(any())).thenThrow(new ScraperException("TVDB weg"));
         NfoException unwritable = mock(NfoException.class);
         when(nfoFiles.writeShow(any(), any())).thenThrow(unwritable);
         when(nfoFiles.writeEpisodes(any(), any())).thenThrow(unwritable);

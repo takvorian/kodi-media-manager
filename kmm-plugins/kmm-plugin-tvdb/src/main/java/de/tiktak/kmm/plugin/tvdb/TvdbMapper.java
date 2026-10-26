@@ -28,6 +28,9 @@ class TvdbMapper {
     static final String CONTINUING = "Continuing";
     static final String ENDED = "Ended";
     private static final String ACTOR = "Actor";
+    private static final String DIRECTOR = "Director";
+    private static final String WRITER = "Writer";
+    private static final String GUEST_STAR = "Guest Star";
     private static final String IMDB_SOURCE = "IMDB";
     private static final String TMDB_SOURCE = "TheMovieDB.com";
     private static final int YEAR_LENGTH = 4;
@@ -79,6 +82,47 @@ class TvdbMapper {
                         .map(episode -> toEpisode(episode, translated.get(episode.path("id").asString())))
                         .toList())
                 .build();
+    }
+
+    /**
+     * Ergänzt eine Episode um Regie, Drehbuch und Gaststars aus {@code /episodes/{id}/extended};
+     * vorhandene Angaben bleiben.
+     */
+    EpisodeResult withCrew(EpisodeResult episode, JsonNode details) {
+        List<JsonNode> people = JsonNodes.elements(details.path("characters"))
+                .filter(person -> JsonNodes.text(person, "personName").isPresent())
+                .toList();
+        return EpisodeResult.builder()
+                .season(episode.season())
+                .episode(episode.episode())
+                .title(episode.title())
+                .plot(episode.plot())
+                .aired(episode.aired())
+                .runtime(episode.runtime())
+                .directors(episode.directors().isEmpty() ? names(people, DIRECTOR) : episode.directors())
+                .writers(episode.writers().isEmpty() ? names(people, WRITER) : episode.writers())
+                .guestStars(episode.guestStars().isEmpty() ? guestStars(people) : episode.guestStars())
+                .ratings(episode.ratings())
+                .uniqueIds(episode.uniqueIds())
+                .thumb(episode.thumb())
+                .build();
+    }
+
+    private static List<String> names(List<JsonNode> people, String peopleType) {
+        return people.stream()
+                .filter(person -> peopleType.equals(person.path("peopleType").asString()))
+                .map(person -> JsonNodes.text(person, "personName").orElseThrow())
+                .distinct()
+                .toList();
+    }
+
+    private static List<CastMember> guestStars(List<JsonNode> people) {
+        return people.stream()
+                .filter(person -> GUEST_STAR.equals(person.path("peopleType").asString()))
+                .map(person -> new CastMember(JsonNodes.text(person, "personName").orElseThrow(),
+                        JsonNodes.text(person, "name").orElse(null),
+                        JsonNodes.text(person, "personImgURL").flatMap(TvdbMapper::uri).orElse(null)))
+                .toList();
     }
 
     private EpisodeResult toEpisode(JsonNode episode, JsonNode translation) {

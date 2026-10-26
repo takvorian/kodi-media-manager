@@ -102,6 +102,7 @@ public class TvShowScrapeService {
                     unmatched++;
                     continue;
                 }
+                match = withDetailsIfMissing(scraper, episode, match);
                 TvShowScrapeMerger.fillEpisode(episode.metadata(), episode.extras(), match,
                         episode.getNfoModifiedAt() == null).ifPresent(fill -> fills.put(episode, fill));
             }
@@ -224,6 +225,27 @@ public class TvShowScrapeService {
         } catch (NfoException e) {
             log.warn("NFO of TV show {} not written: {}", show.getId(), e.getMessage());
             failedFiles.add(TvShowFiles.tvShowNfo(show.directory()).toString());
+        }
+    }
+
+    /**
+     * Fragt die Einzelangaben einer Episode (z. B. Regie und Drehbuch bei TVDB) nur an, wenn sie der
+     * Episode fehlen und der Treffer sie nicht schon enthält; jede Anfrage belastet den Anbieter. Ein
+     * Fehler dabei verhindert die Übernahme der übrigen Angaben nicht.
+     */
+    private static EpisodeResult withDetailsIfMissing(TvShowScraper scraper, Episode episode, EpisodeResult match) {
+        EpisodeExtras extras = episode.extras();
+        boolean missingInLibrary = extras.directors().isEmpty() || extras.writers().isEmpty();
+        boolean missingInMatch = match.directors().isEmpty() && match.writers().isEmpty();
+        if (!missingInLibrary || !missingInMatch) {
+            return match;
+        }
+        try {
+            return scraper.episodeDetails(match);
+        } catch (ScraperException e) {
+            log.warn("Details of episode S{}E{} not loaded from {}: {}", match.season(), match.episode(), scraper.id(),
+                    e.getMessage());
+            return match;
         }
     }
 

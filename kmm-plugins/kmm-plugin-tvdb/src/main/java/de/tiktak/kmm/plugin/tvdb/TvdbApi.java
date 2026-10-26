@@ -1,5 +1,6 @@
 package de.tiktak.kmm.plugin.tvdb;
 
+import java.time.Clock;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,10 +25,12 @@ class TvdbApi {
 
     private final TvdbClient client;
     private final TvdbSettings settings;
+    private final Clock clock;
 
-    TvdbApi(TvdbClient client, TvdbSettings settings) {
+    TvdbApi(TvdbClient client, TvdbSettings settings, Clock clock) {
         this.client = client;
         this.settings = settings;
+        this.clock = clock;
     }
 
     List<JsonNode> searchSeries(String title, Integer year) {
@@ -71,6 +74,22 @@ class TvdbApi {
             }
         }
         return episodes;
+    }
+
+    /** Details einer Episode mit Regie, Drehbuch und Gaststars; zwischengespeichert. */
+    Optional<JsonNode> episode(String tvdbId) {
+        if (!isNumericId(tvdbId)) {
+            return Optional.empty();
+        }
+        String key = settings.baseUrl() + "|" + tvdbId;
+        Optional<JsonNode> cached = TvdbEpisodeCache.get(key, clock);
+        if (cached.isPresent()) {
+            return cached;
+        }
+        Optional<JsonNode> details = client.get("/episodes/" + tvdbId + "/extended", Map.of())
+                .map(response -> response.path("data"));
+        details.ifPresent(data -> TvdbEpisodeCache.put(key, data, clock));
+        return details;
     }
 
     /** TVDB-ID einer Serie aus bekannten IDs: direkt, über die IMDb- oder die TMDB-ID. */
