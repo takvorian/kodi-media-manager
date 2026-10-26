@@ -1,5 +1,6 @@
 package de.tiktak.kmm.tvshow;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,6 +32,14 @@ public class TvShowQueryService {
                 : showRepository.findByTitleContainingIgnoreCase(search.strip(), pageable);
         Map<Long, Long> episodeCounts = episodeCounts(shows.getContent().stream().map(TvShow::getId).toList());
         return shows.map(show -> TvShowSummary.from(show, episodeCounts.getOrDefault(show.getId(), 0L)));
+    }
+
+    /** IDs der Serien einer Quelle, nach Titel sortiert. */
+    public List<Long> findShowIds(long sourceId) {
+        return showRepository.findBySourceId(sourceId).stream()
+                .sorted(Comparator.comparing(TvShow::getTitle, String.CASE_INSENSITIVE_ORDER))
+                .map(TvShow::getId)
+                .toList();
     }
 
     private Map<Long, Long> episodeCounts(List<Long> showIds) {

@@ -93,7 +93,7 @@ describe('SourceList', () => {
     await loadSources([films, series, { ...films, id: 3, name: 'Sets', mediaType: 'MOVIE_SET' }]);
 
     expect(element().querySelectorAll('.scan-button')).toHaveLength(2);
-    expect(element().querySelectorAll('.scrape-button')).toHaveLength(1);
+    expect(element().querySelectorAll('.scrape-button')).toHaveLength(2);
   });
 
   it('reports episodes without recognizable number after a TV scan', async () => {
@@ -313,6 +313,39 @@ describe('SourceList', () => {
     function texts(selector: string): (string | undefined)[] {
       return Array.from(element().querySelectorAll(selector)).map((item) => item.textContent?.trim());
     }
+
+    it('summarizes the scrape of a tv source', async () => {
+      await loadSources([series]);
+
+      button('.scrape-button').click();
+      httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/2/auto-scrape` })
+        .flush(scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: 'Scrapen „Serien“' }));
+      events.emit(scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: 'Scrapen „Serien“' }));
+      events.emit(
+        scrapeJob({
+          id: 'job-10',
+          key: 'auto-scrape:2',
+          title: 'Scrapen „Serien“',
+          status: 'SUCCEEDED',
+          result: {
+            shows: 3,
+            scraped: 2,
+            unmatched: 1,
+            episodesUpdated: 40,
+            imagesSaved: 12,
+            unmatchedTitles: ['Unbekannt'],
+            failures: [],
+            warnings: [],
+          },
+        }),
+      );
+      fixture.detectChanges();
+
+      expect(snackBarMessages).toContain(
+        'Scrapen „Serien“ abgeschlossen: 3 Serien, 40 Episoden ergänzt, 2 neu zugeordnet, 1 ohne Treffer, ' +
+          '12 Bilder gespeichert.',
+      );
+    });
 
     it('starts scraping and shows its progress instead of the action buttons', async () => {
       await loadSources([films]);

@@ -69,6 +69,9 @@ class AutoScrapeServiceTest {
     @Mock
     private JobService jobService;
 
+    @Mock
+    private TvAutoScrapeRunner tvRunner;
+
     @InjectMocks
     private AutoScrapeService service;
 
@@ -89,8 +92,22 @@ class AutoScrapeServiceTest {
     }
 
     @Test
-    void rejectsSourcesWithoutMovies() {
+    void runsTheTvShowScrapeForTvSources() {
         givenSource(MediaType.TV_SHOW);
+        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 1, 0, 3, 2, List.of(), List.of(), List.of());
+        RecordingContext context = new RecordingContext(false);
+        when(tvRunner.run(SOURCE_ID, context)).thenReturn(result);
+
+        service.start(SOURCE_ID);
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("auto-scrape:3"), anyString(), task.capture());
+        assertThat(task.getValue().run(context)).isEqualTo(result);
+    }
+
+    @Test
+    void rejectsSourcesWithoutMoviesOrTvShows() {
+        givenSource(MediaType.MOVIE_SET);
 
         assertThatThrownBy(() -> service.start(SOURCE_ID))
                 .isInstanceOfSatisfying(AutoScrapeNotPossibleException.class,

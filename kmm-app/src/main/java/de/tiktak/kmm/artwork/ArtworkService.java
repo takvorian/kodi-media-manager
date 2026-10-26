@@ -32,8 +32,6 @@ import lombok.extern.slf4j.Slf4j;
 public class ArtworkService {
 
     private static final String TMDB = "tmdb";
-    /** Versuche je Bildart, falls Downloads fehlschlagen. */
-    private static final int MAX_DOWNLOAD_ATTEMPTS = 3;
     private static final String IMDB = "imdb";
 
     private final MovieMetadataService metadataService;
@@ -99,7 +97,8 @@ public class ArtworkService {
         List<String> warnings = new ArrayList<>(search.warnings());
         int saved = 0;
         for (ImageType type : missing) {
-            if (saveBest(files, type, search.candidatesOf(type), warnings)) {
+            if (ArtworkDownloads.saveFirstLoadable(downloader, type, search.candidatesOf(type),
+                    image -> artworkFiles.save(files, type, image), warnings)) {
                 saved++;
             }
         }
@@ -107,29 +106,6 @@ public class ArtworkService {
             events.publishEvent(new MovieFilesChangedEvent(movieId));
         }
         return new ArtworkFillResult(saved, warnings);
-    }
-
-    /**
-     * Speichert den ersten Treffer, der sich laden lässt. Ein Schreibfehler im Filmordner wird nicht
-     * abgefangen, weil weitere Versuche daran nichts ändern.
-     */
-    private boolean saveBest(CompanionFiles files, ImageType type, List<ArtworkCandidate> candidates,
-            List<String> warnings) {
-        String lastProblem = null;
-        for (ArtworkCandidate candidate : candidates.stream().limit(MAX_DOWNLOAD_ATTEMPTS).toList()) {
-            try {
-                DownloadedImage image = downloader.download(candidate.url());
-                artworkFiles.save(files, type, image);
-                return true;
-            } catch (ImageDownloadException e) {
-                log.warn("Could not download {} from {}: {}", type, candidate.url(), e.getMessage());
-                lastProblem = e.getMessage();
-            }
-        }
-        if (lastProblem != null) {
-            warnings.add("%s: %s".formatted(type, lastProblem));
-        }
-        return false;
     }
 
     public void remove(long movieId, ImageType type) {

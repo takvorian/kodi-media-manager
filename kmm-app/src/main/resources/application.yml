@@ -77,6 +77,8 @@ kmm:
   scraping:
     # Metadaten-Scraper für das automatische Scrapen (Fallback: erster eingerichteter)
     preferred-metadata-scraper: tmdb
+    # Serien-Scraper für das automatische Scrapen (Fallback: erster eingerichteter)
+    preferred-tv-show-scraper: tvdb
   artwork:
     max-download-size: 25MB
   kodi:

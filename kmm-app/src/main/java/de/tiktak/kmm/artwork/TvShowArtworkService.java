@@ -2,6 +2,7 @@ package de.tiktak.kmm.artwork;
 
 import java.net.URI;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.TvShowFiles;
 import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.EpisodeSummary;
 import de.tiktak.kmm.tvshow.EpisodeThumbs;
 import de.tiktak.kmm.tvshow.TvShowDetails;
 import de.tiktak.kmm.tvshow.TvShowMetadata;
@@ -82,6 +84,76 @@ public class TvShowArtworkService {
     public void remove(long showId, ImageType type, Integer season) {
         requireSupported(type, season);
         artworkFiles.delete(slot(directory(metadataService.findShow(showId)), type, season));
+    }
+
+    /**
+     * Holt für jede fehlende Bildart der Serie, ihrer Staffeln mit Episoden und für fehlende Standbilder
+     * den besten Treffer. Vorhandene Bilder bleiben unverändert.
+     *
+     * @return Anzahl gespeicherter Bilder und Hinweise; ohne TVDB-, TMDB- oder IMDb-ID wird nichts gesucht
+     */
+    public ArtworkFillResult fillMissing(long showId) {
+        TvShowDetails show = metadataService.findShow(showId);
+        Path directory = directory(show);
+        Map<String, String> uniqueIds = uniqueIds(show.metadata());
+        if (uniqueIds.isEmpty()) {
+            return new ArtworkFillResult(0, List.of());
+        }
+        List<Integer> seasons = show.seasons().stream()
+                .filter(season -> season.episodeCount() > 0)
+                .map(TvShowDetails.Season::number)
+                .toList();
+        List<String> warnings = new ArrayList<>();
+        int saved = 0;
+        ArtworkSearch search = null;
+        for (Integer season : withShow(seasons)) {
+            for (ImageType type : types(season)) {
+                ArtworkSlot slot = slot(directory, type, season);
+                if (artworkFiles.find(slot).isPresent()) {
+                    continue;
+                }
+                if (search == null) {
+                    search = candidateFinder.findAll(MediaType.TV_SHOW, show.metadata().title(),
+                            show.metadata().year(), uniqueIds);
+                    warnings.addAll(search.warnings());
+                }
+                if (ArtworkDownloads.saveFirstLoadable(downloader, type, search.candidatesOf(type, season),
+                        image -> artworkFiles.save(slot, image), warnings)) {
+                    saved++;
+                }
+            }
+        }
+        saved += fillMissingThumbs(show, warnings);
+        return new ArtworkFillResult(saved, warnings);
+    }
+
+    private int fillMissingThumbs(TvShowDetails show, List<String> warnings) {
+        int saved = 0;
+        for (EpisodeSummary episode : show.episodes()) {
+            ArtworkSlot slot = episodeSlot(Path.of(episode.filePath()), ImageType.THUMB);
+            if (artworkFiles.find(slot).isPresent()) {
+                continue;
+            }
+            EpisodeThumbs thumbs = scrapeService.episodeThumbs(episode.id());
+            warnings.addAll(thumbs.warnings());
+            List<ArtworkCandidate> candidates = thumbs.thumbs().stream()
+                    .map(thumb -> new ArtworkCandidate(thumb.scraperId(), thumb.scraperName(), ImageType.THUMB,
+                            thumb.url(), thumb.url(), null, null, null, null, null))
+                    .toList();
+            if (ArtworkDownloads.saveFirstLoadable(downloader, ImageType.THUMB, candidates,
+                    image -> artworkFiles.save(slot, image), warnings)) {
+                saved++;
+            }
+        }
+        return saved;
+    }
+
+    /** Erst die Serie ({@code null}), dann die Staffeln. */
+    private static List<Integer> withShow(List<Integer> seasons) {
+        List<Integer> targets = new ArrayList<>();
+        targets.add(null);
+        targets.addAll(seasons);
+        return targets;
     }
 
     public List<ArtworkInfo> episodeArtwork(long episodeId) {

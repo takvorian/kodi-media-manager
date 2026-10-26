@@ -62,7 +62,8 @@ class TvShowScrapeServiceTest {
         when(nfoFiles.writeShow(any(), any())).thenThrow(unwritable);
         when(nfoFiles.writeEpisodes(any(), any())).thenThrow(unwritable);
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
-                nfoFiles, new TvShowResultCache(Clock.systemUTC()), Clock.systemUTC());
+                nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
+                new TvScrapingProperties("tvdb"), Clock.systemUTC());
 
         EpisodeFillResult result = service.fillFromProvider(7, "tvdb", "73739");
 
@@ -85,11 +86,32 @@ class TvShowScrapeServiceTest {
         when(scraper.displayName()).thenReturn("TheTVDB");
         when(scraper.scrape(any())).thenReturn(Optional.empty());
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
-                nfoFiles, new TvShowResultCache(Clock.systemUTC()), Clock.systemUTC());
+                nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
+                new TvScrapingProperties("tvdb"), Clock.systemUTC());
 
         EpisodeThumbs thumbs = service.episodeThumbs(3);
 
         assertThat(thumbs.thumbs()).isEmpty();
         assertThat(thumbs.warnings()).singleElement().asString().startsWith("TheTVDB: ").contains("nicht eindeutig");
+    }
+
+    @Test
+    void autoScrapesWithTheFirstReadyScraperWhenThePreferredOneIsMissing() {
+        TvShow show = new TvShow(1, SHOW_DIRECTORY, "Lost", null);
+        ReflectionTestUtils.setField(show, "id", 7L);
+        when(showRepository.findById(7L)).thenReturn(Optional.of(show));
+        TvShowScraper unconfigured = mock(TvShowScraper.class);
+        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Key fehlt"));
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(unconfigured, scraper));
+        when(scraper.id()).thenReturn("tmdb");
+        when(scraper.scrape(any())).thenReturn(Optional.empty());
+        TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
+                nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
+                new TvScrapingProperties("tvdb"), Clock.systemUTC());
+
+        assertThat(service.scrapeMissing(7).status()).isEqualTo(TvShowAutoScrapeOutcome.Status.NO_MATCH);
+
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(unconfigured));
+        assertThat(service.scrapeMissing(7).status()).isEqualTo(TvShowAutoScrapeOutcome.Status.NO_SCRAPER);
     }
 }

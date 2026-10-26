@@ -130,7 +130,7 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/system/info`
 - `GET /api/v1/sources`, `POST /api/v1/sources`, `DELETE /api/v1/sources/{id}`
 - `POST /api/v1/sources/{id}/scan` → `202 Accepted` mit dem gestarteten Job (Film- oder Serien-Scan je nach Quelle)
-- `POST /api/v1/sources/{id}/auto-scrape` → `202 Accepted`; ergänzt fehlende Metadaten und Bilder aller Filme der Quelle
+- `POST /api/v1/sources/{id}/auto-scrape` → `202 Accepted`; ergänzt fehlende Metadaten und Bilder aller Filme bzw. Serien (inkl. Episoden und Staffeln) der Quelle
 - `GET /api/v1/jobs`, `GET /api/v1/jobs/{id}`, `POST /api/v1/jobs/{id}/cancel`
 - `GET /api/v1/jobs/events` (Server-Sent Events, Ereignis `job`)
 - `GET /api/v1/movies?search=…&page=…&size=…`

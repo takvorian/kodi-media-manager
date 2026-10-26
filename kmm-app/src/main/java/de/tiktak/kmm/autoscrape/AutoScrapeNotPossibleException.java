@@ -13,6 +13,7 @@ public class AutoScrapeNotPossibleException extends ErrorResponseException {
     AutoScrapeNotPossibleException(MediaSource source) {
         super(HttpStatus.UNPROCESSABLE_CONTENT);
         getBody().setTitle("Quelle kann nicht gescrapt werden");
-        getBody().setDetail("Die Quelle '%s' enthält keine Filme (%s).".formatted(source.getName(), source.getMediaType()));
+        getBody().setDetail("Die Quelle '%s' enthält weder Filme noch Serien (%s).".formatted(source.getName(),
+                source.getMediaType()));
     }
 }

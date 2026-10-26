@@ -99,6 +99,12 @@ export class SourceList {
     return source.mediaType === 'MOVIE' || source.mediaType === 'TV_SHOW';
   }
 
+  /** Film- und Serienquellen lassen sich automatisch scrapen. */
+  protected canScrape(source: MediaSource): boolean {
+    return this.canScan(source);
+  }
+
+  /** Den Kodi-Abgleich gibt es bisher nur für Filme. */
   protected hasMovies(source: MediaSource): boolean {
     return source.mediaType === 'MOVIE';
   }
@@ -213,8 +219,12 @@ function autoScrapeSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as AutoScrapeResult;
     const errors = result.failures.length > 0 ? `, ${result.failures.length} Fehler` : '';
+    const items =
+      result.shows === undefined
+        ? `${result.movies} Filme`
+        : `${result.shows} Serien, ${result.episodesUpdated} Episoden ergänzt`;
     return (
-      `${job.title} abgeschlossen: ${result.movies} Filme, ${result.scraped} neu zugeordnet, ` +
+      `${job.title} abgeschlossen: ${items}, ${result.scraped} neu zugeordnet, ` +
       `${result.unmatched} ohne Treffer, ${result.imagesSaved} Bilder gespeichert${errors}.`
     );
   }

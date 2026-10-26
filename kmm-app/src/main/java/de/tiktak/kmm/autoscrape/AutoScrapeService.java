@@ -20,9 +20,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Scrapt alle Filme einer Quelle im Hintergrund: fehlende Metadaten (nur bei sicherem Treffer) und
- * fehlende Bilder. Vorhandene Daten und Bilder bleiben unverändert. Die Filme werden nacheinander
- * bearbeitet, um die Anfragelimits der Anbieter zu schonen.
+ * Scrapt alle Filme bzw. Serien einer Quelle im Hintergrund: fehlende Metadaten (nur bei sicherem
+ * Treffer) und fehlende Bilder. Vorhandene Daten und Bilder bleiben unverändert. Die Einträge werden
+ * nacheinander bearbeitet, um die Anfragelimits der Anbieter zu schonen.
  */
 @Slf4j
 @Service
@@ -40,17 +40,20 @@ public class AutoScrapeService {
     private final MovieScrapeService scrapeService;
     private final ArtworkService artworkService;
     private final JobService jobService;
+    private final TvAutoScrapeRunner tvRunner;
 
     /**
-     * @throws AutoScrapeNotPossibleException wenn die Quelle keine Filmquelle ist
+     * @throws AutoScrapeNotPossibleException wenn die Quelle weder Filme noch Serien enthält
      */
     public JobSnapshot start(long sourceId) {
         MediaSource source = sourceService.require(sourceId);
-        if (source.getMediaType() != MediaType.MOVIE) {
-            throw new AutoScrapeNotPossibleException(source);
-        }
-        return jobService.submit(JOB_KEY_PREFIX + sourceId, "Scrapen „%s“".formatted(source.getName()),
-                context -> run(sourceId, context));
+        String title = "Scrapen „%s“".formatted(source.getName());
+        return switch (source.getMediaType()) {
+            case MOVIE -> jobService.submit(JOB_KEY_PREFIX + sourceId, title, context -> run(sourceId, context));
+            case TV_SHOW -> jobService.submit(JOB_KEY_PREFIX + sourceId, title,
+                    context -> tvRunner.run(sourceId, context));
+            default -> throw new AutoScrapeNotPossibleException(source);
+        };
     }
 
     AutoScrapeResult run(long sourceId, JobContext context) {

@@ -45,6 +45,8 @@ public class TvShowScrapeService {
     private final EpisodeRepository episodeRepository;
     private final TvShowNfoFiles nfoFiles;
     private final TvShowResultCache cache;
+    private final TvShowMetadataService metadataService;
+    private final TvScrapingProperties properties;
     private final Clock clock;
 
     /**
@@ -78,8 +80,11 @@ public class TvShowScrapeService {
      */
     @Transactional
     public EpisodeFillResult fillFromProvider(long showId, String scraperId, String providerId) {
-        TvShow show = requireShow(showId);
-        TvShowResult scraped = fetch(scraper(scraperId), providerId);
+        return fill(requireShow(showId), scraper(scraperId), providerId);
+    }
+
+    private EpisodeFillResult fill(TvShow show, TvShowScraper scraper, String providerId) {
+        TvShowResult scraped = fetch(scraper, providerId);
         List<String> failedFiles = new ArrayList<>();
         fillShowExtras(show, scraped, failedFiles);
         Map<EpisodeKey, EpisodeResult> byNumber = scraped.episodes().stream()
@@ -109,8 +114,52 @@ public class TvShowScrapeService {
             }
         }
         log.info("Filled episodes of TV show {} from {}: {} updated, {} unchanged, {} unmatched, {} failed files",
-                showId, scraperId, updated, unchanged, unmatched, failedFiles.size());
+                show.getId(), scraper.id(), updated, unchanged, unmatched, failedFiles.size());
         return new EpisodeFillResult(updated, unchanged, unmatched, failedFiles);
+    }
+
+    /**
+     * Scrapt eine Serie automatisch mit dem bevorzugten Serien-Scraper: Eine noch nicht zugeordnete
+     * Serie wird nur bei eindeutigem Treffer übernommen (wie bei Filmen überlagert); danach bekommen die
+     * Episoden leere Felder gefüllt.
+     *
+     * @throws TvShowProblemException wenn der Anbieter einen Fehler meldet oder die NFO nicht geschrieben werden kann
+     */
+    @Transactional
+    public TvShowAutoScrapeOutcome scrapeMissing(long showId) {
+        TvShow show = requireShow(showId);
+        Optional<TvShowScraper> preferred = preferredReadyScraper();
+        if (preferred.isEmpty()) {
+            return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_SCRAPER);
+        }
+        TvShowScraper scraper = preferred.get();
+        Map<String, String> ids = knownIds(show.metadata());
+        String providerId = ids.get(scraper.id());
+        TvShowAutoScrapeOutcome.Status status = TvShowAutoScrapeOutcome.Status.ALREADY_IDENTIFIED;
+        if (providerId == null) {
+            ScrapeRequest request = new ScrapeRequest(MediaType.TV_SHOW, show.getTitle(), show.getReleaseYear(), ids);
+            Optional<TvShowResult> scraped = call(scraper, s -> s.scrape(request));
+            providerId = scraped.map(result -> result.uniqueIds().get(scraper.id())).orElse(null);
+            if (providerId == null) {
+                return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_MATCH);
+            }
+            cache.put(scraper.id(), providerId, scraped.get());
+            metadataService.updateShow(showId, TvShowScrapeMerger.mergeShow(show.metadata(), scraped.get()));
+            status = TvShowAutoScrapeOutcome.Status.SCRAPED;
+        }
+        EpisodeFillResult filled = fill(show, scraper, providerId);
+        return new TvShowAutoScrapeOutcome(status, filled.updated(), filled.failedFiles());
+    }
+
+    /** Der konfigurierte Serien-Scraper, sonst der erste eingerichtete. */
+    private Optional<TvShowScraper> preferredReadyScraper() {
+        List<TvShowScraper> ready = scraperRegistry.tvShowScrapers().stream()
+                .filter(scraper -> scraper.missingConfiguration().isEmpty())
+                .toList();
+        return ready.stream()
+                .filter(scraper -> scraper.id().equals(properties.preferredTvShowScraper()))
+                .findFirst()
+                .or(() -> ready.stream().findFirst());
     }
 
     /**

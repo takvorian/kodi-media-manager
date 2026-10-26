@@ -50,8 +50,14 @@ export function autoScrapeJobKey(sourceId: number): string {
 }
 
 /** Ergebnis eines erfolgreichen Scrape-Jobs; die Listen sind serverseitig gekürzt. */
+/** Ergebnis des automatischen Scrapens einer Film- oder Serienquelle. */
 export interface AutoScrapeResult {
-  readonly movies: number;
+  /** Bearbeitete Filme (nur bei Filmquellen). */
+  readonly movies?: number;
+  /** Bearbeitete Serien (nur bei Serienquellen). */
+  readonly shows?: number;
+  /** Episoden mit ergänzten Angaben (nur bei Serienquellen). */
+  readonly episodesUpdated?: number;
   readonly scraped: number;
   readonly unmatched: number;
   readonly imagesSaved: number;

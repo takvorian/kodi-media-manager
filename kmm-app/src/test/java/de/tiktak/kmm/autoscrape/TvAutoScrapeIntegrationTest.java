@@ -1,0 +1,200 @@
+package de.tiktak.kmm.autoscrape;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+
+import java.io.IOException;
+import java.io.OutputStream;
+import java.net.InetSocketAddress;
+import java.net.URI;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import org.awaitility.Awaitility;
+import org.junit.jupiter.api.AfterAll;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
+
+import com.sun.net.httpserver.HttpServer;
+
+import de.tiktak.kmm.job.JobController;
+import de.tiktak.kmm.library.LibraryScanController;
+import de.tiktak.kmm.plugin.ScraperRegistry;
+import de.tiktak.kmm.plugin.api.EpisodeResult;
+import de.tiktak.kmm.plugin.api.ImageCandidate;
+import de.tiktak.kmm.plugin.api.ImageScraper;
+import de.tiktak.kmm.plugin.api.ImageType;
+import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.TvShowResult;
+import de.tiktak.kmm.plugin.api.TvShowScraper;
+import de.tiktak.kmm.source.MediaSourceController;
+import tools.jackson.databind.JsonNode;
+import tools.jackson.databind.ObjectMapper;
+
+/**
+ * Automatisches Scrapen einer Serienquelle über die REST-API mit Stub-Scrapern: Zuordnung, Episoden
+ * und Bilder. Die Bilddateien liefert ein lokaler HTTP-Server.
+ */
+@SpringBootTest
+@AutoConfigureMockMvc
+@ActiveProfiles("test")
+@WithMockUser
+class TvAutoScrapeIntegrationTest {
+
+    private static final byte[] IMAGE = {(byte) 0xFF, (byte) 0xD8, 7};
+    private static final Duration JOB_TIMEOUT = Duration.ofSeconds(20);
+
+    private static HttpServer server;
+
+    @Autowired
+    private MockMvcTester mockMvc;
+
+    @Autowired
+    private ObjectMapper objectMapper;
+
+    @Autowired
+    private JdbcClient jdbcClient;
+
+    @MockitoBean
+    private ScraperRegistry scraperRegistry;
+
+    @TempDir
+    Path library;
+
+    private long sourceId;
+
+    @BeforeAll
+    static void startServer() throws IOException {
+        server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
+        server.createContext("/", exchange -> {
+            exchange.getResponseHeaders().add("Content-Type", "image/jpeg");
+            exchange.sendResponseHeaders(200, IMAGE.length);
+            try (OutputStream output = exchange.getResponseBody()) {
+                output.write(IMAGE);
+            }
+        });
+        server.start();
+    }
+
+    @AfterAll
+    static void stopServer() {
+        server.stop(0);
+    }
+
+    @BeforeEach
+    void createLibraryAndScrapers() throws IOException {
+        for (String file : List.of("Lost (2004)/Staffel 1/Lost - S01E01.mkv", "Unbekannt/Staffel 1/x - S01E01.mkv")) {
+            Path episode = library.resolve(file);
+            Files.createDirectories(episode.getParent());
+            Files.createFile(episode);
+        }
+        sourceId = createSource();
+        await(post(LibraryScanController.SCAN_PATH.replace("{sourceId}", String.valueOf(sourceId))));
+
+        TvShowScraper tvdb = mock(TvShowScraper.class);
+        when(tvdb.id()).thenReturn("tvdb");
+        when(tvdb.displayName()).thenReturn("TheTVDB");
+        when(tvdb.supportedMediaTypes()).thenReturn(Set.of(de.tiktak.kmm.plugin.api.MediaType.TV_SHOW));
+        TvShowResult lost = TvShowResult.builder().title("Lost").premiered(LocalDate.of(2004, 9, 22))
+                .uniqueIds(Map.of("tvdb", "73739"))
+                .episodes(List.of(EpisodeResult.builder().season(1).episode(1).title("Gestrandet")
+                        .thumb(url("/thumb.jpg")).build()))
+                .build();
+        when(tvdb.scrape(any())).thenAnswer(invocation -> {
+            ScrapeRequest request = invocation.getArgument(0);
+            return request.title().equals("Lost") ? Optional.of(lost) : Optional.empty();
+        });
+        when(tvdb.fetch("73739")).thenReturn(Optional.of(lost));
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(tvdb));
+
+        ImageScraper images = mock(ImageScraper.class);
+        when(images.id()).thenReturn("tvdb");
+        when(images.displayName()).thenReturn("TheTVDB");
+        when(images.findImages(any())).thenReturn(List.of(
+                ImageCandidate.builder().type(ImageType.POSTER).url(url("/poster.jpg")).build(),
+                ImageCandidate.builder().type(ImageType.POSTER).url(url("/season.jpg")).season(1).build()));
+        when(scraperRegistry.imageScrapersFor(de.tiktak.kmm.plugin.api.MediaType.TV_SHOW)).thenReturn(List.of(images));
+    }
+
+    @AfterEach
+    void deleteLibrary() {
+        jdbcClient.sql("DELETE FROM media_source").update();
+    }
+
+    @Test
+    void identifiesShowsFillsEpisodesAndFetchesMissingImages() throws IOException {
+        JsonNode result = await(post(AutoScrapeController.AUTO_SCRAPE_PATH.replace("{sourceId}",
+                String.valueOf(sourceId))));
+
+        assertThat(result.toString()).isEqualTo("{\"shows\":2,\"scraped\":1,\"unmatched\":1,\"episodesUpdated\":1,"
+                + "\"imagesSaved\":3,\"unmatchedTitles\":[\"Unbekannt\"],\"failures\":[],\"warnings\":[]}");
+        assertThat(jdbcClient.sql("SELECT tvdb_id FROM tv_show WHERE title = 'Lost'").query(String.class).single())
+                .isEqualTo("73739");
+        assertThat(Files.readString(library.resolve("Lost (2004)/tvshow.nfo"))).contains("73739");
+        assertThat(Files.readString(library.resolve("Lost (2004)/Staffel 1/Lost - S01E01.nfo")))
+                .contains("<title>Gestrandet</title>");
+        assertThat(library.resolve("Lost (2004)/poster.jpg")).exists();
+        assertThat(library.resolve("Lost (2004)/season01-poster.jpg")).exists();
+        assertThat(library.resolve("Lost (2004)/Staffel 1/Lost - S01E01-thumb.jpg")).exists();
+
+        JsonNode repeated = await(post(AutoScrapeController.AUTO_SCRAPE_PATH.replace("{sourceId}",
+                String.valueOf(sourceId))));
+        assertThat(repeated.get("scraped").asInt()).as("schon zugeordnet").isZero();
+        assertThat(repeated.get("imagesSaved").asInt()).as("vorhandene Bilder bleiben").isZero();
+    }
+
+    private static URI url(String path) {
+        return URI.create("http://127.0.0.1:" + server.getAddress().getPort() + path);
+    }
+
+    private long createSource() {
+        MvcTestResult result = mockMvc.post().uri(MediaSourceController.BASE_PATH).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(
+                        Map.of("name", "Serien", "path", library.toString(), "mediaType", "TV_SHOW")))
+                .exchange();
+        assertThat(result).hasStatus(HttpStatus.CREATED);
+        return read(result).get("id").asLong();
+    }
+
+    private String post(String path) {
+        MvcTestResult result = mockMvc.post().uri(path).with(csrf()).exchange();
+        assertThat(result).hasStatus(HttpStatus.ACCEPTED);
+        return read(result).get("id").asString();
+    }
+
+    private JsonNode await(String jobId) {
+        JsonNode job = Awaitility.await().atMost(JOB_TIMEOUT).pollInSameThread()
+                .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),
+                        node -> !"RUNNING".equals(node.get("status").asString()));
+        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job.get("result");
+    }
+
+    private JsonNode read(MvcTestResult result) {
+        return objectMapper.readTree(result.getResponse().getContentAsByteArray());
+    }
+}
