@@ -26,6 +26,7 @@ class FanartTvClient {
 
     /** fanart.tv akzeptiert für Filme TMDB- und IMDb-IDs; sie landen im URL-Pfad. */
     private static final Pattern MOVIE_ID = Pattern.compile("[0-9]{1,10}|tt[0-9]{7,10}");
+    private static final Pattern TVDB_ID = Pattern.compile("[0-9]{1,10}");
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(20);
     private static final int OK = 200;
     private static final int UNAUTHORIZED = 401;
@@ -44,7 +45,21 @@ class FanartTvClient {
         if (!MOVIE_ID.matcher(movieId).matches()) {
             return Optional.empty();
         }
-        HttpResponse<String> response = send(request("/movies/" + movieId));
+        return get("/movies/" + movieId);
+    }
+
+    /**
+     * @return die Bilder der Serie oder leer, wenn fanart.tv sie nicht kennt
+     */
+    Optional<JsonNode> tvShow(String tvdbId) {
+        if (!TVDB_ID.matcher(tvdbId).matches()) {
+            return Optional.empty();
+        }
+        return get("/tv/" + tvdbId);
+    }
+
+    private Optional<JsonNode> get(String path) {
+        HttpResponse<String> response = send(request(path));
         return switch (response.statusCode()) {
             case OK -> Optional.of(parse(response.body()));
             case NOT_FOUND -> Optional.empty();

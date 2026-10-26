@@ -12,6 +12,8 @@ import lombok.Builder;
  * @param previewUrl kleine Vorschau für die Auswahl; ohne eigene Vorschau gleich {@code url}
  * @param language   ISO-639-1-Sprachcode oder {@code null} für sprachneutrale Bilder
  * @param rating     Beliebtheit beim Anbieter (größer ist besser) oder {@code null}
+ * @param season     Staffel, zu der das Bild gehört (0 für Specials), oder {@code null} für Bilder des ganzen
+ *                   Films bzw. der ganzen Serie
  */
 @Builder
 public record ImageCandidate(
@@ -21,7 +23,8 @@ public record ImageCandidate(
         Integer width,
         Integer height,
         String language,
-        Double rating) {
+        Double rating,
+        Integer season) {
 
     public ImageCandidate {
         Objects.requireNonNull(type, "type must not be null");

@@ -43,7 +43,7 @@ class FanartTvImageScraperTest {
     void describesItself() {
         assertThat(scraper.id()).isEqualTo("fanarttv");
         assertThat(scraper.displayName()).isEqualTo("fanart.tv");
-        assertThat(scraper.supportedMediaTypes()).containsExactly(MediaType.MOVIE);
+        assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.TV_SHOW);
         assertThat(scraper.missingConfiguration()).isEmpty();
     }
 
@@ -103,7 +103,31 @@ class FanartTvImageScraperTest {
 
     @Test
     void returnsNothingForUnsupportedMediaType() {
-        assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "Lost", null, Map.of("tmdb", "1")))).isEmpty();
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.MOVIE_SET, "Matrix", null, Map.of("tmdb", "1"))))
+                .isEmpty();
+        assertThat(fanart.requests()).isEmpty();
+    }
+
+    @Test
+    void findsShowAndSeasonImagesByTvdbId() {
+        fanart.respond("/v3/tv/78020", "tv-78020.json");
+
+        var images = scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "ALF", null, Map.of("tvdb", "78020")));
+
+        assertThat(images)
+                .extracting(ImageCandidate::type, ImageCandidate::season, ImageCandidate::language)
+                .containsExactly(
+                        tuple(ImageType.POSTER, null, "en"),
+                        tuple(ImageType.FANART, null, null),
+                        tuple(ImageType.CLEARLOGO, null, "de"),
+                        tuple(ImageType.LANDSCAPE, null, "en"),
+                        tuple(ImageType.CHARACTERART, null, "en"),
+                        tuple(ImageType.POSTER, 1, "en"),
+                        tuple(ImageType.LANDSCAPE, 0, "en"));
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "ALF", null, Map.of("tmdb", "4658"))))
+                .as("Serien nur über die TVDB-ID").isEmpty();
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "ALF", null, Map.of("tvdb", "x"))))
+                .isEmpty();
     }
 
     @Test

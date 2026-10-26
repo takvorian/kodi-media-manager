@@ -15,6 +15,7 @@ class ImageCandidateTest {
     @Test
     void usesFullImageAsPreviewWhenNoneIsGiven() {
         var candidate = ImageCandidate.builder().type(ImageType.POSTER).url(POSTER_URL).build();
+        assertThat(candidate.season()).as("ohne Staffel gilt das Bild für das ganze Medium").isNull();
 
         assertThat(candidate.previewUrl()).isEqualTo(POSTER_URL);
         assertThat(candidate.language()).isNull();
@@ -24,9 +25,10 @@ class ImageCandidateTest {
     @Test
     void keepsAllValues() {
         var candidate = ImageCandidate.builder().type(ImageType.FANART).url(POSTER_URL).previewUrl(PREVIEW_URL)
-                .width(1920).height(1080).language("de").rating(7.5).build();
+                .width(1920).height(1080).language("de").rating(7.5).season(2).build();
 
         assertThat(candidate.previewUrl()).isEqualTo(PREVIEW_URL);
+        assertThat(candidate.season()).isEqualTo(2);
         assertThat(candidate.width()).isEqualTo(1920);
         assertThat(candidate.rating()).isEqualTo(7.5);
     }

@@ -12,8 +12,19 @@
     {"name": "Jack Shephard", "personName": "Matthew Fox", "peopleType": "Actor", "sort": 1, "personImgURL": "https://artworks.thetvdb.com/fox.jpg"},
     {"name": "Showrunner", "personName": "Damon Lindelof", "peopleType": "Writer", "sort": 0},
     {"name": "Niemand", "personName": "", "peopleType": "Actor"}],
+  "artworks": [
+    {"id": 1, "type": 2, "image": "https://artworks.thetvdb.com/banners/posters/73739-1.jpg",
+     "thumbnail": "https://artworks.thetvdb.com/banners/posters/73739-1_t.jpg", "language": "eng", "score": 100006,
+     "width": 680, "height": 1000, "seasonId": null},
+    {"id": 2, "type": 3, "image": "https://artworks.thetvdb.com/banners/fanart/73739-1.jpg", "language": null,
+     "score": 5, "width": 1920, "height": 1080},
+    {"id": 3, "type": 7, "image": "https://artworks.thetvdb.com/banners/seasons/73739-1.jpg", "language": "deu",
+     "seasonId": 11},
+    {"id": 4, "type": 7, "image": "https://artworks.thetvdb.com/banners/seasons/unknown.jpg", "seasonId": 99},
+    {"id": 5, "type": 5, "image": "https://artworks.thetvdb.com/banners/icon.png"},
+    {"id": 6, "type": 2, "image": "/relativ.jpg"}],
   "seasons": [
-    {"number": 0, "type": {"type": "official"}},
-    {"number": 1, "name": "Die Insel", "type": {"type": "official"}},
+    {"id": 10, "number": 0, "type": {"type": "official"}},
+    {"id": 11, "number": 1, "name": "Die Insel", "type": {"type": "official"}},
     {"number": 1, "type": {"type": "dvd"}},
     {"number": 1, "type": {"type": "official"}}]}}

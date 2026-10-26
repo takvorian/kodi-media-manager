@@ -75,9 +75,30 @@ class TmdbImageScraperTest {
 
     @Test
     void returnsNothingForUnsupportedMediaType() {
-        assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "Lost", null, Map.of("tmdb", "4607"))))
+        assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.TV_SHOW);
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.MOVIE_SET, "Matrix", null, Map.of("tmdb", "2344"))))
                 .isEmpty();
         assertThat(tmdb.requests()).isEmpty();
+    }
+
+    @Test
+    void findsShowImagesAndSeasonPosters() {
+        tmdb.respond("/3/find/73739", "find-tvdb-73739.json")
+                .respond("/3/tv/4607/images", "images-tv-4607.json")
+                .respond("/3/tv/4607", "tv-4607.json")
+                .respond("/3/tv/4607/season/1/images", "images-tv-4607-season-1.json");
+
+        var images = scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "Lost", null, Map.of("tvdb", "73739")));
+
+        assertThat(images)
+                .extracting(ImageCandidate::type, ImageCandidate::season, ImageCandidate::language)
+                .containsExactly(
+                        tuple(ImageType.POSTER, null, "de"),
+                        tuple(ImageType.FANART, null, null),
+                        tuple(ImageType.POSTER, 1, "en"));
+        assertThat(images.get(2).url()).hasToString("https://image.tmdb.org/t/p/original/lost-s1.jpg");
+        assertThat(tmdb.requests()).extracting(FakeTmdbServer.HttpExchangeRecord::path)
+                .contains("/3/tv/4607/season/0/images", "/3/tv/4607/season/2/images");
     }
 
     @Test

@@ -205,7 +205,8 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
       - 3a ✅ Plugin-Schnittstelle `TvShowScraper` (Serie mit Staffeln und Episoden, Attribution je Scraper) und TMDB-TV-Scraper (nur Ausstrahlungsreihenfolge)
       - 3b ✅ TVDB-v4-Plugin (Login mit Key/PIN, Token-Cache, Übersetzungen, offizielle/DVD/absolute Reihenfolge, Attribution); Regie/Drehbuch je Episode liefert TVDB nur über Einzelabfragen und fehlen daher
       - 3c ✅ Online-Suche auf der Seriendetailseite (Vorgabe TVDB): Vorschlag ins Formular, beim Speichern bekommen Episoden leere Felder gefüllt (Titel nur ohne NFO), Darsteller/Bewertungen/Staffeltitel werden ergänzt, NFOs geschrieben; fehlende Episoden auf Knopfdruck; TVDB-Hinweis bei Serien mit TVDB-ID und in der Suche; geladene Serien 15 Minuten zwischengespeichert
-      - 3d Bilder für Serien, Staffeln und Episoden
+      - 3d1 ✅ Bild-Scraper für Serien: Bildkandidaten tragen die Staffelnummer; TMDB (Serie und Staffelposter), TVDB (Artworks inkl. Staffelposter/-banner/-fanart, Sprachen nach ISO 639-1) und fanart.tv (über die TVDB-ID, inkl. Characterart und Staffelbilder)
+      - 3d2 Bilder für Serien, Staffeln und Episoden in App und Oberfläche
       - 3e automatisches Scrapen einer Serienquelle
    4. Kodi-Sync für Serien
 5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.

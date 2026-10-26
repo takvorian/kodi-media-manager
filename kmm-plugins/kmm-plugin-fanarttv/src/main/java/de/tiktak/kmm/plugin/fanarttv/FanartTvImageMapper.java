@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
 import de.tiktak.kmm.plugin.api.ImageCandidate;
@@ -11,26 +12,48 @@ import de.tiktak.kmm.plugin.api.ImageType;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Übersetzt die Antwort von {@code /movies/{id}} in Bild-Kandidaten nach Kodi-Bildarten.
+ * Übersetzt die Antworten von {@code /movies/{id}} und {@code /tv/{id}} in Bild-Kandidaten nach
+ * Kodi-Bildarten. Staffelbilder tragen die Staffelnummer; Bilder für alle Staffeln entfallen.
  */
 class FanartTvImageMapper {
 
     /** fanart.tv-Feld → Kodi-Bildart; HD-Varianten zuerst, damit sie bei gleicher Bewertung vorne stehen. */
-    private static final Map<String, ImageType> FIELDS = fields();
+    private static final Map<String, ImageType> MOVIE_FIELDS = movieFields();
+    private static final Map<String, ImageType> TV_FIELDS = tvFields();
+    private static final Map<String, ImageType> SEASON_FIELDS = seasonFields();
     /** fanart.tv kennzeichnet Bilder ohne Sprache mit „00“. */
     private static final String NO_LANGUAGE = "00";
     private static final String FULL_IMAGE_PATH = "/fanart/";
     private static final String PREVIEW_PATH = "/preview/";
 
     List<ImageCandidate> toCandidates(JsonNode movie) {
-        return FIELDS.entrySet().stream()
-                .flatMap(field -> StreamSupport.stream(movie.path(field.getKey()).spliterator(), false)
-                        .filter(image -> !image.path("url").asString().isBlank())
-                        .map(image -> toCandidate(image, field.getValue())))
-                .toList();
+        return candidates(movie, MOVIE_FIELDS, false).toList();
     }
 
-    private static ImageCandidate toCandidate(JsonNode image, ImageType type) {
+    List<ImageCandidate> toTvCandidates(JsonNode show) {
+        return Stream.concat(candidates(show, TV_FIELDS, false), candidates(show, SEASON_FIELDS, true)).toList();
+    }
+
+    private static Stream<ImageCandidate> candidates(JsonNode response, Map<String, ImageType> fields,
+            boolean perSeason) {
+        return fields.entrySet().stream()
+                .flatMap(field -> StreamSupport.stream(response.path(field.getKey()).spliterator(), false)
+                        .filter(image -> !image.path("url").asString().isBlank())
+                        .filter(image -> !perSeason || season(image) != null)
+                        .map(image -> toCandidate(image, field.getValue(), perSeason ? season(image) : null)));
+    }
+
+    /** Staffelnummer eines Staffelbildes; {@code null} für „all“ oder ungültige Angaben. */
+    private static Integer season(JsonNode image) {
+        try {
+            int season = Integer.parseInt(image.path("season").asString());
+            return season >= 0 ? season : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
+    }
+
+    private static ImageCandidate toCandidate(JsonNode image, ImageType type, Integer season) {
         String url = image.path("url").asString();
         return ImageCandidate.builder()
                 .type(type)
@@ -38,6 +61,7 @@ class FanartTvImageMapper {
                 .previewUrl(URI.create(url.replace(FULL_IMAGE_PATH, PREVIEW_PATH)))
                 .language(language(image.path("lang").asString()))
                 .rating(likes(image.path("likes").asString()))
+                .season(season)
                 .build();
     }
 
@@ -53,7 +77,29 @@ class FanartTvImageMapper {
         }
     }
 
-    private static Map<String, ImageType> fields() {
+    private static Map<String, ImageType> tvFields() {
+        Map<String, ImageType> fields = new LinkedHashMap<>();
+        fields.put("tvposter", ImageType.POSTER);
+        fields.put("showbackground", ImageType.FANART);
+        fields.put("hdtvlogo", ImageType.CLEARLOGO);
+        fields.put("clearlogo", ImageType.CLEARLOGO);
+        fields.put("hdclearart", ImageType.CLEARART);
+        fields.put("clearart", ImageType.CLEARART);
+        fields.put("tvbanner", ImageType.BANNER);
+        fields.put("tvthumb", ImageType.LANDSCAPE);
+        fields.put("characterart", ImageType.CHARACTERART);
+        return fields;
+    }
+
+    private static Map<String, ImageType> seasonFields() {
+        Map<String, ImageType> fields = new LinkedHashMap<>();
+        fields.put("seasonposter", ImageType.POSTER);
+        fields.put("seasonbanner", ImageType.BANNER);
+        fields.put("seasonthumb", ImageType.LANDSCAPE);
+        return fields;
+    }
+
+    private static Map<String, ImageType> movieFields() {
         Map<String, ImageType> fields = new LinkedHashMap<>();
         fields.put("movieposter", ImageType.POSTER);
         fields.put("moviebackground", ImageType.FANART);

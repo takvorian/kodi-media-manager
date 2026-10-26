@@ -50,8 +50,11 @@ class TmdbApi {
         if (!isTmdbId(tmdbId)) {
             return Optional.empty();
         }
-        String languages = String.join(",", settings.imageLanguage(), FALLBACK_IMAGE_LANGUAGE, NO_LANGUAGE);
-        return client.get("/movie/" + tmdbId + "/images", Map.of("include_image_language", languages));
+        return client.get("/movie/" + tmdbId + "/images", Map.of("include_image_language", imageLanguages()));
+    }
+
+    private String imageLanguages() {
+        return String.join(",", settings.imageLanguage(), FALLBACK_IMAGE_LANGUAGE, NO_LANGUAGE);
     }
 
     Optional<JsonNode> searchTvShows(String title, Integer year) {
@@ -79,6 +82,22 @@ class TmdbApi {
             return Optional.empty();
         }
         return client.get("/tv/" + tmdbId + "/season/" + season, Map.of("language", settings.tvLanguage()));
+    }
+
+    /** Bilder einer Serie in der eingestellten Sprache, auf Englisch und ohne Sprache. */
+    Optional<JsonNode> tvImages(String tmdbId) {
+        if (!isTmdbId(tmdbId)) {
+            return Optional.empty();
+        }
+        return client.get("/tv/" + tmdbId + "/images", Map.of("include_image_language", imageLanguages()));
+    }
+
+    Optional<JsonNode> tvSeasonImages(String tmdbId, int season) {
+        if (!isTmdbId(tmdbId)) {
+            return Optional.empty();
+        }
+        return client.get("/tv/" + tmdbId + "/season/" + season + "/images",
+                Map.of("include_image_language", imageLanguages()));
     }
 
     /** TMDB-ID einer Serie aus bekannten IDs: direkt, über die TVDB- oder die IMDb-ID. */
