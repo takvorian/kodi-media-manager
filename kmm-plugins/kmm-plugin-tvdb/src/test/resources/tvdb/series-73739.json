@@ -1,0 +1,19 @@
+{"status": "success", "data": {
+  "id": 73739, "name": "Lost", "firstAired": "2004-09-22", "year": "2004", "overview": "Stranded on an island.",
+  "averageRuntime": 45, "status": {"id": 2, "name": "Ended"},
+  "originalNetwork": {"name": "ABC"}, "latestNetwork": {"name": "ABC (US)"},
+  "genres": [{"name": "Drama"}, {"name": "Science Fiction"}],
+  "contentRatings": [{"name": "TV-14", "country": "usa"}, {"name": "16+", "country": "deu"}],
+  "remoteIds": [{"id": "tt0411008", "type": 2, "sourceName": "IMDB"},
+                {"id": "4607", "type": 12, "sourceName": "TheMovieDB.com"},
+                {"id": "lost", "type": 4, "sourceName": "Official Website"}],
+  "characters": [
+    {"name": "Kate Austen", "personName": "Evangeline Lilly", "peopleType": "Actor", "sort": 2, "image": "https://artworks.thetvdb.com/kate.jpg"},
+    {"name": "Jack Shephard", "personName": "Matthew Fox", "peopleType": "Actor", "sort": 1, "personImgURL": "https://artworks.thetvdb.com/fox.jpg"},
+    {"name": "Showrunner", "personName": "Damon Lindelof", "peopleType": "Writer", "sort": 0},
+    {"name": "Niemand", "personName": "", "peopleType": "Actor"}],
+  "seasons": [
+    {"number": 0, "type": {"type": "official"}},
+    {"number": 1, "name": "Die Insel", "type": {"type": "official"}},
+    {"number": 1, "type": {"type": "dvd"}},
+    {"number": 1, "type": {"type": "official"}}]}}

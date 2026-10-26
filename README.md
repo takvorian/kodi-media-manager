@@ -21,7 +21,7 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 | `kmm-nfo` | Kodi-NFOs für Filme, Serien und Episoden lesen und schreiben (unbekannte Elemente bleiben erhalten) |
 | `kmm-migration-ember` | Lesen von Ember-Profilen (Datenbank + `Settings.xml`), Pfad-Mapping; Import über die Seite **Ember-Import** |
 | `kmm-kodi` | JSON-RPC-Client für Kodi, Zuordnung von KMM-Pfaden zu Kodi-Pfaden |
-| `kmm-plugins` | mitgelieferte Plugins: `kmm-plugin-tmdb` (Metadaten und Bilder), `kmm-plugin-fanarttv` (Bilder) |
+| `kmm-plugins` | mitgelieferte Plugins: `kmm-plugin-tmdb` (Film- und Serien-Metadaten, Bilder), `kmm-plugin-tvdb` (Serien-Metadaten), `kmm-plugin-fanarttv` (Bilder) |
 | `kmm-ui` | Angular-Oberfläche |
 | `kmm-app` | Spring-Boot-Anwendung |
 
@@ -79,6 +79,13 @@ export KMM_TMDB_API_KEY=…          # https://www.themoviedb.org/settings/api (
 export KMM_FANARTTV_API_KEY=…      # https://fanart.tv/get-an-api-key/
 export KMM_TVDB_API_KEY=…          # https://thetvdb.com/api-information (v4), optional KMM_TVDB_PIN
 ```
+
+### Datenquellen
+
+Metadaten und Bilder stammen von [The Movie Database (TMDB)](https://www.themoviedb.org), [fanart.tv](https://fanart.tv)
+und [TheTVDB](https://www.thetvdb.com). Serien-Metadaten von TheTVDB:
+*Metadata provided by TheTVDB. Please consider adding missing information or subscribing.*
+Die Episodenreihenfolge (ausgestrahlt, DVD, absolut) wirkt nur bei TheTVDB; TMDB kennt nur die Ausstrahlungsreihenfolge.
 
 ## Einstellungen
 

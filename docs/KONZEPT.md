@@ -203,7 +203,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
    2. **Ember-Migration II** ✅: Serien, Staffeln, Episoden, Stream-Details (Filme und Episoden), Serien-Einstellungen, API-Keys im Einstellungsspeicher; Embers fehlende Episoden ohne Datei werden nicht übernommen
    3. Scraper und Bilder (Vorgabe TVDB, TMDB-TV wählbar; Episoden bekommen beim Übernehmen nur leere Felder gefüllt; fehlende Episoden werden nur angezeigt; Bilder von TMDB, TVDB und fanart.tv):
       - 3a ✅ Plugin-Schnittstelle `TvShowScraper` (Serie mit Staffeln und Episoden, Attribution je Scraper) und TMDB-TV-Scraper (nur Ausstrahlungsreihenfolge)
-      - 3b TVDB-v4-Plugin mit Episodenreihenfolge und Attribution
+      - 3b ✅ TVDB-v4-Plugin (Login mit Key/PIN, Token-Cache, Übersetzungen, offizielle/DVD/absolute Reihenfolge, Attribution); Regie/Drehbuch je Episode liefert TVDB nur über Einzelabfragen und fehlen daher
       - 3c Online-Suche und Übernahme auf der Seriendetailseite, fehlende Episoden
       - 3d Bilder für Serien, Staffeln und Episoden
       - 3e automatisches Scrapen einer Serienquelle

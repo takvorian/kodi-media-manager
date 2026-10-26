@@ -19,6 +19,7 @@
         <module>kmm-plugin-testdata</module>
         <module>kmm-plugin-tmdb</module>
         <module>kmm-plugin-fanarttv</module>
+        <module>kmm-plugin-tvdb</module>
     </modules>
 
     <properties>

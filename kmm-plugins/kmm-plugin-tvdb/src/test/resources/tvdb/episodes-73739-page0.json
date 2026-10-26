@@ -1,0 +1,5 @@
+{"status": "success", "data": {"series": {"id": 73739}, "episodes": [
+  {"id": 127131, "seasonNumber": 1, "number": 1, "name": "Pilot (1)", "overview": "The crash.", "aired": "2004-09-22",
+   "runtime": 42, "image": "https://artworks.thetvdb.com/banners/episodes/73739/127131.jpg"},
+  {"id": 127132, "seasonNumber": 1, "number": 2, "name": "Pilot (2)", "overview": "", "aired": "", "runtime": 0}
+]}, "links": {"next": "https://api4.thetvdb.com/v4/series/73739/episodes/official?page=1"}}

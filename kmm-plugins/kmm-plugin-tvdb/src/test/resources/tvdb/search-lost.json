@@ -1,0 +1,7 @@
+{"status": "success", "data": [
+  {"tvdb_id": "73739", "name": "Lost", "year": "2004", "overview": "Stranded on an island.",
+   "translations": {"deu": "Lost", "eng": "Lost"}, "overviews": {"deu": "Überlebende eines Flugzeugabsturzes."},
+   "image_url": "https://artworks.thetvdb.com/banners/posters/73739-1.jpg"},
+  {"tvdb_id": "355567", "name": "Lost in Space", "year": "2018", "translations": {"deu": "Lost in Space – Verschollen zwischen fremden Welten"}},
+  {"id": "series-1", "name": "Lost", "year": "unbekannt", "image_url": "kein bild"}
+], "links": {"next": null}}
