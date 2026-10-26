@@ -8,6 +8,8 @@ import de.tiktak.kmm.plugin.api.ImageType;
 
 /**
  * Ein Bild, das ein Scraper zur Auswahl anbietet.
+ *
+ * @param season Staffel des Bildes oder {@code null} für Bilder des ganzen Mediums
  */
 public record ArtworkCandidate(
         String scraperId,
@@ -18,10 +20,12 @@ public record ArtworkCandidate(
         Integer width,
         Integer height,
         String language,
-        Double rating) {
+        Double rating,
+        Integer season) {
 
     static ArtworkCandidate from(ImageScraper scraper, ImageCandidate image) {
         return new ArtworkCandidate(scraper.id(), scraper.displayName(), image.type(), image.url(),
-                image.previewUrl(), image.width(), image.height(), image.language(), image.rating());
+                image.previewUrl(), image.width(), image.height(), image.language(), image.rating(),
+                image.season());
     }
 }

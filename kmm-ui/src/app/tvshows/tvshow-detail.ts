@@ -10,6 +10,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
+import { ArtworkSource } from '../movies/artwork';
+import { ArtworkGallery } from '../movies/artwork-gallery';
 import { Attribution, ScraperInfo } from '../movies/scraper';
 import { problemMessage } from '../shared/problem-message';
 import { TvPeople } from './tv-people';
@@ -25,6 +27,7 @@ import {
   seasonLabel,
 } from './tvshow';
 import { MAX_YEAR, MIN_YEAR, createTvShowMetadataForm, toTvShowFormValue, toTvShowMetadata } from './tvshow-forms';
+import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TvShowService } from './tvshow.service';
 
@@ -49,6 +52,7 @@ export interface SeasonWithEpisodes {
     MatInputModule,
     TvPeople,
     TvShowOnlineSearch,
+    ArtworkGallery,
   ],
   templateUrl: './tvshow-detail.html',
   styleUrl: './tvshow-detail.scss',
@@ -56,6 +60,7 @@ export interface SeasonWithEpisodes {
 export class TvShowDetail {
   private readonly tvShowService = inject(TvShowService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly artworkService = inject(TvShowArtworkService);
 
   /** Serien-ID aus der Route `/tvshows/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -71,6 +76,7 @@ export class TvShowDetail {
   protected readonly seasons = computed<SeasonWithEpisodes[]>(() =>
     this.show.hasValue() ? groupBySeason(this.show.value()) : [],
   );
+  protected readonly showArtwork = computed(() => this.artworkService.forShow(this.id(), null));
   protected readonly scrapers = rxResource({ stream: () => this.tvShowService.tvShowScrapers() });
   /** Hinweise der Anbieter, deren IDs die Serie trägt (z. B. TheTVDB). */
   protected readonly attributions = computed<Attribution[]>(() =>
@@ -90,6 +96,10 @@ export class TvShowDetail {
         this.form.reset(toTvShowFormValue(this.show.value().metadata));
       }
     });
+  }
+
+  protected seasonArtwork(season: Season): ArtworkSource {
+    return this.artworkService.forShow(this.id(), season.number);
   }
 
   protected code(episode: EpisodeSummary): string {

@@ -73,4 +73,23 @@ class TvShowScrapeServiceTest {
         assertThat(episode.getTitle()).isEqualTo("Episode 1");
         assertThat(show.extras().actors()).isEmpty();
     }
+
+    @Test
+    void reportsScrapersThatDoNotKnowTheShowWhenLookingForThumbs() {
+        TvShow show = new TvShow(1, SHOW_DIRECTORY, "Lost", null);
+        ReflectionTestUtils.setField(show, "id", 7L);
+        Episode episode = new Episode(7, Path.of(SHOW_DIRECTORY, "Lost S01E01.mkv").toString(), 1, 1, "Pilot");
+        when(episodeRepository.findById(3L)).thenReturn(Optional.of(episode));
+        when(showRepository.findById(7L)).thenReturn(Optional.of(show));
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(scraper));
+        when(scraper.displayName()).thenReturn("TheTVDB");
+        when(scraper.scrape(any())).thenReturn(Optional.empty());
+        TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
+                nfoFiles, new TvShowResultCache(Clock.systemUTC()), Clock.systemUTC());
+
+        EpisodeThumbs thumbs = service.episodeThumbs(3);
+
+        assertThat(thumbs.thumbs()).isEmpty();
+        assertThat(thumbs.warnings()).singleElement().asString().startsWith("TheTVDB: ").contains("nicht eindeutig");
+    }
 }

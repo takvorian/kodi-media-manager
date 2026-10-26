@@ -43,6 +43,15 @@
     </mat-card-content>
   </mat-card>
 
+  <mat-card appearance="outlined" class="artwork-card">
+    <mat-card-header>
+      <mat-card-title>Standbild</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <app-artwork-gallery [source]="artwork()" />
+    </mat-card-content>
+  </mat-card>
+
   <mat-card appearance="outlined" class="streams-card">
     <mat-card-header>
       <mat-card-title>Technik</mat-card-title>

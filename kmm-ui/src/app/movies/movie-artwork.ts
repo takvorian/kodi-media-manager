@@ -1,100 +1,18 @@
-import { Component, inject, input, signal } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
-import { MatButtonModule } from '@angular/material/button';
-import { MatSnackBar } from '@angular/material/snack-bar';
+import { Component, computed, inject, input } from '@angular/core';
 
-import { CONFIRM } from '../shared/confirm';
-import { problemMessage } from '../shared/problem-message';
-import { ARTWORK_LABELS, ArtworkCandidate, ArtworkCandidates, ArtworkInfo, ArtworkType } from './artwork';
+import { ArtworkGallery } from './artwork-gallery';
 import { ArtworkService } from './artwork.service';
 
-const SNACKBAR_DURATION_MS = 5000;
-
-/**
- * Bilder eines Films: vorhandene Dateien anzeigen, aus den Treffern aller Bild-Scraper auswählen
- * und entfernen. Ein gewähltes Bild wird sofort neben dem Film gespeichert.
- */
+/** Bilder eines Films; gespeichert wird nach Kodi-Konvention neben dem Film. */
 @Component({
   selector: 'app-movie-artwork',
-  imports: [MatButtonModule],
-  templateUrl: './movie-artwork.html',
-  styleUrl: './movie-artwork.scss',
+  imports: [ArtworkGallery],
+  template: '<app-artwork-gallery [source]="source()" />',
 })
 export class MovieArtwork {
   private readonly artworkService = inject(ArtworkService);
-  private readonly snackBar = inject(MatSnackBar);
-  private readonly confirm = inject(CONFIRM);
 
   readonly movieId = input.required<number>();
 
-  protected readonly labels = ARTWORK_LABELS;
-  protected readonly artwork = rxResource({
-    params: () => this.movieId(),
-    stream: ({ params }) => this.artworkService.findAll(params),
-  });
-  protected readonly selectedType = signal<ArtworkType | null>(null);
-  protected readonly candidates = signal<ArtworkCandidates | null>(null);
-  protected readonly candidatesError = signal<string | null>(null);
-  protected readonly busy = signal(false);
-
-  protected imageUrl(artwork: ArtworkInfo): string {
-    return this.artworkService.imageUrl(this.movieId(), artwork);
-  }
-
-  protected languageLabel(candidate: ArtworkCandidate): string {
-    return candidate.language ? candidate.language.toUpperCase() : 'ohne Text';
-  }
-
-  protected select(type: ArtworkType): void {
-    if (this.selectedType() === type) {
-      this.closeSelection();
-      return;
-    }
-    this.selectedType.set(type);
-    this.candidates.set(null);
-    this.candidatesError.set(null);
-    this.artworkService.candidates(this.movieId(), type).subscribe({
-      next: (result) => this.candidates.set(result),
-      error: (error: unknown) => this.candidatesError.set(problemMessage(error)),
-    });
-  }
-
-  protected closeSelection(): void {
-    this.selectedType.set(null);
-    this.candidates.set(null);
-    this.candidatesError.set(null);
-  }
-
-  protected apply(candidate: ArtworkCandidate): void {
-    this.busy.set(true);
-    this.artworkService.apply(this.movieId(), candidate.type, candidate.url).subscribe({
-      next: () => {
-        this.busy.set(false);
-        this.closeSelection();
-        this.notify(`${this.labels[candidate.type]} von ${candidate.scraperName} gespeichert.`);
-        this.artwork.reload();
-      },
-      error: (error: unknown) => {
-        this.busy.set(false);
-        this.notify(problemMessage(error));
-      },
-    });
-  }
-
-  protected remove(artwork: ArtworkInfo): void {
-    if (!this.confirm(`${this.labels[artwork.type]} löschen?`)) {
-      return;
-    }
-    this.artworkService.remove(this.movieId(), artwork.type).subscribe({
-      next: () => {
-        this.notify(`${this.labels[artwork.type]} gelöscht.`);
-        this.artwork.reload();
-      },
-      error: (error: unknown) => this.notify(problemMessage(error)),
-    });
-  }
-
-  private notify(message: string): void {
-    this.snackBar.open(message, 'OK', { duration: SNACKBAR_DURATION_MS });
-  }
+  protected readonly source = computed(() => this.artworkService.forMovie(this.movieId()));
 }

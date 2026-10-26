@@ -16,6 +16,7 @@ import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.plugin.api.ImageType;
+import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -93,7 +94,8 @@ public class ArtworkService {
         if (missing.isEmpty() || uniqueIds.isEmpty()) {
             return new ArtworkFillResult(0, List.of());
         }
-        ArtworkSearch search = candidateFinder.findAll(movie.metadata().title(), movie.metadata().year(), uniqueIds);
+        ArtworkSearch search = candidateFinder.findAll(MediaType.MOVIE, movie.metadata().title(),
+                movie.metadata().year(), uniqueIds);
         List<String> warnings = new ArrayList<>(search.warnings());
         int saved = 0;
         for (ImageType type : missing) {

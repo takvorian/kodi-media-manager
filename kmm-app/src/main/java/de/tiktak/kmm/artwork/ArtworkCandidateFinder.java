@@ -45,20 +45,21 @@ class ArtworkCandidateFinder {
     private final ScraperRegistry scraperRegistry;
     private final SettingsService settingsService;
 
+    /** Treffer einer Bildart für einen Film. */
     ArtworkCandidates find(ImageType type, String title, Integer year, Map<String, String> uniqueIds) {
-        ArtworkSearch search = findAll(title, year, uniqueIds);
+        ArtworkSearch search = findAll(MediaType.MOVIE, title, year, uniqueIds);
         return new ArtworkCandidates(search.candidatesOf(type), search.warnings());
     }
 
     /**
      * @return die Treffer aller Bildarten, je Art in der Reihenfolge der Auswahl
      */
-    ArtworkSearch findAll(String title, Integer year, Map<String, String> uniqueIds) {
-        ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, title, year, uniqueIds);
+    ArtworkSearch findAll(MediaType mediaType, String title, Integer year, Map<String, String> uniqueIds) {
+        ScrapeRequest request = new ScrapeRequest(mediaType, title, year, uniqueIds);
         List<ArtworkCandidate> candidates = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         List<ImageScraper> ready = new ArrayList<>();
-        for (ImageScraper scraper : scraperRegistry.imageScrapersFor(MediaType.MOVIE)) {
+        for (ImageScraper scraper : scraperRegistry.imageScrapersFor(mediaType)) {
             scraper.missingConfiguration().ifPresentOrElse(warnings::add, () -> ready.add(scraper));
         }
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {

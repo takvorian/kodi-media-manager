@@ -7,6 +7,7 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -129,6 +130,37 @@ public class TvShowScrapeService {
                 .map(episode -> new MissingEpisode(episode.season(), episode.episode(), episode.title(),
                         episode.aired()))
                 .toList();
+    }
+
+    /**
+     * Fragt alle eingerichteten Serien-Scraper nach dem Standbild der Episode. Ein Anbieter, der die
+     * Serie nicht kennt oder einen Fehler meldet, erscheint als Hinweis.
+     */
+    @Transactional(readOnly = true)
+    public EpisodeThumbs episodeThumbs(long episodeId) {
+        Episode episode = episodeRepository.findById(episodeId)
+                .orElseThrow(() -> TvShowProblemException.episodeNotFound(episodeId));
+        TvShow show = requireShow(episode.getTvShowId());
+        List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
+        List<String> warnings = new ArrayList<>();
+        for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
+            Optional<String> missing = scraper.missingConfiguration();
+            if (missing.isPresent()) {
+                warnings.add(missing.get());
+                continue;
+            }
+            try {
+                identify(scraper, show).episodes().stream()
+                        .filter(candidate -> EpisodeKey.of(candidate).equals(EpisodeKey.of(episode)))
+                        .map(EpisodeResult::thumb)
+                        .filter(Objects::nonNull)
+                        .findFirst()
+                        .ifPresent(url -> thumbs.add(new EpisodeThumbs.Thumb(scraper.id(), scraper.displayName(), url)));
+            } catch (TvShowProblemException e) {
+                warnings.add("%s: %s".formatted(scraper.displayName(), e.getBody().getDetail()));
+            }
+        }
+        return new EpisodeThumbs(thumbs, warnings);
     }
 
     private void fillShowExtras(TvShow show, TvShowResult scraped, List<String> failedFiles) {

@@ -35,6 +35,7 @@ import de.tiktak.kmm.movie.MovieSupplement;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.api.ImageType;
+import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import de.tiktak.kmm.scanner.DiscFormat;
 
@@ -162,7 +163,7 @@ class ArtworkServiceTest {
         ArtworkCandidate broken = candidate(ImageType.FANART, "https://img/broken.jpg");
         ArtworkCandidate fanart = candidate(ImageType.FANART, "https://img/fanart.jpg");
         ArtworkCandidate logo = candidate(ImageType.CLEARLOGO, "https://img/logo.png");
-        when(candidateFinder.findAll("Heat", 1995, Map.of("tmdb", "949", "imdb", "tt0113277"))).thenReturn(
+        when(candidateFinder.findAll(MediaType.MOVIE, "Heat", 1995, Map.of("tmdb", "949", "imdb", "tt0113277"))).thenReturn(
                 new ArtworkSearch(Map.of(ImageType.FANART, List.of(broken, fanart), ImageType.CLEARLOGO, List.of(logo),
                         ImageType.POSTER, List.of(candidate(ImageType.POSTER, "https://img/p.jpg"))),
                         List.of("fanart.tv: Key fehlt")));
@@ -187,7 +188,7 @@ class ArtworkServiceTest {
         List<ArtworkCandidate> broken = List.of(candidate(ImageType.BANNER, "https://img/1.jpg"),
                 candidate(ImageType.BANNER, "https://img/2.jpg"), candidate(ImageType.BANNER, "https://img/3.jpg"),
                 candidate(ImageType.BANNER, "https://img/4.jpg"));
-        when(candidateFinder.findAll(anyString(), any(), any()))
+        when(candidateFinder.findAll(any(), anyString(), any(), any()))
                 .thenReturn(new ArtworkSearch(Map.of(ImageType.BANNER, broken), List.of()));
         when(downloader.download(any())).thenThrow(ImageDownloadException.downloadFailed(URI.create("https://img"),
                 "HTTP 404", null));
@@ -210,11 +211,12 @@ class ArtworkServiceTest {
         givenMovie(null, null);
         when(artworkFiles.find(eq(FILES), any())).thenReturn(Optional.empty());
         assertThat(service.fillMissing(MOVIE_ID).saved()).isZero();
-        verify(candidateFinder, never()).findAll(any(), any(), any());
+        verify(candidateFinder, never()).findAll(any(), any(), any(), any());
     }
 
     private static ArtworkCandidate candidate(ImageType type, String url) {
-        return new ArtworkCandidate("tmdb", "TMDB", type, URI.create(url), URI.create(url), null, null, "de", 1.0);
+        return new ArtworkCandidate("tmdb", "TMDB", type, URI.create(url), URI.create(url), null, null, "de", 1.0,
+                null);
     }
 
     private void givenMovie(String tmdbId, String imdbId) {

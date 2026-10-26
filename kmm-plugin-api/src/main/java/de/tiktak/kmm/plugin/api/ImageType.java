@@ -12,5 +12,7 @@ public enum ImageType {
     DISCART,
     LANDSCAPE,
     CHARACTERART,
-    KEYART
+    KEYART,
+    /** Standbild einer Episode. */
+    THUMB
 }

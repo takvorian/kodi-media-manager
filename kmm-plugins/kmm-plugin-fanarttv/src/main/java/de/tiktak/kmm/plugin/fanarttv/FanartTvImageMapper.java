@@ -1,9 +1,11 @@
 package de.tiktak.kmm.plugin.fanarttv;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 
@@ -38,9 +40,9 @@ class FanartTvImageMapper {
             boolean perSeason) {
         return fields.entrySet().stream()
                 .flatMap(field -> StreamSupport.stream(response.path(field.getKey()).spliterator(), false)
-                        .filter(image -> !image.path("url").asString().isBlank())
                         .filter(image -> !perSeason || season(image) != null)
-                        .map(image -> toCandidate(image, field.getValue(), perSeason ? season(image) : null)));
+                        .map(image -> toCandidate(image, field.getValue(), perSeason ? season(image) : null))
+                        .flatMap(Optional::stream));
     }
 
     /** Staffelnummer eines Staffelbildes; {@code null} für „all“ oder ungültige Angaben. */
@@ -53,16 +55,33 @@ class FanartTvImageMapper {
         }
     }
 
-    private static ImageCandidate toCandidate(JsonNode image, ImageType type, Integer season) {
-        String url = image.path("url").asString();
-        return ImageCandidate.builder()
+    private static Optional<ImageCandidate> toCandidate(JsonNode image, ImageType type, Integer season) {
+        String url = image.path("url").asString().strip();
+        Optional<URI> full = uri(url);
+        if (full.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(ImageCandidate.builder()
                 .type(type)
-                .url(URI.create(url))
-                .previewUrl(URI.create(url.replace(FULL_IMAGE_PATH, PREVIEW_PATH)))
+                .url(full.get())
+                .previewUrl(uri(url.replace(FULL_IMAGE_PATH, PREVIEW_PATH)).orElse(null))
                 .language(language(image.path("lang").asString()))
                 .rating(likes(image.path("likes").asString()))
                 .season(season)
-                .build();
+                .build());
+    }
+
+    /** fanart.tv liefert Dateinamen mit Leerzeichen, z. B. {@code A_78020 (0).jpg}. */
+    private static Optional<URI> uri(String url) {
+        if (url.isEmpty()) {
+            return Optional.empty();
+        }
+        try {
+            URI uri = new URI(url.replace(" ", "%20"));
+            return uri.isAbsolute() ? Optional.of(uri) : Optional.empty();
+        } catch (URISyntaxException e) {
+            return Optional.empty();
+        }
     }
 
     private static String language(String language) {

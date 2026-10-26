@@ -5,6 +5,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 
 import { ScraperInfo } from '../movies/scraper';
+import { flushWhenRequested } from '../shared/testing';
 import { TvShowDetails, TvShowProposal } from './tvshow';
 import { TvShowDetail } from './tvshow-detail';
 import { TVSHOWS_URL, TV_SHOW_SCRAPERS_URL } from './tvshow.service';
@@ -105,6 +106,7 @@ describe('TvShowDetail', () => {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: `${TVSHOWS_URL}/3` }).flush(details);
     httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush(scrapers);
+    await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3/artwork`, []);
     await fixture.whenStable();
   }
 
@@ -153,6 +155,18 @@ describe('TvShowDetail', () => {
     expect(element().textContent).toContain('TVDB 7.3/10');
     expect(input('genres').value).toBe('Komödie, Familie');
     expect(input('tvdbId').value).toBe('78020');
+  });
+
+  it('loads the images of a season when it is opened', async () => {
+    await load(alf);
+
+    element().querySelectorAll<HTMLElement>('mat-expansion-panel-header')[1].click();
+    await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3/artwork?season=1`, [
+      { type: 'POSTER', exists: false, path: null, modifiedAt: null },
+    ]);
+    await fixture.whenStable();
+
+    expect(element().querySelector('.season-artwork-title')?.textContent).toContain('Bilder der Staffel');
   });
 
   it('saves the metadata and reports where the NFO was written', async () => {
@@ -221,6 +235,7 @@ describe('TvShowDetail', () => {
     httpTesting
       .expectOne(`${TVSHOWS_URL}/4`)
       .flush({ ...alf, id: 4, metadata: { ...alf.metadata, tvdbId: null, tmdbId: '4658' } });
+    await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/4/artwork`, []);
     await fixture.whenStable();
     expect(element().querySelector('.attribution')).toBeNull();
   });
@@ -308,6 +323,7 @@ describe('TvShowDetail', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
     httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush([]);
+    await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3/artwork`, []);
     await fixture.whenStable();
 
     click('.missing-button');

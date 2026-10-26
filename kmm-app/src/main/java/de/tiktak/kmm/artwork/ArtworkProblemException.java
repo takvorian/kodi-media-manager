@@ -31,11 +31,22 @@ public class ArtworkProblemException extends ErrorResponseException {
 
     static ArtworkProblemException imageMissing(ImageType type) {
         return new ArtworkProblemException(HttpStatus.NOT_FOUND, "Kein Bild vorhanden",
-                "Für diesen Film gibt es kein Bild der Art %s.".formatted(type), null);
+                "Es gibt kein Bild der Art %s.".formatted(type), null);
     }
 
     static ArtworkProblemException unwritable(Path file, Throwable cause) {
         return new ArtworkProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Bild konnte nicht gespeichert werden",
-                "%s kann nicht geschrieben werden. Bitte Schreibrechte im Filmordner prüfen.".formatted(file), cause);
+                "%s kann nicht geschrieben werden. Bitte Schreibrechte im Ordner prüfen.".formatted(file), cause);
+    }
+
+    static ArtworkProblemException unsupportedTvType(ImageType type, String target) {
+        return new ArtworkProblemException(HttpStatus.BAD_REQUEST, "Bildart nicht unterstützt",
+                "Die Bildart %s wird für %s nicht verwaltet.".formatted(type, target), null);
+    }
+
+    static ArtworkProblemException missingTvIds() {
+        return new ArtworkProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Serie nicht eindeutig zugeordnet",
+                "Für die Bildsuche wird eine TVDB-, TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen.",
+                null);
     }
 }

@@ -19,7 +19,7 @@ import de.tiktak.kmm.scanner.DiscFormat;
 
 class MovieArtworkFilesTest {
 
-    private final MovieArtworkFiles artworkFiles = new MovieArtworkFiles();
+    private final MovieArtworkFiles artworkFiles = new MovieArtworkFiles(new ArtworkFiles());
 
     @TempDir
     Path directory;

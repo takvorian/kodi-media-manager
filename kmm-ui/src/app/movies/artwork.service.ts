@@ -2,12 +2,23 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { ArtworkCandidates, ArtworkInfo, ArtworkType } from './artwork';
+import { ArtworkCandidates, ArtworkInfo, ArtworkSource, ArtworkType, versioned } from './artwork';
 import { MOVIES_URL } from './movie.service';
 
 @Injectable({ providedIn: 'root' })
 export class ArtworkService {
   private readonly http = inject(HttpClient);
+
+  /** Die Bilder eines Films als Quelle für eine Bildergalerie. */
+  forMovie(movieId: number): ArtworkSource {
+    return {
+      findAll: () => this.findAll(movieId),
+      imageUrl: (artwork) => this.imageUrl(movieId, artwork),
+      candidates: (type) => this.candidates(movieId, type),
+      apply: (type, url) => this.apply(movieId, type, url),
+      remove: (type) => this.remove(movieId, type),
+    };
+  }
 
   findAll(movieId: number): Observable<ArtworkInfo[]> {
     return this.http.get<ArtworkInfo[]>(artworkUrl(movieId));
@@ -15,8 +26,7 @@ export class ArtworkService {
 
   /** URL des Bildes; die Änderungszeit sorgt dafür, dass der Browser ein ersetztes Bild neu lädt. */
   imageUrl(movieId: number, artwork: ArtworkInfo): string {
-    const version = artwork.modifiedAt ? `?v=${encodeURIComponent(artwork.modifiedAt)}` : '';
-    return `${artworkUrl(movieId)}/${artwork.type}/image${version}`;
+    return versioned(`${artworkUrl(movieId)}/${artwork.type}/image`, artwork);
   }
 
   candidates(movieId: number, type: ArtworkType): Observable<ArtworkCandidates> {

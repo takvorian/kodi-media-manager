@@ -107,7 +107,7 @@ class ArtworkCandidateFinderTest {
                 image(ImageType.CLEARLOGO, "en", 3.0, "logo")));
         when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of(tmdb));
 
-        ArtworkSearch search = finder.findAll("Heat", 1995, IDS);
+        ArtworkSearch search = finder.findAll(MediaType.MOVIE, "Heat", 1995, IDS);
 
         assertThat(search.candidatesOf(ImageType.POSTER)).hasSize(1);
         assertThat(search.candidatesOf(ImageType.CLEARLOGO)).hasSize(1);

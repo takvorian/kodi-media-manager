@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import de.tiktak.kmm.plugin.api.ImageType;
 
@@ -22,7 +23,17 @@ record ArtworkSearch(Map<ImageType, List<ArtworkCandidate>> candidatesByType, Li
         warnings = List.copyOf(warnings);
     }
 
+    /** Treffer einer Bildart für das ganze Medium (ohne Staffelbilder). */
     List<ArtworkCandidate> candidatesOf(ImageType type) {
-        return candidatesByType.getOrDefault(type, List.of());
+        return candidatesOf(type, null);
+    }
+
+    /**
+     * @param season Staffel oder {@code null} für Bilder des ganzen Mediums
+     */
+    List<ArtworkCandidate> candidatesOf(ImageType type, Integer season) {
+        return candidatesByType.getOrDefault(type, List.of()).stream()
+                .filter(candidate -> Objects.equals(candidate.season(), season))
+                .toList();
     }
 }

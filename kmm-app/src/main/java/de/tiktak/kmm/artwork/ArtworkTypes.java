@@ -6,7 +6,7 @@ import java.util.Locale;
 import de.tiktak.kmm.plugin.api.ImageType;
 
 /**
- * Bildarten, die KMM für Filme verwaltet, und ihre Kodi-Bezeichnungen.
+ * Bildarten, die KMM für Filme, Serien, Staffeln und Episoden verwaltet, und ihre Kodi-Bezeichnungen.
  */
 final class ArtworkTypes {
 
@@ -18,6 +18,23 @@ final class ArtworkTypes {
             ImageType.DISCART,
             ImageType.BANNER,
             ImageType.LANDSCAPE);
+
+    static final List<ImageType> TV_SHOW_TYPES = List.of(
+            ImageType.POSTER,
+            ImageType.FANART,
+            ImageType.BANNER,
+            ImageType.CLEARLOGO,
+            ImageType.CLEARART,
+            ImageType.LANDSCAPE,
+            ImageType.CHARACTERART);
+
+    static final List<ImageType> SEASON_TYPES = List.of(
+            ImageType.POSTER,
+            ImageType.BANNER,
+            ImageType.FANART,
+            ImageType.LANDSCAPE);
+
+    static final List<ImageType> EPISODE_TYPES = List.of(ImageType.THUMB);
 
     private ArtworkTypes() {
     }

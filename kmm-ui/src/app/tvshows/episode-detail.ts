@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, effect, inject, input, numberAttribute, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,11 +9,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
+import { ArtworkGallery } from '../movies/artwork-gallery';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetailsView } from '../shared/stream-details';
 import { TvPeople } from './tv-people';
 import { EpisodeDetails, episodeCode } from './tvshow';
 import { createEpisodeMetadataForm, toEpisodeFormValue, toEpisodeMetadata } from './tvshow-forms';
+import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TvShowService } from './tvshow.service';
 
 const SNACKBAR_DURATION_MS = 5000;
@@ -21,6 +23,7 @@ const SNACKBAR_DURATION_MS = 5000;
 @Component({
   selector: 'app-episode-detail',
   imports: [
+    ArtworkGallery,
     DatePipe,
     ReactiveFormsModule,
     RouterLink,
@@ -37,12 +40,14 @@ const SNACKBAR_DURATION_MS = 5000;
 export class EpisodeDetail {
   private readonly tvShowService = inject(TvShowService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly artworkService = inject(TvShowArtworkService);
 
   /** Episoden-ID aus der Route `/episodes/:id`. */
   readonly id = input.required({ transform: numberAttribute });
 
   protected readonly form = createEpisodeMetadataForm(inject(NonNullableFormBuilder));
   protected readonly saving = signal(false);
+  protected readonly artwork = computed(() => this.artworkService.forEpisode(this.id()));
   protected readonly episode = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.tvShowService.findEpisode(params),

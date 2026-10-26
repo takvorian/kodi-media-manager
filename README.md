@@ -141,6 +141,9 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
   `GET /api/v1/tvshows/{id}/scraper-proposal?scraper=…&providerId=…` (Vorschlag für das Formular),
   `POST /api/v1/tvshows/{id}/scraper-episodes?scraper=…&providerId=…` (ergänzt leere Episodenfelder, schreibt NFOs),
   `GET /api/v1/tvshows/{id}/missing-episodes?scraper=…` (Episoden beim Anbieter ohne Datei, nur Anzeige)
+- `GET /api/v1/tvshows/{id}/artwork[?season=…]`, `GET|PUT|DELETE /api/v1/tvshows/{id}/artwork/{type}[?season=…]`,
+  `…/{type}/image`, `…/{type}/candidates` (Bilder der Serie bzw. einer Staffel), ebenso
+  `/api/v1/episodes/{id}/artwork/THUMB` (Standbild der Episode)
 - `GET /api/v1/episodes/{id}`, `PUT /api/v1/episodes/{id}/metadata` (schreibt die Episoden-NFO, bei Mehrfachepisoden
   alle Episoden der Datei)
 - `GET /api/v1/movies/{id}/scraper-search?scraper=tmdb&title=…&year=…`, `GET /api/v1/movies/{id}/scraper-proposal?scraper=tmdb&providerId=…`

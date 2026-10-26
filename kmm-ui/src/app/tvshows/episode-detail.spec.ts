@@ -6,6 +6,7 @@ import { provideRouter } from '@angular/router';
 
 import { EpisodeDetail } from './episode-detail';
 import { EpisodeDetails } from './tvshow';
+import { flushWhenRequested } from '../shared/testing';
 import { EPISODES_URL } from './tvshow.service';
 
 describe('EpisodeDetail', () => {
@@ -74,6 +75,7 @@ describe('EpisodeDetail', () => {
   async function load(details: EpisodeDetails): Promise<void> {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: `${EPISODES_URL}/12` }).flush(details);
+    await flushWhenRequested(fixture, httpTesting, `${EPISODES_URL}/12/artwork`, []);
     await fixture.whenStable();
   }
 

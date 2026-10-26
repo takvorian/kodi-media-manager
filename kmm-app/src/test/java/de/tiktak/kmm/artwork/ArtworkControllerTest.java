@@ -79,7 +79,7 @@ class ArtworkControllerTest {
     void listsCandidates() {
         when(artworkService.candidates(5L, ImageType.POSTER)).thenReturn(new ArtworkCandidates(List.of(
                 new ArtworkCandidate("tmdb", "TMDB", ImageType.POSTER, URI.create("https://img/p.jpg"),
-                        URI.create("https://img/w342/p.jpg"), 1000, 1500, "de", 5.4)),
+                        URI.create("https://img/w342/p.jpg"), 1000, 1500, "de", 5.4, null)),
                 List.of("Für fanart.tv fehlt ein API-Key.")));
 
         assertThat(mockMvc.get().uri(ArtworkController.CANDIDATES_PATH, 5L, "POSTER"))

@@ -124,6 +124,9 @@ class FanartTvImageScraperTest {
                         tuple(ImageType.CHARACTERART, null, "en"),
                         tuple(ImageType.POSTER, 1, "en"),
                         tuple(ImageType.LANDSCAPE, 0, "en"));
+        assertThat(images.get(4).url()).as("Leerzeichen werden kodiert")
+                .hasToString("https://assets.fanart.tv/fanart/A_78020%20(0).png");
+        assertThat(images.get(4).previewUrl()).hasToString("https://assets.fanart.tv/preview/A_78020%20(0).png");
         assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "ALF", null, Map.of("tmdb", "4658"))))
                 .as("Serien nur über die TVDB-ID").isEmpty();
         assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "ALF", null, Map.of("tvdb", "x"))))
