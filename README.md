@@ -69,18 +69,23 @@ docker compose up -d --build
 
 ## API-Keys
 
-Für die Online-Suche werden kostenlose API-Keys benötigt (Docker: in `docker/.env` eintragen):
+Für die Online-Suche werden API-Keys benötigt. Sie werden auf der Seite **Einstellungen** unter „API-Keys“ gepflegt
+und in der Datenbank gespeichert; die Oberfläche zeigt nur die letzten Zeichen. Umgebungsvariablen füllen einen
+noch nicht gespeicherten Key beim Start (Docker: in `docker/.env` eintragen); danach gilt der gespeicherte Key,
+und ein in der Oberfläche gelöschter Key bleibt gelöscht:
 
 ```bash
 export KMM_TMDB_API_KEY=…          # https://www.themoviedb.org/settings/api (v3-Key oder v4-Lese-Token)
 export KMM_FANARTTV_API_KEY=…      # https://fanart.tv/get-an-api-key/
+export KMM_TVDB_API_KEY=…          # https://thetvdb.com/api-information (v4), optional KMM_TVDB_PIN
 ```
 
 ## Einstellungen
 
-Sprache der Metadaten und Bilder, Video-Dateiendungen, ausgeschlossene Ordner und ein Proxy werden auf der Seite
-**Einstellungen** gepflegt und in der Datenbank gespeichert. Umgebungsvariablen haben Vorrang; damit festgelegte
-Werte sind in der Oberfläche gesperrt:
+Sprache der Metadaten und Bilder (getrennt für Filme und Serien), Episodenreihenfolge für Serien,
+Video-Dateiendungen, ausgeschlossene Ordner und ein Proxy werden auf der Seite **Einstellungen** gepflegt und in der
+Datenbank gespeichert. Für Filme haben Umgebungsvariablen Vorrang; damit festgelegte Werte sind in der Oberfläche
+gesperrt:
 
 ```bash
 export KMM_TMDB_LANGUAGE=de-DE     # Sprache der Metadaten
@@ -132,6 +137,8 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
   `PUT …/artwork/{TYP}` (`{"url": …}`), `DELETE …/artwork/{TYP}` – TYP: POSTER, FANART, CLEARLOGO, CLEARART, DISCART, BANNER, LANDSCAPE
 - `GET /api/v1/scrapers/metadata`
 - `GET /api/v1/settings`, `PUT /api/v1/settings` (Proxy-Passwort `null` = unverändert)
+- `GET /api/v1/settings/api-keys`, `PUT /api/v1/settings/api-keys` (`{"TMDB_API_KEY": "…"}`; leerer Wert löscht,
+  fehlende Keys bleiben)
 - `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`
 - `GET /api/v1/kodi/hosts`, `POST /api/v1/kodi/hosts`, `PUT|DELETE /api/v1/kodi/hosts/{id}` (Passwort `null` = unverändert),
   `POST /api/v1/kodi/hosts/{id}/test`

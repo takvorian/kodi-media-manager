@@ -26,4 +26,8 @@
   </ProxyCredentials>
   <ProxyPort>3128</ProxyPort>
   <ProxyURI>http://proxy.local</ProxyURI>
+  <TVGeneralLanguage>en-US</TVGeneralLanguage>
+  <TVImagesForceLanguage>true</TVImagesForceLanguage>
+  <TVImagesForcedLanguage>en</TVImagesForcedLanguage>
+  <TVScraperOptionsOrdering>DVD</TVScraperOptionsOrdering>
 </Settings>

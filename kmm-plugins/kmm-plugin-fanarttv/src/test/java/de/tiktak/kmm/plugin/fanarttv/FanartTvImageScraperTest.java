@@ -113,7 +113,7 @@ class FanartTvImageScraperTest {
         assertThat(scraper.missingConfiguration()).contains(FanartTvImageScraper.MISSING_API_KEY);
         assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
                 .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("KMM_FANARTTV_API_KEY");
+                .hasMessageContaining("Einstellungen");
     }
 
     @Test

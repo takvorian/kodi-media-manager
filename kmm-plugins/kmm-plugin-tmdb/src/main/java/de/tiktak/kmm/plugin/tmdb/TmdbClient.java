@@ -50,7 +50,7 @@ class TmdbClient {
         return switch (response.statusCode()) {
             case OK -> Optional.of(parse(response.body()));
             case NOT_FOUND -> Optional.empty();
-            case UNAUTHORIZED -> throw new ScraperException("TMDB lehnt den API-Key ab. Bitte KMM_TMDB_API_KEY prüfen.");
+            case UNAUTHORIZED -> throw new ScraperException("TMDB lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.");
             case TOO_MANY_REQUESTS -> throw new ScraperException(
                     "Das Anfragelimit von TMDB ist erreicht. Bitte später erneut versuchen.");
             default -> throw new ScraperException("TMDB antwortet mit Fehler %d.".formatted(response.statusCode()));

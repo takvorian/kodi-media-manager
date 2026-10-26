@@ -1,0 +1,38 @@
+<mat-card appearance="outlined" class="api-keys">
+  <mat-card-header>
+    <mat-card-title>API-Keys</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="hint">
+      Keys der Online-Dienste. Ein leeres Feld lässt den gespeicherten Key unverändert. Umgebungsvariablen wie
+      <code>KMM_TMDB_API_KEY</code> füllen nur einen noch nicht gespeicherten Key beim Start.
+    </p>
+    @if (keys.error()) {
+      <p class="error">Die API-Keys konnten nicht geladen werden.</p>
+    } @else if (keys.hasValue()) {
+      @for (key of keys.value(); track key.key) {
+        <div class="row api-key">
+          <mat-form-field class="wide">
+            <mat-label>{{ key.label }}</mat-label>
+            <input
+              matInput
+              type="password"
+              [formControl]="control(key.key)"
+              [name]="key.key"
+              autocomplete="new-password"
+              [placeholder]="placeholder(key)"
+            />
+          </mat-form-field>
+          @if (key.set && !deletions().has(key.key)) {
+            <button matButton type="button" class="remove-key-button" (click)="remove(key)">Entfernen</button>
+          }
+        </div>
+      }
+    }
+  </mat-card-content>
+  <mat-card-actions align="end">
+    <button matButton="filled" type="button" class="save-keys-button" [disabled]="!hasChanges() || saving()" (click)="save()">
+      {{ saving() ? 'Speichere …' : 'Keys speichern' }}
+    </button>
+  </mat-card-actions>
+</mat-card>

@@ -14,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
+import de.tiktak.kmm.settings.ApiKeyService;
 import de.tiktak.kmm.settings.SettingsProxyAuthenticator;
 import de.tiktak.kmm.settings.SettingsProxySelector;
 import de.tiktak.kmm.settings.SettingsService;
@@ -40,11 +41,12 @@ class PluginManagerConfiguration {
 
     @Bean
     PluginManager pluginManager(PluginProperties properties, HttpClient pluginHttpClient,
-            ObjectProvider<BuildProperties> buildProperties, SettingsService settingsService) throws IOException {
+            ObjectProvider<BuildProperties> buildProperties, SettingsService settingsService,
+            ApiKeyService apiKeyService) throws IOException {
         Path directory = Files.createDirectories(properties.directory());
         log.info("Loading plugins from {}", directory.toAbsolutePath());
         return new KmmPluginManager(directory, new PluginContextFactory(properties, pluginHttpClient, buildProperties,
-                () -> Map.of(LANGUAGE_SETTING, settingsService.current().metadataLanguage())));
+                () -> Map.of(LANGUAGE_SETTING, settingsService.current().metadataLanguage()), apiKeyService::overlay));
     }
 
     @Bean

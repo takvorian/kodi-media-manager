@@ -9,13 +9,37 @@ import org.junit.jupiter.api.Test;
 
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
+import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
+import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.ProxySettings;
+import de.tiktak.kmm.settings.TvSettings;
 
 class EmberSettingsMapperTest {
 
     private static final KmmSettings CURRENT = new KmmSettings("en-US", "en", List.of("mkv"), List.of("/media/tmp"),
             null);
+
+    @Test
+    void takesOverEmberTvSettings() {
+        var ember = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null,
+                new EmberTvSettings("de-DE", "de", "Absolute"));
+
+        var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of());
+
+        assertThat(imported.settings().tv()).isEqualTo(new TvSettings("de-DE", "de", EpisodeOrdering.ABSOLUTE));
+        assertThat(imported.changes()).containsExactly("Sprache der Serien-Metadaten: de-DE",
+                "Bevorzugte Bildsprache für Serien: de", "Episodenreihenfolge: Absolute");
+    }
+
+    @Test
+    void keepsTheTvSettingsForUnsupportedEmberValues() {
+        var ember = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null,
+                new EmberTvSettings("deutsch", null, "DayOfYear"));
+
+        assertThat(EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of()).settings().tv())
+                .isEqualTo(CURRENT.tv());
+    }
 
     @Test
     void takesOverValidEmberSettings() {
@@ -25,7 +49,8 @@ class EmberSettingsMapperTest {
         var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of("/media/privat"));
 
         assertThat(imported.settings()).isEqualTo(new KmmSettings("de-DE", "de", List.of("mkv", "avi"),
-                List.of("/media/tmp", "/media/privat"), new ProxySettings("proxy.local", 3128, "user", null)));
+                List.of("/media/tmp", "/media/privat"), new ProxySettings("proxy.local", 3128, "user", null),
+                CURRENT.tv()));
         assertThat(imported.changes()).containsExactly("Sprache der Metadaten: de-DE", "Bevorzugte Bildsprache: de",
                 "Video-Dateiendungen: mkv, avi",
                 "Proxy: proxy.local:3128 (Passwort bitte in den Einstellungen eingeben)",

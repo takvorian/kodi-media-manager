@@ -3,6 +3,7 @@ package de.tiktak.kmm.plugin;
 import java.net.http.HttpClient;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 import org.springframework.beans.factory.ObjectProvider;
@@ -26,11 +27,13 @@ class PluginContextFactory {
     private final HttpClient httpClient;
     private final ObjectProvider<BuildProperties> buildProperties;
     private final Supplier<Map<String, String>> sharedSettings;
+    private final BiFunction<String, Map<String, String>, Map<String, String>> storedKeys;
 
+    /** Gemeinsame Einstellungen, dann die des Plugins aus der Konfiguration, zuletzt gespeicherte API-Keys. */
     PluginContext contextFor(String pluginId) {
         Map<String, String> settings = new HashMap<>(sharedSettings.get());
         settings.putAll(properties.settingsOf(pluginId));
-        return new DefaultPluginContext(settings, httpClient, userAgent());
+        return new DefaultPluginContext(storedKeys.apply(pluginId, settings), httpClient, userAgent());
     }
 
     private String userAgent() {

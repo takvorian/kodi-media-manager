@@ -44,7 +44,7 @@ class KmmSettingsTest {
     @Test
     void rejectsInvalidValues() {
         var settings = new KmmSettings("deutsch", "DE", List.of("m k v"), List.of("x".repeat(2000)),
-                new ProxySettings(" ", 0, null, null));
+                new ProxySettings(" ", 0, null, null), new TvSettings("x", "deu", null));
 
         Set<String> invalid = validator.validate(settings).stream()
                 .map(ConstraintViolation::getPropertyPath)
@@ -52,7 +52,17 @@ class KmmSettingsTest {
                 .collect(java.util.stream.Collectors.toSet());
 
         assertThat(invalid).contains("metadataLanguage", "artworkLanguage", "videoExtensions[0].<list element>",
-                "excludedPaths[0].<list element>", "proxy.host", "proxy.port");
+                "excludedPaths[0].<list element>", "proxy.host", "proxy.port", "tv.metadataLanguage",
+                "tv.artworkLanguage", "tv.episodeOrdering");
+    }
+
+    @Test
+    void derivesTvSettingsFromTheMovieLanguages() {
+        var settings = new KmmSettings("en-US", "en", List.of("mkv"), List.of(), null);
+
+        assertThat(settings.tv()).isEqualTo(new TvSettings("en-US", "en", EpisodeOrdering.AIRED));
+        assertThat(settings.withTv(new TvSettings(" fr-FR ", "fr", EpisodeOrdering.ABSOLUTE)).tv().metadataLanguage())
+                .isEqualTo("fr-FR");
     }
 
     @Test

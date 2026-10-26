@@ -20,13 +20,15 @@ import jakarta.validation.constraints.Size;
  * @param videoExtensions  Dateiendungen, die der Scan als Film erkennt
  * @param excludedPaths    Ordner, die der Scan samt Inhalt überspringt
  * @param proxy            Proxy für Anfragen an Online-Dienste oder {@code null} für eine direkte Verbindung
+ * @param tv               Einstellungen für Serien; ohne Angabe wie bei Filmen
  */
 public record KmmSettings(
         @NotBlank @Pattern(regexp = METADATA_LANGUAGE_PATTERN) String metadataLanguage,
         @NotBlank @Pattern(regexp = ARTWORK_LANGUAGE_PATTERN) String artworkLanguage,
         @NotNull @Size(min = 1, max = MAX_EXTENSIONS) List<@Pattern(regexp = EXTENSION_PATTERN) String> videoExtensions,
         @NotNull @Size(max = MAX_EXCLUDED_PATHS) List<@Size(max = MAX_PATH_LENGTH) String> excludedPaths,
-        @Valid ProxySettings proxy) {
+        @Valid ProxySettings proxy,
+        @Valid TvSettings tv) {
 
     static final String METADATA_LANGUAGE_PATTERN = "[a-z]{2}(-[A-Z]{2})?";
     static final String ARTWORK_LANGUAGE_PATTERN = "[a-z]{2}";
@@ -36,7 +38,7 @@ public record KmmSettings(
     static final int MAX_PATH_LENGTH = 1024;
 
     public static final KmmSettings DEFAULTS = new KmmSettings("de-DE", "de",
-            ScanRules.DEFAULT_VIDEO_EXTENSIONS.stream().sorted().toList(), List.of(), null);
+            ScanRules.DEFAULT_VIDEO_EXTENSIONS.stream().sorted().toList(), List.of(), null, null);
 
     private static final String EXTENSION_SEPARATOR = ".";
 
@@ -50,18 +52,29 @@ public record KmmSettings(
                 .distinct()
                 .toList();
         excludedPaths = clean(excludedPaths);
+        tv = tv != null ? tv : TvSettings.like(metadataLanguage, artworkLanguage);
+    }
+
+    /** Einstellungen ohne eigene Angaben für Serien; diese folgen den Film-Sprachen. */
+    public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
+            List<String> excludedPaths, ProxySettings proxy) {
+        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, null);
     }
 
     KmmSettings withMetadataLanguage(String newMetadataLanguage) {
-        return new KmmSettings(newMetadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy);
+        return new KmmSettings(newMetadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv);
     }
 
     KmmSettings withArtworkLanguage(String newArtworkLanguage) {
-        return new KmmSettings(metadataLanguage, newArtworkLanguage, videoExtensions, excludedPaths, proxy);
+        return new KmmSettings(metadataLanguage, newArtworkLanguage, videoExtensions, excludedPaths, proxy, tv);
     }
 
     KmmSettings withProxy(ProxySettings newProxy) {
-        return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, newProxy);
+        return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, newProxy, tv);
+    }
+
+    public KmmSettings withTv(TvSettings newTv) {
+        return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, newTv);
     }
 
     private static String strip(String value) {

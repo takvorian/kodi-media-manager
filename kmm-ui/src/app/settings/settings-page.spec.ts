@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-import { SettingsView } from './settings';
+import { ApiKeyView, SettingsView } from './settings';
 import { SettingsPage } from './settings-page';
 import { SETTINGS_URL } from './settings.service';
 
@@ -14,8 +14,14 @@ describe('SettingsPage', () => {
     videoExtensions: ['mkv', 'avi'],
     excludedPaths: ['/media/privat'],
     proxy: { host: 'proxy.local', port: 3128, username: 'user', passwordSet: true },
+    tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
     overridden: [],
   };
+  const keys: ApiKeyView[] = [
+    { key: 'TMDB_API_KEY', pluginId: 'tmdb', label: 'TMDB-API-Key', set: true, hint: '…cdef' },
+    { key: 'TVDB_API_KEY', pluginId: 'tvdb', label: 'TVDB-API-Key (v4)', set: false, hint: null },
+    { key: 'TVDB_PIN', pluginId: 'tvdb', label: 'TVDB-Abonnenten-PIN', set: true, hint: null },
+  ];
 
   let fixture: ComponentFixture<SettingsPage>;
   let httpTesting: HttpTestingController;
@@ -40,7 +46,18 @@ describe('SettingsPage', () => {
   async function load(view: SettingsView): Promise<void> {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: SETTINGS_URL }).flush(view);
+    await renderPendingChanges();
+    httpTesting.expectOne({ method: 'GET', url: `${SETTINGS_URL}/api-keys` }).flush(keys);
     await fixture.whenStable();
+  }
+
+  /** Rendert, bis die API-Key-Karte nach dem Laden der Einstellungen ihre Anfrage gestellt hat. */
+  async function renderPendingChanges(): Promise<void> {
+    const renderPasses = 2;
+    for (let pass = 0; pass < renderPasses; pass++) {
+      await Promise.resolve();
+      fixture.detectChanges();
+    }
   }
 
   function element(): HTMLElement {
@@ -88,9 +105,65 @@ describe('SettingsPage', () => {
       videoExtensions: ['.MKV', 'iso'],
       excludedPaths: ['/media/privat', '/media/tmp'],
       proxy: { host: 'proxy.local', port: 3128, username: 'user', password: null },
+      tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
     });
     expect(snackBarMessages).toEqual(['Einstellungen gespeichert.']);
     expect(field('videoExtensions').value).toBe('mkv, iso');
+  });
+
+  it('saves separate settings for TV shows', async () => {
+    await load({ ...stored, tv: { metadataLanguage: 'en-US', artworkLanguage: 'en', episodeOrdering: 'DVD' } });
+    expect(field('tvMetadataLanguage').value).toBe('en-US');
+
+    await type('tvArtworkLanguage', 'de');
+    button('.save-button').click();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
+    expect(request.request.body.tv).toEqual({ metadataLanguage: 'en-US', artworkLanguage: 'de', episodeOrdering: 'DVD' });
+    request.flush(stored);
+  });
+
+  it('changes and removes API keys without showing them', async () => {
+    await load(stored);
+    expect(field('TMDB_API_KEY').placeholder).toBe('gespeichert …cdef');
+    expect(field('TVDB_API_KEY').placeholder).toBe('nicht gesetzt');
+    expect(button('.save-keys-button').disabled).toBe(true);
+
+    await type('TVDB_API_KEY', ' 0000-1111 ');
+    const removeButtons = element().querySelectorAll<HTMLButtonElement>('.remove-key-button');
+    expect(removeButtons).toHaveLength(2);
+    removeButtons[1].click();
+    fixture.detectChanges();
+    expect(field('TVDB_PIN').placeholder).toBe('wird entfernt');
+    button('.save-keys-button').click();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: `${SETTINGS_URL}/api-keys` });
+    expect(request.request.body).toEqual({ TVDB_PIN: '', TVDB_API_KEY: '0000-1111' });
+    request.flush(keys);
+    await fixture.whenStable();
+    expect(snackBarMessages).toEqual(['API-Keys gespeichert.']);
+    expect(field('TVDB_API_KEY').value).toBe('');
+  });
+
+  it('reports failures around API keys', async () => {
+    await load(stored);
+    await type('TMDB_API_KEY', 'neu');
+
+    button('.save-keys-button').click();
+    httpTesting
+      .expectOne({ method: 'PUT', url: `${SETTINGS_URL}/api-keys` })
+      .flush({ detail: 'Zu lang' }, { status: 400, statusText: 'Bad Request' });
+    expect(snackBarMessages).toEqual(['Zu lang']);
+
+    fixture = TestBed.createComponent(SettingsPage);
+    fixture.detectChanges();
+    httpTesting.expectOne({ method: 'GET', url: SETTINGS_URL }).flush(stored);
+    await renderPendingChanges();
+    httpTesting
+      .expectOne({ method: 'GET', url: `${SETTINGS_URL}/api-keys` })
+      .flush(null, { status: 500, statusText: 'Error' });
+    await fixture.whenStable();
+    expect(element().querySelector('.api-keys .error')).not.toBeNull();
   });
 
   it('sends no proxy when it is switched off', async () => {

@@ -5,14 +5,18 @@ import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Pattern;
 
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
+import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
+import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.ProxySettings;
+import de.tiktak.kmm.settings.TvSettings;
 
 /**
  * Überträgt Ember-Einstellungen auf die KMM-Einstellungen. Übernommen wird nur, was in Ember gültig
@@ -24,6 +28,9 @@ final class EmberSettingsMapper {
     private static final Pattern ARTWORK_LANGUAGE = Pattern.compile("[a-z]{2}");
     private static final Pattern EXTENSION = Pattern.compile("\\.?[a-z0-9]{1,10}");
     private static final int DEFAULT_PROXY_PORT = 8080;
+    /** Embers {@code DayOfYear} kennen die Scraper von KMM nicht; es bleibt bei der bisherigen Reihenfolge. */
+    private static final Map<String, EpisodeOrdering> ORDERINGS = Map.of(
+            "Standard", EpisodeOrdering.AIRED, "DVD", EpisodeOrdering.DVD, "Absolute", EpisodeOrdering.ABSOLUTE);
 
     private EmberSettingsMapper() {
     }
@@ -59,13 +66,34 @@ final class EmberSettingsMapper {
                         proxy.username() == null ? "" : " (Passwort bitte in den Einstellungen eingeben)"));
             }
         }
+        TvSettings tv = ember.map(settings -> tv(current.tv(), settings.tv(), changes)).orElse(current.tv());
         Set<String> allExcluded = new LinkedHashSet<>(current.excludedPaths());
         if (allExcluded.addAll(excludedPaths)) {
             changes.add("Ausgeschlossene Ordner: " + String.join(", ", excludedPaths));
         }
         KmmSettings imported = new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions,
-                List.copyOf(allExcluded), proxy);
+                List.copyOf(allExcluded), proxy, tv);
         return new SettingsImport(imported, changes);
+    }
+
+    private static TvSettings tv(TvSettings current, EmberTvSettings ember, List<String> changes) {
+        String language = current.metadataLanguage();
+        String imageLanguage = current.artworkLanguage();
+        EpisodeOrdering ordering = current.episodeOrdering();
+        if (matches(METADATA_LANGUAGE, ember.language())) {
+            language = ember.language();
+            changes.add("Sprache der Serien-Metadaten: " + language);
+        }
+        if (matches(ARTWORK_LANGUAGE, ember.imageLanguage())) {
+            imageLanguage = ember.imageLanguage();
+            changes.add("Bevorzugte Bildsprache für Serien: " + imageLanguage);
+        }
+        EpisodeOrdering emberOrdering = ember.ordering() == null ? null : ORDERINGS.get(ember.ordering());
+        if (emberOrdering != null) {
+            ordering = emberOrdering;
+            changes.add("Episodenreihenfolge: " + ember.ordering());
+        }
+        return new TvSettings(language, imageLanguage, ordering);
     }
 
     private static List<String> extensions(List<String> emberExtensions) {

@@ -49,6 +49,18 @@ class EmberSettingsXml {
     @JsonProperty("MovieImagesForcedLanguage")
     private String movieImagesForcedLanguage;
 
+    @JsonProperty("TVGeneralLanguage")
+    private String tvLanguage;
+
+    @JsonProperty("TVImagesForceLanguage")
+    private boolean tvImagesForceLanguage;
+
+    @JsonProperty("TVImagesForcedLanguage")
+    private String tvImagesForcedLanguage;
+
+    @JsonProperty("TVScraperOptionsOrdering")
+    private String tvOrdering;
+
     EmberSettings toSettings() {
         return new EmberSettings(
                 version,
@@ -57,7 +69,9 @@ class EmberSettingsXml {
                 StringArrayXml.valuesOf(validSubtitleExtensions),
                 toProxySettings(),
                 blankToNull(movieLanguage),
-                movieImagesForceLanguage ? blankToNull(movieImagesForcedLanguage) : null);
+                movieImagesForceLanguage ? blankToNull(movieImagesForcedLanguage) : null,
+                new EmberTvSettings(blankToNull(tvLanguage),
+                        tvImagesForceLanguage ? blankToNull(tvImagesForcedLanguage) : null, blankToNull(tvOrdering)));
     }
 
     private Optional<EmberProxySettings> toProxySettings() {

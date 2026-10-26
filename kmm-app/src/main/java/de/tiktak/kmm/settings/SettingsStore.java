@@ -25,6 +25,9 @@ class SettingsStore {
     static final String PROXY_PORT = "proxy-port";
     static final String PROXY_USERNAME = "proxy-username";
     static final String PROXY_PASSWORD = "proxy-password";
+    static final String TV_METADATA_LANGUAGE = "tv-metadata-language";
+    static final String TV_ARTWORK_LANGUAGE = "tv-artwork-language";
+    static final String TV_EPISODE_ORDERING = "tv-episode-ordering";
 
     private static final String LINE_SEPARATOR = "\n";
 
@@ -34,12 +37,18 @@ class SettingsStore {
         Map<String, String> values = repository.findAll().stream()
                 .collect(Collectors.toMap(AppSetting::getKey, AppSetting::getValue));
         KmmSettings defaults = KmmSettings.DEFAULTS;
+        String metadataLanguage = values.getOrDefault(METADATA_LANGUAGE, defaults.metadataLanguage());
+        String artworkLanguage = values.getOrDefault(ARTWORK_LANGUAGE, defaults.artworkLanguage());
         return new KmmSettings(
-                values.getOrDefault(METADATA_LANGUAGE, defaults.metadataLanguage()),
-                values.getOrDefault(ARTWORK_LANGUAGE, defaults.artworkLanguage()),
+                metadataLanguage,
+                artworkLanguage,
                 values.containsKey(VIDEO_EXTENSIONS) ? lines(values.get(VIDEO_EXTENSIONS)) : defaults.videoExtensions(),
                 values.containsKey(EXCLUDED_PATHS) ? lines(values.get(EXCLUDED_PATHS)) : defaults.excludedPaths(),
-                values.containsKey(PROXY_HOST) ? proxy(values) : null);
+                values.containsKey(PROXY_HOST) ? proxy(values) : null,
+                new TvSettings(
+                        values.getOrDefault(TV_METADATA_LANGUAGE, metadataLanguage),
+                        values.getOrDefault(TV_ARTWORK_LANGUAGE, artworkLanguage),
+                        EpisodeOrdering.valueOf(values.getOrDefault(TV_EPISODE_ORDERING, EpisodeOrdering.AIRED.name()))));
     }
 
     void save(KmmSettings settings) {
@@ -52,6 +61,9 @@ class SettingsStore {
         put(PROXY_PORT, proxy == null ? null : String.valueOf(proxy.port()));
         put(PROXY_USERNAME, proxy == null ? null : proxy.username());
         put(PROXY_PASSWORD, proxy == null ? null : proxy.password());
+        put(TV_METADATA_LANGUAGE, settings.tv().metadataLanguage());
+        put(TV_ARTWORK_LANGUAGE, settings.tv().artworkLanguage());
+        put(TV_EPISODE_ORDERING, settings.tv().episodeOrdering().name());
     }
 
     private void put(String key, String value) {

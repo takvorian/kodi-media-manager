@@ -6,6 +6,7 @@ import static org.mockito.Mockito.when;
 
 import java.net.http.HttpClient;
 import java.nio.file.Path;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
 
@@ -30,7 +31,7 @@ class PluginContextFactoryTest {
         when(buildProperties.getIfAvailable()).thenReturn(new BuildProperties(build));
 
         PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties,
-                () -> Map.of("language", "en-US", "region", "US")).contextFor("tmdb");
+                () -> Map.of("language", "en-US", "region", "US"), (id, settings) -> settings).contextFor("tmdb");
 
         assertThat(context.setting("api-key")).contains("geheim");
         assertThat(context.setting("language")).as("eigene Einstellung hat Vorrang").contains("de-DE");
@@ -45,11 +46,27 @@ class PluginContextFactoryTest {
     void givesPluginsWithoutSettingsAnEmptyConfiguration() {
         ObjectProvider<BuildProperties> buildProperties = mock(ObjectProvider.class);
 
-        PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties, Map::of)
-                .contextFor("andere");
+        PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties, Map::of,
+                (id, settings) -> settings).contextFor("andere");
 
         assertThat(context.setting("api-key")).isEmpty();
         assertThat(context.userAgent()).startsWith("KodiMediaManager/dev");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void letsStoredKeysOverrideTheConfiguration() {
+        ObjectProvider<BuildProperties> buildProperties = mock(ObjectProvider.class);
+
+        PluginContext context = new PluginContextFactory(properties, httpClient, buildProperties, Map::of,
+                (id, settings) -> {
+                    Map<String, String> overlaid = new HashMap<>(settings);
+                    overlaid.put("api-key", "gespeichert-" + id);
+                    return overlaid;
+                }).contextFor("tmdb");
+
+        assertThat(context.setting("api-key")).contains("gespeichert-tmdb");
+        assertThat(context.setting("language")).contains("de-DE");
     }
 
     @Test

@@ -21,7 +21,7 @@ public class FanartTvImageScraper implements ImageScraper {
 
     static final String ID = "fanarttv";
     static final String DISPLAY_NAME = "fanart.tv";
-    static final String MISSING_API_KEY = "Für fanart.tv fehlt ein API-Key (Umgebungsvariable KMM_FANARTTV_API_KEY).";
+    static final String MISSING_API_KEY = "Für fanart.tv fehlt ein API-Key (Einstellungen → API-Keys).";
     private static final String TMDB = "tmdb";
     private static final String IMDB = "imdb";
 

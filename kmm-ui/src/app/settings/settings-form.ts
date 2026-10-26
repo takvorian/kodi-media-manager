@@ -1,6 +1,6 @@
 import { FormControl, FormGroup, NonNullableFormBuilder, Validators } from '@angular/forms';
 
-import { KmmSettings, SettingsView } from './settings';
+import { EpisodeOrdering, KmmSettings, SettingsView } from './settings';
 
 const METADATA_LANGUAGE_PATTERN = /^[a-z]{2}(-[A-Z]{2})?$/;
 const ARTWORK_LANGUAGE_PATTERN = /^[a-z]{2}$/;
@@ -20,6 +20,9 @@ export type SettingsForm = FormGroup<{
   proxyPort: FormControl<number>;
   proxyUsername: FormControl<string>;
   proxyPassword: FormControl<string>;
+  tvMetadataLanguage: FormControl<string>;
+  tvArtworkLanguage: FormControl<string>;
+  tvEpisodeOrdering: FormControl<EpisodeOrdering>;
 }>;
 
 export function createSettingsForm(formBuilder: NonNullableFormBuilder): SettingsForm {
@@ -33,6 +36,9 @@ export function createSettingsForm(formBuilder: NonNullableFormBuilder): Setting
     proxyPort: [DEFAULT_PROXY_PORT, [Validators.min(1), Validators.max(MAX_PORT)]],
     proxyUsername: [''],
     proxyPassword: [''],
+    tvMetadataLanguage: ['', [Validators.required, Validators.pattern(METADATA_LANGUAGE_PATTERN)]],
+    tvArtworkLanguage: ['', [Validators.required, Validators.pattern(ARTWORK_LANGUAGE_PATTERN)]],
+    tvEpisodeOrdering: ['AIRED' as EpisodeOrdering],
   });
 }
 
@@ -47,6 +53,9 @@ export function toFormValue(view: SettingsView): SettingsForm['value'] {
     proxyPort: view.proxy?.port ?? DEFAULT_PROXY_PORT,
     proxyUsername: view.proxy?.username ?? '',
     proxyPassword: '',
+    tvMetadataLanguage: view.tv.metadataLanguage,
+    tvArtworkLanguage: view.tv.artworkLanguage,
+    tvEpisodeOrdering: view.tv.episodeOrdering,
   };
 }
 
@@ -66,6 +75,11 @@ export function toSettings(form: SettingsForm): KmmSettings {
           password: value.proxyPassword === '' ? null : value.proxyPassword,
         }
       : null,
+    tv: {
+      metadataLanguage: value.tvMetadataLanguage.trim(),
+      artworkLanguage: value.tvArtworkLanguage.trim(),
+      episodeOrdering: value.tvEpisodeOrdering,
+    },
   };
 }
 

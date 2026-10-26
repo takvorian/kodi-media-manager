@@ -15,7 +15,7 @@ abstract class AbstractTmdbScraper implements Scraper {
 
     static final String ID = "tmdb";
     static final String DISPLAY_NAME = "The Movie Database (TMDB)";
-    static final String MISSING_API_KEY = "Für TMDB fehlt ein API-Key (Umgebungsvariable KMM_TMDB_API_KEY).";
+    static final String MISSING_API_KEY = "Für TMDB fehlt ein API-Key (Einstellungen → API-Keys).";
 
     private TmdbSettings settings;
     private TmdbApi api;

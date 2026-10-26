@@ -12,6 +12,7 @@ describe('SettingsService', () => {
     videoExtensions: ['mkv'],
     excludedPaths: [],
     proxy: null,
+    tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
     overridden: [],
   };
 
@@ -43,5 +44,15 @@ describe('SettingsService', () => {
     request.flush(view);
 
     expect(request.request.body).toEqual(settings);
+  });
+
+  it('loads and saves API keys', () => {
+    service.apiKeys().subscribe();
+    service.saveApiKeys({ TMDB_API_KEY: 'neu', TVDB_PIN: '' }).subscribe();
+
+    httpTesting.expectOne({ method: 'GET', url: `${SETTINGS_URL}/api-keys` }).flush([]);
+    const request = httpTesting.expectOne({ method: 'PUT', url: `${SETTINGS_URL}/api-keys` });
+    expect(request.request.body).toEqual({ TMDB_API_KEY: 'neu', TVDB_PIN: '' });
+    request.flush([]);
   });
 });

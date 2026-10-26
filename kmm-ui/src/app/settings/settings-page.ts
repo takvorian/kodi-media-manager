@@ -6,10 +6,12 @@ import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { problemMessage } from '../shared/problem-message';
-import { SettingsField, SettingsView } from './settings';
+import { ApiKeysCard } from './api-keys-card';
+import { EpisodeOrdering, SettingsField, SettingsView } from './settings';
 import { createSettingsForm, toFormValue, toSettings } from './settings-form';
 import { SettingsService } from './settings.service';
 
@@ -24,6 +26,8 @@ const SNACKBAR_DURATION_MS = 5000;
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSelectModule,
+    ApiKeysCard,
   ],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss',
@@ -35,6 +39,11 @@ export class SettingsPage {
   protected readonly form = createSettingsForm(inject(NonNullableFormBuilder));
   protected readonly settings = rxResource({ stream: () => this.settingsService.load() });
   protected readonly saving = signal(false);
+  protected readonly orderings: readonly { value: EpisodeOrdering; label: string }[] = [
+    { value: 'AIRED', label: 'Ausstrahlung' },
+    { value: 'DVD', label: 'DVD/Blu-ray' },
+    { value: 'ABSOLUTE', label: 'Absolut (ohne Staffeln)' },
+  ];
 
   constructor() {
     effect(() => {

@@ -49,7 +49,7 @@ class FanartTvClient {
             case OK -> Optional.of(parse(response.body()));
             case NOT_FOUND -> Optional.empty();
             case UNAUTHORIZED, FORBIDDEN -> throw new ScraperException(
-                    "fanart.tv lehnt den API-Key ab. Bitte KMM_FANARTTV_API_KEY prüfen.");
+                    "fanart.tv lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.");
             default -> throw new ScraperException("fanart.tv antwortet mit Fehler %d.".formatted(response.statusCode()));
         };
     }

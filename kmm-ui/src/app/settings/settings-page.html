@@ -34,6 +34,33 @@
 
     <mat-card appearance="outlined">
       <mat-card-header>
+        <mat-card-title>Serien</mat-card-title>
+      </mat-card-header>
+      <mat-card-content class="row">
+        <mat-form-field>
+          <mat-label>Metadaten</mat-label>
+          <input matInput formControlName="tvMetadataLanguage" name="tvMetadataLanguage" placeholder="de-DE" />
+          <mat-error>Format: de oder de-DE</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Bevorzugte Bildsprache</mat-label>
+          <input matInput formControlName="tvArtworkLanguage" name="tvArtworkLanguage" placeholder="de" />
+          <mat-error>Format: zwei Kleinbuchstaben, z. B. de</mat-error>
+        </mat-form-field>
+        <mat-form-field>
+          <mat-label>Episodenreihenfolge</mat-label>
+          <mat-select formControlName="tvEpisodeOrdering" name="tvEpisodeOrdering">
+            @for (ordering of orderings; track ordering.value) {
+              <mat-option [value]="ordering.value">{{ ordering.label }}</mat-option>
+            }
+          </mat-select>
+          <mat-hint>Für das Scrapen von Serien</mat-hint>
+        </mat-form-field>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
         <mat-card-title>Scan</mat-card-title>
       </mat-card-header>
       <mat-card-content>
@@ -101,6 +128,8 @@
       </button>
     </div>
   </form>
+
+  <app-api-keys-card />
 } @else {
   <p class="loading">Lade Einstellungen …</p>
 }

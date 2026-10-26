@@ -31,13 +31,22 @@ class SettingsStoreTest {
     @Test
     void savesAndLoadsAllValues() {
         var settings = new KmmSettings("en-US", "en", List.of("mkv", "iso"), List.of("/media/privat", "/media/tmp"),
-                new ProxySettings("proxy.local", 3128, "user", "secret"));
+                new ProxySettings("proxy.local", 3128, "user", "secret"), new TvSettings("de-DE", "de",
+                EpisodeOrdering.DVD));
 
         store.save(settings);
         entityManager.flush();
         entityManager.clear();
 
         assertThat(store.load()).isEqualTo(settings);
+    }
+
+    @Test
+    void letsTvLanguagesFollowTheMovieLanguagesUntilTheyAreSaved() {
+        repository.save(new AppSetting(SettingsStore.METADATA_LANGUAGE, "en-US"));
+        entityManager.flush();
+
+        assertThat(store.load().tv()).isEqualTo(new TvSettings("en-US", "de", EpisodeOrdering.AIRED));
     }
 
     @Test

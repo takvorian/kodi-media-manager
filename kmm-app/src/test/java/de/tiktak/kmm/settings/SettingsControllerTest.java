@@ -8,6 +8,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -27,13 +28,19 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 class SettingsControllerTest {
 
     private static final SettingsView VIEW = new SettingsView("de-DE", "de", List.of("mkv"), List.of(),
-            new SettingsView.Proxy("proxy.local", 3128, "user", true), Set.of(SettingsField.ARTWORK_LANGUAGE));
+            new SettingsView.Proxy("proxy.local", 3128, "user", true),
+            new TvSettings("en-US", "en", EpisodeOrdering.DVD), Set.of(SettingsField.ARTWORK_LANGUAGE));
+
+    private static final String KEYS = SettingsController.BASE_PATH + SettingsController.API_KEYS_PATH;
 
     @Autowired
     private MockMvcTester mockMvc;
 
     @MockitoBean
     private SettingsService settingsService;
+
+    @MockitoBean
+    private ApiKeyService apiKeyService;
 
     @Test
     void returnsEffectiveSettingsWithoutPassword() {
@@ -42,6 +49,7 @@ class SettingsControllerTest {
         assertThat(mockMvc.get().uri(SettingsController.BASE_PATH)).hasStatusOk().bodyJson().isLenientlyEqualTo("""
                 {"metadataLanguage": "de-DE", "videoExtensions": ["mkv"],
                  "proxy": {"host": "proxy.local", "port": 3128, "username": "user", "passwordSet": true},
+                 "tv": {"metadataLanguage": "en-US", "artworkLanguage": "en", "episodeOrdering": "DVD"},
                  "overridden": ["ARTWORK_LANGUAGE"]}
                 """);
     }
@@ -56,7 +64,42 @@ class SettingsControllerTest {
                          "excludedPaths": [], "proxy": null}
                         """))
                 .hasStatusOk();
-        verify(settingsService).update(new KmmSettings("en-US", "en", List.of("mkv"), List.of(), null));
+        verify(settingsService).update(new KmmSettings("en-US", "en", List.of("mkv"), List.of(), null,
+                new TvSettings("en-US", "en", EpisodeOrdering.AIRED)));
+    }
+
+    @Test
+    void listsApiKeysWithoutTheirValues() {
+        when(apiKeyService.view()).thenReturn(List.of(
+                new ApiKeyView(ApiKey.TMDB_API_KEY, "tmdb", "TMDB-API-Key", true, "…cdef")));
+
+        assertThat(mockMvc.get().uri(KEYS))
+                .hasStatusOk().bodyJson().isLenientlyEqualTo("""
+                        [{"key": "TMDB_API_KEY", "pluginId": "tmdb", "set": true, "hint": "…cdef"}]
+                        """);
+    }
+
+    @Test
+    void changesAndDeletesApiKeys() {
+        when(apiKeyService.update(any())).thenReturn(List.of());
+
+        assertThat(mockMvc.put().uri(KEYS).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content("""
+                        {"TVDB_API_KEY": "neu", "FANARTTV_CLIENT_KEY": ""}
+                        """))
+                .hasStatusOk();
+        verify(apiKeyService).update(Map.of(ApiKey.TVDB_API_KEY, "neu", ApiKey.FANARTTV_CLIENT_KEY, ""));
+    }
+
+    @Test
+    void rejectsUnknownAndOverlongApiKeys() {
+        assertThat(mockMvc.put().uri(KEYS).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"OMDB\": \"x\"}"))
+                .hasStatus(400);
+        assertThat(mockMvc.put().uri(KEYS).with(csrf()).contentType(MediaType.APPLICATION_JSON)
+                .content("{\"TMDB_API_KEY\": \"" + "x".repeat(SettingsController.MAX_KEY_LENGTH + 1) + "\"}"))
+                .hasStatus(400);
+        verifyNoInteractions(apiKeyService);
     }
 
     @Test

@@ -46,6 +46,8 @@ kmm:
   plugins:
     directory: ${kmm.home}/plugins
     install-bundled: true
+    # API-Keys stehen im Einstellungsspeicher (Seite „Einstellungen“). Die Werte hier füllen nur einen
+    # noch nicht gespeicherten Key beim Start; danach gilt der gespeicherte.
     settings:
       tmdb:
         # TMDB-API-Key (v3) oder Lese-Token (v4): https://www.themoviedb.org/settings/api
@@ -56,6 +58,11 @@ kmm:
         api-key: ${KMM_FANARTTV_API_KEY:}
         # optionaler persönlicher Key: neue Bilder erscheinen damit früher
         client-key: ${KMM_FANARTTV_CLIENT_KEY:}
+      tvdb:
+        # Projekt-Key der TVDB-API v4: https://thetvdb.com/api-information
+        api-key: ${KMM_TVDB_API_KEY:}
+        # PIN eines TVDB-Abonnements, nur bei Keys für Abonnenten nötig
+        pin: ${KMM_TVDB_PIN:}
   settings:
     # Gesetzte Werte haben Vorrang vor den Einstellungen in der Oberfläche und sind dort gesperrt.
     # Sprache der Metadaten beim Scrapen, z. B. de-DE

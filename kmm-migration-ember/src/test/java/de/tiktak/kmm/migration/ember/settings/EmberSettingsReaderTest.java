@@ -35,6 +35,7 @@ class EmberSettingsReaderTest {
         assertThat(settings.proxy()).contains(new EmberProxySettings("http://proxy.local", 3128, "proxyuser"));
         assertThat(settings.movieLanguage()).isEqualTo("de-DE");
         assertThat(settings.movieImageLanguage()).isEqualTo("de");
+        assertThat(settings.tv()).isEqualTo(new EmberTvSettings("en-US", "en", "DVD"));
     }
 
     @Test

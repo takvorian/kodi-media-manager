@@ -8,6 +8,26 @@ export interface ProxyView {
   readonly passwordSet: boolean;
 }
 
+export type EpisodeOrdering = 'AIRED' | 'DVD' | 'ABSOLUTE';
+
+/** Einstellungen für Serien, getrennt von denen für Filme. */
+export interface TvSettings {
+  readonly metadataLanguage: string;
+  readonly artworkLanguage: string;
+  readonly episodeOrdering: EpisodeOrdering;
+}
+
+export type ApiKeyName = 'TMDB_API_KEY' | 'TVDB_API_KEY' | 'TVDB_PIN' | 'FANARTTV_API_KEY' | 'FANARTTV_CLIENT_KEY';
+
+/** Zustand eines API-Keys; der Key selbst wird nie ausgeliefert. */
+export interface ApiKeyView {
+  readonly key: ApiKeyName;
+  readonly pluginId: string;
+  readonly label: string;
+  readonly set: boolean;
+  readonly hint: string | null;
+}
+
 /** Antwort von GET /api/v1/settings. */
 export interface SettingsView {
   readonly metadataLanguage: string;
@@ -15,10 +35,11 @@ export interface SettingsView {
   readonly videoExtensions: readonly string[];
   readonly excludedPaths: readonly string[];
   readonly proxy: ProxyView | null;
+  readonly tv: TvSettings;
   readonly overridden: readonly SettingsField[];
 }
 
-/** Proxy in einer Änderung; ein Passwort von {@code null} lässt das gespeicherte unverändert. */
+/** Proxy in einer Änderung; ein Passwort von `null` lässt das gespeicherte unverändert. */
 export interface ProxySettings {
   readonly host: string;
   readonly port: number;
@@ -33,4 +54,5 @@ export interface KmmSettings {
   readonly videoExtensions: readonly string[];
   readonly excludedPaths: readonly string[];
   readonly proxy: ProxySettings | null;
+  readonly tv: TvSettings;
 }
