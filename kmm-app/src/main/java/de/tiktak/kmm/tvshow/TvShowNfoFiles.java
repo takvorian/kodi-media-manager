@@ -5,12 +5,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Component;
 
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.EpisodeNfoReader;
 import de.tiktak.kmm.nfo.EpisodeNfoWriter;
+import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.nfo.TvShowNfoReader;
 import de.tiktak.kmm.nfo.TvShowNfoWriter;
@@ -51,6 +53,16 @@ class TvShowNfoFiles {
         return episodeReader.read(nfo.file());
     }
 
+    /** Liest die {@code tvshow.nfo}; eine unlesbare Datei wird protokolliert. */
+    LoadedNfo<TvShowNfo> loadShow(TvNfoState nfo) {
+        return load(nfo, () -> readShow(nfo));
+    }
+
+    /** Liest die NFO einer Episodendatei; eine unlesbare Datei wird protokolliert. */
+    LoadedNfo<List<EpisodeNfo>> loadEpisodes(TvNfoState nfo) {
+        return load(nfo, () -> readEpisodes(nfo));
+    }
+
     /**
      * @throws de.tiktak.kmm.nfo.NfoException wenn die Datei nicht geschrieben werden kann
      */
@@ -67,6 +79,15 @@ class TvShowNfoFiles {
         Path file = TvShowFiles.episodeNfo(episodeFile);
         episodeWriter.write(file, episodes);
         return written(file);
+    }
+
+    private static <T> LoadedNfo<T> load(TvNfoState nfo, Supplier<T> reader) {
+        try {
+            return new LoadedNfo<>(nfo, Optional.of(reader.get()));
+        } catch (NfoException e) {
+            log.warn("Ignoring unreadable NFO: {}", e.getMessage());
+            return new LoadedNfo<>(nfo, Optional.empty());
+        }
     }
 
     private static TvNfoState written(Path file) {

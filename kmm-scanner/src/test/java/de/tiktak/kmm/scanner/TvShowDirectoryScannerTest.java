@@ -68,6 +68,8 @@ class TvShowDirectoryScannerTest {
                 Set.of(root.resolve("Privat")));
 
         assertThat(scanner(rules).scan(root)).isEmpty();
+        assertThat(scanner(rules).showDirectories(root)).containsExactly(root.resolve("Leer (2000)"));
+        assertThat(scanner(rules).scanShow(root.resolve("Leer (2000)"))).isEmpty();
     }
 
     @Test

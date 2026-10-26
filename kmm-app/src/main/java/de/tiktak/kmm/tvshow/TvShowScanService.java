@@ -4,9 +4,8 @@ import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -15,8 +14,7 @@ import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.plugin.api.MediaType;
-import de.tiktak.kmm.scanner.EpisodeCandidate;
-import de.tiktak.kmm.scanner.TvShowCandidate;
+import de.tiktak.kmm.scanner.TvShowDirectoryScanner;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
@@ -24,7 +22,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Durchsucht eine Serienquelle als Hintergrund-Job und übernimmt das Ergebnis in die Bibliothek.
- * Verzeichnisse und NFO-Zeitstempel werden außerhalb der Datenbanktransaktion gelesen.
+ * Verzeichnisse und NFOs werden außerhalb der Datenbanktransaktion gelesen, mehrere Serien gleichzeitig.
  */
 @Slf4j
 @Service
@@ -34,12 +32,14 @@ public class TvShowScanService {
     static final String SEARCHING_MESSAGE = "Verzeichnisse werden durchsucht";
     static final String SYNCHRONIZING_MESSAGE = "Bibliothek wird abgeglichen";
     static final int MAX_LISTED_FILES = 100;
+    /** Gleichzeitig eingelesene Serien; mehr bringt auf Netzlaufwerken kaum etwas und belastet das NAS. */
+    static final int PARALLEL_SHOWS = 8;
     private static final int UNKNOWN_TOTAL = 0;
 
     private final MediaSourceService sourceService;
     private final TvShowScannerFactory scannerFactory;
     private final TvShowLibrarySynchronizer synchronizer;
-    private final TvShowNfoFiles nfoFiles;
+    private final TvShowFolderReader folderReader;
     private final JobService jobService;
     private final ApplicationEventPublisher events;
 
@@ -57,19 +57,17 @@ public class TvShowScanService {
 
     TvShowScanResult scan(MediaSource source, Path directory, JobContext context) {
         context.reportProgress(0, UNKNOWN_TOTAL, SEARCHING_MESSAGE);
-        List<TvShowCandidate> candidates = findCandidates(source, directory);
-        List<ScannedTvShow> scanned = new ArrayList<>(candidates.size());
-        List<String> unrecognized = new ArrayList<>();
-        for (TvShowCandidate candidate : candidates) {
-            context.throwIfCancellationRequested();
-            context.reportProgress(scanned.size(), candidates.size(), candidate.title());
-            scanned.add(withNfos(candidate));
-            candidate.unrecognizedFiles().stream()
-                    .limit(Math.max(0, MAX_LISTED_FILES - unrecognized.size()))
-                    .forEach(file -> unrecognized.add(directory.relativize(file).toString()));
-        }
+        TvShowDirectoryScanner scanner = scannerFactory.create();
+        List<Path> showDirectories = findShowDirectories(source, scanner, directory);
+        KnownNfos known = synchronizer.knownNfos(source.getId());
+        List<ScannedTvShow> scanned = readShows(scanner, showDirectories, known, context);
         context.throwIfCancellationRequested();
-        context.reportProgress(candidates.size(), candidates.size(), SYNCHRONIZING_MESSAGE);
+        context.reportProgress(showDirectories.size(), showDirectories.size(), SYNCHRONIZING_MESSAGE);
+        List<String> unrecognized = scanned.stream()
+                .flatMap(show -> show.candidate().unrecognizedFiles().stream())
+                .limit(MAX_LISTED_FILES)
+                .map(file -> directory.relativize(file).toString())
+                .toList();
         TvShowScanResult result = synchronizer.synchronize(source.getId(), scanned, unrecognized);
         log.info("Scanned TV source '{}': {} shows added, {} removed; episodes {} added, {} updated, {} removed, "
                         + "{} unchanged; {} NFO errors", source.getName(), result.showsAdded(), result.showsRemoved(),
@@ -78,12 +76,18 @@ public class TvShowScanService {
         return result;
     }
 
-    private ScannedTvShow withNfos(TvShowCandidate candidate) {
-        Map<Path, TvNfoState> episodeNfos = new HashMap<>();
-        for (EpisodeCandidate episode : candidate.episodes()) {
-            nfoFiles.findEpisodeNfo(episode.file()).ifPresent(nfo -> episodeNfos.put(episode.file(), nfo));
-        }
-        return new ScannedTvShow(candidate, nfoFiles.findShowNfo(candidate.directory()), episodeNfos);
+    /** Liest die Serien parallel ein; das Ergebnis behält die Reihenfolge der Ordner. */
+    private List<ScannedTvShow> readShows(TvShowDirectoryScanner scanner, List<Path> showDirectories,
+                                          KnownNfos known, JobContext context) {
+        ReadProgress progress = new ReadProgress(context, showDirectories.size());
+        return ParallelReads.map(showDirectories, PARALLEL_SHOWS, "tv-scan-", showDirectory -> {
+            if (context.isCancellationRequested()) {
+                return Optional.<ScannedTvShow>empty();
+            }
+            Optional<ScannedTvShow> show = folderReader.read(scanner, showDirectory, known);
+            progress.showRead(showDirectory);
+            return show;
+        }).stream().flatMap(Optional::stream).toList();
     }
 
     private static Path scannableDirectory(MediaSource source) {
@@ -97,12 +101,30 @@ public class TvShowScanService {
         return directory;
     }
 
-    private List<TvShowCandidate> findCandidates(MediaSource source, Path directory) {
+    private List<Path> findShowDirectories(MediaSource source, TvShowDirectoryScanner scanner, Path directory) {
         try {
-            return scannerFactory.create().scan(directory);
+            return scanner.showDirectories(directory);
         } catch (UncheckedIOException e) {
             log.warn("Scanning TV source '{}' failed", source.getName(), e);
             throw TvShowProblemException.unreachable(source);
+        }
+    }
+
+    /** Meldet den Fortschritt je fertig eingelesener Serie; die Zähler steigen nie rückwärts. */
+    private static final class ReadProgress {
+
+        private final JobContext context;
+        private final int total;
+        private int done;
+
+        private ReadProgress(JobContext context, int total) {
+            this.context = context;
+            this.total = total;
+        }
+
+        synchronized void showRead(Path showDirectory) {
+            done++;
+            context.reportProgress(done, total, showDirectory.getFileName().toString());
         }
     }
 }

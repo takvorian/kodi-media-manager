@@ -38,6 +38,18 @@ public class TvShowDirectoryScanner {
      * @throws UncheckedIOException wenn das Quellverzeichnis nicht gelesen werden kann
      */
     public List<TvShowCandidate> scan(Path root) {
+        return showDirectories(root).stream()
+                .map(this::scanShow)
+                .flatMap(Optional::stream)
+                .toList();
+    }
+
+    /**
+     * @return die möglichen Serienordner der Quelle, sortiert; ob sie Episoden enthalten, prüft erst
+     *         {@link #scanShow(Path)}
+     * @throws UncheckedIOException wenn das Quellverzeichnis nicht gelesen werden kann
+     */
+    public List<Path> showDirectories(Path root) {
         Objects.requireNonNull(root, "root must not be null");
         try (Stream<Path> entries = Files.list(root)) {
             return entries
@@ -45,16 +57,18 @@ public class TvShowDirectoryScanner {
                     .filter(directory -> !rules.isIgnoredDirectory(directory.getFileName().toString()))
                     .filter(directory -> !rules.isExcludedDirectory(directory))
                     .sorted()
-                    .map(this::scanShow)
-                    .flatMap(Optional::stream)
                     .toList();
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
     }
 
-    /** Ordner ohne Videodateien sind keine Serie. */
-    private Optional<TvShowCandidate> scanShow(Path directory) {
+    /**
+     * Durchsucht einen Serienordner. Ordner ohne Videodateien sind keine Serie.
+     *
+     * @return die Serie oder leer, wenn der Ordner keine Videodateien enthält oder unlesbar ist
+     */
+    public Optional<TvShowCandidate> scanShow(Path directory) {
         EpisodeVisitor visitor = new EpisodeVisitor(directory);
         try {
             Files.walkFileTree(directory, visitor);

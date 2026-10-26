@@ -7,10 +7,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.intThat;
+import static org.mockito.ArgumentMatchers.startsWith;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -18,8 +21,8 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.IntStream;
 
@@ -61,7 +64,7 @@ class TvShowScanServiceTest {
     private TvShowLibrarySynchronizer synchronizer;
 
     @Mock
-    private TvShowNfoFiles nfoFiles;
+    private TvShowFolderReader folderReader;
 
     @Mock
     private JobService jobService;
@@ -96,50 +99,76 @@ class TvShowScanServiceTest {
     }
 
     @Test
-    void readsNfosAndListsAtMostAHundredUnrecognizedFiles() {
+    void readsShowsInParallelKeepsTheirOrderAndListsAtMostAHundredUnrecognizedFiles() {
         MediaSource source = givenSource(MediaType.TV_SHOW, directory);
-        Path episodeFile = directory.resolve("ALF/S01E01.avi");
-        TvNfoState nfo = new TvNfoState(directory.resolve("ALF/S01E01.nfo"), Instant.EPOCH);
-        List<Path> unrecognized = new ArrayList<>(IntStream.range(0, 150)
-                .mapToObj(index -> directory.resolve("ALF/x" + index + ".avi")).toList());
-        TvShowCandidate alf = new TvShowCandidate(directory.resolve("ALF"), "ALF", null,
-                List.of(new EpisodeCandidate(episodeFile, new EpisodeNumber(1, List.of(1)), null)), unrecognized);
+        KnownNfos known = new KnownNfos(Map.of("x", Instant.EPOCH), Map.of());
+        List<Path> folders = IntStream.range(0, 20).mapToObj(index -> directory.resolve("Serie " + index)).toList();
         when(scannerFactory.create()).thenReturn(scanner);
-        when(scanner.scan(directory)).thenReturn(List.of(alf));
-        when(nfoFiles.findEpisodeNfo(episodeFile)).thenReturn(Optional.of(nfo));
-        when(nfoFiles.findShowNfo(alf.directory())).thenReturn(Optional.empty());
-        TvShowScanResult expected = new TvShowScanResult(3, 1, 0, 1, 0, 0, 0, 0, List.of());
+        when(scanner.showDirectories(directory)).thenReturn(folders);
+        when(synchronizer.knownNfos(3)).thenReturn(known);
+        when(folderReader.read(eq(scanner), any(), eq(known))).thenAnswer(invocation -> {
+            Path folder = invocation.getArgument(1);
+            if (folder.endsWith("Serie 5")) {
+                return Optional.empty();
+            }
+            List<Path> unrecognized = IntStream.range(0, 10).mapToObj(index -> folder.resolve("x" + index + ".avi"))
+                    .toList();
+            EpisodeCandidate episode = new EpisodeCandidate(folder.resolve("S01E01.avi"),
+                    new EpisodeNumber(1, List.of(1)), null);
+            return Optional.of(new ScannedTvShow(new TvShowCandidate(folder, "x", null, List.of(episode),
+                    unrecognized), Optional.empty(), Map.of(), Optional.empty(), Map.of()));
+        });
+        TvShowScanResult expected = new TvShowScanResult(3, 19, 0, 19, 0, 0, 0, 0, List.of());
         when(synchronizer.synchronize(eq(3L), anyList(), anyList())).thenReturn(expected);
+        JobContext context = mock(JobContext.class);
 
-        assertThat(service.scan(source, directory, mock(JobContext.class))).isEqualTo(expected);
-        verify(events).publishEvent(new TvShowSourceScannedEvent(3, 2));
+        assertThat(service.scan(source, directory, context)).isEqualTo(expected);
+        verify(events).publishEvent(new TvShowSourceScannedEvent(3, 38));
+        verify(context).reportProgress(20, 20, TvShowScanService.SYNCHRONIZING_MESSAGE);
+        verify(context, times(20)).reportProgress(intThat(done -> done >= 1 && done <= 20), eq(20), startsWith("Serie "));
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<ScannedTvShow>> shows = ArgumentCaptor.forClass(List.class);
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<String>> files = ArgumentCaptor.forClass(List.class);
         verify(synchronizer).synchronize(eq(3L), shows.capture(), files.capture());
-        assertThat(shows.getValue().getFirst().episodeNfos()).containsEntry(episodeFile, nfo);
+        assertThat(shows.getValue()).extracting(ScannedTvShow::path).containsExactlyElementsOf(folders.stream()
+                .filter(folder -> !folder.endsWith("Serie 5")).map(Path::toString).toList());
         assertThat(files.getValue()).hasSize(TvShowScanService.MAX_LISTED_FILES).first()
-                .isEqualTo(Path.of("ALF", "x0.avi").toString());
+                .isEqualTo(Path.of("Serie 0", "x0.avi").toString());
     }
 
     @Test
     void stopsWhenCancelledAndReportsUnreadableSources() {
         MediaSource source = givenSource(MediaType.TV_SHOW, directory);
         when(scannerFactory.create()).thenReturn(scanner);
-        when(scanner.scan(directory)).thenReturn(List.of(new TvShowCandidate(directory, "x", null, List.of(),
-                List.of())));
+        when(scanner.showDirectories(directory)).thenReturn(List.of(directory.resolve("x")));
+        when(synchronizer.knownNfos(3)).thenReturn(KnownNfos.NONE);
         JobContext cancelled = mock(JobContext.class);
+        when(cancelled.isCancellationRequested()).thenReturn(true);
         doThrow(new JobCancelledException()).when(cancelled).throwIfCancellationRequested();
 
         assertThatExceptionOfType(JobCancelledException.class)
                 .isThrownBy(() -> service.scan(source, directory, cancelled));
+        verify(folderReader, never()).read(any(), any(), any());
         verify(synchronizer, never()).synchronize(anyLong(), anyList(), anyList());
 
-        when(scanner.scan(directory)).thenThrow(new UncheckedIOException(new IOException("weg")));
+        when(scanner.showDirectories(directory)).thenThrow(new UncheckedIOException(new IOException("weg")));
         assertThatThrownBy(() -> service.scan(source, directory, mock(JobContext.class)))
                 .isInstanceOf(TvShowProblemException.class);
+    }
+
+    @Test
+    void passesOnFailuresWhileReadingAShow() {
+        MediaSource source = givenSource(MediaType.TV_SHOW, directory);
+        when(scannerFactory.create()).thenReturn(scanner);
+        when(scanner.showDirectories(directory)).thenReturn(List.of(directory.resolve("x")));
+        when(synchronizer.knownNfos(3)).thenReturn(KnownNfos.NONE);
+        when(folderReader.read(any(), any(), any())).thenThrow(new IllegalStateException("kaputt"));
+
+        assertThatThrownBy(() -> service.scan(source, directory, mock(JobContext.class)))
+                .isInstanceOf(IllegalStateException.class).hasMessage("kaputt");
+        verify(synchronizer, never()).synchronize(anyLong(), anyList(), anyList());
     }
 
     private MediaSource givenSource(MediaType type, Path path) {

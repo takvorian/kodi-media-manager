@@ -4,9 +4,11 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -14,19 +16,16 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.EpisodeNfo;
-import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.scanner.EpisodeCandidate;
 import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 
 /**
  * Gleicht die Serien einer Quelle mit dem Scan-Ergebnis ab: Neue Serien und Episoden werden angelegt,
  * verschwundene entfernt. Angaben kommen aus den NFOs; bekannte Einträge werden nur aktualisiert,
  * wenn sich ihre NFO seit dem letzten Einlesen geändert hat.
  */
-@Slf4j
 @Component
 @RequiredArgsConstructor
 class TvShowLibrarySynchronizer {
@@ -66,20 +65,33 @@ class TvShowLibrarySynchronizer {
                 outcome.updated, outcome.removed, outcome.unchanged, outcome.nfoErrors, unrecognizedFiles);
     }
 
+    /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs, damit der Scan nur geänderte liest. */
+    @Transactional(readOnly = true)
+    KnownNfos knownNfos(long sourceId) {
+        Map<String, Instant> shows = new HashMap<>();
+        for (Object[] row : showRepository.findNfoTimestampsBySourceId(sourceId)) {
+            if (row[1] != null) {
+                shows.put((String) row[0], (Instant) row[1]);
+            }
+        }
+        Map<String, Set<Instant>> episodeFiles = new HashMap<>();
+        for (Object[] row : episodeRepository.findNfoTimestampsBySourceId(sourceId)) {
+            episodeFiles.computeIfAbsent((String) row[0], file -> new HashSet<>()).add((Instant) row[1]);
+        }
+        return new KnownNfos(shows, episodeFiles);
+    }
+
     private void synchronizeShowNfo(TvShow show, ScannedTvShow scanned, Outcome outcome) {
         Optional<TvNfoState> nfo = scanned.showNfo();
         if (nfo.isEmpty() || nfo.get().modifiedAt().equals(show.getNfoModifiedAt())) {
             return;
         }
-        try {
-            TvShowNfo content = nfoFiles.readShow(nfo.get());
-            show.applyMetadata(TvNfoMapper.toMetadata(content, scanned.candidate().title(),
-                    scanned.candidate().year()));
-            show.applyExtras(TvNfoMapper.toExtras(content));
-        } catch (NfoException e) {
-            log.warn("Ignoring unreadable NFO: {}", e.getMessage());
-            outcome.nfoErrors++;
-        }
+        Optional<TvShowNfo> content = scanned.loadedShowNfo(nfo.get())
+                .orElseGet(() -> nfoFiles.loadShow(nfo.get())).content();
+        content.ifPresentOrElse(read -> {
+            show.applyMetadata(TvNfoMapper.toMetadata(read, scanned.candidate().title(), scanned.candidate().year()));
+            show.applyExtras(TvNfoMapper.toExtras(read));
+        }, () -> outcome.nfoErrors++);
         show.markNfoSynchronized(nfo.get().modifiedAt());
     }
 
@@ -89,7 +101,7 @@ class TvShowLibrarySynchronizer {
         List<Episode> created = new ArrayList<>();
         for (EpisodeCandidate candidate : scanned.candidate().episodes()) {
             TvNfoState nfo = scanned.episodeNfos().get(candidate.file());
-            NfoContent content = new NfoContent(nfo);
+            NfoContent content = new NfoContent(nfo, scanned.loadedEpisodeNfo(candidate.file(), nfo));
             for (int number : candidate.number().episodes()) {
                 int season = candidate.number().season();
                 Episode episode = remaining.remove(new EpisodeKey(candidate.file().toString(), season, number));
@@ -160,25 +172,25 @@ class TvShowLibrarySynchronizer {
         }
     }
 
-    /** Liest die NFO einer Datei höchstens einmal, auch bei Mehrfachepisoden. */
+    /**
+     * Inhalt der NFO einer Datei, auch bei Mehrfachepisoden höchstens einmal gelesen. Normalerweise hat
+     * der Scan sie bereits gelesen; nur wenn sie sich seither geändert hat, wird sie hier gelesen.
+     */
     private static final class NfoContent {
 
         private final TvNfoState nfo;
+        private final Optional<LoadedNfo<List<EpisodeNfo>>> loaded;
         private Optional<List<EpisodeNfo>> episodes;
         private boolean failureReported;
 
-        private NfoContent(TvNfoState nfo) {
+        private NfoContent(TvNfoState nfo, Optional<LoadedNfo<List<EpisodeNfo>>> loaded) {
             this.nfo = nfo;
+            this.loaded = loaded;
         }
 
         Optional<List<EpisodeNfo>> episodes(TvShowNfoFiles files) {
             if (episodes == null) {
-                try {
-                    episodes = Optional.of(files.readEpisodes(nfo));
-                } catch (NfoException e) {
-                    log.warn("Ignoring unreadable NFO: {}", e.getMessage());
-                    episodes = Optional.empty();
-                }
+                episodes = loaded.orElseGet(() -> files.loadEpisodes(nfo)).content();
             }
             return episodes;
         }

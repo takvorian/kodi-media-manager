@@ -14,6 +14,11 @@ interface EpisodeRepository extends JpaRepository<Episode, Long> {
 
     List<Episode> findByFilePathHash(String filePathHash);
 
+    /** Datei und Änderungszeit der eingelesenen NFO je Episode einer Quelle. */
+    @Query("SELECT e.filePath, e.nfoModifiedAt FROM Episode e "
+            + "WHERE e.tvShowId IN (SELECT s.id FROM TvShow s WHERE s.sourceId = :sourceId)")
+    List<Object[]> findNfoTimestampsBySourceId(long sourceId);
+
     /** Anzahl der Episoden je Serie als Paare {@code [tvShowId, count]}. */
     @Query("SELECT e.tvShowId, COUNT(e) FROM Episode e WHERE e.tvShowId IN :tvShowIds GROUP BY e.tvShowId")
     List<Object[]> countByTvShowIds(Collection<Long> tvShowIds);
