@@ -64,6 +64,16 @@ describe('KodiService', () => {
     expect(refreshed).toEqual([]);
   });
 
+  it('imports the watched status from Kodi', () => {
+    service.importSourcePlayback(1).subscribe();
+    service.importMoviePlayback(5).subscribe();
+    service.importEpisodePlayback(12).subscribe();
+
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/playback' }).flush({});
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/playback' }).flush({});
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/playback' }).flush({});
+  });
+
   it('tests the connection', () => {
     let received: KodiConnectionTest | undefined;
 

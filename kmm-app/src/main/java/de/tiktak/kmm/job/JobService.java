@@ -14,6 +14,7 @@ import java.util.stream.Stream;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
+import org.springframework.web.ErrorResponseException;
 
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
@@ -126,8 +127,11 @@ public class JobService {
         events.publishEvent(new JobChangedEvent(snapshot));
     }
 
+    /** Fachliche Fehler bringen eine lesbare Beschreibung mit; die technische Meldung wäre nur der HTTP-Status. */
     private static String errorMessage(RuntimeException exception) {
-        String message = exception.getMessage();
+        String message = exception instanceof ErrorResponseException problem && problem.getBody().getDetail() != null
+                ? problem.getBody().getDetail()
+                : exception.getMessage();
         return message == null || message.isBlank() ? UNEXPECTED_ERROR : message;
     }
 }

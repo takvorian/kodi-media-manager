@@ -131,6 +131,26 @@ describe('SourceList', () => {
     expect(snackBarMessages).toEqual(['Wohnzimmer: Kodi sucht nach neuen Filmen.', 'Quelle nicht gefunden']);
   });
 
+  it('imports the watched status of a source from Kodi as job', async () => {
+    await loadSources([films, series]);
+    const playbackJob = job({ id: 'job-7', key: 'kodi-playback:1', title: 'Gesehen-Status „Filme“ aus Kodi' });
+
+    button('.kodi-playback-button').click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/playback' }).flush(playbackJob);
+    fixture.detectChanges();
+    expect(element().querySelector('.job-progress')).not.toBeNull();
+    events.emit({
+      ...playbackJob,
+      status: 'SUCCEEDED',
+      result: { sourceId: 1, host: 'Wohnzimmer', updated: 1, unchanged: 2, notInKodi: 0, failed: 0, failures: [] },
+    });
+    fixture.detectChanges();
+
+    expect(snackBarMessages).toEqual([
+      'Gesehen-Status „Filme“ aus Kodi (Wohnzimmer) abgeschlossen: 1 übernommen, 2 unverändert, 0 in Kodi unbekannt.',
+    ]);
+  });
+
   it('shows a hint without sources', async () => {
     await loadSources([]);
 

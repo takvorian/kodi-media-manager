@@ -13,6 +13,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.web.ErrorResponseException;
 
 class JobServiceTest {
 
@@ -68,6 +69,19 @@ class JobServiceTest {
             assertThat(job.status()).isEqualTo(JobStatus.FAILED);
             assertThat(job.message()).isEqualTo("Verzeichnis weg");
         });
+    }
+
+    @Test
+    void recordsTheReadableDetailOfProblemExceptions() {
+        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+            ErrorResponseException problem = new ErrorResponseException(HttpStatus.BAD_GATEWAY);
+            problem.getBody().setDetail("Kodi ist nicht erreichbar.");
+            throw problem;
+        });
+
+        runSubmittedTasks();
+
+        assertThat(service.find(started.id()).message()).isEqualTo("Kodi ist nicht erreichbar.");
     }
 
     @Test

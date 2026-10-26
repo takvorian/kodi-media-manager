@@ -157,6 +157,37 @@ describe('MovieDetail', () => {
     expect(button('.kodi-refresh-button').disabled).toBe(false);
   });
 
+  it('imports the watched status from Kodi without discarding unsaved changes', async () => {
+    await load(heat);
+    await type('title', 'Heat (Director’s Cut)');
+
+    button('.kodi-playback-button').click();
+    fixture.detectChanges();
+    expect(button('.kodi-playback-button').disabled).toBe(true);
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/playback' }).flush({
+      host: 'Wohnzimmer',
+      outcome: 'UPDATED',
+      message: '„Heat“ aus Kodi übernommen: 2× gesehen.',
+      playCount: 2,
+      lastPlayedAt: '2025-04-03T21:14:16Z',
+    });
+    await fixture.whenStable();
+
+    expect(element().querySelector('app-movie-supplement')?.textContent).toContain('2×');
+    expect(input('title').value).toBe('Heat (Director’s Cut)');
+    button('.kodi-playback-button').click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/playback' })
+      .flush({ detail: 'Kein Kodi-Gerät hat eine Pfad-Zuordnung.' }, { status: 422, statusText: 'Unprocessable' });
+    fixture.detectChanges();
+
+    expect(snackBarMessages).toEqual([
+      'Wohnzimmer: „Heat“ aus Kodi übernommen: 2× gesehen.',
+      'Kein Kodi-Gerät hat eine Pfad-Zuordnung.',
+    ]);
+    expect(button('.kodi-playback-button').disabled).toBe(false);
+  });
+
   it('announces where a missing NFO will be created', async () => {
     await load({ ...heat, nfo: { path: '/media/filme/Heat.nfo', exists: false, modifiedAt: null } });
 

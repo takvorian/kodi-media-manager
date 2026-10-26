@@ -68,6 +68,7 @@
           @if (canScrape(source)) {
             <button matButton class="scrape-button" (click)="autoScrape(source)">Scrapen</button>
             <button matButton class="kodi-scan-button" (click)="scanInKodi(source)">Kodi-Scan</button>
+            <button matButton class="kodi-playback-button" (click)="importPlayback(source)">Gesehen-Status</button>
           }
         }
         <button matButton class="delete-button" (click)="delete(source)" [disabled]="!!job">Entfernen</button>

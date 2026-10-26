@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
-import { kodiSyncSummary } from '../kodi/kodi';
+import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { problemMessage } from '../shared/problem-message';
@@ -51,16 +51,21 @@ export class EpisodeDetail {
   protected readonly form = createEpisodeMetadataForm(inject(NonNullableFormBuilder));
   protected readonly saving = signal(false);
   protected readonly refreshingKodi = signal(false);
+  protected readonly importingPlayback = signal(false);
   protected readonly artwork = computed(() => this.artworkService.forEpisode(this.id()));
   protected readonly episode = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.tvShowService.findEpisode(params),
   });
 
+  /** Eigenes Signal, damit Änderungen außerhalb der Metadaten (Gesehen-Status) das Formular nicht zurücksetzen. */
+  private readonly metadata = computed(() => (this.episode.hasValue() ? this.episode.value().metadata : null));
+
   constructor() {
     effect(() => {
-      if (this.episode.hasValue()) {
-        this.form.reset(toEpisodeFormValue(this.episode.value().metadata));
+      const metadata = this.metadata();
+      if (metadata) {
+        this.form.reset(toEpisodeFormValue(metadata));
       }
     });
   }
@@ -107,6 +112,31 @@ export class EpisodeDetail {
         this.notify(problemMessage(error));
       },
     });
+  }
+
+  /** Holt Wiedergaben und letzte Wiedergabe aus Kodi und schreibt sie in NFO und Bibliothek. */
+  protected importPlayback(): void {
+    this.importingPlayback.set(true);
+    this.kodiService.importEpisodePlayback(this.id()).subscribe({
+      next: (result) => {
+        this.importingPlayback.set(false);
+        this.showPlayback(result);
+        this.notify(`${result.host}: ${result.message}`);
+      },
+      error: (error: unknown) => {
+        this.importingPlayback.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
+  private showPlayback(result: KodiPlaybackResult): void {
+    this.episode.update((details) =>
+      details && {
+        ...details,
+        extras: { ...details.extras, playCount: result.playCount, lastPlayed: result.lastPlayedAt },
+      },
+    );
   }
 
   private notify(message: string): void {

@@ -1,5 +1,5 @@
 import { DatePipe } from '@angular/common';
-import { Component, effect, inject, input, numberAttribute, signal } from '@angular/core';
+import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
-import { kodiSyncSummary } from '../kodi/kodi';
+import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetailsView } from '../shared/stream-details';
@@ -54,15 +54,20 @@ export class MovieDetail {
   protected readonly saving = signal(false);
   protected readonly searchingOnline = signal(false);
   protected readonly refreshingKodi = signal(false);
+  protected readonly importingPlayback = signal(false);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),
   });
 
+  /** Eigenes Signal, damit Änderungen außerhalb der Metadaten (Gesehen-Status) das Formular nicht zurücksetzen. */
+  private readonly metadata = computed(() => (this.movie.hasValue() ? this.movie.value().metadata : null));
+
   constructor() {
     effect(() => {
-      if (this.movie.hasValue()) {
-        this.showInForm(this.movie.value());
+      const metadata = this.metadata();
+      if (metadata) {
+        this.form.reset(toFormValue(metadata));
       }
     });
   }
@@ -113,6 +118,22 @@ export class MovieDetail {
     });
   }
 
+  /** Holt Wiedergaben und letzte Wiedergabe aus Kodi und schreibt sie in NFO und Bibliothek. */
+  protected importPlayback(): void {
+    this.importingPlayback.set(true);
+    this.kodiService.importMoviePlayback(this.id()).subscribe({
+      next: (result) => {
+        this.importingPlayback.set(false);
+        this.showPlayback(result);
+        this.notify(`${result.host}: ${result.message}`);
+      },
+      error: (error: unknown) => {
+        this.importingPlayback.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
   protected reset(): void {
     if (this.movie.hasValue()) {
       this.showInForm(this.movie.value());
@@ -121,6 +142,15 @@ export class MovieDetail {
 
   private showInForm(details: MovieDetails): void {
     this.form.reset(toFormValue(details.metadata));
+  }
+
+  private showPlayback(result: KodiPlaybackResult): void {
+    this.movie.update((details) =>
+      details && {
+        ...details,
+        supplement: { ...details.supplement, playCount: result.playCount, lastPlayed: result.lastPlayedAt },
+      },
+    );
   }
 
   private notify(message: string): void {

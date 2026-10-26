@@ -90,7 +90,7 @@ final class TvNfoMapper {
         return local == null ? null : local.atZone(zone).toInstant();
     }
 
-    private static LocalDateTime toLocal(Instant instant, ZoneId zone) {
+    static LocalDateTime toLocal(Instant instant, ZoneId zone) {
         return instant == null ? null : LocalDateTime.ofInstant(instant, zone);
     }
 

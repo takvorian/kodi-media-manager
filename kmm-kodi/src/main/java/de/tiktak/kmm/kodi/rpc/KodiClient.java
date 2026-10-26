@@ -8,6 +8,10 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -32,6 +36,9 @@ public class KodiClient {
     private static final int OK = 200;
     private static final int UNAUTHORIZED = 401;
     private static final String DEFAULT_NAME = "Kodi";
+    /** Einträge je Anfrage beim Lesen ganzer Quellen; hält Antworten über langsame Verbindungen klein. */
+    static final int PAGE_SIZE = 500;
+    private static final DateTimeFormatter KODI_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private final HttpClient httpClient;
     private final Duration requestTimeout;
@@ -132,6 +139,65 @@ public class KodiClient {
      */
     public void scan(KodiEndpoint endpoint, String directory) {
         call(endpoint, "VideoLibrary.Scan", Map.of("directory", directory, "showdialogs", false));
+    }
+
+    /**
+     * Liefert den Wiedergabestand aller Filme in oder unterhalb des Verzeichnisses.
+     *
+     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     */
+    public List<KodiPlayback> moviePlaybacks(KodiEndpoint endpoint, String directory) {
+        return playbacks(endpoint, "VideoLibrary.GetMovies", "movies", directory, List.of("file", "playcount",
+                "lastplayed"));
+    }
+
+    /**
+     * Liefert den Wiedergabestand aller Episoden in oder unterhalb des Verzeichnisses.
+     *
+     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     */
+    public List<KodiPlayback> episodePlaybacks(KodiEndpoint endpoint, String directory) {
+        return playbacks(endpoint, "VideoLibrary.GetEpisodes", "episodes", directory, List.of("file", "season",
+                "episode", "playcount", "lastplayed"));
+    }
+
+    private List<KodiPlayback> playbacks(KodiEndpoint endpoint, String method, String resultKey, String directory,
+                                         List<String> properties) {
+        Map<String, Object> filter = Map.of("field", "path", "operator", "startswith", "value", directory);
+        List<KodiPlayback> playbacks = new ArrayList<>();
+        int total;
+        do {
+            int start = playbacks.size();
+            JsonNode result = call(endpoint, method, Map.of("filter", filter, "properties", properties,
+                    "limits", Map.of("start", start, "end", start + PAGE_SIZE)));
+            JsonNode items = result.path(resultKey);
+            items.forEach(item -> playbacks.add(playback(item)));
+            total = result.path("limits").path("total").asInt(0);
+            if (items.isEmpty()) {
+                break;
+            }
+        } while (playbacks.size() < total);
+        return playbacks;
+    }
+
+    private static KodiPlayback playback(JsonNode item) {
+        return new KodiPlayback(item.path("file").asString(), optionalInt(item.path("season")),
+                optionalInt(item.path("episode")), item.path("playcount").asInt(0),
+                dateTime(item.path("lastplayed").asString("")));
+    }
+
+    private static Integer optionalInt(JsonNode node) {
+        return node.isNumber() ? node.asInt() : null;
+    }
+
+    /** Kodi meldet „nie gespielt“ als leeren Text. */
+    private static LocalDateTime dateTime(String value) {
+        try {
+            return value.isBlank() ? null : LocalDateTime.parse(value, KODI_DATE_TIME);
+        } catch (DateTimeParseException e) {
+            log.debug("Ignoring unparsable Kodi date '{}'", value);
+            return null;
+        }
     }
 
     private JsonNode call(KodiEndpoint endpoint, String method, Map<String, Object> params) {

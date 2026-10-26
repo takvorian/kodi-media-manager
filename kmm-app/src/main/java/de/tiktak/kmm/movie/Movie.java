@@ -266,6 +266,11 @@ public class Movie {
         this.addedAt = Objects.requireNonNull(newAddedAt, "addedAt must not be null");
     }
 
+    void changePlayback(Integer newPlayCount, Instant newLastPlayedAt) {
+        this.playCount = newPlayCount;
+        this.lastPlayedAt = newLastPlayedAt;
+    }
+
     void markNfoSynchronized(Instant nfoModifiedAt) {
         this.nfoModifiedAt = Objects.requireNonNull(nfoModifiedAt, "nfoModifiedAt must not be null");
     }

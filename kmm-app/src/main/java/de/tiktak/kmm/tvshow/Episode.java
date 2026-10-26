@@ -169,6 +169,11 @@ public class Episode {
         this.addedAt = Objects.requireNonNull(newAddedAt, "addedAt must not be null");
     }
 
+    void changePlayback(Integer newPlayCount, Instant newLastPlayedAt) {
+        this.playCount = newPlayCount;
+        this.lastPlayedAt = newLastPlayedAt;
+    }
+
     void markNfoSynchronized(Instant modifiedAt) {
         this.nfoModifiedAt = Objects.requireNonNull(modifiedAt, "modifiedAt must not be null");
     }

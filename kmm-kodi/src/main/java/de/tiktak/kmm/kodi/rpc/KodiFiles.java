@@ -1,6 +1,7 @@
 package de.tiktak.kmm.kodi.rpc;
 
 import java.util.Arrays;
+import java.util.List;
 
 /**
  * Vergleicht Dateipfade so, wie Kodi sie in seiner Bibliothek speichert. Kodi verwendet je nach
@@ -30,14 +31,22 @@ final class KodiFiles {
 
     /**
      * @param kodiFile Datei aus Kodis Bibliothek, ggf. ein Stapel
-     * @param file     gesuchte Datei; bei mehrteiligen Filmen der erste Teil
+     * @return die einzelnen Dateien, bei einem Stapel alle Teile
      */
-    static boolean matches(String kodiFile, String file) {
+    static List<String> parts(String kodiFile) {
         if (kodiFile.regionMatches(true, 0, STACK_PREFIX, 0, STACK_PREFIX.length())) {
             return Arrays.stream(kodiFile.substring(STACK_PREFIX.length()).split(STACK_SEPARATOR))
                     .map(part -> part.replace(ESCAPED_COMMA, ","))
-                    .anyMatch(part -> part.equalsIgnoreCase(file));
+                    .toList();
         }
-        return kodiFile.equalsIgnoreCase(file);
+        return List.of(kodiFile);
+    }
+
+    /**
+     * @param kodiFile Datei aus Kodis Bibliothek, ggf. ein Stapel
+     * @param file     gesuchte Datei; bei mehrteiligen Filmen der erste Teil
+     */
+    static boolean matches(String kodiFile, String file) {
+        return parts(kodiFile).stream().anyMatch(part -> part.equalsIgnoreCase(file));
     }
 }

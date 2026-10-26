@@ -108,6 +108,28 @@ describe('EpisodeDetail', () => {
     expect(snackBarMessages).toEqual(['Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.', 'Kodi nicht erreichbar']);
   });
 
+  it('imports the watched status from Kodi', async () => {
+    await load(gestatten);
+
+    element().querySelector<HTMLButtonElement>('.kodi-playback-button')!.click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/playback' }).flush({
+      host: 'Wohnzimmer',
+      outcome: 'UPDATED',
+      message: '„ALF S01E16“ aus Kodi übernommen: 3× gesehen.',
+      playCount: 3,
+      lastPlayedAt: '2025-04-03T21:14:16Z',
+    });
+    await fixture.whenStable();
+
+    expect(element().textContent).toContain('3×');
+    element().querySelector<HTMLButtonElement>('.kodi-playback-button')!.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/playback' })
+      .flush({ detail: 'Kodi nicht erreichbar' }, { status: 502, statusText: 'Bad Gateway' });
+
+    expect(snackBarMessages).toEqual(['Wohnzimmer: „ALF S01E16“ aus Kodi übernommen: 3× gesehen.', 'Kodi nicht erreichbar']);
+  });
+
   it('saves the metadata', async () => {
     await load({ ...gestatten, nfo: { ...gestatten.nfo, exists: false, modifiedAt: null } });
     expect(element().querySelector('.nfo-status')?.textContent).toContain('Noch keine NFO');

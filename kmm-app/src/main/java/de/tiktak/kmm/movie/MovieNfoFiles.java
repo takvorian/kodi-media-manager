@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,6 +15,7 @@ import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.NfoReader;
 import de.tiktak.kmm.nfo.NfoWriter;
+import de.tiktak.kmm.nfo.PlaybackNfoWriter;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,7 @@ class MovieNfoFiles {
 
     private final NfoReader reader;
     private final NfoWriter writer;
+    private final PlaybackNfoWriter playbackWriter = new PlaybackNfoWriter();
 
     Optional<NfoFileState> find(CompanionFiles companionFiles) {
         return companionFiles.nfoCandidates().stream()
@@ -54,6 +57,18 @@ class MovieNfoFiles {
         MovieNfo nfo = MovieNfoMapper.toNfo(metadata, supplement, existingUniqueIds(existing));
         writer.write(target, nfo);
         return state(target).orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + target));
+    }
+
+    /**
+     * Schreibt nur den Wiedergabestand in die vorhandene NFO.
+     *
+     * @return Zustand der geschriebenen Datei
+     * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
+     */
+    NfoFileState writePlayback(NfoFileState nfoFile, Integer playCount, LocalDateTime lastPlayed) {
+        playbackWriter.writeMovie(nfoFile.file(), playCount, lastPlayed);
+        return state(nfoFile.file())
+                .orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + nfoFile.file()));
     }
 
     private Map<String, String> existingUniqueIds(Optional<NfoFileState> existing) {

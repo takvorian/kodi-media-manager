@@ -25,17 +25,18 @@ public class EpisodeNfoWriter {
                 .orElseGet(NfoFileWriter::newContainer);
         Document document = container.getOwnerDocument();
         for (EpisodeNfo episode : episodes) {
-            Element element = existing(container, episode)
+            Element element = existing(container, episode.season(), episode.episode())
                     .orElseGet(() -> NfoDomEditor.appendChild(document, container, NfoElements.EPISODE_DETAILS));
             apply(document, element, episode);
         }
         NfoFileWriter.write(nfoFile, NfoDocuments.children(container, NfoElements.EPISODE_DETAILS));
     }
 
-    private static Optional<Element> existing(Element container, EpisodeNfo episode) {
+    /** Das {@code <episodedetails>} der Episode innerhalb einer gelesenen NFO. */
+    static Optional<Element> existing(Element container, int season, int episode) {
         List<Element> elements = NfoDocuments.children(container, NfoElements.EPISODE_DETAILS);
         Optional<Element> matching = elements.stream()
-                .filter(element -> EpisodeNfoReader.fromXml(element).describes(episode.season(), episode.episode()))
+                .filter(element -> EpisodeNfoReader.fromXml(element).describes(season, episode))
                 .findFirst();
         if (matching.isPresent()) {
             return matching;

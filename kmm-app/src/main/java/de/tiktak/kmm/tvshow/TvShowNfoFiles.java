@@ -3,6 +3,7 @@ package de.tiktak.kmm.tvshow;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Supplier;
@@ -13,6 +14,7 @@ import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.EpisodeNfoReader;
 import de.tiktak.kmm.nfo.EpisodeNfoWriter;
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.nfo.PlaybackNfoWriter;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.nfo.TvShowNfoReader;
 import de.tiktak.kmm.nfo.TvShowNfoWriter;
@@ -30,6 +32,7 @@ class TvShowNfoFiles {
     private final TvShowNfoWriter showWriter = new TvShowNfoWriter();
     private final EpisodeNfoReader episodeReader = new EpisodeNfoReader();
     private final EpisodeNfoWriter episodeWriter = new EpisodeNfoWriter();
+    private final PlaybackNfoWriter playbackWriter = new PlaybackNfoWriter();
 
     Optional<TvNfoState> findShowNfo(Path showDirectory) {
         return state(TvShowFiles.tvShowNfo(showDirectory));
@@ -79,6 +82,17 @@ class TvShowNfoFiles {
         Path file = TvShowFiles.episodeNfo(episodeFile);
         episodeWriter.write(file, episodes);
         return written(file);
+    }
+
+    /**
+     * Schreibt nur den Wiedergabestand der Episode in ihre vorhandene NFO.
+     *
+     * @throws de.tiktak.kmm.nfo.NfoException wenn die NFO die Episode nicht enthält oder nicht geschrieben
+     *                                        werden kann
+     */
+    TvNfoState writePlayback(TvNfoState nfo, int season, int episode, Integer playCount, LocalDateTime lastPlayed) {
+        playbackWriter.writeEpisode(nfo.file(), season, episode, playCount, lastPlayed);
+        return written(nfo.file());
     }
 
     private static <T> LoadedNfo<T> load(TvNfoState nfo, Supplier<T> reader) {

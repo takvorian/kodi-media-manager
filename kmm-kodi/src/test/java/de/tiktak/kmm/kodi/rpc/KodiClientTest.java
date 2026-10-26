@@ -11,7 +11,9 @@ import java.net.ServerSocket;
 import java.net.http.HttpClient;
 import java.net.http.HttpConnectTimeoutException;
 import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -125,6 +127,54 @@ class KodiClientTest {
         assertThat(kodi.calls().getFirst().params().path("filter").path("value").asString())
                 .isEqualTo("smb://nas/serien/Lost/S1/");
         assertThat(client.findEpisode(kodi.endpoint(), "smb://nas/serien/Lost/S1/Lost S01E03.mkv", 1, 4)).isEmpty();
+    }
+
+    @Test
+    void readsMoviePlaybacksBelowADirectoryPageByPage() {
+        kodi.respond("VideoLibrary.GetMovies", """
+                {"limits": {"total": 2}, "movies": [{"movieid": 1, "label": "About Schmidt", "playcount": 1,
+                  "lastplayed": "2025-04-03 23:14:16",
+                  "file": "stack://smb://nas/filme/A/About Schmidt CD1.avi , smb://nas/filme/A/About Schmidt CD2.avi"}]}
+                """);
+
+        List<KodiPlayback> playbacks = client.moviePlaybacks(kodi.endpoint(), "smb://nas/filme/");
+
+        assertThat(playbacks).hasSize(2).first().satisfies(playback -> {
+            assertThat(playback.playCount()).isEqualTo(1);
+            assertThat(playback.lastPlayed()).isEqualTo(LocalDateTime.of(2025, 4, 3, 23, 14, 16));
+            assertThat(playback.isMovie("smb://nas/filme/A/About Schmidt CD1.avi")).isTrue();
+            assertThat(playback.files()).containsExactly("smb://nas/filme/A/About Schmidt CD1.avi",
+                    "smb://nas/filme/A/About Schmidt CD2.avi");
+            assertThat(playback.isEpisode("smb://nas/filme/A/About Schmidt CD1.avi", 1, 1)).isFalse();
+        });
+        assertThat(kodi.calls()).extracting(call -> call.params().path("limits").path("start").asInt())
+                .containsExactly(0, 1);
+        assertThat(kodi.calls().getFirst().params().path("filter"))
+                .isEqualTo(json("""
+                        {"field": "path", "operator": "startswith", "value": "smb://nas/filme/"}"""));
+    }
+
+    @Test
+    void readsEpisodePlaybacksAndStopsOnAnEmptyPage() {
+        kodi.respond("VideoLibrary.GetEpisodes", """
+                {"limits": {"total": 1}, "episodes": [{"episodeid": 12, "season": 1, "episode": 2, "playcount": 0,
+                  "lastplayed": "", "file": "smb://nas/serien/Lost/S1/Lost S01E01E02.mkv"}]}
+                """);
+
+        List<KodiPlayback> playbacks = client.episodePlaybacks(kodi.endpoint(), "smb://nas/serien/");
+        assertThat(playbacks).singleElement().satisfies(playback -> {
+            assertThat(playback.lastPlayed()).isNull();
+            assertThat(playback.isEpisode("smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", 1, 2)).isTrue();
+            assertThat(playback.isEpisode("smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", 1, 1)).isFalse();
+            assertThat(playback.isMovie("smb://nas/serien/Lost/S1/Lost S01E01E02.mkv")).isFalse();
+        });
+
+        kodi.respond("VideoLibrary.GetEpisodes", "{\"limits\": {\"total\": 5}, \"episodes\": [{\"file\": \"x\","
+                + " \"season\": 1, \"episode\": 1, \"lastplayed\": \"gestern\"}]}");
+        assertThat(client.episodePlaybacks(kodi.endpoint(), "smb://nas/serien/")).hasSize(5)
+                .allSatisfy(playback -> assertThat(playback.lastPlayed()).isNull());
+        kodi.respond("VideoLibrary.GetEpisodes", "{\"limits\": {\"total\": 5}}");
+        assertThat(client.episodePlaybacks(kodi.endpoint(), "smb://nas/serien/")).isEmpty();
     }
 
     @Test

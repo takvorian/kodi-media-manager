@@ -14,7 +14,7 @@ import { Observable, filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
-import { kodiSyncSummary } from '../kodi/kodi';
+import { KODI_PLAYBACK_JOB_KEY_PREFIX, kodiPlaybackJobKey, kodiPlaybackSummary, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
@@ -88,6 +88,12 @@ export class SourceList {
         takeUntilDestroyed(),
       )
       .subscribe((job) => this.onAutoScrapeFinished(job));
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key.startsWith(KODI_PLAYBACK_JOB_KEY_PREFIX)),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => this.notify(kodiPlaybackSummary(job)));
   }
 
   protected mediaTypeLabel(mediaType: MediaType): string {
@@ -104,9 +110,13 @@ export class SourceList {
     return this.canScan(source);
   }
 
-  /** Laufender Scan oder laufendes Scrapen der Quelle; beide schließen sich in der Oberfläche aus. */
+  /** Laufender Job der Quelle (Scan, Scrapen, Gesehen-Status); sie schließen sich in der Oberfläche aus. */
   protected runningJob(source: MediaSource): Job | undefined {
-    return this.jobStore.runningJob(scanJobKey(source.id)) ?? this.jobStore.runningJob(autoScrapeJobKey(source.id));
+    return (
+      this.jobStore.runningJob(scanJobKey(source.id)) ??
+      this.jobStore.runningJob(autoScrapeJobKey(source.id)) ??
+      this.jobStore.runningJob(kodiPlaybackJobKey(source.id))
+    );
   }
 
   protected percent(job: Job): number | null {
@@ -146,6 +156,11 @@ export class SourceList {
       next: (results) => this.notify(kodiSyncSummary(results)),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });
+  }
+
+  /** Holt den Gesehen-Status aller Filme bzw. Episoden der Quelle aus Kodi. */
+  protected importPlayback(source: MediaSource): void {
+    this.track(this.kodiService.importSourcePlayback(source.id));
   }
 
   protected closeScrapeReport(): void {

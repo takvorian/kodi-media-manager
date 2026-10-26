@@ -15,6 +15,10 @@ public class NfoException extends RuntimeException {
         return new NfoException("Die NFO-Datei '%s' kann nicht gelesen werden.".formatted(nfoFile), cause);
     }
 
+    static NfoException missingEntry(Path nfoFile) {
+        return new NfoException("Die NFO-Datei '%s' fehlt oder enthält den Eintrag nicht.".formatted(nfoFile), null);
+    }
+
     static NfoException unwritable(Path nfoFile, Throwable cause) {
         return new NfoException("Die NFO-Datei '%s' kann nicht geschrieben werden.".formatted(nfoFile), cause);
     }

@@ -26,6 +26,11 @@ public class KodiProblemException extends ErrorResponseException {
                 "Es gibt bereits ein Kodi-Gerät mit dem Namen '%s'.".formatted(name), null);
     }
 
+    static KodiProblemException noHostFor(String path) {
+        return new KodiProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein passendes Kodi-Gerät",
+                "Kein Kodi-Gerät hat eine Pfad-Zuordnung für %s.".formatted(path), null);
+    }
+
     static KodiProblemException unavailable(KodiException cause) {
         return new KodiProblemException(HttpStatus.BAD_GATEWAY, "Kodi nicht erreichbar", cause.getMessage(), cause);
     }

@@ -2,7 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { KodiConnectionTest, KodiHost, KodiHostCommand, KodiSyncResult } from './kodi';
+import { Job } from '../jobs/job';
+import { KodiConnectionTest, KodiHost, KodiHostCommand, KodiPlaybackResult, KodiSyncResult } from './kodi';
 
 export const KODI_URL = '/api/v1/kodi';
 export const KODI_HOSTS_URL = `${KODI_URL}/hosts`;
@@ -49,5 +50,20 @@ export class KodiService {
   /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen bzw. Serien durchsuchen. */
   scanSource(sourceId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/sources/${sourceId}/scan`, null);
+  }
+
+  /** Holt den Gesehen-Status aller Filme bzw. Episoden der Quelle aus Kodi; läuft als Job. */
+  importSourcePlayback(sourceId: number): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/sources/${sourceId}/playback`, null);
+  }
+
+  /** Holt den Gesehen-Status des Films aus Kodi. */
+  importMoviePlayback(movieId: number): Observable<KodiPlaybackResult> {
+    return this.http.post<KodiPlaybackResult>(`${KODI_URL}/movies/${movieId}/playback`, null);
+  }
+
+  /** Holt den Gesehen-Status der Episode aus Kodi. */
+  importEpisodePlayback(episodeId: number): Observable<KodiPlaybackResult> {
+    return this.http.post<KodiPlaybackResult>(`${KODI_URL}/episodes/${episodeId}/playback`, null);
   }
 }

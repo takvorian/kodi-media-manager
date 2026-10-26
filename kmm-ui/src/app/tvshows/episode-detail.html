@@ -8,9 +8,14 @@
     <h2 class="page-title">
       <span class="code">{{ code(details) }}</span> {{ details.metadata.title }}
     </h2>
-    <button matButton type="button" class="kodi-refresh-button" [disabled]="refreshingKodi()" (click)="refreshInKodi()">
-      In Kodi aktualisieren
-    </button>
+    <div class="title-actions">
+      <button matButton type="button" class="kodi-refresh-button" [disabled]="refreshingKodi()" (click)="refreshInKodi()">
+        In Kodi aktualisieren
+      </button>
+      <button matButton type="button" class="kodi-playback-button" [disabled]="importingPlayback()" (click)="importPlayback()">
+        Gesehen-Status aus Kodi
+      </button>
+    </div>
   </div>
 
   <mat-card appearance="outlined" class="file-card">
