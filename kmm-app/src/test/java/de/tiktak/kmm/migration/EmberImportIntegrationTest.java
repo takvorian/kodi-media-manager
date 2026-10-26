@@ -38,12 +38,13 @@ import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.SettingsController;
 import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceController;
+import de.tiktak.kmm.tvshow.TvShowController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Ember-Import über die REST-API mit der Fixture-Datenbank; die Ember-Pfade ({@code D:\Filme}) werden
- * auf ein temporäres Verzeichnis abgebildet.
+ * Ember-Import über die REST-API mit der Fixture-Datenbank; die Ember-Pfade ({@code D:\Filme} und
+ * {@code \\nas\serien}) werden auf temporäre Verzeichnisse abgebildet.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -63,6 +64,9 @@ class EmberImportIntegrationTest {
 
     @TempDir
     Path library;
+
+    @TempDir
+    Path series;
 
     @Autowired
     private MockMvcTester mockMvc;
@@ -85,6 +89,10 @@ class EmberImportIntegrationTest {
         createFile("The Matrix (1999)/The Matrix.mkv");
         createFile("The Matrix Reloaded (2003)/The Matrix Reloaded CD1.avi");
         createFile("The Matrix Reloaded (2003)/The Matrix Reloaded CD2.avi");
+        createFile(series.resolve("Lost/Season 1/Lost S01E01E02.mkv"));
+        createFile(series.resolve("Lost/Season 1/Lost S01E03.mkv"));
+        Files.writeString(series.resolve("Lost/Season 1/Lost S01E03.nfo"),
+                "<episodedetails><title>Aus der NFO</title><season>1</season><episode>3</episode></episodedetails>");
     }
 
     @AfterEach
@@ -100,13 +108,18 @@ class EmberImportIntegrationTest {
         JsonNode report = awaitJob(startImport(true));
 
         assertThat(report.get("dryRun").asBoolean()).isTrue();
-        assertThat(report.get("sourcesCreated").asInt()).isEqualTo(1);
+        assertThat(report.get("sourcesCreated").asInt()).isEqualTo(2);
         assertThat(report.get("moviesCreated").asInt()).isEqualTo(3);
+        assertThat(report.get("tvShows")).hasToString(
+                "{\"showsCreated\":1,\"showsUpdated\":0,\"showsSkipped\":0,\"episodesCreated\":3,"
+                        + "\"episodesUpdated\":0,\"episodesSkipped\":0,\"episodesMissing\":1}");
         assertThat(report.get("moviesWithoutNfo").asInt()).isEqualTo(2);
         assertThat(report.get("settingsChanges").toString()).contains("Sprache der Metadaten: de-DE");
         assertThat(count("media_source")).isZero();
         assertThat(count("movie")).isZero();
         assertThat(count("movie_set")).isZero();
+        assertThat(count("tv_show")).isZero();
+        assertThat(count("episode")).isZero();
         assertThat(report.get("kodiHostsCreated").asInt()).isEqualTo(2);
         assertThat(count("kodi_host")).isZero();
         assertThat(mockMvc.get().uri(SettingsController.BASE_PATH)).bodyJson()
@@ -142,7 +155,7 @@ class EmberImportIntegrationTest {
 
         assertThat(repeated.get("moviesCreated").asInt()).isZero();
         assertThat(repeated.get("moviesUpdated").asInt()).isEqualTo(3);
-        assertThat(repeated.get("sourcesReused").asInt()).isEqualTo(1);
+        assertThat(repeated.get("sourcesReused").asInt()).isEqualTo(2);
         assertThat(repeated.get("kodiHostsUpdated").asInt()).isEqualTo(2);
         assertThat(count("movie")).isEqualTo(3);
     }
@@ -150,7 +163,7 @@ class EmberImportIntegrationTest {
     @Test
     void keepsImportedDataWhenTheSourceIsScanned() {
         awaitJob(startImport(false));
-        long sourceId = jdbcClient.sql("SELECT id FROM media_source").query(Long.class).single();
+        long sourceId = sourceId("MOVIE");
 
         JsonNode scan = awaitJob(post(
                 LibraryScanController.SCAN_PATH.replace("{sourceId}", String.valueOf(sourceId))));
@@ -159,6 +172,58 @@ class EmberImportIntegrationTest {
         assertThat(scan.get("removed").asInt()).isZero();
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId("Heat"))).bodyJson()
                 .extractingPath("$.metadata.title").isEqualTo("Heat");
+    }
+
+    @Test
+    void importsTvShowsWithEpisodesAndUpdatesThemOnRepeat() {
+        JsonNode report = awaitJob(startImport(false));
+
+        assertThat(report.get("tvShows").get("episodesCreated").asInt()).isEqualTo(3);
+        long showId = jdbcClient.sql("SELECT id FROM tv_show").query(Long.class).single();
+        assertThat(mockMvc.get().uri(TvShowController.SHOW_PATH, showId)).bodyJson().isLenientlyEqualTo("""
+                {"directoryPath": "%s",
+                 "metadata": {"title": "Lost", "year": 2004, "mpaa": "FSK 16", "status": "Ended", "runtime": 45,
+                              "genres": ["Drama"], "studios": ["Warner Bros."], "tags": ["Heist"],
+                              "tvdbId": "73739", "tmdbId": "4607", "imdbId": "tt0411008", "userRating": 8},
+                 "extras": {"actors": [{"name": "Matthew Fox", "role": "Jack Shephard"}],
+                            "ratings": [{"source": "imdb", "value": 9.9}], "seasonNames": {"0": "Specials"}},
+                 "seasons": [{"number": 0, "title": "Specials", "episodeCount": 0},
+                             {"number": 1, "episodeCount": 3}]}
+                """.formatted(json(series.resolve("Lost").toString())));
+        assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId(1))).bodyJson().isLenientlyEqualTo("""
+                {"filePath": "%s", "season": 1, "episode": 1, "addedAt": "%s",
+                 "metadata": {"title": "Pilot (1)", "plot": "Der Absturz.", "aired": "2004-09-22", "runtime": 42,
+                              "tvdbId": "127131", "tmdbId": "64465", "imdbId": "tt0636289", "userRating": 9},
+                 "extras": {"directors": ["Jack Bender"], "writers": ["Jack Bender"],
+                            "actors": [{"name": "Matthew Fox"}, {"name": "Kevin Tighe", "role": "Anthony Cooper"}],
+                            "ratings": [{"source": "tvdb", "value": 8.1, "votes": 120}], "playCount": 1,
+                            "streams": {"videos": [{"codec": "h264", "aspect": 1.778, "width": 1280, "height": 720}],
+                                        "audios": [{"codec": "AAC", "language": "deu", "channels": 2}],
+                                        "subtitles": [{"language": "eng", "forced": false}]}},
+                 "nfo": {"exists": false}}
+                """.formatted(json(series.resolve("Lost/Season 1/Lost S01E01E02.mkv").toString()), EMBER_DATE_ADDED));
+        assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId(2))).bodyJson()
+                .extractingPath("$.filePath").isEqualTo(series.resolve("Lost/Season 1/Lost S01E01E02.mkv").toString());
+
+        JsonNode repeated = awaitJob(startImport(false));
+
+        assertThat(repeated.get("tvShows").get("showsUpdated").asInt()).isEqualTo(1);
+        assertThat(repeated.get("tvShows").get("episodesUpdated").asInt()).isEqualTo(3);
+        assertThat(count("tv_show")).isEqualTo(1);
+        assertThat(count("episode")).isEqualTo(3);
+    }
+
+    @Test
+    void keepsImportedEpisodesWhenTheTvSourceIsScanned() {
+        awaitJob(startImport(false));
+
+        JsonNode scan = awaitJob(post(
+                LibraryScanController.SCAN_PATH.replace("{sourceId}", String.valueOf(sourceId("TV_SHOW")))));
+
+        assertThat(scan.get("added").asInt()).as(scan.toString()).isZero();
+        assertThat(scan.get("removed").asInt()).isZero();
+        assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId(3))).bodyJson()
+                .extractingPath("$.metadata.title").isEqualTo("Tabula Rasa");
     }
 
     @Test
@@ -191,7 +256,7 @@ class EmberImportIntegrationTest {
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of("profilePath", library.toString(),
                         "pathMappings", List.of(), "importSettings", false, "importKodiHosts", false,
-                        "dryRun", true))))
+                        "importTvShows", false, "dryRun", true))))
                 .hasStatus(422);
     }
 
@@ -200,6 +265,7 @@ class EmberImportIntegrationTest {
         assertThat(mockMvc.get().uri(EmberMigrationController.BASE_PATH + "/inspect").param("path", profile.toString()))
                 .bodyJson().isLenientlyEqualTo("""
                         {"sources": [{"name": "Filme", "path": "D:\\\\Filme"}],
+                         "tvSources": [{"name": "Serien", "path": "\\\\\\\\nas\\\\serien"}],
                          "kodiHosts": [{"name": "Wohnzimmer", "address": "kodi.example.org", "pathMappings": 2},
                                        {"name": null, "address": "192.168.1.20", "port": 0}]}
                         """);
@@ -209,9 +275,11 @@ class EmberImportIntegrationTest {
         MvcTestResult result = mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of(
                         "profilePath", profile.toString(),
-                        "pathMappings", List.of(Map.of("emberPath", "D:\\Filme", "kmmPath", library.toString())),
+                        "pathMappings", List.of(Map.of("emberPath", "D:\\Filme", "kmmPath", library.toString()),
+                                Map.of("emberPath", "\\\\nas\\serien", "kmmPath", series.toString())),
                         "importSettings", true,
                         "importKodiHosts", true,
+                        "importTvShows", true,
                         "dryRun", dryRun)))
                 .exchange();
         assertThat(result).hasStatus(202);
@@ -241,12 +309,25 @@ class EmberImportIntegrationTest {
                 .single();
     }
 
+    private long sourceId(String mediaType) {
+        return jdbcClient.sql("SELECT id FROM media_source WHERE media_type = :type").param("type", mediaType)
+                .query(Long.class).single();
+    }
+
+    private long episodeId(int episode) {
+        return jdbcClient.sql("SELECT id FROM episode WHERE episode_number = :episode").param("episode", episode)
+                .query(Long.class).single();
+    }
+
     private long count(String table) {
         return jdbcClient.sql("SELECT COUNT(*) FROM " + table).query(Long.class).single();
     }
 
     private void createFile(String relativePath) throws IOException {
-        Path file = library.resolve(relativePath);
+        createFile(library.resolve(relativePath));
+    }
+
+    private static void createFile(Path file) throws IOException {
         Files.createDirectories(file.getParent());
         Files.createFile(file);
     }

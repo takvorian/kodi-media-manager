@@ -30,6 +30,7 @@ import de.tiktak.kmm.migration.ember.EmberProfileException;
 import de.tiktak.kmm.migration.ember.EmberProfileInspection;
 import de.tiktak.kmm.migration.ember.kodi.EmberKodiHost;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
+import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
@@ -59,6 +60,7 @@ class EmberMigrationControllerTest {
         when(importService.inspect(Path.of("ember"))).thenReturn(EmberInspectionResponse.from(
                 new EmberProfileInspection(PROFILE, LIBRARY, Optional.of(settings)),
                 List.of(new EmberMovieSource(6, "filme", "a:\\medien\\filme", "de-DE")),
+                List.of(new EmberTvShowSource(2, "serien", "a:\\medien\\serien", "de-DE")),
                 List.of(new EmberKodiHost("FireKodi", "firetv.local", 8080, "kodi", "geheim", true,
                         List.of(new EmberKodiHost.Source("Movie", "a:\\medien\\filme", "smb://nas/filme/"))))));
 
@@ -71,6 +73,7 @@ class EmberMigrationControllerTest {
                           "library": {"movies": 3, "movieSets": 1, "tvShows": 1, "episodes": 2,
                                       "movieSources": 1, "tvShowSources": 1},
                           "sources": [{"name": "filme", "path": "a:\\\\medien\\\\filme"}],
+                          "tvSources": [{"name": "serien", "path": "a:\\\\medien\\\\serien"}],
                           "kodiHosts": [{"name": "FireKodi", "address": "firetv.local", "port": 8080,
                                          "pathMappings": 1}],
                           "settings": {
@@ -86,7 +89,7 @@ class EmberMigrationControllerTest {
     @Test
     void returnsInspectionWithoutSettings() {
         when(importService.inspect(any())).thenReturn(EmberInspectionResponse.from(
-                new EmberProfileInspection(PROFILE, LIBRARY, Optional.empty()), List.of(), List.of()));
+                new EmberProfileInspection(PROFILE, LIBRARY, Optional.empty()), List.of(), List.of(), List.of()));
 
         assertThat(mockMvc.get().uri(INSPECT_PATH).param("path", "ember"))
                 .hasStatusOk()
@@ -128,13 +131,13 @@ class EmberMigrationControllerTest {
     void startsImportAsJob() {
         UUID jobId = UUID.fromString("7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f02");
         var request = new EmberImportRequest("ember",
-                List.of(new EmberImportRequest.PathMapping("a:\\medien\\filme", "/media/filme")), true, true, true);
+                List.of(new EmberImportRequest.PathMapping("a:\\medien\\filme", "/media/filme")), true, true, true, true);
         when(importService.start(request)).thenReturn(new JobSnapshot(jobId, EmberImportService.JOB_KEY,
                 "Ember-Import (Probelauf)", JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null));
 
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                 {"profilePath": "ember", "pathMappings": [{"emberPath": "a:\\\\medien\\\\filme", "kmmPath": "/media/filme"}],
-                 "importSettings": true, "importKodiHosts": true, "dryRun": true}
+                 "importSettings": true, "importKodiHosts": true, "importTvShows": true, "dryRun": true}
                 """))
                 .hasStatus(202)
                 .hasHeader("Location", "/api/v1/jobs/" + jobId);
@@ -155,7 +158,7 @@ class EmberMigrationControllerTest {
 
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                 {"profilePath": "leer", "pathMappings": [], "importSettings": false, "importKodiHosts": false,
-                 "dryRun": false}
+                 "importTvShows": false, "dryRun": false}
                 """))
                 .hasStatus(422);
     }

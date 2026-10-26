@@ -163,7 +163,8 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 - `EmberSettingsReader`: liest `Settings.xml` in ein Teil-Modell. Unbekannte Elemente werden ignoriert. Das Proxy-Passwort wird bewusst nicht übernommen.
 - `PathMapper`: übersetzt Windows- und UNC-Pfade (`D:\Filme`, `\\nas\serien`) per Präfix-Regel (längster Präfix gewinnt) in Zielpfade (`/media/filme`).
 - `EmberLibraryReader`: liest Quellen, Filme mit allen Verknüpfungen (IDs, Genres, Darsteller mit Rolle und Bild, Regie, Drehbuch, Studios, Länder, Tags, Bewertungen, Sets mit Reihenfolge, Nutzerdaten) und ausgeschlossene Ordner, je Tabelle mit einer Abfrage (1169 Filme in unter einer Sekunde).
-- `GET /api/v1/migrations/ember/inspect?path=…`: Analyse ohne Import (Version, Umfang, Filmquellen, Einstellungen).
+- `EmberTvLibraryReader`: liest Serienquellen, Serien (IDs, Genres, Studios, Tags, Darsteller, Bewertungen, Staffeltitel), Episoden mit Datei (Pfad über `files`; Darsteller und Gaststars, Regie, Drehbuch, Bewertungen, Nutzerdaten) und zählt Embers Episoden ohne Datei. Stream-Details kommen für Filme und Episoden aus den Tabellen `MoviesVStreams`/`TVVStreams` usw.
+- `GET /api/v1/migrations/ember/inspect?path=…`: Analyse ohne Import (Version, Umfang, Film- und Serienquellen, Einstellungen).
 
 **Import (Ember-Migration I, umgesetzt):**
 - `POST /api/v1/migrations/ember/import` startet einen Hintergrund-Job (`ember-import`) mit Live-Fortschritt; Assistent in der UI: Profil analysieren → Pfade zuordnen → Probelauf → Import → Bericht.
@@ -174,7 +175,12 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 - **Umrechnungen:** `Germany:16` → `FSK 16`; leere Bewertungen (0 ohne Stimmen) und eigene Bewertung 0 entfallen; Embers Zeitstempel (Sekunden seit 1970, aber aus der lokalen Uhrzeit berechnet) werden in der Zeitzone von KMM zu Hinzugefügt-Datum und „zuletzt gesehen“; Pfade, die auf dem Zielsystem ungültig sind, werden übersprungen und gemeldet.
 - **Einstellungen:** Sprache der Film-Metadaten, erzwungene Bildsprache, Video-Dateiendungen, ausgeschlossene Ordner (über die Pfad-Zuordnung) und Proxy (ohne Passwort) gehen in den KMM-Einstellungsspeicher; durch die Konfiguration festgelegte Werte bleiben unverändert.
 - **Kodi-Geräte** (`Interface.Kodi.xml`): Name, Adresse, Port, Zugangsdaten, Echtzeit-Sync und Pfad-Zuordnungen; Embers lokale Pfade laufen über die Pfad-Zuordnung des Imports, Zuordnungen ohne passende Regel entfallen mit Hinweis. Geräte werden über den Namen erkannt.
-- **Nicht übernommen (Ember-Migration II):** Serien, Stream-Details, Embers Artwork-Pfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren/Markierungen, Scraper-Keys, Kodi-Optionen zum Gesehen-Status.
+
+**Import (Ember-Migration II, umgesetzt):**
+- **Serien** (abwählbar): Serienquellen über dieselbe Pfad-Zuordnung, Serien über den Ordner, Episoden über Datei, Staffel und Nummer erkannt; Mehrfachepisoden bleiben mehrere Episoden mit derselben Datei. Embers Platzhalter-Staffel −1 und leere Staffeltitel entfallen; Episoden ohne Datei werden nur gezählt. Wie bei Filmen gewinnt die Ember-DB, `tvshow.nfo` und Episoden-NFOs gelten danach als eingelesen.
+- **Stream-Details** für Filme und Episoden; externe Untertitel (eigene Dateien) entfallen. Liefert Ember keine Spuren, bleiben die in KMM bekannten erhalten.
+- **Einstellungen:** Sprache der Serien-Metadaten und -Bilder sowie die Episodenreihenfolge. API-Keys werden bewusst nicht übernommen; sie werden in KMM unter „Einstellungen → API-Keys“ gepflegt.
+- **Nicht übernommen:** Embers Artwork-Pfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren/Markierungen, Scraper-Keys, Kodi-Optionen zum Gesehen-Status.
 
 **Schema-Versionen:** Direkt unterstützt wird v48. Ältere Profile werden einmal mit der letzten Ember-Version geöffnet, die sie selbst aktualisiert.
 
@@ -194,7 +200,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 3. **Kodi-Integration** ✅: Kodi-Geräte mit Pfad-Zuordnung und Verbindungstest, Echtzeit-Sync wie in Ember (RefreshMovie bzw. Scan des Ordners, entprellt im Hintergrund), manueller Abgleich je Film und Quelle, Übernahme der Kodi-Geräte aus Ember. Später: Gesehen-Status aus Kodi holen, Bibliothek bereinigen (`VideoLibrary.Clean`).
 4. **Serien** (in Inkrementen):
    1. Modell, Scan, NFOs, Liste und Detailseiten ✅ (jeder Ordner unter der Quelle ist eine Serie, Episoden beliebig tief; Staffel/Episode aus dem Dateinamen; Mehrfachepisoden als mehrere Episoden mit derselben Datei; `tvshow.nfo` und Episoden-NFOs werden gelesen und beim Bearbeiten geschrieben)
-   2. **Ember-Migration II**: Serien, Staffeln, Episoden, Stream-Details (Filme und Episoden), restliche Einstellungen; Embers fehlende Episoden ohne Datei werden nicht übernommen
+   2. **Ember-Migration II** ✅: Serien, Staffeln, Episoden, Stream-Details (Filme und Episoden), Serien-Einstellungen, API-Keys im Einstellungsspeicher; Embers fehlende Episoden ohne Datei werden nicht übernommen
    3. Scraper TMDB-TV und TVDB v4 (mit TVDB-Attribution), Bilder für Serien, Staffeln und Episoden, automatisches Scrapen
    4. Kodi-Sync für Serien
 5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.

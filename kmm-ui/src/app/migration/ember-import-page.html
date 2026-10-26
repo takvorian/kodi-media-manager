@@ -38,7 +38,7 @@
         <dt>Bestand</dt>
         <dd class="library">
           {{ found.library.movies }} Filme, {{ found.library.movieSets }} Filmsets, {{ found.library.tvShows }} Serien
-          <span class="hint">(Serien folgen in einem späteren Schritt)</span>
+          mit {{ found.library.episodes }} Episoden
         </dd>
         @if (found.kodiHosts.length > 0) {
           <dt>Kodi-Geräte</dt>
@@ -67,8 +67,8 @@
     </mat-card-header>
     <mat-card-content>
       <p class="hint">
-        Wo liegen Embers Filmquellen aus Sicht von KMM? Läuft KMM auf demselben Rechner, bleiben die Pfade gleich;
-        unter Docker z. B. <code>/media/filme</code> eintragen.
+        Wo liegen Embers Film- und Serienquellen aus Sicht von KMM? Läuft KMM auf demselben Rechner, bleiben die
+        Pfade gleich; unter Docker z. B. <code>/media/filme</code> eintragen.
       </p>
       @for (mapping of mappings.controls; track $index) {
         <div class="row mapping" [formGroup]="mapping">
@@ -84,9 +84,14 @@
           </mat-form-field>
         </div>
       } @empty {
-        <p class="hint">Das Profil enthält keine Filmquellen.</p>
+        <p class="hint">Das Profil enthält keine Quellen.</p>
       }
-      <mat-checkbox [formControl]="importSettings" name="importSettings">
+      @if (found.library.tvShows > 0) {
+        <mat-checkbox [formControl]="importTvShows" name="importTvShows" class="tv-shows-checkbox">
+          Serien und Episoden übernehmen (Episoden ohne Datei bleiben außen vor)
+        </mat-checkbox>
+      }
+      <mat-checkbox [formControl]="importSettings" name="importSettings" class="settings-checkbox">
         Einstellungen übernehmen (Sprache, Dateiendungen, ausgeschlossene Ordner, Proxy)
       </mat-checkbox>
       @if (found.kodiHosts.length > 0) {
@@ -126,11 +131,23 @@
         <dd class="report-movies">
           {{ result.moviesCreated }} neu, {{ result.moviesUpdated }} aktualisiert, {{ result.moviesSkipped }} übersprungen
         </dd>
+        @if (hasTvShows(result)) {
+          <dt>Serien</dt>
+          <dd class="report-tv-shows">
+            {{ result.tvShows.showsCreated }} neu, {{ result.tvShows.showsUpdated }} aktualisiert,
+            {{ result.tvShows.showsSkipped }} übersprungen
+          </dd>
+          <dt>Episoden</dt>
+          <dd class="report-episodes">
+            {{ result.tvShows.episodesCreated }} neu, {{ result.tvShows.episodesUpdated }} aktualisiert,
+            {{ result.tvShows.episodesSkipped }} übersprungen, {{ result.tvShows.episodesMissing }} ohne Datei
+          </dd>
+        }
         @if (result.kodiHostsCreated + result.kodiHostsUpdated > 0) {
           <dt>Kodi-Geräte</dt>
           <dd class="report-kodi-hosts">{{ result.kodiHostsCreated }} neu, {{ result.kodiHostsUpdated }} aktualisiert</dd>
         }
-        <dt>Ohne NFO</dt>
+        <dt>Filme ohne NFO</dt>
         <dd class="report-missing">{{ result.moviesWithoutNfo }}</dd>
       </dl>
       @if (result.settingsChanges.length > 0) {

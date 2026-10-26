@@ -1,21 +1,17 @@
 package de.tiktak.kmm.migration;
 
 import java.nio.file.Path;
-import java.time.Instant;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
 import de.tiktak.kmm.migration.ember.library.EmberMovie;
-import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberSetLink;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSet;
 import de.tiktak.kmm.movie.MovieImport;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieSupplement;
-import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.StackedFiles;
 
@@ -26,13 +22,9 @@ final class EmberMovieMapper {
 
     static final String DVD_MARKER_FILE = "VIDEO_TS.IFO";
     static final String BLURAY_MARKER_FILE = "index.bdmv";
-    /** Ember speichert die deutsche Freigabe als {@code Germany:16}, KMM wie der TMDB-Scraper als {@code FSK 16}. */
-    private static final String EMBER_GERMAN_CERTIFICATION = "Germany:";
-    private static final String KMM_GERMAN_CERTIFICATION = "FSK ";
     private static final String IMDB = "imdb";
     private static final String TMDB = "tmdb";
     private static final String TMDB_COLLECTION = "tmdbcol";
-    private static final int MAX_USER_RATING = 10;
     private static final char EXTENSION_SEPARATOR = '.';
 
     private EmberMovieMapper() {
@@ -56,8 +48,8 @@ final class EmberMovieMapper {
                 supplement(movie, set.map(SetAssignment::reference).orElse(null), zone),
                 set.map(SetAssignment::order).orElse(null),
                 set.map(SetAssignment::tmdbCollectionId).orElse(movie.uniqueIds().get(TMDB_COLLECTION)),
-                toInstant(movie.dateAdded(), zone),
-                StreamDetails.EMPTY);
+                EmberMappings.toInstant(movie.dateAdded(), zone),
+                EmberStreamMapper.toStreamDetails(movie.streams()));
     }
 
     /** Filme in mehreren Sets kennt Kodi nicht; übernommen wird das erste. */
@@ -84,7 +76,7 @@ final class EmberMovieMapper {
                 movie.outline(),
                 movie.tagline(),
                 movie.runtime(),
-                certification(movie.mpaa()),
+                EmberMappings.certification(movie.mpaa()),
                 movie.genres(),
                 movie.uniqueIds().get(IMDB),
                 movie.uniqueIds().get(TMDB)).withinLimits();
@@ -101,18 +93,14 @@ final class EmberMovieMapper {
                 movie.countries(),
                 movie.tags(),
                 movie.ratings().stream()
-                        .filter(EmberMovieMapper::isRated)
+                        .filter(EmberMappings::isRated)
                         .map(rating -> new MovieSupplement.Rating(rating.source(), rating.value(), rating.max(),
                                 rating.votes(), rating.defaultRating()))
                         .toList(),
                 set,
-                movie.userRating() != null && movie.userRating() <= MAX_USER_RATING ? movie.userRating() : null,
+                EmberMappings.userRating(movie.userRating()),
                 movie.playCount(),
-                toInstant(movie.lastPlayed(), zone));
-    }
-
-    private static Instant toInstant(LocalDateTime localDateTime, ZoneId zone) {
-        return localDateTime == null ? null : localDateTime.atZone(zone).toInstant();
+                EmberMappings.toInstant(movie.lastPlayed(), zone));
     }
 
     private static Optional<SetAssignment> set(EmberMovie movie, Map<Long, EmberMovieSet> sets) {
@@ -120,18 +108,6 @@ final class EmberMovieMapper {
                 .map(link -> SetAssignment.of(link, sets.get(link.setId())))
                 .filter(Objects::nonNull)
                 .findFirst();
-    }
-
-    /** Ember legt für unbekannte Bewertungen Einträge mit 0 und ohne Stimmen an. */
-    private static boolean isRated(EmberRating rating) {
-        return rating.value() > 0 || rating.votes() != null && rating.votes() > 0;
-    }
-
-    private static String certification(String mpaa) {
-        if (mpaa != null && mpaa.startsWith(EMBER_GERMAN_CERTIFICATION)) {
-            return KMM_GERMAN_CERTIFICATION + mpaa.substring(EMBER_GERMAN_CERTIFICATION.length());
-        }
-        return mpaa;
     }
 
     /** Ohne Titel in Ember: Dateiname ohne Endung, bei Discs der Name des Filmordners. */

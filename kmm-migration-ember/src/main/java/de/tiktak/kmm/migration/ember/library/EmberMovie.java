@@ -15,6 +15,7 @@ import lombok.Builder;
  * @param mpaa       Altersfreigabe, z. B. {@code Germany:16}
  * @param uniqueIds  IDs je Anbieter, Schlüssel klein geschrieben (z. B. {@code imdb}, {@code tmdb}, {@code tmdbcol})
  * @param sets       Zugehörigkeit zu Filmsets
+ * @param streams    Video-, Ton- und Untertitelspuren
  * @param userRating eigene Bewertung oder {@code null}, wenn keine vergeben ist
  */
 @Builder
@@ -42,6 +43,7 @@ public record EmberMovie(
         List<String> tags,
         List<EmberRating> ratings,
         List<EmberSetLink> sets,
+        EmberStreams streams,
         LocalDateTime dateAdded,
         Integer playCount,
         LocalDateTime lastPlayed,
@@ -58,6 +60,7 @@ public record EmberMovie(
         tags = copy(tags);
         ratings = copy(ratings);
         sets = copy(sets);
+        streams = streams == null ? EmberStreams.NONE : streams;
     }
 
     private static <T> List<T> copy(List<T> values) {

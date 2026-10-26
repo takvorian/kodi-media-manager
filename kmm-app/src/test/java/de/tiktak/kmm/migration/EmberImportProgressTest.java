@@ -43,6 +43,21 @@ class EmberImportProgressTest {
     }
 
     @Test
+    void countsShowsAndEpisodes() {
+        var progress = new EmberImportProgress(false);
+        progress.showImported(true);
+        progress.showImported(false);
+        progress.showSkipped();
+        progress.episodeImported(true);
+        progress.episodeImported(true);
+        progress.episodeImported(false);
+        progress.episodeSkipped();
+        progress.episodesMissing(4);
+
+        assertThat(progress.toReport().tvShows()).isEqualTo(new EmberImportReport.TvShows(1, 1, 1, 2, 1, 1, 4));
+    }
+
+    @Test
     void listsEachWarningOnlyOnce() {
         var progress = new EmberImportProgress(false);
         progress.warn("Verzeichnis nicht erreichbar");

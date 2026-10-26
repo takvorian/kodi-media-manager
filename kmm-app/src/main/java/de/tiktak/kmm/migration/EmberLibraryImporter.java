@@ -1,8 +1,6 @@
 package de.tiktak.kmm.migration;
 
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
 import java.time.Clock;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -17,21 +15,19 @@ import de.tiktak.kmm.migration.ember.library.EmberLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberMovie;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSet;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
+import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.movie.MovieImportResult;
 import de.tiktak.kmm.movie.MovieImportService;
 import de.tiktak.kmm.movie.MovieImportService.MovieImportSession;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.settings.SettingsService;
-import de.tiktak.kmm.source.ImportedSource;
-import de.tiktak.kmm.source.MediaSourceConflictException;
-import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Überträgt einen gelesenen Ember-Bestand in die KMM-Datenbank: Quellen, Filme mit allen Angaben,
- * Sets und auf Wunsch die Einstellungen. Läuft in der Transaktion des Aufrufers, damit ein Probelauf
+ * Sets und auf Wunsch Serien und die Einstellungen. Läuft in der Transaktion des Aufrufers, damit ein Probelauf
  * sie zurückrollen kann.
  */
 @Slf4j
@@ -41,16 +37,21 @@ class EmberLibraryImporter {
 
     static final String DEFAULT_SOURCE_NAME = "Filme";
 
-    private final MediaSourceService sourceService;
+    private final EmberSourceImporter sourceImporter;
+    private final EmberTvImporter tvImporter;
     private final MovieImportService movieImportService;
     private final SettingsService settingsService;
     private final Clock clock;
 
-    void importLibrary(EmberLibrary library, Optional<EmberSettings> settings, EmberImportRequest request,
-            EmberImportProgress progress, JobContext context) {
+    /**
+     * @param tvLibrary Serienbestand; leer, wenn keine Serien übernommen werden sollen
+     */
+    void importLibrary(EmberLibrary library, Optional<EmberTvLibrary> tvLibrary, Optional<EmberSettings> settings,
+            EmberImportRequest request, EmberImportProgress progress, JobContext context) {
         EmberPathTranslator paths = EmberPathTranslator.of(request.pathMappings());
         Map<Long, Long> sourceIds = importSources(library.sources(), paths, progress);
         importMovies(library, sourceIds, paths, progress, context);
+        tvLibrary.ifPresent(tv -> tvImporter.importLibrary(tv, paths, progress, context));
         if (request.importSettings()) {
             importSettings(settings, library.excludedDirectories(), paths, progress, request.dryRun());
         }
@@ -61,23 +62,8 @@ class EmberLibraryImporter {
         Map<Long, Long> sourceIds = new HashMap<>();
         for (EmberMovieSource source : sources) {
             String name = source.name() == null ? DEFAULT_SOURCE_NAME : source.name();
-            Optional<String> directory = source.path() == null ? Optional.empty() : paths.translate(source.path());
-            if (directory.isEmpty()) {
-                progress.sourceSkipped("%s (%s): keine gültige Pfad-Zuordnung auf diesem System"
-                        .formatted(name, source.path()));
-                continue;
-            }
-            try {
-                ImportedSource imported = sourceService.importSource(name, directory.get(), MediaType.MOVIE);
-                progress.sourceImported(imported.created());
-                sourceIds.put(source.id(), imported.source().getId());
-                if (!Files.isDirectory(Path.of(directory.get()))) {
-                    progress.warn("Das Verzeichnis %s der Quelle „%s“ ist derzeit nicht erreichbar."
-                            .formatted(directory.get(), name));
-                }
-            } catch (MediaSourceConflictException e) {
-                progress.sourceSkipped("%s (%s): %s".formatted(name, directory.get(), e.getBody().getDetail()));
-            }
+            sourceImporter.importSource(name, source.path(), MediaType.MOVIE, paths, progress)
+                    .ifPresent(id -> sourceIds.put(source.id(), id));
         }
         return sourceIds;
     }

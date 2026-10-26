@@ -47,6 +47,7 @@ export class EmberImportPage {
   protected readonly mappings = this.formBuilder.array<MappingForm>([]);
   protected readonly importSettings = this.formBuilder.control(true);
   protected readonly importKodiHosts = this.formBuilder.control(true);
+  protected readonly importTvShows = this.formBuilder.control(true);
   protected readonly inspection = signal<EmberInspection | null>(null);
   protected readonly inspecting = signal(false);
   protected readonly report = signal<EmberImportReport | null>(null);
@@ -95,7 +96,7 @@ export class EmberImportPage {
       this.mappings.markAllAsTouched();
       return;
     }
-    if (!dryRun && !this.confirm(`${inspection.library.movies} Filme aus Ember in die Bibliothek übernehmen?`)) {
+    if (!dryRun && !this.confirm(confirmation(inspection, this.importTvShows.value))) {
       return;
     }
     this.report.set(null);
@@ -105,12 +106,18 @@ export class EmberImportPage {
         pathMappings: this.mappings.getRawValue().map(trimmed),
         importSettings: this.importSettings.value,
         importKodiHosts: this.importKodiHosts.value,
+        importTvShows: this.importTvShows.value,
         dryRun,
       })
       .subscribe({
         next: (job) => this.jobStore.update(job),
         error: (error: unknown) => this.notify(problemMessage(error)),
       });
+  }
+
+  protected hasTvShows(report: EmberImportReport): boolean {
+    const tv = report.tvShows;
+    return tv.showsCreated + tv.showsUpdated + tv.showsSkipped + tv.episodesMissing > 0;
   }
 
   protected cancel(job: Job): void {
@@ -120,18 +127,22 @@ export class EmberImportPage {
     });
   }
 
-  /** Vorschlag: jede Ember-Quelle mit unverändertem Pfad; unter Docker trägt man z. B. /media/filme ein. */
+  /** Vorschlag: jede Film- und Serienquelle mit unverändertem Pfad; unter Docker z. B. /media/filme. */
   private showMappings(inspection: EmberInspection): void {
     this.mappings.clear();
-    for (const source of inspection.sources) {
+    const paths = new Set<string>();
+    for (const source of [...inspection.sources, ...inspection.tvSources]) {
       if (source.path) {
-        this.mappings.push(
-          this.formBuilder.group({
-            emberPath: [source.path, Validators.required],
-            kmmPath: [source.path, Validators.required],
-          }),
-        );
+        paths.add(source.path);
       }
+    }
+    for (const path of paths) {
+      this.mappings.push(
+        this.formBuilder.group({
+          emberPath: [path, Validators.required],
+          kmmPath: [path, Validators.required],
+        }),
+      );
     }
   }
 
@@ -156,7 +167,14 @@ function trimmed(mapping: PathMapping): PathMapping {
   return { emberPath: mapping.emberPath.trim(), kmmPath: mapping.kmmPath.trim() };
 }
 
+function confirmation(inspection: EmberInspection, withTvShows: boolean): string {
+  const tvShows = withTvShows && inspection.library.tvShows > 0 ? ` und ${inspection.library.tvShows} Serien` : '';
+  return `${inspection.library.movies} Filme${tvShows} aus Ember in die Bibliothek übernehmen?`;
+}
+
 function summary(title: string, report: EmberImportReport): string {
   const verb = report.dryRun ? 'würde übernehmen' : 'hat übernommen';
-  return `${title}: ${verb} ${report.moviesCreated} neue und ${report.moviesUpdated} vorhandene Filme.`;
+  const episodes = report.tvShows.episodesCreated + report.tvShows.episodesUpdated;
+  const tvShows = episodes > 0 ? ` sowie ${episodes} Episoden` : '';
+  return `${title}: ${verb} ${report.moviesCreated} neue und ${report.moviesUpdated} vorhandene Filme${tvShows}.`;
 }

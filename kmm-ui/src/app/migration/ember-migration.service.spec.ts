@@ -35,6 +35,7 @@ describe('EmberMigrationService', () => {
       pathMappings: [{ emberPath: 'a:\\filme', kmmPath: '/media/filme' }],
       importSettings: true,
       importKodiHosts: true,
+      importTvShows: true,
       dryRun: true,
     };
     let received: Job | undefined;

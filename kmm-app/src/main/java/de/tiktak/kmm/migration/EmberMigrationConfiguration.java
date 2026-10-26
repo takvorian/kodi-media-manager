@@ -8,6 +8,7 @@ import de.tiktak.kmm.migration.ember.EmberProfileDetector;
 import de.tiktak.kmm.migration.ember.EmberProfileInspector;
 import de.tiktak.kmm.migration.ember.kodi.EmberKodiHostsReader;
 import de.tiktak.kmm.migration.ember.library.EmberLibraryReader;
+import de.tiktak.kmm.migration.ember.library.EmberTvLibraryReader;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
 
 /**
@@ -34,6 +35,11 @@ class EmberMigrationConfiguration {
     @Bean
     EmberLibraryReader emberLibraryReader() {
         return new EmberLibraryReader();
+    }
+
+    @Bean
+    EmberTvLibraryReader emberTvLibraryReader() {
+        return new EmberTvLibraryReader();
     }
 
     @Bean

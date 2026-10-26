@@ -12,6 +12,7 @@ import java.util.List;
  * @param moviesUpdated    vorhandene Filme, deren Angaben aus Ember übernommen wurden
  * @param moviesSkipped    Filme ohne Pfad-Zuordnung oder ohne übernommene Quelle
  * @param moviesWithoutNfo Filme, deren Datei oder NFO KMM nicht gefunden hat
+ * @param tvShows          Ergebnis für Serien und Episoden
  * @param kodiHostsCreated neu angelegte Kodi-Geräte
  * @param kodiHostsUpdated vorhandene Kodi-Geräte mit demselben Namen, die aktualisiert wurden
  * @param settingsChanges  übernommene Einstellungen in lesbarer Form
@@ -27,6 +28,7 @@ public record EmberImportReport(
         int moviesUpdated,
         int moviesSkipped,
         int moviesWithoutNfo,
+        TvShows tvShows,
         int kodiHostsCreated,
         int kodiHostsUpdated,
         List<String> settingsChanges,
@@ -39,5 +41,15 @@ public record EmberImportReport(
         skippedSources = List.copyOf(skippedSources);
         missingFiles = List.copyOf(missingFiles);
         warnings = List.copyOf(warnings);
+    }
+
+    /**
+     * @param showsSkipped    Serien ohne Pfad-Zuordnung oder ohne übernommene Quelle
+     * @param episodesUpdated vorhandene Episoden, deren Angaben aus Ember übernommen wurden
+     * @param episodesSkipped Episoden ohne Pfad-Zuordnung oder einer nicht übernommenen Serie
+     * @param episodesMissing Episoden, die Ember ohne Datei kennt; sie werden nicht übernommen
+     */
+    public record TvShows(int showsCreated, int showsUpdated, int showsSkipped, int episodesCreated,
+            int episodesUpdated, int episodesSkipped, int episodesMissing) {
     }
 }

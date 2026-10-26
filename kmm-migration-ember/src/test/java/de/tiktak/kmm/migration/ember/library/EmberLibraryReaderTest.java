@@ -103,6 +103,19 @@ class EmberLibraryReaderTest {
         assertThat(reloaded.dateAdded()).isNull();
         assertThat(reloaded.studios()).isEmpty();
         assertThat(reloaded.ratings()).isEmpty();
+        assertThat(reloaded.streams()).isEqualTo(EmberStreams.NONE);
+    }
+
+    @Test
+    void readsStreamDetailsOfAMovie() {
+        EmberStreams streams = movie(1).streams();
+
+        assertThat(streams.videos()).containsExactly(
+                new EmberStreams.Video("avc1", 1920, 800, "2.40", 10200, 8000, "progressive", null, "de"));
+        assertThat(streams.audios()).containsExactly(
+                new EmberStreams.Audio("DTS", "deu", 6, 1509),
+                new EmberStreams.Audio("AC3", "eng", 6, null));
+        assertThat(streams.subtitles()).containsExactly(new EmberStreams.Subtitle("deu", true, true));
     }
 
     @Test

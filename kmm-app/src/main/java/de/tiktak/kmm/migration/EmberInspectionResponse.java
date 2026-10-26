@@ -6,6 +6,7 @@ import de.tiktak.kmm.migration.ember.EmberLibraryStatistics;
 import de.tiktak.kmm.migration.ember.EmberProfileInspection;
 import de.tiktak.kmm.migration.ember.kodi.EmberKodiHost;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
+import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 
@@ -13,6 +14,7 @@ import de.tiktak.kmm.migration.ember.settings.EmberSettings;
  * Antwort der Profil-Analyse. Pfade werden als Text ausgegeben, fehlende Einstellungen als {@code null}.
  *
  * @param sources   Filmquellen aus Ember, z. B. als Vorschlag für Pfad-Zuordnungen
+ * @param tvSources Serienquellen aus Ember
  * @param kodiHosts Kodi-Geräte aus Ember, ohne Zugangsdaten
  */
 public record EmberInspectionResponse(
@@ -20,16 +22,18 @@ public record EmberInspectionResponse(
         int schemaVersion,
         EmberLibraryStatistics library,
         List<Source> sources,
+        List<Source> tvSources,
         List<KodiHost> kodiHosts,
         Settings settings) {
 
     static EmberInspectionResponse from(EmberProfileInspection inspection, List<EmberMovieSource> sources,
-            List<EmberKodiHost> kodiHosts) {
+            List<EmberTvShowSource> tvSources, List<EmberKodiHost> kodiHosts) {
         return new EmberInspectionResponse(
                 inspection.profile().directory().toString(),
                 inspection.profile().schemaVersion(),
                 inspection.library(),
                 sources.stream().map(source -> new Source(source.name(), source.path())).toList(),
+                tvSources.stream().map(source -> new Source(source.name(), source.path())).toList(),
                 kodiHosts.stream().map(KodiHost::from).toList(),
                 inspection.settings().map(Settings::from).orElse(null));
     }

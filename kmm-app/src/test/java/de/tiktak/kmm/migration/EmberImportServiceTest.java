@@ -36,6 +36,9 @@ import de.tiktak.kmm.migration.ember.kodi.EmberKodiHost;
 import de.tiktak.kmm.migration.ember.kodi.EmberKodiHostsReader;
 import de.tiktak.kmm.migration.ember.library.EmberLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberLibraryReader;
+import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
+import de.tiktak.kmm.migration.ember.library.EmberTvLibraryReader;
+import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsException;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
 
@@ -55,6 +58,9 @@ class EmberImportServiceTest {
 
     @Mock
     private EmberLibraryReader libraryReader;
+
+    @Mock
+    private EmberTvLibraryReader tvLibraryReader;
 
     @Mock
     private EmberSettingsReader settingsReader;
@@ -80,7 +86,7 @@ class EmberImportServiceTest {
     void startsJobWithTitleOfTheRun() {
         when(profileDetector.detect(PROFILE_DIRECTORY)).thenReturn(PROFILE);
 
-        service().start(new EmberImportRequest("ember", List.of(), false, false, true));
+        service().start(new EmberImportRequest("ember", List.of(), false, false, false, true));
 
         verify(jobService).submit(eq(EmberImportService.JOB_KEY), eq("Ember-Import (Probelauf)"), any());
     }
@@ -90,8 +96,8 @@ class EmberImportServiceTest {
         givenTransaction();
         when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
 
-        EmberImportReport report = service().run(PROFILE, new EmberImportRequest("ember", List.of(), false, false, true),
-                mock(JobContext.class));
+        EmberImportReport report = service().run(PROFILE,
+                new EmberImportRequest("ember", List.of(), false, false, false, true), mock(JobContext.class));
 
         assertThat(report.dryRun()).isTrue();
         assertThat(status.isRollbackOnly()).isTrue();
@@ -106,12 +112,40 @@ class EmberImportServiceTest {
         when(unreadable.getMessage()).thenReturn("kaputt");
         when(settingsReader.read(any())).thenThrow(unreadable);
 
-        EmberImportReport report = service().run(PROFILE, new EmberImportRequest("ember", List.of(), true, false, false),
-                mock(JobContext.class));
+        EmberImportReport report = service().run(PROFILE,
+                new EmberImportRequest("ember", List.of(), true, false, false, false), mock(JobContext.class));
 
         assertThat(report.warnings()).containsExactly("Die Ember-Einstellungen konnten nicht gelesen werden: kaputt");
         assertThat(status.isRollbackOnly()).isFalse();
-        verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.empty()), any(), any(), any());
+        verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.empty()), eq(Optional.empty()), any(), any(),
+                any());
+        verify(tvLibraryReader, never()).read(any());
+    }
+
+    @Test
+    void readsTheTvLibraryOnlyOnRequest() {
+        givenTransaction();
+        when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
+        EmberTvLibrary tvLibrary = new EmberTvLibrary(List.of(), List.of(), List.of(), 0);
+        when(tvLibraryReader.read(PROFILE.databaseFile())).thenReturn(tvLibrary);
+
+        EmberImportReport report = service().run(PROFILE,
+                new EmberImportRequest("ember", List.of(), false, false, true, false), mock(JobContext.class));
+
+        assertThat(report.tvShows().episodesCreated()).isZero();
+        verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.of(tvLibrary)), eq(Optional.empty()), any(),
+                any(), any());
+    }
+
+    @Test
+    void inspectsMovieAndTvSources() {
+        when(profileInspector.inspect(PROFILE_DIRECTORY)).thenReturn(new EmberProfileInspection(PROFILE,
+                new EmberLibraryStatistics(0, 0, 0, 0, 0, 0), Optional.empty()));
+        when(tvLibraryReader.readSources(PROFILE.databaseFile()))
+                .thenReturn(List.of(new EmberTvShowSource(2, "serien", "a:\\medien\\serien", "de-DE")));
+
+        assertThat(service().inspect(PROFILE_DIRECTORY).tvSources())
+                .containsExactly(new EmberInspectionResponse.Source("serien", "a:\\medien\\serien"));
     }
 
     @Test
@@ -121,8 +155,10 @@ class EmberImportServiceTest {
         List<EmberKodiHost> hosts = List.of(new EmberKodiHost("Wohnzimmer", "kodi", 8080, null, null, true, List.of()));
         when(kodiHostsReader.read(PROFILE)).thenReturn(hosts);
 
-        service().run(PROFILE, new EmberImportRequest("ember", List.of(), false, false, false), mock(JobContext.class));
-        service().run(PROFILE, new EmberImportRequest("ember", List.of(), false, true, false), mock(JobContext.class));
+        service().run(PROFILE, new EmberImportRequest("ember", List.of(), false, false, false, false),
+                mock(JobContext.class));
+        service().run(PROFILE, new EmberImportRequest("ember", List.of(), false, true, false, false),
+                mock(JobContext.class));
 
         verify(kodiHostImporter).importHosts(eq(List.of()), any(), any());
         verify(kodiHostImporter).importHosts(eq(hosts), any(), any());
@@ -136,7 +172,7 @@ class EmberImportServiceTest {
                 PROFILE_DIRECTORY.resolve("Interface.Kodi.xml"), new IllegalStateException()));
 
         EmberImportReport report = service().run(PROFILE,
-                new EmberImportRequest("ember", List.of(), false, true, false), mock(JobContext.class));
+                new EmberImportRequest("ember", List.of(), false, true, false, false), mock(JobContext.class));
 
         assertThat(report.warnings()).singleElement().asString()
                 .startsWith("Die Kodi-Geräte konnten nicht gelesen werden: ");
@@ -160,7 +196,7 @@ class EmberImportServiceTest {
         when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
         EmberImportService service = service();
 
-        service.start(new EmberImportRequest("ember", List.of(), false, false, false));
+        service.start(new EmberImportRequest("ember", List.of(), false, false, false, false));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
         verify(jobService).submit(anyString(), anyString(), task.capture());
@@ -171,7 +207,7 @@ class EmberImportServiceTest {
     void rejectsInvalidProfileBeforeStarting() {
         when(profileDetector.detect(any())).thenThrow(new IllegalStateException("kein Profil"));
 
-        assertThatThrownBy(() -> service().start(new EmberImportRequest("leer", List.of(), false, false, false)))
+        assertThatThrownBy(() -> service().start(new EmberImportRequest("leer", List.of(), false, false, false, false)))
                 .hasMessage("kein Profil");
         verify(jobService, never()).submit(anyString(), anyString(), any());
     }
@@ -181,7 +217,7 @@ class EmberImportServiceTest {
     }
 
     private EmberImportService service() {
-        return new EmberImportService(profileInspector, profileDetector, libraryReader, settingsReader,
+        return new EmberImportService(profileInspector, profileDetector, libraryReader, tvLibraryReader, settingsReader,
                 kodiHostsReader, importer, kodiHostImporter, jobService, new TransactionTemplate(transactionManager));
     }
 }

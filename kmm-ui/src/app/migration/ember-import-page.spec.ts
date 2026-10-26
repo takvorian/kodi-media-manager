@@ -19,6 +19,10 @@ describe('EmberImportPage', () => {
       { name: 'filme', path: 'a:\\medien\\filme' },
       { name: 'ohne Pfad', path: null },
     ],
+    tvSources: [
+      { name: 'serien', path: 'a:\\medien\\serien' },
+      { name: 'gemeinsam', path: 'a:\\medien\\filme' },
+    ],
     kodiHosts: [
       { name: 'FireKodi', address: 'firetv.local', port: 8080, pathMappings: 2 },
       { name: null, address: '192.168.1.20', port: 0, pathMappings: 0 },
@@ -33,6 +37,15 @@ describe('EmberImportPage', () => {
     moviesUpdated: 0,
     moviesSkipped: 2,
     moviesWithoutNfo: 1,
+    tvShows: {
+      showsCreated: 1,
+      showsUpdated: 0,
+      showsSkipped: 0,
+      episodesCreated: 3,
+      episodesUpdated: 0,
+      episodesSkipped: 1,
+      episodesMissing: 2,
+    },
     kodiHostsCreated: 2,
     kodiHostsUpdated: 0,
     settingsChanges: ['Sprache der Metadaten: de-DE'],
@@ -47,11 +60,13 @@ describe('EmberImportPage', () => {
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
   let confirmAnswer: boolean;
+  let confirmQuestions: string[];
   let events: FakeJobEvents;
 
   beforeEach(() => {
     snackBarMessages = [];
     confirmAnswer = true;
+    confirmQuestions = [];
     events = new FakeJobEvents();
     TestBed.configureTestingModule({
       imports: [EmberImportPage],
@@ -59,7 +74,13 @@ describe('EmberImportPage', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
-        { provide: CONFIRM, useValue: () => confirmAnswer },
+        {
+          provide: CONFIRM,
+          useValue: (question: string) => {
+            confirmQuestions.push(question);
+            return confirmAnswer;
+          },
+        },
         events.provider(),
       ],
     });
@@ -95,14 +116,16 @@ describe('EmberImportPage', () => {
     await fixture.whenStable();
   }
 
-  it('shows the profile and proposes unchanged paths for the sources', async () => {
+  it('shows the profile and proposes unchanged paths for movie and tv sources', async () => {
     await analyze();
 
     expect(element().querySelector('.library')?.textContent).toContain('1169 Filme, 222 Filmsets');
+    expect(element().querySelector('.library')?.textContent).toContain('183 Serien mit 9516 Episoden');
     expect(element().querySelector('.settings')?.textContent).toContain('Sprache de-DE');
     expect(field('emberPath0').value).toBe('a:\\medien\\filme');
     expect(field('kmmPath0').value).toBe('a:\\medien\\filme');
-    expect(field('emberPath1')).toBeNull();
+    expect(field('emberPath1').value).toBe('a:\\medien\\serien');
+    expect(field('emberPath2')).toBeNull();
     expect(texts('.kodi-hosts div')).toEqual(['FireKodi (firetv.local:8080)', '192.168.1.20 (192.168.1.20:8080)']);
   });
 
@@ -133,9 +156,13 @@ describe('EmberImportPage', () => {
 
     expect(request.request.body).toEqual({
       profilePath: 'C:\\Ember\\Profiles\\Default',
-      pathMappings: [{ emberPath: 'a:\\medien\\filme', kmmPath: '/media/filme' }],
+      pathMappings: [
+        { emberPath: 'a:\\medien\\filme', kmmPath: '/media/filme' },
+        { emberPath: 'a:\\medien\\serien', kmmPath: 'a:\\medien\\serien' },
+      ],
       importSettings: true,
       importKodiHosts: true,
+      importTvShows: true,
       dryRun: true,
     });
   });
@@ -158,12 +185,14 @@ describe('EmberImportPage', () => {
     button('.import-button').click();
 
     httpTesting.expectNone({ method: 'POST' });
+    expect(confirmQuestions).toEqual(['1169 Filme und 183 Serien aus Ember in die Bibliothek übernehmen?']);
   });
 
-  it('imports without settings after confirmation', async () => {
+  it('imports without settings, tv shows and kodi hosts after confirmation', async () => {
     await analyze();
-    element().querySelector<HTMLInputElement>('mat-checkbox input')!.click();
+    element().querySelector<HTMLInputElement>('.settings-checkbox input')!.click();
     element().querySelector<HTMLInputElement>('.kodi-hosts-checkbox input')!.click();
+    element().querySelector<HTMLInputElement>('.tv-shows-checkbox input')!.click();
     await fixture.whenStable();
 
     button('.import-button').click();
@@ -173,6 +202,8 @@ describe('EmberImportPage', () => {
     expect(request.request.body.dryRun).toBe(false);
     expect(request.request.body.importSettings).toBe(false);
     expect(request.request.body.importKodiHosts).toBe(false);
+    expect(request.request.body.importTvShows).toBe(false);
+    expect(confirmQuestions).toEqual(['1169 Filme aus Ember in die Bibliothek übernehmen?']);
   });
 
   it('shows progress, can cancel and presents the report', async () => {
@@ -187,14 +218,43 @@ describe('EmberImportPage', () => {
     events.emit(importJob({ status: 'SUCCEEDED', result: report }));
     fixture.detectChanges();
 
-    expect(snackBarMessages).toEqual(['Ember-Import (Probelauf): würde übernehmen 1169 neue und 0 vorhandene Filme.']);
+    expect(snackBarMessages).toEqual([
+      'Ember-Import (Probelauf): würde übernehmen 1169 neue und 0 vorhandene Filme sowie 3 Episoden.',
+    ]);
     expect(element().querySelector('.report mat-card-title')?.textContent).toContain('Probelauf');
     expect(element().querySelector('.report-movies')?.textContent).toContain('1169 neu, 0 aktualisiert, 2 übersprungen');
     expect(texts('.settings-changes li')).toEqual(['Sprache der Metadaten: de-DE']);
     expect(element().querySelector('.report-kodi-hosts')?.textContent).toContain('2 neu, 0 aktualisiert');
+    expect(element().querySelector('.report-tv-shows')?.textContent).toContain('1 neu, 0 aktualisiert, 0 übersprungen');
+    expect(element().querySelector('.report-episodes')?.textContent).toContain(
+      '3 neu, 0 aktualisiert, 1 übersprungen, 2 ohne Datei',
+    );
     expect(texts('.skipped-sources li')).toEqual(['serien: keine Zuordnung']);
     expect(texts('.warnings li')).toEqual(['Verzeichnis nicht erreichbar']);
     expect(texts('.missing-files li')).toEqual(['Heat']);
+  });
+
+  it('hides tv show rows when no tv shows were imported', async () => {
+    await analyze();
+    const withoutTvShows: EmberImportReport = {
+      ...report,
+      tvShows: {
+        showsCreated: 0,
+        showsUpdated: 0,
+        showsSkipped: 0,
+        episodesCreated: 0,
+        episodesUpdated: 0,
+        episodesSkipped: 0,
+        episodesMissing: 0,
+      },
+    };
+
+    events.emit(importJob());
+    events.emit(importJob({ status: 'SUCCEEDED', result: withoutTvShows }));
+    fixture.detectChanges();
+
+    expect(element().querySelector('.report-tv-shows')).toBeNull();
+    expect(snackBarMessages).toEqual(['Ember-Import (Probelauf): würde übernehmen 1169 neue und 0 vorhandene Filme.']);
   });
 
   it('reports failed, cancelled and unstartable imports', async () => {

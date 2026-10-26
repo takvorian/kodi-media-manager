@@ -20,6 +20,13 @@ final class EmberImportProgress {
     private int moviesUpdated;
     private int moviesSkipped;
     private int moviesWithoutNfo;
+    private int showsCreated;
+    private int showsUpdated;
+    private int showsSkipped;
+    private int episodesCreated;
+    private int episodesUpdated;
+    private int episodesSkipped;
+    private int episodesMissing;
     private int kodiHostsCreated;
     private int kodiHostsUpdated;
     private final List<String> settingsChanges = new ArrayList<>();
@@ -55,6 +62,34 @@ final class EmberImportProgress {
         moviesSkipped++;
     }
 
+    void showImported(boolean created) {
+        if (created) {
+            showsCreated++;
+        } else {
+            showsUpdated++;
+        }
+    }
+
+    void showSkipped() {
+        showsSkipped++;
+    }
+
+    void episodeImported(boolean created) {
+        if (created) {
+            episodesCreated++;
+        } else {
+            episodesUpdated++;
+        }
+    }
+
+    void episodeSkipped() {
+        episodesSkipped++;
+    }
+
+    void episodesMissing(int count) {
+        episodesMissing += count;
+    }
+
     void kodiHostImported(boolean created) {
         if (created) {
             kodiHostsCreated++;
@@ -80,7 +115,10 @@ final class EmberImportProgress {
 
     EmberImportReport toReport() {
         return new EmberImportReport(dryRun, sourcesCreated, sourcesReused, moviesCreated, moviesUpdated,
-                moviesSkipped, moviesWithoutNfo, kodiHostsCreated, kodiHostsUpdated, settingsChanges, skippedSources, missingFiles, List.copyOf(warnings));
+                moviesSkipped, moviesWithoutNfo, new EmberImportReport.TvShows(showsCreated, showsUpdated,
+                        showsSkipped, episodesCreated, episodesUpdated, episodesSkipped, episodesMissing),
+                kodiHostsCreated, kodiHostsUpdated, settingsChanges, skippedSources, missingFiles,
+                List.copyOf(warnings));
     }
 
     private static void addLimited(List<String> list, String entry) {

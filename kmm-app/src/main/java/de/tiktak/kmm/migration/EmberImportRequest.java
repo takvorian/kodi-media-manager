@@ -14,6 +14,7 @@ import jakarta.validation.constraints.Size;
  * @param pathMappings   Zuordnung der Ember-Pfade zu Pfaden in KMM; ohne Zuordnung bleiben Pfade unverändert
  * @param importSettings  ob Embers Einstellungen übernommen werden
  * @param importKodiHosts ob Embers Kodi-Geräte samt Zugangsdaten übernommen werden
+ * @param importTvShows   ob Embers Serien und Episoden übernommen werden
  * @param dryRun         Probelauf: alles prüfen und berichten, aber nichts speichern
  */
 public record EmberImportRequest(
@@ -21,6 +22,7 @@ public record EmberImportRequest(
         @NotNull @Size(max = MAX_MAPPINGS) List<@Valid PathMapping> pathMappings,
         boolean importSettings,
         boolean importKodiHosts,
+        boolean importTvShows,
         boolean dryRun) {
 
     static final int MAX_MAPPINGS = 50;

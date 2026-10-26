@@ -3,7 +3,7 @@
 Medienverwaltung für [Kodi](https://kodi.tv) als Java-Nachfolger von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper).
 KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter H2-Datenbank) und bringt eine Weboberfläche mit.
 
-> **Status:** Filme und erste Serienfunktionen – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten), Filme, Sets, Einstellungen und Kodi-Geräte aus Ember Media Manager übernehmen (mit Probelauf) sowie Kodi nach Änderungen automatisch aktualisieren funktionieren. Serienquellen lassen sich scannen; Serien, Staffeln und Episoden (auch Mehrfachepisoden) werden aus den NFOs gelesen, angezeigt und bearbeitet. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
+> **Status:** Filme und erste Serienfunktionen – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten), Filme, Sets, Serien mit Episoden, Stream-Details, Einstellungen und Kodi-Geräte aus Ember Media Manager übernehmen (mit Probelauf) sowie Kodi nach Änderungen automatisch aktualisieren funktionieren. Serienquellen lassen sich scannen; Serien, Staffeln und Episoden (auch Mehrfachepisoden) werden aus den NFOs gelesen, angezeigt und bearbeitet. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
 
 ## Technik
 

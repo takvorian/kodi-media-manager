@@ -4,12 +4,8 @@ import java.nio.file.Path;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -69,6 +65,7 @@ public class EmberLibraryReader {
     private static final String IMDB = "imdb";
     private static final String TMDB = "tmdb";
     private static final String TMDB_COLLECTION = "tmdbcol";
+    private static final String ID = "idMovie";
     private static final int NO_ORDER = -1;
 
     public EmberLibrary read(Path databaseFile) {
@@ -90,24 +87,25 @@ public class EmberLibraryReader {
     }
 
     private List<EmberMovieSource> sources(Connection connection) throws SQLException {
-        return query(connection, SOURCES, row -> new EmberMovieSource(row.getLong("idSource"),
+        return EmberQueries.query(connection, SOURCES, row -> new EmberMovieSource(row.getLong("idSource"),
                 EmberValues.text(row, "strName"), EmberValues.text(row, "strPath"),
                 EmberValues.text(row, "strLanguage")));
     }
 
     private List<EmberMovie> movies(Connection connection) throws SQLException {
-        Map<Long, Map<String, String>> uniqueIds = uniqueIds(connection);
-        Map<Long, List<String>> genres = names(connection, GENRES);
-        Map<Long, List<EmberActor>> actors = grouped(connection, ACTORS, EmberLibraryReader::actor);
-        Map<Long, List<String>> directors = names(connection, DIRECTORS);
-        Map<Long, List<String>> writers = names(connection, WRITERS);
-        Map<Long, List<String>> studios = names(connection, STUDIOS);
-        Map<Long, List<String>> countries = names(connection, COUNTRIES);
-        Map<Long, List<String>> tags = names(connection, TAGS);
-        Map<Long, List<EmberRating>> ratings = grouped(connection, RATINGS, EmberLibraryReader::rating);
-        Map<Long, List<EmberSetLink>> sets = grouped(connection, SET_LINKS, row -> new EmberSetLink(
+        Map<Long, Map<String, String>> uniqueIds = EmberQueries.uniqueIds(connection, UNIQUE_IDS, ID);
+        Map<Long, List<String>> genres = EmberQueries.names(connection, GENRES, ID);
+        Map<Long, List<EmberActor>> actors = EmberQueries.grouped(connection, ACTORS, ID, EmberQueries::actor);
+        Map<Long, List<String>> directors = EmberQueries.names(connection, DIRECTORS, ID);
+        Map<Long, List<String>> writers = EmberQueries.names(connection, WRITERS, ID);
+        Map<Long, List<String>> studios = EmberQueries.names(connection, STUDIOS, ID);
+        Map<Long, List<String>> countries = EmberQueries.names(connection, COUNTRIES, ID);
+        Map<Long, List<String>> tags = EmberQueries.names(connection, TAGS, ID);
+        Map<Long, List<EmberRating>> ratings = EmberQueries.grouped(connection, RATINGS, ID, EmberQueries::rating);
+        Map<Long, List<EmberSetLink>> sets = EmberQueries.grouped(connection, SET_LINKS, ID, row -> new EmberSetLink(
                 row.getLong("idSet"), order(EmberValues.nullableInt(row, "iOrder"))));
-        return query(connection, MOVIES, row -> {
+        Map<Long, EmberStreams> streams = EmberStreamReader.movies(connection);
+        return EmberQueries.query(connection, MOVIES, row -> {
             long id = row.getLong("idMovie");
             return EmberMovie.builder()
                     .id(id)
@@ -133,6 +131,7 @@ public class EmberLibraryReader {
                     .tags(tags.get(id))
                     .ratings(ratings.get(id))
                     .sets(sets.get(id))
+                    .streams(streams.getOrDefault(id, EmberStreams.NONE))
                     .dateAdded(EmberValues.localDateTime(row, "DateAdded"))
                     .playCount(EmberValues.nullableInt(row, "Playcount"))
                     .lastPlayed(EmberValues.localDateTime(row, "iLastPlayed"))
@@ -141,88 +140,25 @@ public class EmberLibraryReader {
         });
     }
 
-    private static EmberActor actor(ResultSet row) throws SQLException {
-        String name = EmberValues.text(row, "strActor");
-        return name == null ? null
-                : new EmberActor(name, EmberValues.text(row, "strRole"), EmberValues.text(row, "strThumb"));
-    }
-
-    private static EmberRating rating(ResultSet row) throws SQLException {
-        String source = EmberValues.text(row, "rating_type");
-        return source == null ? null : new EmberRating(source, row.getDouble("rating"),
-                EmberValues.nullableInt(row, "rating_max"), EmberValues.nullableInt(row, "votes"),
-                row.getBoolean("isDefault"));
-    }
-
     private List<EmberMovieSet> sets(Connection connection) throws SQLException {
-        return query(connection, SETS, row -> new EmberMovieSet(row.getLong("idSet"), EmberValues.text(row, "Title"),
+        return EmberQueries.query(connection, SETS, row -> new EmberMovieSet(row.getLong("idSet"), EmberValues.text(row, "Title"),
                 EmberValues.text(row, "Plot"),
                 firstPresent(EmberValues.text(row, "TMDBColID"), EmberValues.text(row, "tmdbId"))));
     }
 
     private List<String> excludedDirectories(Connection connection) throws SQLException {
-        return query(connection, EXCLUDED_DIRECTORIES, row -> EmberValues.text(row, "Dirname")).stream()
+        return EmberQueries.query(connection, EXCLUDED_DIRECTORIES, row -> EmberValues.text(row, "Dirname")).stream()
                 .filter(Objects::nonNull)
                 .toList();
-    }
-
-    private Map<Long, Map<String, String>> uniqueIds(Connection connection) throws SQLException {
-        Map<Long, Map<String, String>> ids = new HashMap<>();
-        forEachRow(connection, UNIQUE_IDS, row -> {
-            String type = EmberValues.text(row, "type");
-            String value = EmberValues.text(row, "value");
-            if (type != null && value != null) {
-                ids.computeIfAbsent(row.getLong("idMovie"), key -> new LinkedHashMap<>())
-                        .putIfAbsent(type.toLowerCase(Locale.ROOT), value);
-            }
-        });
-        return ids;
     }
 
     /** Ältere Einträge haben die IDs nur in den Spalten der Filmtabelle. */
     private static Map<String, String> withColumnIds(Map<String, String> uniqueIds, ResultSet row) throws SQLException {
         Map<String, String> ids = new LinkedHashMap<>(uniqueIds);
-        putIfAbsent(ids, IMDB, EmberValues.text(row, "Imdb"));
-        putIfAbsent(ids, TMDB, EmberValues.text(row, "TMDB"));
-        putIfAbsent(ids, TMDB_COLLECTION, EmberValues.text(row, "TMDBColID"));
+        EmberQueries.putIfAbsent(ids, IMDB, EmberValues.text(row, "Imdb"));
+        EmberQueries.putIfAbsent(ids, TMDB, EmberValues.text(row, "TMDB"));
+        EmberQueries.putIfAbsent(ids, TMDB_COLLECTION, EmberValues.text(row, "TMDBColID"));
         return ids;
-    }
-
-    private static void putIfAbsent(Map<String, String> ids, String type, String value) {
-        if (value != null) {
-            ids.putIfAbsent(type, value);
-        }
-    }
-
-    private Map<Long, List<String>> names(Connection connection, String sql) throws SQLException {
-        return grouped(connection, sql, row -> EmberValues.text(row, "name"));
-    }
-
-    /** Ordnet die Zeilen über die Spalte {@code idMovie} zu; Zeilen, für die der Mapper {@code null} liefert, entfallen. */
-    private <T> Map<Long, List<T>> grouped(Connection connection, String sql, RowMapper<T> mapper)
-            throws SQLException {
-        Map<Long, List<T>> grouped = new HashMap<>();
-        forEachRow(connection, sql, row -> {
-            T value = mapper.map(row);
-            if (value != null) {
-                grouped.computeIfAbsent(row.getLong("idMovie"), key -> new ArrayList<>()).add(value);
-            }
-        });
-        return grouped;
-    }
-
-    private <T> List<T> query(Connection connection, String sql, RowMapper<T> mapper) throws SQLException {
-        List<T> values = new ArrayList<>();
-        forEachRow(connection, sql, row -> values.add(mapper.map(row)));
-        return values;
-    }
-
-    private void forEachRow(Connection connection, String sql, RowConsumer consumer) throws SQLException {
-        try (Statement statement = connection.createStatement(); ResultSet row = statement.executeQuery(sql)) {
-            while (row.next()) {
-                consumer.accept(row);
-            }
-        }
     }
 
     private static Integer order(Integer order) {
@@ -231,15 +167,5 @@ public class EmberLibraryReader {
 
     private static String firstPresent(String preferred, String fallback) {
         return preferred != null ? preferred : fallback;
-    }
-
-    @FunctionalInterface
-    private interface RowMapper<T> {
-        T map(ResultSet row) throws SQLException;
-    }
-
-    @FunctionalInterface
-    private interface RowConsumer {
-        void accept(ResultSet row) throws SQLException;
     }
 }

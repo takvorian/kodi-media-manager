@@ -35,6 +35,7 @@ export interface EmberInspection {
   readonly schemaVersion: number;
   readonly library: EmberLibraryStatistics;
   readonly sources: readonly EmberSource[];
+  readonly tvSources: readonly EmberSource[];
   readonly kodiHosts: readonly EmberKodiHost[];
   readonly settings: EmberSettingsSummary | null;
 }
@@ -50,7 +51,20 @@ export interface EmberImportRequest {
   readonly pathMappings: readonly PathMapping[];
   readonly importSettings: boolean;
   readonly importKodiHosts: boolean;
+  readonly importTvShows: boolean;
   readonly dryRun: boolean;
+}
+
+/** Ergebnis des Imports für Serien und Episoden. */
+export interface EmberTvShowsReport {
+  readonly showsCreated: number;
+  readonly showsUpdated: number;
+  readonly showsSkipped: number;
+  readonly episodesCreated: number;
+  readonly episodesUpdated: number;
+  readonly episodesSkipped: number;
+  /** Episoden, die Ember ohne Datei kennt; sie werden nicht übernommen. */
+  readonly episodesMissing: number;
 }
 
 /** Ergebnis eines erfolgreichen Import-Jobs. */
@@ -62,6 +76,7 @@ export interface EmberImportReport {
   readonly moviesUpdated: number;
   readonly moviesSkipped: number;
   readonly moviesWithoutNfo: number;
+  readonly tvShows: EmberTvShowsReport;
   readonly kodiHostsCreated: number;
   readonly kodiHostsUpdated: number;
   readonly settingsChanges: readonly string[];

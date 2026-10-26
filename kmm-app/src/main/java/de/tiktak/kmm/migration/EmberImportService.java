@@ -19,6 +19,8 @@ import de.tiktak.kmm.migration.ember.kodi.EmberKodiHostsReader;
 import de.tiktak.kmm.migration.ember.library.EmberLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberLibraryReader;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
+import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
+import de.tiktak.kmm.migration.ember.library.EmberTvLibraryReader;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsException;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
@@ -26,7 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Analysiert Ember-Profile und übernimmt ihren Filmbestand als Hintergrund-Job. Ein Probelauf
+ * Analysiert Ember-Profile und übernimmt ihren Film- und Serienbestand als Hintergrund-Job. Ein Probelauf
  * führt den Import vollständig aus und rollt ihn am Ende zurück; so zeigt sein Bericht genau, was
  * der echte Import ändern würde. Ein erneuter Import aktualisiert statt zu duplizieren.
  */
@@ -41,6 +43,7 @@ public class EmberImportService {
     private final EmberProfileInspector profileInspector;
     private final EmberProfileDetector profileDetector;
     private final EmberLibraryReader libraryReader;
+    private final EmberTvLibraryReader tvLibraryReader;
     private final EmberSettingsReader settingsReader;
     private final EmberKodiHostsReader kodiHostsReader;
     private final EmberLibraryImporter importer;
@@ -50,8 +53,10 @@ public class EmberImportService {
 
     public EmberInspectionResponse inspect(Path directory) {
         var inspection = profileInspector.inspect(directory);
-        List<EmberMovieSource> sources = libraryReader.readSources(inspection.profile().databaseFile());
-        return EmberInspectionResponse.from(inspection, sources, inspectKodiHosts(inspection.profile()));
+        Path databaseFile = inspection.profile().databaseFile();
+        List<EmberMovieSource> sources = libraryReader.readSources(databaseFile);
+        return EmberInspectionResponse.from(inspection, sources, tvLibraryReader.readSources(databaseFile),
+                inspectKodiHosts(inspection.profile()));
     }
 
     /**
@@ -69,19 +74,22 @@ public class EmberImportService {
         context.reportProgress(0, 0, READING_MESSAGE);
         EmberImportProgress progress = new EmberImportProgress(request.dryRun());
         EmberLibrary library = libraryReader.read(profile.databaseFile());
+        Optional<EmberTvLibrary> tvLibrary = request.importTvShows()
+                ? Optional.of(tvLibraryReader.read(profile.databaseFile()))
+                : Optional.empty();
         Optional<EmberSettings> settings = readSettings(profile, request, progress);
         List<EmberKodiHost> kodiHosts = readKodiHosts(profile, request, progress);
         transactionTemplate.executeWithoutResult(status -> {
-            importer.importLibrary(library, settings, request, progress, context);
+            importer.importLibrary(library, tvLibrary, settings, request, progress, context);
             kodiHostImporter.importHosts(kodiHosts, EmberPathTranslator.of(request.pathMappings()), progress);
             if (request.dryRun()) {
                 status.setRollbackOnly();
             }
         });
         EmberImportReport report = progress.toReport();
-        log.info("Ember import{} finished: {} movies created, {} updated, {} skipped",
+        log.info("Ember import{} finished: {} movies created, {} updated, {} skipped; {} episodes created, {} updated",
                 request.dryRun() ? " (dry run)" : "", report.moviesCreated(), report.moviesUpdated(),
-                report.moviesSkipped());
+                report.moviesSkipped(), report.tvShows().episodesCreated(), report.tvShows().episodesUpdated());
         return report;
     }
 

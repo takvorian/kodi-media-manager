@@ -18,10 +18,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -34,6 +34,7 @@ import de.tiktak.kmm.migration.ember.library.EmberMovie;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberSetLink;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSet;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
+import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.movie.MovieImport;
 import de.tiktak.kmm.movie.MovieImportResult;
 import de.tiktak.kmm.movie.MovieImportService;
@@ -61,7 +62,9 @@ class EmberLibraryImporterTest {
     @Spy
     private Clock clock = Clock.systemUTC();
 
-    @InjectMocks
+    @Mock
+    private EmberTvImporter tvImporter;
+
     private EmberLibraryImporter importer;
 
     @TempDir
@@ -69,6 +72,12 @@ class EmberLibraryImporterTest {
 
     private final MovieImportSession session = mock(MovieImportSession.class);
     private final RecordingContext context = new RecordingContext(false);
+
+    @BeforeEach
+    void createImporter() {
+        importer = new EmberLibraryImporter(new EmberSourceImporter(sourceService), tvImporter, movieImportService,
+                settingsService, clock);
+    }
 
     @Test
     void keepsPathsUnchangedWithoutMappingRules() {
@@ -145,12 +154,24 @@ class EmberLibraryImporterTest {
         when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS);
         EmberLibrary withExcluded = new EmberLibrary(List.of(), List.of(), List.of(), List.of("D:\\Filme\\Privat"));
 
-        EmberImportReport dryRun = run(withExcluded, new EmberImportRequest("ember", mappings(), true, false, true));
+        EmberImportReport dryRun = run(withExcluded, new EmberImportRequest("ember", mappings(), true, false, false, true));
         verify(settingsService, never()).update(any());
-        EmberImportReport real = run(withExcluded, new EmberImportRequest("ember", mappings(), true, false, false));
+        EmberImportReport real = run(withExcluded, new EmberImportRequest("ember", mappings(), true, false, false, false));
 
         assertThat(dryRun.settingsChanges()).isEqualTo(real.settingsChanges()).hasSize(1);
         verify(settingsService).update(any());
+    }
+
+    @Test
+    void handsTheTvLibraryToTheTvImporter() {
+        when(movieImportService.startSession(anyCollection())).thenReturn(session);
+        EmberTvLibrary tvLibrary = new EmberTvLibrary(List.of(), List.of(), List.of(), 0);
+        EmberImportProgress progress = new EmberImportProgress(false);
+
+        importer.importLibrary(new EmberLibrary(List.of(), List.of(), List.of(), List.of()), Optional.of(tvLibrary),
+                Optional.empty(), mapped(), progress, context);
+
+        verify(tvImporter).importLibrary(eq(tvLibrary), any(EmberPathTranslator.class), eq(progress), eq(context));
     }
 
     @Test
@@ -159,14 +180,15 @@ class EmberLibraryImporterTest {
         when(movieImportService.startSession(anyCollection())).thenReturn(session);
 
         assertThatExceptionOfType(JobCancelledException.class).isThrownBy(() -> importer.importLibrary(
-                library(source("D:\\Filme"), movie(1, "D:\\Filme\\Heat.mkv")), Optional.empty(), mapped(),
+                library(source("D:\\Filme"), movie(1, "D:\\Filme\\Heat.mkv")), Optional.empty(), Optional.empty(),
+                mapped(),
                 new EmberImportProgress(false), new RecordingContext(true)));
         verify(session, never()).importMovie(any(MovieImport.class));
     }
 
     private EmberImportReport run(EmberLibrary emberLibrary, EmberImportRequest request) {
         EmberImportProgress progress = new EmberImportProgress(request.dryRun());
-        importer.importLibrary(emberLibrary, Optional.empty(), request, progress, context);
+        importer.importLibrary(emberLibrary, Optional.empty(), Optional.empty(), request, progress, context);
         return progress.toReport();
     }
 
@@ -186,7 +208,7 @@ class EmberLibraryImporterTest {
     }
 
     private static EmberImportRequest request(List<EmberImportRequest.PathMapping> mappings) {
-        return new EmberImportRequest("ember", mappings, false, false, false);
+        return new EmberImportRequest("ember", mappings, false, false, false, false);
     }
 
     private static EmberLibrary library(EmberMovieSource source, EmberMovie movie) {
