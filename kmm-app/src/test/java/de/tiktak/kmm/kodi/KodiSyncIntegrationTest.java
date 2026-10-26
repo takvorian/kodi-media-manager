@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.kodi.rpc.FakeKodiServer;
+import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.movie.MovieController;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
@@ -110,7 +111,8 @@ class KodiSyncIntegrationTest {
     }
 
     private void scan(long sourceId) {
-        MvcTestResult started = mockMvc.post().uri(MovieController.SCAN_PATH, sourceId).with(csrf()).exchange();
+        MvcTestResult started = mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf())
+                .exchange();
         assertThat(started).hasStatus(HttpStatus.ACCEPTED);
         String jobId = read(started).get("id").asString();
         JsonNode job = await().atMost(TIMEOUT).pollInSameThread()

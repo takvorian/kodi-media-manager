@@ -24,6 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class MediaSourceService {
 
+    /** Präfix des Job-Schlüssels für Scans; pro Quelle läuft höchstens ein Scan, egal welcher Art. */
+    public static final String SCAN_JOB_KEY_PREFIX = "scan:";
+
     private static final Sort BY_NAME = Sort.by(Sort.Order.asc("name").ignoreCase());
 
     private final MediaSourceRepository repository;

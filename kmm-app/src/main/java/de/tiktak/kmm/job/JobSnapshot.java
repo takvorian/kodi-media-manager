@@ -6,7 +6,7 @@ import java.util.UUID;
 /**
  * Unveränderlicher Zustand eines Jobs zu einem Zeitpunkt. Wird über REST und SSE ausgeliefert.
  *
- * @param key        fachlicher Schlüssel; pro Schlüssel läuft höchstens ein Job (z. B. {@code movie-scan:3})
+ * @param key        fachlicher Schlüssel; pro Schlüssel läuft höchstens ein Job (z. B. {@code scan:3})
  * @param title      Beschreibung für die Oberfläche
  * @param done       erledigte Arbeitsschritte
  * @param total      Gesamtzahl der Schritte oder 0, solange sie unbekannt ist

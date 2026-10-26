@@ -31,7 +31,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MovieScanService {
 
     /** Präfix des Job-Schlüssels; pro Quelle läuft höchstens ein Scan. */
-    public static final String JOB_KEY_PREFIX = "movie-scan:";
+    public static final String JOB_KEY_PREFIX = MediaSourceService.SCAN_JOB_KEY_PREFIX;
     static final String SEARCHING_MESSAGE = "Verzeichnisse werden durchsucht";
     static final String CHECKING_NFOS_MESSAGE = "NFOs werden geprüft";
     static final String SYNCHRONIZING_MESSAGE = "Bibliothek wird abgeglichen";

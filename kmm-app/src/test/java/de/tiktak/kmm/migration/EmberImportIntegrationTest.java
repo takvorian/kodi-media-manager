@@ -30,6 +30,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
+import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.migration.ember.EmberFixtures;
 import de.tiktak.kmm.kodi.KodiHostController;
 import de.tiktak.kmm.movie.MovieController;
@@ -151,7 +152,8 @@ class EmberImportIntegrationTest {
         awaitJob(startImport(false));
         long sourceId = jdbcClient.sql("SELECT id FROM media_source").query(Long.class).single();
 
-        JsonNode scan = awaitJob(post(MovieController.SCAN_PATH.replace("{sourceId}", String.valueOf(sourceId))));
+        JsonNode scan = awaitJob(post(
+                LibraryScanController.SCAN_PATH.replace("{sourceId}", String.valueOf(sourceId))));
 
         assertThat(scan.get("added").asInt()).isZero();
         assertThat(scan.get("removed").asInt()).isZero();

@@ -27,7 +27,7 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 class JobControllerTest {
 
     private static final UUID JOB_ID = UUID.fromString("7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f00");
-    private static final JobSnapshot JOB = JobSnapshot.started(JOB_ID, "movie-scan:1", "Scan „Filme“",
+    private static final JobSnapshot JOB = JobSnapshot.started(JOB_ID, "scan:1", "Scan „Filme“",
             Instant.parse("2026-10-25T12:00:00Z")).withProgress(3, 10, "NFOs werden geprüft");
 
     @Autowired
@@ -47,7 +47,7 @@ class JobControllerTest {
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        [{"id": "7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f00", "key": "movie-scan:1", "status": "RUNNING",
+                        [{"id": "7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f00", "key": "scan:1", "status": "RUNNING",
                           "done": 3, "total": 10, "message": "NFOs werden geprüft"}]
                         """);
     }

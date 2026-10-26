@@ -88,9 +88,9 @@ class MovieScanServiceTest {
     @Test
     void startsScanAsJobKeyedBySource() {
         givenSource(MediaType.MOVIE, directory);
-        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "movie-scan:3", "Scan „Filme“", JobStatus.RUNNING,
+        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "scan:3", "Scan „Filme“", JobStatus.RUNNING,
                 0, 0, null, null, Instant.now(), null);
-        when(jobService.submit(eq("movie-scan:3"), eq("Scan „Filme“"), any())).thenReturn(started);
+        when(jobService.submit(eq("scan:3"), eq("Scan „Filme“"), any())).thenReturn(started);
 
         assertThat(service.startScan(SOURCE_ID)).isEqualTo(started);
     }

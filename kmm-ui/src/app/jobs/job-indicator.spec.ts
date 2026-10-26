@@ -35,7 +35,7 @@ describe('JobIndicator', () => {
 
   it('shows an indeterminate job without percentage and counts further jobs', () => {
     events.emit(job({ message: 'Verzeichnisse werden durchsucht' }));
-    events.emit(job({ id: 'job-2', key: 'movie-scan:2', startedAt: '2026-10-25T11:00:00Z' }));
+    events.emit(job({ id: 'job-2', key: 'scan:2', startedAt: '2026-10-25T11:00:00Z' }));
 
     expect(text()).toBe('Scan „Filme“ – Verzeichnisse werden durchsucht · 1 weitere');
   });

@@ -26,6 +26,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
+import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -136,7 +137,7 @@ class MovieLibraryIntegrationTest {
 
     @Test
     void rejectsScanOfUnknownSource() {
-        assertThat(mockMvc.post().uri(MovieController.SCAN_PATH, 999L).with(csrf())).hasStatus(404);
+        assertThat(mockMvc.post().uri(LibraryScanController.SCAN_PATH, 999L).with(csrf())).hasStatus(404);
     }
 
     @Test
@@ -164,7 +165,8 @@ class MovieLibraryIntegrationTest {
     }
 
     private JsonNode startScan(long sourceId) {
-        MvcTestResult result = mockMvc.post().uri(MovieController.SCAN_PATH, sourceId).with(csrf()).exchange();
+        MvcTestResult result = mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf())
+                .exchange();
         assertThat(result).hasStatus(HttpStatus.ACCEPTED);
         return objectMapper.readTree(result.getResponse().getContentAsByteArray());
     }

@@ -23,7 +23,7 @@ export interface CreateMediaSource {
 }
 
 /** Präfix des Job-Schlüssels eines Scans; muss zu MovieScanService.JOB_KEY_PREFIX passen. */
-export const SCAN_JOB_KEY_PREFIX = 'movie-scan:';
+export const SCAN_JOB_KEY_PREFIX = 'scan:';
 
 export function scanJobKey(sourceId: number): string {
   return `${SCAN_JOB_KEY_PREFIX}${sourceId}`;

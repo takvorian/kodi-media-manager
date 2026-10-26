@@ -34,6 +34,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import de.tiktak.kmm.job.JobController;
+import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.movie.MovieController;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
@@ -108,7 +109,7 @@ class AutoScrapeIntegrationTest {
                 """);
         Path roninPoster = Files.write(library.resolve("Ronin (1998)/Ronin (1998)-poster.jpg"), EXISTING_POSTER);
         long sourceId = createSource();
-        awaitJob(post(MovieController.SCAN_PATH, sourceId));
+        awaitJob(post(LibraryScanController.SCAN_PATH, sourceId));
 
         JsonNode result = awaitJob(post(AutoScrapeController.AUTO_SCRAPE_PATH, sourceId));
 

@@ -36,7 +36,7 @@ describe('JobStore', () => {
 
     expect(store.jobs()).toHaveLength(1);
     expect(store.jobs()[0].done).toBe(5);
-    expect(store.runningJob('movie-scan:1')?.done).toBe(5);
+    expect(store.runningJob('scan:1')?.done).toBe(5);
   });
 
   it('lists running jobs first and newest first', () => {
@@ -54,7 +54,7 @@ describe('JobStore', () => {
     store.update(job({ status: 'SUCCEEDED' }));
 
     expect(completed.map((entry) => entry.status)).toEqual(['SUCCEEDED']);
-    expect(store.runningJob('movie-scan:1')).toBeUndefined();
+    expect(store.runningJob('scan:1')).toBeUndefined();
   });
 
   it('does not announce jobs that were already finished when first seen', () => {

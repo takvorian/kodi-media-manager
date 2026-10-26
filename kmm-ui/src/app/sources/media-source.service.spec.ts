@@ -53,7 +53,7 @@ describe('MediaSourceService', () => {
   });
 
   it('starts a scan job', () => {
-    const job = { id: 'job-1', key: 'movie-scan:7', status: 'RUNNING' } as Job;
+    const job = { id: 'job-1', key: 'scan:7', status: 'RUNNING' } as Job;
     let received: Job | undefined;
 
     service.scan(7).subscribe((started) => (received = started));

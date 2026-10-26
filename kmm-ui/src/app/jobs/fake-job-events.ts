@@ -37,7 +37,7 @@ export class FakeJobEvents implements JobEventSource {
 export function job(overrides: Partial<Job> = {}): Job {
   return {
     id: 'job-1',
-    key: 'movie-scan:1',
+    key: 'scan:1',
     title: 'Scan „Filme“',
     status: 'RUNNING',
     done: 0,
