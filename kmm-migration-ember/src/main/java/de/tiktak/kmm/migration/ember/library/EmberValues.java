@@ -2,8 +2,9 @@ package de.tiktak.kmm.migration.ember.library;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.time.format.DateTimeParseException;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -49,10 +50,14 @@ final class EmberValues {
         return value != null && value > 0 ? value : null;
     }
 
-    /** Ember speichert Zeitpunkte als Unix-Zeit in Sekunden. */
-    static Instant epochSeconds(ResultSet row, String column) throws SQLException {
+    /**
+     * Ember speichert Zeitpunkte als Sekunden seit 1970, rechnet dabei aber die lokale Uhrzeit ohne
+     * Zeitzone um ({@code ConvertToUnixTimestamp}). Der Wert ist deshalb eine Uhrzeit ohne Zone.
+     */
+    static LocalDateTime localDateTime(ResultSet row, String column) throws SQLException {
         long seconds = row.getLong(column);
-        return row.wasNull() || seconds <= NO_TIMESTAMP ? null : Instant.ofEpochSecond(seconds);
+        return row.wasNull() || seconds <= NO_TIMESTAMP ? null
+                : LocalDateTime.ofEpochSecond(seconds, 0, ZoneOffset.UTC);
     }
 
     static LocalDate date(ResultSet row, String column) throws SQLException {

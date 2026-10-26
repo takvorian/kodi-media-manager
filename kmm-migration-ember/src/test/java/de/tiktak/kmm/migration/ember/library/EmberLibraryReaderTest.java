@@ -6,8 +6,8 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -72,9 +72,9 @@ class EmberLibraryReaderTest {
         assertThat(heat.ratings()).containsExactly(new EmberRating("imdb", 8.3, 10, 650000, true),
                 new EmberRating("themoviedb", 7.9, 10, 1000, false), new EmberRating("trakt", 0, 10, 0, false));
         assertThat(heat.sets()).isEmpty();
-        assertThat(heat.dateAdded()).isEqualTo(Instant.ofEpochSecond(1480465215));
+        assertThat(heat.dateAdded()).isEqualTo(LocalDateTime.of(2016, 11, 30, 0, 20, 15));
         assertThat(heat.playCount()).isEqualTo(2);
-        assertThat(heat.lastPlayed()).isEqualTo(Instant.ofEpochSecond(1471131295));
+        assertThat(heat.lastPlayed()).isEqualTo(LocalDateTime.of(2016, 8, 13, 23, 34, 55));
         assertThat(heat.userRating()).isEqualTo(9);
     }
 

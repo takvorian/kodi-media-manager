@@ -1,7 +1,7 @@
 package de.tiktak.kmm.migration.ember.library;
 
-import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -42,9 +42,9 @@ public record EmberMovie(
         List<String> tags,
         List<EmberRating> ratings,
         List<EmberSetLink> sets,
-        Instant dateAdded,
+        LocalDateTime dateAdded,
         Integer playCount,
-        Instant lastPlayed,
+        LocalDateTime lastPlayed,
         Integer userRating) {
 
     public EmberMovie {

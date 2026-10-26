@@ -133,9 +133,9 @@ public class EmberLibraryReader {
                     .tags(tags.get(id))
                     .ratings(ratings.get(id))
                     .sets(sets.get(id))
-                    .dateAdded(EmberValues.epochSeconds(row, "DateAdded"))
+                    .dateAdded(EmberValues.localDateTime(row, "DateAdded"))
                     .playCount(EmberValues.nullableInt(row, "Playcount"))
-                    .lastPlayed(EmberValues.epochSeconds(row, "iLastPlayed"))
+                    .lastPlayed(EmberValues.localDateTime(row, "iLastPlayed"))
                     .userRating(EmberValues.positiveInteger(row, "iUserRating"))
                     .build();
         });

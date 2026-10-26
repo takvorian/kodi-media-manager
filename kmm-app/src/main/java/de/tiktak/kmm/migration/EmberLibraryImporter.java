@@ -3,6 +3,7 @@ package de.tiktak.kmm.migration;
 import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
+import java.time.Clock;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,6 +44,7 @@ class EmberLibraryImporter {
     private final MediaSourceService sourceService;
     private final MovieImportService movieImportService;
     private final SettingsService settingsService;
+    private final Clock clock;
 
     void importLibrary(EmberLibrary library, Optional<EmberSettings> settings, EmberImportRequest request,
             EmberImportProgress progress, JobContext context) {
@@ -99,7 +101,8 @@ class EmberLibraryImporter {
             MovieImportResult result;
             try {
                 result = session.importMovie(
-                        EmberMovieMapper.toImport(movie, sourceIds.get(movie.sourceId()), entry.getValue(), sets));
+                        EmberMovieMapper.toImport(movie, sourceIds.get(movie.sourceId()), entry.getValue(), sets,
+                                clock.getZone()));
             } catch (InvalidPathException e) {
                 progress.movieSkipped();
                 progress.warn("„%s“ wurde übersprungen, der Pfad ist auf diesem System ungültig: %s"

@@ -8,6 +8,9 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -48,6 +51,9 @@ import tools.jackson.databind.ObjectMapper;
 @DirtiesContext
 class EmberImportIntegrationTest {
 
+    /** Ember speichert lokale Uhrzeiten (hier 30.11.2016 00:20:15); KMM rechnet mit der eigenen Zeitzone um. */
+    private static final Instant EMBER_DATE_ADDED =
+            LocalDateTime.of(2016, 11, 30, 0, 20, 15).atZone(ZoneId.systemDefault()).toInstant();
     private static final Duration JOB_TIMEOUT = Duration.ofSeconds(20);
     private static final String IMPORT_PATH = EmberMigrationController.BASE_PATH + "/import";
 
@@ -114,7 +120,7 @@ class EmberImportIntegrationTest {
         assertThat(report.get("skippedSources").isEmpty()).isTrue();
         long heatId = movieId("Heat");
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, heatId)).bodyJson().isLenientlyEqualTo("""
-                {"filePath": "%s", "addedAt": "2016-11-30T00:20:15Z",
+                {"filePath": "%s", "addedAt": "%s",
                  "metadata": {"title": "Heat", "year": 1995, "mpaa": "FSK 16", "runtime": 170,
                               "genres": ["Krimi", "Drama"], "imdbId": "tt0113277", "tmdbId": "949"},
                  "supplement": {"actors": [{"name": "Al Pacino", "role": "Lt. Vincent Hanna"},
@@ -123,7 +129,7 @@ class EmberImportIntegrationTest {
                                 "tags": ["Heist"], "userRating": 9, "playCount": 2,
                                 "ratings": [{"source": "imdb", "value": 8.3}, {"source": "themoviedb"}]},
                  "nfo": {"exists": true}}
-                """.formatted(json(library.resolve("Heat (1995)/Heat.mkv").toString())));
+                """.formatted(json(library.resolve("Heat (1995)/Heat.mkv").toString()), EMBER_DATE_ADDED));
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId("Matrix Reloaded"))).bodyJson()
                 .extractingPath("$.supplement.set.name").isEqualTo("Matrix Collection");
         assertThat(jdbcClient.sql("SELECT tmdb_collection_id FROM movie_set").query(String.class).single())

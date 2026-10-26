@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
@@ -25,6 +27,8 @@ import de.tiktak.kmm.scanner.DiscFormat;
 
 class EmberMovieMapperTest {
 
+    /** Ember speichert lokale Uhrzeiten; im November gilt in Berlin UTC+1, im August UTC+2. */
+    private static final ZoneId BERLIN = ZoneId.of("Europe/Berlin");
     private static final Map<Long, EmberMovieSet> SETS = Map.of(
             1L, new EmberMovieSet(1, "Matrix Collection", "Neo gegen die Maschinen.", "2344"),
             2L, new EmberMovieSet(2, null, null, null));
@@ -36,7 +40,7 @@ class EmberMovieMapperTest {
     void mapsMetadataAndConvertsGermanCertification() {
         EmberMovie heat = heat().build();
 
-        MovieImport movieImport = EmberMovieMapper.toImport(heat, 7, file("Heat.mkv"), SETS);
+        MovieImport movieImport = EmberMovieMapper.toImport(heat, 7, file("Heat.mkv"), SETS, BERLIN);
 
         assertThat(movieImport.sourceId()).isEqualTo(7);
         assertThat(movieImport.discFormat()).isEqualTo(DiscFormat.FILE);
@@ -44,20 +48,21 @@ class EmberMovieMapperTest {
         assertThat(movieImport.metadata()).isEqualTo(new MovieMetadata("Heat", "Heat", null, 1995,
                 LocalDate.of(1995, 12, 15), "Handlung", null, "Tagline", 170, "FSK 16", List.of("Krimi"),
                 "tt0113277", "949"));
-        assertThat(movieImport.addedAt()).isEqualTo(Instant.ofEpochSecond(1480465215));
+        assertThat(movieImport.addedAt()).isEqualTo(Instant.parse("2016-11-29T23:20:15Z"));
     }
 
     @Test
     void mapsSupplementAndDropsEmptyRatings() {
         EmberMovie heat = heat().build();
 
-        MovieSupplement supplement = EmberMovieMapper.toImport(heat, 7, file("Heat.mkv"), SETS).supplement();
+        MovieSupplement supplement = EmberMovieMapper.toImport(heat, 7, file("Heat.mkv"), SETS, BERLIN).supplement();
 
         assertThat(supplement.actors()).containsExactly(new MovieSupplement.Actor("Al Pacino", "Hanna", "pacino.jpg"));
         assertThat(supplement.directors()).containsExactly("Michael Mann");
         assertThat(supplement.ratings()).containsExactly(new MovieSupplement.Rating("imdb", 8.3, 10, 650000, true),
                 new MovieSupplement.Rating("trakt", 0, 10, 12, false));
         assertThat(supplement.userRating()).isEqualTo(9);
+        assertThat(supplement.lastPlayed()).isEqualTo(Instant.parse("2016-08-13T21:34:55Z"));
         assertThat(supplement.playCount()).isEqualTo(2);
         assertThat(supplement.set()).isNull();
     }
@@ -67,7 +72,7 @@ class EmberMovieMapperTest {
         EmberMovie matrix = heat().sets(List.of(new EmberSetLink(2, 5), new EmberSetLink(1, 3), new EmberSetLink(9, 0)))
                 .build();
 
-        MovieImport movieImport = EmberMovieMapper.toImport(matrix, 7, file("Matrix.mkv"), SETS);
+        MovieImport movieImport = EmberMovieMapper.toImport(matrix, 7, file("Matrix.mkv"), SETS, BERLIN);
 
         assertThat(movieImport.supplement().set())
                 .isEqualTo(new MovieSupplement.SetReference("Matrix Collection", "Neo gegen die Maschinen."));
@@ -81,7 +86,7 @@ class EmberMovieMapperTest {
         EmberMovie untitled = EmberMovie.builder().id(3).sourceId(1).path("D:\\Filme\\x.mkv").year(1700)
                 .uniqueIds(Map.of("imdb", "0113277", "tmdb", "abc", "tmdbcol", "99")).userRating(42).build();
 
-        MovieImport movieImport = EmberMovieMapper.toImport(untitled, 7, file("Unbekannt.avi"), SETS);
+        MovieImport movieImport = EmberMovieMapper.toImport(untitled, 7, file("Unbekannt.avi"), SETS, BERLIN);
 
         assertThat(movieImport.metadata().title()).isEqualTo("Unbekannt");
         assertThat(movieImport.metadata().year()).isNull();
@@ -100,8 +105,8 @@ class EmberMovieMapperTest {
         Files.createFile(library.resolve("Ronin").resolve("Ronin CD2.avi"));
         EmberMovie untitled = EmberMovie.builder().id(1).sourceId(1).path("x").build();
 
-        MovieImport disc = EmberMovieMapper.toImport(untitled, 7, dvd.toString(), SETS);
-        MovieImport stack = EmberMovieMapper.toImport(untitled, 7, file("Ronin/Ronin CD1.avi"), SETS);
+        MovieImport disc = EmberMovieMapper.toImport(untitled, 7, dvd.toString(), SETS, BERLIN);
+        MovieImport stack = EmberMovieMapper.toImport(untitled, 7, file("Ronin/Ronin CD1.avi"), SETS, BERLIN);
 
         assertThat(disc.discFormat()).isEqualTo(DiscFormat.DVD);
         assertThat(disc.metadata().title()).isEqualTo("Heat (1995)");
@@ -122,6 +127,7 @@ class EmberMovieMapperTest {
                 .actors(List.of(new EmberActor("Al Pacino", "Hanna", "pacino.jpg"))).directors(List.of("Michael Mann"))
                 .ratings(List.of(new EmberRating("imdb", 8.3, 10, 650000, true),
                         new EmberRating("themoviedb", 0, 10, 0, false), new EmberRating("trakt", 0, 10, 12, false)))
-                .dateAdded(Instant.ofEpochSecond(1480465215)).playCount(2).userRating(9);
+                .dateAdded(LocalDateTime.of(2016, 11, 30, 0, 20, 15)).playCount(2)
+                .lastPlayed(LocalDateTime.of(2016, 8, 13, 23, 34, 55)).userRating(9);
     }
 }

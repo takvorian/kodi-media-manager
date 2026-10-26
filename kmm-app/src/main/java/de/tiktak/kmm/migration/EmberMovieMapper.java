@@ -1,6 +1,9 @@
 package de.tiktak.kmm.migration;
 
 import java.nio.file.Path;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,8 +40,10 @@ final class EmberMovieMapper {
     /**
      * @param filePath Pfad der Filmdatei im Zielsystem
      * @param sets     Filmsets aus Ember nach ID
+     * @param zone     Zeitzone, in der Ember lief; Ember speichert Zeitpunkte als lokale Uhrzeit
      */
-    static MovieImport toImport(EmberMovie movie, long sourceId, String filePath, Map<Long, EmberMovieSet> sets) {
+    static MovieImport toImport(EmberMovie movie, long sourceId, String filePath, Map<Long, EmberMovieSet> sets,
+            ZoneId zone) {
         DiscFormat format = discFormat(filePath);
         Optional<SetAssignment> set = set(movie, sets);
         return new MovieImport(
@@ -47,10 +52,10 @@ final class EmberMovieMapper {
                 format,
                 format == DiscFormat.FILE ? StackedFiles.partCount(Path.of(filePath)) : 1,
                 metadata(movie, filePath, format),
-                supplement(movie, set.map(SetAssignment::reference).orElse(null)),
+                supplement(movie, set.map(SetAssignment::reference).orElse(null), zone),
                 set.map(SetAssignment::order).orElse(null),
                 set.map(SetAssignment::tmdbCollectionId).orElse(movie.uniqueIds().get(TMDB_COLLECTION)),
-                movie.dateAdded());
+                toInstant(movie.dateAdded(), zone));
     }
 
     /** Filme in mehreren Sets kennt Kodi nicht; übernommen wird das erste. */
@@ -83,7 +88,7 @@ final class EmberMovieMapper {
                 movie.uniqueIds().get(TMDB)).withinLimits();
     }
 
-    private static MovieSupplement supplement(EmberMovie movie, MovieSupplement.SetReference set) {
+    private static MovieSupplement supplement(EmberMovie movie, MovieSupplement.SetReference set, ZoneId zone) {
         return new MovieSupplement(
                 movie.actors().stream()
                         .map(actor -> new MovieSupplement.Actor(actor.name(), actor.role(), actor.thumb()))
@@ -101,7 +106,11 @@ final class EmberMovieMapper {
                 set,
                 movie.userRating() != null && movie.userRating() <= MAX_USER_RATING ? movie.userRating() : null,
                 movie.playCount(),
-                movie.lastPlayed());
+                toInstant(movie.lastPlayed(), zone));
+    }
+
+    private static Instant toInstant(LocalDateTime localDateTime, ZoneId zone) {
+        return localDateTime == null ? null : localDateTime.atZone(zone).toInstant();
     }
 
     private static Optional<SetAssignment> set(EmberMovie movie, Map<Long, EmberMovieSet> sets) {
