@@ -10,6 +10,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
+import { KodiService } from '../kodi/kodi.service';
+import { kodiSyncSummary } from '../kodi/kodi';
 import { ArtworkSource } from '../movies/artwork';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { Attribution, ScraperInfo } from '../movies/scraper';
@@ -61,6 +63,7 @@ export class TvShowDetail {
   private readonly tvShowService = inject(TvShowService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly artworkService = inject(TvShowArtworkService);
+  private readonly kodiService = inject(KodiService);
 
   /** Serien-ID aus der Route `/tvshows/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -85,6 +88,7 @@ export class TvShowDetail {
       : [],
   );
   protected readonly searchingOnline = signal(false);
+  protected readonly refreshingKodi = signal(false);
   /** Übernommener Treffer, dessen Episodendaten beim nächsten Speichern ergänzt werden. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
@@ -112,6 +116,21 @@ export class TvShowDetail {
 
   protected missingCode(episode: MissingEpisode): string {
     return episodeCode(episode.season, episode.episode);
+  }
+
+  /** Lässt Kodi NFO und Bilder der Serie neu einlesen, unabhängig vom Echtzeit-Sync. */
+  protected refreshInKodi(): void {
+    this.refreshingKodi.set(true);
+    this.kodiService.refreshTvShow(this.id()).subscribe({
+      next: (results) => {
+        this.refreshingKodi.set(false);
+        this.notify(kodiSyncSummary(results));
+      },
+      error: (error: unknown) => {
+        this.refreshingKodi.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
   }
 
   protected toggleOnlineSearch(): void {

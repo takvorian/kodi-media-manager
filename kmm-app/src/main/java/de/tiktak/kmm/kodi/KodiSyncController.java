@@ -26,6 +26,16 @@ public class KodiSyncController {
         return syncService.refreshMovie(movieId);
     }
 
+    @PostMapping("/tvshows/{showId}/refresh")
+    public List<KodiSyncResult> refreshTvShow(@PathVariable long showId) {
+        return syncService.refreshTvShow(showId);
+    }
+
+    @PostMapping("/episodes/{episodeId}/refresh")
+    public List<KodiSyncResult> refreshEpisode(@PathVariable long episodeId) {
+        return syncService.refreshEpisode(episodeId);
+    }
+
     @PostMapping("/sources/{sourceId}/scan")
     public List<KodiSyncResult> scanSource(@PathVariable long sourceId) {
         return syncService.scanSource(sourceId);

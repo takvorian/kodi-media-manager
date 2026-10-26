@@ -42,6 +42,18 @@ class KodiSyncControllerTest {
     }
 
     @Test
+    void refreshesTvShowsAndEpisodes() {
+        when(syncService.refreshTvShow(7)).thenReturn(List.of(
+                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, "„Lost“ aktualisiert.", NOW)));
+        when(syncService.refreshEpisode(12)).thenReturn(List.of());
+
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/refresh").with(csrf()))
+                .hasStatusOk().bodyJson().extractingPath("$[0].message").isEqualTo("„Lost“ aktualisiert.");
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/12/refresh").with(csrf()))
+                .hasStatusOk().bodyJson().isEqualTo("[]");
+    }
+
+    @Test
     void scansASource() {
         when(syncService.scanSource(3)).thenReturn(List.of());
 

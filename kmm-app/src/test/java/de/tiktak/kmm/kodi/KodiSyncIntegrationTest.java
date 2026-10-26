@@ -29,6 +29,7 @@ import de.tiktak.kmm.kodi.rpc.FakeKodiServer;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.movie.MovieController;
 import de.tiktak.kmm.source.MediaSourceController;
+import de.tiktak.kmm.tvshow.TvShowController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -95,6 +96,41 @@ class KodiSyncIntegrationTest {
                         """);
         assertThat(mockMvc.get().uri(KodiHostController.BASE_PATH))
                 .bodyJson().extractingPath("$[0].lastSync.outcome").isEqualTo("REFRESHED");
+    }
+
+    @Test
+    void keepsKodiUpToDateForTvShows() throws IOException {
+        Path episode = library.resolve("Lost/Staffel 1/Lost - S01E01.mkv");
+        Files.createDirectories(episode.getParent());
+        Files.createFile(episode);
+        kodi.respond("VideoLibrary.GetTVShows", "{\"tvshows\": [{\"tvshowid\": 4, \"file\": \"smb://nas/filme/Lost/\"}]}");
+        kodi.respond("VideoLibrary.GetEpisodes", """
+                {"episodes": [{"episodeid": 9, "file": "smb://nas/filme/Lost/Staffel 1/Lost - S01E01.mkv",
+                               "season": 1, "episode": 1}]}""");
+        createKodiHost();
+        long sourceId = create(MediaSourceController.BASE_PATH,
+                Map.of("name", "Serien", "path", library.toString(), "mediaType", "TV_SHOW"));
+
+        scan(sourceId);
+        await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.Scan"));
+
+        long showId = jdbcClient.sql("SELECT id FROM tv_show").query(Long.class).single();
+        long episodeId = jdbcClient.sql("SELECT id FROM episode").query(Long.class).single();
+        assertThat(mockMvc.put().uri(TvShowController.SHOW_METADATA_PATH, showId).with(csrf()).contentType(JSON)
+                .content("{\"title\": \"Lost\", \"genres\": [], \"studios\": [], \"tags\": []}"))
+                .hasStatusOk();
+        await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshTVShow"));
+        assertThat(mockMvc.put().uri(TvShowController.EPISODE_METADATA_PATH, episodeId).with(csrf())
+                .contentType(JSON).content("{\"title\": \"Gestrandet\"}"))
+                .hasStatusOk();
+        await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshEpisode"));
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.Scan", "VideoLibrary.GetTVShows",
+                "VideoLibrary.RefreshTVShow", "VideoLibrary.GetEpisodes", "VideoLibrary.RefreshEpisode");
+
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/{id}/refresh", episodeId)
+                .with(csrf())).hasStatusOk().bodyJson().isLenientlyEqualTo("""
+                        [{"host": "Wohnzimmer", "outcome": "REFRESHED", "message": "„Lost S01E01“ aktualisiert."}]
+                        """);
     }
 
     private void createKodiHost() {

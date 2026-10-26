@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -47,6 +48,7 @@ public class TvShowScrapeService {
     private final TvShowResultCache cache;
     private final TvShowMetadataService metadataService;
     private final TvScrapingProperties properties;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     /**
@@ -222,6 +224,7 @@ public class TvShowScrapeService {
             TvNfoState written = nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(show.metadata(), extras));
             show.applyExtras(extras);
             show.markNfoSynchronized(written.modifiedAt());
+            events.publishEvent(new TvShowFilesChangedEvent(show.getId()));
         } catch (NfoException e) {
             log.warn("NFO of TV show {} not written: {}", show.getId(), e.getMessage());
             failedFiles.add(TvShowFiles.tvShowNfo(show.directory()).toString());
@@ -266,7 +269,10 @@ public class TvShowScrapeService {
                 episode.applyMetadata(fill.metadata());
                 episode.applyExtras(fill.extras());
             });
-            sameFile.forEach(episode -> episode.markNfoSynchronized(written.modifiedAt()));
+            sameFile.forEach(episode -> {
+                episode.markNfoSynchronized(written.modifiedAt());
+                events.publishEvent(new EpisodeFilesChangedEvent(episode.getId()));
+            });
             return true;
         } catch (NfoException e) {
             log.warn("NFO of {} not written: {}", first.getFilePath(), e.getMessage());

@@ -8,15 +8,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.TvShowFiles;
 import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.EpisodeSummary;
 import de.tiktak.kmm.tvshow.EpisodeThumbs;
 import de.tiktak.kmm.tvshow.TvShowDetails;
+import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
 import de.tiktak.kmm.tvshow.TvShowMetadata;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowScrapeService;
@@ -45,6 +48,7 @@ public class TvShowArtworkService {
     private final ArtworkFiles artworkFiles;
     private final ArtworkCandidateFinder candidateFinder;
     private final ImageDownloader downloader;
+    private final ApplicationEventPublisher events;
 
     /**
      * @param season Staffel oder {@code null} für die Bilder der Serie
@@ -78,12 +82,14 @@ public class TvShowArtworkService {
         ArtworkSlot slot = slot(directory(metadataService.findShow(showId)), type, season);
         ArtworkFile saved = artworkFiles.save(slot, downloader.download(parse(url)));
         log.info("Saved {} (season {}) of TV show {} to {}", type, season, showId, saved.file());
+        events.publishEvent(new TvShowFilesChangedEvent(showId));
         return ArtworkInfo.of(type, Optional.of(saved));
     }
 
     public void remove(long showId, ImageType type, Integer season) {
         requireSupported(type, season);
         artworkFiles.delete(slot(directory(metadataService.findShow(showId)), type, season));
+        events.publishEvent(new TvShowFilesChangedEvent(showId));
     }
 
     /**
@@ -123,6 +129,9 @@ public class TvShowArtworkService {
                 }
             }
         }
+        if (saved > 0) {
+            events.publishEvent(new TvShowFilesChangedEvent(showId));
+        }
         saved += fillMissingThumbs(show, warnings);
         return new ArtworkFillResult(saved, warnings);
     }
@@ -143,6 +152,7 @@ public class TvShowArtworkService {
             if (ArtworkDownloads.saveFirstLoadable(downloader, ImageType.THUMB, candidates,
                     image -> artworkFiles.save(slot, image), warnings)) {
                 saved++;
+                events.publishEvent(new EpisodeFilesChangedEvent(episode.id()));
             }
         }
         return saved;
@@ -185,12 +195,14 @@ public class TvShowArtworkService {
         ArtworkSlot slot = episodeSlot(episodeFile(metadataService.findEpisode(episodeId)), type);
         ArtworkFile saved = artworkFiles.save(slot, downloader.download(parse(url)));
         log.info("Saved {} of episode {} to {}", type, episodeId, saved.file());
+        events.publishEvent(new EpisodeFilesChangedEvent(episodeId));
         return ArtworkInfo.of(type, Optional.of(saved));
     }
 
     public void removeEpisode(long episodeId, ImageType type) {
         requireEpisodeType(type);
         artworkFiles.delete(episodeSlot(episodeFile(metadataService.findEpisode(episodeId)), type));
+        events.publishEvent(new EpisodeFilesChangedEvent(episodeId));
     }
 
     private static ArtworkSlot slot(Path directory, ImageType type, Integer season) {

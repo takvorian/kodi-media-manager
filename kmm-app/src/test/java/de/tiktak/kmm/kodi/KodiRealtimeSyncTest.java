@@ -16,6 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
+import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
+import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
+import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
 
 @ExtendWith(MockitoExtension.class)
 class KodiRealtimeSyncTest {
@@ -54,5 +57,19 @@ class KodiRealtimeSyncTest {
 
         verify(syncService, timeout(WAIT_MILLIS)).scanSourceOnRealtimeHosts(4);
         verify(syncService, never()).scanSourceOnRealtimeHosts(3);
+    }
+
+    @Test
+    void refreshesChangedTvShowsAndEpisodesAndScansTvSourcesWithNewEntries() {
+        realtimeSync.onTvShowFilesChanged(new TvShowFilesChangedEvent(7));
+        realtimeSync.onTvShowFilesChanged(new TvShowFilesChangedEvent(7));
+        realtimeSync.onEpisodeFilesChanged(new EpisodeFilesChangedEvent(12));
+        realtimeSync.onTvSourceScanned(new TvShowSourceScannedEvent(5, 0));
+        realtimeSync.onTvSourceScanned(new TvShowSourceScannedEvent(6, 3));
+
+        verify(syncService, timeout(WAIT_MILLIS).times(1)).refreshTvShowOnRealtimeHosts(7);
+        verify(syncService, timeout(WAIT_MILLIS)).refreshEpisodeOnRealtimeHosts(12);
+        verify(syncService, timeout(WAIT_MILLIS)).scanSourceOnRealtimeHosts(6);
+        verify(syncService, never()).scanSourceOnRealtimeHosts(5);
     }
 }

@@ -9,6 +9,8 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
+import { kodiSyncSummary } from '../kodi/kodi';
+import { KodiService } from '../kodi/kodi.service';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetailsView } from '../shared/stream-details';
@@ -41,12 +43,14 @@ export class EpisodeDetail {
   private readonly tvShowService = inject(TvShowService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly artworkService = inject(TvShowArtworkService);
+  private readonly kodiService = inject(KodiService);
 
   /** Episoden-ID aus der Route `/episodes/:id`. */
   readonly id = input.required({ transform: numberAttribute });
 
   protected readonly form = createEpisodeMetadataForm(inject(NonNullableFormBuilder));
   protected readonly saving = signal(false);
+  protected readonly refreshingKodi = signal(false);
   protected readonly artwork = computed(() => this.artworkService.forEpisode(this.id()));
   protected readonly episode = rxResource({
     params: () => this.id(),
@@ -88,6 +92,21 @@ export class EpisodeDetail {
     if (this.episode.hasValue()) {
       this.form.reset(toEpisodeFormValue(this.episode.value().metadata));
     }
+  }
+
+  /** Lässt Kodi NFO und Standbild der Episode neu einlesen, unabhängig vom Echtzeit-Sync. */
+  protected refreshInKodi(): void {
+    this.refreshingKodi.set(true);
+    this.kodiService.refreshEpisode(this.id()).subscribe({
+      next: (results) => {
+        this.refreshingKodi.set(false);
+        this.notify(kodiSyncSummary(results));
+      },
+      error: (error: unknown) => {
+        this.refreshingKodi.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
   }
 
   private notify(message: string): void {

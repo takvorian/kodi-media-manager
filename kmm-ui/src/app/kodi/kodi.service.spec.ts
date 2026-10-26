@@ -54,8 +54,12 @@ describe('KodiService', () => {
 
     service.refreshMovie(5).subscribe((results) => (refreshed = results));
     service.scanSource(1).subscribe();
+    service.refreshTvShow(3).subscribe();
+    service.refreshEpisode(12).subscribe();
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/refresh' }).flush([]);
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' }).flush([]);
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' }).flush([]);
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/refresh' }).flush([]);
 
     expect(refreshed).toEqual([]);
   });

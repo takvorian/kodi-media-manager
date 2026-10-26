@@ -30,6 +30,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
@@ -64,6 +65,9 @@ class TvShowScanServiceTest {
 
     @Mock
     private JobService jobService;
+
+    @Mock
+    private ApplicationEventPublisher events;
 
     @InjectMocks
     private TvShowScanService service;
@@ -108,6 +112,7 @@ class TvShowScanServiceTest {
         when(synchronizer.synchronize(eq(3L), anyList(), anyList())).thenReturn(expected);
 
         assertThat(service.scan(source, directory, mock(JobContext.class))).isEqualTo(expected);
+        verify(events).publishEvent(new TvShowSourceScannedEvent(3, 2));
 
         @SuppressWarnings("unchecked")
         ArgumentCaptor<List<ScannedTvShow>> shows = ArgumentCaptor.forClass(List.class);

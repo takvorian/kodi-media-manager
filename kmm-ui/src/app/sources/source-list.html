@@ -67,8 +67,6 @@
           }
           @if (canScrape(source)) {
             <button matButton class="scrape-button" (click)="autoScrape(source)">Scrapen</button>
-          }
-          @if (hasMovies(source)) {
             <button matButton class="kodi-scan-button" (click)="scanInKodi(source)">Kodi-Scan</button>
           }
         }

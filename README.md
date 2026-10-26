@@ -156,6 +156,7 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`
 - `GET /api/v1/kodi/hosts`, `POST /api/v1/kodi/hosts`, `PUT|DELETE /api/v1/kodi/hosts/{id}` (Passwort `null` = unverändert),
   `POST /api/v1/kodi/hosts/{id}/test`
-- `POST /api/v1/kodi/movies/{id}/refresh`, `POST /api/v1/kodi/sources/{id}/scan` (alle Kodi-Geräte, Ergebnis je Gerät)
+- `POST /api/v1/kodi/movies/{id}/refresh`, `POST /api/v1/kodi/tvshows/{id}/refresh`, `POST /api/v1/kodi/episodes/{id}/refresh`,
+  `POST /api/v1/kodi/sources/{id}/scan` (alle Kodi-Geräte, Ergebnis je Gerät)
 - `GET /api/v1/migrations/ember/inspect?path=…`, `POST /api/v1/migrations/ember/import` → `202 Accepted` mit dem gestarteten Job
   (`{"profilePath": …, "pathMappings": [{"emberPath": "a:\\filme", "kmmPath": "/media/filme"}], "importSettings": true, "importKodiHosts": true, "dryRun": true}`)

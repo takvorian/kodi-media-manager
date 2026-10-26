@@ -157,6 +157,21 @@ describe('TvShowDetail', () => {
     expect(input('tvdbId').value).toBe('78020');
   });
 
+  it('refreshes the show in Kodi on request', async () => {
+    await load(alf);
+
+    element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' }).flush([
+      { hostId: 1, host: 'Wohnzimmer', outcome: 'REFRESHED', message: '„ALF“ aktualisiert.', at: '' },
+    ]);
+    element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })
+      .flush({ detail: 'Serie nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+
+    expect(snackBarMessages).toEqual(['Wohnzimmer: „ALF“ aktualisiert.', 'Serie nicht gefunden']);
+  });
+
   it('loads the images of a season when it is opened', async () => {
     await load(alf);
 

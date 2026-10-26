@@ -104,11 +104,6 @@ export class SourceList {
     return this.canScan(source);
   }
 
-  /** Den Kodi-Abgleich gibt es bisher nur für Filme. */
-  protected hasMovies(source: MediaSource): boolean {
-    return source.mediaType === 'MOVIE';
-  }
-
   /** Laufender Scan oder laufendes Scrapen der Quelle; beide schließen sich in der Oberfläche aus. */
   protected runningJob(source: MediaSource): Job | undefined {
     return this.jobStore.runningJob(scanJobKey(source.id)) ?? this.jobStore.runningJob(autoScrapeJobKey(source.id));

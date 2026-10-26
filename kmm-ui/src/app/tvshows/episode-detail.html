@@ -4,9 +4,14 @@
 } @else if (episode.hasValue()) {
   @let details = episode.value();
   <a matButton [routerLink]="['/tvshows', details.tvShowId]" class="back-link">← {{ details.showTitle }}</a>
-  <h2 class="page-title">
-    <span class="code">{{ code(details) }}</span> {{ details.metadata.title }}
-  </h2>
+  <div class="title-row">
+    <h2 class="page-title">
+      <span class="code">{{ code(details) }}</span> {{ details.metadata.title }}
+    </h2>
+    <button matButton type="button" class="kodi-refresh-button" [disabled]="refreshingKodi()" (click)="refreshInKodi()">
+      In Kodi aktualisieren
+    </button>
+  </div>
 
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>

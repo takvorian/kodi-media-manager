@@ -100,6 +100,46 @@ class KodiClientTest {
     }
 
     @Test
+    void findsATvShowByItsDirectory() {
+        kodi.respond("VideoLibrary.GetTVShows", """
+                {"tvshows": [{"tvshowid": 4, "file": "smb://nas/serien/ALF/"},
+                             {"tvshowid": 7, "file": "smb://nas/serien/Lost/"}]}
+                """);
+
+        assertThat(client.findTvShow(kodi.endpoint(), "smb://nas/serien/lost/")).contains(7);
+        assertThat(kodi.calls().getFirst().params().path("filter").path("value").asString())
+                .isEqualTo("smb://nas/serien/lost/");
+        assertThat(client.findTvShow(kodi.endpoint(), "smb://nas/serien/Andere/")).isEmpty();
+    }
+
+    @Test
+    void findsAnEpisodeByFileSeasonAndNumber() {
+        kodi.respond("VideoLibrary.GetEpisodes", """
+                {"episodes": [
+                  {"episodeid": 11, "file": "smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", "season": 1, "episode": 1},
+                  {"episodeid": 12, "file": "smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", "season": 1, "episode": 2},
+                  {"episodeid": 13, "file": "smb://nas/serien/Lost/S1/Lost S01E03.mkv", "season": 1, "episode": 3}]}
+                """);
+
+        assertThat(client.findEpisode(kodi.endpoint(), "smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", 1, 2)).contains(12);
+        assertThat(kodi.calls().getFirst().params().path("filter").path("value").asString())
+                .isEqualTo("smb://nas/serien/Lost/S1/");
+        assertThat(client.findEpisode(kodi.endpoint(), "smb://nas/serien/Lost/S1/Lost S01E03.mkv", 1, 4)).isEmpty();
+    }
+
+    @Test
+    void refreshesTvShowsWithoutEpisodesAndSingleEpisodes() {
+        client.refreshTvShow(kodi.endpoint(), 7);
+        client.refreshEpisode(kodi.endpoint(), 12);
+
+        assertThat(kodi.calls().get(0).method()).isEqualTo("VideoLibrary.RefreshTVShow");
+        assertThat(kodi.calls().get(0).params())
+                .isEqualTo(json("{\"tvshowid\": 7, \"ignorenfo\": false, \"refreshepisodes\": false}"));
+        assertThat(kodi.calls().get(1).method()).isEqualTo("VideoLibrary.RefreshEpisode");
+        assertThat(kodi.calls().get(1).params().path("episodeid").asInt()).isEqualTo(12);
+    }
+
+    @Test
     void explainsRejectedCredentials() {
         kodi.respondWithStatus(401);
 

@@ -3,6 +3,7 @@ package de.tiktak.kmm.tvshow;
 import java.time.Clock;
 import java.util.List;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,6 +26,7 @@ public class TvShowMetadataService {
     private final TvShowRepository showRepository;
     private final EpisodeRepository episodeRepository;
     private final TvShowNfoFiles nfoFiles;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public TvShowDetails findShow(long showId) {
@@ -40,6 +42,7 @@ public class TvShowMetadataService {
         show.applyMetadata(metadata);
         show.markNfoSynchronized(written.modifiedAt());
         log.info("Metadata of TV show {} saved to {}", showId, written.file());
+        events.publishEvent(new TvShowFilesChangedEvent(showId));
         return details(show);
     }
 
@@ -65,6 +68,7 @@ public class TvShowMetadataService {
         episode.applyMetadata(metadata);
         sameFile.forEach(other -> other.markNfoSynchronized(written.modifiedAt()));
         log.info("Metadata of episode {} saved to {}", episodeId, written.file());
+        sameFile.forEach(other -> events.publishEvent(new EpisodeFilesChangedEvent(other.getId())));
         return episodeDetails(episode);
     }
 

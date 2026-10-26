@@ -115,15 +115,15 @@ describe('SourceList', () => {
     ]);
   });
 
-  it('lets Kodi scan a movie source', async () => {
+  it('lets Kodi scan movie and tv sources', async () => {
     await loadSources([films, series]);
-    expect(element().querySelectorAll('.kodi-scan-button')).toHaveLength(1);
+    expect(element().querySelectorAll('.kodi-scan-button')).toHaveLength(2);
 
-    button('.kodi-scan-button').click();
+    element().querySelector<HTMLButtonElement>('.kodi-scan-button')!.click();
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' }).flush([
       { hostId: 1, host: 'Wohnzimmer', outcome: 'SCAN_STARTED', message: 'Kodi sucht nach neuen Filmen.', at: '' },
     ]);
-    button('.kodi-scan-button').click();
+    element().querySelector<HTMLButtonElement>('.kodi-scan-button')!.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' })
       .flush({ detail: 'Quelle nicht gefunden' }, { status: 404, statusText: 'Not Found' });

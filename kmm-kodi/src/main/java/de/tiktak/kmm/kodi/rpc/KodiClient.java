@@ -77,6 +77,55 @@ public class KodiClient {
     }
 
     /**
+     * Sucht eine Serie in Kodis Bibliothek über ihren Ordner.
+     *
+     * @param directory Serienordner aus Sicht von Kodi mit abschließendem Trennzeichen
+     * @return Kodis ID der Serie oder leer, wenn Kodi sie nicht kennt
+     */
+    public Optional<Integer> findTvShow(KodiEndpoint endpoint, String directory) {
+        Map<String, Object> filter = Map.of("field", "path", "operator", "is", "value", directory);
+        JsonNode shows = call(endpoint, "VideoLibrary.GetTVShows",
+                Map.of("filter", filter, "properties", List.of("file"))).path("tvshows");
+        for (JsonNode show : shows) {
+            if (show.path("file").asString().equalsIgnoreCase(directory)) {
+                return Optional.of(show.path("tvshowid").asInt());
+            }
+        }
+        return Optional.empty();
+    }
+
+    /**
+     * Sucht eine Episode in Kodis Bibliothek. Bei Mehrfachepisoden kennt Kodi mehrere Episoden mit
+     * derselben Datei; Staffel und Nummer unterscheiden sie.
+     *
+     * @param file Datei aus Sicht von Kodi
+     * @return Kodis ID der Episode oder leer, wenn Kodi sie nicht kennt
+     */
+    public Optional<Integer> findEpisode(KodiEndpoint endpoint, String file, int season, int episode) {
+        Map<String, Object> filter = Map.of("field", "path", "operator", "is", "value", KodiFiles.directoryOf(file));
+        JsonNode episodes = call(endpoint, "VideoLibrary.GetEpisodes",
+                Map.of("filter", filter, "properties", List.of("file", "season", "episode"))).path("episodes");
+        for (JsonNode candidate : episodes) {
+            if (KodiFiles.matches(candidate.path("file").asString(), file)
+                    && candidate.path("season").asInt(-1) == season && candidate.path("episode").asInt(-1) == episode) {
+                return Optional.of(candidate.path("episodeid").asInt());
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** Kodi liest {@code tvshow.nfo} und die Bilder der Serie neu ein, die Episoden nicht. */
+    public void refreshTvShow(KodiEndpoint endpoint, int tvShowId) {
+        call(endpoint, "VideoLibrary.RefreshTVShow",
+                Map.of("tvshowid", tvShowId, "ignorenfo", false, "refreshepisodes", false));
+    }
+
+    /** Kodi liest NFO und Standbild der Episode neu ein. */
+    public void refreshEpisode(KodiEndpoint endpoint, int episodeId) {
+        call(endpoint, "VideoLibrary.RefreshEpisode", Map.of("episodeid", episodeId, "ignorenfo", false));
+    }
+
+    /**
      * Kodi durchsucht das Verzeichnis nach neuen Medien. Bekannte Einträge aktualisiert Kodi dabei nicht.
      *
      * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen

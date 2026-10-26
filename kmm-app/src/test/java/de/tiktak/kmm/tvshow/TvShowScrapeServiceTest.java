@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import de.tiktak.kmm.nfo.NfoException;
@@ -65,7 +66,7 @@ class TvShowScrapeServiceTest {
         when(nfoFiles.writeEpisodes(any(), any())).thenThrow(unwritable);
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
                 nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
-                new TvScrapingProperties("tvdb"), Clock.systemUTC());
+                new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
 
         EpisodeFillResult result = service.fillFromProvider(7, "tvdb", "73739");
 
@@ -89,7 +90,7 @@ class TvShowScrapeServiceTest {
         when(scraper.scrape(any())).thenReturn(Optional.empty());
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
                 nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
-                new TvScrapingProperties("tvdb"), Clock.systemUTC());
+                new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
 
         EpisodeThumbs thumbs = service.episodeThumbs(3);
 
@@ -109,7 +110,7 @@ class TvShowScrapeServiceTest {
         when(scraper.scrape(any())).thenReturn(Optional.empty());
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
                 nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
-                new TvScrapingProperties("tvdb"), Clock.systemUTC());
+                new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
 
         assertThat(service.scrapeMissing(7).status()).isEqualTo(TvShowAutoScrapeOutcome.Status.NO_MATCH);
 

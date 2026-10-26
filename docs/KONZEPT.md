@@ -208,7 +208,7 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
       - 3d1 ✅ Bild-Scraper für Serien: Bildkandidaten tragen die Staffelnummer; TMDB (Serie und Staffelposter), TVDB (Artworks inkl. Staffelposter/-banner/-fanart, Sprachen nach ISO 639-1) und fanart.tv (über die TVDB-ID, inkl. Characterart und Staffelbilder)
       - 3d2 ✅ Bilder in App und Oberfläche: Serie (Poster, Fanart, Banner, Clearlogo, Clearart, Landscape, Characterart → `poster.jpg` … im Serienordner), Staffeln (Poster, Banner, Fanart, Landscape → `season01-poster.jpg`, `season-specials-poster.jpg`) und Episoden (Standbild der Serien-Scraper → `<episode>-thumb.jpg`); gemeinsame Bildergalerie und Dateiablage für Filme und Serien
       - 3e ✅ automatisches Scrapen einer Serienquelle: nicht zugeordnete Serien nur bei eindeutigem Treffer des bevorzugten Scrapers (`kmm.scraping.preferred-tv-show-scraper`, Vorgabe `tvdb`), leere Episodenfelder, fehlende Bilder von Serie, Staffeln mit Episoden und Standbilder; vorhandene Daten und Bilder bleiben
-   4. Kodi-Sync für Serien
+   4. Kodi-Sync für Serien ✅: Echtzeit-Sync wie bei Filmen – geänderte Serie → `VideoLibrary.RefreshTVShow` (ohne Episoden), geänderte Episode → `RefreshEpisode`, in Kodi unbekannt → `Scan` des Serienordners, neue Serien/Episoden nach dem Scan → `Scan` der Quelle; Knöpfe „In Kodi aktualisieren“ für Serie und Episode, „Kodi-Scan“ für Serienquellen
 5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.
 6. **Erweiterungen:** Trailer/Themes, Trakt.tv, Export, HTML-Scraper, Installer (jpackage).
 

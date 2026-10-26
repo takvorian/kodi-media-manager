@@ -36,7 +36,17 @@ export class KodiService {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/movies/${movieId}/refresh`, null);
   }
 
-  /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen durchsuchen. */
+  /** Aktualisiert die Serie (ohne Episoden) auf allen Kodi-Geräten. */
+  refreshTvShow(showId: number): Observable<KodiSyncResult[]> {
+    return this.http.post<KodiSyncResult[]>(`${KODI_URL}/tvshows/${showId}/refresh`, null);
+  }
+
+  /** Aktualisiert die Episode auf allen Kodi-Geräten. */
+  refreshEpisode(episodeId: number): Observable<KodiSyncResult[]> {
+    return this.http.post<KodiSyncResult[]>(`${KODI_URL}/episodes/${episodeId}/refresh`, null);
+  }
+
+  /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen bzw. Serien durchsuchen. */
   scanSource(sourceId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/sources/${sourceId}/scan`, null);
   }

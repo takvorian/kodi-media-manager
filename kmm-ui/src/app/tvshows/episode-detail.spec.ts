@@ -95,6 +95,19 @@ describe('EpisodeDetail', () => {
     expect(element().querySelector('.audios')?.textContent?.trim()).toBe('Dolby Digital · Mono');
   });
 
+  it('refreshes the episode in Kodi on request', async () => {
+    await load(gestatten);
+
+    element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/refresh' }).flush([]);
+    element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/refresh' })
+      .flush({ detail: 'Kodi nicht erreichbar' }, { status: 502, statusText: 'Bad Gateway' });
+
+    expect(snackBarMessages).toEqual(['Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.', 'Kodi nicht erreichbar']);
+  });
+
   it('saves the metadata', async () => {
     await load({ ...gestatten, nfo: { ...gestatten.nfo, exists: false, modifiedAt: null } });
     expect(element().querySelector('.nfo-status')?.textContent).toContain('Noch keine NFO');

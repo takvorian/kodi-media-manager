@@ -12,6 +12,10 @@ import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiException;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadataService;
+import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.TvShowDetails;
+import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
@@ -19,16 +23,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Aktualisiert Filme in Kodi: Kennt Kodi den Film, liest es NFO und Bilder neu ein; sonst durchsucht
- * Kodi das Verzeichnis des Films. Fehler eines Geräts verhindern den Abgleich der anderen nicht.
+ * Aktualisiert Filme, Serien und Episoden in Kodi: Kennt Kodi den Eintrag, liest es NFO und Bilder neu
+ * ein; sonst durchsucht Kodi das Verzeichnis des Films bzw. der Serie. Fehler eines Geräts verhindern den
+ * Abgleich der anderen nicht.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class KodiSyncService {
 
+    private static final String EPISODE_CODE = "S%02dE%02d";
+
     private final KodiHostService hostService;
     private final MovieMetadataService metadataService;
+    private final TvShowMetadataService tvShowService;
     private final MediaSourceService sourceService;
     private final KodiClient kodiClient;
     private final KodiSyncLog syncLog;
@@ -39,7 +47,17 @@ public class KodiSyncService {
         return refreshMovie(movieId, hostService.targets());
     }
 
-    /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen durchsuchen. */
+    /** Aktualisiert die Serie (ohne ihre Episoden) auf allen Kodi-Geräten. */
+    public List<KodiSyncResult> refreshTvShow(long showId) {
+        return refreshTvShow(showId, hostService.targets());
+    }
+
+    /** Aktualisiert die Episode auf allen Kodi-Geräten. */
+    public List<KodiSyncResult> refreshEpisode(long episodeId) {
+        return refreshEpisode(episodeId, hostService.targets());
+    }
+
+    /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen bzw. Serien durchsuchen. */
     public List<KodiSyncResult> scanSource(long sourceId) {
         return scanSource(sourceId, hostService.targets());
     }
@@ -48,6 +66,20 @@ public class KodiSyncService {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {
             refreshMovie(movieId, targets);
+        }
+    }
+
+    void refreshTvShowOnRealtimeHosts(long showId) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (!targets.isEmpty()) {
+            refreshTvShow(showId, targets);
+        }
+    }
+
+    void refreshEpisodeOnRealtimeHosts(long episodeId) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (!targets.isEmpty()) {
+            refreshEpisode(episodeId, targets);
         }
     }
 
@@ -61,6 +93,17 @@ public class KodiSyncService {
     private List<KodiSyncResult> refreshMovie(long movieId, List<KodiTarget> targets) {
         MovieDetails movie = metadataService.findDetails(movieId);
         return syncAll(targets, target -> refresh(target, movie));
+    }
+
+    private List<KodiSyncResult> refreshTvShow(long showId, List<KodiTarget> targets) {
+        TvShowDetails show = tvShowService.findShow(showId);
+        return syncAll(targets, target -> refresh(target, show));
+    }
+
+    private List<KodiSyncResult> refreshEpisode(long episodeId, List<KodiTarget> targets) {
+        EpisodeDetails episode = tvShowService.findEpisode(episodeId);
+        TvShowDetails show = tvShowService.findShow(episode.tvShowId());
+        return syncAll(targets, target -> refresh(target, show, episode));
     }
 
     private List<KodiSyncResult> scanSource(long sourceId, List<KodiTarget> targets) {
@@ -85,6 +128,44 @@ public class KodiSyncService {
                 "„%s“ ist in Kodi noch unbekannt; Kodi liest %s ein.".formatted(title, kodiDirectory.get()));
     }
 
+    private Outcome refresh(KodiTarget target, TvShowDetails show) {
+        String title = show.metadata().title();
+        Optional<String> kodiDirectory = target.pathMapper().toKodiDirectory(show.directoryPath());
+        if (kodiDirectory.isEmpty()) {
+            return notMapped(show.directoryPath());
+        }
+        Optional<Integer> kodiShowId = kodiClient.findTvShow(target.endpoint(), kodiDirectory.get());
+        if (kodiShowId.isPresent()) {
+            kodiClient.refreshTvShow(target.endpoint(), kodiShowId.get());
+            return new Outcome(KodiSyncOutcome.REFRESHED, "„%s“ aktualisiert.".formatted(title));
+        }
+        return scanUnknown(target, title, kodiDirectory.get());
+    }
+
+    /** Eine Episode, die Kodi noch nicht kennt, findet es über einen Scan des Serienordners. */
+    private Outcome refresh(KodiTarget target, TvShowDetails show, EpisodeDetails episode) {
+        String title = "%s %s".formatted(show.metadata().title(),
+                EPISODE_CODE.formatted(episode.season(), episode.episode()));
+        Optional<String> kodiFile = target.pathMapper().toKodiPath(episode.filePath());
+        Optional<String> kodiDirectory = target.pathMapper().toKodiDirectory(show.directoryPath());
+        if (kodiFile.isEmpty() || kodiDirectory.isEmpty()) {
+            return notMapped(episode.filePath());
+        }
+        Optional<Integer> kodiEpisodeId = kodiClient.findEpisode(target.endpoint(), kodiFile.get(), episode.season(),
+                episode.episode());
+        if (kodiEpisodeId.isPresent()) {
+            kodiClient.refreshEpisode(target.endpoint(), kodiEpisodeId.get());
+            return new Outcome(KodiSyncOutcome.REFRESHED, "„%s“ aktualisiert.".formatted(title));
+        }
+        return scanUnknown(target, title, kodiDirectory.get());
+    }
+
+    private Outcome scanUnknown(KodiTarget target, String title, String kodiDirectory) {
+        kodiClient.scan(target.endpoint(), kodiDirectory);
+        return new Outcome(KodiSyncOutcome.SCAN_STARTED,
+                "„%s“ ist in Kodi noch unbekannt; Kodi liest %s ein.".formatted(title, kodiDirectory));
+    }
+
     private Outcome scan(KodiTarget target, MediaSource source) {
         Optional<String> kodiDirectory = target.pathMapper().toKodiDirectory(source.getPath());
         if (kodiDirectory.isEmpty()) {
@@ -92,7 +173,8 @@ public class KodiSyncService {
         }
         kodiClient.scan(target.endpoint(), kodiDirectory.get());
         return new Outcome(KodiSyncOutcome.SCAN_STARTED,
-                "Kodi sucht in %s nach neuen Filmen.".formatted(kodiDirectory.get()));
+                "Kodi sucht in %s nach neuen %s.".formatted(kodiDirectory.get(),
+                        source.getMediaType() == MediaType.TV_SHOW ? "Serien und Episoden" : "Filmen"));
     }
 
     private List<KodiSyncResult> syncAll(List<KodiTarget> targets, Function<KodiTarget, Outcome> sync) {

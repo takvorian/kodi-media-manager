@@ -90,6 +90,11 @@
   justify-content: space-between;
 }
 
+.title-actions {
+  display: flex;
+  gap: 8px;
+}
+
 .missing-button {
   margin-top: 8px;
 }

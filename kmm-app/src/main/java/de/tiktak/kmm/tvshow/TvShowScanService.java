@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.job.JobContext;
@@ -40,6 +41,7 @@ public class TvShowScanService {
     private final TvShowLibrarySynchronizer synchronizer;
     private final TvShowNfoFiles nfoFiles;
     private final JobService jobService;
+    private final ApplicationEventPublisher events;
 
     /**
      * Prüft die Quelle und startet den Scan im Hintergrund.
@@ -72,6 +74,7 @@ public class TvShowScanService {
         log.info("Scanned TV source '{}': {} shows added, {} removed; episodes {} added, {} updated, {} removed, "
                         + "{} unchanged; {} NFO errors", source.getName(), result.showsAdded(), result.showsRemoved(),
                 result.added(), result.updated(), result.removed(), result.unchanged(), result.nfoErrors());
+        events.publishEvent(new TvShowSourceScannedEvent(source.getId(), result.showsAdded() + result.added()));
         return result;
     }
 

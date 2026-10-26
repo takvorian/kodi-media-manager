@@ -1,6 +1,8 @@
 package de.tiktak.kmm.kodi;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.lenient;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
@@ -35,6 +37,10 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.TvShowDetails;
+import de.tiktak.kmm.tvshow.TvShowMetadata;
+import de.tiktak.kmm.tvshow.TvShowMetadataService;
 
 @ExtendWith(MockitoExtension.class)
 class KodiSyncServiceTest {
@@ -44,6 +50,10 @@ class KodiSyncServiceTest {
     private static final Instant NOW = Instant.parse("2026-10-25T20:00:00Z");
     private static final KodiPathMapper FILME = new KodiPathMapper(
             List.of(new KodiPathMapping(LIBRARY.toString(), "smb://nas/filme/")));
+    private static final long SHOW_ID = 7L;
+    private static final Path SERIES_LIBRARY = Path.of("serien").toAbsolutePath();
+    private static final KodiPathMapper SERIEN = new KodiPathMapper(
+            List.of(new KodiPathMapping(SERIES_LIBRARY.toString(), "smb://nas/serien/")));
 
     @Mock
     private KodiHostService hostService;
@@ -54,6 +64,9 @@ class KodiSyncServiceTest {
     @Mock
     private MediaSourceService sourceService;
 
+    @Mock
+    private TvShowMetadataService tvShowService;
+
     private final FakeKodiServer kodi = new FakeKodiServer();
     private final KodiSyncLog syncLog = new KodiSyncLog();
     private KodiSyncService service;
@@ -61,7 +74,7 @@ class KodiSyncServiceTest {
     @BeforeEach
     void setUp() {
         KodiClient client = new KodiClient(HttpClient.newHttpClient(), Duration.ofSeconds(5));
-        service = new KodiSyncService(hostService, metadataService, sourceService, client, syncLog,
+        service = new KodiSyncService(hostService, metadataService, tvShowService, sourceService, client, syncLog,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -173,6 +186,79 @@ class KodiSyncServiceTest {
                 result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
         assertThat(kodi.methods()).containsExactly("VideoLibrary.Scan");
         assertThat(service.scanSource(3)).hasSize(2);
+    }
+
+    @Test
+    void refreshesATvShowKodiKnowsAndScansUnknownOnes() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
+        givenShow();
+        kodi.respond("VideoLibrary.GetTVShows", "{\"tvshows\": [{\"tvshowid\": 4, \"file\": \"smb://nas/serien/Lost/\"}]}");
+
+        assertThat(service.refreshTvShow(SHOW_ID)).singleElement().satisfies(result -> {
+            assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.REFRESHED);
+            assertThat(result.message()).isEqualTo("„Lost“ aktualisiert.");
+        });
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow");
+
+        kodi.respond("VideoLibrary.GetTVShows", "{\"limits\": {\"total\": 0}}");
+        service.refreshTvShowOnRealtimeHosts(SHOW_ID);
+        assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> {
+            assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.SCAN_STARTED);
+            assertThat(result.message()).contains("smb://nas/serien/Lost/");
+        });
+    }
+
+    @Test
+    void refreshesAnEpisodeKodiKnowsAndScansTheShowFolderOtherwise() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
+        givenShow();
+        EpisodeDetails episode = mock(EpisodeDetails.class);
+        when(episode.tvShowId()).thenReturn(SHOW_ID);
+        when(episode.filePath()).thenReturn(SERIES_LIBRARY.resolve("Lost/S1/Lost S01E02.mkv").toString());
+        when(episode.season()).thenReturn(1);
+        when(episode.episode()).thenReturn(2);
+        when(tvShowService.findEpisode(9)).thenReturn(episode);
+        kodi.respond("VideoLibrary.GetEpisodes", """
+                {"episodes": [{"episodeid": 12, "file": "smb://nas/serien/Lost/S1/Lost S01E02.mkv",
+                               "season": 1, "episode": 2}]}""");
+
+        assertThat(service.refreshEpisode(9)).singleElement().satisfies(result ->
+                assertThat(result.message()).isEqualTo("„Lost S01E02“ aktualisiert."));
+        assertThat(kodi.calls().get(1).params().path("episodeid").asInt()).isEqualTo(12);
+
+        kodi.respond("VideoLibrary.GetEpisodes", "{}");
+        service.refreshEpisodeOnRealtimeHosts(9);
+        assertThat(kodi.calls().getLast().method()).isEqualTo("VideoLibrary.Scan");
+        assertThat(kodi.calls().getLast().params().path("directory").asString()).isEqualTo("smb://nas/serien/Lost/");
+    }
+
+    @Test
+    void reportsTvShowsOutsideTheMappedDirectoriesAndSkipsManualHostsAutomatically() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, false));
+        givenShow();
+
+        assertThat(service.refreshTvShow(SHOW_ID)).singleElement().satisfies(result ->
+                assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
+        service.refreshTvShowOnRealtimeHosts(SHOW_ID);
+        service.refreshEpisodeOnRealtimeHosts(9);
+        assertThat(kodi.methods()).isEmpty();
+    }
+
+    @Test
+    void namesTvSourcesWhenScanning() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
+        when(sourceService.require(4)).thenReturn(new MediaSource("Serien", SERIES_LIBRARY.toString(), MediaType.TV_SHOW));
+
+        assertThat(service.scanSource(4)).singleElement().satisfies(result -> assertThat(result.message())
+                .isEqualTo("Kodi sucht in smb://nas/serien/ nach neuen Serien und Episoden."));
+    }
+
+    private void givenShow() {
+        TvShowDetails show = mock(TvShowDetails.class);
+        when(show.directoryPath()).thenReturn(SERIES_LIBRARY.resolve("Lost").toString());
+        when(show.metadata()).thenReturn(new TvShowMetadata("Lost", null, null, null, null, null, null, null, null,
+                List.of(), List.of(), List.of(), null, null, null, null));
+        lenient().when(tvShowService.findShow(SHOW_ID)).thenReturn(show);
     }
 
     private void givenHosts(KodiTarget... targets) {
