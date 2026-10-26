@@ -40,6 +40,7 @@ import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieQueryService;
 import de.tiktak.kmm.movie.MovieScrapeService;
 import de.tiktak.kmm.movie.MovieSupplement;
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
@@ -171,7 +172,8 @@ class AutoScrapeServiceTest {
         var metadata = new MovieMetadata(title, null, null, null, null, null, null, null, null, null, List.of(), null,
                 null);
         when(metadataService.findDetails(movieId)).thenReturn(new MovieDetails(movieId, SOURCE_ID, "/m/" + title,
-                DiscFormat.FILE, 1, null, metadata, MovieSupplement.EMPTY, new MovieDetails.NfoInfo("/m/x.nfo", false, null)));
+                DiscFormat.FILE, 1, null, metadata, MovieSupplement.EMPTY, StreamDetails.EMPTY,
+                new MovieDetails.NfoInfo("/m/x.nfo", false, null)));
     }
 
     private static ErrorResponseException problem(String detail) {

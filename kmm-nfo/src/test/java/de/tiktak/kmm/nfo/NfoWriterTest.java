@@ -102,12 +102,16 @@ class NfoWriterTest {
     }
 
     @Test
-    void emptySupplementRemovesTheElements() throws IOException {
+    void emptySupplementRemovesTheElementsButKeepsUnknownStreams() throws IOException {
         Path nfoFile = copyFixture("full-movie.nfo");
 
         writer.write(nfoFile, withSupplement(heat("Heat"), MovieNfoSupplement.EMPTY));
 
-        assertThat(reader.read(nfoFile).supplement()).isEqualTo(MovieNfoSupplement.EMPTY);
+        MovieNfoSupplement read = reader.read(nfoFile).supplement();
+        assertThat(read.actors()).isEmpty();
+        assertThat(read.ratings()).isEmpty();
+        assertThat(read.set()).isNull();
+        assertThat(read.streams().videos()).hasSize(1);
         assertThat(Files.readString(nfoFile)).contains("<codec>h264</codec>");
     }
 
@@ -198,7 +202,7 @@ class NfoWriterTest {
                 List.of("Heist", "Los Angeles"), List.of(new NfoRating("imdb", 8.3, 10, 650000, true),
                         new NfoRating("themoviedb", 7.9, 10, null, false)),
                 new NfoMovieSet("Michael Mann Collection", null), null, 3, LocalDateTime.of(2024, 5, 1, 20, 15),
-                LocalDateTime.of(2016, 11, 30, 1, 20, 15));
+                LocalDateTime.of(2016, 11, 30, 1, 20, 15), StreamDetails.EMPTY);
     }
 
     private Path copyFixture(String name) throws IOException {

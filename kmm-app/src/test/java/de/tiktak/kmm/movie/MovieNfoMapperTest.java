@@ -16,6 +16,7 @@ import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoActor;
 import de.tiktak.kmm.nfo.NfoMovieSet;
 import de.tiktak.kmm.nfo.NfoRating;
+import de.tiktak.kmm.nfo.StreamDetails;
 
 class MovieNfoMapperTest {
 
@@ -41,7 +42,7 @@ class MovieNfoMapperTest {
                         new NfoActor("Pacino", "Hanna", 0, "pacino.jpg")),
                 List.of("Michael Mann"), List.of("Michael Mann"), List.of("Warner"), List.of("USA"), List.of("Heist"),
                 List.of(new NfoRating("imdb", 8.3, 10, 650000, true)), new NfoMovieSet("Mann Collection", "Filme"),
-                0, 2, LocalDateTime.of(2024, 5, 1, 20, 15), null);
+                0, 2, LocalDateTime.of(2024, 5, 1, 20, 15), null, null);
 
         MovieSupplement supplement = MovieNfoMapper.toSupplement(nfo, BERLIN);
 
@@ -62,8 +63,9 @@ class MovieNfoMapperTest {
                 List.of(), List.of(new MovieSupplement.Rating("imdb", 8.3, 10, null, true)),
                 new MovieSupplement.SetReference("Mann Collection", null), 9, null, Instant.parse("2024-05-01T18:15:00Z"));
 
-        MovieNfoSupplement nfo = MovieNfoMapper.toNfoSupplement(supplement, Instant.parse("2016-11-30T00:20:15Z"),
-                BERLIN);
+        StreamDetails streams = new StreamDetails(List.of(), List.of(), List.of(new StreamDetails.Subtitle("deu", false)));
+        MovieNfoSupplement nfo = MovieNfoMapper.toNfoSupplement(supplement, streams,
+                Instant.parse("2016-11-30T00:20:15Z"), BERLIN);
 
         assertThat(nfo.actors()).containsExactly(new NfoActor("Pacino", "Hanna", 0, null),
                 new NfoActor("De Niro", null, 1, null));
@@ -72,12 +74,13 @@ class MovieNfoMapperTest {
         assertThat(nfo.userRating()).isEqualTo(9);
         assertThat(nfo.lastPlayed()).isEqualTo(LocalDateTime.of(2024, 5, 1, 20, 15));
         assertThat(nfo.dateAdded()).isEqualTo(LocalDateTime.of(2016, 11, 30, 1, 20, 15));
+        assertThat(nfo.streams()).isEqualTo(streams);
     }
 
     @Test
     void mapsEmptySupplementWithoutSetAndTimes() {
         assertThat(MovieNfoMapper.toSupplement(MovieNfoSupplement.EMPTY, BERLIN)).isEqualTo(MovieSupplement.EMPTY);
-        assertThat(MovieNfoMapper.toNfoSupplement(MovieSupplement.EMPTY, null, BERLIN))
+        assertThat(MovieNfoMapper.toNfoSupplement(MovieSupplement.EMPTY, StreamDetails.EMPTY, null, BERLIN))
                 .isEqualTo(MovieNfoSupplement.EMPTY);
     }
 

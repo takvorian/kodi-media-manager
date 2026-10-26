@@ -53,7 +53,8 @@ class TvShowValuesTest {
     void dropsIncompleteExtras() {
         TvShowExtras show = new TvShowExtras(List.of(new TvActor(" ", "Rolle", null), new TvActor("ALF", " ", " ")),
                 List.of(new TvRating(" ", 1, null, null, false)), new TreeMap<>(Map.of(-1, "x", 1, " ", 2, "Zwei")));
-        EpisodeExtras episode = new EpisodeExtras(Arrays.asList("Regie", "Regie", null), null, null, null, -3, null);
+        EpisodeExtras episode = new EpisodeExtras(Arrays.asList("Regie", "Regie", null), null, null, null, -3, null,
+                null);
 
         assertThat(show.actors()).containsExactly(new TvActor("ALF", null, null));
         assertThat(show.ratings()).isEmpty();
@@ -62,7 +63,7 @@ class TvShowValuesTest {
         assertThat(episode.directors()).containsExactly("Regie");
         assertThat(episode.writers()).isEmpty();
         assertThat(episode.playCount()).isNull();
-        assertThat(new EpisodeExtras(null, null, null, null, null, null)).isEqualTo(EpisodeExtras.EMPTY);
+        assertThat(new EpisodeExtras(null, null, null, null, null, null, null)).isEqualTo(EpisodeExtras.EMPTY);
     }
 
     @Test

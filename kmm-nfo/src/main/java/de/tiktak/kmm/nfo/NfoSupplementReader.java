@@ -38,7 +38,8 @@ final class NfoSupplementReader {
                 integer(NfoDocuments.text(movie, NfoElements.USER_RATING)),
                 integer(NfoDocuments.text(movie, NfoElements.PLAY_COUNT)),
                 dateTime(NfoDocuments.text(movie, NfoElements.LAST_PLAYED)),
-                dateTime(NfoDocuments.text(movie, NfoElements.DATE_ADDED)));
+                dateTime(NfoDocuments.text(movie, NfoElements.DATE_ADDED)),
+                NfoStreamDetails.read(movie));
     }
 
     static List<NfoActor> actors(Element movie) {

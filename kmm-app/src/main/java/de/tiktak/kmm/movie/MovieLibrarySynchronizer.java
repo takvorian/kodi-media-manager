@@ -108,6 +108,7 @@ class MovieLibrarySynchronizer {
         }
         MovieSupplement supplement = MovieNfoMapper.toSupplement(nfoSupplement, clock.getZone());
         movie.applySupplement(supplement, movieSets.resolve(supplement.set()));
+        movie.applyStreamDetails(nfoSupplement.streams());
         Instant dateAdded = MovieNfoMapper.toInstant(nfoSupplement.dateAdded(), clock.getZone());
         if (dateAdded != null) {
             movie.changeAddedAt(dateAdded);

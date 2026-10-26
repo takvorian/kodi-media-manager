@@ -1,0 +1,2 @@
+ALTER TABLE movie ADD COLUMN stream_details LONGTEXT NULL;
+ALTER TABLE episode ADD COLUMN stream_details LONGTEXT NULL;

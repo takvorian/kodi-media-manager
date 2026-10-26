@@ -17,6 +17,7 @@ import java.util.Map;
  * @param userRating eigene Bewertung 1–10 oder {@code null}
  * @param lastPlayed letzte Wiedergabe in lokaler Zeit
  * @param dateAdded  Hinzugefügt-Datum in lokaler Zeit
+ * @param streams    Video-, Ton- und Untertitelspuren; leer, wenn unbekannt
  */
 public record EpisodeNfo(
         String title,
@@ -34,7 +35,8 @@ public record EpisodeNfo(
         Integer userRating,
         Integer playCount,
         LocalDateTime lastPlayed,
-        LocalDateTime dateAdded) {
+        LocalDateTime dateAdded,
+        StreamDetails streams) {
 
     public EpisodeNfo {
         uniqueIds = NfoCollections.orderedIds(uniqueIds);
@@ -42,6 +44,7 @@ public record EpisodeNfo(
         directors = NfoCollections.list(directors);
         writers = NfoCollections.list(writers);
         actors = NfoCollections.list(actors);
+        streams = streams == null ? StreamDetails.EMPTY : streams;
     }
 
     /** Ob dieses Element zu Staffel und Episode gehört. */

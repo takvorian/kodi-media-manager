@@ -30,6 +30,7 @@ import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieSupplement;
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
@@ -183,7 +184,7 @@ class KodiSyncServiceTest {
                 null, null);
         when(metadataService.findDetails(MOVIE_ID)).thenReturn(new MovieDetails(MOVIE_ID, 1L,
                 LIBRARY.resolve(relativeFile).toString(), format, 1, NOW, metadata, MovieSupplement.EMPTY,
-                new MovieDetails.NfoInfo("Heat.nfo", false, null)));
+                StreamDetails.EMPTY, new MovieDetails.NfoInfo("Heat.nfo", false, null)));
     }
 
     private static KodiTarget target(long id, String name, KodiEndpoint endpoint, KodiPathMapper mapper,

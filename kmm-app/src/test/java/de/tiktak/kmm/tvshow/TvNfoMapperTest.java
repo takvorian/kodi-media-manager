@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoActor;
 import de.tiktak.kmm.nfo.NfoRating;
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.nfo.TvShowNfo;
 
 class TvNfoMapperTest {
@@ -62,7 +63,7 @@ class TvNfoMapperTest {
         EpisodeNfo nfo = new EpisodeNfo(null, "Original", 1, 16, "Handlung", LocalDate.of(1987, 2, 9), 30,
                 Map.of("tvdb", "110001"), List.of(), List.of("Regie"), List.of("Autor"),
                 List.of(new NfoActor("Gast", "Rolle", 0, null)), 7, 2, LocalDateTime.of(2014, 5, 25, 1, 21, 47),
-                null);
+                null, new StreamDetails(List.of(), List.of(new StreamDetails.Audio("ac3", null, 1, null)), List.of()));
 
         EpisodeMetadata metadata = TvNfoMapper.toMetadata(nfo, "Aus dem Dateinamen");
         EpisodeExtras extras = TvNfoMapper.toExtras(nfo, BERLIN);
@@ -74,6 +75,8 @@ class TvNfoMapperTest {
         assertThat(back.lastPlayed()).isEqualTo(LocalDateTime.of(2014, 5, 25, 1, 21, 47));
         assertThat(back.dateAdded()).isEqualTo(LocalDateTime.of(2020, 1, 1, 12, 0));
         assertThat(back.describes(1, 16)).isTrue();
+        assertThat(back.streams()).isEqualTo(nfo.streams());
+        assertThat(extras.streams()).isEqualTo(nfo.streams());
         assertThat(TvNfoMapper.toInstant(null, BERLIN)).isNull();
     }
 }

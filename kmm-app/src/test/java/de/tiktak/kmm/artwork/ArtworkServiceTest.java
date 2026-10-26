@@ -33,6 +33,7 @@ import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieSupplement;
 import de.tiktak.kmm.movie.MovieMetadataService;
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import de.tiktak.kmm.scanner.DiscFormat;
@@ -221,6 +222,6 @@ class ArtworkServiceTest {
                 imdbId, tmdbId);
         lenient().when(metadataService.findDetails(MOVIE_ID)).thenReturn(new MovieDetails(
                 MOVIE_ID, 1L, MOVIE_FILE.toString(), DiscFormat.FILE, 1, MODIFIED, metadata,
-                MovieSupplement.EMPTY, new MovieDetails.NfoInfo("Heat.nfo", false, null)));
+                MovieSupplement.EMPTY, StreamDetails.EMPTY, new MovieDetails.NfoInfo("Heat.nfo", false, null)));
     }
 }

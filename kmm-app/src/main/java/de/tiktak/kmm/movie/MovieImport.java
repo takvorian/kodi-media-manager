@@ -3,6 +3,7 @@ package de.tiktak.kmm.movie;
 import java.time.Instant;
 import java.util.Objects;
 
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 /**
@@ -23,12 +24,14 @@ public record MovieImport(
         MovieSupplement supplement,
         Integer setOrder,
         String setTmdbCollectionId,
-        Instant addedAt) {
+        Instant addedAt,
+        StreamDetails streams) {
 
     public MovieImport {
         Objects.requireNonNull(filePath, "filePath must not be null");
         Objects.requireNonNull(discFormat, "discFormat must not be null");
         Objects.requireNonNull(metadata, "metadata must not be null");
         Objects.requireNonNull(supplement, "supplement must not be null");
+        streams = streams == null ? StreamDetails.EMPTY : streams;
     }
 }

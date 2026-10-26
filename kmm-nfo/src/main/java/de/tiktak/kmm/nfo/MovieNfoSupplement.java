@@ -13,6 +13,7 @@ import java.util.List;
  * @param playCount  Anzahl der Wiedergaben oder {@code null}
  * @param lastPlayed letzte Wiedergabe (lokale Zeit) oder {@code null}
  * @param dateAdded  Aufnahme in die Bibliothek (lokale Zeit) oder {@code null}
+ * @param streams    Video-, Ton- und Untertitelspuren; leer, wenn unbekannt
  */
 public record MovieNfoSupplement(
         List<NfoActor> actors,
@@ -26,10 +27,11 @@ public record MovieNfoSupplement(
         Integer userRating,
         Integer playCount,
         LocalDateTime lastPlayed,
-        LocalDateTime dateAdded) {
+        LocalDateTime dateAdded,
+        StreamDetails streams) {
 
     public static final MovieNfoSupplement EMPTY = new MovieNfoSupplement(List.of(), List.of(), List.of(), List.of(),
-            List.of(), List.of(), List.of(), null, null, null, null, null);
+            List.of(), List.of(), List.of(), null, null, null, null, null, StreamDetails.EMPTY);
 
     public MovieNfoSupplement {
         actors = copy(actors);
@@ -39,6 +41,7 @@ public record MovieNfoSupplement(
         countries = copy(countries);
         tags = copy(tags);
         ratings = copy(ratings);
+        streams = streams == null ? StreamDetails.EMPTY : streams;
     }
 
     private static <T> List<T> copy(List<T> values) {

@@ -40,6 +40,8 @@ class EpisodeNfoTest {
         assertThat(first.actors()).containsExactly(new NfoActor("Bill Daily", "Dr. Larry Dykstra", null, null));
         assertThat(first.playCount()).isEqualTo(1);
         assertThat(first.lastPlayed()).isEqualTo(LocalDateTime.of(2014, 5, 25, 1, 21, 47));
+        assertThat(first.streams().audios()).containsExactly(new StreamDetails.Audio("ac3", null, 1, null));
+        assertThat(episodes.get(1).streams().isEmpty()).isTrue();
         assertThat(first.describes(1, 16)).isTrue();
         assertThat(first.describes(1, 17)).isFalse();
         assertThat(episodes.get(1).describes(1, 17)).isTrue();
@@ -58,7 +60,7 @@ class EpisodeNfoTest {
         assertThat(episodes.get(1)).isEqualTo(changed);
         String content = Files.readString(nfoFile);
         assertThat(content).startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>")
-                .contains("<codec>ac3</codec>");
+                .contains("<codec>ac3</codec>", "<channels>1</channels>");
         assertThat(content.split("<episodedetails>", -1)).hasSize(3);
     }
 
@@ -87,7 +89,7 @@ class EpisodeNfoTest {
     @Test
     void requiresSeasonAndEpisodeForWriting() {
         EpisodeNfo withoutNumbers = new EpisodeNfo("x", null, null, null, null, null, null, null, null, null, null,
-                null, null, null, null, null);
+                null, null, null, null, null, null);
 
         assertThatThrownBy(() -> writer.write(directory.resolve("x.nfo"), List.of(withoutNumbers)))
                 .isInstanceOf(IllegalArgumentException.class);
@@ -104,7 +106,8 @@ class EpisodeNfoTest {
         return new EpisodeNfo(title, "Original", season, episode, "Handlung", LocalDate.of(1987, 2, 16), 25,
                 Map.of("tvdb", "110002"), List.of(new NfoRating("tvdb", 7.5, 10, 12, true)), List.of("Regie"),
                 List.of("Autor"), List.of(new NfoActor("Gast", "Rolle", 0, null)), 7, 2,
-                LocalDateTime.of(2020, 1, 2, 3, 4, 5), LocalDateTime.of(2019, 1, 1, 0, 0, 0));
+                LocalDateTime.of(2020, 1, 2, 3, 4, 5), LocalDateTime.of(2019, 1, 1, 0, 0, 0),
+                new StreamDetails(List.of(), List.of(new StreamDetails.Audio("ac3", "deu", 2, null)), List.of()));
     }
 
     private Path fixture() throws IOException {

@@ -12,6 +12,7 @@ import { RouterLink } from '@angular/router';
 import { kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { problemMessage } from '../shared/problem-message';
+import { StreamDetailsView } from '../shared/stream-details';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
 import { MAX_YEAR, MIN_YEAR, createMovieMetadataForm, toFormValue, toMetadata } from './movie-metadata-form';
@@ -34,6 +35,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MovieArtwork,
     MovieOnlineSearch,
     MovieSupplementView,
+    StreamDetailsView,
   ],
   templateUrl: './movie-detail.html',
   styleUrl: './movie-detail.scss',

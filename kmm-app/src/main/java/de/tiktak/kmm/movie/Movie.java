@@ -12,10 +12,13 @@ import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import de.tiktak.kmm.nfo.StreamDetails;
+import de.tiktak.kmm.persistence.StreamDetailsConverter;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import de.tiktak.kmm.scanner.DiscFormat;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -162,6 +165,13 @@ public class Movie {
     @Column(name = "supplement_known", nullable = false)
     private boolean supplementKnown;
 
+    /** Video-, Ton- und Untertitelspuren aus NFO oder Migration. */
+    @Getter(AccessLevel.NONE)
+    @Convert(converter = StreamDetailsConverter.class)
+    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+    @Column(name = "stream_details", length = Length.LONG32)
+    private StreamDetails streamDetails;
+
     /** Änderungszeit der NFO beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
@@ -242,6 +252,14 @@ public class Movie {
     void assignSet(MovieSet set, Integer order) {
         movieSet = set;
         setOrder = set == null ? null : order;
+    }
+
+    public StreamDetails streamDetails() {
+        return streamDetails == null ? StreamDetails.EMPTY : streamDetails;
+    }
+
+    void applyStreamDetails(StreamDetails details) {
+        this.streamDetails = details == null || details.isEmpty() ? null : details;
     }
 
     void changeAddedAt(Instant newAddedAt) {

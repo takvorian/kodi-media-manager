@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataResult;
@@ -56,7 +57,7 @@ class MovieScrapeServiceTest {
     void setUp() {
         service = new MovieScrapeService(scraperRegistry, metadataService, new ScrapingProperties("tmdb"));
         MovieDetails details = new MovieDetails(MOVIE_ID, 1L, "/media/Heat.mkv", DiscFormat.FILE, 1, null, CURRENT,
-                MovieSupplement.EMPTY, new MovieDetails.NfoInfo("/media/Heat.nfo", false, null));
+                MovieSupplement.EMPTY, StreamDetails.EMPTY, new MovieDetails.NfoInfo("/media/Heat.nfo", false, null));
         lenient().when(metadataService.findDetails(MOVIE_ID)).thenReturn(details);
         lenient().when(tmdb.displayName()).thenReturn("TMDB");
     }
@@ -199,7 +200,8 @@ class MovieScrapeServiceTest {
 
     private void givenMovie(MovieMetadata metadata) {
         when(metadataService.findDetails(MOVIE_ID)).thenReturn(new MovieDetails(MOVIE_ID, 1L, "/media/Heat.mkv",
-                DiscFormat.FILE, 1, null, metadata, MovieSupplement.EMPTY, new MovieDetails.NfoInfo("/media/Heat.nfo", false, null)));
+                DiscFormat.FILE, 1, null, metadata, MovieSupplement.EMPTY, StreamDetails.EMPTY,
+                new MovieDetails.NfoInfo("/media/Heat.nfo", false, null)));
     }
 
     private static MetadataScraper readyScraper(String id) {

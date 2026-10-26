@@ -12,8 +12,11 @@ import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import de.tiktak.kmm.nfo.StreamDetails;
+import de.tiktak.kmm.persistence.StreamDetailsConverter;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -104,6 +107,12 @@ public class Episode {
     @Column(name = "added_at", nullable = false)
     private Instant addedAt;
 
+    @Getter(AccessLevel.NONE)
+    @Convert(converter = StreamDetailsConverter.class)
+    @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
+    @Column(name = "stream_details", length = Length.LONG32)
+    private StreamDetails streamDetails;
+
     /** Änderungszeit der NFO beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
@@ -140,7 +149,8 @@ public class Episode {
                 creditsOf(EpisodeCredit.Type.ACTOR).map(EpisodeCredit::toActor).toList(),
                 ratings.stream().map(TvRatingEntry::toRating).toList(),
                 playCount,
-                lastPlayedAt);
+                lastPlayedAt,
+                streamDetails == null ? StreamDetails.EMPTY : streamDetails);
     }
 
     void applyExtras(EpisodeExtras extras) {
@@ -152,6 +162,7 @@ public class Episode {
         extras.ratings().forEach(rating -> ratings.add(TvRatingEntry.of(rating)));
         playCount = extras.playCount();
         lastPlayedAt = extras.lastPlayed();
+        streamDetails = extras.streams().isEmpty() ? null : extras.streams();
     }
 
     void changeAddedAt(Instant newAddedAt) {

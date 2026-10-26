@@ -14,6 +14,7 @@ import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoActor;
 import de.tiktak.kmm.nfo.NfoMovieSet;
 import de.tiktak.kmm.nfo.NfoRating;
+import de.tiktak.kmm.nfo.StreamDetails;
 
 /**
  * Übersetzt zwischen NFO-Inhalt und Film-Metadaten. Zeitangaben stehen in der NFO in lokaler Zeit.
@@ -102,7 +103,8 @@ final class MovieNfoMapper {
                 toInstant(nfo.lastPlayed(), zone));
     }
 
-    static MovieNfoSupplement toNfoSupplement(MovieSupplement supplement, Instant addedAt, ZoneId zone) {
+    static MovieNfoSupplement toNfoSupplement(MovieSupplement supplement, StreamDetails streams, Instant addedAt,
+            ZoneId zone) {
         List<MovieSupplement.Actor> actors = supplement.actors();
         return new MovieNfoSupplement(
                 IntStream.range(0, actors.size())
@@ -122,7 +124,8 @@ final class MovieNfoMapper {
                 supplement.userRating(),
                 supplement.playCount(),
                 toLocal(supplement.lastPlayed(), zone),
-                toLocal(addedAt, zone));
+                toLocal(addedAt, zone),
+                streams);
     }
 
     static Instant toInstant(LocalDateTime localDateTime, ZoneId zone) {

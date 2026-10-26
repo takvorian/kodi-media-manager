@@ -135,7 +135,8 @@ class TvShowLibraryIntegrationTest {
         assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, partOne)).bodyJson().isLenientlyEqualTo("""
                 {"showTitle": "ALF – Der Außerirdische", "season": 1, "episode": 16,
                  "metadata": {"title": "Gestatten – Teil 1 (geändert)"},
-                 "extras": {"directors": ["Tom Patchett"], "playCount": 1}}
+                 "extras": {"directors": ["Tom Patchett"], "playCount": 1,
+                            "streams": {"audios": [{"codec": "ac3"}]}}}
                 """);
     }
 

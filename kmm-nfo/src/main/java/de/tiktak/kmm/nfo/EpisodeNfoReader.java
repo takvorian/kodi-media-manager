@@ -52,6 +52,7 @@ public class EpisodeNfoReader {
                 NfoSupplementReader.integer(NfoDocuments.text(episode, NfoElements.USER_RATING)),
                 NfoSupplementReader.integer(NfoDocuments.text(episode, NfoElements.PLAY_COUNT)),
                 NfoSupplementReader.dateTime(NfoDocuments.text(episode, NfoElements.LAST_PLAYED)),
-                NfoSupplementReader.dateTime(NfoDocuments.text(episode, NfoElements.DATE_ADDED)));
+                NfoSupplementReader.dateTime(NfoDocuments.text(episode, NfoElements.DATE_ADDED)),
+                NfoStreamDetails.read(episode));
     }
 }

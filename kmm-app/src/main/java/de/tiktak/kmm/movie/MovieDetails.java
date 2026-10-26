@@ -3,6 +3,7 @@ package de.tiktak.kmm.movie;
 import java.time.Instant;
 import java.util.Optional;
 
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 /**
@@ -19,6 +20,7 @@ public record MovieDetails(
         Instant addedAt,
         MovieMetadata metadata,
         MovieSupplement supplement,
+        StreamDetails streams,
         NfoInfo nfo) {
 
     static MovieDetails from(Movie movie, Optional<NfoFileState> nfoFile) {
@@ -26,7 +28,8 @@ public record MovieDetails(
                 .map(state -> new NfoInfo(state.file().toString(), true, state.modifiedAt()))
                 .orElseGet(() -> new NfoInfo(movie.companionFiles().nfoFile().toString(), false, null));
         return new MovieDetails(movie.getId(), movie.getSourceId(), movie.getFilePath(), movie.getDiscFormat(),
-                movie.getPartCount(), movie.getAddedAt(), movie.metadata(), movie.supplement(), nfo);
+                movie.getPartCount(), movie.getAddedAt(), movie.metadata(), movie.supplement(), movie.streamDetails(),
+                nfo);
     }
 
     /**

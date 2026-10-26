@@ -102,6 +102,8 @@ class MovieLibraryIntegrationTest {
                   <actor><name>Al Pacino</name><role>Hanna</role></actor>
                   <set><name>Michael Mann Collection</name></set>
                   <playcount>2</playcount>
+                  <fileinfo><streamdetails><video><codec>h264</codec><width>1920</width></video>
+                    <audio><codec>dca</codec><language>deu</language><channels>6</channels></audio></streamdetails></fileinfo>
                 </movie>
                 """);
         long sourceId = createSource();
@@ -113,6 +115,7 @@ class MovieLibraryIntegrationTest {
                 {"metadata": {"title": "Heat – aus der NFO", "year": 1995, "imdbId": "tt0113277"},
                  "supplement": {"actors": [{"name": "Al Pacino", "role": "Hanna"}],
                                 "set": {"name": "Michael Mann Collection"}, "playCount": 2},
+                 "streams": {"videos": [{"codec": "h264", "width": 1920}], "audios": [{"codec": "dca", "channels": 6}]},
                  "nfo": {"exists": true}}
                 """);
 
@@ -125,7 +128,8 @@ class MovieLibraryIntegrationTest {
         String written = Files.readString(nfo);
         assertThat(written).contains("<title>Heat (Director's Cut)</title>", "<genre>Krimi</genre>",
                 "<name>Al Pacino</name>", "<role>Hanna</role>", "<name>Michael Mann Collection</name>",
-                "<playcount>2</playcount>", "<dateadded>", ">949</uniqueid>");
+                "<playcount>2</playcount>", "<dateadded>", ">949</uniqueid>", "<codec>dca</codec>",
+                "<width>1920</width>");
         assertThat(scan(sourceId).updated()).isZero();
 
         Files.writeString(nfo, written.replace("Director's Cut", "Extended"));

@@ -1,3 +1,5 @@
+import { StreamDetails } from '../shared/stream-details';
+
 export interface TvShowSummary {
   readonly id: number;
   readonly sourceId: number;
@@ -118,6 +120,7 @@ export interface EpisodeExtras {
   readonly ratings: readonly TvRating[];
   readonly playCount: number | null;
   readonly lastPlayed: string | null;
+  readonly streams: StreamDetails;
 }
 
 export interface EpisodeDetails {

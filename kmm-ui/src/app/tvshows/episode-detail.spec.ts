@@ -36,6 +36,7 @@ describe('EpisodeDetail', () => {
       ratings: [],
       playCount: 1,
       lastPlayed: '2014-05-24T23:21:47Z',
+      streams: { videos: [], audios: [{ codec: 'ac3', language: null, channels: 1, bitrate: null }], subtitles: [] },
     },
     nfo: { path: '/media/serien/ALF/S01E16E17.nfo', exists: true, modifiedAt: '2026-10-26T09:00:00Z' },
   };
@@ -89,6 +90,7 @@ describe('EpisodeDetail', () => {
     await fixture.whenStable();
     expect(element().querySelectorAll('.actors li')).toHaveLength(21);
     expect(input('aired').value).toBe('1987-02-09');
+    expect(element().querySelector('.audios')?.textContent?.trim()).toBe('Dolby Digital · Mono');
   });
 
   it('saves the metadata', async () => {

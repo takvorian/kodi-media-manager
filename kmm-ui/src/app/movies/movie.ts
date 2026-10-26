@@ -1,3 +1,5 @@
+import { StreamDetails } from '../shared/stream-details';
+
 export type DiscFormat = 'FILE' | 'DVD' | 'BLURAY';
 
 export interface MovieSummary {
@@ -107,5 +109,6 @@ export interface MovieDetails {
   readonly addedAt: string;
   readonly metadata: MovieMetadata;
   readonly supplement: MovieSupplement;
+  readonly streams: StreamDetails;
   readonly nfo: NfoInfo;
 }

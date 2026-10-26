@@ -29,6 +29,7 @@ import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoActor;
 import de.tiktak.kmm.nfo.NfoMovieSet;
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.MovieCandidate;
 import de.tiktak.kmm.source.MediaSourceService;
@@ -112,7 +113,8 @@ class MovieLibrarySynchronizerTest {
         when(nfoFiles.read(scanned.nfo().orElseThrow())).thenReturn(withSupplement(nfo("Heat", 1995, null),
                 new MovieNfoSupplement(List.of(new NfoActor("Al Pacino", "Hanna", 0, null)), List.of("Michael Mann"),
                         List.of(), List.of(), List.of(), List.of(), List.of(), new NfoMovieSet("Mann Collection", null),
-                        null, 2, null, LocalDateTime.of(2016, 11, 30, 1, 20, 15))));
+                        null, 2, null, LocalDateTime.of(2016, 11, 30, 1, 20, 15),
+                        new StreamDetails(List.of(), List.of(new StreamDetails.Audio("ac3", "deu", 6, null)), List.of()))));
 
         synchronizer.synchronize(SOURCE_ID, List.of(scanned));
 
@@ -120,6 +122,7 @@ class MovieLibrarySynchronizerTest {
         Movie movie = moviesCaptor.getValue().getFirst();
         assertThat(movie.supplement().actors()).extracting(MovieSupplement.Actor::name).containsExactly("Al Pacino");
         assertThat(movie.supplement().directors()).containsExactly("Michael Mann");
+        assertThat(movie.streamDetails().audios()).extracting(StreamDetails.Audio::codec).containsExactly("ac3");
         assertThat(movie.getMovieSet()).isSameAs(set);
         assertThat(movie.getPlayCount()).isEqualTo(2);
         assertThat(movie.getAddedAt()).isEqualTo(Instant.parse("2016-11-30T01:20:15Z"));

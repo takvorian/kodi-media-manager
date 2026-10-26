@@ -32,6 +32,23 @@ describe('MovieDetail', () => {
       tmdbId: null,
     },
     supplement: { ...EMPTY_SUPPLEMENT, directors: ['Michael Mann'] },
+    streams: {
+      videos: [
+        {
+          codec: 'h264',
+          aspect: 2.388,
+          width: 1280,
+          height: 536,
+          durationSeconds: 5733,
+          bitrate: null,
+          scanType: null,
+          stereoMode: null,
+          language: null,
+        },
+      ],
+      audios: [{ codec: 'dca', language: 'deu', channels: 6, bitrate: null }],
+      subtitles: [{ language: 'deu', forced: true }],
+    },
     nfo: { path: '/media/filme/Heat.nfo', exists: true, modifiedAt: '2026-10-25T11:00:00Z' },
   };
 
@@ -107,6 +124,9 @@ describe('MovieDetail', () => {
     expect(input('title').value).toBe('Heat');
     expect(input('genres').value).toBe('Krimi');
     expect(button('.save-button').disabled).toBe(true);
+    expect(element().querySelector('.videos')?.textContent?.trim()).toBe('H.264 · 1280×536 · 2.39:1 · 1 h 36 min');
+    expect(element().querySelector('.audios')?.textContent?.trim()).toBe('deu · DTS · 5.1');
+    expect(element().querySelector('.subtitles')?.textContent?.trim()).toBe('deu (erzwungen)');
   });
 
   it('refreshes the movie in Kodi and reports each host', async () => {

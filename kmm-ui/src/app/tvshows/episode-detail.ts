@@ -10,6 +10,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
 import { problemMessage } from '../shared/problem-message';
+import { StreamDetailsView } from '../shared/stream-details';
 import { TvPeople } from './tv-people';
 import { EpisodeDetails, episodeCode } from './tvshow';
 import { createEpisodeMetadataForm, toEpisodeFormValue, toEpisodeMetadata } from './tvshow-forms';
@@ -27,6 +28,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    StreamDetailsView,
     TvPeople,
   ],
   templateUrl: './episode-detail.html',

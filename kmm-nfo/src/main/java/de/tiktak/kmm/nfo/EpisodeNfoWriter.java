@@ -10,7 +10,7 @@ import org.w3c.dom.Element;
 /**
  * Schreibt Episoden-NFOs. Jede übergebene Episode ersetzt das {@code <episodedetails>} mit derselben
  * Staffel und Episode oder wird angehängt; andere Episoden einer Mehrfachepisode und nicht von KMM
- * verwaltete Elemente (Stream-Details, Bild-URLs …) bleiben erhalten.
+ * verwaltete Elemente (Bild-URLs …) bleiben erhalten. Stream-Details ersetzt KMM, sofern es welche kennt.
  */
 public class EpisodeNfoWriter {
 
@@ -65,5 +65,6 @@ public class EpisodeNfoWriter {
         NfoDomEditor.setTexts(document, element, NfoElements.CREDITS, nfo.writers());
         NfoDomEditor.replaceAll(element, NfoElements.ACTOR,
                 nfo.actors().stream().map(actor -> NfoSupplementWriter.actor(document, actor)).toList());
+        NfoStreamDetails.write(document, element, nfo.streams());
     }
 }

@@ -15,6 +15,7 @@ import de.tiktak.kmm.migration.ember.library.EmberMovieSet;
 import de.tiktak.kmm.movie.MovieImport;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieSupplement;
+import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.StackedFiles;
 
@@ -55,7 +56,8 @@ final class EmberMovieMapper {
                 supplement(movie, set.map(SetAssignment::reference).orElse(null), zone),
                 set.map(SetAssignment::order).orElse(null),
                 set.map(SetAssignment::tmdbCollectionId).orElse(movie.uniqueIds().get(TMDB_COLLECTION)),
-                toInstant(movie.dateAdded(), zone));
+                toInstant(movie.dateAdded(), zone),
+                StreamDetails.EMPTY);
     }
 
     /** Filme in mehreren Sets kennt Kodi nicht; übernommen wird das erste. */
