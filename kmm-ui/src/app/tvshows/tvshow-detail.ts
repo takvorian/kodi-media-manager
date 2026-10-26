@@ -10,10 +10,22 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
+import { Attribution, ScraperInfo } from '../movies/scraper';
 import { problemMessage } from '../shared/problem-message';
 import { TvPeople } from './tv-people';
-import { EpisodeSummary, Season, TvShowDetails, episodeCode, seasonLabel } from './tvshow';
+import { defaultTvShowScraper } from './tv-scrapers';
+import {
+  EpisodeFillResult,
+  EpisodeSummary,
+  MissingEpisode,
+  Season,
+  TvShowDetails,
+  TvShowMetadata,
+  episodeCode,
+  seasonLabel,
+} from './tvshow';
 import { MAX_YEAR, MIN_YEAR, createTvShowMetadataForm, toTvShowFormValue, toTvShowMetadata } from './tvshow-forms';
+import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TvShowService } from './tvshow.service';
 
 const SNACKBAR_DURATION_MS = 5000;
@@ -36,6 +48,7 @@ export interface SeasonWithEpisodes {
     MatFormFieldModule,
     MatInputModule,
     TvPeople,
+    TvShowOnlineSearch,
   ],
   templateUrl: './tvshow-detail.html',
   styleUrl: './tvshow-detail.scss',
@@ -58,6 +71,18 @@ export class TvShowDetail {
   protected readonly seasons = computed<SeasonWithEpisodes[]>(() =>
     this.show.hasValue() ? groupBySeason(this.show.value()) : [],
   );
+  protected readonly scrapers = rxResource({ stream: () => this.tvShowService.tvShowScrapers() });
+  /** Hinweise der Anbieter, deren IDs die Serie trägt (z. B. TheTVDB). */
+  protected readonly attributions = computed<Attribution[]>(() =>
+    this.show.hasValue() && this.scrapers.hasValue()
+      ? attributionsFor(this.show.value().metadata, this.scrapers.value())
+      : [],
+  );
+  protected readonly searchingOnline = signal(false);
+  /** Übernommener Treffer, dessen Episodendaten beim nächsten Speichern ergänzt werden. */
+  protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
+  protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
+  protected readonly loadingMissing = signal(false);
 
   constructor() {
     effect(() => {
@@ -75,6 +100,45 @@ export class TvShowDetail {
     return seasonLabel(season);
   }
 
+  protected missingCode(episode: MissingEpisode): string {
+    return episodeCode(episode.season, episode.episode);
+  }
+
+  protected toggleOnlineSearch(): void {
+    this.searchingOnline.update((open) => !open);
+  }
+
+  protected adoptProposal(scraped: TvShowScrapedProposal): void {
+    this.form.patchValue(toTvShowFormValue(scraped.proposal.metadata));
+    this.form.markAsDirty();
+    this.searchingOnline.set(false);
+    this.pendingFill.set(scraped);
+    this.notify(
+      `Daten von ${scraped.scraperName} übernommen – bitte prüfen und speichern. ` +
+        `Beim Speichern werden ${scraped.proposal.matchedEpisodes} Episoden ergänzt.`,
+    );
+  }
+
+  /** Fragt beim bevorzugten Serien-Scraper, welche Episoden ohne Datei es gibt. */
+  protected showMissingEpisodes(): void {
+    const scraper = this.scrapers.hasValue() ? defaultTvShowScraper(this.scrapers.value()) : undefined;
+    if (!scraper) {
+      this.notify('Es ist kein Serien-Scraper installiert oder aktiv.');
+      return;
+    }
+    this.loadingMissing.set(true);
+    this.tvShowService.missingEpisodes(this.id(), scraper.id).subscribe({
+      next: (episodes) => {
+        this.loadingMissing.set(false);
+        this.missingEpisodes.set(episodes);
+      },
+      error: (error: unknown) => {
+        this.loadingMissing.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
   protected save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -83,6 +147,11 @@ export class TvShowDetail {
     this.saving.set(true);
     this.tvShowService.updateShow(this.id(), toTvShowMetadata(this.form)).subscribe({
       next: (details) => {
+        const pending = this.pendingFill();
+        if (pending) {
+          this.fillEpisodes(pending);
+          return;
+        }
         this.saving.set(false);
         this.show.set(details);
         this.notify(`Gespeichert und in ${details.nfo.path} geschrieben.`);
@@ -95,14 +164,43 @@ export class TvShowDetail {
   }
 
   protected reset(): void {
+    this.pendingFill.set(null);
     if (this.show.hasValue()) {
       this.form.reset(toTvShowFormValue(this.show.value().metadata));
     }
   }
 
+  private fillEpisodes(pending: TvShowScrapedProposal): void {
+    this.tvShowService.fillEpisodes(this.id(), pending.scraperId, pending.providerId).subscribe({
+      next: (result) => {
+        this.saving.set(false);
+        this.pendingFill.set(null);
+        this.show.reload();
+        this.notify(fillSummary(pending.scraperName, result));
+      },
+      error: (error: unknown) => {
+        this.saving.set(false);
+        this.show.reload();
+        this.notify(`Serie gespeichert, Episoden nicht ergänzt: ${problemMessage(error)}`);
+      },
+    });
+  }
+
   private notify(message: string): void {
     this.snackBar.open(message, 'OK', { duration: SNACKBAR_DURATION_MS });
   }
+}
+
+function fillSummary(scraperName: string, result: EpisodeFillResult): string {
+  const failed =
+    result.failedFiles.length > 0 ? ` ${result.failedFiles.length} NFOs konnten nicht geschrieben werden.` : '';
+  return `Gespeichert; ${result.updated} Episoden mit Daten von ${scraperName} ergänzt.${failed}`;
+}
+
+/** TheTVDB verlangt den Hinweis, wo seine Daten genutzt werden; die Serie trägt dann eine TVDB-ID. */
+function attributionsFor(metadata: TvShowMetadata, scrapers: readonly ScraperInfo[]): Attribution[] {
+  const ids: Record<string, string | null> = { tvdb: metadata.tvdbId, tmdb: metadata.tmdbId };
+  return scrapers.flatMap((scraper) => (scraper.attribution && ids[scraper.id] ? [scraper.attribution] : []));
 }
 
 function groupBySeason(details: TvShowDetails): SeasonWithEpisodes[] {

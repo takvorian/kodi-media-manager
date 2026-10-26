@@ -1,0 +1,72 @@
+.search-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  align-items: baseline;
+}
+
+.query-field {
+  flex: 2 1 240px;
+}
+
+.year-field {
+  flex: 0 1 110px;
+}
+
+.candidates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-height: 480px;
+  overflow-y: auto;
+}
+
+.candidate {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+}
+
+.poster {
+  width: 46px;
+  height: 69px;
+  flex: none;
+  object-fit: cover;
+  border-radius: 4px;
+  background-color: var(--mat-sys-surface-container-high);
+}
+
+.candidate-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+  min-width: 0;
+}
+
+.candidate-title {
+  font-weight: 500;
+}
+
+.overview {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font: var(--mat-sys-body-small);
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}
+
+.attribution {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}

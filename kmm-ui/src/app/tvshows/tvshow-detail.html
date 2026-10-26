@@ -4,7 +4,25 @@
   <p class="error">Die Serie konnte nicht geladen werden.</p>
 } @else if (show.hasValue()) {
   @let details = show.value();
-  <h2 class="page-title">{{ details.metadata.title }}</h2>
+  <div class="title-row">
+    <h2 class="page-title">{{ details.metadata.title }}</h2>
+    <button matButton="tonal" type="button" class="online-search-button" (click)="toggleOnlineSearch()">
+      {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
+    </button>
+  </div>
+
+  @if (searchingOnline()) {
+    <mat-card appearance="outlined" class="online-search-card">
+      <mat-card-content>
+        <app-tvshow-online-search
+          [showId]="details.id"
+          [title]="details.metadata.title"
+          [year]="details.metadata.year"
+          (proposed)="adoptProposal($event)"
+        />
+      </mat-card-content>
+    </mat-card>
+  }
 
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>
@@ -59,6 +77,34 @@
           </mat-expansion-panel>
         }
       </mat-accordion>
+
+      @let missing = missingEpisodes();
+      @if (missing === null) {
+        <button
+          matButton
+          type="button"
+          class="missing-button"
+          [disabled]="loadingMissing()"
+          (click)="showMissingEpisodes()"
+        >
+          {{ loadingMissing() ? 'Frage Anbieter …' : 'Fehlende Episoden anzeigen' }}
+        </button>
+      } @else if (missing.length === 0) {
+        <p class="hint no-missing">Es fehlen keine Episoden.</p>
+      } @else {
+        <h3 class="missing-title">Fehlende Episoden ({{ missing.length }})</h3>
+        <ul class="episodes missing-episodes">
+          @for (episode of missing; track $index) {
+            <li class="episode missing-episode">
+              <span class="code">{{ missingCode(episode) }}</span>
+              {{ episode.title ?? 'ohne Titel' }}
+              @if (episode.aired) {
+                <span class="hint"> · {{ episode.aired | date: 'mediumDate' }}</span>
+              }
+            </li>
+          }
+        </ul>
+      }
     </mat-card-content>
   </mat-card>
 
@@ -158,6 +204,13 @@
       <textarea matInput formControlName="plot" name="plot" rows="6"></textarea>
     </mat-form-field>
 
+    @if (pendingFill(); as pending) {
+      <p class="hint pending-fill">
+        Beim Speichern werden {{ pending.proposal.matchedEpisodes }} Episoden mit Daten von {{ pending.scraperName }}
+        ergänzt (nur leere Felder).
+      </p>
+    }
+
     <div class="actions">
       <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
         Verwerfen
@@ -167,6 +220,12 @@
       </button>
     </div>
   </form>
+
+  @for (attribution of attributions(); track attribution.link) {
+    <p class="attribution">
+      <a [href]="attribution.link" target="_blank" rel="noopener">{{ attribution.text }}</a>
+    </p>
+  }
 } @else {
   <p class="loading">Lade Serie …</p>
 }

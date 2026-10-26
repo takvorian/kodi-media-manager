@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 
 import { EpisodeMetadata, TvShowMetadata, episodeCode, seasonLabel } from './tvshow';
-import { EPISODES_URL, TVSHOWS_URL, TvShowService } from './tvshow.service';
+import { EPISODES_URL, TVSHOWS_URL, TV_SHOW_SCRAPERS_URL, TvShowService } from './tvshow.service';
 
 describe('TvShowService', () => {
   let service: TvShowService;
@@ -37,6 +37,25 @@ describe('TvShowService', () => {
     httpTesting.expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/metadata` }).flush({});
     httpTesting.expectOne({ method: 'GET', url: `${EPISODES_URL}/12` }).flush({});
     httpTesting.expectOne({ method: 'PUT', url: `${EPISODES_URL}/12/metadata` }).flush({});
+  });
+
+  it('talks to the tv show scrapers', () => {
+    service.tvShowScrapers().subscribe();
+    service.searchOnline(3, 'tvdb', 'ALF', 1986).subscribe();
+    service.searchOnline(3, 'tvdb', 'ALF', null).subscribe();
+    service.proposal(3, 'tvdb', '78020').subscribe();
+    service.fillEpisodes(3, 'tvdb', '78020').subscribe();
+    service.missingEpisodes(3, 'tvdb').subscribe();
+
+    httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush([]);
+    const searches = httpTesting.match((request) => request.url === `${TVSHOWS_URL}/3/scraper-search`);
+    expect(searches.map((request) => request.request.params.get('year'))).toEqual(['1986', null]);
+    searches.forEach((request) => request.flush([]));
+    httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-proposal`).flush({});
+    const fill = httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-episodes`);
+    expect(fill.request.method).toBe('POST');
+    fill.flush({});
+    httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/missing-episodes`).flush([]);
   });
 
   it('formats episode codes and season labels', () => {

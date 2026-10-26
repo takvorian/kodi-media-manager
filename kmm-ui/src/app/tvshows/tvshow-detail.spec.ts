@@ -4,9 +4,10 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 
-import { TvShowDetails } from './tvshow';
+import { ScraperInfo } from '../movies/scraper';
+import { TvShowDetails, TvShowProposal } from './tvshow';
 import { TvShowDetail } from './tvshow-detail';
-import { TVSHOWS_URL } from './tvshow.service';
+import { TVSHOWS_URL, TV_SHOW_SCRAPERS_URL } from './tvshow.service';
 
 describe('TvShowDetail', () => {
   const alf: TvShowDetails = {
@@ -50,6 +51,22 @@ describe('TvShowDetail', () => {
     nfo: { path: '/media/serien/ALF (1986)/tvshow.nfo', exists: true, modifiedAt: '2026-10-26T09:00:00Z' },
   };
 
+  const scrapers: ScraperInfo[] = [
+    { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['TV_SHOW'], missingConfiguration: null, attribution: null },
+    {
+      id: 'tvdb',
+      displayName: 'TheTVDB',
+      mediaTypes: ['TV_SHOW'],
+      missingConfiguration: null,
+      attribution: { text: 'Metadata provided by TheTVDB.', link: 'https://www.thetvdb.com' },
+    },
+  ];
+  const proposal: TvShowProposal = {
+    metadata: { ...alf.metadata, title: 'ALF', plot: 'Ein Außerirdischer bei den Tanners.', tmdbId: '4658' },
+    matchedEpisodes: 2,
+    providerEpisodes: 99,
+  };
+
   let fixture: ComponentFixture<TvShowDetail>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
@@ -87,6 +104,33 @@ describe('TvShowDetail', () => {
   async function load(details: TvShowDetails): Promise<void> {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: `${TVSHOWS_URL}/3` }).flush(details);
+    httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush(scrapers);
+    await fixture.whenStable();
+  }
+
+  function click(selector: string): void {
+    element().querySelector<HTMLButtonElement>(selector)!.click();
+  }
+
+  async function adoptFromOnlineSearch(): Promise<void> {
+    click('.online-search-button');
+    fixture.detectChanges();
+    httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush(scrapers);
+    await fixture.whenStable();
+    click('.search-button');
+    httpTesting
+      .expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-search`)
+      .flush([{ providerId: '78020', title: 'ALF', originalTitle: 'ALF', year: 1986, overview: null, posterUrl: null }]);
+    await fixture.whenStable();
+    click('.adopt-button');
+    httpTesting
+      .expectOne(
+        (request) =>
+          request.url === `${TVSHOWS_URL}/3/scraper-proposal` &&
+          request.params.get('scraper') === 'tvdb' &&
+          request.params.get('providerId') === '78020',
+      )
+      .flush(proposal);
     await fixture.whenStable();
   }
 
@@ -161,8 +205,113 @@ describe('TvShowDetail', () => {
   it('shows an error when the show cannot be loaded', async () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(null, { status: 404, statusText: 'Not Found' });
+    httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush(scrapers);
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();
+  });
+
+  it('shows the TVDB attribution only for shows with a TVDB ID', async () => {
+    await load(alf);
+    expect(texts('.attribution')).toEqual(['Metadata provided by TheTVDB.']);
+    expect(element().querySelector('.attribution a')?.getAttribute('href')).toBe('https://www.thetvdb.com');
+
+    fixture.componentRef.setInput('id', '4');
+    fixture.detectChanges();
+    httpTesting
+      .expectOne(`${TVSHOWS_URL}/4`)
+      .flush({ ...alf, id: 4, metadata: { ...alf.metadata, tvdbId: null, tmdbId: '4658' } });
+    await fixture.whenStable();
+    expect(element().querySelector('.attribution')).toBeNull();
+  });
+
+  it('adopts an online search result and fills the episodes after saving', async () => {
+    await load(alf);
+    await adoptFromOnlineSearch();
+
+    expect(input('tmdbId').value).toBe('4658');
+    expect(element().querySelector('app-tvshow-online-search')).toBeNull();
+    expect(element().querySelector('.pending-fill')?.textContent).toContain('2 Episoden mit Daten von TheTVDB');
+    expect(snackBarMessages).toEqual([
+      'Daten von TheTVDB übernommen – bitte prüfen und speichern. Beim Speichern werden 2 Episoden ergänzt.',
+    ]);
+
+    click('.save-button');
+    httpTesting.expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/metadata` }).flush(alf);
+    const fill = httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-episodes`);
+    expect(fill.request.method).toBe('POST');
+    expect(fill.request.params.get('providerId')).toBe('78020');
+    fill.flush({ updated: 2, unchanged: 0, unmatched: 1, failedFiles: ['/x2.nfo'] });
+    fixture.detectChanges();
+    httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
+    await fixture.whenStable();
+
+    expect(snackBarMessages[1]).toBe(
+      'Gespeichert; 2 Episoden mit Daten von TheTVDB ergänzt. 1 NFOs konnten nicht geschrieben werden.',
+    );
+    expect(element().querySelector('.pending-fill')).toBeNull();
+  });
+
+  it('reports episodes that could not be filled and forgets discarded proposals', async () => {
+    await load(alf);
+    await adoptFromOnlineSearch();
+    click('.save-button');
+    httpTesting.expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/metadata` }).flush(alf);
+    httpTesting
+      .expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-episodes`)
+      .flush({ detail: 'TVDB nicht erreichbar' }, { status: 502, statusText: 'Bad Gateway' });
+    fixture.detectChanges();
+    httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
+    await fixture.whenStable();
+    expect(snackBarMessages[1]).toBe('Serie gespeichert, Episoden nicht ergänzt: TVDB nicht erreichbar');
+
+    await adoptFromOnlineSearch();
+    click('.reset-button');
+    await fixture.whenStable();
+    expect(element().querySelector('.pending-fill')).toBeNull();
+  });
+
+  it('lists missing episodes from the preferred scraper', async () => {
+    await load(alf);
+
+    click('.missing-button');
+    const request = httpTesting.expectOne((req) => req.url === `${TVSHOWS_URL}/3/missing-episodes`);
+    expect(request.request.params.get('scraper')).toBe('tvdb');
+    request.flush([
+      { season: 1, episode: 1, title: 'Hallo, da bin ich!', aired: '1986-09-22' },
+      { season: 4, episode: 24, title: null, aired: null },
+    ]);
+    await fixture.whenStable();
+
+    expect(texts('.missing-title')).toEqual(['Fehlende Episoden (2)']);
+    const missing = texts('.missing-episode');
+    expect(missing[0]).toMatch(/^S01E01 Hallo, da bin ich! · .*1986$/);
+    expect(missing[1]).toBe('S04E24 ohne Titel');
+  });
+
+  it('reports when no episodes are missing and when the provider fails', async () => {
+    await load(alf);
+    click('.missing-button');
+    httpTesting
+      .expectOne((req) => req.url === `${TVSHOWS_URL}/3/missing-episodes`)
+      .flush({ detail: 'nicht eindeutig zugeordnet' }, { status: 422, statusText: 'Unprocessable' });
+    await fixture.whenStable();
+    expect(snackBarMessages).toEqual(['nicht eindeutig zugeordnet']);
+
+    click('.missing-button');
+    httpTesting.expectOne((req) => req.url === `${TVSHOWS_URL}/3/missing-episodes`).flush([]);
+    await fixture.whenStable();
+    expect(element().querySelector('.no-missing')).not.toBeNull();
+  });
+
+  it('needs a scraper for missing episodes', async () => {
+    fixture.detectChanges();
+    httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
+    httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush([]);
+    await fixture.whenStable();
+
+    click('.missing-button');
+
+    expect(snackBarMessages).toEqual(['Es ist kein Serien-Scraper installiert oder aktiv.']);
   });
 });

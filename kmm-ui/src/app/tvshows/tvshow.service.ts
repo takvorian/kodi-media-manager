@@ -2,10 +2,22 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { EpisodeDetails, EpisodeMetadata, TvShowDetails, TvShowMetadata, TvShowPage, TvShowQuery } from './tvshow';
+import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
+import {
+  EpisodeDetails,
+  EpisodeFillResult,
+  EpisodeMetadata,
+  MissingEpisode,
+  TvShowDetails,
+  TvShowMetadata,
+  TvShowPage,
+  TvShowProposal,
+  TvShowQuery,
+} from './tvshow';
 
 export const TVSHOWS_URL = '/api/v1/tvshows';
 export const EPISODES_URL = '/api/v1/episodes';
+export const TV_SHOW_SCRAPERS_URL = '/api/v1/scrapers/tvshows';
 const SORT_BY_TITLE = 'title,asc';
 
 @Injectable({ providedIn: 'root' })
@@ -28,6 +40,34 @@ export class TvShowService {
   /** Speichert die Metadaten; das Backend schreibt sie zugleich in die tvshow.nfo. */
   updateShow(showId: number, metadata: TvShowMetadata): Observable<TvShowDetails> {
     return this.http.put<TvShowDetails>(`${TVSHOWS_URL}/${showId}/metadata`, metadata);
+  }
+
+  tvShowScrapers(): Observable<ScraperInfo[]> {
+    return this.http.get<ScraperInfo[]>(TV_SHOW_SCRAPERS_URL);
+  }
+
+  searchOnline(showId: number, scraper: string, title: string, year: number | null): Observable<ScrapeCandidate[]> {
+    let params = new HttpParams().set('scraper', scraper).set('title', title);
+    if (year !== null) {
+      params = params.set('year', year);
+    }
+    return this.http.get<ScrapeCandidate[]>(`${TVSHOWS_URL}/${showId}/scraper-search`, { params });
+  }
+
+  proposal(showId: number, scraper: string, providerId: string): Observable<TvShowProposal> {
+    const params = new HttpParams().set('scraper', scraper).set('providerId', providerId);
+    return this.http.get<TvShowProposal>(`${TVSHOWS_URL}/${showId}/scraper-proposal`, { params });
+  }
+
+  /** Ergänzt leere Angaben der Episoden aus dem Treffer und schreibt deren NFOs. */
+  fillEpisodes(showId: number, scraper: string, providerId: string): Observable<EpisodeFillResult> {
+    const params = new HttpParams().set('scraper', scraper).set('providerId', providerId);
+    return this.http.post<EpisodeFillResult>(`${TVSHOWS_URL}/${showId}/scraper-episodes`, null, { params });
+  }
+
+  missingEpisodes(showId: number, scraper: string): Observable<MissingEpisode[]> {
+    const params = new HttpParams().set('scraper', scraper);
+    return this.http.get<MissingEpisode[]>(`${TVSHOWS_URL}/${showId}/missing-episodes`, { params });
   }
 
   findEpisode(episodeId: number): Observable<EpisodeDetails> {

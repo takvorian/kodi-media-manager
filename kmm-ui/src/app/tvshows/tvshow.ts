@@ -146,3 +146,27 @@ export function seasonLabel(season: Season): string {
   const name = season.number === 0 ? 'Specials' : `Staffel ${season.number}`;
   return season.title && season.title !== name ? `${name} – ${season.title}` : name;
 }
+
+/** Vorschlag aus der Online-Suche für das Formular der Serie. */
+export interface TvShowProposal {
+  readonly metadata: TvShowMetadata;
+  /** Episoden der Bibliothek, die der Anbieter kennt und beim Übernehmen ergänzt. */
+  readonly matchedEpisodes: number;
+  readonly providerEpisodes: number;
+}
+
+/** Ergebnis der Übernahme von Episodendaten. */
+export interface EpisodeFillResult {
+  readonly updated: number;
+  readonly unchanged: number;
+  readonly unmatched: number;
+  readonly failedFiles: readonly string[];
+}
+
+/** Episode, die der Anbieter kennt, für die es aber keine Datei gibt. */
+export interface MissingEpisode {
+  readonly season: number;
+  readonly episode: number;
+  readonly title: string | null;
+  readonly aired: string | null;
+}

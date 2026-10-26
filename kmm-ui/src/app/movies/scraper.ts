@@ -5,6 +5,14 @@ export interface ScraperInfo {
   readonly mediaTypes: readonly string[];
   /** Hinweis, was zur Nutzung fehlt, oder {@code null}, wenn der Scraper einsatzbereit ist. */
   readonly missingConfiguration: string | null;
+  /** Vom Anbieter verlangter Hinweis auf die Datenquelle. */
+  readonly attribution?: Attribution | null;
+}
+
+/** Hinweis auf die Datenquelle mit Link, z. B. für TheTVDB. */
+export interface Attribution {
+  readonly text: string;
+  readonly link: string;
 }
 
 /** Suchtreffer eines Scrapers. */
