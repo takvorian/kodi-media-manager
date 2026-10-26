@@ -4,7 +4,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
@@ -133,7 +132,7 @@ class KodiPlaybackServiceTest {
         when(hostService.targets()).thenReturn(List.of(new KodiTarget(2, "Aus", unreachable, FILME, false)));
         assertThatThrownBy(() -> service.importMovie(5)).isInstanceOfSatisfying(KodiProblemException.class,
                 e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY));
-        verify(moviePlaybacks, never()).changePlayback(anyLong(), anyInt(), any());
+        verify(moviePlaybacks, never()).changePlayback(anyLong(), any(), any());
     }
 
     @Test
@@ -143,18 +142,21 @@ class KodiPlaybackServiceTest {
         kodi.respond("VideoLibrary.GetMovies", """
                 {"movies": [{"file": "smb://nas/filme/Heat/Heat.mkv", "playcount": 2, "lastplayed": ""},
                             {"file": "smb://nas/filme/Ronin/Ronin.mkv", "playcount": 1, "lastplayed": ""},
-                            {"file": "smb://nas/filme/Alien/Alien.mkv", "playcount": 0, "lastplayed": ""}]}""");
+                            {"file": "smb://nas/filme/Alien/Alien.mkv", "playcount": 0, "lastplayed": ""},
+                            {"file": "smb://nas/filme/Delicatessen/Delicatessen.mkv", "playcount": 1,
+                             "lastplayed": "2025-04-03 23:14:16"}]}""");
         when(moviePlaybacks.findBySource(3)).thenReturn(List.of(movie(7, "Heat", 1), movie(8, "Ronin", 1),
-                movie(9, "Alien", 4), movie(10, "Brazil", null)));
+                movie(9, "Alien", 4), movie(10, "Brazil", null), movie(11, "Delicatessen", null)));
         doThrow(new ErrorResponseException(HttpStatus.UNPROCESSABLE_CONTENT)).when(moviePlaybacks)
-                .changePlayback(eq(7L), anyInt(), any());
+                .changePlayback(eq(7L), any(), any());
 
         KodiPlaybackImportResult result = service.importSource(source, mock(JobContext.class));
 
         assertThat(result).usingRecursiveComparison().ignoringFields("failures").isEqualTo(
-                new KodiPlaybackImportResult(3, "Wohnzimmer", 1, 1, 1, 1, List.of()));
+                new KodiPlaybackImportResult(3, "Wohnzimmer", 1, 1, 1, 1, 1, List.of()));
         assertThat(result.failures()).singleElement().asString().startsWith("„Heat“: ");
-        verify(moviePlaybacks).changePlayback(9, 0, null);
+        verify(moviePlaybacks).changePlayback(11, 1, PLAYED);
+        verify(moviePlaybacks, never()).changePlayback(eq(9L), any(), any());
     }
 
     @Test
@@ -186,10 +188,13 @@ class KodiPlaybackServiceTest {
                 LIBRARY.resolve("Lost/S01E01.mkv").toString(), 1, 1, 3, PLAYED));
 
         assertThat(service.importEpisode(4)).satisfies(result -> {
-            assertThat(result.outcome()).isEqualTo(KodiPlaybackOutcome.UPDATED);
-            assertThat(result.message()).isEqualTo("„Lost S01E01“ aus Kodi übernommen: ungesehen.");
+            assertThat(result.outcome()).isEqualTo(KodiPlaybackOutcome.KEPT);
+            assertThat(result.message())
+                    .isEqualTo("„Lost S01E01“: KMM kennt mehr Wiedergaben als Kodi, der Stand bleibt.");
+            assertThat(result.playCount()).isEqualTo(3);
+            assertThat(result.lastPlayedAt()).isEqualTo(PLAYED);
         });
-        verify(episodePlaybacks).changePlayback(4, 0, null);
+        verify(episodePlaybacks, never()).changePlayback(anyLong(), any(), any());
     }
 
     private void givenKodi() {

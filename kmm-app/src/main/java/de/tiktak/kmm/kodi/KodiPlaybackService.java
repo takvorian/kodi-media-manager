@@ -18,6 +18,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiException;
+import de.tiktak.kmm.kodi.KodiPlaybacks.Playback;
 import de.tiktak.kmm.kodi.rpc.KodiPlayback;
 import de.tiktak.kmm.movie.MoviePlayback;
 import de.tiktak.kmm.movie.MoviePlaybackService;
@@ -31,9 +32,9 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Holt den Gesehen-Status (Wiedergaben und letzte Wiedergabe) aus Kodi und übernimmt ihn in NFO und
- * Datenbank. Kodi gewinnt, auch „ungesehen“ wird übernommen; Einträge, die Kodi nicht kennt, bleiben
- * unverändert. Alle Kodi-Geräte nutzen dieselbe Kodi-Datenbank, deshalb genügt das erste erreichbare
- * Gerät mit passender Pfad-Zuordnung.
+ * Datenbank. Kodi ergänzt nur, es setzt nichts zurück (siehe {@link KodiPlaybacks}); Einträge, die Kodi
+ * nicht kennt, bleiben unverändert. Alle Kodi-Geräte nutzen dieselbe Kodi-Datenbank, deshalb genügt das
+ * erste erreichbare Gerät mit passender Pfad-Zuordnung.
  */
 @Slf4j
 @Service
@@ -90,9 +91,9 @@ public class KodiPlaybackService {
             tally.add(apply(entry, fetched));
         }
         KodiPlaybackImportResult result = tally.result(source.getId(), fetched.target().name());
-        log.info("Playback of source '{}' from Kodi '{}': {} updated, {} unchanged, {} not in Kodi, {} failed",
-                source.getName(), result.host(), result.updated(), result.unchanged(), result.notInKodi(),
-                result.failed());
+        log.info("Playback of source '{}' from Kodi '{}': {} updated, {} unchanged, {} kept, {} not in Kodi, "
+                        + "{} failed", source.getName(), result.host(), result.updated(), result.unchanged(),
+                result.kept(), result.notInKodi(), result.failed());
         return result;
     }
 
@@ -136,17 +137,21 @@ public class KodiPlaybackService {
             return entry.unchanged(KodiPlaybackOutcome.UNCHANGED,
                     "„%s“ ist bereits auf dem Stand von Kodi.".formatted(entry.label()));
         }
-        int playCount = kodi.get().playCount();
-        Instant lastPlayedAt = KodiPlaybacks.lastPlayedAt(kodi.get(), clock.getZone());
+        Playback merged = KodiPlaybacks.merge(entry.playCount(), entry.lastPlayedAt(), kodi.get(), clock.getZone());
+        if (merged.isSameAs(entry.playCount(), entry.lastPlayedAt())) {
+            return entry.unchanged(KodiPlaybackOutcome.KEPT,
+                    "„%s“: KMM kennt mehr Wiedergaben als Kodi, der Stand bleibt.".formatted(entry.label()));
+        }
         try {
-            entry.change().accept(playCount, lastPlayedAt);
+            entry.change().accept(merged.playCount(), merged.lastPlayedAt());
         } catch (ErrorResponseException e) {
             return entry.unchanged(KodiPlaybackOutcome.FAILED,
                     "„%s“: %s".formatted(entry.label(), e.getBody().getDetail()));
         }
-        String state = playCount == 0 ? "ungesehen" : "%d× gesehen".formatted(playCount);
-        return new Applied(KodiPlaybackOutcome.UPDATED,
-                "„%s“ aus Kodi übernommen: %s.".formatted(entry.label(), state), playCount, lastPlayedAt);
+        String state = merged.playCount() == null || merged.playCount() == 0 ? "ungesehen"
+                : "%d× gesehen".formatted(merged.playCount());
+        return new Applied(KodiPlaybackOutcome.UPDATED, "„%s“ aus Kodi übernommen: %s.".formatted(entry.label(),
+                state), merged.playCount(), merged.lastPlayedAt());
     }
 
     private Entry movieEntry(MoviePlayback movie) {
@@ -185,7 +190,7 @@ public class KodiPlaybackService {
 
     @FunctionalInterface
     private interface PlaybackChange {
-        void accept(int playCount, Instant lastPlayedAt);
+        void accept(Integer playCount, Instant lastPlayedAt);
     }
 
     private record Applied(KodiPlaybackOutcome outcome, String message, Integer playCount, Instant lastPlayedAt) {
@@ -196,17 +201,19 @@ public class KodiPlaybackService {
         private final List<String> failures = new ArrayList<>();
         private int updated;
         private int unchanged;
+        private int kept;
         private int notInKodi;
         private int failed;
 
         int count() {
-            return updated + unchanged + notInKodi + failed;
+            return updated + unchanged + kept + notInKodi + failed;
         }
 
         void add(Applied applied) {
             switch (applied.outcome()) {
                 case UPDATED -> updated++;
                 case UNCHANGED -> unchanged++;
+                case KEPT -> kept++;
                 case NOT_IN_KODI -> notInKodi++;
                 case FAILED -> {
                     failed++;
@@ -218,7 +225,8 @@ public class KodiPlaybackService {
         }
 
         KodiPlaybackImportResult result(long sourceId, String host) {
-            return new KodiPlaybackImportResult(sourceId, host, updated, unchanged, notInKodi, failed, failures);
+            return new KodiPlaybackImportResult(sourceId, host, updated, unchanged, kept, notInKodi, failed,
+                    failures);
         }
     }
 }

@@ -8,6 +8,11 @@ public enum KodiPlaybackOutcome {
     UPDATED,
     /** Der Stand in KMM entspricht bereits dem in Kodi. */
     UNCHANGED,
+    /**
+     * KMM kennt mehr Wiedergaben oder eine neuere letzte Wiedergabe als Kodi. KMM setzt nichts zurück,
+     * der Stand in KMM bleibt.
+     */
+    KEPT,
     /** Kodi kennt den Eintrag nicht; der Stand in KMM bleibt unverändert. */
     NOT_IN_KODI,
     /** Die NFO konnte nicht geschrieben werden. */

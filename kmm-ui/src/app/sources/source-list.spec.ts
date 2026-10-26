@@ -142,7 +142,7 @@ describe('SourceList', () => {
     events.emit({
       ...playbackJob,
       status: 'SUCCEEDED',
-      result: { sourceId: 1, host: 'Wohnzimmer', updated: 1, unchanged: 2, notInKodi: 0, failed: 0, failures: [] },
+      result: { sourceId: 1, host: 'Wohnzimmer', updated: 1, unchanged: 2, kept: 0, notInKodi: 0, failed: 0, failures: [] },
     });
     fixture.detectChanges();
 

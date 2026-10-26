@@ -38,9 +38,27 @@ class KodiPlaybacksTest {
     }
 
     @Test
-    void convertsKodisLocalTime() {
-        assertThat(KodiPlaybacks.lastPlayedAt(kodi(1, PLAYED), BERLIN)).isEqualTo(PLAYED_AT);
-        assertThat(KodiPlaybacks.lastPlayedAt(kodi(0, null), BERLIN)).isNull();
+    void takesOverMorePlaysAndNewerDatesFromKodi() {
+        LocalDateTime later = PLAYED.plusYears(1);
+
+        assertThat(KodiPlaybacks.merge(1, PLAYED_AT, kodi(2, later), BERLIN))
+                .isEqualTo(new KodiPlaybacks.Playback(2, later.atZone(BERLIN).toInstant()));
+        assertThat(KodiPlaybacks.merge(null, null, kodi(1, PLAYED), BERLIN))
+                .isEqualTo(new KodiPlaybacks.Playback(1, PLAYED_AT));
+        assertThat(KodiPlaybacks.merge(3, PLAYED_AT, kodi(1, later), BERLIN))
+                .isEqualTo(new KodiPlaybacks.Playback(3, later.atZone(BERLIN).toInstant()));
+    }
+
+    @Test
+    void neverResetsWhatKmmKnows() {
+        assertThat(KodiPlaybacks.merge(1, PLAYED_AT, kodi(0, null), BERLIN))
+                .isEqualTo(new KodiPlaybacks.Playback(1, PLAYED_AT));
+        assertThat(KodiPlaybacks.merge(2, PLAYED_AT, kodi(1, PLAYED.minusDays(3)), BERLIN))
+                .isEqualTo(new KodiPlaybacks.Playback(2, PLAYED_AT));
+        assertThat(KodiPlaybacks.merge(1, PLAYED_AT, kodi(1, PLAYED.toLocalDate().atStartOfDay()), BERLIN))
+                .satisfies(merged -> assertThat(merged.isSameAs(1, PLAYED_AT)).isTrue());
+        assertThat(KodiPlaybacks.merge(null, null, kodi(0, null), BERLIN).isSameAs(null, null)).isTrue();
+        assertThat(new KodiPlaybacks.Playback(1, null).isSameAs(1, PLAYED_AT)).isFalse();
     }
 
     @Test

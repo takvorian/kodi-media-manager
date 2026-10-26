@@ -65,7 +65,7 @@ export function kodiPlaybackJobKey(sourceId: number): string {
   return `${KODI_PLAYBACK_JOB_KEY_PREFIX}${sourceId}`;
 }
 
-export type KodiPlaybackOutcome = 'UPDATED' | 'UNCHANGED' | 'NOT_IN_KODI' | 'FAILED';
+export type KodiPlaybackOutcome = 'UPDATED' | 'UNCHANGED' | 'KEPT' | 'NOT_IN_KODI' | 'FAILED';
 
 /** Ergebnis der Übernahme des Gesehen-Status eines Films oder einer Episode aus Kodi. */
 export interface KodiPlaybackResult {
@@ -83,6 +83,8 @@ export interface KodiPlaybackImportResult {
   readonly host: string;
   readonly updated: number;
   readonly unchanged: number;
+  /** KMM weiß mehr als Kodi und behält seinen Stand. */
+  readonly kept: number;
   readonly notInKodi: number;
   readonly failed: number;
   readonly failures: readonly string[];
@@ -92,10 +94,11 @@ export interface KodiPlaybackImportResult {
 export function kodiPlaybackSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as KodiPlaybackImportResult;
+    const kept = result.kept > 0 ? `, ${result.kept} abweichend (KMM-Stand behalten)` : '';
     const failed = result.failed > 0 ? `, ${result.failed} Fehler` : '';
     return (
       `${job.title} (${result.host}) abgeschlossen: ${result.updated} übernommen, ` +
-      `${result.unchanged} unverändert, ${result.notInKodi} in Kodi unbekannt${failed}.`
+      `${result.unchanged} unverändert, ${result.notInKodi} in Kodi unbekannt${kept}${failed}.`
     );
   }
   return job.status === 'CANCELLED'

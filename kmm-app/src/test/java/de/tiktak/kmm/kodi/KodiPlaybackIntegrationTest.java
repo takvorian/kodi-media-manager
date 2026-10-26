@@ -95,7 +95,8 @@ class KodiPlaybackIntegrationTest {
         long alienId = jdbcClient.sql("SELECT id FROM movie WHERE title = 'Alien'").query(Long.class).single();
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/{id}/playback", alienId).with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
-                        {"host": "Wohnzimmer", "outcome": "NOT_IN_KODI", "message": "„Alien“ ist in Kodi nicht bekannt."}
+                        {"host": "Wohnzimmer", "outcome": "NOT_IN_KODI",
+                         "message": "„Alien“ ist in Kodi nicht bekannt."}
                         """);
 
         JsonNode again = runJob(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/sources/{id}/playback",
