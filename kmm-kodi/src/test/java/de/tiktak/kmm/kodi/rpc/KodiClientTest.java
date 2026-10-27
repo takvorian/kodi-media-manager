@@ -133,7 +133,7 @@ class KodiClientTest {
     void readsMoviePlaybacksBelowADirectoryPageByPage() {
         kodi.respond("VideoLibrary.GetMovies", """
                 {"limits": {"total": 2}, "movies": [{"movieid": 1, "label": "About Schmidt", "playcount": 1,
-                  "lastplayed": "2025-04-03 23:14:16",
+                  "lastplayed": "2025-04-03 23:14:16", "userrating": 10,
                   "file": "stack://smb://nas/filme/A/About Schmidt CD1.avi , smb://nas/filme/A/About Schmidt CD2.avi"}]}
                 """);
 
@@ -141,6 +141,7 @@ class KodiClientTest {
 
         assertThat(playbacks).hasSize(2).first().satisfies(playback -> {
             assertThat(playback.playCount()).isEqualTo(1);
+            assertThat(playback.userRating()).isEqualTo(10);
             assertThat(playback.lastPlayed()).isEqualTo(LocalDateTime.of(2025, 4, 3, 23, 14, 16));
             assertThat(playback.isMovie("smb://nas/filme/A/About Schmidt CD1.avi")).isTrue();
             assertThat(playback.files()).containsExactly("smb://nas/filme/A/About Schmidt CD1.avi",
@@ -164,6 +165,7 @@ class KodiClientTest {
         List<KodiPlayback> playbacks = client.episodePlaybacks(kodi.endpoint(), "smb://nas/serien/");
         assertThat(playbacks).singleElement().satisfies(playback -> {
             assertThat(playback.lastPlayed()).isNull();
+            assertThat(playback.userRating()).isZero();
             assertThat(playback.isEpisode("smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", 1, 2)).isTrue();
             assertThat(playback.isEpisode("smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", 1, 1)).isFalse();
             assertThat(playback.isMovie("smb://nas/serien/Lost/S1/Lost S01E01E02.mkv")).isFalse();

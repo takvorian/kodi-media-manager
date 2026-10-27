@@ -5,15 +5,17 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Wiedergabestand eines Films oder einer Episode in Kodis Bibliothek.
+ * Wiedergabestand und eigene Bewertung eines Films oder einer Episode in Kodis Bibliothek.
  *
  * @param file       Datei aus Sicht von Kodi, bei mehrteiligen Filmen ein Stapel
  * @param season     Staffel oder {@code null} bei Filmen
  * @param episode    Episode oder {@code null} bei Filmen
  * @param playCount  Anzahl der Wiedergaben, 0 für ungesehen
  * @param lastPlayed letzte Wiedergabe in der Ortszeit des Kodi-Geräts oder {@code null}
+ * @param userRating eigene Bewertung 1–10, 0 für nicht bewertet
  */
-public record KodiPlayback(String file, Integer season, Integer episode, int playCount, LocalDateTime lastPlayed) {
+public record KodiPlayback(String file, Integer season, Integer episode, int playCount, LocalDateTime lastPlayed,
+                           int userRating) {
 
     public KodiPlayback {
         Objects.requireNonNull(file, "file must not be null");

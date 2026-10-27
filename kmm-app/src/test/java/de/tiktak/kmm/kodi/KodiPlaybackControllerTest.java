@@ -46,14 +46,14 @@ class KodiPlaybackControllerTest {
     @Test
     void takesOverMoviesAndEpisodes() {
         when(playbackService.importMovie(5)).thenReturn(new KodiPlaybackResult("Wohnzimmer",
-                KodiPlaybackOutcome.UPDATED, "„Heat“ aus Kodi übernommen: 2× gesehen.", 2, NOW));
+                KodiPlaybackOutcome.UPDATED, "„Heat“ aus Kodi übernommen: 2× gesehen, Bewertung 8.", 2, NOW, 8));
         when(playbackService.importEpisode(9)).thenReturn(new KodiPlaybackResult("Wohnzimmer",
-                KodiPlaybackOutcome.NOT_IN_KODI, "„Lost S01E01“ ist in Kodi nicht bekannt.", null, null));
+                KodiPlaybackOutcome.NOT_IN_KODI, "„Lost S01E01“ ist in Kodi nicht bekannt.", null, null, null));
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/5/playback").with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
                         {"host": "Wohnzimmer", "outcome": "UPDATED", "playCount": 2,
-                         "lastPlayedAt": "2026-10-26T20:00:00Z"}
+                         "lastPlayedAt": "2026-10-26T20:00:00Z", "userRating": 8}
                         """);
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/9/playback").with(csrf()))
                 .hasStatusOk().bodyJson().extractingPath("$.outcome").isEqualTo("NOT_IN_KODI");

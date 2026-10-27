@@ -156,6 +156,8 @@ export class EpisodeDetail {
         extras: { ...details.extras, playCount: result.playCount, lastPlayed: result.lastPlayedAt },
       },
     );
+    // Nur das Feld setzen: Neue Metadaten würden das Formular samt ungespeicherter Änderungen zurücksetzen.
+    this.form.controls.userRating.setValue(result.userRating);
   }
 
   private showStreams(streams: StreamDetails): void {

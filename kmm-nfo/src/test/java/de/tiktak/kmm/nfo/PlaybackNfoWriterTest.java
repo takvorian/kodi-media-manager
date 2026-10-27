@@ -26,7 +26,7 @@ class PlaybackNfoWriterTest {
         Path nfo = givenNfo("movie.nfo", """
                 <movie><title>About Schmidt</title><trailer>plugin://x</trailer><playcount>0</playcount></movie>""");
 
-        writer.writeMovie(nfo, 1, PLAYED);
+        writer.writeMovie(nfo, playback(1, PLAYED));
 
         MovieNfo read = new NfoReader().read(nfo);
         assertThat(read.title()).isEqualTo("About Schmidt");
@@ -34,7 +34,7 @@ class PlaybackNfoWriterTest {
         assertThat(read.supplement().lastPlayed()).isEqualTo(PLAYED);
         assertThat(Files.readString(nfo)).contains("<trailer>plugin://x</trailer>");
 
-        writer.writeMovie(nfo, null, null);
+        writer.writeMovie(nfo, playback(null, null));
         assertThat(Files.readString(nfo)).doesNotContain("playcount", "lastplayed");
     }
 
@@ -44,7 +44,7 @@ class PlaybackNfoWriterTest {
                 <episodedetails><title>Eins</title><season>1</season><episode>1</episode></episodedetails>
                 <episodedetails><title>Zwei</title><season>1</season><episode>2</episode></episodedetails>""");
 
-        writer.writeEpisode(nfo, 1, 2, 3, PLAYED);
+        writer.writeEpisode(nfo, 1, 2, playback(3, PLAYED));
 
         List<EpisodeNfo> episodes = new EpisodeNfoReader().read(nfo);
         assertThat(episodes).extracting(EpisodeNfo::title).containsExactly("Eins", "Zwei");
@@ -67,13 +67,13 @@ class PlaybackNfoWriterTest {
                 "");
         Path nfo = givenNfo("episode.nfo", ember);
 
-        writer.writeEpisode(nfo, 1, 1, 1, PLAYED);
+        writer.writeEpisode(nfo, 1, 1, playback(1, PLAYED));
 
         assertThat(Files.readString(nfo)).isEqualTo(ember
                 .replace("  <playcount>0</playcount>\r\n",
                         "  <playcount>1</playcount>\r\n  <lastplayed>2025-04-03 23:14:16</lastplayed>\r\n"));
 
-        writer.writeEpisode(nfo, 1, 1, null, null);
+        writer.writeEpisode(nfo, 1, 1, playback(null, null));
         assertThat(Files.readString(nfo)).isEqualTo(ember.replace("  <playcount>0</playcount>\r\n", ""));
     }
 
@@ -94,7 +94,7 @@ class PlaybackNfoWriterTest {
                 """;
         Path nfo = givenNfo("episode.nfo", xml);
 
-        writer.writeEpisode(nfo, 1, 2, 3, null);
+        writer.writeEpisode(nfo, 1, 2, playback(3, null));
 
         assertThat(Files.readString(nfo)).isEqualTo(xml.replace(
                 "    <episode>2</episode>\n", "    <episode>2</episode>\n    <playcount>3</playcount>\n"));
@@ -105,7 +105,7 @@ class PlaybackNfoWriterTest {
         Path nfo = givenNfo("movie.nfo",
                 "<movie><title>Heat</title><plot><![CDATA[Ende </movie> mitten im Text]]></plot></movie>");
 
-        writer.writeMovie(nfo, 2, PLAYED);
+        writer.writeMovie(nfo, playback(2, PLAYED));
 
         MovieNfo read = new NfoReader().read(nfo);
         assertThat(read.plot()).isEqualTo("Ende </movie> mitten im Text");
@@ -118,11 +118,52 @@ class PlaybackNfoWriterTest {
         Path nfo = givenNfo("episode.nfo",
                 "<episodedetails><title>Eins</title><season>1</season><episode>1</episode></episodedetails>");
 
-        assertThatThrownBy(() -> writer.writeEpisode(nfo, 1, 5, 1, null)).isInstanceOf(NfoException.class)
+        assertThatThrownBy(() -> writer.writeEpisode(nfo, 1, 5, playback(1, null))).isInstanceOf(NfoException.class)
                 .hasMessageContaining("enthält den Eintrag nicht");
-        assertThatThrownBy(() -> writer.writeMovie(directory.resolve("fehlt.nfo"), 1, null))
+        assertThatThrownBy(() -> writer.writeMovie(directory.resolve("fehlt.nfo"), playback(1, null)))
                 .isInstanceOf(NfoException.class);
         assertThat(directory.resolve("fehlt.nfo")).doesNotExist();
+    }
+
+    @Test
+    void setsTheUserRatingButKeepsItWhenNoneIsGiven() throws IOException {
+        Path nfo = givenNfo("movie.nfo", """
+                <movie>
+                  <title>Jurassic World</title>
+                  <playcount>2</playcount>
+                </movie>
+                """);
+
+        writer.writeMovie(nfo, new NfoPlayback(2, PLAYED, 10));
+
+        assertThat(Files.readString(nfo)).isEqualTo("""
+                <movie>
+                  <title>Jurassic World</title>
+                  <playcount>2</playcount>
+                  <lastplayed>2025-04-03 23:14:16</lastplayed>
+                  <userrating>10</userrating>
+                </movie>
+                """);
+        writer.writeMovie(nfo, new NfoPlayback(3, PLAYED, null));
+        assertThat(new NfoReader().read(nfo).supplement().userRating()).isEqualTo(10);
+    }
+
+    @Test
+    void setsTheUserRatingWhenRewritingTheNfo() throws IOException {
+        Path nfo = givenNfo("episode.nfo", "<episodedetails><title>Eins</title><season>1</season><episode>1</episode>"
+                + "<plot><![CDATA[</episodedetails>]]></plot><userrating>3</userrating></episodedetails>");
+
+        writer.writeEpisode(nfo, 1, 1, new NfoPlayback(1, PLAYED, 8));
+
+        EpisodeNfo episode = new EpisodeNfoReader().read(nfo).getFirst();
+        assertThat(episode.userRating()).isEqualTo(8);
+        assertThat(episode.plot()).isEqualTo("</episodedetails>");
+        writer.writeEpisode(nfo, 1, 1, new NfoPlayback(1, PLAYED, null));
+        assertThat(new EpisodeNfoReader().read(nfo).getFirst().userRating()).isEqualTo(8);
+    }
+
+    private static NfoPlayback playback(Integer playCount, LocalDateTime lastPlayed) {
+        return new NfoPlayback(playCount, lastPlayed, null);
     }
 
     private Path givenNfo(String name, String xml) throws IOException {

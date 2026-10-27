@@ -67,7 +67,7 @@ export function kodiPlaybackJobKey(sourceId: number): string {
 
 export type KodiPlaybackOutcome = 'UPDATED' | 'UNCHANGED' | 'KEPT' | 'NOT_IN_KODI' | 'FAILED';
 
-/** Ergebnis der Übernahme des Gesehen-Status eines Films oder einer Episode aus Kodi. */
+/** Ergebnis der Übernahme von Gesehen-Status und eigener Bewertung eines Films oder einer Episode aus Kodi. */
 export interface KodiPlaybackResult {
   readonly host: string;
   readonly outcome: KodiPlaybackOutcome;
@@ -75,6 +75,7 @@ export interface KodiPlaybackResult {
   /** Stand in KMM danach. */
   readonly playCount: number | null;
   readonly lastPlayedAt: string | null;
+  readonly userRating: number | null;
 }
 
 /** Ergebnis der Übernahme des Gesehen-Status einer ganzen Quelle; die Fehlerliste ist serverseitig gekürzt. */

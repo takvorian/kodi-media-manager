@@ -193,7 +193,12 @@ export class MovieDetail {
     this.movie.update((details) =>
       details && {
         ...details,
-        supplement: { ...details.supplement, playCount: result.playCount, lastPlayed: result.lastPlayedAt },
+        supplement: {
+          ...details.supplement,
+          playCount: result.playCount,
+          lastPlayed: result.lastPlayedAt,
+          userRating: result.userRating,
+        },
       },
     );
   }

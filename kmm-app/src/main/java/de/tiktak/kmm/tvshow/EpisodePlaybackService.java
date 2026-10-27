@@ -10,11 +10,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.nfo.NfoPlayback;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest den Wiedergabestand von Episoden und übernimmt einen neuen, etwa aus Kodi. Der Stand wird in die
+ * Liest Wiedergabestand und eigene Bewertung von Episoden und übernimmt neue, etwa aus Kodi. Der Stand wird in die
  * vorhandene NFO und in die Datenbank geschrieben; ohne NFO nur in die Datenbank. Es wird kein
  * {@link EpisodeFilesChangedEvent} veröffentlicht: Der Stand kommt von Kodi, Kodi muss die Episode
  * deshalb nicht neu einlesen.
@@ -48,23 +49,25 @@ public class EpisodePlaybackService {
     /**
      * @param playCount    Anzahl der Wiedergaben oder {@code null}
      * @param lastPlayedAt letzte Wiedergabe oder {@code null}
+     * @param userRating   eigene Bewertung 1–10 oder {@code null}
      * @throws TvShowProblemException wenn die NFO nicht geschrieben werden kann; die Datenbank bleibt dann
      *                                unverändert
      */
     @Transactional
-    public void changePlayback(long episodeId, Integer playCount, Instant lastPlayedAt) {
+    public void changePlayback(long episodeId, Integer playCount, Instant lastPlayedAt, Integer userRating) {
         Episode episode = require(episodeId);
         nfoFiles.findEpisodeNfo(episode.file()).ifPresent(nfo -> {
             try {
                 TvNfoState written = nfoFiles.writePlayback(nfo, episode.getSeason(), episode.getEpisode(),
-                        playCount, TvNfoMapper.toLocal(lastPlayedAt, clock.getZone()));
+                        new NfoPlayback(playCount, TvNfoMapper.toLocal(lastPlayedAt, clock.getZone()), userRating));
                 markSynchronized(episode, nfo, written);
             } catch (NfoException e) {
                 throw TvShowProblemException.nfoNotWritable(e);
             }
         });
-        episode.changePlayback(playCount, lastPlayedAt);
-        log.info("Playback of episode {} changed to {} plays, last {}", episodeId, playCount, lastPlayedAt);
+        episode.changePlayback(playCount, lastPlayedAt, userRating);
+        log.info("Playback of episode {} changed to {} plays, last {}, rating {}", episodeId, playCount,
+                lastPlayedAt, userRating);
     }
 
     /**

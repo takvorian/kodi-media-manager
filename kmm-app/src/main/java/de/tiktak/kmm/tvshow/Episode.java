@@ -181,9 +181,10 @@ public class Episode {
         streamDetails = details == null || details.isEmpty() ? null : details;
     }
 
-    void changePlayback(Integer newPlayCount, Instant newLastPlayedAt) {
+    void changePlayback(Integer newPlayCount, Instant newLastPlayedAt, Integer newUserRating) {
         this.playCount = newPlayCount;
         this.lastPlayedAt = newLastPlayedAt;
+        this.userRating = newUserRating;
     }
 
     void markNfoSynchronized(Instant modifiedAt) {

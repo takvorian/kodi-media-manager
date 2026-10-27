@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Instant;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Optional;
 
@@ -13,6 +12,7 @@ import org.springframework.stereotype.Component;
 import de.tiktak.kmm.nfo.MovieNfo;
 import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.nfo.NfoPlayback;
 import de.tiktak.kmm.nfo.NfoReader;
 import de.tiktak.kmm.nfo.NfoWriter;
 import de.tiktak.kmm.nfo.PlaybackNfoWriter;
@@ -63,13 +63,13 @@ class MovieNfoFiles {
     }
 
     /**
-     * Schreibt nur den Wiedergabestand in die vorhandene NFO.
+     * Schreibt nur Wiedergabestand und eigene Bewertung in die vorhandene NFO.
      *
      * @return Zustand der geschriebenen Datei
      * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
      */
-    NfoFileState writePlayback(NfoFileState nfoFile, Integer playCount, LocalDateTime lastPlayed) {
-        playbackWriter.writeMovie(nfoFile.file(), playCount, lastPlayed);
+    NfoFileState writePlayback(NfoFileState nfoFile, NfoPlayback playback) {
+        playbackWriter.writeMovie(nfoFile.file(), playback);
         return state(nfoFile.file())
                 .orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + nfoFile.file()));
     }

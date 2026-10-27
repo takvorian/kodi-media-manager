@@ -170,10 +170,12 @@ describe('MovieDetail', () => {
       message: '„Heat“ aus Kodi übernommen: 2× gesehen.',
       playCount: 2,
       lastPlayedAt: '2025-04-03T21:14:16Z',
+      userRating: 10,
     });
     await fixture.whenStable();
 
     expect(element().querySelector('app-movie-supplement')?.textContent).toContain('2×');
+    expect(element().querySelector('app-movie-supplement')?.textContent).toContain('10/10');
     expect(input('title').value).toBe('Heat (Director’s Cut)');
     button('.kodi-playback-button').click();
     httpTesting

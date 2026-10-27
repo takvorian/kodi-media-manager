@@ -148,7 +148,7 @@ public class KodiClient {
      */
     public List<KodiPlayback> moviePlaybacks(KodiEndpoint endpoint, String directory) {
         return playbacks(endpoint, "VideoLibrary.GetMovies", "movies", directory, List.of("file", "playcount",
-                "lastplayed"));
+                "lastplayed", "userrating"));
     }
 
     /**
@@ -158,7 +158,7 @@ public class KodiClient {
      */
     public List<KodiPlayback> episodePlaybacks(KodiEndpoint endpoint, String directory) {
         return playbacks(endpoint, "VideoLibrary.GetEpisodes", "episodes", directory, List.of("file", "season",
-                "episode", "playcount", "lastplayed"));
+                "episode", "playcount", "lastplayed", "userrating"));
     }
 
     private List<KodiPlayback> playbacks(KodiEndpoint endpoint, String method, String resultKey, String directory,
@@ -183,7 +183,8 @@ public class KodiClient {
     private static KodiPlayback playback(JsonNode item) {
         return new KodiPlayback(item.path("file").asString(), optionalInt(item.path("season")),
                 optionalInt(item.path("episode")), item.path("playcount").asInt(0),
-                dateTime(item.path("lastplayed").asString("")));
+                dateTime(item.path("lastplayed").asString("")),
+                item.path("userrating").asInt(0));
     }
 
     private static Integer optionalInt(JsonNode node) {

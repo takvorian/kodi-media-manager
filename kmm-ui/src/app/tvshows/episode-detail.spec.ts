@@ -132,6 +132,8 @@ describe('EpisodeDetail', () => {
 
   it('imports the watched status from Kodi', async () => {
     await load(gestatten);
+    input('plot').value = 'Noch nicht gespeichert.';
+    input('plot').dispatchEvent(new Event('input'));
 
     element().querySelector<HTMLButtonElement>('.kodi-playback-button')!.click();
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/playback' }).flush({
@@ -140,10 +142,13 @@ describe('EpisodeDetail', () => {
       message: '„ALF S01E16“ aus Kodi übernommen: 3× gesehen.',
       playCount: 3,
       lastPlayedAt: '2025-04-03T21:14:16Z',
+      userRating: 8,
     });
     await fixture.whenStable();
 
     expect(element().textContent).toContain('3×');
+    expect(input('userRating').value).toBe('8');
+    expect(input('plot').value).toBe('Noch nicht gespeichert.');
     element().querySelector<HTMLButtonElement>('.kodi-playback-button')!.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/playback' })

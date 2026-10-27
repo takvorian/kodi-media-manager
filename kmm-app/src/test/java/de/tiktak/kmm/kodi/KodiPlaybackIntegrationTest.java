@@ -76,7 +76,7 @@ class KodiPlaybackIntegrationTest {
         kodi.respond("VideoLibrary.GetMovies", """
                 {"limits": {"total": 2}, "movies": [
                   {"file": "smb://nas/medien/filme/Heat (1995)/Heat (1995).mkv", "playcount": 2,
-                   "lastplayed": "2025-04-03 23:14:16"},
+                   "lastplayed": "2025-04-03 23:14:16", "userrating": 9},
                   {"file": "smb://nas/medien/filme/Ronin (1998)/Ronin (1998).mkv", "playcount": 1, "lastplayed": ""}]}
                 """);
         createKodiHost();
@@ -89,7 +89,9 @@ class KodiPlaybackIntegrationTest {
         assertThat(result.toString()).contains("\"updated\":2", "\"unchanged\":0", "\"notInKodi\":1",
                 "\"failed\":0", "\"host\":\"Wohnzimmer\"");
         assertThat(Files.readString(heatNfo)).contains("<title>Heat</title>", "<playcount>2</playcount>",
-                "<lastplayed>2025-04-03 23:14:16</lastplayed>");
+                "<lastplayed>2025-04-03 23:14:16</lastplayed>", "<userrating>9</userrating>");
+        assertThat(jdbcClient.sql("SELECT user_rating FROM movie WHERE title = 'Heat'").query(Integer.class).single())
+                .isEqualTo(9);
         assertThat(jdbcClient.sql("SELECT play_count FROM movie ORDER BY title").query(Integer.class).list())
                 .containsExactly(null, 2, 1);
         long alienId = jdbcClient.sql("SELECT id FROM movie WHERE title = 'Alien'").query(Long.class).single();

@@ -2,12 +2,10 @@ package de.tiktak.kmm.kodi;
 
 import java.nio.file.Path;
 import java.time.Clock;
-import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiFunction;
-import java.util.function.Predicate;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
@@ -31,8 +29,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Holt den Gesehen-Status (Wiedergaben und letzte Wiedergabe) aus Kodi und übernimmt ihn in NFO und
- * Datenbank. Kodi ergänzt nur, es setzt nichts zurück (siehe {@link KodiPlaybacks}); Einträge, die Kodi
+ * Holt den Gesehen-Status (Wiedergaben und letzte Wiedergabe) und die eigene Bewertung aus Kodi und
+ * übernimmt sie in NFO und Datenbank. In der NFO überlebt die Bewertung, wenn Kodi den Eintrag neu
+ * einliest. Kodi ergänzt nur, es setzt nichts zurück (siehe {@link KodiPlaybacks}); Einträge, die Kodi
  * nicht kennt, bleiben unverändert. Alle Kodi-Geräte nutzen dieselbe Kodi-Datenbank, deshalb genügt das
  * erste erreichbare Gerät mit passender Pfad-Zuordnung.
  */
@@ -101,8 +100,9 @@ public class KodiPlaybackService {
         Fetched fetched = fetch(Path.of(entry.filePath()).getParent().toString(), query);
         Applied applied = apply(entry, fetched);
         log.info("Playback from Kodi '{}': {}", fetched.target().name(), applied.message());
+        Playback playback = applied.playback();
         return new KodiPlaybackResult(fetched.target().name(), applied.outcome(), applied.message(),
-                applied.playCount(), applied.lastPlayedAt());
+                playback.playCount(), playback.lastPlayedAt(), playback.userRating());
     }
 
     /** Fragt das erste erreichbare Kodi-Gerät, das das Verzeichnis zuordnen kann. */
@@ -133,37 +133,41 @@ public class KodiPlaybackService {
             return entry.unchanged(KodiPlaybackOutcome.NOT_IN_KODI,
                     "„%s“ ist in Kodi nicht bekannt.".formatted(entry.label()));
         }
-        if (KodiPlaybacks.isCurrent(entry.playCount(), entry.lastPlayedAt(), kodi.get(), clock.getZone())) {
+        if (KodiPlaybacks.isCurrent(entry.playback(), kodi.get(), clock.getZone())) {
             return entry.unchanged(KodiPlaybackOutcome.UNCHANGED,
                     "„%s“ ist bereits auf dem Stand von Kodi.".formatted(entry.label()));
         }
-        Playback merged = KodiPlaybacks.merge(entry.playCount(), entry.lastPlayedAt(), kodi.get(), clock.getZone());
-        if (merged.isSameAs(entry.playCount(), entry.lastPlayedAt())) {
+        Playback merged = KodiPlaybacks.merge(entry.playback(), kodi.get(), clock.getZone());
+        if (merged.equals(entry.playback())) {
             return entry.unchanged(KodiPlaybackOutcome.KEPT,
-                    "„%s“: KMM kennt mehr Wiedergaben als Kodi, der Stand bleibt.".formatted(entry.label()));
+                    "„%s“: KMM weiß mehr als Kodi, der Stand bleibt.".formatted(entry.label()));
         }
         try {
-            entry.change().accept(merged.playCount(), merged.lastPlayedAt());
+            entry.change().accept(merged);
         } catch (ErrorResponseException e) {
             return entry.unchanged(KodiPlaybackOutcome.FAILED,
                     "„%s“: %s".formatted(entry.label(), e.getBody().getDetail()));
         }
         String state = merged.playCount() == null || merged.playCount() == 0 ? "ungesehen"
                 : "%d× gesehen".formatted(merged.playCount());
-        return new Applied(KodiPlaybackOutcome.UPDATED, "„%s“ aus Kodi übernommen: %s.".formatted(entry.label(),
-                state), merged.playCount(), merged.lastPlayedAt());
+        String rating = merged.userRating() == null ? "" : ", Bewertung %d".formatted(merged.userRating());
+        return new Applied(KodiPlaybackOutcome.UPDATED, "„%s“ aus Kodi übernommen: %s%s.".formatted(entry.label(),
+                state, rating), merged);
     }
 
     private Entry movieEntry(MoviePlayback movie) {
-        return new Entry(movie.title(), movie.filePath(), movie.playCount(), movie.lastPlayedAt(), null, null,
-                (playCount, lastPlayedAt) -> moviePlaybacks.changePlayback(movie.movieId(), playCount, lastPlayedAt));
+        return new Entry(movie.title(), movie.filePath(),
+                new Playback(movie.playCount(), movie.lastPlayedAt(), movie.userRating()), null, null,
+                merged -> moviePlaybacks.changePlayback(movie.movieId(), merged.playCount(), merged.lastPlayedAt(),
+                        merged.userRating()));
     }
 
     private Entry episodeEntry(EpisodePlayback episode) {
         return new Entry(EPISODE_LABEL.formatted(episode.showTitle(), episode.season(), episode.episode()),
-                episode.filePath(), episode.playCount(), episode.lastPlayedAt(), episode.season(), episode.episode(),
-                (playCount, lastPlayedAt) -> episodePlaybacks.changePlayback(episode.episodeId(), playCount,
-                        lastPlayedAt));
+                episode.filePath(), new Playback(episode.playCount(), episode.lastPlayedAt(), episode.userRating()),
+                episode.season(), episode.episode(),
+                merged -> episodePlaybacks.changePlayback(episode.episodeId(), merged.playCount(),
+                        merged.lastPlayedAt(), merged.userRating()));
     }
 
     private record Fetched(KodiTarget target, KodiPlaybackIndex index) {
@@ -175,8 +179,8 @@ public class KodiPlaybackService {
      * @param season  Staffel oder {@code null} bei Filmen
      * @param episode Episode oder {@code null} bei Filmen
      */
-    private record Entry(String label, String filePath, Integer playCount, Instant lastPlayedAt, Integer season,
-                         Integer episode, PlaybackChange change) {
+    private record Entry(String label, String filePath, Playback playback, Integer season, Integer episode,
+                         PlaybackChange change) {
 
         boolean matches(KodiPlayback playback, String kodiFile) {
             return season == null ? playback.isMovie(kodiFile) : playback.isEpisode(kodiFile, season, episode);
@@ -184,16 +188,16 @@ public class KodiPlaybackService {
 
         /** Ergebnis ohne Änderung: KMM behält seinen bisherigen Stand. */
         Applied unchanged(KodiPlaybackOutcome outcome, String message) {
-            return new Applied(outcome, message, playCount, lastPlayedAt);
+            return new Applied(outcome, message, playback);
         }
     }
 
     @FunctionalInterface
     private interface PlaybackChange {
-        void accept(Integer playCount, Instant lastPlayedAt);
+        void accept(Playback merged);
     }
 
-    private record Applied(KodiPlaybackOutcome outcome, String message, Integer playCount, Instant lastPlayedAt) {
+    private record Applied(KodiPlaybackOutcome outcome, String message, Playback playback) {
     }
 
     private static final class Tally {

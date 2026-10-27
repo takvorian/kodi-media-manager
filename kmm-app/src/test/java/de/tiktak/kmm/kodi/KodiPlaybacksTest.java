@@ -9,6 +9,7 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.kodi.KodiPlaybacks.Playback;
 import de.tiktak.kmm.kodi.rpc.KodiPlayback;
 
 class KodiPlaybacksTest {
@@ -19,54 +20,63 @@ class KodiPlaybacksTest {
 
     @Test
     void treatsAMissingPlayCountAsUnwatched() {
-        assertThat(KodiPlaybacks.isCurrent(null, null, kodi(0, null), BERLIN)).isTrue();
-        assertThat(KodiPlaybacks.isCurrent(0, null, kodi(0, null), BERLIN)).isTrue();
-        assertThat(KodiPlaybacks.isCurrent(2, null, kodi(0, null), BERLIN)).isFalse();
-        assertThat(KodiPlaybacks.isCurrent(null, null, kodi(1, null), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(kmm(null, null), kodi(0, null), BERLIN)).isTrue();
+        assertThat(KodiPlaybacks.isCurrent(kmm(0, null), kodi(0, null), BERLIN)).isTrue();
+        assertThat(KodiPlaybacks.isCurrent(kmm(2, null), kodi(0, null), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(kmm(null, null), kodi(1, null), BERLIN)).isFalse();
     }
 
     @Test
     void keepsTheExactTimeWhenKodiOnlyKnowsTheDate() {
-        assertThat(KodiPlaybacks.isCurrent(1, PLAYED_AT, kodi(1, PLAYED), BERLIN)).isTrue();
-        assertThat(KodiPlaybacks.isCurrent(1, PLAYED_AT, kodi(1, PLAYED.toLocalDate().atStartOfDay()), BERLIN))
+        assertThat(KodiPlaybacks.isCurrent(kmm(1, PLAYED_AT), kodi(1, PLAYED), BERLIN)).isTrue();
+        assertThat(KodiPlaybacks.isCurrent(kmm(1, PLAYED_AT), kodi(1, PLAYED.toLocalDate().atStartOfDay()), BERLIN))
                 .isTrue();
-        assertThat(KodiPlaybacks.isCurrent(1, PLAYED_AT, kodi(1, PLAYED.plusDays(1).toLocalDate().atStartOfDay()),
-                BERLIN)).isFalse();
-        assertThat(KodiPlaybacks.isCurrent(1, PLAYED_AT, kodi(1, PLAYED.plusHours(1)), BERLIN)).isFalse();
-        assertThat(KodiPlaybacks.isCurrent(1, null, kodi(1, PLAYED), BERLIN)).isFalse();
-        assertThat(KodiPlaybacks.isCurrent(1, PLAYED_AT, kodi(1, null), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(kmm(1, PLAYED_AT),
+                kodi(1, PLAYED.plusDays(1).toLocalDate().atStartOfDay()), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(kmm(1, PLAYED_AT), kodi(1, PLAYED.plusHours(1)), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(kmm(1, null), kodi(1, PLAYED), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(kmm(1, PLAYED_AT), kodi(1, null), BERLIN)).isFalse();
     }
 
     @Test
     void takesOverMorePlaysAndNewerDatesFromKodi() {
         LocalDateTime later = PLAYED.plusYears(1);
 
-        assertThat(KodiPlaybacks.merge(1, PLAYED_AT, kodi(2, later), BERLIN))
-                .isEqualTo(new KodiPlaybacks.Playback(2, later.atZone(BERLIN).toInstant()));
-        assertThat(KodiPlaybacks.merge(null, null, kodi(1, PLAYED), BERLIN))
-                .isEqualTo(new KodiPlaybacks.Playback(1, PLAYED_AT));
-        assertThat(KodiPlaybacks.merge(3, PLAYED_AT, kodi(1, later), BERLIN))
-                .isEqualTo(new KodiPlaybacks.Playback(3, later.atZone(BERLIN).toInstant()));
+        assertThat(KodiPlaybacks.merge(kmm(1, PLAYED_AT), kodi(2, later), BERLIN))
+                .isEqualTo(kmm(2, later.atZone(BERLIN).toInstant()));
+        assertThat(KodiPlaybacks.merge(kmm(null, null), kodi(1, PLAYED), BERLIN)).isEqualTo(kmm(1, PLAYED_AT));
+        assertThat(KodiPlaybacks.merge(kmm(3, PLAYED_AT), kodi(1, later), BERLIN))
+                .isEqualTo(kmm(3, later.atZone(BERLIN).toInstant()));
     }
 
     @Test
     void neverResetsWhatKmmKnows() {
-        assertThat(KodiPlaybacks.merge(1, PLAYED_AT, kodi(0, null), BERLIN))
-                .isEqualTo(new KodiPlaybacks.Playback(1, PLAYED_AT));
-        assertThat(KodiPlaybacks.merge(2, PLAYED_AT, kodi(1, PLAYED.minusDays(3)), BERLIN))
-                .isEqualTo(new KodiPlaybacks.Playback(2, PLAYED_AT));
-        assertThat(KodiPlaybacks.merge(1, PLAYED_AT, kodi(1, PLAYED.toLocalDate().atStartOfDay()), BERLIN))
-                .satisfies(merged -> assertThat(merged.isSameAs(1, PLAYED_AT)).isTrue());
-        assertThat(KodiPlaybacks.merge(null, null, kodi(0, null), BERLIN).isSameAs(null, null)).isTrue();
-        assertThat(new KodiPlaybacks.Playback(1, null).isSameAs(1, PLAYED_AT)).isFalse();
+        assertThat(KodiPlaybacks.merge(kmm(1, PLAYED_AT), kodi(0, null), BERLIN)).isEqualTo(kmm(1, PLAYED_AT));
+        assertThat(KodiPlaybacks.merge(kmm(2, PLAYED_AT), kodi(1, PLAYED.minusDays(3)), BERLIN))
+                .isEqualTo(kmm(2, PLAYED_AT));
+        assertThat(KodiPlaybacks.merge(kmm(1, PLAYED_AT), kodi(1, PLAYED.toLocalDate().atStartOfDay()), BERLIN))
+                .isEqualTo(kmm(1, PLAYED_AT));
+        assertThat(KodiPlaybacks.merge(kmm(null, null), kodi(0, null), BERLIN)).isEqualTo(kmm(null, null));
+    }
+
+    @Test
+    void takesOverTheUserRatingFromKodiButKeepsItWhenKodiHasNone() {
+        Playback rated = new Playback(1, PLAYED_AT, 7);
+
+        assertThat(KodiPlaybacks.isCurrent(rated, kodi(1, PLAYED, 7), BERLIN)).isTrue();
+        assertThat(KodiPlaybacks.isCurrent(rated, kodi(1, PLAYED, 9), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(rated, kodi(1, PLAYED, 0), BERLIN)).isFalse();
+        assertThat(KodiPlaybacks.isCurrent(kmm(1, PLAYED_AT), kodi(1, PLAYED, 0), BERLIN)).isTrue();
+        assertThat(KodiPlaybacks.merge(rated, kodi(1, PLAYED, 9), BERLIN)).isEqualTo(new Playback(1, PLAYED_AT, 9));
+        assertThat(KodiPlaybacks.merge(rated, kodi(0, null, 0), BERLIN)).isEqualTo(rated);
     }
 
     @Test
     void findsPlaybacksByFileIgnoringCaseAndStacks() {
         KodiPlayback stacked = new KodiPlayback("stack://smb://nas/A/a CD1.avi , smb://nas/A/a CD2.avi", null, null,
-                1, null);
-        KodiPlayback first = new KodiPlayback("smb://nas/S/s.mkv", 1, 1, 0, null);
-        KodiPlayback second = new KodiPlayback("smb://nas/S/s.mkv", 1, 2, 3, null);
+                1, null, 0);
+        KodiPlayback first = new KodiPlayback("smb://nas/S/s.mkv", 1, 1, 0, null, 0);
+        KodiPlayback second = new KodiPlayback("smb://nas/S/s.mkv", 1, 2, 3, null, 0);
         KodiPlaybackIndex index = new KodiPlaybackIndex(List.of(stacked, first, second));
 
         assertThat(index.find("SMB://nas/a/a cd1.avi", playback -> true)).contains(stacked);
@@ -75,7 +85,15 @@ class KodiPlaybacksTest {
         assertThat(index.find("smb://nas/fehlt.mkv", playback -> true)).isEmpty();
     }
 
+    private static Playback kmm(Integer playCount, Instant lastPlayedAt) {
+        return new Playback(playCount, lastPlayedAt, null);
+    }
+
     private static KodiPlayback kodi(int playCount, LocalDateTime lastPlayed) {
-        return new KodiPlayback("smb://nas/x.mkv", null, null, playCount, lastPlayed);
+        return kodi(playCount, lastPlayed, 0);
+    }
+
+    private static KodiPlayback kodi(int playCount, LocalDateTime lastPlayed, int userRating) {
+        return new KodiPlayback("smb://nas/x.mkv", null, null, playCount, lastPlayed, userRating);
     }
 }
