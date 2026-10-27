@@ -14,8 +14,8 @@ import de.tiktak.kmm.nfo.StreamDetails;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Findet Untertiteldateien neben einer Videodatei, etwa {@code Heat.de.forced.srt} zu {@code Heat.mkv},
- * und liest Sprache und „forced“ aus dem Dateinamen.
+ * Findet Untertiteldateien neben einer Videodatei, etwa {@code Heat.de.forced.srt} oder
+ * {@code Heat-eng.idx} zu {@code Heat.mkv}, und liest Sprache und „forced“ aus dem Dateinamen.
  */
 @Slf4j
 final class ExternalSubtitles {
@@ -26,6 +26,9 @@ final class ExternalSubtitles {
     private static final String VOBSUB_DATA = "sub";
     private static final String FORCED = "forced";
     private static final char SEPARATOR = '.';
+    /** Zeichen, die wie bei Kodi den Videonamen vom Rest des Untertitel-Dateinamens trennen. */
+    private static final String NAME_SEPARATORS = "._ -";
+    private static final String TOKEN_SEPARATORS = "[._ -]+";
 
     private ExternalSubtitles() {
     }
@@ -34,9 +37,9 @@ final class ExternalSubtitles {
     static List<StreamDetails.Subtitle> of(Path videoFile) {
         String fileName = videoFile.getFileName().toString();
         int extensionStart = fileName.lastIndexOf(SEPARATOR);
-        String prefix = (extensionStart > 0 ? fileName.substring(0, extensionStart) : fileName) + SEPARATOR;
+        String prefix = extensionStart > 0 ? fileName.substring(0, extensionStart) : fileName;
         try (Stream<Path> siblings = Files.list(videoFile.toAbsolutePath().getParent())) {
-            List<Path> files = siblings.filter(file -> file.getFileName().toString().startsWith(prefix))
+            List<Path> files = siblings.filter(file -> belongsTo(file.getFileName().toString(), prefix))
                     .filter(file -> EXTENSIONS.contains(extension(file)))
                     .sorted()
                     .toList();
@@ -58,13 +61,18 @@ final class ExternalSubtitles {
         String middle = name.substring(prefix.length(), name.length() - extension(file).length());
         String language = null;
         boolean forced = false;
-        for (String token : middle.split("[._ -]+")) {
+        for (String token : middle.split(TOKEN_SEPARATORS)) {
             forced |= FORCED.equalsIgnoreCase(token);
             if (language == null) {
                 language = IsoLanguages.toTerminology(token);
             }
         }
         return new StreamDetails.Subtitle(language, forced, file.toAbsolutePath().toString());
+    }
+
+    private static boolean belongsTo(String name, String prefix) {
+        return name.length() > prefix.length() && name.startsWith(prefix)
+                && NAME_SEPARATORS.indexOf(name.charAt(prefix.length())) >= 0;
     }
 
     private static boolean isVobSubData(Path file, List<Path> files) {

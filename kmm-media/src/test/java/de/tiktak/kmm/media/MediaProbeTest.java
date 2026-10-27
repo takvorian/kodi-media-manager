@@ -81,6 +81,27 @@ class MediaProbeTest {
     }
 
     @Test
+    void findsSubtitlesWhoseNameContinuesWithADashUnderscoreOrSpace() throws IOException {
+        Path video = file("vov-heat-720p.mkv", 100);
+        Path forced = file("vov-heat-720p-eng-forced.idx", 1);
+        file("vov-heat-720p-eng-forced.sub", 1);
+        Path german = file("vov-heat-720p_de.srt", 1);
+        Path plain = file("vov-heat-720p.idx", 1);
+        file("vov-heat-720p.sub", 1);
+        Path spaced = file("vov-heat-720p fr.srt", 1);
+        file("vov-heat-720pX.srt", 1);
+        file("vov-heat.srt", 1);
+
+        StreamDetails details = probe(HALLOWEEN).probe(video, DiscFormat.FILE);
+
+        assertThat(details.subtitles()).filteredOn(StreamDetails.Subtitle::isExternal).containsExactlyInAnyOrder(
+                new StreamDetails.Subtitle("eng", true, forced.toAbsolutePath().toString()),
+                new StreamDetails.Subtitle("deu", false, german.toAbsolutePath().toString()),
+                new StreamDetails.Subtitle(null, false, plain.toAbsolutePath().toString()),
+                new StreamDetails.Subtitle("fra", false, spaced.toAbsolutePath().toString()));
+    }
+
+    @Test
     void readsTheLargestTitleOfADvdInOneGo() throws IOException {
         Path ifo = file("VIDEO_TS/VIDEO_TS.IFO", 1);
         file("VIDEO_TS/VTS_01_0.VOB", 500);
