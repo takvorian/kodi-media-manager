@@ -11,6 +11,7 @@ COPY kmm-scanner/ kmm-scanner/
 COPY kmm-nfo/ kmm-nfo/
 COPY kmm-migration-ember/ kmm-migration-ember/
 COPY kmm-kodi/ kmm-kodi/
+COPY kmm-media/ kmm-media/
 COPY kmm-plugins/ kmm-plugins/
 COPY kmm-ui/ kmm-ui/
 COPY kmm-app/ kmm-app/
@@ -24,7 +25,7 @@ RUN --mount=type=cache,target=/root/.m2 \
 # ---- Runtime --------------------------------------------------------------
 FROM eclipse-temurin:25-jre
 
-# ffprobe liefert später die Stream-Details (Codecs, Auflösung, Tonspuren).
+# ffprobe liefert die Stream-Details (Codecs, Auflösung, Tonspuren).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg curl \
     && rm -rf /var/lib/apt/lists/*

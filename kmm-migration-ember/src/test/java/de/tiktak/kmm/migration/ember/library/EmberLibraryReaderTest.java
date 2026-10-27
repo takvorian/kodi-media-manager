@@ -111,11 +111,13 @@ class EmberLibraryReaderTest {
         EmberStreams streams = movie(1).streams();
 
         assertThat(streams.videos()).containsExactly(
-                new EmberStreams.Video("avc1", 1920, 800, "2.40", 10200, 8000, "progressive", null, "de"));
+                new EmberStreams.Video("avc1", 1920, 800, "2.40", 10200, 8000, "progressive", null, "de", "2",
+                        "left_right", 2167309437L));
         assertThat(streams.audios()).containsExactly(
                 new EmberStreams.Audio("DTS", "deu", 6, 1509),
                 new EmberStreams.Audio("AC3", "eng", 6, null));
-        assertThat(streams.subtitles()).containsExactly(new EmberStreams.Subtitle("deu", true, true));
+        assertThat(streams.subtitles()).containsExactly(new EmberStreams.Subtitle("deu", true, true,
+                "D:\\Filme\\Heat (1995)\\Heat.de.srt"));
     }
 
     @Test

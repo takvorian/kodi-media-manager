@@ -59,7 +59,10 @@ final class EmberStreamReader {
                 EmberValues.positiveInteger(row, "Video_Bitrate"),
                 EmberValues.text(row, "Video_ScanType"),
                 EmberValues.text(row, "Video_StereoMode"),
-                EmberValues.text(row, "Video_Language"));
+                EmberValues.text(row, "Video_Language"),
+                EmberValues.text(row, "Video_MultiViewCount"),
+                EmberValues.text(row, "Video_MultiViewLayout"),
+                fileSize(EmberValues.text(row, "Video_FileSize")));
     }
 
     private static EmberStreams.Audio audio(ResultSet row) throws SQLException {
@@ -74,6 +77,20 @@ final class EmberStreamReader {
         return new EmberStreams.Subtitle(
                 EmberValues.text(row, "Subs_Language"),
                 Integer.valueOf(1).equals(EmberValues.positiveInteger(row, "Subs_Forced")),
-                EXTERNAL.equalsIgnoreCase(EmberValues.text(row, "Subs_Type")));
+                EXTERNAL.equalsIgnoreCase(EmberValues.text(row, "Subs_Type")),
+                EmberValues.text(row, "Subs_Path"));
+    }
+
+    /** Ember speichert die Größe als Text einer Gleitkommazahl. */
+    private static Long fileSize(String text) {
+        if (text == null) {
+            return null;
+        }
+        try {
+            double size = Double.parseDouble(text.replace(',', '.'));
+            return size > 0 ? Math.round(size) : null;
+        } catch (NumberFormatException e) {
+            return null;
+        }
     }
 }

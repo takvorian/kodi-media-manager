@@ -19,9 +19,11 @@ public record EmberStreams(List<Video> videos, List<Audio> audios, List<Subtitle
      * @param aspect          Seitenverhältnis als Text, z. B. {@code 1.778}
      * @param durationSeconds Laufzeit in Sekunden oder {@code null}
      * @param bitrate         Bitrate in kbit/s oder {@code null}
+     * @param fileSize        Größe in Byte oder {@code null}
      */
     public record Video(String codec, Integer width, Integer height, String aspect, Integer durationSeconds,
-            Integer bitrate, String scanType, String stereoMode, String language) {
+            Integer bitrate, String scanType, String stereoMode, String language, String multiViewCount,
+            String multiViewLayout, Long fileSize) {
     }
 
     /**
@@ -33,7 +35,8 @@ public record EmberStreams(List<Video> videos, List<Audio> audios, List<Subtitle
 
     /**
      * @param external ob es eine separate Untertiteldatei ist
+     * @param path     Pfad der Untertiteldatei in Ember oder {@code null}
      */
-    public record Subtitle(String language, boolean forced, boolean external) {
+    public record Subtitle(String language, boolean forced, boolean external, String path) {
     }
 }

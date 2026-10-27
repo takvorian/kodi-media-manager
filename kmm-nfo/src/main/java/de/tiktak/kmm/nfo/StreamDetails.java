@@ -26,9 +26,21 @@ public record StreamDetails(List<Video> videos, List<Audio> audios, List<Subtitl
      * @param bitrate         Bitrate in kbit/s
      * @param scanType        z. B. {@code Progressive}
      * @param stereoMode      3D-Modus, z. B. {@code left_right}
+     * @param hdrType         HDR-Art wie in Kodi 20+: {@code hdr10}, {@code dolbyvision} oder {@code hlg}
+     * @param multiViewCount  Anzahl der Ansichten bei 3D (MVC), von Ember geschrieben
+     * @param multiViewLayout Anordnung der Ansichten bei 3D (MVC), von Ember geschrieben
+     * @param fileSize        Größe der Datei(en) in Byte, von Ember geschrieben
      */
     public record Video(String codec, Double aspect, Integer width, Integer height, Integer durationSeconds,
-            Integer bitrate, String scanType, String stereoMode, String language) {
+            Integer bitrate, String scanType, String stereoMode, String language, String hdrType,
+            String multiViewCount, String multiViewLayout, Long fileSize) {
+
+        /** Videospur mit den Angaben, die Kodi selbst kennt, ohne HDR. */
+        public Video(String codec, Double aspect, Integer width, Integer height, Integer durationSeconds,
+                Integer bitrate, String scanType, String stereoMode, String language) {
+            this(codec, aspect, width, height, durationSeconds, bitrate, scanType, stereoMode, language, null, null,
+                    null, null);
+        }
     }
 
     /**
@@ -41,7 +53,16 @@ public record StreamDetails(List<Video> videos, List<Audio> audios, List<Subtitl
 
     /**
      * @param forced ob es sich um erzwungene Untertitel handelt
+     * @param path   Pfad einer externen Untertiteldatei; {@code null} für Untertitel in der Videodatei
      */
-    public record Subtitle(String language, boolean forced) {
+    public record Subtitle(String language, boolean forced, String path) {
+
+        public Subtitle(String language, boolean forced) {
+            this(language, forced, null);
+        }
+
+        public boolean isExternal() {
+            return path != null;
+        }
     }
 }

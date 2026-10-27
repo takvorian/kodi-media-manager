@@ -20,6 +20,10 @@ jobs:
           java-version: '25'
           cache: maven
 
+      # Die ffprobe-Tests in kmm-media laufen nur mit ffmpeg auf dem PATH.
+      - name: Install ffmpeg
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
+
       - name: Build and test
         run: ./mvnw -B verify
 

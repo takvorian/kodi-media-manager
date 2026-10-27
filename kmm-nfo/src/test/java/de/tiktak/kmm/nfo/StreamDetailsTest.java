@@ -14,7 +14,8 @@ import org.junit.jupiter.api.io.TempDir;
 class StreamDetailsTest {
 
     private static final StreamDetails HEAT = new StreamDetails(
-            List.of(new StreamDetails.Video("h264", 2.388, 1280, 536, 5733, 1513, "Progressive", null, null)),
+            List.of(new StreamDetails.Video("h264", 2.388, 1280, 536, 5733, 1513, "Progressive", null, null, null, null,
+                    null, 2167309437L)),
             List.of(new StreamDetails.Audio("dca", "deu", 6, 1509), new StreamDetails.Audio("ac3", "eng", 2, null)),
             List.of(new StreamDetails.Subtitle("deu", true)));
 
@@ -76,6 +77,47 @@ class StreamDetailsTest {
         assertThat(reader.read(nfo).supplement().streams().audios())
                 .containsExactly(new StreamDetails.Audio("aac", null, null, null));
         assertThat(StreamDetails.EMPTY.isEmpty()).isTrue();
+    }
+
+    @Test
+    void writesInEmbersOrderWithLongLanguageAndSubtitleType() throws IOException {
+        Path nfo = directory.resolve("Heat.nfo");
+        StreamDetails details = new StreamDetails(
+                List.of(new StreamDetails.Video("hevc", 1.7777, 3840, 2160, 7200, null, null, null, null, "hdr10", null,
+                        null, 5L)),
+                List.of(new StreamDetails.Audio("truehd", "deu", 8, null)),
+                List.of(new StreamDetails.Subtitle("eng", false), new StreamDetails.Subtitle("deu", true, "/x/Heat.de.srt")));
+
+        writer.write(nfo, movie(details));
+
+        String content = Files.readString(nfo).replaceAll("\\s+", "");
+        assertThat(content).contains("<streamdetails><audio><channels>8</channels><codec>truehd</codec>"
+                + "<language>deu</language><longlanguage>German</longlanguage></audio>"
+                + "<subtitle><language>eng</language><longlanguage>English</longlanguage><forced>false</forced>"
+                + "<type>Embedded</type></subtitle>"
+                + "<subtitle><language>deu</language><longlanguage>German</longlanguage><forced>true</forced>"
+                + "<path>/x/Heat.de.srt</path><type>External</type></subtitle>"
+                + "<video><aspect>1.778</aspect><codec>hevc</codec><durationinseconds>7200</durationinseconds>"
+                + "<hdrtype>hdr10</hdrtype><height>2160</height><width>3840</width><filesize>5</filesize></video>");
+        assertThat(reader.read(nfo).supplement().streams().subtitles()).extracting(StreamDetails.Subtitle::isExternal)
+                .containsExactly(false, true);
+    }
+
+    @Test
+    void readsEmbersExternalSubtitlesAndDecimalFileSize() throws IOException {
+        Path nfo = Files.writeString(directory.resolve("Heat.nfo"), """
+                <movie><fileinfo><streamdetails>
+                  <subtitle><language>deu</language><type>External</type></subtitle>
+                  <video><multiview_count>2</multiview_count><multiview_layout>x</multiview_layout>
+                    <filesize>12,6</filesize></video>
+                </streamdetails></fileinfo></movie>""");
+
+        StreamDetails streams = reader.read(nfo).supplement().streams();
+
+        assertThat(streams.subtitles()).containsExactly(new StreamDetails.Subtitle("deu", false, ""));
+        assertThat(streams.videos().getFirst().multiViewCount()).isEqualTo("2");
+        assertThat(streams.videos().getFirst().multiViewLayout()).isEqualTo("x");
+        assertThat(streams.videos().getFirst().fileSize()).isEqualTo(13L);
     }
 
     private static MovieNfo movie(StreamDetails streams) {

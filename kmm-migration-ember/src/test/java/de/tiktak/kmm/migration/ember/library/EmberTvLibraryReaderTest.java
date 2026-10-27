@@ -95,9 +95,9 @@ class EmberTvLibraryReaderTest {
         assertThat(pilot.lastPlayed()).isNotNull();
         assertThat(pilot.userRating()).isEqualTo(9);
         assertThat(pilot.streams().videos()).containsExactly(
-                new EmberStreams.Video("h264", 1280, 720, "1.778", null, null, null, null, null));
+                new EmberStreams.Video("h264", 1280, 720, "1.778", null, null, null, null, null, null, null, null));
         assertThat(pilot.streams().audios()).containsExactly(new EmberStreams.Audio("AAC", "deu", 2, 128));
-        assertThat(pilot.streams().subtitles()).containsExactly(new EmberStreams.Subtitle("eng", false, false));
+        assertThat(pilot.streams().subtitles()).containsExactly(new EmberStreams.Subtitle("eng", false, false, null));
     }
 
     @Test

@@ -77,7 +77,7 @@ final class EmberTvShowMapper {
                 ratings(episode.ratings()),
                 episode.playCount(),
                 EmberMappings.toInstant(episode.lastPlayed(), zone),
-                EmberStreamMapper.toStreamDetails(episode.streams()));
+                EmberStreamMapper.toStreamDetails(episode.streams(), filePath));
         return new EpisodeImport(filePath, episode.season(), episode.episode(), metadata, extras,
                 EmberMappings.toInstant(episode.dateAdded(), zone));
     }

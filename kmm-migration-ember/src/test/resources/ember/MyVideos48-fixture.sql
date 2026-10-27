@@ -44,14 +44,14 @@ CREATE TABLE directorlinkepisode (idDirector INTEGER, idEpisode INTEGER);
 CREATE TABLE writerlinkepisode (idWriter INTEGER, idEpisode INTEGER);
 CREATE TABLE MoviesVStreams (MovieID INTEGER, StreamID INTEGER, Video_Width TEXT, Video_Height TEXT, Video_Codec TEXT,
     Video_Duration TEXT, Video_ScanType TEXT, Video_AspectDisplayRatio TEXT, Video_Language TEXT, Video_Bitrate TEXT,
-    Video_StereoMode TEXT);
+    Video_StereoMode TEXT, Video_MultiViewCount TEXT, Video_MultiViewLayout TEXT, Video_FileSize TEXT);
 CREATE TABLE MoviesAStreams (MovieID INTEGER, StreamID INTEGER, Audio_Language TEXT, Audio_Codec TEXT,
     Audio_Channel TEXT, Audio_Bitrate TEXT);
 CREATE TABLE MoviesSubs (MovieID INTEGER, StreamID INTEGER, Subs_Language TEXT, Subs_Type TEXT, Subs_Path TEXT,
     Subs_Forced BOOL);
 CREATE TABLE TVVStreams (TVEpID INTEGER, StreamID INTEGER, Video_Width TEXT, Video_Height TEXT, Video_Codec TEXT,
     Video_Duration TEXT, Video_ScanType TEXT, Video_AspectDisplayRatio TEXT, Video_Language TEXT, Video_Bitrate TEXT,
-    Video_StereoMode TEXT);
+    Video_StereoMode TEXT, Video_MultiViewCount TEXT, Video_MultiViewLayout TEXT, Video_FileSize TEXT);
 CREATE TABLE TVAStreams (TVEpID INTEGER, StreamID INTEGER, Audio_Language TEXT, Audio_Codec TEXT, Audio_Channel TEXT,
     Audio_Bitrate TEXT);
 CREATE TABLE TVSubs (TVEpID INTEGER, StreamID INTEGER, Subs_Language TEXT, Subs_Type TEXT, Subs_Path TEXT,
@@ -119,7 +119,7 @@ INSERT INTO setlinkmovie VALUES (1, 3, -1);
 
 INSERT INTO ExcludeDir VALUES ('D:\Filme\Privat');
 
-INSERT INTO MoviesVStreams VALUES (1, 0, '1920', '800', 'avc1', '10200', 'progressive', '2.40', 'de', '8000', '');
+INSERT INTO MoviesVStreams VALUES (1, 0, '1920', '800', 'avc1', '10200', 'progressive', '2.40', 'de', '8000', '', '2', 'left_right', '2167309437');
 INSERT INTO MoviesAStreams VALUES (1, 0, 'deu', 'DTS', '6', '1509');
 INSERT INTO MoviesAStreams VALUES (1, 1, 'eng', 'AC3', '6', '');
 INSERT INTO MoviesSubs VALUES (1, 0, 'deu', 'External', 'D:\Filme\Heat (1995)\Heat.de.srt', 1);
@@ -152,7 +152,7 @@ INSERT INTO actorlinkepisode VALUES (6, 1, 'Jack Shephard', 0);
 INSERT INTO gueststarlinkepisode VALUES (8, 1, 'Anthony Cooper', 0);
 INSERT INTO directorlinkepisode VALUES (7, 1);
 INSERT INTO writerlinkepisode VALUES (7, 1);
-INSERT INTO TVVStreams VALUES (1, 0, '1280', '720', 'h264', '0', '', '1.778', '', '', '');
+INSERT INTO TVVStreams VALUES (1, 0, '1280', '720', 'h264', '0', '', '1.778', '', '', '', '', '', '');
 INSERT INTO TVAStreams VALUES (1, 0, 'deu', 'AAC', '2', '128');
 INSERT INTO TVSubs VALUES (1, 0, 'eng', 'Embedded', '', 0);
-INSERT INTO TVVStreams VALUES (3, 0, '720', '576', 'mpeg4', '2580', 'interlaced', '1.333', '', '', '');
+INSERT INTO TVVStreams VALUES (3, 0, '720', '576', 'mpeg4', '2580', 'interlaced', '1.333', '', '', '', '', '', '');

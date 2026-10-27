@@ -45,6 +45,10 @@
         </dependency>
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-media</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
             <artifactId>kmm-migration-ember</artifactId>
             <version>${project.version}</version>
             <type>test-jar</type>

@@ -1,0 +1,74 @@
+{
+    "streams": [
+        {
+            "codec_name": "mjpeg",
+            "codec_type": "video",
+            "width": 600,
+            "height": 900,
+            "disposition": { "forced": 0, "attached_pic": 1 }
+        },
+        {
+            "codec_name": "hevc",
+            "codec_type": "video",
+            "codec_tag_string": "[0][0][0][0]",
+            "width": 3840,
+            "height": 1600,
+            "display_aspect_ratio": "0:1",
+            "sample_aspect_ratio": "N/A",
+            "field_order": "tt",
+            "color_transfer": "smpte2084",
+            "bit_rate": "24000000",
+            "disposition": { "forced": 0, "attached_pic": 0 },
+            "tags": { "language": "und", "stereo_mode": "left_right" },
+            "side_data_list": [ { "side_data_type": "DOVI configuration record" } ]
+        },
+        {
+            "codec_name": "mpeg4",
+            "codec_type": "video",
+            "codec_tag_string": "XVID",
+            "width": 720,
+            "height": 576,
+            "sample_aspect_ratio": "64:45",
+            "color_transfer": "arib-std-b67",
+            "disposition": { "forced": 0, "attached_pic": 0 }
+        },
+        {
+            "codec_name": "dts",
+            "profile": "DTS-HD MA + DTS:X",
+            "codec_type": "audio",
+            "channels": 8,
+            "disposition": { "forced": 0, "attached_pic": 0 },
+            "tags": { "language": "eng" }
+        },
+        {
+            "codec_name": "dts",
+            "profile": "DTS-HD HRA",
+            "codec_type": "audio",
+            "channels": 6,
+            "disposition": { "forced": 0, "attached_pic": 0 },
+            "tags": { "language": "fre" }
+        },
+        {
+            "codec_name": "truehd",
+            "codec_type": "audio",
+            "channels": 8,
+            "disposition": { "forced": 0, "attached_pic": 0 }
+        },
+        {
+            "codec_name": "hdmv_pgs_subtitle",
+            "codec_type": "subtitle",
+            "disposition": { "forced": 1, "attached_pic": 0 },
+            "tags": { "language": "ger" }
+        },
+        {
+            "codec_name": "subrip",
+            "codec_type": "subtitle",
+            "disposition": { "forced": 0, "attached_pic": 0 },
+            "tags": { "language": "ger", "title": "Deutsch Forced" }
+        }
+    ],
+    "format": {
+        "duration": "N/A",
+        "bit_rate": "N/A"
+    }
+}

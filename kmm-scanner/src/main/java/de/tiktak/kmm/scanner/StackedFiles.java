@@ -1,8 +1,11 @@
 package de.tiktak.kmm.scanner;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
@@ -38,6 +41,27 @@ public final class StackedFiles {
         }
     }
 
+    /**
+     * @return alle vorhandenen Teile in der Reihenfolge ihrer Nummern; für eine normale Datei nur diese
+     * @throws UncheckedIOException wenn der Ordner eines mehrteiligen Films nicht lesbar ist
+     */
+    public static List<Path> parts(Path file) {
+        Optional<StackedFile> stacked = stackedFile(file);
+        if (stacked.isEmpty()) {
+            return List.of(file);
+        }
+        try (Stream<Path> siblings = Files.list(file.getParent())) {
+            return siblings.flatMap(sibling -> stackedFile(sibling).stream()
+                            .filter(part -> part.stackKey().equals(stacked.get().stackKey()))
+                            .map(part -> new NumberedPart(sibling, part.partNumber())))
+                    .sorted(Comparator.comparingInt(NumberedPart::number))
+                    .map(NumberedPart::file)
+                    .toList();
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+    }
+
     private static Optional<StackedFile> stackedFile(Path file) {
         String fileName = file.getFileName().toString();
         int extensionStart = fileName.lastIndexOf(EXTENSION_SEPARATOR);
@@ -45,5 +69,8 @@ public final class StackedFiles {
             return Optional.empty();
         }
         return StackedFile.of(file, fileName.substring(0, extensionStart), fileName.substring(extensionStart + 1));
+    }
+
+    private record NumberedPart(Path file, int number) {
     }
 }

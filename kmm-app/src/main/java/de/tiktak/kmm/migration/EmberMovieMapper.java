@@ -49,7 +49,7 @@ final class EmberMovieMapper {
                 set.map(SetAssignment::order).orElse(null),
                 set.map(SetAssignment::tmdbCollectionId).orElse(movie.uniqueIds().get(TMDB_COLLECTION)),
                 EmberMappings.toInstant(movie.dateAdded(), zone),
-                EmberStreamMapper.toStreamDetails(movie.streams()));
+                EmberStreamMapper.toStreamDetails(movie.streams(), filePath));
     }
 
     /** Filme in mehreren Sets kennt Kodi nicht; übernommen wird das erste. */

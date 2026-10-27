@@ -51,11 +51,30 @@ final class NfoTextEditor {
      * @return {@code false}, wenn das Wurzelelement im Text nicht eindeutig zu finden ist
      */
     boolean setChildText(String rootName, int index, String childName, String value) {
+        return setChild(rootName, index, childName, value == null ? null : tag(childName, value));
+    }
+
+    /**
+     * Wie {@link #setChildText}, aber mit einem fertigen Element samt Kindern.
+     *
+     * @param element das Element als Text, ohne Einrückung vor der ersten und Zeilenende nach der letzten
+     *                Zeile, oder {@code null}, um das Element zu entfernen
+     */
+    boolean setChild(String rootName, int index, String childName, String element) {
         Optional<Span> root = rootElement(rootName, index);
         root.ifPresent(span -> text = text.substring(0, span.start())
-                + withChild(text.substring(span.start(), span.end()), rootName, childName, value)
+                + withChild(text.substring(span.start(), span.end()), rootName, childName, element)
                 + text.substring(span.end()));
         return root.isPresent();
+    }
+
+    /** @return die Einrückung der Kindelemente des Wurzelelements, notfalls zwei Leerzeichen */
+    Optional<String> childIndent(String rootName, int index) {
+        return rootElement(rootName, index).map(span -> indentOf(text.substring(span.start(), span.end())));
+    }
+
+    String newline() {
+        return newline;
     }
 
     void write(Path nfoFile) {
@@ -80,33 +99,33 @@ final class NfoTextEditor {
         return Optional.empty();
     }
 
-    private String withChild(String element, String rootName, String childName, String value) {
+    private String withChild(String element, String rootName, String childName, String rendered) {
         Matcher existing = Pattern.compile("([ \\t]*)<" + childName + "(?:\\s[^>]*)?(?:/>|>.*?</" + childName
                 + "\\s*>)(\\r?\\n)?", Pattern.DOTALL).matcher(element);
         StringBuilder result = new StringBuilder();
         boolean replaced = false;
         while (existing.find()) {
             String replacement = "";
-            if (value != null && !replaced) {
+            if (rendered != null && !replaced) {
                 String lineEnd = existing.group(2) == null ? "" : existing.group(2);
-                replacement = existing.group(1) + tag(childName, value) + lineEnd;
+                replacement = existing.group(1) + rendered + lineEnd;
                 replaced = true;
             }
             existing.appendReplacement(result, Matcher.quoteReplacement(replacement));
         }
         existing.appendTail(result);
-        return value == null || replaced ? result.toString() : inserted(result.toString(), rootName, childName, value);
+        return rendered == null || replaced ? result.toString() : inserted(result.toString(), rootName, rendered);
     }
 
-    private String inserted(String element, String rootName, String childName, String value) {
+    private String inserted(String element, String rootName, String rendered) {
         int closing = element.lastIndexOf("</" + rootName);
         int lineStart = element.lastIndexOf('\n', closing) + 1;
         String indent = indentOf(element);
         if (element.substring(lineStart, closing).isBlank()) {
-            return element.substring(0, lineStart) + indent + tag(childName, value) + newline
+            return element.substring(0, lineStart) + indent + rendered + newline
                     + element.substring(lineStart);
         }
-        return element.substring(0, closing) + newline + indent + tag(childName, value) + newline
+        return element.substring(0, closing) + newline + indent + rendered + newline
                 + element.substring(closing);
     }
 
@@ -115,7 +134,7 @@ final class NfoTextEditor {
         return indent.find() && !indent.group(1).isEmpty() ? indent.group(1) : DEFAULT_INDENT;
     }
 
-    private static String tag(String name, String value) {
+    static String tag(String name, String value) {
         String escaped = value.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
         return "<%s>%s</%s>".formatted(name, escaped, name);
     }
