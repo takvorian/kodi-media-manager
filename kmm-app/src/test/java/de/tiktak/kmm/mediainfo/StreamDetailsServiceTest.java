@@ -33,6 +33,7 @@ import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.job.JobTask;
 import de.tiktak.kmm.media.MediaProbe;
 import de.tiktak.kmm.media.FfprobeRunner;
+import de.tiktak.kmm.movie.MovieMedia;
 import de.tiktak.kmm.movie.MovieStreamDetailsService;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -128,6 +129,32 @@ class StreamDetailsServiceTest {
         assertThat(service.probeEpisodesAfterScrape(SHOW_ID)).singleElement().asString()
                 .startsWith("ffprobe kann nicht gestartet werden");
         verify(episodes, never()).changeStreamDetails(anyLong(), any());
+    }
+
+    @Test
+    void countsTheEpisodeFilesReadAfterTheOnlineSearch() {
+        when(probes.probeOnScrape()).thenReturn(true);
+        when(episodes.findByShow(SHOW_ID)).thenReturn(List.of(episode(1, 1, LOST, false),
+                episode(2, 2, LOST, false), episode(3, 3, LOST_3, false)));
+        when(episodes.find(1L)).thenReturn(episode(1, 1, LOST, false));
+        when(episodes.find(3L)).thenReturn(episode(3, 3, LOST_3, false));
+        when(episodes.changeStreamDetails(anyLong(), eq(PROBED))).thenReturn(PROBED);
+
+        assertThat(service.probeShowIfEnabled(SHOW_ID)).contains(new ShowStreamDetailsResult(2, List.of()));
+        verify(episodes, never()).changeStreamDetails(2L, PROBED);
+    }
+
+    @Test
+    void readsAMovieAfterTheOnlineSearchOnlyWhenEnabled() {
+        when(probes.probeOnScrape()).thenReturn(false);
+        assertThat(service.probeMovieIfEnabled(1L)).isEmpty();
+
+        when(probes.probeOnScrape()).thenReturn(true);
+        when(movies.find(1L)).thenReturn(new MovieMedia(1L, "Heat", Path.of("/filme/Heat.mkv"), DiscFormat.FILE,
+                false));
+        when(movies.changeStreamDetails(1L, PROBED)).thenReturn(PROBED);
+
+        assertThat(service.probeMovieIfEnabled(1L)).contains(PROBED);
     }
 
     private EpisodeMedia episode(long id, int number, Path file, boolean hasStreams) {

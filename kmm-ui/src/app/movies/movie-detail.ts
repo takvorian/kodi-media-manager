@@ -58,6 +58,8 @@ export class MovieDetail {
   protected readonly refreshingKodi = signal(false);
   protected readonly importingPlayback = signal(false);
   protected readonly probingStreams = signal(false);
+  /** Ob das Formular einen Treffer der Online-Suche enthält; nach dem Speichern werden die Angaben ausgelesen. */
+  private readonly adoptedProposal = signal(false);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),
@@ -86,6 +88,10 @@ export class MovieDetail {
         this.saving.set(false);
         this.movie.set(details);
         this.notify(`Gespeichert und in ${details.nfo.path} geschrieben.`);
+        if (this.adoptedProposal()) {
+          this.adoptedProposal.set(false);
+          this.probeStreamsAfterScrape();
+        }
       },
       error: (error: unknown) => {
         this.saving.set(false);
@@ -102,6 +108,7 @@ export class MovieDetail {
   protected adoptProposal(proposal: ScrapedProposal): void {
     this.form.patchValue(toFormValue(proposal.metadata));
     this.form.markAsDirty();
+    this.adoptedProposal.set(true);
     this.searchingOnline.set(false);
     this.notify(`Daten von ${proposal.scraperName} übernommen – bitte prüfen und speichern.`);
   }
@@ -154,9 +161,28 @@ export class MovieDetail {
   }
 
   protected reset(): void {
+    this.adoptedProposal.set(false);
     if (this.movie.hasValue()) {
       this.showInForm(this.movie.value());
     }
+  }
+
+  /** Wie nach dem automatischen Scrapen, sofern in den Einstellungen nicht abgeschaltet. */
+  private probeStreamsAfterScrape(): void {
+    this.probingStreams.set(true);
+    this.mediaInfoService.probeMovieAfterScrape(this.id()).subscribe({
+      next: (streams) => {
+        this.probingStreams.set(false);
+        if (streams) {
+          this.showStreams(streams);
+          this.notify('Gespeichert; technische Angaben ausgelesen.');
+        }
+      },
+      error: (error: unknown) => {
+        this.probingStreams.set(false);
+        this.notify(`Gespeichert, technische Angaben nicht ausgelesen: ${problemMessage(error)}`);
+      },
+    });
   }
 
   private showInForm(details: MovieDetails): void {

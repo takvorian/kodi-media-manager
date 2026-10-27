@@ -99,34 +99,54 @@ public class StreamDetailsService {
     }
 
     /**
+     * Liest einen Film nach dem Scrapen aus, wenn das eingestellt ist.
+     *
+     * @return die übernommenen Angaben; leer, wenn das Auslesen nach dem Scrapen abgeschaltet ist
+     * @throws MediaInfoProblemException wenn ffprobe die Datei nicht lesen kann
+     */
+    public Optional<StreamDetails> probeMovieIfEnabled(long movieId) {
+        return probes.probeOnScrape() ? Optional.of(probeMovie(movieId)) : Optional.empty();
+    }
+
+    /**
      * Liest einen Film nach dem automatischen Scrapen aus, wenn das eingestellt ist.
      *
      * @return eine Fehlermeldung, wenn das Auslesen scheiterte
      */
     public Optional<String> probeMovieAfterScrape(long movieId) {
-        if (!probes.probeOnScrape()) {
-            return Optional.empty();
-        }
-        return failureOf(() -> probeMovie(movieId));
+        return failureOf(() -> probeMovieIfEnabled(movieId));
     }
 
     /**
-     * Liest nach dem automatischen Scrapen einer Serie die Episoden ohne technische Angaben aus, wenn das
-     * eingestellt ist. Vorhandene Angaben, etwa aus Ember, bleiben, damit das Scrapen schnell bleibt.
+     * Liest nach dem Scrapen einer Serie die Episoden ohne technische Angaben aus, wenn das eingestellt
+     * ist. Vorhandene Angaben, etwa aus Ember, bleiben, damit das Scrapen schnell bleibt.
      *
-     * @return die Fehlermeldungen der Dateien, die nicht gelesen werden konnten
+     * @return leer, wenn das Auslesen nach dem Scrapen abgeschaltet ist
      */
-    public List<String> probeEpisodesAfterScrape(long showId) {
+    public Optional<ShowStreamDetailsResult> probeShowIfEnabled(long showId) {
         if (!probes.probeOnScrape()) {
-            return List.of();
+            return Optional.empty();
         }
+        int updated = 0;
         List<String> failures = new ArrayList<>();
         for (EpisodeMedia media : perFile(episodes.findByShow(showId), EpisodeMedia::file)) {
             if (!media.hasStreamDetails()) {
-                failureOf(() -> probeEpisode(media.episodeId())).ifPresent(failures::add);
+                Optional<String> failure = failureOf(() -> probeEpisode(media.episodeId()));
+                failure.ifPresent(failures::add);
+                updated += failure.isEmpty() ? 1 : 0;
             }
         }
-        return failures;
+        return Optional.of(new ShowStreamDetailsResult(updated, failures));
+    }
+
+    /**
+     * Liest nach dem automatischen Scrapen einer Serie die Episoden ohne technische Angaben aus.
+     *
+     * @return die Fehlermeldungen der Dateien, die nicht gelesen werden konnten
+     * @see #probeShowIfEnabled(long)
+     */
+    public List<String> probeEpisodesAfterScrape(long showId) {
+        return probeShowIfEnabled(showId).map(ShowStreamDetailsResult::failures).orElse(List.of());
     }
 
     StreamDetailsJobResult run(long sourceId, List<Entry> entries, JobContext context) {

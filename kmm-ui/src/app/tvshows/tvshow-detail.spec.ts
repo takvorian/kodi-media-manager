@@ -274,11 +274,15 @@ describe('TvShowDetail', () => {
     fill.flush({ updated: 2, unchanged: 0, unmatched: 1, failedFiles: ['/x2.nfo'] });
     fixture.detectChanges();
     httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
+    httpTesting
+      .expectOne({ method: 'POST', url: `/api/v1/tvshows/3/stream-details/after-scrape` })
+      .flush({ updated: 4, failures: [] });
     await fixture.whenStable();
 
     expect(snackBarMessages[1]).toBe(
       'Gespeichert; 2 Episoden mit Daten von TheTVDB ergänzt. 1 NFOs konnten nicht geschrieben werden.',
     );
+    expect(snackBarMessages[2]).toBe('Technische Angaben von 4 Episodendateien ausgelesen.');
     expect(element().querySelector('.pending-fill')).toBeNull();
   });
 

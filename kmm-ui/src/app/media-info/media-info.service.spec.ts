@@ -29,4 +29,21 @@ describe('MediaInfoService', () => {
 
     expect(movie).toEqual(EMPTY_STREAMS);
   });
+
+  it('reads after the online search unless switched off', () => {
+    let movie: StreamDetails | null | undefined;
+    let show: unknown;
+
+    service.probeMovieAfterScrape(5).subscribe((details) => (movie = details));
+    service.probeShowAfterScrape(3).subscribe((result) => (show = result));
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/movies/5/stream-details/after-scrape' })
+      .flush(null, { status: 204, statusText: 'No Content' });
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/tvshows/3/stream-details/after-scrape' })
+      .flush({ updated: 2, failures: [] });
+
+    expect(movie).toBeNull();
+    expect(show).toEqual({ updated: 2, failures: [] });
+  });
 });

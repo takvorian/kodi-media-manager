@@ -15,6 +15,8 @@ import { kodiSyncSummary } from '../kodi/kodi';
 import { ArtworkSource } from '../movies/artwork';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { Attribution, ScraperInfo } from '../movies/scraper';
+import { showStreamDetailsSummary } from '../media-info/media-info';
+import { MediaInfoService } from '../media-info/media-info.service';
 import { problemMessage } from '../shared/problem-message';
 import { TvPeople } from './tv-people';
 import { defaultTvShowScraper } from './tv-scrapers';
@@ -61,6 +63,7 @@ export interface SeasonWithEpisodes {
 })
 export class TvShowDetail {
   private readonly tvShowService = inject(TvShowService);
+  private readonly mediaInfoService = inject(MediaInfoService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly artworkService = inject(TvShowArtworkService);
   private readonly kodiService = inject(KodiService);
@@ -206,12 +209,26 @@ export class TvShowDetail {
         this.pendingFill.set(null);
         this.show.reload();
         this.notify(fillSummary(pending.scraperName, result));
+        this.probeStreamsAfterScrape();
       },
       error: (error: unknown) => {
         this.saving.set(false);
         this.show.reload();
         this.notify(`Serie gespeichert, Episoden nicht ergänzt: ${problemMessage(error)}`);
       },
+    });
+  }
+
+  /** Liest die Episoden ohne technische Angaben aus, wie nach dem automatischen Scrapen. */
+  private probeStreamsAfterScrape(): void {
+    this.mediaInfoService.probeShowAfterScrape(this.id()).subscribe({
+      next: (result) => {
+        const summary = showStreamDetailsSummary(result);
+        if (summary) {
+          this.notify(summary);
+        }
+      },
+      error: (error: unknown) => this.notify(`Technische Angaben nicht ausgelesen: ${problemMessage(error)}`),
     });
   }
 

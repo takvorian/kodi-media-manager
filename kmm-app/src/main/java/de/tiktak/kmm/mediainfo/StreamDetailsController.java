@@ -43,4 +43,26 @@ public class StreamDetailsController {
     public StreamDetails probeEpisode(@PathVariable long episodeId) {
         return service.probeEpisode(episodeId);
     }
+
+    /**
+     * Liest den Film nach der Online-Suche aus, wenn das eingestellt ist.
+     *
+     * @return die Angaben oder 204, wenn das Auslesen nach dem Scrapen abgeschaltet ist
+     */
+    @PostMapping("/movies/{movieId}/stream-details/after-scrape")
+    public ResponseEntity<StreamDetails> probeMovieAfterScrape(@PathVariable long movieId) {
+        return service.probeMovieIfEnabled(movieId).map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    /**
+     * Liest nach der Online-Suche die Episoden der Serie ohne Angaben aus, wenn das eingestellt ist.
+     *
+     * @return das Ergebnis oder 204, wenn das Auslesen nach dem Scrapen abgeschaltet ist
+     */
+    @PostMapping("/tvshows/{showId}/stream-details/after-scrape")
+    public ResponseEntity<ShowStreamDetailsResult> probeShowAfterScrape(@PathVariable long showId) {
+        return service.probeShowIfEnabled(showId).map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
 }

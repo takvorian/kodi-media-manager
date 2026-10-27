@@ -24,6 +24,21 @@ export interface StreamDetailsJobResult {
   readonly failures: readonly string[];
 }
 
+/** Ergebnis des Auslesens der Episoden einer Serie nach der Online-Suche. */
+export interface ShowStreamDetailsResult {
+  readonly updated: number;
+  readonly failures: readonly string[];
+}
+
+/** Meldung nach dem Auslesen der Episoden; ohne ausgelesene Dateien und Fehler gibt es nichts zu melden. */
+export function showStreamDetailsSummary(result: ShowStreamDetailsResult | null): string | null {
+  if (!result || (result.updated === 0 && result.failures.length === 0)) {
+    return null;
+  }
+  const failed = result.failures.length > 0 ? ` ${result.failures.length} Fehler (z. B. ${result.failures[0]}).` : '';
+  return `Technische Angaben von ${result.updated} Episodendateien ausgelesen.${failed}`;
+}
+
 /** Fasst einen beendeten Job „Technische Angaben“ für eine Snackbar-Meldung zusammen. */
 export function streamDetailsSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {

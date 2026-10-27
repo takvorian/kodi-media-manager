@@ -298,6 +298,74 @@ describe('MovieDetail', () => {
     httpTesting.expectNone({ method: 'PUT' });
   });
 
+  it('reads the technical details after saving online data', async () => {
+    await load(heat);
+    await adoptFromOnlineSearch();
+
+    button('.save-button').click();
+    expectSave().flush(heat);
+    httpTesting
+      .expectOne({ method: 'POST', url: `${MOVIES_URL}/5/stream-details/after-scrape` })
+      .flush({ videos: [], audios: [{ codec: 'truehd', language: 'deu', channels: 8, bitrate: null }], subtitles: [] });
+    await fixture.whenStable();
+
+    expect(element().querySelector('app-stream-details')?.textContent).toContain('Dolby TrueHD');
+    expect(snackBarMessages).toContain('Gespeichert; technische Angaben ausgelesen.');
+
+    await type('title', 'Heat 2');
+    button('.save-button').click();
+    expectSave().flush(heat);
+    await fixture.whenStable();
+    httpTesting.expectNone(`${MOVIES_URL}/5/stream-details/after-scrape`);
+  });
+
+  it('reports technical details that cannot be read after saving online data', async () => {
+    await load(heat);
+    await adoptFromOnlineSearch();
+
+    button('.save-button').click();
+    expectSave().flush(heat);
+    httpTesting
+      .expectOne(`${MOVIES_URL}/5/stream-details/after-scrape`)
+      .flush({ detail: 'ffprobe fehlt' }, { status: 422, statusText: 'Unprocessable' });
+    await fixture.whenStable();
+
+    expect(snackBarMessages).toContain('Gespeichert, technische Angaben nicht ausgelesen: ffprobe fehlt');
+    expect(button('.stream-details-button').disabled).toBe(false);
+  });
+
+  it('does not read the technical details after discarding online data', async () => {
+    await load(heat);
+    await adoptFromOnlineSearch();
+    button('.reset-button').click();
+    await type('title', 'Heat 2');
+
+    button('.save-button').click();
+    expectSave().flush(heat);
+    await fixture.whenStable();
+
+    httpTesting.expectNone(`${MOVIES_URL}/5/stream-details/after-scrape`);
+  });
+
+  async function adoptFromOnlineSearch(): Promise<void> {
+    button('.online-search-button').click();
+    fixture.detectChanges();
+    httpTesting.expectOne('/api/v1/scrapers/metadata').flush([
+      { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['MOVIE'], missingConfiguration: null },
+    ]);
+    await fixture.whenStable();
+    button('.search-button').click();
+    httpTesting
+      .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-search`)
+      .flush([{ providerId: '949', title: 'Heat', originalTitle: 'Heat', year: 1995, overview: null, posterUrl: null }]);
+    await fixture.whenStable();
+    button('.adopt-button').click();
+    httpTesting
+      .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-proposal`)
+      .flush({ ...heat.metadata, tmdbId: '949' });
+    await fixture.whenStable();
+  }
+
   it('closes the online search again', async () => {
     await load(heat);
 

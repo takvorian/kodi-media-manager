@@ -174,6 +174,34 @@ class StreamDetailsIntegrationTest {
         assertThat(mockMvc.post().uri("/api/v1/movies/{id}/stream-details", heat).with(csrf())).hasStatusOk();
     }
 
+    @Test
+    void readsAfterTheOnlineSearchOnlyWhenEnabled() throws IOException {
+        Path filme = Files.createDirectories(library.resolve("filme"));
+        givenFile(filme.resolve("Heat (1995)/Heat (1995).mkv"), "");
+        Path serien = Files.createDirectories(library.resolve("serien"));
+        givenFile(serien.resolve("Lost/Lost - S01E01.mkv"), "");
+        givenFile(serien.resolve("Lost/Lost - S01E02.mkv"), "");
+        when(probes.probeNewFiles()).thenReturn(false);
+        scan(createSource("Filme", filme, "MOVIE"));
+        scan(createSource("Serien", serien, "TV_SHOW"));
+        long heat = jdbcClient.sql("SELECT id FROM movie").query(Long.class).single();
+        long lost = jdbcClient.sql("SELECT id FROM tv_show").query(Long.class).single();
+
+        assertThat(mockMvc.post().uri("/api/v1/movies/{id}/stream-details/after-scrape", heat).with(csrf()))
+                .hasStatus(HttpStatus.NO_CONTENT);
+        assertThat(mockMvc.post().uri("/api/v1/tvshows/{id}/stream-details/after-scrape", lost).with(csrf()))
+                .hasStatus(HttpStatus.NO_CONTENT);
+        assertThat(streamsOf("Heat")).isNull();
+
+        when(probes.probeOnScrape()).thenReturn(true);
+        assertThat(mockMvc.post().uri("/api/v1/movies/{id}/stream-details/after-scrape", heat).with(csrf()))
+                .hasStatusOk().bodyJson().extractingPath("$.audios[0].codec").isEqualTo("truehd");
+        assertThat(mockMvc.post().uri("/api/v1/tvshows/{id}/stream-details/after-scrape", lost).with(csrf()))
+                .hasStatusOk().bodyJson().extractingPath("$.updated").isEqualTo(2);
+        assertThat(mockMvc.post().uri("/api/v1/tvshows/{id}/stream-details/after-scrape", lost).with(csrf()))
+                .hasStatusOk().bodyJson().extractingPath("$.updated").isEqualTo(0);
+    }
+
     private String streamsOf(String title) {
         return jdbcClient.sql("SELECT stream_details FROM movie WHERE title = ?").param(title)
                 .query(String.class).optional().orElse(null);
