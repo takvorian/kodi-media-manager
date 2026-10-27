@@ -73,7 +73,8 @@ public class TvShowScanService {
         log.info("Scanned TV source '{}': {} shows added, {} removed; episodes {} added, {} updated, {} removed, "
                         + "{} unchanged; {} NFO errors", source.getName(), result.showsAdded(), result.showsRemoved(),
                 result.added(), result.updated(), result.removed(), result.unchanged(), result.nfoErrors());
-        events.publishEvent(new TvShowSourceScannedEvent(source.getId(), result.showsAdded() + result.added()));
+        events.publishEvent(new TvShowSourceScannedEvent(source.getId(), result.showsAdded() + result.added(),
+                result.newWithoutStreams()));
         return result;
     }
 

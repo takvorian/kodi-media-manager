@@ -151,6 +151,34 @@ describe('SourceList', () => {
     ]);
   });
 
+  it('reads the technical details of a source as job', async () => {
+    await loadSources([films, series]);
+    const probeJob = job({ id: 'job-8', key: 'stream-details:1', title: 'Technische Angaben „Filme“' });
+
+    button('.stream-details-button').click();
+    fixture.detectChanges();
+    document.querySelector<HTMLButtonElement>('.stream-details-all')!.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/sources/1/stream-details?scope=ALL' })
+      .flush(probeJob);
+    fixture.detectChanges();
+    expect(element().querySelector('.job-progress')).not.toBeNull();
+    events.emit({
+      ...probeJob,
+      status: 'SUCCEEDED',
+      result: { sourceId: 1, updated: 3, skipped: 0, failed: 0, failures: [] },
+    });
+    fixture.detectChanges();
+    button('.stream-details-button').click();
+    fixture.detectChanges();
+    document.querySelector<HTMLButtonElement>('.stream-details-missing')!.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/sources/1/stream-details?scope=MISSING' })
+      .flush({ detail: 'ffprobe fehlt' }, { status: 409, statusText: 'Conflict' });
+
+    expect(snackBarMessages).toEqual(['Technische Angaben „Filme“ abgeschlossen: 3 ausgelesen.', 'ffprobe fehlt']);
+  });
+
   it('shows a hint without sources', async () => {
     await loadSources([]);
 

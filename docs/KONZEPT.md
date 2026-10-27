@@ -132,12 +132,14 @@ kodi-media-manager/            groupId de.tiktak.kmm
 ├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite, Settings.xml, Interface.Kodi.xml), Pfad-Mapping
 ├─ kmm-kodi                    JSON-RPC-Client für Kodi (Version, Film suchen, RefreshMovie, Scan),
 │                              Zuordnung KMM-Pfad → Kodi-Pfad (smb://, nfs://, Windows, POSIX)
+├─ kmm-media                   Stream-Details mit ffprobe (Kodi-/Ember-Namen, Stapel, DVD-Titel, Blu-ray,
+│                              externe Untertitel, HDR) und Zusammenführen mit vorhandenen Angaben
 ├─ kmm-plugins/                mitgelieferte Plugins: kmm-plugin-tmdb (Metadaten + Bilder), kmm-plugin-fanarttv (Bilder);
 │                              kmm-plugin-testdata nur für Tests
 ├─ kmm-ui                      Angular-SPA → static/ im JAR
 ├─ kmm-app                     Spring Boot: REST, Security, Plugins, Persistenz, Profile
 └─ docker/                     Dockerfile, docker-compose.yml
-geplant: kmm-core, kmm-media; Scraper-Plugins tvdb, omdb
+geplant: kmm-core; Scraper-Plugins omdb
 ```
 
 Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von `kmm-app` prüft Spring Modulith (`ModularityTests`).
@@ -178,8 +180,8 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 
 **Import (Ember-Migration II, umgesetzt):**
 - **Serien** (abwählbar): Serienquellen über dieselbe Pfad-Zuordnung, Serien über den Ordner, Episoden über Datei, Staffel und Nummer erkannt; Mehrfachepisoden bleiben mehrere Episoden mit derselben Datei. Embers Platzhalter-Staffel −1 und leere Staffeltitel entfallen; Episoden ohne Datei werden nur gezählt. Wie bei Filmen gewinnt die Ember-DB, `tvshow.nfo` und Episoden-NFOs gelten danach als eingelesen.
-- **Stream-Details** für Filme und Episoden; externe Untertitel (eigene Dateien) entfallen. Liefert Ember keine Spuren, bleiben die in KMM bekannten erhalten.
-- **Einstellungen:** Sprache der Serien-Metadaten und -Bilder sowie die Episodenreihenfolge. API-Keys werden bewusst nicht übernommen; sie werden in KMM unter „Einstellungen → API-Keys“ gepflegt.
+- **Stream-Details** für Filme und Episoden, mit Dateigröße, 3D-Angaben und externen Untertiteln (Pfad neben der Videodatei im Zielsystem). Liefert Ember keine Spuren, bleiben die in KMM bekannten erhalten.
+- **Einstellungen:** Sprache der Serien-Metadaten und -Bilder, die Episodenreihenfolge und ob beim Scrapen die Mediendaten ausgelesen werden (`MovieScraperMetaDataScan`/`TVScraperMetaDataScan`). API-Keys werden bewusst nicht übernommen; sie werden in KMM unter „Einstellungen → API-Keys“ gepflegt.
 - **Nicht übernommen:** Embers Artwork-Pfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren/Markierungen, Scraper-Keys, Kodi-Optionen zum Gesehen-Status.
 
 **Schema-Versionen:** Direkt unterstützt wird v48. Ältere Profile werden einmal mit der letzten Ember-Version geöffnet, die sie selbst aktualisiert.
@@ -209,7 +211,9 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
       - 3d2 ✅ Bilder in App und Oberfläche: Serie (Poster, Fanart, Banner, Clearlogo, Clearart, Landscape, Characterart → `poster.jpg` … im Serienordner), Staffeln (Poster, Banner, Fanart, Landscape → `season01-poster.jpg`, `season-specials-poster.jpg`) und Episoden (Standbild der Serien-Scraper → `<episode>-thumb.jpg`); gemeinsame Bildergalerie und Dateiablage für Filme und Serien
       - 3e ✅ automatisches Scrapen einer Serienquelle: nicht zugeordnete Serien nur bei eindeutigem Treffer des bevorzugten Scrapers (`kmm.scraping.preferred-tv-show-scraper`, Vorgabe `tvdb`), leere Episodenfelder, fehlende Bilder von Serie, Staffeln mit Episoden und Standbilder; vorhandene Daten und Bilder bleiben
    4. Kodi-Sync für Serien ✅: Echtzeit-Sync wie bei Filmen – geänderte Serie → `VideoLibrary.RefreshTVShow` (ohne Episoden), geänderte Episode → `RefreshEpisode`, in Kodi unbekannt → `Scan` des Serienordners, neue Serien/Episoden nach dem Scan → `Scan` der Quelle; Knöpfe „In Kodi aktualisieren“ für Serie und Episode, „Kodi-Scan“ für Serienquellen
-5. **Komfort:** ffprobe-Streamdetails, Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.
+5. **Komfort** (in Inkrementen):
+   1. Technische Angaben mit ffprobe ✅: Video (Codec, Auflösung, Seitenverhältnis, Laufzeit, Bitrate, Bildaufbau, 3D, HDR-Typ), Ton und Untertitel (eingebettet und als Dateien daneben) in Kodis bzw. Embers Namen (`dca`, `dtshd_ma`, `deu` …). Auslöser: je Film/Episode, je Quelle als Job (nur fehlende oder alle), nach dem automatischen Scrapen (Filme; bei Serien Episoden ohne Angaben) und für neue Dateien ohne Angaben nach dem Scan – beides abschaltbar, ffprobe-Pfad einstellbar. Vorhandene Angaben werden ersetzt, Sprachen und Embers 3D-Angaben bleiben, wenn ffprobe keine liefert. In der NFO wird nur `<fileinfo>` im Format von Ember ersetzt (alphabetisch, mit `longlanguage`, `filesize`, Untertiteltyp); der Rest der Datei bleibt Zeichen für Zeichen erhalten. Mehrfachepisoden bekommen die Angaben in jedes `<episodedetails>`.
+   2. Bulk-Rename, Tag-/Filmset-Manager, Filter- und Metadaten-Editor.
 6. **Erweiterungen:** Trailer/Themes, Trakt.tv, Export, HTML-Scraper, Installer (jpackage).
 
 ## 8. Offene Punkte / Risiken

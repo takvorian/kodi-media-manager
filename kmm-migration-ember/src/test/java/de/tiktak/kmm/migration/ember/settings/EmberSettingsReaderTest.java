@@ -36,6 +36,7 @@ class EmberSettingsReaderTest {
         assertThat(settings.movieLanguage()).isEqualTo("de-DE");
         assertThat(settings.movieImageLanguage()).isEqualTo("de");
         assertThat(settings.tv()).isEqualTo(new EmberTvSettings("en-US", "en", "DVD"));
+        assertThat(settings.metaDataScan()).isTrue();
     }
 
     @Test

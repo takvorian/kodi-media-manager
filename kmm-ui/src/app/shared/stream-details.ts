@@ -10,6 +10,9 @@ export interface VideoStream {
   readonly scanType: string | null;
   readonly stereoMode: string | null;
   readonly language: string | null;
+  /** HDR-Art wie in Kodi: hdr10, dolbyvision oder hlg. */
+  readonly hdrType?: string | null;
+  readonly fileSize?: number | null;
 }
 
 export interface AudioStream {
@@ -22,9 +25,11 @@ export interface AudioStream {
 export interface SubtitleStream {
   readonly language: string | null;
   readonly forced: boolean;
+  /** Pfad einer externen Untertiteldatei; fehlt bei Untertiteln in der Videodatei. */
+  readonly path?: string | null;
 }
 
-/** Technische Angaben einer Videodatei (aus NFO oder Ember). */
+/** Technische Angaben einer Videodatei (aus NFO, Ember oder ffprobe). */
 export interface StreamDetails {
   readonly videos: readonly VideoStream[];
   readonly audios: readonly AudioStream[];
@@ -39,11 +44,15 @@ const CHANNEL_LAYOUTS: Record<number, string> = { 1: 'Mono', 2: 'Stereo', 6: '5.
 const CODEC_NAMES: Record<string, string> = {
   dca: 'DTS',
   dts: 'DTS',
+  dtshd_ma: 'DTS-HD MA',
+  dtshd_hra: 'DTS-HD HRA',
   ac3: 'Dolby Digital',
   eac3: 'Dolby Digital Plus',
   truehd: 'Dolby TrueHD',
   aac: 'AAC',
   mp3: 'MP3',
+  flac: 'FLAC',
+  opus: 'Opus',
   h264: 'H.264',
   avc: 'H.264',
   hevc: 'H.265',
@@ -51,7 +60,10 @@ const CODEC_NAMES: Record<string, string> = {
   mpeg2video: 'MPEG-2',
   xvid: 'Xvid',
   divx: 'DivX',
+  av1: 'AV1',
+  vp9: 'VP9',
 };
+const HDR_NAMES: Record<string, string> = { hdr10: 'HDR10', dolbyvision: 'Dolby Vision', hlg: 'HLG' };
 
 export function videoLabel(video: VideoStream): string {
   const parts = [codecName(video.codec)];
@@ -60,6 +72,9 @@ export function videoLabel(video: VideoStream): string {
   }
   if (video.aspect) {
     parts.push(`${video.aspect.toFixed(2)}:1`);
+  }
+  if (video.hdrType) {
+    parts.push(HDR_NAMES[video.hdrType] ?? video.hdrType);
   }
   if (video.stereoMode) {
     parts.push(`3D (${video.stereoMode})`);
@@ -76,8 +91,9 @@ export function audioLabel(audio: AudioStream): string {
 }
 
 export function subtitleLabel(subtitle: SubtitleStream): string {
+  const notes = [subtitle.forced ? 'erzwungen' : null, subtitle.path != null ? 'extern' : null].filter((note) => note);
   const language = subtitle.language ?? 'unbekannt';
-  return subtitle.forced ? `${language} (erzwungen)` : language;
+  return notes.length > 0 ? `${language} (${notes.join(', ')})` : language;
 }
 
 function codecName(codec: string | null): string {

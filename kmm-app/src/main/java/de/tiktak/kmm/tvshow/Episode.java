@@ -169,6 +169,18 @@ public class Episode {
         this.addedAt = Objects.requireNonNull(newAddedAt, "addedAt must not be null");
     }
 
+    boolean hasStreamDetails() {
+        return streamDetails != null && !streamDetails.isEmpty();
+    }
+
+    StreamDetails streamDetails() {
+        return streamDetails == null ? StreamDetails.EMPTY : streamDetails;
+    }
+
+    void applyStreamDetails(StreamDetails details) {
+        streamDetails = details == null || details.isEmpty() ? null : details;
+    }
+
     void changePlayback(Integer newPlayCount, Instant newLastPlayedAt) {
         this.playCount = newPlayCount;
         this.lastPlayedAt = newLastPlayedAt;

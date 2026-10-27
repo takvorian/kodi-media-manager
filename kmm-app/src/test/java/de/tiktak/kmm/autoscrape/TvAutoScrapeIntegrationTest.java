@@ -42,6 +42,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
+import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.ImageCandidate;
@@ -80,6 +81,9 @@ class TvAutoScrapeIntegrationTest {
 
     @MockitoBean
     private ScraperRegistry scraperRegistry;
+
+    @MockitoBean
+    private StreamDetailsService streamDetails;
 
     @TempDir
     Path library;

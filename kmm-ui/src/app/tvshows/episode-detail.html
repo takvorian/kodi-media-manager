@@ -15,6 +15,9 @@
       <button matButton type="button" class="kodi-playback-button" [disabled]="importingPlayback()" (click)="importPlayback()">
         Gesehen-Status aus Kodi
       </button>
+      <button matButton type="button" class="stream-details-button" [disabled]="probingStreams()" (click)="probeStreams()">
+        Technische Angaben auslesen
+      </button>
     </div>
   </div>
 

@@ -12,6 +12,7 @@ import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
 import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
+import de.tiktak.kmm.settings.MediaInfoSettings;
 import de.tiktak.kmm.settings.ProxySettings;
 import de.tiktak.kmm.settings.TvSettings;
 
@@ -30,6 +31,19 @@ class EmberSettingsMapperTest {
         assertThat(imported.settings().tv()).isEqualTo(new TvSettings("de-DE", "de", EpisodeOrdering.ABSOLUTE));
         assertThat(imported.changes()).containsExactly("Sprache der Serien-Metadaten: de-DE",
                 "Bevorzugte Bildsprache für Serien: de", "Episodenreihenfolge: Absolute");
+    }
+
+    @Test
+    void takesOverWhetherEmberReadsMediaInfoWhileScraping() {
+        var ember = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null, null, false);
+
+        var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of());
+
+        assertThat(imported.settings().mediaInfo()).isEqualTo(new MediaInfoSettings("ffprobe", false, true));
+        assertThat(imported.changes()).containsExactly("Technische Angaben beim Scrapen auslesen: nein");
+        var withoutValue = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null, null);
+        assertThat(EmberSettingsMapper.map(CURRENT, Optional.of(withoutValue), List.of()).settings().mediaInfo())
+                .isEqualTo(MediaInfoSettings.DEFAULTS);
     }
 
     @Test

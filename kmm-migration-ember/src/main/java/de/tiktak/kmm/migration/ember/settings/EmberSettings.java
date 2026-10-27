@@ -16,6 +16,8 @@ import java.util.Optional;
  * @param movieImageLanguage erzwungene Sprache der Filmbilder (ISO 639-1) oder {@code null}, wenn
  *                           Ember keine Sprache erzwingt
  * @param tv                 Einstellungen für Serien
+ * @param metaDataScan       ob Ember beim Scrapen die Mediendaten ausliest (für Filme oder Serien), oder
+ *                           {@code null}, wenn die Datei keine Angabe enthält
  */
 public record EmberSettings(
         int version,
@@ -25,7 +27,8 @@ public record EmberSettings(
         Optional<EmberProxySettings> proxy,
         String movieLanguage,
         String movieImageLanguage,
-        EmberTvSettings tv) {
+        EmberTvSettings tv,
+        Boolean metaDataScan) {
 
     public EmberSettings {
         videoExtensions = List.copyOf(videoExtensions);
@@ -38,5 +41,12 @@ public record EmberSettings(
     public EmberSettings(int version, String language, List<String> videoExtensions, List<String> subtitleExtensions,
             Optional<EmberProxySettings> proxy, String movieLanguage, String movieImageLanguage) {
         this(version, language, videoExtensions, subtitleExtensions, proxy, movieLanguage, movieImageLanguage, null);
+    }
+
+    /** Einstellungen ohne Angabe zum Auslesen der Mediendaten. */
+    public EmberSettings(int version, String language, List<String> videoExtensions, List<String> subtitleExtensions,
+            Optional<EmberProxySettings> proxy, String movieLanguage, String movieImageLanguage, EmberTvSettings tv) {
+        this(version, language, videoExtensions, subtitleExtensions, proxy, movieLanguage, movieImageLanguage, tv,
+                null);
     }
 }

@@ -30,4 +30,6 @@
   <TVImagesForceLanguage>true</TVImagesForceLanguage>
   <TVImagesForcedLanguage>en</TVImagesForcedLanguage>
   <TVScraperOptionsOrdering>DVD</TVScraperOptionsOrdering>
+  <MovieScraperMetaDataScan>true</MovieScraperMetaDataScan>
+  <TVScraperMetaDataScan>false</TVScraperMetaDataScan>
 </Settings>

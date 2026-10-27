@@ -23,6 +23,9 @@ export type SettingsForm = FormGroup<{
   tvMetadataLanguage: FormControl<string>;
   tvArtworkLanguage: FormControl<string>;
   tvEpisodeOrdering: FormControl<EpisodeOrdering>;
+  ffprobePath: FormControl<string>;
+  probeOnScrape: FormControl<boolean>;
+  probeNewFiles: FormControl<boolean>;
 }>;
 
 export function createSettingsForm(formBuilder: NonNullableFormBuilder): SettingsForm {
@@ -39,6 +42,9 @@ export function createSettingsForm(formBuilder: NonNullableFormBuilder): Setting
     tvMetadataLanguage: ['', [Validators.required, Validators.pattern(METADATA_LANGUAGE_PATTERN)]],
     tvArtworkLanguage: ['', [Validators.required, Validators.pattern(ARTWORK_LANGUAGE_PATTERN)]],
     tvEpisodeOrdering: ['AIRED' as EpisodeOrdering],
+    ffprobePath: ['ffprobe', Validators.required],
+    probeOnScrape: [true],
+    probeNewFiles: [true],
   });
 }
 
@@ -56,6 +62,9 @@ export function toFormValue(view: SettingsView): SettingsForm['value'] {
     tvMetadataLanguage: view.tv.metadataLanguage,
     tvArtworkLanguage: view.tv.artworkLanguage,
     tvEpisodeOrdering: view.tv.episodeOrdering,
+    ffprobePath: view.mediaInfo.ffprobePath,
+    probeOnScrape: view.mediaInfo.probeOnScrape,
+    probeNewFiles: view.mediaInfo.probeNewFiles,
   };
 }
 
@@ -79,6 +88,11 @@ export function toSettings(form: SettingsForm): KmmSettings {
       metadataLanguage: value.tvMetadataLanguage.trim(),
       artworkLanguage: value.tvArtworkLanguage.trim(),
       episodeOrdering: value.tvEpisodeOrdering,
+    },
+    mediaInfo: {
+      ffprobePath: value.ffprobePath.trim(),
+      probeOnScrape: value.probeOnScrape,
+      probeNewFiles: value.probeNewFiles,
     },
   };
 }

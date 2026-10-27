@@ -12,8 +12,9 @@ import { RouterLink } from '@angular/router';
 import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { ArtworkGallery } from '../movies/artwork-gallery';
+import { MediaInfoService } from '../media-info/media-info.service';
 import { problemMessage } from '../shared/problem-message';
-import { StreamDetailsView } from '../shared/stream-details';
+import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
 import { TvPeople } from './tv-people';
 import { EpisodeDetails, episodeCode } from './tvshow';
 import { createEpisodeMetadataForm, toEpisodeFormValue, toEpisodeMetadata } from './tvshow-forms';
@@ -44,6 +45,7 @@ export class EpisodeDetail {
   private readonly snackBar = inject(MatSnackBar);
   private readonly artworkService = inject(TvShowArtworkService);
   private readonly kodiService = inject(KodiService);
+  private readonly mediaInfoService = inject(MediaInfoService);
 
   /** Episoden-ID aus der Route `/episodes/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -52,6 +54,7 @@ export class EpisodeDetail {
   protected readonly saving = signal(false);
   protected readonly refreshingKodi = signal(false);
   protected readonly importingPlayback = signal(false);
+  protected readonly probingStreams = signal(false);
   protected readonly artwork = computed(() => this.artworkService.forEpisode(this.id()));
   protected readonly episode = rxResource({
     params: () => this.id(),
@@ -88,6 +91,22 @@ export class EpisodeDetail {
       },
       error: (error: unknown) => {
         this.saving.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
+  /** Liest Codecs, Auflösung und Spuren mit ffprobe aus und schreibt sie in NFO und Bibliothek. */
+  protected probeStreams(): void {
+    this.probingStreams.set(true);
+    this.mediaInfoService.probeEpisode(this.id()).subscribe({
+      next: (streams) => {
+        this.probingStreams.set(false);
+        this.showStreams(streams);
+        this.notify('Technische Angaben ausgelesen.');
+      },
+      error: (error: unknown) => {
+        this.probingStreams.set(false);
         this.notify(problemMessage(error));
       },
     });
@@ -137,6 +156,10 @@ export class EpisodeDetail {
         extras: { ...details.extras, playCount: result.playCount, lastPlayed: result.lastPlayedAt },
       },
     );
+  }
+
+  private showStreams(streams: StreamDetails): void {
+    this.episode.update((details) => details && { ...details, extras: { ...details.extras, streams } });
   }
 
   private notify(message: string): void {

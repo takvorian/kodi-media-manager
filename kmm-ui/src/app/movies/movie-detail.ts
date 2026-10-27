@@ -11,8 +11,9 @@ import { RouterLink } from '@angular/router';
 
 import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
+import { MediaInfoService } from '../media-info/media-info.service';
 import { problemMessage } from '../shared/problem-message';
-import { StreamDetailsView } from '../shared/stream-details';
+import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
 import { MAX_YEAR, MIN_YEAR, createMovieMetadataForm, toFormValue, toMetadata } from './movie-metadata-form';
@@ -43,6 +44,7 @@ const SNACKBAR_DURATION_MS = 5000;
 export class MovieDetail {
   private readonly movieService = inject(MovieService);
   private readonly kodiService = inject(KodiService);
+  private readonly mediaInfoService = inject(MediaInfoService);
   private readonly snackBar = inject(MatSnackBar);
 
   /** Film-ID aus der Route {@code /movies/:id}. */
@@ -55,6 +57,7 @@ export class MovieDetail {
   protected readonly searchingOnline = signal(false);
   protected readonly refreshingKodi = signal(false);
   protected readonly importingPlayback = signal(false);
+  protected readonly probingStreams = signal(false);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),
@@ -134,6 +137,22 @@ export class MovieDetail {
     });
   }
 
+  /** Liest Codecs, Auflösung und Spuren mit ffprobe aus und schreibt sie in NFO und Bibliothek. */
+  protected probeStreams(): void {
+    this.probingStreams.set(true);
+    this.mediaInfoService.probeMovie(this.id()).subscribe({
+      next: (streams) => {
+        this.probingStreams.set(false);
+        this.showStreams(streams);
+        this.notify('Technische Angaben ausgelesen.');
+      },
+      error: (error: unknown) => {
+        this.probingStreams.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
   protected reset(): void {
     if (this.movie.hasValue()) {
       this.showInForm(this.movie.value());
@@ -151,6 +170,10 @@ export class MovieDetail {
         supplement: { ...details.supplement, playCount: result.playCount, lastPlayed: result.lastPlayedAt },
       },
     );
+  }
+
+  private showStreams(streams: StreamDetails): void {
+    this.movie.update((details) => details && { ...details, streams });
   }
 
   private notify(message: string): void {

@@ -73,8 +73,12 @@ class MovieLibrarySynchronizer {
         movieRepository.deleteAll(removed);
         sourceService.markScanned(sourceId, clock.instant());
         int unchanged = known.size() - removed.size() - outcome.updated;
+        List<Long> withoutStreams = outcome.added.stream()
+                .filter(movie -> movie.streamDetails().isEmpty())
+                .map(Movie::getId)
+                .toList();
         return new ScanResult(sourceId, outcome.added.size(), outcome.updated, removed.size(), unchanged,
-                outcome.nfoErrors);
+                outcome.nfoErrors, withoutStreams);
     }
 
     private Movie newMovie(long sourceId, ScannedMovie scanned, Outcome outcome) {

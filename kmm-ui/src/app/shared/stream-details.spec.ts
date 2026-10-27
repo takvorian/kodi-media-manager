@@ -30,9 +30,28 @@ describe('stream details', () => {
         language: null,
       }),
     ).toBe('');
-    expect(audioLabel({ codec: 'opus', language: null, channels: 3, bitrate: null })).toBe('opus · 3 Kanäle');
+    expect(audioLabel({ codec: 'opus', language: null, channels: 3, bitrate: null })).toBe('Opus · 3 Kanäle');
+    expect(audioLabel({ codec: 'dtshd_ma', language: 'deu', channels: 8, bitrate: null })).toBe('deu · DTS-HD MA · 7.1');
     expect(audioLabel({ codec: null, language: 'eng', channels: 2, bitrate: null })).toBe('eng · Stereo');
     expect(subtitleLabel({ language: null, forced: false })).toBe('unbekannt');
+    expect(subtitleLabel({ language: 'deu', forced: true, path: '/filme/Heat.de.forced.srt' })).toBe(
+      'deu (erzwungen, extern)',
+    );
+    expect(subtitleLabel({ language: 'eng', forced: false, path: '' })).toBe('eng (extern)');
+    expect(
+      videoLabel({
+        codec: 'hevc',
+        aspect: null,
+        width: null,
+        height: null,
+        durationSeconds: null,
+        bitrate: null,
+        scanType: null,
+        stereoMode: null,
+        language: null,
+        hdrType: 'hdr10',
+      }),
+    ).toBe('H.265 · HDR10');
   });
 
   it('shows a hint without streams', async () => {

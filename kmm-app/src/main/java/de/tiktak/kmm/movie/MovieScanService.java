@@ -72,7 +72,8 @@ public class MovieScanService {
         log.info("Scanned source '{}': {} added, {} updated, {} removed, {} unchanged, {} NFO errors",
                 source.getName(), result.added(), result.updated(), result.removed(), result.unchanged(),
                 result.nfoErrors());
-        events.publishEvent(new MovieSourceScannedEvent(source.getId(), result.added(), result.removed()));
+        events.publishEvent(new MovieSourceScannedEvent(source.getId(), result.added(), result.removed(),
+                result.newWithoutStreams()));
         return result;
     }
 

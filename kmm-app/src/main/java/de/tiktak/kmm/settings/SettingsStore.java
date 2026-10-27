@@ -28,6 +28,9 @@ class SettingsStore {
     static final String TV_METADATA_LANGUAGE = "tv-metadata-language";
     static final String TV_ARTWORK_LANGUAGE = "tv-artwork-language";
     static final String TV_EPISODE_ORDERING = "tv-episode-ordering";
+    static final String FFPROBE_PATH = "ffprobe-path";
+    static final String PROBE_ON_SCRAPE = "probe-on-scrape";
+    static final String PROBE_NEW_FILES = "probe-new-files";
 
     private static final String LINE_SEPARATOR = "\n";
 
@@ -48,7 +51,16 @@ class SettingsStore {
                 new TvSettings(
                         values.getOrDefault(TV_METADATA_LANGUAGE, metadataLanguage),
                         values.getOrDefault(TV_ARTWORK_LANGUAGE, artworkLanguage),
-                        EpisodeOrdering.valueOf(values.getOrDefault(TV_EPISODE_ORDERING, EpisodeOrdering.AIRED.name()))));
+                        EpisodeOrdering.valueOf(values.getOrDefault(TV_EPISODE_ORDERING, EpisodeOrdering.AIRED.name()))),
+                mediaInfo(values));
+    }
+
+    private static MediaInfoSettings mediaInfo(Map<String, String> values) {
+        MediaInfoSettings defaults = MediaInfoSettings.DEFAULTS;
+        return new MediaInfoSettings(
+                values.getOrDefault(FFPROBE_PATH, defaults.ffprobePath()),
+                Boolean.parseBoolean(values.getOrDefault(PROBE_ON_SCRAPE, String.valueOf(defaults.probeOnScrape()))),
+                Boolean.parseBoolean(values.getOrDefault(PROBE_NEW_FILES, String.valueOf(defaults.probeNewFiles()))));
     }
 
     void save(KmmSettings settings) {
@@ -64,6 +76,9 @@ class SettingsStore {
         put(TV_METADATA_LANGUAGE, settings.tv().metadataLanguage());
         put(TV_ARTWORK_LANGUAGE, settings.tv().artworkLanguage());
         put(TV_EPISODE_ORDERING, settings.tv().episodeOrdering().name());
+        put(FFPROBE_PATH, settings.mediaInfo().ffprobePath());
+        put(PROBE_ON_SCRAPE, String.valueOf(settings.mediaInfo().probeOnScrape()));
+        put(PROBE_NEW_FILES, String.valueOf(settings.mediaInfo().probeNewFiles()));
     }
 
     private void put(String key, String value) {

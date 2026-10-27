@@ -10,6 +10,7 @@ import de.tiktak.kmm.artwork.ArtworkService;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieQueryService;
 import de.tiktak.kmm.movie.MovieScrapeService;
@@ -33,6 +34,7 @@ public class AutoScrapeService {
     public static final String JOB_KEY_PREFIX = "auto-scrape:";
     static final String NO_METADATA_SCRAPER = "Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.";
     private static final String UNEXPECTED_ERROR = "unerwarteter Fehler";
+    static final String TECHNICAL_DETAILS = "Technische Angaben: ";
 
     private final MediaSourceService sourceService;
     private final MovieQueryService queryService;
@@ -41,6 +43,7 @@ public class AutoScrapeService {
     private final ArtworkService artworkService;
     private final JobService jobService;
     private final TvAutoScrapeRunner tvRunner;
+    private final StreamDetailsService streamDetails;
 
     /**
      * @throws AutoScrapeNotPossibleException wenn die Quelle weder Filme noch Serien enthält
@@ -76,7 +79,11 @@ public class AutoScrapeService {
     private void scrapeMovie(long movieId, String title, AutoScrapeProgress progress) {
         try {
             switch (scrapeService.scrapeMissingMetadata(movieId)) {
-                case SCRAPED -> progress.scraped();
+                case SCRAPED -> {
+                    progress.scraped();
+                    streamDetails.probeMovieAfterScrape(movieId)
+                            .ifPresent(failure -> progress.failed(title, TECHNICAL_DETAILS + failure));
+                }
                 case NO_MATCH -> progress.unmatched(title);
                 case NO_SCRAPER -> progress.warn(NO_METADATA_SCRAPER);
                 case ALREADY_IDENTIFIED -> {

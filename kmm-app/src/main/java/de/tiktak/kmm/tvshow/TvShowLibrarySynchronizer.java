@@ -62,7 +62,8 @@ class TvShowLibrarySynchronizer {
         }
         sourceService.markScanned(sourceId, clock.instant());
         return new TvShowScanResult(sourceId, outcome.showsAdded, outcome.showsRemoved, outcome.added,
-                outcome.updated, outcome.removed, outcome.unchanged, outcome.nfoErrors, unrecognizedFiles);
+                outcome.updated, outcome.removed, outcome.unchanged, outcome.nfoErrors, unrecognizedFiles,
+                outcome.newWithoutStreams);
     }
 
     /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs, damit der Scan nur geänderte liest. */
@@ -120,6 +121,8 @@ class TvShowLibrarySynchronizer {
             }
         }
         episodeRepository.saveAll(created);
+        created.stream().filter(episode -> !episode.hasStreamDetails())
+                .forEach(episode -> outcome.newWithoutStreams.add(episode.getId()));
         episodeRepository.deleteAll(remaining.values());
         outcome.removed += remaining.size();
     }
@@ -211,5 +214,6 @@ class TvShowLibrarySynchronizer {
         private int removed;
         private int unchanged;
         private int nfoErrors;
+        private final List<Long> newWithoutStreams = new ArrayList<>();
     }
 }

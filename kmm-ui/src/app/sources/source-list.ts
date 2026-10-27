@@ -6,6 +6,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -16,6 +17,15 @@ import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { KODI_PLAYBACK_JOB_KEY_PREFIX, kodiPlaybackJobKey, kodiPlaybackSummary, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
+import {
+  NEW_FILES_STREAM_DETAILS_JOB_KEY_PREFIX,
+  STREAM_DETAILS_JOB_KEY_PREFIX,
+  StreamDetailsScope,
+  newFilesStreamDetailsJobKey,
+  streamDetailsJobKey,
+  streamDetailsSummary,
+} from '../media-info/media-info';
+import { MediaInfoService } from '../media-info/media-info.service';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import {
@@ -48,6 +58,7 @@ export interface ScrapeReport {
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    MatMenuModule,
     MatProgressBarModule,
     MatSelectModule,
     MatTableModule,
@@ -59,6 +70,7 @@ export class SourceList {
   private readonly sourceService = inject(MediaSourceService);
   private readonly jobStore = inject(JobStore);
   private readonly kodiService = inject(KodiService);
+  private readonly mediaInfoService = inject(MediaInfoService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
 
@@ -94,6 +106,16 @@ export class SourceList {
         takeUntilDestroyed(),
       )
       .subscribe((job) => this.notify(kodiPlaybackSummary(job)));
+    this.jobStore.completed
+      .pipe(
+        filter(
+          (job) =>
+            job.key.startsWith(STREAM_DETAILS_JOB_KEY_PREFIX) ||
+            job.key.startsWith(NEW_FILES_STREAM_DETAILS_JOB_KEY_PREFIX),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => this.notify(streamDetailsSummary(job)));
   }
 
   protected mediaTypeLabel(mediaType: MediaType): string {
@@ -110,12 +132,17 @@ export class SourceList {
     return this.canScan(source);
   }
 
-  /** Laufender Job der Quelle (Scan, Scrapen, Gesehen-Status); sie schließen sich in der Oberfläche aus. */
+  /**
+   * Laufender Job der Quelle (Scan, Scrapen, Gesehen-Status, technische Angaben); sie schließen sich in der
+   * Oberfläche aus.
+   */
   protected runningJob(source: MediaSource): Job | undefined {
     return (
       this.jobStore.runningJob(scanJobKey(source.id)) ??
       this.jobStore.runningJob(autoScrapeJobKey(source.id)) ??
-      this.jobStore.runningJob(kodiPlaybackJobKey(source.id))
+      this.jobStore.runningJob(kodiPlaybackJobKey(source.id)) ??
+      this.jobStore.runningJob(streamDetailsJobKey(source.id)) ??
+      this.jobStore.runningJob(newFilesStreamDetailsJobKey(source.id))
     );
   }
 
@@ -161,6 +188,11 @@ export class SourceList {
   /** Holt den Gesehen-Status aller Filme bzw. Episoden der Quelle aus Kodi. */
   protected importPlayback(source: MediaSource): void {
     this.track(this.kodiService.importSourcePlayback(source.id));
+  }
+
+  /** Liest die technischen Angaben der Filme bzw. Episoden mit ffprobe aus. */
+  protected probeStreams(source: MediaSource, scope: StreamDetailsScope): void {
+    this.track(this.mediaInfoService.probeSource(source.id, scope));
   }
 
   protected closeScrapeReport(): void {

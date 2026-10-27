@@ -188,6 +188,30 @@ describe('MovieDetail', () => {
     expect(button('.kodi-playback-button').disabled).toBe(false);
   });
 
+  it('reads the technical details with ffprobe', async () => {
+    await load(heat);
+
+    button('.stream-details-button').click();
+    fixture.detectChanges();
+    expect(button('.stream-details-button').disabled).toBe(true);
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/movies/5/stream-details' }).flush({
+      videos: [],
+      audios: [{ codec: 'truehd', language: 'deu', channels: 8, bitrate: null }],
+      subtitles: [],
+    });
+    await fixture.whenStable();
+
+    expect(element().querySelector('app-stream-details')?.textContent).toContain('Dolby TrueHD');
+    button('.stream-details-button').click();
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/movies/5/stream-details' })
+      .flush({ detail: 'ffprobe kann nicht gestartet werden' }, { status: 422, statusText: 'Unprocessable' });
+    fixture.detectChanges();
+
+    expect(snackBarMessages).toEqual(['Technische Angaben ausgelesen.', 'ffprobe kann nicht gestartet werden']);
+    expect(button('.stream-details-button').disabled).toBe(false);
+  });
+
   it('announces where a missing NFO will be created', async () => {
     await load({ ...heat, nfo: { path: '/media/filme/Heat.nfo', exists: false, modifiedAt: null } });
 

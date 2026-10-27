@@ -27,6 +27,7 @@ import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
@@ -35,6 +36,7 @@ import com.sun.net.httpserver.HttpServer;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
+import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.movie.MovieController;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
@@ -72,6 +74,9 @@ class AutoScrapeIntegrationTest {
 
     @Autowired
     private JdbcClient jdbcClient;
+
+    @MockitoBean
+    private StreamDetailsService streamDetails;
 
     @DynamicPropertySource
     static void plugins(DynamicPropertyRegistry registry) throws IOException {

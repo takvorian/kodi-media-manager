@@ -23,6 +23,7 @@ import de.tiktak.kmm.artwork.ArtworkFillResult;
 import de.tiktak.kmm.artwork.TvShowArtworkService;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
+import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome.Status;
 import de.tiktak.kmm.tvshow.TvShowDetails;
@@ -51,6 +52,9 @@ class TvAutoScrapeRunnerTest {
     @Mock
     private JobContext context;
 
+    @Mock
+    private StreamDetailsService streamDetails;
+
     @InjectMocks
     private TvAutoScrapeRunner runner;
 
@@ -69,6 +73,7 @@ class TvAutoScrapeRunnerTest {
         when(scrapeService.scrapeMissing(4L)).thenThrow(new IllegalStateException("kaputt"));
         when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(2, List.of("POSTER: 404")));
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(1, List.of()));
+        when(streamDetails.probeEpisodesAfterScrape(2L)).thenReturn(List.of("ffprobe fehlt"));
 
         TvAutoScrapeResult result = runner.run(SOURCE_ID, context);
 
@@ -77,9 +82,11 @@ class TvAutoScrapeRunnerTest {
         assertThat(result.episodesUpdated()).isEqualTo(4);
         assertThat(result.imagesSaved()).isEqualTo(3);
         assertThat(result.warnings()).containsExactly(TvAutoScrapeRunner.NO_TV_SHOW_SCRAPER, "POSTER: 404");
-        assertThat(result.failures()).hasSize(3)
+        assertThat(result.failures()).contains("Lost: Technische Angaben: ffprobe fehlt");
+        verify(streamDetails, never()).probeEpisodesAfterScrape(1L);
+        assertThat(result.failures()).hasSize(4)
                 .first().asString().isEqualTo("Lost: NFO nicht geschrieben: /lost/x.nfo");
-        assertThat(result.failures().get(2)).isEqualTo("Defekt: unerwarteter Fehler");
+        assertThat(result.failures().get(3)).isEqualTo("Defekt: unerwarteter Fehler");
         verify(context).reportProgress(4, 4, null);
     }
 

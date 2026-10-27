@@ -17,6 +17,15 @@ export interface TvSettings {
   readonly episodeOrdering: EpisodeOrdering;
 }
 
+/** Einstellungen für ffprobe, das die technischen Angaben ausliest. */
+export interface MediaInfoSettings {
+  readonly ffprobePath: string;
+  /** Nach dem automatischen Scrapen auslesen, wie Embers „MetaDataScan“. */
+  readonly probeOnScrape: boolean;
+  /** Neue Dateien ohne Angaben in der NFO nach dem Scan auslesen. */
+  readonly probeNewFiles: boolean;
+}
+
 export type ApiKeyName = 'TMDB_API_KEY' | 'TVDB_API_KEY' | 'TVDB_PIN' | 'FANARTTV_API_KEY' | 'FANARTTV_CLIENT_KEY';
 
 /** Zustand eines API-Keys; der Key selbst wird nie ausgeliefert. */
@@ -36,6 +45,7 @@ export interface SettingsView {
   readonly excludedPaths: readonly string[];
   readonly proxy: ProxyView | null;
   readonly tv: TvSettings;
+  readonly mediaInfo: MediaInfoSettings;
   readonly overridden: readonly SettingsField[];
 }
 
@@ -55,4 +65,5 @@ export interface KmmSettings {
   readonly excludedPaths: readonly string[];
   readonly proxy: ProxySettings | null;
   readonly tv: TvSettings;
+  readonly mediaInfo: MediaInfoSettings;
 }

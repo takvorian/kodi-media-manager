@@ -15,6 +15,8 @@ import de.tiktak.kmm.nfo.EpisodeNfoReader;
 import de.tiktak.kmm.nfo.EpisodeNfoWriter;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.PlaybackNfoWriter;
+import de.tiktak.kmm.nfo.StreamDetails;
+import de.tiktak.kmm.nfo.StreamDetailsNfoWriter;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.nfo.TvShowNfoReader;
 import de.tiktak.kmm.nfo.TvShowNfoWriter;
@@ -33,6 +35,7 @@ class TvShowNfoFiles {
     private final EpisodeNfoReader episodeReader = new EpisodeNfoReader();
     private final EpisodeNfoWriter episodeWriter = new EpisodeNfoWriter();
     private final PlaybackNfoWriter playbackWriter = new PlaybackNfoWriter();
+    private final StreamDetailsNfoWriter streamDetailsWriter = new StreamDetailsNfoWriter();
 
     Optional<TvNfoState> findShowNfo(Path showDirectory) {
         return state(TvShowFiles.tvShowNfo(showDirectory));
@@ -92,6 +95,16 @@ class TvShowNfoFiles {
      */
     TvNfoState writePlayback(TvNfoState nfo, int season, int episode, Integer playCount, LocalDateTime lastPlayed) {
         playbackWriter.writeEpisode(nfo.file(), season, episode, playCount, lastPlayed);
+        return written(nfo.file());
+    }
+
+    /**
+     * Ersetzt nur die technischen Angaben einer Episode in der vorhandenen NFO.
+     *
+     * @throws NfoException wenn die NFO die Episode nicht enthält oder nicht geschrieben werden kann
+     */
+    TvNfoState writeStreamDetails(TvNfoState nfo, int season, int episode, StreamDetails details) {
+        streamDetailsWriter.writeEpisode(nfo.file(), season, episode, details);
         return written(nfo.file());
     }
 

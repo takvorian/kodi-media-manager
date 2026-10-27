@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -31,6 +32,7 @@ import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.job.JobTask;
 import de.tiktak.kmm.movie.MetadataScrapeOutcome;
@@ -71,6 +73,9 @@ class AutoScrapeServiceTest {
 
     @Mock
     private TvAutoScrapeRunner tvRunner;
+
+    @Mock
+    private StreamDetailsService streamDetails;
 
     @InjectMocks
     private AutoScrapeService service;
@@ -129,12 +134,15 @@ class AutoScrapeServiceTest {
         when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(7, List.of("fanart.tv: Key fehlt")));
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(0, List.of()));
         when(artworkService.fillMissing(3L)).thenReturn(new ArtworkFillResult(2, List.of("fanart.tv: Key fehlt")));
+        when(streamDetails.probeMovieAfterScrape(1L)).thenReturn(Optional.of("ffprobe fehlt"));
         RecordingContext context = new RecordingContext(false);
 
         AutoScrapeResult result = service.run(SOURCE_ID, context);
 
         assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, List.of("Unbekannt"),
-                List.of("Kaputt: TMDB ist nicht erreichbar"), List.of("fanart.tv: Key fehlt")));
+                List.of("Heat: Technische Angaben: ffprobe fehlt", "Kaputt: TMDB ist nicht erreichbar"),
+                List.of("fanart.tv: Key fehlt")));
+        verify(streamDetails, never()).probeMovieAfterScrape(3L);
         assertThat(context.progress).containsExactly("0/4 Heat", "1/4 Unbekannt", "2/4 Ronin", "3/4 Kaputt",
                 "4/4 null");
         verify(artworkService, never()).fillMissing(4L);

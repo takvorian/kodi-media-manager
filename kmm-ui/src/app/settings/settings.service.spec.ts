@@ -13,6 +13,7 @@ describe('SettingsService', () => {
     excludedPaths: [],
     proxy: null,
     tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
+    mediaInfo: { ffprobePath: 'ffprobe', probeOnScrape: true, probeNewFiles: true },
     overridden: [],
   };
 

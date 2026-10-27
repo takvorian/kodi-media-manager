@@ -29,7 +29,8 @@ class SettingsControllerTest {
 
     private static final SettingsView VIEW = new SettingsView("de-DE", "de", List.of("mkv"), List.of(),
             new SettingsView.Proxy("proxy.local", 3128, "user", true),
-            new TvSettings("en-US", "en", EpisodeOrdering.DVD), Set.of(SettingsField.ARTWORK_LANGUAGE));
+            new TvSettings("en-US", "en", EpisodeOrdering.DVD), MediaInfoSettings.DEFAULTS,
+            Set.of(SettingsField.ARTWORK_LANGUAGE));
 
     private static final String KEYS = SettingsController.BASE_PATH + SettingsController.API_KEYS_PATH;
 

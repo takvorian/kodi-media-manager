@@ -15,6 +15,7 @@ describe('SettingsPage', () => {
     excludedPaths: ['/media/privat'],
     proxy: { host: 'proxy.local', port: 3128, username: 'user', passwordSet: true },
     tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
+    mediaInfo: { ffprobePath: 'ffprobe', probeOnScrape: true, probeNewFiles: true },
     overridden: [],
   };
   const keys: ApiKeyView[] = [
@@ -106,6 +107,7 @@ describe('SettingsPage', () => {
       excludedPaths: ['/media/privat', '/media/tmp'],
       proxy: { host: 'proxy.local', port: 3128, username: 'user', password: null },
       tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
+      mediaInfo: { ffprobePath: 'ffprobe', probeOnScrape: true, probeNewFiles: true },
     });
     expect(snackBarMessages).toEqual(['Einstellungen gespeichert.']);
     expect(field('videoExtensions').value).toBe('mkv, iso');
@@ -120,6 +122,22 @@ describe('SettingsPage', () => {
 
     const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
     expect(request.request.body.tv).toEqual({ metadataLanguage: 'en-US', artworkLanguage: 'de', episodeOrdering: 'DVD' });
+    request.flush(stored);
+  });
+
+  it('saves the ffprobe settings', async () => {
+    await load(stored);
+
+    await type('ffprobePath', ' C:\ffmpeg\bin\ffprobe.exe ');
+    element().querySelector<HTMLInputElement>('[name="probeNewFiles"] input')!.click();
+    button('.save-button').click();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
+    expect(request.request.body.mediaInfo).toEqual({
+      ffprobePath: 'C:\ffmpeg\bin\ffprobe.exe',
+      probeOnScrape: true,
+      probeNewFiles: false,
+    });
     request.flush(stored);
   });
 
@@ -169,7 +187,7 @@ describe('SettingsPage', () => {
   it('sends no proxy when it is switched off', async () => {
     await load(stored);
 
-    element().querySelector<HTMLInputElement>('mat-checkbox input')!.click();
+    element().querySelector<HTMLInputElement>('[name="proxyEnabled"] input')!.click();
     await fixture.whenStable();
     button('.save-button').click();
 
@@ -181,7 +199,7 @@ describe('SettingsPage', () => {
   it('requires a proxy host when the proxy is switched on', async () => {
     await load({ ...stored, proxy: null });
 
-    element().querySelector<HTMLInputElement>('mat-checkbox input')!.click();
+    element().querySelector<HTMLInputElement>('[name="proxyEnabled"] input')!.click();
     await fixture.whenStable();
     button('.save-button').click();
     fixture.detectChanges();

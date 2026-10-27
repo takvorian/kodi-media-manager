@@ -61,6 +61,12 @@ class EmberSettingsXml {
     @JsonProperty("TVScraperOptionsOrdering")
     private String tvOrdering;
 
+    @JsonProperty("MovieScraperMetaDataScan")
+    private Boolean movieMetaDataScan;
+
+    @JsonProperty("TVScraperMetaDataScan")
+    private Boolean tvMetaDataScan;
+
     EmberSettings toSettings() {
         return new EmberSettings(
                 version,
@@ -71,7 +77,16 @@ class EmberSettingsXml {
                 blankToNull(movieLanguage),
                 movieImagesForceLanguage ? blankToNull(movieImagesForcedLanguage) : null,
                 new EmberTvSettings(blankToNull(tvLanguage),
-                        tvImagesForceLanguage ? blankToNull(tvImagesForcedLanguage) : null, blankToNull(tvOrdering)));
+                        tvImagesForceLanguage ? blankToNull(tvImagesForcedLanguage) : null, blankToNull(tvOrdering)),
+                metaDataScan());
+    }
+
+    /** Ember schaltet das Auslesen der Mediendaten beim Scrapen für Filme und Serien getrennt. */
+    private Boolean metaDataScan() {
+        if (movieMetaDataScan == null && tvMetaDataScan == null) {
+            return null;
+        }
+        return Boolean.TRUE.equals(movieMetaDataScan) || Boolean.TRUE.equals(tvMetaDataScan);
     }
 
     private Optional<EmberProxySettings> toProxySettings() {

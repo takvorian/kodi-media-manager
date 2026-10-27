@@ -108,6 +108,28 @@ describe('EpisodeDetail', () => {
     expect(snackBarMessages).toEqual(['Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.', 'Kodi nicht erreichbar']);
   });
 
+  it('reads the technical details with ffprobe', async () => {
+    await load(gestatten);
+
+    element().querySelector<HTMLButtonElement>('.stream-details-button')!.click();
+    httpTesting.expectOne({ method: 'POST', url: `/api/v1/episodes/${gestatten.id}/stream-details` }).flush({
+      videos: [{ codec: 'hevc', aspect: 1.78, width: 3840, height: 2160, durationSeconds: null, bitrate: null,
+        scanType: null, stereoMode: null, language: null, hdrType: 'dolbyvision' }],
+      audios: [],
+      subtitles: [],
+    });
+    await fixture.whenStable();
+
+    expect(element().textContent).toContain('Dolby Vision');
+    element().querySelector<HTMLButtonElement>('.stream-details-button')!.click();
+    httpTesting
+      .expectOne({ method: 'POST', url: `/api/v1/episodes/${gestatten.id}/stream-details` })
+      .flush({ detail: 'kaputt' }, { status: 422, statusText: 'Unprocessable' });
+    fixture.detectChanges();
+
+    expect(snackBarMessages).toContain('kaputt');
+  });
+
   it('imports the watched status from Kodi', async () => {
     await load(gestatten);
 

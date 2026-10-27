@@ -61,6 +61,28 @@
 
     <mat-card appearance="outlined">
       <mat-card-header>
+        <mat-card-title>Technische Angaben</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <mat-form-field class="full">
+          <mat-label>ffprobe</mat-label>
+          <input matInput formControlName="ffprobePath" name="ffprobePath" />
+          <mat-hint>Pfad zu ffprobe (Teil von FFmpeg) oder nur „ffprobe“, wenn es auf dem PATH liegt</mat-hint>
+          <mat-error>Bitte einen Pfad angeben</mat-error>
+        </mat-form-field>
+        <div>
+          <mat-checkbox formControlName="probeOnScrape" name="probeOnScrape">Nach dem automatischen Scrapen auslesen</mat-checkbox>
+        </div>
+        <div>
+          <mat-checkbox formControlName="probeNewFiles" name="probeNewFiles">
+            Neue Dateien ohne Angaben in der NFO nach dem Scan auslesen
+          </mat-checkbox>
+        </div>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-header>
         <mat-card-title>Scan</mat-card-title>
       </mat-card-header>
       <mat-card-content>

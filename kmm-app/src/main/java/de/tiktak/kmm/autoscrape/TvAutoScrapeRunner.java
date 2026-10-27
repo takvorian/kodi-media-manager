@@ -11,6 +11,7 @@ import org.springframework.web.ErrorResponseException;
 import de.tiktak.kmm.artwork.ArtworkFillResult;
 import de.tiktak.kmm.artwork.TvShowArtworkService;
 import de.tiktak.kmm.job.JobContext;
+import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowQueryService;
@@ -35,6 +36,7 @@ class TvAutoScrapeRunner {
     private final TvShowMetadataService metadataService;
     private final TvShowScrapeService scrapeService;
     private final TvShowArtworkService artworkService;
+    private final StreamDetailsService streamDetails;
 
     TvAutoScrapeResult run(long sourceId, JobContext context) {
         List<Long> showIds = queryService.findShowIds(sourceId);
@@ -67,6 +69,10 @@ class TvAutoScrapeRunner {
             }
             progress.episodesUpdated += outcome.episodesUpdated();
             outcome.failedFiles().forEach(file -> progress.failed(title, "NFO nicht geschrieben: " + file));
+            if (outcome.status() == TvShowAutoScrapeOutcome.Status.SCRAPED || outcome.episodesUpdated() > 0) {
+                streamDetails.probeEpisodesAfterScrape(showId).forEach(
+                        failure -> progress.failed(title, AutoScrapeService.TECHNICAL_DETAILS + failure));
+            }
             ArtworkFillResult artwork = artworkService.fillMissing(showId);
             progress.imagesSaved += artwork.saved();
             artwork.warnings().forEach(progress::warn);

@@ -15,6 +15,7 @@ import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
 import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
+import de.tiktak.kmm.settings.MediaInfoSettings;
 import de.tiktak.kmm.settings.ProxySettings;
 import de.tiktak.kmm.settings.TvSettings;
 
@@ -71,9 +72,19 @@ final class EmberSettingsMapper {
         if (allExcluded.addAll(excludedPaths)) {
             changes.add("Ausgeschlossene Ordner: " + String.join(", ", excludedPaths));
         }
+        MediaInfoSettings mediaInfo = ember.map(settings -> mediaInfo(current.mediaInfo(), settings, changes))
+                .orElse(current.mediaInfo());
         KmmSettings imported = new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions,
-                List.copyOf(allExcluded), proxy, tv);
+                List.copyOf(allExcluded), proxy, tv, mediaInfo);
         return new SettingsImport(imported, changes);
+    }
+
+    private static MediaInfoSettings mediaInfo(MediaInfoSettings current, EmberSettings ember, List<String> changes) {
+        if (ember.metaDataScan() == null) {
+            return current;
+        }
+        changes.add("Technische Angaben beim Scrapen auslesen: " + (ember.metaDataScan() ? "ja" : "nein"));
+        return new MediaInfoSettings(current.ffprobePath(), ember.metaDataScan(), current.probeNewFiles());
     }
 
     private static TvSettings tv(TvSettings current, EmberTvSettings ember, List<String> changes) {
