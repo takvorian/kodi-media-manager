@@ -8,6 +8,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.job.ParallelReads;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.scanner.TvShowCandidate;

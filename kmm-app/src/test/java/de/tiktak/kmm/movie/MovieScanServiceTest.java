@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -40,6 +41,8 @@ import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.job.JobTask;
+import de.tiktak.kmm.nfo.MovieNfo;
+import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import de.tiktak.kmm.scanner.DiscFormat;
@@ -98,7 +101,7 @@ class MovieScanServiceTest {
     @Test
     void startedJobScansTheSource() {
         givenSource(MediaType.MOVIE, directory);
-        when(scanner.scan(directory)).thenReturn(List.of());
+        givenScannerFinds();
         when(synchronizer.synchronize(SOURCE_ID, List.of())).thenReturn(new ScanResult(SOURCE_ID, 0, 0, 0, 0, 0));
         service.startScan(SOURCE_ID);
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
@@ -116,7 +119,8 @@ class MovieScanServiceTest {
         var ronin = candidate("Ronin.mkv");
         var nfo = new NfoFileState(directory.resolve("Heat.nfo"), Instant.parse("2026-10-20T08:00:00Z"));
         var expected = new ScanResult(SOURCE_ID, 2, 0, 0, 0, 0);
-        when(scanner.scan(directory)).thenReturn(List.of(heat, ronin));
+        givenScannerFinds(heat, ronin);
+        when(synchronizer.knownNfos(SOURCE_ID)).thenReturn(Map.of(heat.file().toString(), nfo.modifiedAt()));
         when(nfoFiles.find(CompanionFiles.of(heat.file(), DiscFormat.FILE, 1))).thenReturn(Optional.of(nfo));
         when(nfoFiles.find(CompanionFiles.of(ronin.file(), DiscFormat.FILE, 1))).thenReturn(Optional.empty());
         when(synchronizer.synchronize(SOURCE_ID, List.of(
@@ -127,16 +131,46 @@ class MovieScanServiceTest {
         assertThat(service.scan(source, directory, context)).isEqualTo(expected);
         assertThat(context.progress).containsExactly(
                 "0/0 " + MovieScanService.SEARCHING_MESSAGE,
+                "1/1 " + MovieScanService.SEARCHING_MESSAGE,
                 "1/2 " + MovieScanService.CHECKING_NFOS_MESSAGE,
                 "2/2 " + MovieScanService.CHECKING_NFOS_MESSAGE,
                 "2/2 " + MovieScanService.SYNCHRONIZING_MESSAGE);
         verify(events).publishEvent(new MovieSourceScannedEvent(SOURCE_ID, 2, 0));
+        verify(nfoFiles, never()).read(any());
+    }
+
+    @Test
+    void readsNewAndChangedNfosBeforeSynchronizing() {
+        MediaSource source = givenSource(MediaType.MOVIE, directory);
+        var heat = candidate("Heat.mkv");
+        var ronin = candidate("Ronin.mkv");
+        var heatNfo = new NfoFileState(directory.resolve("Heat.nfo"), Instant.parse("2026-10-20T08:00:00Z"));
+        var roninNfo = new NfoFileState(directory.resolve("Ronin.nfo"), Instant.parse("2026-10-20T08:00:00Z"));
+        MovieNfo heatContent = mock(MovieNfo.class);
+        givenScannerFinds(heat, ronin);
+        when(synchronizer.knownNfos(SOURCE_ID))
+                .thenReturn(Map.of(heat.file().toString(), Instant.parse("2026-10-01T08:00:00Z")));
+        when(nfoFiles.find(CompanionFiles.of(heat.file(), DiscFormat.FILE, 1))).thenReturn(Optional.of(heatNfo));
+        when(nfoFiles.find(CompanionFiles.of(ronin.file(), DiscFormat.FILE, 1))).thenReturn(Optional.of(roninNfo));
+        when(nfoFiles.read(heatNfo)).thenReturn(heatContent);
+        when(nfoFiles.read(roninNfo)).thenThrow(mock(NfoException.class));
+        ArgumentCaptor<List<ScannedMovie>> scanned = ArgumentCaptor.forClass(List.class);
+        when(synchronizer.synchronize(eq(SOURCE_ID), scanned.capture()))
+                .thenReturn(new ScanResult(SOURCE_ID, 1, 1, 0, 0, 1));
+
+        service.scan(source, directory, new RecordingContext(false));
+
+        assertThat(scanned.getValue()).extracting(ScannedMovie::candidate).containsExactly(heat, ronin);
+        assertThat(scanned.getValue().getFirst().loaded()).hasValueSatisfying(
+                loaded -> assertThat(loaded.content()).isSameAs(heatContent));
+        assertThat(scanned.getValue().getLast().loaded()).hasValueSatisfying(
+                loaded -> assertThatThrownBy(loaded::content).isInstanceOf(NfoException.class));
     }
 
     @Test
     void stopsBeforeTouchingLibraryWhenCancelled() {
         MediaSource source = givenSource(MediaType.MOVIE, directory);
-        when(scanner.scan(directory)).thenReturn(List.of(candidate("Heat.mkv")));
+        givenScannerFinds(candidate("Heat.mkv"));
 
         assertThatExceptionOfType(JobCancelledException.class)
                 .isThrownBy(() -> service.scan(source, directory, new RecordingContext(true)));
@@ -168,11 +202,20 @@ class MovieScanServiceTest {
     @Test
     void reportsScannerFailureAsUnreachable() {
         MediaSource source = givenSource(MediaType.MOVIE, directory);
-        when(scanner.scan(directory)).thenThrow(new UncheckedIOException(new IOException("network lost")));
+        when(scanner.scan(eq(directory), any())).thenThrow(new UncheckedIOException(new IOException("network lost")));
 
         assertThatThrownBy(() -> service.scan(source, directory, new RecordingContext(false)))
                 .isInstanceOf(SourceNotScannableException.class);
         verify(synchronizer, never()).synchronize(anyLong(), anyList());
+    }
+
+    /** Der Scanner findet die Filme in einem einzigen Unterordner. */
+    private void givenScannerFinds(MovieCandidate... candidates) {
+        when(scanner.scan(eq(directory), any())).thenAnswer(invocation -> {
+            MovieDirectoryScanner.SubtreeScanner subtrees = invocation.getArgument(1);
+            return subtrees.scanAll(List.of(directory.resolve("Filme")), subdirectory -> List.of(candidates))
+                    .getFirst();
+        });
     }
 
     private MovieCandidate candidate(String fileName) {

@@ -3,6 +3,7 @@ package de.tiktak.kmm.movie;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,6 +36,18 @@ class MovieLibrarySynchronizer {
     private final MovieNfoFiles nfoFiles;
     private final MovieSets movieSets;
     private final Clock clock;
+
+    /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs je Filmdatei, damit der Scan nur geänderte liest. */
+    @Transactional(readOnly = true)
+    Map<String, Instant> knownNfos(long sourceId) {
+        Map<String, Instant> known = new HashMap<>();
+        for (Object[] row : movieRepository.findNfoTimestampsBySourceId(sourceId)) {
+            if (row[1] != null) {
+                known.put((String) row[0], (Instant) row[1]);
+            }
+        }
+        return known;
+    }
 
     @Transactional
     ScanResult synchronize(long sourceId, List<ScannedMovie> scannedMovies) {
@@ -90,7 +103,7 @@ class MovieLibrarySynchronizer {
         }
         NfoFileState nfoFile = scanned.nfo().get();
         try {
-            MovieNfo nfo = nfoFiles.read(nfoFile);
+            MovieNfo nfo = scanned.loaded().isPresent() ? scanned.loaded().get().content() : nfoFiles.read(nfoFile);
             movie.applyMetadata(MovieNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
             applySupplement(movie, nfo.supplement());
             movie.markNfoSynchronized(nfoFile.modifiedAt());

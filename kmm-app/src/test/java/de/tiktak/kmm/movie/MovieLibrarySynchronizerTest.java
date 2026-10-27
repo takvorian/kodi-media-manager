@@ -224,6 +224,34 @@ class MovieLibrarySynchronizerTest {
         return new Movie(SOURCE_ID, ROOT.resolve(fileName).toString(), title, null, DiscFormat.FILE, 1);
     }
 
+    @Test
+    void usesNfoReadDuringTheScanInsteadOfReadingAgain() {
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of());
+        ScannedMovie read = scannedWithNfo("Heat.mkv", "Heat", null);
+        ScannedMovie preloaded = new ScannedMovie(read.candidate(), read.nfo(),
+                Optional.of(LoadedMovieNfo.read(() -> nfo("Heat – Die Saga", 1995, null))));
+        ScannedMovie broken = scannedWithNfo("Ronin.mkv", "Ronin", null);
+        ScannedMovie brokenPreloaded = new ScannedMovie(broken.candidate(), broken.nfo(),
+                Optional.of(LoadedMovieNfo.read(() -> {
+                    throw unreadableNfo();
+                })));
+
+        ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(preloaded, brokenPreloaded));
+
+        assertThat(result.nfoErrors()).isEqualTo(1);
+        verify(movieRepository).saveAll(moviesCaptor.capture());
+        assertThat(moviesCaptor.getValue()).extracting(Movie::getTitle).containsExactly("Heat – Die Saga", "Ronin");
+        verify(nfoFiles, never()).read(any());
+    }
+
+    @Test
+    void knowsTheNfoTimesOfMoviesWithReadNfo() {
+        when(movieRepository.findNfoTimestampsBySourceId(SOURCE_ID)).thenReturn(List.of(
+                new Object[] {"/filme/Heat.mkv", NFO_TIME}, new Object[] {"/filme/Ronin.mkv", null}));
+
+        assertThat(synchronizer.knownNfos(SOURCE_ID)).containsExactly(Map.entry("/filme/Heat.mkv", NFO_TIME));
+    }
+
     private static ScannedMovie scanned(String fileName, String title, Integer year) {
         return new ScannedMovie(candidate(fileName, title, year), Optional.empty());
     }

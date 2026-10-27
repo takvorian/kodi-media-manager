@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
@@ -174,6 +175,35 @@ class MovieDirectoryScannerTest {
                 ScanRules.DEFAULT_IGNORED_DIRECTORIES, Set.of(root.resolve("Privat"))), new MovieNameParser());
 
         assertThat(customScanner.scan(root)).extracting(MovieCandidate::title).containsExactly("Heat");
+    }
+
+    @Test
+    void scansEverySubdirectoryOfTheRootWithTheGivenStrategy() throws IOException {
+        Path heat = file("Heat (1995)/Heat (1995).mkv");
+        Path ronin = file("Ronin (1998)/VIDEO_TS/VIDEO_TS.IFO");
+        Path matrix = file("The.Matrix.1999.mkv");
+        file("Extras/Making of.mkv");
+        List<Path> scannedDirectories = new ArrayList<>();
+
+        List<MovieCandidate> candidates = scanner.scan(root, (directories, scan) -> {
+            scannedDirectories.addAll(directories);
+            return directories.reversed().stream().map(scan).toList();
+        });
+
+        assertThat(scannedDirectories).containsExactlyInAnyOrder(
+                root.resolve("Heat (1995)"), root.resolve("Ronin (1998)"), root.resolve("Extras"));
+        assertThat(candidates).extracting(MovieCandidate::file).containsExactly(heat, ronin, matrix);
+        assertThat(candidates).extracting(MovieCandidate::title).containsExactly("Heat", "Ronin", "The Matrix");
+    }
+
+    @Test
+    void recognizesDiscFolderDirectlyInTheRoot() throws IOException {
+        Path marker = file("VIDEO_TS/VIDEO_TS.IFO");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.file()).isEqualTo(marker);
+            assertThat(candidate.format()).isEqualTo(DiscFormat.DVD);
+        });
     }
 
     private Path file(String relativePath) throws IOException {

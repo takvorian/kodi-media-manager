@@ -15,6 +15,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
 import lombok.RequiredArgsConstructor;
@@ -35,6 +37,9 @@ public class MovieDirectoryScanner {
 
     private static final Pattern NON_MOVIE_FILE = Pattern.compile("(?i)(?:^|[ ._-])(?:sample|trailer)$");
     private static final char EXTENSION_SEPARATOR = '.';
+    private static final int TOP_LEVEL_DEPTH = 1;
+    private static final Comparator<MovieCandidate> BY_FILE = Comparator.comparing(
+            candidate -> candidate.file().toString());
 
     private final ScanRules rules;
     private final MovieNameParser nameParser;
@@ -43,14 +48,42 @@ public class MovieDirectoryScanner {
      * @throws UncheckedIOException wenn das Verzeichnis nicht gelesen werden kann
      */
     public List<MovieCandidate> scan(Path root) {
+        return scan(root, (directories, scan) -> directories.stream().map(scan).toList());
+    }
+
+    /**
+     * Durchsucht die Dateien direkt in der Wurzel selbst und jeden Unterordner der Wurzel mit
+     * {@code subtrees}, z. B. parallel. Ein Unterordner liefert dasselbe wie im Durchlauf über alles,
+     * denn mehrteilige Filme liegen immer in einem Ordner.
+     *
+     * @throws UncheckedIOException wenn das Verzeichnis nicht gelesen werden kann
+     */
+    public List<MovieCandidate> scan(Path root, SubtreeScanner subtrees) {
         Objects.requireNonNull(root, "root must not be null");
+        CollectingVisitor top = walk(root, root, TOP_LEVEL_DEPTH);
+        List<MovieCandidate> candidates = new ArrayList<>(top.candidates());
+        subtrees.scanAll(top.subdirectories, directory -> walk(root, directory, Integer.MAX_VALUE).candidates())
+                .forEach(candidates::addAll);
+        candidates.sort(BY_FILE);
+        return List.copyOf(candidates);
+    }
+
+    private CollectingVisitor walk(Path root, Path start, int maxDepth) {
         CollectingVisitor visitor = new CollectingVisitor(root);
         try {
-            Files.walkFileTree(root, visitor);
+            Files.walkFileTree(start, Set.of(), maxDepth, visitor);
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-        return visitor.candidates();
+        return visitor;
+    }
+
+    /** Strategie, mit der die Unterordner der Wurzel durchsucht werden. */
+    @FunctionalInterface
+    public interface SubtreeScanner {
+
+        /** @return die Ergebnisse von {@code scan} für jeden Ordner, in beliebiger Reihenfolge */
+        List<List<MovieCandidate>> scanAll(List<Path> directories, Function<Path, List<MovieCandidate>> scan);
     }
 
     private final class CollectingVisitor extends SimpleFileVisitor<Path> {
@@ -59,6 +92,8 @@ public class MovieDirectoryScanner {
         private final List<MovieCandidate> discs = new ArrayList<>();
         private final List<MovieCandidate> singleFiles = new ArrayList<>();
         private final Map<String, List<StackPart>> stacks = new LinkedHashMap<>();
+        /** Ordner unterhalb der größten Tiefe; bei Tiefe 1 die Unterordner der Wurzel. */
+        private final List<Path> subdirectories = new ArrayList<>();
 
         private CollectingVisitor(Path root) {
             this.root = root;
@@ -80,6 +115,10 @@ public class MovieDirectoryScanner {
 
         @Override
         public FileVisitResult visitFile(Path file, BasicFileAttributes attributes) {
+            if (attributes.isDirectory()) {
+                subdirectories.add(file);
+                return FileVisitResult.CONTINUE;
+            }
             String fileName = file.getFileName().toString();
             int extensionStart = fileName.lastIndexOf(EXTENSION_SEPARATOR);
             if (!attributes.isRegularFile() || extensionStart <= 0) {
@@ -132,8 +171,7 @@ public class MovieDirectoryScanner {
             List<MovieCandidate> candidates = new ArrayList<>(discs);
             candidates.addAll(singleFiles);
             stacks.values().forEach(parts -> candidates.add(stackCandidate(parts)));
-            candidates.sort(Comparator.comparing(candidate -> candidate.file().toString()));
-            return List.copyOf(candidates);
+            return candidates;
         }
 
         private MovieCandidate stackCandidate(List<StackPart> parts) {

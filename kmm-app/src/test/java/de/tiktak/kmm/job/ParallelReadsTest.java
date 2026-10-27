@@ -1,4 +1,4 @@
-package de.tiktak.kmm.tvshow;
+package de.tiktak.kmm.job;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;

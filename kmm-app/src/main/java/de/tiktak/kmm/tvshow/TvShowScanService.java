@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.job.ParallelReads;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.TvShowDirectoryScanner;
 import de.tiktak.kmm.source.MediaSource;
