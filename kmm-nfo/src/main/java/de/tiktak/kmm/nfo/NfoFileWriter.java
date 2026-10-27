@@ -51,18 +51,28 @@ final class NfoFileWriter {
             return Optional.empty();
         }
         try {
-            Optional<String> xml = NfoDocuments.rootXml(Files.readString(nfoFile, StandardCharsets.UTF_8), rootName);
-            if (xml.isEmpty()) {
-                return Optional.empty();
-            }
-            Element container = NfoDocuments.parseAll(xml.get()).getDocumentElement();
-            removeWhitespaceText(container);
-            return Optional.of(container);
+            return parseRoots(Files.readString(nfoFile, StandardCharsets.UTF_8), rootName);
         } catch (IOException | SAXException e) {
             // Eine kaputte NFO wird ersetzt statt den Speichervorgang scheitern zu lassen.
             log.warn("Existing NFO {} is not valid XML and will be replaced: {}", nfoFile, e.getMessage());
             return Optional.empty();
         }
+    }
+
+    /**
+     * Die Wurzelelemente eines NFO-Texts wie bei {@link #existingRoots(Path, String)}.
+     *
+     * @return leer, wenn der Text kein solches Element enthält
+     * @throws SAXException wenn der Text kein gültiges XML ist
+     */
+    static Optional<Element> parseRoots(String content, String rootName) throws IOException, SAXException {
+        Optional<String> xml = NfoDocuments.rootXml(content, rootName);
+        if (xml.isEmpty()) {
+            return Optional.empty();
+        }
+        Element container = NfoDocuments.parseAll(xml.get()).getDocumentElement();
+        removeWhitespaceText(container);
+        return Optional.of(container);
     }
 
     /** Leerer Container für eine neue NFO; die Wurzelelemente hängt der Aufrufer an. */
@@ -75,17 +85,26 @@ final class NfoFileWriter {
 
     /** Schreibt die Elemente nacheinander, mit einer gemeinsamen XML-Deklaration. */
     static void write(Path nfoFile, List<Element> roots) {
-        Path temporary = nfoFile.resolveSibling(nfoFile.getFileName() + TEMP_SUFFIX);
         try {
             StringBuilder content = new StringBuilder(XML_DECLARATION).append(System.lineSeparator());
             for (Element root : roots) {
                 content.append(serialize(root).strip()).append(System.lineSeparator());
             }
+            writeBytes(nfoFile, content.toString().getBytes(StandardCharsets.UTF_8));
+        } catch (TransformerException e) {
+            throw NfoException.unwritable(nfoFile, e);
+        }
+    }
+
+    /** Ersetzt den Inhalt der Datei über eine temporäre Datei. */
+    static void writeBytes(Path nfoFile, byte[] content) {
+        Path temporary = nfoFile.resolveSibling(nfoFile.getFileName() + TEMP_SUFFIX);
+        try {
             try (OutputStream output = Files.newOutputStream(temporary)) {
-                output.write(content.toString().getBytes(StandardCharsets.UTF_8));
+                output.write(content);
             }
             replace(temporary, nfoFile);
-        } catch (IOException | TransformerException e) {
+        } catch (IOException e) {
             deleteQuietly(temporary);
             throw NfoException.unwritable(nfoFile, e);
         }

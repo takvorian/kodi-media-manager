@@ -53,6 +53,67 @@ class PlaybackNfoWriterTest {
     }
 
     @Test
+    void keepsTheFormattingOfAnEmberNfoCharacterByCharacter() throws IOException {
+        String ember = String.join("\r\n",
+                "<?xml version=\"1.0\" encoding=\"utf-8\"?>",
+                "<!-- Ember Media Manager -->",
+                "<episodedetails>",
+                "  <uniqueid type=\"tvdb\" default=\"true\">213420</uniqueid>",
+                "  <title>The Foretelling</title>",
+                "  <season>1</season>",
+                "  <episode>1</episode>",
+                "  <playcount>0</playcount>",
+                "</episodedetails>",
+                "");
+        Path nfo = givenNfo("episode.nfo", ember);
+
+        writer.writeEpisode(nfo, 1, 1, 1, PLAYED);
+
+        assertThat(Files.readString(nfo)).isEqualTo(ember
+                .replace("  <playcount>0</playcount>\r\n",
+                        "  <playcount>1</playcount>\r\n  <lastplayed>2025-04-03 23:14:16</lastplayed>\r\n"));
+
+        writer.writeEpisode(nfo, 1, 1, null, null);
+        assertThat(Files.readString(nfo)).isEqualTo(ember.replace("  <playcount>0</playcount>\r\n", ""));
+    }
+
+    @Test
+    void insertsIntoTheRightEpisodeAndKeepsUmlauts() throws IOException {
+        String xml = """
+                <?xml version="1.0" encoding="UTF-8"?>
+                <episodedetails>
+                    <title>Grüße</title>
+                    <season>1</season>
+                    <episode>1</episode>
+                </episodedetails>
+                <episodedetails>
+                    <title>Zwei</title>
+                    <season>1</season>
+                    <episode>2</episode>
+                </episodedetails>
+                """;
+        Path nfo = givenNfo("episode.nfo", xml);
+
+        writer.writeEpisode(nfo, 1, 2, 3, null);
+
+        assertThat(Files.readString(nfo)).isEqualTo(xml.replace(
+                "    <episode>2</episode>\n", "    <episode>2</episode>\n    <playcount>3</playcount>\n"));
+    }
+
+    @Test
+    void rewritesNfosThatCannotSafelyBeEditedAsText() throws IOException {
+        Path nfo = givenNfo("movie.nfo",
+                "<movie><title>Heat</title><plot><![CDATA[Ende </movie> mitten im Text]]></plot></movie>");
+
+        writer.writeMovie(nfo, 2, PLAYED);
+
+        MovieNfo read = new NfoReader().read(nfo);
+        assertThat(read.plot()).isEqualTo("Ende </movie> mitten im Text");
+        assertThat(read.supplement().playCount()).isEqualTo(2);
+        assertThat(read.supplement().lastPlayed()).isEqualTo(PLAYED);
+    }
+
+    @Test
     void rejectsMissingNfosAndUnknownEpisodes() throws IOException {
         Path nfo = givenNfo("episode.nfo",
                 "<episodedetails><title>Eins</title><season>1</season><episode>1</episode></episodedetails>");
