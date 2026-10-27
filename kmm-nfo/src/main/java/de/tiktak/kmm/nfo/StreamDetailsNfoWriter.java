@@ -2,7 +2,9 @@ package de.tiktak.kmm.nfo;
 
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -12,7 +14,8 @@ import org.xml.sax.SAXException;
 /**
  * Ersetzt nur die Stream-Details ({@code <fileinfo>}) einer vorhandenen NFO. Wie beim
  * {@link PlaybackNfoWriter} wird die Datei als Text bearbeitet, damit alles andere Zeichen für Zeichen
- * erhalten bleibt; nur wenn das nicht sicher geht, wird sie neu geschrieben.
+ * erhalten bleibt; nur wenn das nicht sicher geht, wird sie neu geschrieben. Jede Datei wird genau einmal
+ * ersetzt: Mehrmaliges Ersetzen kurz hintereinander scheitert auf Netzlaufwerken gelegentlich.
  */
 public class StreamDetailsNfoWriter {
 
@@ -21,7 +24,7 @@ public class StreamDetailsNfoWriter {
      */
     public void writeMovie(Path nfoFile, StreamDetails details) {
         Element container = existing(nfoFile, NfoElements.MOVIE);
-        if (writeAsText(nfoFile, NfoElements.MOVIE, 0, details)) {
+        if (details.isEmpty() || writeAsText(nfoFile, NfoElements.MOVIE, Map.of(0, details))) {
             return;
         }
         Element movie = NfoDocuments.children(container, NfoElements.MOVIE).getFirst();
@@ -30,41 +33,59 @@ public class StreamDetailsNfoWriter {
     }
 
     /**
-     * Ändert in einer Mehrfachepisoden-NFO nur die angegebene Episode.
+     * Ändert in einer Mehrfachepisoden-NFO nur die angegebenen Episoden; Episoden ohne Stream-Details
+     * bleiben unverändert.
      *
-     * @throws NfoException wenn die NFO fehlt, die Episode nicht enthält oder nicht geschrieben werden kann
+     * @throws NfoException wenn die NFO fehlt, eine der Episoden nicht enthält oder nicht geschrieben werden kann
      */
-    public void writeEpisode(Path nfoFile, int season, int episode, StreamDetails details) {
+    public void writeEpisodes(Path nfoFile, List<EpisodeStreamDetails> episodes) {
         Element container = existing(nfoFile, NfoElements.EPISODE_DETAILS);
-        Element element = EpisodeNfoWriter.existing(container, season, episode)
-                .orElseThrow(() -> NfoException.missingEntry(nfoFile));
-        int index = NfoDocuments.children(container, NfoElements.EPISODE_DETAILS).indexOf(element);
-        if (writeAsText(nfoFile, NfoElements.EPISODE_DETAILS, index, details)) {
+        List<Element> elements = NfoDocuments.children(container, NfoElements.EPISODE_DETAILS);
+        Map<Integer, StreamDetails> byIndex = new LinkedHashMap<>();
+        for (EpisodeStreamDetails episode : episodes) {
+            Element element = EpisodeNfoWriter.existing(container, episode.season(), episode.episode())
+                    .orElseThrow(() -> NfoException.missingEntry(nfoFile));
+            if (!episode.details().isEmpty()) {
+                byIndex.put(elements.indexOf(element), episode.details());
+            }
+        }
+        if (byIndex.isEmpty() || writeAsText(nfoFile, NfoElements.EPISODE_DETAILS, byIndex)) {
             return;
         }
-        NfoStreamDetails.write(container.getOwnerDocument(), element, details);
-        NfoFileWriter.write(nfoFile, NfoDocuments.children(container, NfoElements.EPISODE_DETAILS));
+        byIndex.forEach((index, details) ->
+                NfoStreamDetails.write(container.getOwnerDocument(), elements.get(index), details));
+        NfoFileWriter.write(nfoFile, elements);
     }
 
     /**
-     * Geschrieben wird nur, wenn das Ergebnis gültig ist und genau die Spuren des neuen Blocks enthält.
+     * Geschrieben wird nur, wenn das Ergebnis gültig ist und genau die Spuren der neuen Blöcke enthält.
      *
+     * @param byIndex die neuen Stream-Details je Position des Wurzelelements
      * @return {@code false}, wenn die Datei nicht sicher als Text bearbeitet werden kann
      */
-    private static boolean writeAsText(Path nfoFile, String rootName, int index, StreamDetails details) {
-        if (details.isEmpty()) {
-            return true;
-        }
-        Optional<NfoTextEditor> editor = NfoTextEditor.open(nfoFile);
-        Optional<String> indent = editor.flatMap(opened -> opened.childIndent(rootName, index));
-        if (indent.isEmpty()) {
+    private static boolean writeAsText(Path nfoFile, String rootName, Map<Integer, StreamDetails> byIndex) {
+        Optional<NfoTextEditor> opened = NfoTextEditor.open(nfoFile);
+        if (opened.isEmpty()) {
             return false;
         }
-        String block = NfoStreamDetails.toText(details, indent.get(), editor.get().newline());
-        boolean edited = editor.get().setChild(rootName, index, NfoStreamDetails.FILE_INFO, block)
-                && carries(editor.get().text(), rootName, index, block);
+        NfoTextEditor editor = opened.get();
+        Map<Integer, String> blocks = new LinkedHashMap<>();
+        for (Map.Entry<Integer, StreamDetails> entry : byIndex.entrySet()) {
+            int index = entry.getKey();
+            Optional<String> indent = editor.childIndent(rootName, index);
+            if (indent.isEmpty()) {
+                return false;
+            }
+            String block = NfoStreamDetails.toText(entry.getValue(), indent.get(), editor.newline());
+            if (!editor.setChild(rootName, index, NfoStreamDetails.FILE_INFO, block)) {
+                return false;
+            }
+            blocks.put(index, block);
+        }
+        boolean edited = blocks.entrySet().stream()
+                .allMatch(block -> carries(editor.text(), rootName, block.getKey(), block.getValue()));
         if (edited) {
-            editor.get().write(nfoFile);
+            editor.write(nfoFile);
         }
         return edited;
     }

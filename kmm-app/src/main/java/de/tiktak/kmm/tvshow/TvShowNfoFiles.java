@@ -13,9 +13,9 @@ import org.springframework.stereotype.Component;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.EpisodeNfoReader;
 import de.tiktak.kmm.nfo.EpisodeNfoWriter;
+import de.tiktak.kmm.nfo.EpisodeStreamDetails;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.PlaybackNfoWriter;
-import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.nfo.StreamDetailsNfoWriter;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.nfo.TvShowNfoReader;
@@ -103,8 +103,8 @@ class TvShowNfoFiles {
      *
      * @throws NfoException wenn die NFO die Episode nicht enthält oder nicht geschrieben werden kann
      */
-    TvNfoState writeStreamDetails(TvNfoState nfo, int season, int episode, StreamDetails details) {
-        streamDetailsWriter.writeEpisode(nfo.file(), season, episode, details);
+    TvNfoState writeStreamDetails(TvNfoState nfo, List<EpisodeStreamDetails> episodes) {
+        streamDetailsWriter.writeEpisodes(nfo.file(), episodes);
         return written(nfo.file());
     }
 

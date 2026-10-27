@@ -97,7 +97,8 @@ class StreamDetailsNfoWriterTest {
                 """;
         Path nfo = givenNfo("episode.nfo", xml);
 
-        writer.writeEpisode(nfo, 1, 2, HALLOWEEN);
+        writer.writeEpisodes(nfo, List.of(new EpisodeStreamDetails(1, 2, HALLOWEEN),
+                new EpisodeStreamDetails(1, 1, StreamDetails.EMPTY)));
 
         String content = Files.readString(nfo);
         assertThat(content).startsWith(xml.substring(0, xml.indexOf("<title>Zwei")))
@@ -106,6 +107,37 @@ class StreamDetailsNfoWriterTest {
         List<EpisodeNfo> episodes = new EpisodeNfoReader().read(nfo);
         assertThat(episodes.getFirst().streams()).isEqualTo(StreamDetails.EMPTY);
         assertThat(episodes.getLast().streams()).isEqualTo(HALLOWEEN);
+    }
+
+    @Test
+    void writesAllEpisodesOfAFileAtOnce() throws IOException {
+        StreamDetails other = new StreamDetails(List.of(), List.of(new StreamDetails.Audio("aac", null, 2, 128)),
+                List.of());
+        Path nfo = givenNfo("episode.nfo", """
+                <episodedetails><title>Eins</title><season>1</season><episode>1</episode></episodedetails>
+                <episodedetails><title>Zwei</title><season>1</season><episode>2</episode></episodedetails>
+                <episodedetails><title>Drei</title><season>1</season><episode>3</episode></episodedetails>""");
+
+        writer.writeEpisodes(nfo, List.of(new EpisodeStreamDetails(1, 3, other),
+                new EpisodeStreamDetails(1, 1, HALLOWEEN)));
+
+        assertThat(new EpisodeNfoReader().read(nfo)).extracting(EpisodeNfo::streams)
+                .containsExactly(HALLOWEEN, StreamDetails.EMPTY, other);
+        assertThat(directory.toFile().list()).containsExactly("episode.nfo");
+    }
+
+    @Test
+    void rewritesMultiEpisodeNfosThatCannotSafelyBeEditedAsText() throws IOException {
+        Path nfo = givenNfo("episode.nfo", """
+                <episodedetails><title>Eins</title><season>1</season><episode>1</episode>                <plot><![CDATA[</episodedetails>]]></plot></episodedetails>
+                <episodedetails><title>Zwei</title><season>1</season><episode>2</episode></episodedetails>""");
+
+        writer.writeEpisodes(nfo, List.of(new EpisodeStreamDetails(1, 1, HALLOWEEN),
+                new EpisodeStreamDetails(1, 2, HALLOWEEN)));
+
+        List<EpisodeNfo> episodes = new EpisodeNfoReader().read(nfo);
+        assertThat(episodes).extracting(EpisodeNfo::streams).containsExactly(HALLOWEEN, HALLOWEEN);
+        assertThat(episodes.getFirst().plot()).isEqualTo("</episodedetails>");
     }
 
     @Test
@@ -135,7 +167,8 @@ class StreamDetailsNfoWriterTest {
         Path nfo = givenNfo("episode.nfo",
                 "<episodedetails><title>Eins</title><season>1</season><episode>1</episode></episodedetails>");
 
-        assertThatThrownBy(() -> writer.writeEpisode(nfo, 1, 5, HALLOWEEN)).isInstanceOf(NfoException.class);
+        assertThatThrownBy(() -> writer.writeEpisodes(nfo, List.of(new EpisodeStreamDetails(1, 5, HALLOWEEN))))
+                .isInstanceOf(NfoException.class);
         assertThatThrownBy(() -> writer.writeMovie(directory.resolve("fehlt.nfo"), HALLOWEEN))
                 .isInstanceOf(NfoException.class);
     }

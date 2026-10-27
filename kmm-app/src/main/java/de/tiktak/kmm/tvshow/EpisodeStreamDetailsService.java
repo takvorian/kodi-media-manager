@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.media.StreamDetailsMerge;
+import de.tiktak.kmm.nfo.EpisodeStreamDetails;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.StreamDetails;
 import lombok.RequiredArgsConstructor;
@@ -77,18 +78,17 @@ public class EpisodeStreamDetailsService {
      * die NFO für sie neu ein.
      */
     private void write(TvNfoState before, Map<Episode, StreamDetails> merged) {
+        List<EpisodeStreamDetails> episodes = merged.entrySet().stream()
+                .map(entry -> new EpisodeStreamDetails(entry.getKey().getSeason(), entry.getKey().getEpisode(),
+                        entry.getValue()))
+                .toList();
         try {
-            TvNfoState written = before;
-            for (Map.Entry<Episode, StreamDetails> entry : merged.entrySet()) {
-                Episode episode = entry.getKey();
-                written = nfoFiles.writeStreamDetails(before, episode.getSeason(), episode.getEpisode(),
-                        entry.getValue());
-            }
-            TvNfoState last = written;
+            TvNfoState written = nfoFiles.writeStreamDetails(before, episodes);
             merged.keySet().stream()
                     .filter(episode -> before.modifiedAt().equals(episode.getNfoModifiedAt()))
-                    .forEach(episode -> episode.markNfoSynchronized(last.modifiedAt()));
+                    .forEach(episode -> episode.markNfoSynchronized(written.modifiedAt()));
         } catch (NfoException e) {
+            log.warn("Stream details not written to {}", before.file(), e);
             throw TvShowProblemException.nfoNotWritable(e);
         }
     }
