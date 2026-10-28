@@ -1,5 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  TestRequest,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MovieMetadata } from './movie';
@@ -8,8 +12,18 @@ import { METADATA_SCRAPERS_URL, MOVIES_URL } from './movie.service';
 import { ScrapeCandidate, ScraperInfo } from './scraper';
 
 describe('MovieOnlineSearch', () => {
-  const tmdb: ScraperInfo = { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['MOVIE'], missingConfiguration: null };
-  const other: ScraperInfo = { id: 'other', displayName: 'Andere', mediaTypes: ['MOVIE'], missingConfiguration: null };
+  const tmdb: ScraperInfo = {
+    id: 'tmdb',
+    displayName: 'TMDB',
+    mediaTypes: ['MOVIE'],
+    missingConfiguration: null,
+  };
+  const other: ScraperInfo = {
+    id: 'other',
+    displayName: 'Andere',
+    mediaTypes: ['MOVIE'],
+    missingConfiguration: null,
+  };
   const heat: ScrapeCandidate = {
     providerId: '949',
     title: 'Stirb langsam',
@@ -76,9 +90,9 @@ describe('MovieOnlineSearch', () => {
     expect(request.request.params.get('scraper')).toBe('tmdb');
     expect(request.request.params.get('title')).toBe('Die Hard');
     expect(request.request.params.get('year')).toBe('1988');
-    expect(element().querySelector('.candidate-title')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
-      'Stirb langsam (1988)',
-    );
+    expect(
+      element().querySelector('.candidate-title')?.textContent?.replace(/\s+/g, ' ').trim(),
+    ).toBe('Stirb langsam (1988)');
     expect(element().querySelector('.candidate')?.textContent).toContain('Die Hard');
     expect(element().querySelector<HTMLImageElement>('.poster')?.src).toBe(heat.posterUrl);
     expect(searchButton().textContent).toContain('Bei TMDB suchen');
@@ -106,17 +120,26 @@ describe('MovieOnlineSearch', () => {
 
     element().querySelector<HTMLButtonElement>('.adopt-button')!.click();
     const request = httpTesting.expectOne((req) => req.url === `${MOVIES_URL}/5/scraper-proposal`);
-    request.flush(proposal);
+    request.flush({ metadata: proposal, collection: { providerId: '1', name: 'Heat-Reihe' } });
 
     expect(request.request.params.get('providerId')).toBe('949');
-    expect(proposals).toEqual([{ metadata: proposal, scraperName: 'TMDB' }]);
+    expect(proposals).toEqual([
+      {
+        metadata: proposal,
+        collection: { providerId: '1', name: 'Heat-Reihe' },
+        scraperName: 'TMDB',
+      },
+    ]);
   });
 
   it('shows provider errors', async () => {
     await loadScrapers([tmdb]);
 
     searchButton().click();
-    expectSearch().flush({ detail: 'TMDB lehnt den API-Key ab.' }, { status: 502, statusText: 'Bad Gateway' });
+    expectSearch().flush(
+      { detail: 'TMDB lehnt den API-Key ab.' },
+      { status: 502, statusText: 'Bad Gateway' },
+    );
     await fixture.whenStable();
 
     expect(element().querySelector('.error')?.textContent).toContain('API-Key');
@@ -144,7 +167,9 @@ describe('MovieOnlineSearch', () => {
 
   it('shows an error when the scrapers cannot be loaded', async () => {
     fixture.detectChanges();
-    httpTesting.expectOne(METADATA_SCRAPERS_URL).flush('boom', { status: 500, statusText: 'Server Error' });
+    httpTesting
+      .expectOne(METADATA_SCRAPERS_URL)
+      .flush('boom', { status: 500, statusText: 'Server Error' });
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();

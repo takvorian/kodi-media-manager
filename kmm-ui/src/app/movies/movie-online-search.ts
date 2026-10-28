@@ -10,11 +10,12 @@ import { Observable } from 'rxjs';
 import { problemMessage } from '../shared/problem-message';
 import { MovieMetadata } from './movie';
 import { MovieService } from './movie.service';
-import { ScrapeCandidate, ScraperInfo } from './scraper';
+import { CollectionReference, ScrapeCandidate, ScraperInfo } from './scraper';
 
-/** Übernommene Daten samt Herkunft. */
+/** Übernommene Daten samt Sammlung und Herkunft. */
 export interface ScrapedProposal {
   readonly metadata: MovieMetadata;
+  readonly collection: CollectionReference | null;
   readonly scraperName: string;
 }
 
@@ -24,7 +25,13 @@ export interface ScrapedProposal {
  */
 @Component({
   selector: 'app-movie-online-search',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+  ],
   templateUrl: './movie-online-search.html',
   styleUrl: './movie-online-search.scss',
 })
@@ -46,7 +53,9 @@ export class MovieOnlineSearch {
     year: [null as number | null],
   });
 
-  private readonly chosenScraperId = toSignal(this.form.controls.scraper.valueChanges, { initialValue: '' });
+  private readonly chosenScraperId = toSignal(this.form.controls.scraper.valueChanges, {
+    initialValue: '',
+  });
 
   /** Gewählter Scraper, sonst der erste verfügbare. */
   protected readonly selectedScraper = computed<ScraperInfo | undefined>(() => {
@@ -62,8 +71,9 @@ export class MovieOnlineSearch {
     const { query, year } = this.form.getRawValue();
     const title = query.trim() || this.title();
     const searchYear = query.trim() ? year : this.year();
-    this.run(this.movieService.searchOnline(this.movieId(), scraper.id, title, searchYear), (results) =>
-      this.candidates.set(results),
+    this.run(
+      this.movieService.searchOnline(this.movieId(), scraper.id, title, searchYear),
+      (results) => this.candidates.set(results),
     );
   }
 
@@ -72,8 +82,9 @@ export class MovieOnlineSearch {
     if (!scraper) {
       return;
     }
-    this.run(this.movieService.proposal(this.movieId(), scraper.id, candidate.providerId), (metadata) =>
-      this.proposed.emit({ metadata, scraperName: scraper.displayName }),
+    this.run(
+      this.movieService.proposal(this.movieId(), scraper.id, candidate.providerId),
+      (proposal) => this.proposed.emit({ ...proposal, scraperName: scraper.displayName }),
     );
   }
 

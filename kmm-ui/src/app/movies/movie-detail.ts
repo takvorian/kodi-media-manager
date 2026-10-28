@@ -31,6 +31,7 @@ import { MovieSupplementView } from './movie-supplement';
 import { MovieService } from './movie.service';
 import { MovieRenamePlan, renameConfirmation } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
+import { CollectionReference } from './scraper';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -75,6 +76,8 @@ export class MovieDetail {
   protected readonly renaming = signal(false);
   /** Ob das Formular einen Treffer der Online-Suche enthält; nach dem Speichern werden die Angaben ausgelesen. */
   private readonly adoptedProposal = signal(false);
+  /** Sammlung des übernommenen Treffers; nach dem Speichern wird der Film ihrem Set zugeordnet, wenn eingestellt. */
+  private readonly adoptedCollection = signal<CollectionReference | null>(null);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),
@@ -107,7 +110,8 @@ export class MovieDetail {
         this.notify(`Gespeichert und in ${details.nfo.path} geschrieben.`);
         if (this.adoptedProposal()) {
           this.adoptedProposal.set(false);
-          this.probeStreamsAfterScrape();
+          this.assignCollectionThenProbe(this.adoptedCollection());
+          this.adoptedCollection.set(null);
         }
       },
       error: (error: unknown) => {
@@ -126,6 +130,7 @@ export class MovieDetail {
     this.form.patchValue(toFormValue(proposal.metadata));
     this.form.markAsDirty();
     this.adoptedProposal.set(true);
+    this.adoptedCollection.set(proposal.collection);
     this.searchingOnline.set(false);
     this.notify(`Daten von ${proposal.scraperName} übernommen – bitte prüfen und speichern.`);
   }
@@ -218,12 +223,33 @@ export class MovieDetail {
 
   protected reset(): void {
     this.adoptedProposal.set(false);
+    this.adoptedCollection.set(null);
     if (this.movie.hasValue()) {
       this.showInForm(this.movie.value());
     }
   }
 
   /** Wie nach dem automatischen Scrapen, sofern in den Einstellungen nicht abgeschaltet. */
+  /** Nacheinander, weil beides die NFO schreibt. */
+  private assignCollectionThenProbe(collection: CollectionReference | null): void {
+    if (!collection) {
+      this.probeStreamsAfterScrape();
+      return;
+    }
+    this.movieService.assignCollection(this.id(), collection).subscribe({
+      next: (result) => {
+        if (result.assigned) {
+          this.notify(`Dem Filmset „${collection.name}“ zugeordnet.`);
+        }
+        this.probeStreamsAfterScrape();
+      },
+      error: (error: unknown) => {
+        this.notify(problemMessage(error));
+        this.probeStreamsAfterScrape();
+      },
+    });
+  }
+
   private probeStreamsAfterScrape(): void {
     this.probingStreams.set(true);
     this.mediaInfoService.probeMovieAfterScrape(this.id()).subscribe({

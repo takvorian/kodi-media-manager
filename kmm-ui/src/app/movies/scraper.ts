@@ -15,6 +15,12 @@ export interface Attribution {
   readonly link: string;
 }
 
+/** Sammlung eines Films beim Anbieter, etwa eine TMDB-Sammlung. */
+export interface CollectionReference {
+  readonly providerId: string;
+  readonly name: string;
+}
+
 /** Suchtreffer eines Scrapers. */
 export interface ScrapeCandidate {
   readonly providerId: string;
@@ -23,4 +29,10 @@ export interface ScrapeCandidate {
   readonly year: number | null;
   readonly overview: string | null;
   readonly posterUrl: string | null;
+}
+
+/** Antwort von GET /api/v1/movies/{id}/scraper-proposal. */
+export interface MovieScrapeProposal<M> {
+  readonly metadata: M;
+  readonly collection: CollectionReference | null;
 }

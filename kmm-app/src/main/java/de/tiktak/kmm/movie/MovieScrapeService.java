@@ -49,14 +49,25 @@ public class MovieScrapeService {
     }
 
     /**
-     * @return die vorhandenen Metadaten, überlagert mit den Daten des Treffers
+     * @return die vorhandenen Metadaten, überlagert mit den Daten des Treffers, und die Sammlung des Films
      */
-    public MovieMetadata proposal(long movieId, String scraperId, String providerId) {
+    public MovieScrapeProposal proposal(long movieId, String scraperId, String providerId) {
         MovieMetadata current = metadataService.findDetails(movieId).metadata();
         MetadataScraper scraper = scraper(scraperId);
         MetadataResult scraped = call(scraper, s -> s.fetch(providerId))
                 .orElseThrow(() -> ScraperProblemException.notFoundAtProvider(scraper, providerId));
-        return ScrapedMetadataMerger.merge(current, scraped);
+        return new MovieScrapeProposal(ScrapedMetadataMerger.merge(current, scraped), scraped.collection());
+    }
+
+    /**
+     * Ordnet einen gescrapten Film dem Set seiner Sammlung zu, sofern „Filme beim Scrapen ihrem Filmset zuordnen“
+     * eingeschaltet ist.
+     *
+     * @return ob sich die Set-Zugehörigkeit geändert hat
+     */
+    public boolean assignCollection(long movieId, CollectionReference collection) {
+        return settingsService.current().movieSets().assignOnScrape()
+                && collectionAssigner.assign(movieId, collection);
     }
 
     /**
@@ -81,14 +92,10 @@ public class MovieScrapeService {
             return MetadataScrapeOutcome.NO_MATCH;
         }
         metadataService.update(movieId, ScrapedMetadataMerger.merge(current, scraped.get()));
-        assignCollection(movieId, scraped.get().collection());
-        return MetadataScrapeOutcome.SCRAPED;
-    }
-
-    private void assignCollection(long movieId, CollectionReference collection) {
-        if (collection != null && settingsService.current().movieSets().assignOnScrape()) {
-            collectionAssigner.assign(movieId, collection);
+        if (scraped.get().collection() != null) {
+            assignCollection(movieId, scraped.get().collection());
         }
+        return MetadataScrapeOutcome.SCRAPED;
     }
 
     /** Der konfigurierte Scraper, sonst der erste eingerichtete. */

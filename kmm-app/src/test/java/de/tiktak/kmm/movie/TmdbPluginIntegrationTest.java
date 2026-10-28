@@ -139,8 +139,9 @@ class TmdbPluginIntegrationTest {
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        {"title": "Heat", "year": 1995, "premiered": "1995-12-15", "runtime": 170, "mpaa": "FSK 16",
-                         "genres": ["Krimi"], "imdbId": "tt0113277", "tmdbId": "949"}
+                        {"metadata": {"title": "Heat", "year": 1995, "premiered": "1995-12-15", "runtime": 170,
+                         "mpaa": "FSK 16", "genres": ["Krimi"], "imdbId": "tt0113277", "tmdbId": "949"},
+                         "collection": null}
                         """);
     }
 

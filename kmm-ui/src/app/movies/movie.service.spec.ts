@@ -12,7 +12,9 @@ describe('MovieService', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(MovieService);
     httpTesting = TestBed.inject(HttpTestingController);
   });
@@ -91,6 +93,14 @@ describe('MovieService', () => {
     request.flush({});
 
     expect(request.request.params.get('providerId')).toBe('949');
+  });
+
+  it('assigns the collection of a scraped movie', () => {
+    service.assignCollection(5, { providerId: '1', name: 'Heat-Reihe' }).subscribe();
+
+    const request = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/5/collection` });
+    expect(request.request.body).toEqual({ providerId: '1', name: 'Heat-Reihe' });
+    request.flush({ assigned: true });
   });
 
   it('saves the metadata of a movie', () => {

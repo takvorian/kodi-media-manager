@@ -12,6 +12,7 @@ import { EMPTY_SUPPLEMENT, MovieDetails } from './movie';
 import { MovieDetail } from './movie-detail';
 import { MOVIES_URL } from './movie.service';
 import { MovieRenamePlan } from './movie-rename';
+import { CollectionReference } from './scraper';
 import { CONFIRM } from '../shared/confirm';
 
 describe('MovieDetail', () => {
@@ -351,7 +352,10 @@ describe('MovieDetail', () => {
     button('.adopt-button').click();
     httpTesting
       .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-proposal`)
-      .flush({ ...heat.metadata, runtime: 171, mpaa: 'FSK 16', tmdbId: '949' });
+      .flush({
+        metadata: { ...heat.metadata, runtime: 171, mpaa: 'FSK 16', tmdbId: '949' },
+        collection: null,
+      });
     await fixture.whenStable();
 
     expect(element().querySelector('app-movie-online-search')).toBeNull();
@@ -360,6 +364,24 @@ describe('MovieDetail', () => {
     expect(button('.save-button').disabled).toBe(false);
     expect(snackBarMessages).toEqual(['Daten von TMDB übernommen – bitte prüfen und speichern.']);
     httpTesting.expectNone({ method: 'PUT' });
+  });
+
+  it('assigns the movie to the set of its collection after saving online data, then reads the details', async () => {
+    await load(heat);
+    await adoptFromOnlineSearch({ providerId: '1', name: 'Heat-Reihe' });
+
+    button('.save-button').click();
+    expectSave().flush(heat);
+    const assign = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/5/collection` });
+    expect(assign.request.body).toEqual({ providerId: '1', name: 'Heat-Reihe' });
+    httpTesting.expectNone(`${MOVIES_URL}/5/stream-details/after-scrape`);
+    assign.flush({ assigned: true });
+    httpTesting
+      .expectOne({ method: 'POST', url: `${MOVIES_URL}/5/stream-details/after-scrape` })
+      .flush(null);
+    await fixture.whenStable();
+
+    expect(snackBarMessages).toContain('Dem Filmset „Heat-Reihe“ zugeordnet.');
   });
 
   it('reads the technical details after saving online data', async () => {
@@ -417,7 +439,9 @@ describe('MovieDetail', () => {
     httpTesting.expectNone(`${MOVIES_URL}/5/stream-details/after-scrape`);
   });
 
-  async function adoptFromOnlineSearch(): Promise<void> {
+  async function adoptFromOnlineSearch(
+    collection: CollectionReference | null = null,
+  ): Promise<void> {
     button('.online-search-button').click();
     fixture.detectChanges();
     httpTesting
@@ -443,7 +467,7 @@ describe('MovieDetail', () => {
     button('.adopt-button').click();
     httpTesting
       .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-proposal`)
-      .flush({ ...heat.metadata, tmdbId: '949' });
+      .flush({ metadata: { ...heat.metadata, tmdbId: '949' }, collection });
     await fixture.whenStable();
   }
 

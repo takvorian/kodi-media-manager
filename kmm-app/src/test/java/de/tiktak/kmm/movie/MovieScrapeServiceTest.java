@@ -94,12 +94,26 @@ class MovieScrapeServiceTest {
     @Test
     void proposesCurrentMetadataOverlaidWithScrapedData() {
         givenScraper();
-        when(tmdb.fetch("949")).thenReturn(Optional.of(MetadataResult.builder().title("Heat").runtime(170).build()));
+        when(tmdb.fetch("949")).thenReturn(Optional.of(MetadataResult.builder().title("Heat").runtime(170)
+                .collection(new CollectionReference("1", "Heat-Reihe")).build()));
 
-        MovieMetadata proposal = service.proposal(MOVIE_ID, "tmdb", "949");
+        MovieScrapeProposal proposal = service.proposal(MOVIE_ID, "tmdb", "949");
 
-        assertThat(proposal.runtime()).isEqualTo(170);
-        assertThat(proposal.year()).isEqualTo(1995);
+        assertThat(proposal.metadata().runtime()).isEqualTo(170);
+        assertThat(proposal.metadata().year()).isEqualTo(1995);
+        assertThat(proposal.collection()).isEqualTo(new CollectionReference("1", "Heat-Reihe"));
+    }
+
+    @Test
+    void assignsTheCollectionAfterAManualScrapeOnlyIfEnabled() {
+        CollectionReference heat = new CollectionReference("1", "Heat-Reihe");
+        when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS);
+        assertThat(service.assignCollection(MOVIE_ID, heat)).isFalse();
+
+        when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS.withMovieSets(
+                new MovieSetSettings(false, null, false, null, true)));
+        when(collectionAssigner.assign(MOVIE_ID, heat)).thenReturn(true);
+        assertThat(service.assignCollection(MOVIE_ID, heat)).isTrue();
     }
 
     @Test
