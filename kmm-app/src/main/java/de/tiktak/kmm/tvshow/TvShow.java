@@ -45,11 +45,11 @@ public class TvShow {
     @Column(name = "source_id", nullable = false, updatable = false)
     private Long sourceId;
 
-    @Column(name = "directory_path", nullable = false, length = 1024, updatable = false)
+    @Column(name = "directory_path", nullable = false, length = 1024)
     private String directoryPath;
 
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "directory_path_hash", nullable = false, length = 64, updatable = false)
+    @Column(name = "directory_path_hash", nullable = false, length = 64)
     private String directoryPathHash;
 
     @Column(nullable = false, length = TvTexts.MAX_TITLE_LENGTH)
@@ -192,6 +192,12 @@ public class TvShow {
 
     Path directory() {
         return Path.of(directoryPath);
+    }
+
+    /** Nach dem Umbenennen: der Serienordner liegt jetzt dort. */
+    void relocate(String newDirectoryPath) {
+        this.directoryPath = Objects.requireNonNull(newDirectoryPath, "newDirectoryPath must not be null");
+        this.directoryPathHash = PathHash.of(newDirectoryPath);
     }
 
     /** Ohne Jahr und Erstausstrahlung bleibt das Jahr aus dem Ordnernamen. */

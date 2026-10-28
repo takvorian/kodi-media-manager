@@ -93,6 +93,71 @@ class TvShowRenameIntegrationTest {
     }
 
     @Test
+    void renamesAShowAndTheNextScanFindsItsEpisodesAtTheirNewPlace() throws IOException {
+        Path serien = Files.createDirectories(library.resolve("serien"));
+        Path srt = serien.resolve("lost/lost.s01e01e02.de.srt");
+        givenFile(serien.resolve("lost/tvshow.nfo"), "<tvshow><title>Lost</title><premiered>2004-09-22</premiered></tvshow>");
+        givenFile(serien.resolve("lost/lost.s01e01e02.nfo"), """
+                <episodedetails><title>Pilot (1)</title><season>1</season><episode>1</episode><playcount>1</playcount>
+                <fileinfo><streamdetails><subtitle><language>deu</language><path>%s</path></subtitle></streamdetails>
+                </fileinfo></episodedetails>
+                <episodedetails><title>Pilot (2)</title><season>1</season><episode>2</episode></episodedetails>"""
+                .formatted(srt));
+        givenFile(serien.resolve("lost/lost.s01e01e02.mkv"), "");
+        givenFile(srt, "");
+        long sourceId = createSource(serien);
+        scan(sourceId);
+        long showId = jdbcClient.sql("SELECT id FROM tv_show").query(Long.class).single();
+
+        MvcTestResult renamed = mockMvc.post().uri(TvShowRenameController.SHOW_RENAME_PATH, showId).with(csrf())
+                .contentType(JSON).content(PATTERNS).exchange();
+
+        assertThat(renamed).hasStatusOk().bodyJson().extractingPath("$.status").isEqualTo("RENAME");
+        Path season = serien.resolve("Lost (2004)/Staffel 1");
+        String name = "Lost - S01E01E02 - Pilot (1) - Pilot (2)";
+        assertThat(season.resolve(name + ".mkv")).exists();
+        assertThat(season.resolve(name + ".de.srt")).exists();
+        assertThat(serien.resolve("Lost (2004)/tvshow.nfo")).exists();
+        assertThat(serien.resolve("lost")).doesNotExist();
+        assertThat(jdbcClient.sql("SELECT directory_path FROM tv_show").query(String.class).single())
+                .isEqualTo(serien.resolve("Lost (2004)").toString());
+        assertThat(jdbcClient.sql("SELECT DISTINCT file_path FROM episode").query(String.class).list())
+                .containsExactly(season.resolve(name + ".mkv").toString());
+        assertThat(Files.readString(season.resolve(name + ".nfo")))
+                .contains("<path>" + season.resolve(name + ".de.srt"), "<playcount>1</playcount>", "Pilot (2)");
+        JsonNode rescan = scan(sourceId);
+        assertThat(rescan.toString()).contains("\"removed\":0");
+        assertThat(jdbcClient.sql("SELECT COUNT(*) FROM episode").query(Long.class).single()).isEqualTo(2);
+        assertThat(mockMvc.post().uri(TvShowRenameController.SHOW_PREVIEW_PATH, showId).with(csrf())
+                .contentType(JSON).content(PATTERNS).exchange())
+                .hasStatusOk().bodyJson().extractingPath("$.status").isEqualTo("UNCHANGED");
+    }
+
+    @Test
+    void renamesTheSelectedShowsOfASourceAndReportsConflicts() throws IOException {
+        Path serien = Files.createDirectories(library.resolve("serien"));
+        givenFile(serien.resolve("alf/tvshow.nfo"), "<tvshow><title>ALF</title><premiered>1986-09-22</premiered></tvshow>");
+        givenFile(serien.resolve("alf/alf.s01e01.mkv"), "");
+        givenFile(serien.resolve("lost/tvshow.nfo"), "<tvshow><title>Lost</title><premiered>2004-09-22</premiered></tvshow>");
+        givenFile(serien.resolve("lost/lost.s01e01.mkv"), "");
+        givenFile(serien.resolve("Lost (2004)/belegt.txt"), "");
+        long sourceId = createSource(serien);
+        scan(sourceId);
+
+        JsonNode result = runJob(mockMvc.post().uri(TvShowRenameController.SOURCE_RENAME_PATH, sourceId).with(csrf())
+                .contentType(JSON).content("{\"patterns\": %s}".formatted(PATTERNS)).exchange());
+
+        assertThat(result.get("renamed").asInt()).isEqualTo(1);
+        assertThat(result.get("skipped").asInt()).isEqualTo(1);
+        assertThat(result.get("problems").get(0).asString()).startsWith("„Lost“: Der Ordner");
+        try (var files = Files.list(serien.resolve("ALF (1986)/Staffel 1"))) {
+            assertThat(files.map(file -> file.getFileName().toString())).singleElement().asString()
+                    .startsWith("ALF - S01E01").endsWith(".mkv");
+        }
+        assertThat(serien.resolve("lost/lost.s01e01.mkv")).exists();
+    }
+
+    @Test
     void rejectsInvalidPatternsAndMovieSources() throws IOException {
         long sourceId = createSource(Files.createDirectories(library.resolve("serien")));
 

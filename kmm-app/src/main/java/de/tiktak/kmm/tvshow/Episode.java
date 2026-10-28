@@ -47,11 +47,11 @@ public class Episode {
     @Column(name = "tv_show_id", nullable = false, updatable = false)
     private Long tvShowId;
 
-    @Column(name = "file_path", nullable = false, length = 1024, updatable = false)
+    @Column(name = "file_path", nullable = false, length = 1024)
     private String filePath;
 
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "file_path_hash", nullable = false, length = 64, updatable = false)
+    @Column(name = "file_path_hash", nullable = false, length = 64)
     private String filePathHash;
 
     @Column(name = "season_number", nullable = false, updatable = false)
@@ -198,6 +198,12 @@ public class Episode {
 
     Path file() {
         return Path.of(filePath);
+    }
+
+    /** Nach dem Umbenennen: die Datei liegt jetzt dort. */
+    void relocate(String newFilePath) {
+        this.filePath = Objects.requireNonNull(newFilePath, "newFilePath must not be null");
+        this.filePathHash = PathHash.of(newFilePath);
     }
 
     private Stream<EpisodeCredit> creditsOf(EpisodeCredit.Type type) {
