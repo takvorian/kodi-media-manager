@@ -7,7 +7,14 @@ import { JobIndicator } from './jobs/job-indicator';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, MatToolbarModule, MatButtonModule, JobIndicator],
+  imports: [
+    RouterOutlet,
+    RouterLink,
+    RouterLinkActive,
+    MatToolbarModule,
+    MatButtonModule,
+    JobIndicator,
+  ],
   templateUrl: './app.html',
   styleUrl: './app.scss',
 })
@@ -16,6 +23,7 @@ export class App {
   protected readonly navigation = [
     { path: '/movies', label: 'Filme' },
     { path: '/tvshows', label: 'Serien' },
+    { path: '/tags', label: 'Tags' },
     { path: '/sources', label: 'Quellen' },
     { path: '/kodi', label: 'Kodi' },
     { path: '/settings', label: 'Einstellungen' },

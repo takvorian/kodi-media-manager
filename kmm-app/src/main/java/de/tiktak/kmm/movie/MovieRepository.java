@@ -19,4 +19,14 @@ interface MovieRepository extends JpaRepository<Movie, Long> {
     List<Movie> findByFilePathHashIn(Collection<String> filePathHashes);
 
     Page<Movie> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
+    /** Je Tag die Anzahl der Filme. */
+    @Query("SELECT t, COUNT(m) FROM Movie m JOIN m.tags t GROUP BY t")
+    List<Object[]> countByTag();
+
+    @Query("SELECT m.id FROM Movie m JOIN m.tags t WHERE t = :tag")
+    List<Long> findIdsByTag(String tag);
+
+    @Query("SELECT m.id, m.title FROM Movie m JOIN m.tags t WHERE t = :tag ORDER BY m.title")
+    List<Object[]> findTitlesByTag(String tag);
 }

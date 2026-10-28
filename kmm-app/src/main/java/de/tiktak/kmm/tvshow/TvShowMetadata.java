@@ -56,6 +56,12 @@ public record TvShowMetadata(
         tags = tags == null ? null : TvTexts.cleanAll(tags, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
+    /** Kopie mit anderen Tags. */
+    public TvShowMetadata withTags(List<String> newTags) {
+        return new TvShowMetadata(title, originalTitle, sortTitle, year, premiered, plot, runtime, mpaa, status, genres,
+                studios, newTags, tvdbId, tmdbId, imdbId, userRating);
+    }
+
     /**
      * Kopie für Daten aus Dateien und Fremdquellen, die die Grenzen der Datenbank einhält: Texte werden
      * gekürzt, ungültige Zahlen und IDs entfallen.

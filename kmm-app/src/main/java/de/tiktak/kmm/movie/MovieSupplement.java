@@ -46,6 +46,12 @@ public record MovieSupplement(
         ratings = withoutNulls(ratings);
     }
 
+    /** Kopie mit anderen Tags. */
+    public MovieSupplement withTags(List<String> newTags) {
+        return new MovieSupplement(actors, directors, writers, studios, countries, newTags, ratings, set, userRating,
+                playCount, lastPlayed);
+    }
+
     /**
      * Ein Darsteller; die Reihenfolge ergibt sich aus der Position in der Liste.
      *

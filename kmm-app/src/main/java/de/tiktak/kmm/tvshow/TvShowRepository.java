@@ -19,4 +19,14 @@ interface TvShowRepository extends JpaRepository<TvShow, Long> {
     List<Object[]> findNfoTimestampsBySourceId(long sourceId);
 
     Page<TvShow> findByTitleContainingIgnoreCase(String title, Pageable pageable);
+
+    /** Je Tag die Anzahl der Serien. */
+    @Query("SELECT t, COUNT(s) FROM TvShow s JOIN s.tags t GROUP BY t")
+    List<Object[]> countByTag();
+
+    @Query("SELECT s.id FROM TvShow s JOIN s.tags t WHERE t = :tag")
+    List<Long> findIdsByTag(String tag);
+
+    @Query("SELECT s.id, s.title FROM TvShow s JOIN s.tags t WHERE t = :tag ORDER BY s.title")
+    List<Object[]> findTitlesByTag(String tag);
 }

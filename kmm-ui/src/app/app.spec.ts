@@ -24,6 +24,7 @@ describe('App', () => {
     expect(Array.from(element.querySelectorAll('nav a')).map((link) => link.textContent?.trim())).toEqual([
       'Filme',
       'Serien',
+      'Tags',
       'Quellen',
       'Kodi',
       'Einstellungen',

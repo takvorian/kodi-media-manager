@@ -28,6 +28,11 @@ export const routes: Routes = [
     loadComponent: () => import('./tvshows/episode-detail').then((m) => m.EpisodeDetail),
   },
   {
+    path: 'tags',
+    title: 'Tags – KMM',
+    loadComponent: () => import('./tags/tag-manager').then((m) => m.TagManager),
+  },
+  {
     path: 'sources',
     title: 'Quellen – KMM',
     loadComponent: () => import('./sources/source-list').then((m) => m.SourceList),
