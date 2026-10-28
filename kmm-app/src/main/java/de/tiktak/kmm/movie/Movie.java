@@ -12,6 +12,7 @@ import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import de.tiktak.kmm.nfo.CodecNames;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.persistence.StreamDetailsConverter;
 import de.tiktak.kmm.persistence.StreamIndex;
@@ -273,13 +274,16 @@ public class Movie {
     }
 
     void applyStreamDetails(StreamDetails details) {
-        this.streamDetails = details == null || details.isEmpty() ? null : details;
+        this.streamDetails = details == null || details.isEmpty() ? null : CodecNames.normalize(details);
         this.streamIndex = StreamIndex.of(this.streamDetails);
     }
 
-    /** Legt die Kurzform für Filme an, deren technische Angaben vor der Kurzform gespeichert wurden. */
+    /**
+     * Legt die Kurzform für Filme an, deren technische Angaben vor der Kurzform gespeichert wurden, und übersetzt
+     * dabei Codec-Namen, die etwa aus Ember noch roh übernommen wurden.
+     */
     void indexStreams() {
-        this.streamIndex = StreamIndex.of(this.streamDetails);
+        applyStreamDetails(this.streamDetails);
     }
 
     void changeAddedAt(Instant newAddedAt) {

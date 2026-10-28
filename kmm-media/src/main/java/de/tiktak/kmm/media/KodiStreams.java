@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
 
+import de.tiktak.kmm.nfo.CodecNames;
 import de.tiktak.kmm.nfo.IsoLanguages;
 import de.tiktak.kmm.nfo.StreamDetails;
 
@@ -15,7 +16,6 @@ import de.tiktak.kmm.nfo.StreamDetails;
  */
 final class KodiStreams {
 
-    private static final Map<String, String> AUDIO_CODECS = Map.of("dts", "dca");
     private static final Set<String> INTERLACED = Set.of("tt", "bb", "tb", "bt");
     private static final Map<String, String> HDR_TRANSFERS = Map.of("smpte2084", "hdr10", "arib-std-b67", "hlg");
     /** MPEG-4-Part-2-Videos nennt Kodi nach ihrem FourCC, etwa {@code xvid} oder {@code divx}. */
@@ -85,7 +85,7 @@ final class KodiStreams {
         if ("dts".equals(stream.codec()) && profile.contains("DTS-HD HRA")) {
             return "dtshd_hra";
         }
-        return stream.codec() == null ? null : AUDIO_CODECS.getOrDefault(stream.codec(), stream.codec());
+        return CodecNames.audio(stream.codec());
     }
 
     /** Matroska-Dateien enthalten die Videobitrate oft nicht; dann bleibt die Gesamtbitrate ohne Ton. */

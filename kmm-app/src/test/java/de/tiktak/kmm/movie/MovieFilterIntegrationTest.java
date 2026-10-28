@@ -180,6 +180,23 @@ class MovieFilterIntegrationTest {
         assertThat(titles(true, condition("RESOLUTION", "AT_LEAST", "1080"))).containsExactly("Heat", "Matrix");
     }
 
+    @Test
+    void translatesRawCodecNamesWhenReadingAndWhenReindexing() throws IOException {
+        Path filme = library.resolve("filme");
+        givenMovie(filme, "Ember-Import", 2001, streams("640", "352", "avc1", null, "mp4a-40-2", "deu", null, null));
+        long sourceId = jdbcClient.sql("SELECT id FROM media_source").query(Long.class).single();
+        awaitJob(read(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange())
+                .get("id").asString());
+        assertThat(titles(true, condition("VIDEO_CODEC", "IS", "h264"))).containsExactly("Ember-Import", "Heat");
+        assertThat(titles(true, condition("AUDIO_CODEC", "IS", "aac"))).containsExactly("Ember-Import");
+
+        jdbcClient.sql("UPDATE movie SET stream_details = REPLACE(stream_details, '\"truehd\"', '\"atmos / truehd\"'),"
+                + " audio_codecs = NULL WHERE title = 'Matrix'").update();
+        backfill.indexMissing();
+
+        assertThat(titles(true, condition("AUDIO_CODEC", "IS", "truehd_atmos"))).containsExactly("Matrix");
+    }
+
     @SafeVarargs
     private List<String> titles(boolean matchAll, Map<String, String>... conditions) {
         String body = objectMapper.writeValueAsString(Map.of("matchAll", matchAll, "conditions", List.of(conditions)));
