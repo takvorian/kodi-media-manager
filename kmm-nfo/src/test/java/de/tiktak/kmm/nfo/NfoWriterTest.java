@@ -36,7 +36,8 @@ class NfoWriterTest {
         String content = Files.readString(nfoFile);
         assertThat(content).startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
         assertThat(content).contains("<uniqueid default=\"true\" type=\"imdb\">tt0113277</uniqueid>");
-        assertThat(content).contains("\n    <title>Heat</title>");
+        assertThat(content).contains("\n    <title>Heat</title>", "<edition>Director's Cut</edition>",
+                "<videosource>bluray</videosource>");
     }
 
     @Test
@@ -65,7 +66,7 @@ class NfoWriterTest {
     @Test
     void replacesListsAndRemovesClearedFields() throws IOException {
         Path nfoFile = copyFixture("full-movie.nfo");
-        MovieNfo changed = new MovieNfo("Heat", null, null, 1995, null, null, null, null, null, null,
+        MovieNfo changed = new MovieNfo("Heat", null, null, 1995, null, null, null, null, null, null, null, null,
                 List.of("Action"), Map.of("tmdb", "949"));
 
         writer.write(nfoFile, changed);
@@ -129,7 +130,7 @@ class NfoWriterTest {
     void writesYearDerivedFromPremiered() throws IOException {
         Path nfoFile = directory.resolve("Heat.nfo");
         MovieNfo nfo = new MovieNfo("Heat", null, null, null, LocalDate.of(1995, 12, 15), null, null, null, null,
-                null, List.of(), Map.of());
+                null, null, null, List.of(), Map.of());
 
         writer.write(nfoFile, nfo);
 
@@ -186,12 +187,13 @@ class NfoWriterTest {
         ids.put("imdb", "tt0113277");
         ids.put("tmdb", "949");
         return new MovieNfo(title, "Heat", "Heat", 1995, LocalDate.of(1995, 12, 15), "Handlung", "Kurz",
-                "A Los Angeles Crime Saga", 170, "FSK 16", List.of("Krimi", "Drama"), ids);
+                "A Los Angeles Crime Saga", 170, "FSK 16", "Director's Cut", "bluray", List.of("Krimi", "Drama"), ids);
     }
 
     private static MovieNfo withSupplement(MovieNfo nfo, MovieNfoSupplement supplement) {
         return new MovieNfo(nfo.title(), nfo.originalTitle(), nfo.sortTitle(), nfo.year(), nfo.premiered(), nfo.plot(),
-                nfo.outline(), nfo.tagline(), nfo.runtime(), nfo.mpaa(), nfo.genres(), nfo.uniqueIds(), supplement);
+                nfo.outline(), nfo.tagline(), nfo.runtime(), nfo.mpaa(), nfo.edition(), nfo.videoSource(), nfo.genres(),
+                nfo.uniqueIds(), supplement);
     }
 
     private static MovieNfoSupplement supplement() {

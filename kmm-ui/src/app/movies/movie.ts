@@ -43,6 +43,10 @@ export interface MovieMetadata {
   readonly genres: readonly string[];
   readonly imdbId: string | null;
   readonly tmdbId: string | null;
+  /** Fassung, z. B. „Director's Cut“. */
+  readonly edition: string | null;
+  /** Videoquelle, z. B. bluray. */
+  readonly videoSource: string | null;
 }
 
 export interface MovieActor {

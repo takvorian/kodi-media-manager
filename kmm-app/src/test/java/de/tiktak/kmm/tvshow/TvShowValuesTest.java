@@ -38,7 +38,7 @@ class TvShowValuesTest {
     @Test
     void limitsEpisodeMetadata() {
         EpisodeMetadata limited = new EpisodeMetadata(" Pilot ", null, "P".repeat(TvTexts.MAX_PLOT_LENGTH + 1), null, -1,
-                "x", "42", "tt0000001", 0).withinLimits();
+                "x", "42", "tt0000001", 0, null).withinLimits();
 
         assertThat(limited.title()).isEqualTo("Pilot");
         assertThat(limited.plot()).hasSize(TvTexts.MAX_PLOT_LENGTH);

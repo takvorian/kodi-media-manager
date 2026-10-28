@@ -16,6 +16,8 @@ final class NfoElements {
     static final String TAGLINE = "tagline";
     static final String RUNTIME = "runtime";
     static final String MPAA = "mpaa";
+    static final String EDITION = "edition";
+    static final String VIDEO_SOURCE = "videosource";
     static final String GENRE = "genre";
     static final String UNIQUE_ID = "uniqueid";
     static final String TYPE_ATTRIBUTE = "type";

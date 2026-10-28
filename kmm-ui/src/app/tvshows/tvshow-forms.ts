@@ -5,6 +5,7 @@ import { EpisodeMetadata, TvShowMetadata } from './tvshow';
 export const MIN_YEAR = 1870;
 export const MAX_YEAR = 2200;
 const MAX_TITLE_LENGTH = 512;
+const MAX_LABEL_LENGTH = 255;
 const NUMERIC_ID_PATTERN = /^\d{1,10}$/;
 const IMDB_ID_PATTERN = /^tt\d{7,10}$/;
 const LIST_SEPARATOR = ',';
@@ -40,6 +41,7 @@ export type EpisodeMetadataForm = FormGroup<{
   tmdbId: FormControl<string>;
   imdbId: FormControl<string>;
   userRating: FormControl<number | null>;
+  videoSource: FormControl<string>;
   plot: FormControl<string>;
 }>;
 
@@ -74,6 +76,7 @@ export function createEpisodeMetadataForm(formBuilder: NonNullableFormBuilder): 
     tmdbId: ['', Validators.pattern(NUMERIC_ID_PATTERN)],
     imdbId: ['', Validators.pattern(IMDB_ID_PATTERN)],
     userRating: formBuilder.control<number | null>(null, userRatingValidators()),
+    videoSource: ['', Validators.maxLength(MAX_LABEL_LENGTH)],
     plot: [''],
   });
 }
@@ -131,6 +134,7 @@ export function toEpisodeFormValue(metadata: EpisodeMetadata): EpisodeMetadataFo
     tmdbId: metadata.tmdbId ?? '',
     imdbId: metadata.imdbId ?? '',
     userRating: metadata.userRating,
+    videoSource: metadata.videoSource ?? '',
     plot: metadata.plot ?? '',
   };
 }
@@ -146,6 +150,7 @@ export function toEpisodeMetadata(form: EpisodeMetadataForm): EpisodeMetadata {
     tmdbId: textOrNull(value.tmdbId),
     imdbId: textOrNull(value.imdbId),
     userRating: value.userRating,
+    videoSource: textOrNull(value.videoSource),
     plot: textOrNull(value.plot),
   };
 }

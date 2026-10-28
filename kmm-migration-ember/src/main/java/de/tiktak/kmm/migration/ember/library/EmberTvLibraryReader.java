@@ -51,7 +51,7 @@ public class EmberTvLibraryReader {
     private static final String EPISODES = """
             SELECT e.idEpisode, e.idShow, f.strFilename, e.Season, e.Episode, e.Title, e.OriginalTitle, e.Plot,
                    e.Aired, e.Runtime, e.strIMDB, e.strTMDB, e.strTVDB, e.DateAdded, e.Playcount, e.iLastPlayed,
-                   e.iUserRating
+                   e.iUserRating, e.VideoSource
             FROM episode e LEFT JOIN files f ON f.idFile = e.idFile
             ORDER BY e.idShow, e.Season, e.Episode, e.idEpisode""";
     private static final String EPISODE_UNIQUE_IDS = """
@@ -191,6 +191,7 @@ public class EmberTvLibraryReader {
                     .playCount(EmberValues.nullableInt(row, "Playcount"))
                     .lastPlayed(EmberValues.localDateTime(row, "iLastPlayed"))
                     .userRating(EmberValues.positiveInteger(row, "iUserRating"))
+                    .videoSource(EmberValues.text(row, "VideoSource"))
                     .streams(streams.getOrDefault(id, EmberStreams.NONE))
                     .build());
         });

@@ -37,7 +37,7 @@ class MovieMetadataTest {
     @Test
     void trimsTextsAndTurnsBlanksIntoNull() {
         var metadata = new MovieMetadata("  Heat ", " ", null, null, null, "\n", null, null, null, null,
-                Arrays.asList(" Krimi ", "", null, "Krimi", "Drama"), " tt0113277 ", "");
+                Arrays.asList(" Krimi ", "", null, "Krimi", "Drama"), " tt0113277 ", "", null, null);
 
         assertThat(metadata.title()).isEqualTo("Heat");
         assertThat(metadata.originalTitle()).isNull();
@@ -77,7 +77,7 @@ class MovieMetadataTest {
     @Test
     void requiresGenreList() {
         var metadata = new MovieMetadata("Heat", null, null, null, null, null, null, null, null, null, null, null,
-                null);
+                null, null, null);
 
         assertThat(violatedFields(metadata)).containsExactly("genres");
     }
@@ -91,14 +91,14 @@ class MovieMetadataTest {
 
     private static MovieMetadata metadata(String title, Integer year, String imdbId, String tmdbId) {
         return new MovieMetadata(title, null, null, year, null, null, null, null, 120, null, List.of("Krimi"),
-                imdbId, tmdbId);
+                imdbId, tmdbId, null, null);
     }
 
     @Test
     void cutsForeignDataToTheLimitsOfTheDatabase() {
         var foreign = new MovieMetadata("x".repeat(600), null, null, 1500, null, "p".repeat(30_000), null, null, -5,
                 "m".repeat(100), java.util.stream.IntStream.range(0, 60).mapToObj(index -> "Genre " + index).toList(),
-                "0113277", "949a");
+                "0113277", "949a", null, null);
 
         MovieMetadata limited = foreign.withinLimits();
 
@@ -116,7 +116,7 @@ class MovieMetadataTest {
     @Test
     void keepsValidValuesWithinLimits() {
         var valid = new MovieMetadata("Heat", null, null, 1995, null, null, null, null, 170, "FSK 16", List.of("Krimi"),
-                "tt0113277", "949");
+                "tt0113277", "949", null, null);
 
         assertThat(valid.withinLimits()).isEqualTo(valid);
     }

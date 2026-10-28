@@ -44,6 +44,7 @@ public class EpisodeNfoReader {
                 NfoDocuments.text(episode, NfoElements.PLOT),
                 NfoReader.date(NfoDocuments.text(episode, NfoElements.AIRED)),
                 NfoReader.number(NfoDocuments.text(episode, NfoElements.RUNTIME)),
+                NfoDocuments.text(episode, NfoElements.VIDEO_SOURCE),
                 NfoReader.uniqueIds(episode),
                 NfoSupplementReader.ratings(episode),
                 NfoDocuments.texts(episode, NfoElements.DIRECTOR),

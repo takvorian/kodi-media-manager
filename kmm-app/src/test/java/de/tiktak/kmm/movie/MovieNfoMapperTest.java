@@ -21,7 +21,7 @@ import de.tiktak.kmm.nfo.StreamDetails;
 class MovieNfoMapperTest {
 
     private static final MovieNfo FULL_NFO = new MovieNfo("Heat", "Heat OT", "Heat Sort", 1995,
-            LocalDate.of(1995, 12, 15), "Handlung", "Kurz", "Tagline", 170, "FSK 16", List.of("Krimi"),
+            LocalDate.of(1995, 12, 15), "Handlung", "Kurz", "Tagline", 170, "FSK 16", null, null, List.of("Krimi"),
             Map.of("imdb", "tt0113277", "tmdb", "949", "tvdb", "123"));
 
     @Test
@@ -30,7 +30,7 @@ class MovieNfoMapperTest {
 
         assertThat(metadata).isEqualTo(new MovieMetadata("Heat", "Heat OT", "Heat Sort", 1995,
                 LocalDate.of(1995, 12, 15), "Handlung", "Kurz", "Tagline", 170, "FSK 16", List.of("Krimi"),
-                "tt0113277", "949"));
+                "tt0113277", "949", null, null));
     }
 
     private static final ZoneId BERLIN = ZoneId.of("Europe/Berlin");
@@ -86,7 +86,7 @@ class MovieNfoMapperTest {
 
     @Test
     void fallsBackToScannedTitleAndYear() {
-        MovieNfo empty = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null);
+        MovieNfo empty = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         MovieMetadata metadata = MovieNfoMapper.toMetadata(empty, "Heat", 1995);
 
@@ -98,7 +98,7 @@ class MovieNfoMapperTest {
 
     @Test
     void usesYearOfPremieredBeforeScannedYear() {
-        MovieNfo nfo = new MovieNfo(null, null, null, null, LocalDate.of(1995, 12, 15), null, null, null, null, null,
+        MovieNfo nfo = new MovieNfo(null, null, null, null, LocalDate.of(1995, 12, 15), null, null, null, null, null, null, null,
                 null, null);
 
         assertThat(MovieNfoMapper.toMetadata(nfo, "Heat", 2000).year()).isEqualTo(1995);
@@ -119,7 +119,7 @@ class MovieNfoMapperTest {
     @Test
     void dropsClearedImdbIdEvenIfExistingNfoHasOne() {
         MovieMetadata metadata = new MovieMetadata("Heat", null, null, null, null, null, null, null, null, null,
-                List.of(), null, null);
+                List.of(), null, null, null, null);
 
         MovieNfo nfo = MovieNfoMapper.toNfo(metadata, null, Map.of("imdb", "tt0113277"));
 

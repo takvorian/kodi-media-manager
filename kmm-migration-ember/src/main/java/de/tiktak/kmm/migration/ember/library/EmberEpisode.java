@@ -38,6 +38,7 @@ public record EmberEpisode(
         Integer playCount,
         LocalDateTime lastPlayed,
         Integer userRating,
+        String videoSource,
         EmberStreams streams) {
 
     public EmberEpisode {

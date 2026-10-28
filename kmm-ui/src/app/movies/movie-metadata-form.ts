@@ -7,6 +7,7 @@ export const MAX_YEAR = 2200;
 const IMDB_ID_PATTERN = /^tt\d{7,10}$/;
 const TMDB_ID_PATTERN = /^\d{1,10}$/;
 const GENRE_SEPARATOR = ',';
+const MAX_LABEL_LENGTH = 255;
 
 /** Textfelder sind leer statt {@code null}; leere Eingaben gelten beim Speichern als „nicht gesetzt“. */
 export type MovieMetadataForm = FormGroup<{
@@ -17,6 +18,8 @@ export type MovieMetadataForm = FormGroup<{
   premiered: FormControl<string>;
   runtime: FormControl<number | null>;
   mpaa: FormControl<string>;
+  edition: FormControl<string>;
+  videoSource: FormControl<string>;
   genres: FormControl<string>;
   tagline: FormControl<string>;
   outline: FormControl<string>;
@@ -34,6 +37,8 @@ export function createMovieMetadataForm(formBuilder: NonNullableFormBuilder): Mo
     premiered: [''],
     runtime: formBuilder.control<number | null>(null, Validators.min(0)),
     mpaa: [''],
+    edition: ['', Validators.maxLength(MAX_LABEL_LENGTH)],
+    videoSource: ['', Validators.maxLength(MAX_LABEL_LENGTH)],
     genres: [''],
     tagline: [''],
     outline: [''],
@@ -52,6 +57,8 @@ export function toFormValue(metadata: MovieMetadata): MovieMetadataForm['value']
     premiered: metadata.premiered ?? '',
     runtime: metadata.runtime,
     mpaa: metadata.mpaa ?? '',
+    edition: metadata.edition ?? '',
+    videoSource: metadata.videoSource ?? '',
     genres: metadata.genres.join(`${GENRE_SEPARATOR} `),
     tagline: metadata.tagline ?? '',
     outline: metadata.outline ?? '',
@@ -71,6 +78,8 @@ export function toMetadata(form: MovieMetadataForm): MovieMetadata {
     premiered: textOrNull(value.premiered),
     runtime: value.runtime,
     mpaa: textOrNull(value.mpaa),
+    edition: textOrNull(value.edition),
+    videoSource: textOrNull(value.videoSource),
     genres: value.genres
       .split(GENRE_SEPARATOR)
       .map((genre) => genre.trim())

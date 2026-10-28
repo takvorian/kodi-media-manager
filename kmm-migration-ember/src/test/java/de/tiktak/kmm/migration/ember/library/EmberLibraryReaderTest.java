@@ -76,6 +76,8 @@ class EmberLibraryReaderTest {
         assertThat(heat.playCount()).isEqualTo(2);
         assertThat(heat.lastPlayed()).isEqualTo(LocalDateTime.of(2016, 8, 13, 23, 34, 55));
         assertThat(heat.userRating()).isEqualTo(9);
+        assertThat(heat.edition()).isEqualTo("Director's Cut");
+        assertThat(heat.videoSource()).isEqualTo("bluray");
     }
 
     @Test
@@ -89,6 +91,8 @@ class EmberLibraryReaderTest {
         assertThat(matrix.playCount()).isNull();
         assertThat(matrix.lastPlayed()).isNull();
         assertThat(matrix.userRating()).isNull();
+        assertThat(matrix.edition()).as("leer").isNull();
+        assertThat(matrix.videoSource()).as("leer").isNull();
     }
 
     @Test

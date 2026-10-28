@@ -95,6 +95,12 @@ public class Movie {
     @Column(name = "tagline", length = MovieMetadata.MAX_TITLE_LENGTH)
     private String tagline;
 
+    @Column(name = "edition", length = MovieMetadata.MAX_LABEL_LENGTH)
+    private String edition;
+
+    @Column(name = "video_source", length = MovieMetadata.MAX_LABEL_LENGTH)
+    private String videoSource;
+
     @Column(name = "runtime_minutes")
     private Integer runtime;
 
@@ -188,7 +194,7 @@ public class Movie {
 
     public MovieMetadata metadata() {
         return new MovieMetadata(title, originalTitle, sortTitle, releaseYear, premiered, plot, outline, tagline,
-                runtime, mpaa, List.copyOf(genres), imdbId, tmdbId);
+                runtime, mpaa, List.copyOf(genres), imdbId, tmdbId, edition, videoSource);
     }
 
     void applyMetadata(MovieMetadata metadata) {
@@ -200,6 +206,8 @@ public class Movie {
         this.plot = metadata.plot();
         this.outline = metadata.outline();
         this.tagline = metadata.tagline();
+        this.edition = metadata.edition();
+        this.videoSource = metadata.videoSource();
         this.runtime = metadata.runtime();
         this.mpaa = metadata.mpaa();
         this.imdbId = metadata.imdbId();

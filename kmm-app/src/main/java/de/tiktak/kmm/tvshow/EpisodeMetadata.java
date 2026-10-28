@@ -11,7 +11,7 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Bearbeitbare Metadaten einer Episode. Staffel und Episode stehen im Dateinamen und sind hier
- * nicht änderbar.
+ * nicht änderbar. Die Videoquelle (z. B. {@code dvd}) stammt aus Ember und dient etwa dem Umbenennen.
  */
 public record EpisodeMetadata(
         @NotBlank @Size(max = TvTexts.MAX_TITLE_LENGTH) String title,
@@ -22,7 +22,8 @@ public record EpisodeMetadata(
         @Pattern(regexp = TvShowMetadata.NUMERIC_ID_PATTERN) String tvdbId,
         @Pattern(regexp = TvShowMetadata.NUMERIC_ID_PATTERN) String tmdbId,
         @Pattern(regexp = TvShowMetadata.IMDB_ID_PATTERN) String imdbId,
-        @Min(TvShowMetadata.MIN_USER_RATING) @Max(TvShowMetadata.MAX_USER_RATING) Integer userRating) {
+        @Min(TvShowMetadata.MIN_USER_RATING) @Max(TvShowMetadata.MAX_USER_RATING) Integer userRating,
+        @Size(max = TvTexts.MAX_LABEL_LENGTH) String videoSource) {
 
     public EpisodeMetadata {
         title = TvTexts.clean(title, Integer.MAX_VALUE);
@@ -31,6 +32,7 @@ public record EpisodeMetadata(
         tvdbId = TvTexts.clean(tvdbId, Integer.MAX_VALUE);
         tmdbId = TvTexts.clean(tmdbId, Integer.MAX_VALUE);
         imdbId = TvTexts.clean(imdbId, Integer.MAX_VALUE);
+        videoSource = TvTexts.clean(videoSource, Integer.MAX_VALUE);
     }
 
     /** Kopie, die die Grenzen der Datenbank einhält (für Daten aus Dateien und Fremdquellen). */
@@ -45,6 +47,7 @@ public record EpisodeMetadata(
                 TvTexts.id(tmdbId, TvShowMetadata.NUMERIC_ID_PATTERN),
                 TvTexts.id(imdbId, TvShowMetadata.IMDB_ID_PATTERN),
                 userRating != null && userRating >= TvShowMetadata.MIN_USER_RATING
-                        && userRating <= TvShowMetadata.MAX_USER_RATING ? userRating : null);
+                        && userRating <= TvShowMetadata.MAX_USER_RATING ? userRating : null,
+                TvTexts.clean(videoSource, TvTexts.MAX_LABEL_LENGTH));
     }
 }

@@ -69,7 +69,7 @@ final class TvNfoMapper {
                 nfo.uniqueIds().get(TVDB),
                 nfo.uniqueIds().get(TMDB),
                 nfo.uniqueIds().get(IMDB),
-                nfo.userRating()).withinLimits();
+                nfo.userRating(), nfo.videoSource()).withinLimits();
     }
 
     static EpisodeExtras toExtras(EpisodeNfo nfo, ZoneId zone) {
@@ -80,7 +80,8 @@ final class TvNfoMapper {
     static EpisodeNfo toNfo(int season, int episode, EpisodeMetadata metadata, EpisodeExtras extras,
             Instant addedAt, ZoneId zone) {
         return new EpisodeNfo(metadata.title(), metadata.originalTitle(), season, episode, metadata.plot(),
-                metadata.aired(), metadata.runtime(), ids(metadata.tvdbId(), metadata.tmdbId(), metadata.imdbId()),
+                metadata.aired(), metadata.runtime(), metadata.videoSource(),
+                ids(metadata.tvdbId(), metadata.tmdbId(), metadata.imdbId()),
                 nfoRatings(extras.ratings()), extras.directors(), extras.writers(), nfoActors(extras.actors()),
                 metadata.userRating(), extras.playCount(), toLocal(extras.lastPlayed(), zone),
                 toLocal(addedAt, zone), extras.streams());

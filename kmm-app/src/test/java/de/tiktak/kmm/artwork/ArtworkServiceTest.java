@@ -221,7 +221,7 @@ class ArtworkServiceTest {
 
     private void givenMovie(String tmdbId, String imdbId) {
         var metadata = new MovieMetadata("Heat", null, null, 1995, null, null, null, null, null, null, List.of(),
-                imdbId, tmdbId);
+                imdbId, tmdbId, null, null);
         lenient().when(metadataService.findDetails(MOVIE_ID)).thenReturn(new MovieDetails(
                 MOVIE_ID, 1L, MOVIE_FILE.toString(), DiscFormat.FILE, 1, MODIFIED, metadata,
                 MovieSupplement.EMPTY, StreamDetails.EMPTY, new MovieDetails.NfoInfo("Heat.nfo", false, null)));

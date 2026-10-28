@@ -30,6 +30,8 @@ describe('MovieDetail', () => {
       genres: ['Krimi'],
       imdbId: 'tt0113277',
       tmdbId: null,
+      edition: null,
+      videoSource: null,
     },
     supplement: { ...EMPTY_SUPPLEMENT, directors: ['Michael Mann'] },
     streams: {

@@ -132,7 +132,7 @@ class TvShowImportServiceTest {
 
     private static EpisodeImport episodeImport(int number, String title, StreamDetails streams) {
         return new EpisodeImport(EPISODE_FILE, 1, number,
-                new EpisodeMetadata(title, null, null, null, null, null, null, null, null),
+                new EpisodeMetadata(title, null, null, null, null, null, null, null, null, null),
                 new EpisodeExtras(List.of(), List.of(), List.of(), List.of(), 2, null, streams), ADDED_AT);
     }
 }

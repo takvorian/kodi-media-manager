@@ -60,7 +60,7 @@ class TvNfoMapperTest {
 
     @Test
     void mapsAnEpisodeNfoAndBackInLocalTime() {
-        EpisodeNfo nfo = new EpisodeNfo(null, "Original", 1, 16, "Handlung", LocalDate.of(1987, 2, 9), 30,
+        EpisodeNfo nfo = new EpisodeNfo(null, "Original", 1, 16, "Handlung", LocalDate.of(1987, 2, 9), 30, null,
                 Map.of("tvdb", "110001"), List.of(), List.of("Regie"), List.of("Autor"),
                 List.of(new NfoActor("Gast", "Rolle", 0, null)), 7, 2, LocalDateTime.of(2014, 5, 25, 1, 21, 47),
                 null, new StreamDetails(List.of(), List.of(new StreamDetails.Audio("ac3", null, 1, null)), List.of()));
@@ -69,7 +69,7 @@ class TvNfoMapperTest {
         EpisodeExtras extras = TvNfoMapper.toExtras(nfo, BERLIN);
 
         assertThat(metadata).isEqualTo(new EpisodeMetadata("Aus dem Dateinamen", "Original", "Handlung",
-                LocalDate.of(1987, 2, 9), 30, "110001", null, null, 7));
+                LocalDate.of(1987, 2, 9), 30, "110001", null, null, 7, null));
         assertThat(extras.lastPlayed()).isEqualTo(Instant.parse("2014-05-24T23:21:47Z"));
         EpisodeNfo back = TvNfoMapper.toNfo(1, 16, metadata, extras, Instant.parse("2020-01-01T11:00:00Z"), BERLIN);
         assertThat(back.lastPlayed()).isEqualTo(LocalDateTime.of(2014, 5, 25, 1, 21, 47));

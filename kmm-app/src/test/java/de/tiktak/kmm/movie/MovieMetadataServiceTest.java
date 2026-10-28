@@ -144,6 +144,6 @@ class MovieMetadataServiceTest {
 
     private static MovieMetadata metadata(String title) {
         return new MovieMetadata(title, null, null, 1995, null, null, null, null, null, null,
-                List.of("Krimi", "Drama"), "tt0113277", null);
+                List.of("Krimi", "Drama"), "tt0113277", null, null, null);
     }
 }

@@ -34,6 +34,8 @@ class NfoReaderTest {
         assertThat(nfo.tagline()).isEqualTo("A Los Angeles Crime Saga");
         assertThat(nfo.runtime()).isEqualTo(170);
         assertThat(nfo.mpaa()).isEqualTo("FSK 16");
+        assertThat(nfo.edition()).isEqualTo("Remastered");
+        assertThat(nfo.videoSource()).isEqualTo("bluray");
         assertThat(nfo.genres()).containsExactly("Krimi", "Drama", "Thriller");
         assertThat(nfo.uniqueIds()).containsEntry("imdb", "tt0113277").containsEntry("tmdb", "949");
     }

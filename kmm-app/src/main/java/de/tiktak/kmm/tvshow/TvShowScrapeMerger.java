@@ -74,7 +74,7 @@ final class TvShowScrapeMerger {
                 prefer(metadata.tvdbId(), scraped.uniqueIds().get(TVDB)),
                 prefer(metadata.tmdbId(), scraped.uniqueIds().get(TMDB)),
                 prefer(metadata.imdbId(), scraped.uniqueIds().get(IMDB)),
-                metadata.userRating()).withinLimits();
+                metadata.userRating(), metadata.videoSource()).withinLimits();
         EpisodeExtras filledExtras = new EpisodeExtras(
                 extras.directors().isEmpty() ? scraped.directors() : extras.directors(),
                 extras.writers().isEmpty() ? scraped.writers() : extras.writers(),

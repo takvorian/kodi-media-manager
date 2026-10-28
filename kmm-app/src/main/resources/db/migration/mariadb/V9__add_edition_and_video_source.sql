@@ -1,0 +1,4 @@
+ALTER TABLE movie
+    ADD COLUMN edition      VARCHAR(255) NULL,
+    ADD COLUMN video_source VARCHAR(255) NULL;
+ALTER TABLE episode ADD COLUMN video_source VARCHAR(255) NULL;

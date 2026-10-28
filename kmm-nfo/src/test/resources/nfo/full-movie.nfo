@@ -17,6 +17,8 @@
   <runtime>170</runtime>
   <thumb aspect="poster">https://image.example.org/heat-poster.jpg</thumb>
   <mpaa>FSK 16</mpaa>
+  <edition>Remastered</edition>
+  <videosource>bluray</videosource>
   <playcount>2</playcount>
   <lastplayed>2024-05-01 20:15:00</lastplayed>
   <uniqueid type="imdb" default="true">tt0113277</uniqueid>

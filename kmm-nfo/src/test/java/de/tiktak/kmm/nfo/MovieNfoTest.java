@@ -14,7 +14,7 @@ class MovieNfoTest {
 
     @Test
     void replacesMissingCollectionsWithEmptyOnes() {
-        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null);
+        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null, null, null);
 
         assertThat(nfo.genres()).isEmpty();
         assertThat(nfo.uniqueIds()).isEmpty();
@@ -23,7 +23,7 @@ class MovieNfoTest {
 
     @Test
     void normalizesUniqueIdTypesToLowerCase() {
-        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null,
+        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null, null,
                 Map.of("IMDB", "tt0113277"));
 
         assertThat(nfo.uniqueIds()).containsOnlyKeys("imdb");
@@ -38,7 +38,7 @@ class MovieNfoTest {
         ids.put("imdb", "tt0113277");
         ids.put("tvdb", "1");
 
-        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, ids);
+        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null, null, ids);
 
         assertThat(nfo.uniqueIds().keySet()).containsExactly("tmdb", "imdb", "tvdb");
     }
@@ -46,7 +46,7 @@ class MovieNfoTest {
     @Test
     void copiesGenresDefensively() {
         List<String> genres = new ArrayList<>(List.of("Drama"));
-        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, genres, null);
+        var nfo = new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null, genres, null);
 
         genres.add("Krimi");
 
@@ -55,7 +55,7 @@ class MovieNfoTest {
 
     @Test
     void prefersExplicitYearOverPremiered() {
-        var nfo = new MovieNfo(null, null, null, 1996, LocalDate.of(1995, 12, 15), null, null, null, null, null,
+        var nfo = new MovieNfo(null, null, null, 1996, LocalDate.of(1995, 12, 15), null, null, null, null, null, null, null,
                 null, null);
 
         assertThat(nfo.effectiveYear()).isEqualTo(1996);

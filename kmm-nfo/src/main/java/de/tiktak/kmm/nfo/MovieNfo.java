@@ -10,6 +10,8 @@ import java.util.Optional;
  * Die Felder einer Kodi-Film-NFO, die KMM verwaltet. Nicht gesetzte Werte sind {@code null}.
  *
  * @param runtime   Laufzeit in Minuten
+ * @param edition   Fassung, z. B. „Director's Cut“ (wie Ember)
+ * @param videoSource Videoquelle, z. B. {@code bluray} (wie Ember)
  * @param uniqueIds IDs je Anbieter in Reihenfolge, Schlüssel klein geschrieben (z. B. {@code imdb}, {@code tmdb})
  * @param supplement weitere Angaben; {@code null} heißt „unbekannt“: Beim Schreiben bleiben die
  *                   entsprechenden Elemente einer vorhandenen NFO dann unverändert
@@ -25,6 +27,8 @@ public record MovieNfo(
         String tagline,
         Integer runtime,
         String mpaa,
+        String edition,
+        String videoSource,
         List<String> genres,
         Map<String, String> uniqueIds,
         MovieNfoSupplement supplement) {
@@ -39,10 +43,10 @@ public record MovieNfo(
 
     /** NFO-Inhalt ohne bekannte weitere Angaben. */
     public MovieNfo(String title, String originalTitle, String sortTitle, Integer year, LocalDate premiered,
-            String plot, String outline, String tagline, Integer runtime, String mpaa, List<String> genres,
-            Map<String, String> uniqueIds) {
-        this(title, originalTitle, sortTitle, year, premiered, plot, outline, tagline, runtime, mpaa, genres,
-                uniqueIds, null);
+            String plot, String outline, String tagline, Integer runtime, String mpaa, String edition,
+            String videoSource, List<String> genres, Map<String, String> uniqueIds) {
+        this(title, originalTitle, sortTitle, year, premiered, plot, outline, tagline, runtime, mpaa, edition,
+                videoSource, genres, uniqueIds, null);
     }
 
     public Optional<String> uniqueId(String type) {

@@ -14,6 +14,8 @@ import jakarta.validation.constraints.Size;
 
 /**
  * Bearbeitbare Metadaten eines Films. Entspricht den Feldern, die KMM in die NFO schreibt.
+ * Fassung ({@code edition}) und Videoquelle ({@code videosource}) kennt Kodi nicht; sie stammen aus Ember
+ * und dienen etwa dem Umbenennen.
  * Nicht gesetzte Werte sind {@code null}.
  */
 public record MovieMetadata(
@@ -29,12 +31,15 @@ public record MovieMetadata(
         @Size(max = MAX_MPAA_LENGTH) String mpaa,
         @NotNull @Size(max = MAX_GENRES) List<@NotBlank @Size(max = MAX_GENRE_LENGTH) String> genres,
         @Pattern(regexp = IMDB_ID_PATTERN) String imdbId,
-        @Pattern(regexp = TMDB_ID_PATTERN) String tmdbId) {
+        @Pattern(regexp = TMDB_ID_PATTERN) String tmdbId,
+        @Size(max = MAX_LABEL_LENGTH) String edition,
+        @Size(max = MAX_LABEL_LENGTH) String videoSource) {
 
     static final int MAX_TITLE_LENGTH = 512;
     static final int MAX_OUTLINE_LENGTH = 2048;
     static final int MAX_PLOT_LENGTH = 20_000;
     static final int MAX_MPAA_LENGTH = 64;
+    static final int MAX_LABEL_LENGTH = 255;
     static final int MAX_GENRES = 50;
     static final int MAX_GENRE_LENGTH = 128;
     static final int MIN_YEAR = 1870;
@@ -52,6 +57,8 @@ public record MovieMetadata(
         mpaa = trimToNull(mpaa);
         imdbId = trimToNull(imdbId);
         tmdbId = trimToNull(tmdbId);
+        edition = trimToNull(edition);
+        videoSource = trimToNull(videoSource);
         genres = genres == null ? null : genres.stream()
                 .map(MovieMetadata::trimToNull)
                 .filter(Objects::nonNull)
@@ -82,7 +89,9 @@ public record MovieMetadata(
                         .limit(MAX_GENRES)
                         .toList(),
                 imdbId != null && imdbId.matches(IMDB_ID_PATTERN) ? imdbId : null,
-                tmdbId != null && tmdbId.matches(TMDB_ID_PATTERN) ? tmdbId : null);
+                tmdbId != null && tmdbId.matches(TMDB_ID_PATTERN) ? tmdbId : null,
+                Texts.clean(edition, MAX_LABEL_LENGTH),
+                Texts.clean(videoSource, MAX_LABEL_LENGTH));
     }
 
     private static String trimToNull(String value) {

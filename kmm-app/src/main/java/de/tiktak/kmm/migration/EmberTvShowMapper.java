@@ -69,7 +69,8 @@ final class EmberTvShowMapper {
                 episode.uniqueIds().get(TVDB),
                 episode.uniqueIds().get(TMDB),
                 episode.uniqueIds().get(IMDB),
-                EmberMappings.userRating(episode.userRating())).withinLimits();
+                EmberMappings.userRating(episode.userRating()), episode.videoSource())
+                .withinLimits();
         EpisodeExtras extras = new EpisodeExtras(
                 episode.directors(),
                 episode.writers(),

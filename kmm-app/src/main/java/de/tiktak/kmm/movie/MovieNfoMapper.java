@@ -49,7 +49,7 @@ final class MovieNfoMapper {
                 nfo.mpaa(),
                 nfo.genres(),
                 nfo.uniqueId(MovieNfo.IMDB).orElse(null),
-                nfo.uniqueId(MovieNfo.TMDB).orElse(null));
+                nfo.uniqueId(MovieNfo.TMDB).orElse(null), nfo.edition(), nfo.videoSource());
     }
 
     /**
@@ -77,6 +77,8 @@ final class MovieNfoMapper {
                 metadata.tagline(),
                 metadata.runtime(),
                 metadata.mpaa(),
+                metadata.edition(),
+                metadata.videoSource(),
                 metadata.genres(),
                 uniqueIds,
                 supplement);

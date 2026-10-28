@@ -94,6 +94,7 @@ class EmberTvLibraryReaderTest {
         assertThat(pilot.playCount()).isEqualTo(1);
         assertThat(pilot.lastPlayed()).isNotNull();
         assertThat(pilot.userRating()).isEqualTo(9);
+        assertThat(pilot.videoSource()).isEqualTo("dvd");
         assertThat(pilot.streams().videos()).containsExactly(
                 new EmberStreams.Video("h264", 1280, 720, "1.778", null, null, null, null, null, null, null, null));
         assertThat(pilot.streams().audios()).containsExactly(new EmberStreams.Audio("AAC", "deu", 2, 128));
@@ -106,6 +107,7 @@ class EmberTvLibraryReaderTest {
         assertThat(episode(2).playCount()).isNull();
         assertThat(episode(2).lastPlayed()).isNull();
         assertThat(episode(2).userRating()).isNull();
+        assertThat(episode(2).videoSource()).isNull();
         assertThat(episode(2).streams()).isEqualTo(EmberStreams.NONE);
         assertThat(episode(3).streams().videos()).extracting(EmberStreams.Video::durationSeconds).containsExactly(2580);
     }

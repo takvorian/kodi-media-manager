@@ -13,7 +13,7 @@ import de.tiktak.kmm.plugin.api.MetadataResult;
 class ScrapedMetadataMergerTest {
 
     private static final MovieMetadata CURRENT = new MovieMetadata("Heat (alt)", "Heat OT", "Heat, The", 1994,
-            null, "Alte Handlung", "Kurz", null, 160, "FSK 18", List.of("Action"), "tt0113277", null);
+            null, "Alte Handlung", "Kurz", null, 160, "FSK 18", List.of("Action"), "tt0113277", null, null, null);
 
     @Test
     void replacesEverythingTheScraperDelivers() {
@@ -27,7 +27,7 @@ class ScrapedMetadataMergerTest {
 
         assertThat(merged).isEqualTo(new MovieMetadata("Heat", "Heat", "Heat, The", 1995, LocalDate.of(1995, 12, 15),
                 "Neue Handlung", "Kurz", "A Los Angeles Crime Saga", 170, "FSK 16", List.of("Krimi", "Drama"),
-                "tt0113277", "949"));
+                "tt0113277", "949", null, null));
     }
 
     @Test

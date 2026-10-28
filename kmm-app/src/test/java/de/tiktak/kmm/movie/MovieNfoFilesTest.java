@@ -106,6 +106,6 @@ class MovieNfoFilesTest {
 
     private static MovieMetadata metadata(String imdbId) {
         return new MovieMetadata("Heat", null, null, 1995, null, "Handlung", null, null, 170, null,
-                List.of("Krimi"), imdbId, null);
+                List.of("Krimi"), imdbId, null, null, null);
     }
 }

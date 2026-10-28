@@ -28,7 +28,8 @@ final class ScrapedMetadataMerger {
                 prefer(scraped.certification(), current.mpaa()),
                 scraped.genres().isEmpty() ? current.genres() : scraped.genres(),
                 prefer(scraped.uniqueIds().get(IMDB), current.imdbId()),
-                prefer(scraped.uniqueIds().get(TMDB), current.tmdbId()));
+                prefer(scraped.uniqueIds().get(TMDB), current.tmdbId()),
+                current.edition(), current.videoSource());
     }
 
     private static <T> T prefer(T scraped, T current) {

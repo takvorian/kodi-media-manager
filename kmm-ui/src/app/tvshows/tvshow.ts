@@ -111,6 +111,8 @@ export interface EpisodeMetadata {
   readonly tmdbId: string | null;
   readonly imdbId: string | null;
   readonly userRating: number | null;
+  /** Videoquelle, z. B. dvd. */
+  readonly videoSource: string | null;
 }
 
 export interface EpisodeExtras {

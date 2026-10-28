@@ -267,7 +267,7 @@ class KodiSyncServiceTest {
 
     private void givenMovie(String relativeFile, DiscFormat format) {
         var metadata = new MovieMetadata("Heat", null, null, 1995, null, null, null, null, null, null, List.of(),
-                null, null);
+                null, null, null, null);
         when(metadataService.findDetails(MOVIE_ID)).thenReturn(new MovieDetails(MOVIE_ID, 1L,
                 LIBRARY.resolve(relativeFile).toString(), format, 1, NOW, metadata, MovieSupplement.EMPTY,
                 StreamDetails.EMPTY, new MovieDetails.NfoInfo("Heat.nfo", false, null)));

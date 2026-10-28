@@ -36,6 +36,8 @@ public class NfoWriter {
         NfoDomEditor.setText(document, movie, NfoElements.TAGLINE, nfo.tagline());
         NfoDomEditor.setText(document, movie, NfoElements.RUNTIME, toText(nfo.runtime()));
         NfoDomEditor.setText(document, movie, NfoElements.MPAA, nfo.mpaa());
+        NfoDomEditor.setText(document, movie, NfoElements.EDITION, nfo.edition());
+        NfoDomEditor.setText(document, movie, NfoElements.VIDEO_SOURCE, nfo.videoSource());
         NfoDomEditor.setTexts(document, movie, NfoElements.GENRE, nfo.genres());
         NfoDomEditor.setUniqueIds(document, movie, nfo.uniqueIds());
         if (nfo.supplement() != null) {

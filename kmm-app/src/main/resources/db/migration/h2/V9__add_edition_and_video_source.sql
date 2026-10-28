@@ -1,0 +1,3 @@
+ALTER TABLE movie ADD COLUMN edition VARCHAR(255);
+ALTER TABLE movie ADD COLUMN video_source VARCHAR(255);
+ALTER TABLE episode ADD COLUMN video_source VARCHAR(255);

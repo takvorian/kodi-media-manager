@@ -19,6 +19,8 @@ describe('movie metadata form', () => {
     genres: ['Krimi', 'Drama'],
     imdbId: 'tt0113277',
     tmdbId: null,
+    edition: "Director's Cut",
+    videoSource: 'bluray',
   };
 
   let form: MovieMetadataForm;
@@ -36,11 +38,13 @@ describe('movie metadata form', () => {
 
   it('turns blank texts into null and splits genres', () => {
     form.reset(toFormValue(heat));
-    form.patchValue({ originalTitle: '  ', genres: ' Action ,, Thriller ,', title: ' Heat 2 ', year: null });
+    form.patchValue({ originalTitle: '  ', videoSource: ' ', genres: ' Action ,, Thriller ,', title: ' Heat 2 ', year: null });
 
     const metadata = toMetadata(form);
 
     expect(metadata.originalTitle).toBeNull();
+    expect(metadata.videoSource).toBeNull();
+    expect(metadata.edition).toBe("Director's Cut");
     expect(metadata.genres).toEqual(['Action', 'Thriller']);
     expect(metadata.title).toBe('Heat 2');
     expect(metadata.year).toBeNull();

@@ -79,7 +79,8 @@ final class EmberMovieMapper {
                 EmberMappings.certification(movie.mpaa()),
                 movie.genres(),
                 movie.uniqueIds().get(IMDB),
-                movie.uniqueIds().get(TMDB)).withinLimits();
+                movie.uniqueIds().get(TMDB), movie.edition(), movie.videoSource())
+                .withinLimits();
     }
 
     private static MovieSupplement supplement(EmberMovie movie, MovieSupplement.SetReference set, ZoneId zone) {

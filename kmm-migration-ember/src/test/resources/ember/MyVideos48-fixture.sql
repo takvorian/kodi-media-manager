@@ -156,3 +156,10 @@ INSERT INTO TVVStreams VALUES (1, 0, '1280', '720', 'h264', '0', '', '1.778', ''
 INSERT INTO TVAStreams VALUES (1, 0, 'deu', 'AAC', '2', '128');
 INSERT INTO TVSubs VALUES (1, 0, 'eng', 'Embedded', '', 0);
 INSERT INTO TVVStreams VALUES (3, 0, '720', '576', 'mpeg4', '2580', 'interlaced', '1.333', '', '', '', '', '', '');
+
+ALTER TABLE movie ADD COLUMN VideoSource TEXT;
+ALTER TABLE movie ADD COLUMN edition TEXT;
+ALTER TABLE episode ADD COLUMN VideoSource TEXT;
+UPDATE movie SET VideoSource = 'bluray', edition = 'Director''s Cut' WHERE idMovie = 1;
+UPDATE movie SET VideoSource = '', edition = '' WHERE idMovie = 2;
+UPDATE episode SET VideoSource = 'dvd' WHERE idEpisode = 1;

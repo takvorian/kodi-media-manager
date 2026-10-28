@@ -267,12 +267,12 @@ class MovieLibrarySynchronizerTest {
 
     private static MovieNfo nfo(String title, Integer year, String imdbId) {
         Map<String, String> ids = imdbId == null ? Map.of() : Map.of(MovieNfo.IMDB, imdbId);
-        return new MovieNfo(title, null, null, year, null, null, null, null, null, null, List.of("Krimi"), ids);
+        return new MovieNfo(title, null, null, year, null, null, null, null, null, null, null, null, List.of("Krimi"), ids);
     }
 
     private static MovieNfo withSupplement(MovieNfo nfo, MovieNfoSupplement supplement) {
         return new MovieNfo(nfo.title(), nfo.originalTitle(), nfo.sortTitle(), nfo.year(), nfo.premiered(), nfo.plot(),
-                nfo.outline(), nfo.tagline(), nfo.runtime(), nfo.mpaa(), nfo.genres(), nfo.uniqueIds(), supplement);
+                nfo.outline(), nfo.tagline(), nfo.runtime(), nfo.mpaa(), null, null, nfo.genres(), nfo.uniqueIds(), supplement);
     }
 
     private static NfoException unreadableNfo() {

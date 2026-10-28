@@ -55,6 +55,7 @@ public class EpisodeNfoWriter {
         NfoDomEditor.setText(document, element, NfoElements.PLOT, nfo.plot());
         NfoDomEditor.setText(document, element, NfoElements.AIRED, NfoSupplementWriter.toText(nfo.aired()));
         NfoDomEditor.setText(document, element, NfoElements.RUNTIME, NfoSupplementWriter.toText(nfo.runtime()));
+        NfoDomEditor.setText(document, element, NfoElements.VIDEO_SOURCE, nfo.videoSource());
         NfoDomEditor.setUniqueIds(document, element, nfo.uniqueIds());
         NfoDomEditor.replaceAll(element, NfoElements.RATINGS, NfoSupplementWriter.ratings(document, nfo.ratings()));
         NfoDomEditor.setText(document, element, NfoElements.USER_RATING, NfoSupplementWriter.toText(nfo.userRating()));

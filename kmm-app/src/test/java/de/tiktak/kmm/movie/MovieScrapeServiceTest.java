@@ -40,7 +40,7 @@ class MovieScrapeServiceTest {
 
     private static final long MOVIE_ID = 5L;
     private static final MovieMetadata CURRENT = new MovieMetadata("Heat", null, null, 1995, null, null, null, null,
-            null, null, List.of(), null, null);
+            null, null, List.of(), null, null, null, null);
 
     @Mock
     private ScraperRegistry scraperRegistry;
@@ -141,7 +141,7 @@ class MovieScrapeServiceTest {
     @Test
     void autoScrapeLeavesIdentifiedMoviesUntouched() {
         givenMovie(new MovieMetadata("Heat", null, null, 1995, null, null, null, null, null, null, List.of(), null,
-                "949"));
+                "949", null, null));
 
         assertThat(service.scrapeMissingMetadata(MOVIE_ID)).isEqualTo(MetadataScrapeOutcome.ALREADY_IDENTIFIED);
         verify(scraperRegistry, never()).metadataScrapersFor(any());
@@ -168,7 +168,7 @@ class MovieScrapeServiceTest {
     @Test
     void autoScrapeFallsBackToFirstReadyScraperAndPassesKnownImdbId() {
         givenMovie(new MovieMetadata("Heat", null, null, 1995, null, null, null, null, null, null, List.of(),
-                "tt0113277", null));
+                "tt0113277", null, null, null));
         MetadataScraper unconfigured = readyScraper("tmdb");
         when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Key fehlt"));
         MetadataScraper other = readyScraper("other");

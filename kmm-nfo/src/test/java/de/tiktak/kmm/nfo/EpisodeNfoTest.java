@@ -34,6 +34,8 @@ class EpisodeNfoTest {
         assertThat(first.episode()).isEqualTo(16);
         assertThat(first.aired()).isEqualTo(LocalDate.of(1987, 2, 9));
         assertThat(first.runtime()).isEqualTo(30);
+        assertThat(first.videoSource()).isEqualTo("dvd");
+        assertThat(episodes.get(1).videoSource()).isNull();
         assertThat(first.uniqueIds()).containsExactly(Map.entry("tvdb", "110001"));
         assertThat(first.writers()).containsExactly("Bob Bendetson");
         assertThat(first.directors()).containsExactly("Tom Patchett");
@@ -88,7 +90,7 @@ class EpisodeNfoTest {
 
     @Test
     void requiresSeasonAndEpisodeForWriting() {
-        EpisodeNfo withoutNumbers = new EpisodeNfo("x", null, null, null, null, null, null, null, null, null, null,
+        EpisodeNfo withoutNumbers = new EpisodeNfo("x", null, null, null, null, null, null, null, null, null, null, null,
                 null, null, null, null, null, null);
 
         assertThatThrownBy(() -> writer.write(directory.resolve("x.nfo"), List.of(withoutNumbers)))
@@ -103,7 +105,7 @@ class EpisodeNfoTest {
     }
 
     private static EpisodeNfo episode(int season, int episode, String title) {
-        return new EpisodeNfo(title, "Original", season, episode, "Handlung", LocalDate.of(1987, 2, 16), 25,
+        return new EpisodeNfo(title, "Original", season, episode, "Handlung", LocalDate.of(1987, 2, 16), 25, null,
                 Map.of("tvdb", "110002"), List.of(new NfoRating("tvdb", 7.5, 10, 12, true)), List.of("Regie"),
                 List.of("Autor"), List.of(new NfoActor("Gast", "Rolle", 0, null)), 7, 2,
                 LocalDateTime.of(2020, 1, 2, 3, 4, 5), LocalDateTime.of(2019, 1, 1, 0, 0, 0),

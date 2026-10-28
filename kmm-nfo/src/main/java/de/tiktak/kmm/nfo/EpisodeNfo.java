@@ -12,6 +12,7 @@ import java.util.Map;
  * @param episode    Episode; {@code null}, wenn die NFO keine angibt
  * @param aired      Erstausstrahlung
  * @param runtime    Laufzeit in Minuten
+ * @param videoSource Videoquelle, z. B. {@code dvd} (wie Ember)
  * @param writers    Drehbuch ({@code <credits>})
  * @param actors     Darsteller einschließlich Gaststars
  * @param userRating eigene Bewertung 1–10 oder {@code null}
@@ -27,6 +28,7 @@ public record EpisodeNfo(
         String plot,
         LocalDate aired,
         Integer runtime,
+        String videoSource,
         Map<String, String> uniqueIds,
         List<NfoRating> ratings,
         List<String> directors,

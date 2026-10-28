@@ -44,7 +44,7 @@ public class NfoReader {
         Map<String, String> urlIds = idsFromUrls(NfoDocuments.outsideMovieXml(content));
         Optional<String> xml = NfoDocuments.movieXml(content);
         if (xml.isEmpty()) {
-            return new MovieNfo(null, null, null, null, null, null, null, null, null, null, List.of(), urlIds,
+            return new MovieNfo(null, null, null, null, null, null, null, null, null, null, null, null, List.of(), urlIds,
                     MovieNfoSupplement.EMPTY);
         }
         Document document = NfoDocuments.parse(xml.get());
@@ -66,6 +66,8 @@ public class NfoReader {
                 NfoDocuments.text(movie, NfoElements.TAGLINE),
                 number(NfoDocuments.text(movie, NfoElements.RUNTIME)),
                 NfoDocuments.text(movie, NfoElements.MPAA),
+                NfoDocuments.text(movie, NfoElements.EDITION),
+                NfoDocuments.text(movie, NfoElements.VIDEO_SOURCE),
                 NfoDocuments.texts(movie, NfoElements.GENRE),
                 uniqueIds,
                 NfoSupplementReader.read(movie));

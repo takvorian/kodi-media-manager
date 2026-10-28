@@ -47,7 +47,9 @@ public record EmberMovie(
         LocalDateTime dateAdded,
         Integer playCount,
         LocalDateTime lastPlayed,
-        Integer userRating) {
+        Integer userRating,
+        String edition,
+        String videoSource) {
 
     public EmberMovie {
         uniqueIds = uniqueIds == null ? Map.of() : Map.copyOf(uniqueIds);

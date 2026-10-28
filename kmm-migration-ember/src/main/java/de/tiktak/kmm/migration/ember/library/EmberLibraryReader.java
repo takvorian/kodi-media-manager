@@ -25,7 +25,7 @@ public class EmberLibraryReader {
     private static final String MOVIES = """
             SELECT idMovie, idSource, MoviePath, Title, OriginalTitle, SortTitle, Year, premiered, Plot, Outline,
                    Tagline, Runtime, MPAA, Certification, Imdb, TMDB, TMDBColID, DateAdded, Playcount, iLastPlayed,
-                   iUserRating
+                   iUserRating, edition, VideoSource
             FROM movie ORDER BY idMovie""";
     private static final String UNIQUE_IDS = """
             SELECT media_id AS idMovie, type, value FROM uniqueid WHERE media_type = 'movie'
@@ -136,6 +136,8 @@ public class EmberLibraryReader {
                     .playCount(EmberValues.nullableInt(row, "Playcount"))
                     .lastPlayed(EmberValues.localDateTime(row, "iLastPlayed"))
                     .userRating(EmberValues.positiveInteger(row, "iUserRating"))
+                    .edition(EmberValues.text(row, "edition"))
+                    .videoSource(EmberValues.text(row, "VideoSource"))
                     .build();
         });
     }

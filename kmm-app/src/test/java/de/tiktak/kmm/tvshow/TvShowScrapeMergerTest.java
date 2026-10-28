@@ -74,7 +74,7 @@ class TvShowScrapeMergerTest {
     @Test
     void fillsOnlyEmptyEpisodeFields() {
         EpisodeMetadata metadata = new EpisodeMetadata("Eigener Titel", null, "Eigene Handlung", null, null, null,
-                null, null, 8);
+                null, null, 8, null);
         EpisodeExtras extras = new EpisodeExtras(List.of("Regie"), List.of(), List.of(), List.of(), 2, null,
                 StreamDetails.EMPTY);
         EpisodeResult scraped = EpisodeResult.builder().season(1).episode(1).title("Pilot").plot("Absturz")
@@ -99,7 +99,7 @@ class TvShowScrapeMergerTest {
 
     @Test
     void reportsUnchangedEpisodes() {
-        EpisodeMetadata metadata = new EpisodeMetadata("Pilot", null, "Absturz", null, null, null, null, null, null);
+        EpisodeMetadata metadata = new EpisodeMetadata("Pilot", null, "Absturz", null, null, null, null, null, null, null);
         EpisodeResult scraped = EpisodeResult.builder().season(1).episode(1).build();
 
         assertThat(TvShowScrapeMerger.fillEpisode(metadata, EpisodeExtras.EMPTY, scraped, true)).isEmpty();

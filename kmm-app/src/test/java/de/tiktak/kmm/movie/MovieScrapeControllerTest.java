@@ -43,7 +43,7 @@ class MovieScrapeControllerTest {
     @Test
     void returnsProposal() {
         when(scrapeService.proposal(5L, "tmdb", "949")).thenReturn(new MovieMetadata("Heat", null, null, 1995, null,
-                null, null, null, 170, "FSK 16", List.of("Krimi"), "tt0113277", "949"));
+                null, null, null, 170, "FSK 16", List.of("Krimi"), "tt0113277", "949", null, null));
 
         assertThat(mockMvc.get().uri(MovieScrapeController.PROPOSAL_PATH, 5L)
                 .param("scraper", "tmdb").param("providerId", "949"))

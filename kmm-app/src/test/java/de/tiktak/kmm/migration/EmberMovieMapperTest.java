@@ -47,7 +47,7 @@ class EmberMovieMapperTest {
         assertThat(movieImport.partCount()).isEqualTo(1);
         assertThat(movieImport.metadata()).isEqualTo(new MovieMetadata("Heat", "Heat", null, 1995,
                 LocalDate.of(1995, 12, 15), "Handlung", null, "Tagline", 170, "FSK 16", List.of("Krimi"),
-                "tt0113277", "949"));
+                "tt0113277", "949", null, null));
         assertThat(movieImport.addedAt()).isEqualTo(Instant.parse("2016-11-29T23:20:15Z"));
     }
 

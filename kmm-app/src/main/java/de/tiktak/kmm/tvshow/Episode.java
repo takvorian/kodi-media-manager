@@ -88,6 +88,9 @@ public class Episode {
     @Column(name = "user_rating")
     private Integer userRating;
 
+    @Column(name = "video_source", length = TvTexts.MAX_LABEL_LENGTH)
+    private String videoSource;
+
     @Column(name = "play_count")
     private Integer playCount;
 
@@ -127,7 +130,8 @@ public class Episode {
     }
 
     public EpisodeMetadata metadata() {
-        return new EpisodeMetadata(title, originalTitle, plot, aired, runtime, tvdbId, tmdbId, imdbId, userRating);
+        return new EpisodeMetadata(title, originalTitle, plot, aired, runtime, tvdbId, tmdbId, imdbId, userRating,
+                videoSource);
     }
 
     void applyMetadata(EpisodeMetadata metadata) {
@@ -140,6 +144,7 @@ public class Episode {
         this.tmdbId = metadata.tmdbId();
         this.imdbId = metadata.imdbId();
         this.userRating = metadata.userRating();
+        this.videoSource = metadata.videoSource();
     }
 
     public EpisodeExtras extras() {

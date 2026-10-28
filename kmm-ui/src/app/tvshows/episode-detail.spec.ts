@@ -29,6 +29,7 @@ describe('EpisodeDetail', () => {
       tmdbId: null,
       imdbId: null,
       userRating: null,
+      videoSource: 'dvd',
     },
     extras: {
       directors: ['Tom Patchett'],

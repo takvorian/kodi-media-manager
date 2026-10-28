@@ -195,7 +195,7 @@ class AutoScrapeServiceTest {
 
     private void givenMovie(long movieId, String title) {
         var metadata = new MovieMetadata(title, null, null, null, null, null, null, null, null, null, List.of(), null,
-                null);
+                null, null, null);
         when(metadataService.findDetails(movieId)).thenReturn(new MovieDetails(movieId, SOURCE_ID, "/m/" + title,
                 DiscFormat.FILE, 1, null, metadata, MovieSupplement.EMPTY, StreamDetails.EMPTY,
                 new MovieDetails.NfoInfo("/m/x.nfo", false, null)));

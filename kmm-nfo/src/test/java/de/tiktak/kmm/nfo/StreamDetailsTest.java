@@ -123,7 +123,7 @@ class StreamDetailsTest {
     private static MovieNfo movie(StreamDetails streams) {
         MovieNfoSupplement supplement = new MovieNfoSupplement(List.of(), List.of(), List.of(), List.of(), List.of(),
                 List.of(), List.of(), null, null, null, null, null, streams);
-        return new MovieNfo("Heat", null, null, 1995, null, null, null, null, null, null, List.of(), Map.of(),
+        return new MovieNfo("Heat", null, null, 1995, null, null, null, null, null, null, null, null, List.of(), Map.of(),
                 supplement);
     }
 }
