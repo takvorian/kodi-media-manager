@@ -21,6 +21,8 @@ public final class CodecNames {
             Map.entry("v_mpegh/iso/hevc", "hevc"),
             Map.entry("av01", "av1"),
             Map.entry("v_mpeg2", "mpeg2video"),
+            Map.entry("v_mpeg4/iso/asp", "mpeg4"),
+            Map.entry("v_mpeg4/iso/sp", "mpeg4"),
             Map.entry("v_ms/vfw/fourcc / dx50", "dx50"),
             Map.entry("v_ms/vfw/fourcc / xvid", "xvid"),
             Map.entry("v_vp7", "vp7"),

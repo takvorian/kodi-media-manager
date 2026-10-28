@@ -12,8 +12,8 @@ class CodecNamesTest {
 
     @ParameterizedTest
     @CsvSource(delimiter = '|', value = {
-        "avc1|h264", "AVC|h264", "V_MPEG4/ISO/AVC|h264", "hvc1|hevc", "av01|av1", "xvid|xvid", "dx50|dx50",
-        "mpeg2video|mpeg2video"
+        "avc1|h264", "AVC|h264", "V_MPEG4/ISO/AVC|h264", "hvc1|hevc", "av01|av1", "V_MPEG4/ISO/ASP|mpeg4",
+        "xvid|xvid", "dx50|dx50", "mpeg2video|mpeg2video"
     })
     void translatesVideoCodecsToKodiNames(String raw, String kodi) {
         assertThat(CodecNames.video(raw)).isEqualTo(kodi);
