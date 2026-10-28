@@ -38,6 +38,7 @@ import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.movie.MovieImport;
 import de.tiktak.kmm.movie.MovieImportResult;
 import de.tiktak.kmm.movie.MovieImportService;
+import de.tiktak.kmm.movie.MovieSetService;
 import de.tiktak.kmm.movie.MovieImportService.MovieImportSession;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.settings.KmmSettings;
@@ -55,6 +56,9 @@ class EmberLibraryImporterTest {
 
     @Mock
     private MovieImportService movieImportService;
+
+    @Mock
+    private MovieSetService movieSetService;
 
     @Mock
     private SettingsService settingsService;
@@ -76,7 +80,7 @@ class EmberLibraryImporterTest {
     @BeforeEach
     void createImporter() {
         importer = new EmberLibraryImporter(new EmberSourceImporter(sourceService), tvImporter, movieImportService,
-                settingsService, clock);
+                movieSetService, settingsService, clock);
     }
 
     @Test

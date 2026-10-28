@@ -146,8 +146,10 @@ class EmberImportIntegrationTest {
                 """.formatted(json(library.resolve("Heat (1995)/Heat.mkv").toString()), EMBER_DATE_ADDED));
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId("Matrix Reloaded"))).bodyJson()
                 .extractingPath("$.supplement.set.name").isEqualTo("Matrix Collection");
-        assertThat(jdbcClient.sql("SELECT tmdb_collection_id FROM movie_set").query(String.class).single())
-                .isEqualTo("2344");
+        assertThat(jdbcClient.sql("SELECT tmdb_collection_id FROM movie_set WHERE name = 'Matrix Collection'")
+                .query(String.class).single()).isEqualTo("2344");
+        assertThat(jdbcClient.sql("SELECT sort_method FROM movie_set WHERE name = 'Leeres Set'").query(String.class)
+                .single()).as("auch Sets ohne Filme").isEqualTo("TITLE");
         assertThat(jdbcClient.sql("SELECT part_count FROM movie WHERE title = 'Matrix Reloaded'").query(Integer.class)
                 .single()).isEqualTo(2);
 

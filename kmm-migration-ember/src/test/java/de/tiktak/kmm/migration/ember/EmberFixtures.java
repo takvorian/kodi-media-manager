@@ -19,7 +19,7 @@ public final class EmberFixtures {
 
     public static final String DATABASE_FILE_NAME = "MyVideos48.emm";
     public static final long MOVIE_COUNT = 3;
-    public static final long MOVIE_SET_COUNT = 1;
+    public static final long MOVIE_SET_COUNT = 2;
     public static final long TV_SHOW_COUNT = 1;
     public static final long EPISODE_COUNT = 4;
     public static final long MOVIE_SOURCE_COUNT = 1;

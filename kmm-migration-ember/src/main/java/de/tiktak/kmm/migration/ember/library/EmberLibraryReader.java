@@ -56,13 +56,15 @@ public class EmberLibraryReader {
             WHERE media_type = 'movie' ORDER BY media_id, isDefault DESC, idRating""";
     private static final String SET_LINKS = "SELECT idMovie, idSet, iOrder FROM setlinkmovie ORDER BY idMovie, idSet";
     private static final String SETS = """
-            SELECT s.idSet, s.Title, s.Plot, s.TMDBColID,
+            SELECT s.idSet, s.Title, s.Plot, s.TMDBColID, s.SortMethod,
                    (SELECT u.value FROM uniqueid u WHERE u.media_type = 'set' AND u.media_id = s.idSet AND u.type = 'tmdb'
                     LIMIT 1) AS tmdbId
             FROM sets s ORDER BY s.idSet""";
     private static final String EXCLUDED_DIRECTORIES = "SELECT Dirname FROM ExcludeDir ORDER BY Dirname";
 
     private static final String IMDB = "imdb";
+    /** Embers {@code SortMethod_MovieSet.Title}. */
+    private static final int SORTED_BY_TITLE = 1;
     private static final String TMDB = "tmdb";
     private static final String TMDB_COLLECTION = "tmdbcol";
     private static final String ID = "idMovie";
@@ -145,7 +147,8 @@ public class EmberLibraryReader {
     private List<EmberMovieSet> sets(Connection connection) throws SQLException {
         return EmberQueries.query(connection, SETS, row -> new EmberMovieSet(row.getLong("idSet"), EmberValues.text(row, "Title"),
                 EmberValues.text(row, "Plot"),
-                firstPresent(EmberValues.text(row, "TMDBColID"), EmberValues.text(row, "tmdbId"))));
+                firstPresent(EmberValues.text(row, "TMDBColID"), EmberValues.text(row, "tmdbId")),
+                Integer.valueOf(SORTED_BY_TITLE).equals(EmberValues.nullableInt(row, "SortMethod"))));
     }
 
     private List<String> excludedDirectories(Connection connection) throws SQLException {

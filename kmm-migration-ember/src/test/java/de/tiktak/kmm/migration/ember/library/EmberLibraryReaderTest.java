@@ -39,8 +39,9 @@ class EmberLibraryReaderTest {
     void readsSourcesSetsAndExcludedDirectories() {
         assertThat(library.sources()).containsExactly(new EmberMovieSource(1, "Filme", "D:\\Filme", "de-DE"));
         assertThat(library.sets()).containsExactly(
-                new EmberMovieSet(1, "Matrix Collection", "Neo gegen die Maschinen.", "2344"));
-        assertThat(library.setsById()).containsOnlyKeys(1L);
+                new EmberMovieSet(1, "Matrix Collection", "Neo gegen die Maschinen.", "2344"),
+                new EmberMovieSet(2, "Leeres Set", null, "999", true));
+        assertThat(library.setsById()).containsOnlyKeys(1L, 2L);
         assertThat(library.excludedDirectories()).containsExactly("D:\\Filme\\Privat");
         assertThat(library.movies()).hasSize((int) EmberFixtures.MOVIE_COUNT);
     }

@@ -22,7 +22,7 @@ CREATE TABLE tag (idTag INTEGER PRIMARY KEY, strTag TEXT);
 CREATE TABLE taglinks (idTag INTEGER, idMedia INTEGER, media_type TEXT, sorting INTEGER);
 CREATE TABLE rating (idRating INTEGER PRIMARY KEY, media_id INTEGER, media_type TEXT, rating_type TEXT,
     rating_max INTEGER, rating FLOAT, votes INTEGER, isDefault BOOLEAN);
-CREATE TABLE sets (idSet INTEGER PRIMARY KEY, Title TEXT, Plot TEXT, TMDBColID TEXT);
+CREATE TABLE sets (idSet INTEGER PRIMARY KEY, Title TEXT, Plot TEXT, TMDBColID TEXT, SortMethod INTEGER);
 CREATE TABLE setlinkmovie (idSet INTEGER, idMovie INTEGER, iOrder INTEGER);
 CREATE TABLE ExcludeDir (Dirname TEXT PRIMARY KEY);
 CREATE TABLE tvshow (
@@ -113,7 +113,8 @@ INSERT INTO rating VALUES (3, 1, 'movie', 'trakt', 10, 0, 0, 0);
 INSERT INTO rating VALUES (4, 2, 'movie', 'imdb', 10, 8.7, NULL, 1);
 INSERT INTO rating VALUES (5, 1, 'tvshow', 'imdb', 10, 9.9, 1, 1);
 
-INSERT INTO sets VALUES (1, 'Matrix Collection', 'Neo gegen die Maschinen.', '');
+INSERT INTO sets VALUES (1, 'Matrix Collection', 'Neo gegen die Maschinen.', '', 0);
+INSERT INTO sets VALUES (2, 'Leeres Set', NULL, '999', 1);
 INSERT INTO setlinkmovie VALUES (1, 2, 0);
 INSERT INTO setlinkmovie VALUES (1, 3, -1);
 

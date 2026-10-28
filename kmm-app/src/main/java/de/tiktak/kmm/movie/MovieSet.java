@@ -7,6 +7,8 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -40,6 +42,10 @@ class MovieSet {
     @Column(name = "tmdb_collection_id", length = 16)
     private String tmdbCollectionId;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "sort_method", nullable = false, length = 16)
+    private SetSortMethod sortMethod = SetSortMethod.YEAR;
+
     MovieSet(String name) {
         this.name = Objects.requireNonNull(name, "name must not be null");
     }
@@ -55,6 +61,18 @@ class MovieSet {
         if (newTmdbCollectionId != null) {
             this.tmdbCollectionId = newTmdbCollectionId;
         }
+    }
+
+    /** Übernimmt bearbeitete Angaben; leere Beschreibung und ID werden gelöscht. */
+    void change(MovieSetData data) {
+        this.name = data.name();
+        this.overview = data.overview();
+        this.tmdbCollectionId = data.tmdbCollectionId();
+        this.sortMethod = data.sortMethod();
+    }
+
+    void sortBy(SetSortMethod newSortMethod) {
+        this.sortMethod = Objects.requireNonNull(newSortMethod, "sortMethod must not be null");
     }
 
     MovieSupplement.SetReference toReference() {

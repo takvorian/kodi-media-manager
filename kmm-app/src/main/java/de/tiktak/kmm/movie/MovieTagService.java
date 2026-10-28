@@ -1,17 +1,14 @@
 package de.tiktak.kmm.movie;
 
-import java.time.Clock;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tiktak.kmm.nfo.NfoException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -26,9 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 public class MovieTagService {
 
     private final MovieRepository movieRepository;
-    private final MovieNfoFiles nfoFiles;
-    private final Clock clock;
-    private final ApplicationEventPublisher events;
+    private final MovieSupplementWriter supplementWriter;
 
     /** @return je Tag die Anzahl der Filme */
     public Map<String, Long> countByTag() {
@@ -60,19 +55,9 @@ public class MovieTagService {
         if (changed.tags().equals(current.tags())) {
             return false;
         }
-        if (movie.isSupplementKnown()) {
-            try {
-                NfoFileState written = nfoFiles.write(movie.companionFiles(), movie.metadata(),
-                        MovieNfoMapper.toNfoSupplement(changed, movie.streamDetails(), movie.getAddedAt(),
-                                clock.getZone()));
-                movie.markNfoSynchronized(written.modifiedAt());
-            } catch (NfoException e) {
-                throw new NfoNotWritableException(e);
-            }
-        }
+        supplementWriter.write(movie, changed);
         movie.applySupplement(changed, movie.getMovieSet());
         log.info("Tags of movie {} changed to {}", movieId, changed.tags());
-        events.publishEvent(new MovieFilesChangedEvent(movieId));
         return true;
     }
 }

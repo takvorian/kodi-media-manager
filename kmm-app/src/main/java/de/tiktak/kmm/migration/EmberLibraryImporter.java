@@ -19,6 +19,8 @@ import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.movie.MovieImportResult;
 import de.tiktak.kmm.movie.MovieImportService;
+import de.tiktak.kmm.movie.MovieSetService;
+import de.tiktak.kmm.movie.SetSortMethod;
 import de.tiktak.kmm.movie.MovieImportService.MovieImportSession;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.settings.SettingsService;
@@ -40,6 +42,7 @@ class EmberLibraryImporter {
     private final EmberSourceImporter sourceImporter;
     private final EmberTvImporter tvImporter;
     private final MovieImportService movieImportService;
+    private final MovieSetService movieSetService;
     private final SettingsService settingsService;
     private final Clock clock;
 
@@ -78,6 +81,7 @@ class EmberLibraryImporter {
             filePath.ifPresentOrElse(path -> filePaths.put(movie, path), progress::movieSkipped);
         }
         Map<Long, EmberMovieSet> sets = library.setsById();
+        importSets(library.sets());
         MovieImportSession session = movieImportService.startSession(filePaths.values());
         int done = 0;
         for (Map.Entry<EmberMovie, String> entry : filePaths.entrySet()) {
@@ -105,6 +109,14 @@ class EmberLibraryImporter {
             }
         }
         context.reportProgress(filePaths.size(), filePaths.size(), null);
+    }
+
+    /** Alle Sets, auch solche ohne Filme, mit Beschreibung, TMDB-ID und Sortierung. */
+    private void importSets(List<EmberMovieSet> sets) {
+        sets.stream()
+                .filter(set -> set.title() != null)
+                .forEach(set -> movieSetService.importSet(set.title(), set.plot(), set.tmdbCollectionId(),
+                        set.sortedByTitle() ? SetSortMethod.TITLE : SetSortMethod.YEAR));
     }
 
     private void importSettings(Optional<EmberSettings> settings, List<String> excludedDirectories,
