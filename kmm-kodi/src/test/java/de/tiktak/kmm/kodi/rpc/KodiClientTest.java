@@ -102,6 +102,23 @@ class KodiClientTest {
     }
 
     @Test
+    void findsAndUpdatesMovieSets() {
+        kodi.respond("VideoLibrary.GetMovieSets", """
+                {"sets": [{"setid": 3, "title": "Alien Collection"}, {"setid": 7, "title": "Matrix Filmreihe"}]}""");
+        kodi.respond("VideoLibrary.GetMovieDetails", "{\"moviedetails\": {\"movieid\": 12, \"setid\": 7}}");
+
+        assertThat(client.findMovieSet(kodi.endpoint(), "matrix filmreihe")).contains(7);
+        assertThat(client.findMovieSet(kodi.endpoint(), "Heat")).isEmpty();
+        assertThat(client.movieSetOf(kodi.endpoint(), 12)).contains(7);
+        client.setMovieSetDetails(kodi.endpoint(), 7, "Matrix Trilogie", null);
+
+        assertThat(kodi.calls().getLast().params()).isEqualTo(json(
+                "{\"setid\": 7, \"title\": \"Matrix Trilogie\", \"plot\": \"\"}"));
+        kodi.respond("VideoLibrary.GetMovieDetails", "{\"moviedetails\": {\"movieid\": 12, \"setid\": 0}}");
+        assertThat(client.movieSetOf(kodi.endpoint(), 12)).isEmpty();
+    }
+
+    @Test
     void cleansTheMoviesOfADirectoryWithoutDialogs() {
         client.cleanMovies(kodi.endpoint(), "smb://nas/filme/H/heat/");
         client.cleanTvShows(kodi.endpoint(), "smb://nas/serien/lost/");

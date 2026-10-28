@@ -15,6 +15,10 @@ import de.tiktak.kmm.kodi.rpc.KodiException;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
+import de.tiktak.kmm.movie.MovieSetChangedEvent;
+import de.tiktak.kmm.movie.MovieSetDetails;
+import de.tiktak.kmm.movie.MovieSetProblemException;
+import de.tiktak.kmm.movie.MovieSetService;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.tvshow.EpisodeDetails;
 import de.tiktak.kmm.tvshow.TvShowDetails;
@@ -40,6 +44,7 @@ public class KodiSyncService {
 
     private final KodiHostService hostService;
     private final MovieMetadataService metadataService;
+    private final MovieSetService movieSetService;
     private final TvShowMetadataService tvShowService;
     private final MediaSourceService sourceService;
     private final KodiClient kodiClient;
@@ -106,6 +111,27 @@ public class KodiSyncService {
             syncAll(targets, target -> syncRenamed(target, event.directory(), event.previousDirectory(),
                     kodiClient::cleanTvShows));
         }
+    }
+
+    /**
+     * Übernimmt Titel und Beschreibung eines Filmsets in Kodi, wie Ember. Kodi findet das Set über den bisherigen
+     * Titel oder über einen seiner Filme; kennt Kodi es noch nicht, kommt es mit dem Einlesen der Filme.
+     */
+    void syncMovieSetOnRealtimeHosts(MovieSetChangedEvent event) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (targets.isEmpty()) {
+            return;
+        }
+        MovieSetDetails set;
+        try {
+            set = movieSetService.find(event.setId());
+        } catch (MovieSetProblemException e) {
+            log.debug("Movie set {} is gone, nothing to sync", event.setId());
+            return;
+        }
+        Optional<String> memberFile = set.movies().stream().findFirst()
+                .map(member -> metadataService.findDetails(member.id()).filePath());
+        syncAll(targets, target -> syncSet(target, set, event.previousName(), memberFile));
     }
 
     void scanSourceOnRealtimeHosts(long sourceId) {
@@ -202,6 +228,21 @@ public class KodiSyncService {
         clean.accept(target.endpoint(), previous.get());
         return new Outcome(KodiSyncOutcome.SCAN_STARTED,
                 "Kodi liest %s ein und entfernt die alten Einträge aus %s.".formatted(directory.get(), previous.get()));
+    }
+
+    private Outcome syncSet(KodiTarget target, MovieSetDetails set, String previousName, Optional<String> memberFile) {
+        String name = set.data().name();
+        Optional<Integer> kodiSetId = kodiClient.findMovieSet(target.endpoint(), previousName)
+                .or(() -> kodiClient.findMovieSet(target.endpoint(), name))
+                .or(() -> memberFile.flatMap(target.pathMapper()::toKodiPath)
+                        .flatMap(file -> kodiClient.findMovie(target.endpoint(), file))
+                        .flatMap(movieId -> kodiClient.movieSetOf(target.endpoint(), movieId)));
+        if (kodiSetId.isEmpty()) {
+            return new Outcome(KodiSyncOutcome.NOT_IN_KODI,
+                    "Das Filmset „%s“ ist in Kodi noch unbekannt.".formatted(name));
+        }
+        kodiClient.setMovieSetDetails(target.endpoint(), kodiSetId.get(), name, set.data().overview());
+        return new Outcome(KodiSyncOutcome.UPDATED, "Filmset „%s“ aktualisiert.".formatted(name));
     }
 
     private Outcome scan(KodiTarget target, MediaSource source) {

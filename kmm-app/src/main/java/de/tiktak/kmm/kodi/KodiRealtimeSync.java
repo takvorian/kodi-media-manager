@@ -9,6 +9,7 @@ import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
+import de.tiktak.kmm.movie.MovieSetChangedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
@@ -52,6 +53,11 @@ class KodiRealtimeSync implements DisposableBean {
     @TransactionalEventListener(fallbackExecution = true)
     void onMovieRenamed(MovieRenamedEvent event) {
         executor.execute(() -> syncService.syncRenamedMovieOnRealtimeHosts(event));
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    void onMovieSetChanged(MovieSetChangedEvent event) {
+        executor.execute(() -> syncService.syncMovieSetOnRealtimeHosts(event));
     }
 
     @TransactionalEventListener(fallbackExecution = true)

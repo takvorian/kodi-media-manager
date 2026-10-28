@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
+import de.tiktak.kmm.movie.MovieSetChangedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
@@ -62,6 +63,15 @@ class KodiRealtimeSyncTest {
 
         verify(syncService, timeout(WAIT_MILLIS)).syncRenamedMovieOnRealtimeHosts(first);
         verify(syncService, timeout(WAIT_MILLIS)).syncRenamedMovieOnRealtimeHosts(second);
+    }
+
+    @Test
+    void syncsChangedMovieSets() {
+        MovieSetChangedEvent event = new MovieSetChangedEvent(4, "Alt");
+
+        realtimeSync.onMovieSetChanged(event);
+
+        verify(syncService, timeout(WAIT_MILLIS)).syncMovieSetOnRealtimeHosts(event);
     }
 
     @Test

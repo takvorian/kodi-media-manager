@@ -35,7 +35,13 @@ export interface KodiConnectionTest {
   readonly version: string;
 }
 
-export type KodiSyncOutcome = 'REFRESHED' | 'SCAN_STARTED' | 'NOT_MAPPED' | 'FAILED';
+export type KodiSyncOutcome =
+  | 'REFRESHED'
+  | 'SCAN_STARTED'
+  | 'UPDATED'
+  | 'NOT_IN_KODI'
+  | 'NOT_MAPPED'
+  | 'FAILED';
 
 /** Ergebnis eines Abgleichs mit einem Kodi-Gerät. */
 export interface KodiSyncResult {

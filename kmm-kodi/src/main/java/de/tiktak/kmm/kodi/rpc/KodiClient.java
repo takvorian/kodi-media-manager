@@ -14,6 +14,7 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.LinkedHashMap;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -76,6 +77,42 @@ public class KodiClient {
             }
         }
         return Optional.empty();
+    }
+
+    /**
+     * Sucht ein Filmset in Kodis Bibliothek über seinen Titel, ohne Rücksicht auf Groß- und Kleinschreibung.
+     *
+     * @return Kodis ID des Sets oder leer, wenn Kodi keines mit dem Titel kennt
+     */
+    public Optional<Integer> findMovieSet(KodiEndpoint endpoint, String title) {
+        JsonNode sets = call(endpoint, "VideoLibrary.GetMovieSets", Map.of("properties", List.of("title")))
+                .path("sets");
+        for (JsonNode set : sets) {
+            if (set.path("title").asString("").equalsIgnoreCase(title)) {
+                return Optional.of(set.path("setid").asInt());
+            }
+        }
+        return Optional.empty();
+    }
+
+    /** @return Kodis ID des Sets, zu dem der Film gehört, oder leer ohne Set */
+    public Optional<Integer> movieSetOf(KodiEndpoint endpoint, int movieId) {
+        int setId = call(endpoint, "VideoLibrary.GetMovieDetails",
+                Map.of("movieid", movieId, "properties", List.of("setid"))).path("moviedetails").path("setid").asInt(0);
+        return setId > 0 ? Optional.of(setId) : Optional.empty();
+    }
+
+    /**
+     * Setzt Titel und Beschreibung eines Filmsets.
+     *
+     * @param plot Beschreibung oder {@code null}, um sie zu leeren
+     */
+    public void setMovieSetDetails(KodiEndpoint endpoint, int setId, String title, String plot) {
+        Map<String, Object> params = new HashMap<>();
+        params.put("setid", setId);
+        params.put("title", title);
+        params.put("plot", plot == null ? "" : plot);
+        call(endpoint, "VideoLibrary.SetMovieSetDetails", params);
     }
 
     /** Kodi liest NFO und Bilder des Films neu ein. */
