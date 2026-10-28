@@ -73,6 +73,13 @@
           </div>
         </form>
 
+        <h3>Bilder</h3>
+        @let artwork = artworkSource();
+        @if (artwork) {
+          <app-artwork-gallery [source]="artwork" />
+        }
+        <p class="hint">Wo Set-Bilder liegen, steht in den Einstellungen unter „Filmsets“.</p>
+
         <h3>Filme ({{ details.movies.length }})</h3>
         <ul class="members">
           @for (movie of details.movies; track movie.id) {
@@ -84,7 +91,7 @@
             <li class="empty">Noch keine Filme.</li>
           }
         </ul>
-        <button matButton class="remove-button" (click)="removeMarked()" [disabled]="!!job || removal().size === 0">
+        <button matButton class="remove-members-button" (click)="removeMarked()" [disabled]="!!job || removal().size === 0">
           {{ removal().size }} entfernen
         </button>
 

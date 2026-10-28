@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { Job } from '../jobs/job';
+import { ArtworkCandidates, ArtworkInfo, ArtworkSource, versioned } from '../movies/artwork';
 import { MovieSetData, MovieSetDetails, MovieSetSummary } from './movie-set';
 
 export const MOVIE_SETS_URL = '/api/v1/moviesets';
@@ -37,5 +38,17 @@ export class MovieSetService {
 
   removeMovies(setId: number, movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${MOVIE_SETS_URL}/${setId}/movies/remove`, { movieIds });
+  }
+
+  /** Bilder eines Sets; gespeichert wird in den Ablagen aus den Einstellungen. */
+  artwork(setId: number): ArtworkSource {
+    const baseUrl = `${MOVIE_SETS_URL}/${setId}/artwork`;
+    return {
+      findAll: () => this.http.get<ArtworkInfo[]>(baseUrl),
+      imageUrl: (artwork) => versioned(`${baseUrl}/${artwork.type}/image`, artwork),
+      candidates: (type) => this.http.get<ArtworkCandidates>(`${baseUrl}/${type}/candidates`),
+      apply: (type, url) => this.http.put<ArtworkInfo>(`${baseUrl}/${type}`, { url }),
+      remove: (type) => this.http.delete<void>(`${baseUrl}/${type}`),
+    };
   }
 }

@@ -7,6 +7,7 @@ import { Subject } from 'rxjs';
 
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
+import { ArtworkInfo } from '../movies/artwork';
 import { CONFIRM } from '../shared/confirm';
 import { flushWhenRequested } from '../shared/testing';
 import { MovieSetDetails, MovieSetSummary, movieSetJobSummary } from './movie-set';
@@ -45,6 +46,11 @@ describe('MovieSetManager', () => {
       { id: 6, title: 'Matrix Reloaded', year: 2003 },
     ],
   };
+
+  const artwork: ArtworkInfo[] = [
+    { type: 'POSTER', exists: true, path: '/sets/Matrix Filmreihe-poster.jpg', modifiedAt: '2026-10-28T12:00:00Z' },
+    { type: 'KEYART', exists: false, path: null, modifiedAt: null },
+  ];
 
   let fixture: ComponentFixture<MovieSetManager>;
   let httpTesting: HttpTestingController;
@@ -120,6 +126,7 @@ describe('MovieSetManager', () => {
   async function selectMatrix(): Promise<void> {
     element().querySelector<HTMLButtonElement>('.set')!.click();
     await flushWhenRequested(fixture, httpTesting, `${MOVIE_SETS_URL}/1`, matrix);
+    await flushWhenRequested(fixture, httpTesting, `${MOVIE_SETS_URL}/1/artwork`, artwork);
     await fixture.whenStable();
   }
 
@@ -139,6 +146,9 @@ describe('MovieSetManager', () => {
     expect(input('name').value).toBe('Matrix Filmreihe');
     expect(input('tmdbCollectionId').value).toBe('2344');
     expect(texts('.members li')).toEqual(['Matrix (1999)', 'Matrix Reloaded (2003)']);
+    expect(element().querySelector<HTMLImageElement>('app-artwork-gallery img')!.src).toContain(
+      `${MOVIE_SETS_URL}/1/artwork/POSTER/image`,
+    );
   });
 
   it('creates a set and selects it', async () => {
@@ -197,7 +207,7 @@ describe('MovieSetManager', () => {
 
     element().querySelector<HTMLInputElement>('.members input')!.click();
     await fixture.whenStable();
-    button('.remove-button').click();
+    button('.remove-members-button').click();
     const remove = httpTesting.expectOne({
       method: 'POST',
       url: `${MOVIE_SETS_URL}/1/movies/remove`,

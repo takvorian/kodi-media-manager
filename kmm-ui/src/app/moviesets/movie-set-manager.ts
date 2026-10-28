@@ -19,6 +19,7 @@ import { Observable, filter } from 'rxjs';
 
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
+import { ArtworkGallery } from '../movies/artwork-gallery';
 import { MovieSummary } from '../movies/movie';
 import { MovieService } from '../movies/movie.service';
 import { CONFIRM } from '../shared/confirm';
@@ -38,7 +39,7 @@ const SEARCH_SIZE = 20;
 const TMDB_ID_PATTERN = /^\s*(\d{1,10})?\s*$/;
 
 /**
- * Filmset-Manager: Sets anlegen, bearbeiten und löschen, Filme hinzufügen und entfernen. Was Film-NFOs ändert,
+ * Filmset-Manager: Sets anlegen, bearbeiten und löschen, Bilder wählen, Filme hinzufügen und entfernen. Was Film-NFOs ändert,
  * läuft als Hintergrund-Job.
  */
 @Component({
@@ -47,6 +48,7 @@ const TMDB_ID_PATTERN = /^\s*(\d{1,10})?\s*$/;
     FormsModule,
     ReactiveFormsModule,
     RouterLink,
+    ArtworkGallery,
     MatButtonModule,
     MatCardModule,
     MatCheckboxModule,
@@ -88,6 +90,10 @@ export class MovieSetManager {
   protected readonly search = signal('');
   protected readonly candidates = signal<readonly MovieSummary[]>([]);
   protected readonly chosen = signal<ReadonlySet<number>>(new Set());
+  /** Neu bei jedem Laden des Sets, damit die Galerie nach einer Umbenennung die verschobenen Bilder zeigt. */
+  protected readonly artworkSource = computed(() =>
+    this.set.hasValue() ? this.setService.artwork(this.set.value().id) : null,
+  );
   protected readonly runningJob = computed(() => this.jobStore.runningJob(MOVIE_SET_JOB_KEY));
 
   constructor() {

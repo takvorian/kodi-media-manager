@@ -9,6 +9,7 @@ export type ArtworkType =
   | 'BANNER'
   | 'LANDSCAPE'
   | 'CHARACTERART'
+  | 'KEYART'
   | 'THUMB';
 
 export const ARTWORK_LABELS: Record<ArtworkType, string> = {
@@ -20,6 +21,7 @@ export const ARTWORK_LABELS: Record<ArtworkType, string> = {
   BANNER: 'Banner',
   LANDSCAPE: 'Landscape',
   CHARACTERART: 'Characterart',
+  KEYART: 'Keyart',
   THUMB: 'Standbild',
 };
 
@@ -50,7 +52,7 @@ export interface ArtworkCandidates {
   readonly warnings: readonly string[];
 }
 
-/** Woher eine Bildergalerie ihre Bilder bezieht: ein Film, eine Serie, eine Staffel oder eine Episode. */
+/** Woher eine Bildergalerie ihre Bilder bezieht: ein Film, ein Filmset, eine Serie, eine Staffel oder eine Episode. */
 export interface ArtworkSource {
   findAll(): Observable<ArtworkInfo[]>;
   /** URL des Bildes; die Änderungszeit sorgt dafür, dass der Browser ein ersetztes Bild neu lädt. */

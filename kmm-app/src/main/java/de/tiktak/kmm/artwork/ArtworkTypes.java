@@ -36,6 +36,17 @@ final class ArtworkTypes {
 
     static final List<ImageType> EPISODE_TYPES = List.of(ImageType.THUMB);
 
+    /** Wie Ember; Kodi liest dieselben Namen aus dem Set-Ordner. */
+    static final List<ImageType> MOVIE_SET_TYPES = List.of(
+            ImageType.POSTER,
+            ImageType.FANART,
+            ImageType.BANNER,
+            ImageType.CLEARLOGO,
+            ImageType.CLEARART,
+            ImageType.DISCART,
+            ImageType.KEYART,
+            ImageType.LANDSCAPE);
+
     private ArtworkTypes() {
     }
 

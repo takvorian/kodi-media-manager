@@ -44,6 +44,17 @@ public class ArtworkProblemException extends ErrorResponseException {
                 "Die Bildart %s wird für %s nicht verwaltet.".formatted(type, target), null);
     }
 
+    static ArtworkProblemException missingCollectionId() {
+        return new ArtworkProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Set nicht zugeordnet",
+                "Für die Bildsuche wird die TMDB-ID der Sammlung benötigt. Bitte zuerst das Set bei TMDB suchen.",
+                null);
+    }
+
+    static ArtworkProblemException noMovieSetImageStorage() {
+        return new ArtworkProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Keine Ablage für Set-Bilder",
+                "Bitte in den Einstellungen unter „Filmsets“ eine Ablage für Set-Bilder einschalten.", null);
+    }
+
     static ArtworkProblemException missingTvIds() {
         return new ArtworkProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Serie nicht eindeutig zugeordnet",
                 "Für die Bildsuche wird eine TVDB-, TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen.",
