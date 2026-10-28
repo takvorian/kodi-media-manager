@@ -72,7 +72,7 @@ class MovieRenameIntegrationTest {
         givenFile(filme.resolve("b/Brazil.nfo"), "<movie><title>Same</title></movie>");
         givenFile(filme.resolve("b/Brazil.mkv"), "");
         long sourceId = createSource(filme);
-        runJob(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange());
+        scan(sourceId);
 
         MvcTestResult preview = mockMvc.post().uri(MovieRenameController.SOURCE_PREVIEW_PATH, sourceId).with(csrf())
                 .contentType(JSON).content("""
@@ -91,6 +91,77 @@ class MovieRenameIntegrationTest {
                 "\"targetName\":\"Heat.bluray.mkv\"");
         assertThat(plans.get(3).get("status").asString()).as("Ronin.mkv statt Ronin (1998).mkv").isEqualTo("RENAME");
         assertThat(filme.resolve("heat/heat.mkv")).exists();
+    }
+
+    @Test
+    void renamesAMovieAndTheNextScanFindsItAtItsNewPlace() throws IOException {
+        Path filme = Files.createDirectories(library.resolve("filme"));
+        Path srt = filme.resolve("alt/heat/heat.de.srt");
+        givenFile(filme.resolve("alt/heat/heat.nfo"), """
+                <movie><title>Heat</title><year>1995</year><playcount>2</playcount>
+                <fileinfo><streamdetails><subtitle><language>deu</language><path>%s</path></subtitle>
+                </streamdetails></fileinfo></movie>""".formatted(srt));
+        givenFile(filme.resolve("alt/heat/heat.mkv"), "");
+        givenFile(srt, "");
+        long sourceId = createSource(filme);
+        scan(sourceId);
+        long movieId = jdbcClient.sql("SELECT id FROM movie").query(Long.class).single();
+
+        MvcTestResult renamed = mockMvc.post().uri(MovieRenameController.MOVIE_RENAME_PATH, movieId).with(csrf())
+                .contentType(JSON).content("""
+                        {"folder": "{title:first}/{title} ({year})", "file": "{title}"}""").exchange();
+
+        assertThat(renamed).hasStatusOk().bodyJson().extractingPath("$.status").isEqualTo("RENAME");
+        Path target = filme.resolve("H/Heat (1995)");
+        assertThat(target.resolve("Heat.mkv")).exists();
+        assertThat(target.resolve("Heat.de.srt")).exists();
+        assertThat(filme.resolve("alt")).doesNotExist();
+        assertThat(jdbcClient.sql("SELECT file_path FROM movie").query(String.class).single())
+                .isEqualTo(target.resolve("Heat.mkv").toString());
+        assertThat(Files.readString(target.resolve("Heat.nfo"))).contains("<path>" + target.resolve("Heat.de.srt"))
+                .contains("<playcount>2</playcount>");
+        JsonNode rescan = scan(sourceId);
+        assertThat(rescan.get("added").asInt()).isZero();
+        assertThat(rescan.get("removed").asInt()).isZero();
+        assertThat(mockMvc.post().uri(MovieRenameController.MOVIE_PREVIEW_PATH, movieId).with(csrf())
+                .contentType(JSON).content("""
+                        {"folder": "{title:first}/{title} ({year})", "file": "{title}"}""").exchange())
+                .hasStatusOk().bodyJson().extractingPath("$.status").isEqualTo("UNCHANGED");
+    }
+
+    @Test
+    void renamesTheSelectedMoviesOfASourceAndSkipsConflicts() throws IOException {
+        Path filme = Files.createDirectories(library.resolve("filme"));
+        givenFile(filme.resolve("heat/heat.nfo"), "<movie><title>Heat</title></movie>");
+        givenFile(filme.resolve("heat/heat.mkv"), "");
+        givenFile(filme.resolve("ronin/ronin.nfo"), "<movie><title>Ronin</title></movie>");
+        givenFile(filme.resolve("ronin/ronin.mkv"), "");
+        givenFile(filme.resolve("Ronin2/belegt.txt"), "");
+        givenFile(filme.resolve("alien/alien.nfo"), "<movie><title>Alien</title></movie>");
+        givenFile(filme.resolve("alien/alien.mkv"), "");
+        long sourceId = createSource(filme);
+        scan(sourceId);
+        long alienId = jdbcClient.sql("SELECT id FROM movie WHERE title = 'Alien'").query(Long.class).single();
+        long heatId = jdbcClient.sql("SELECT id FROM movie WHERE title = 'Heat'").query(Long.class).single();
+
+        JsonNode result = runJob(mockMvc.post().uri(MovieRenameController.SOURCE_RENAME_PATH, sourceId).with(csrf())
+                .contentType(JSON).content("""
+                        {"patterns": {"folder": "{title}2", "file": "{title}"}, "movieIds": [%d, %d]}"""
+                        .formatted(alienId, heatId)).exchange());
+
+        assertThat(result.get("renamed").asInt()).isEqualTo(2);
+        assertThat(filme.resolve("Alien2/Alien.mkv")).exists();
+        assertThat(filme.resolve("Heat2/Heat.mkv")).exists();
+        assertThat(filme.resolve("ronin/ronin.mkv")).as("nicht ausgewählt").exists();
+
+        JsonNode all = runJob(mockMvc.post().uri(MovieRenameController.SOURCE_RENAME_PATH, sourceId).with(csrf())
+                .contentType(JSON).content("""
+                        {"patterns": {"folder": "{title}2", "file": "{title}"}}""").exchange());
+
+        assertThat(all.get("renamed").asInt()).isZero();
+        assertThat(all.get("unchanged").asInt()).isEqualTo(2);
+        assertThat(all.get("skipped").asInt()).isEqualTo(1);
+        assertThat(all.get("problems").get(0).asString()).startsWith("„Ronin“: Der Ordner");
     }
 
     @Test
@@ -126,13 +197,18 @@ class MovieRenameIntegrationTest {
         return read(result).get("id").asLong();
     }
 
-    private void runJob(MvcTestResult started) {
+    private JsonNode scan(long sourceId) {
+        return runJob(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange());
+    }
+
+    private JsonNode runJob(MvcTestResult started) {
         assertThat(started).hasStatus(HttpStatus.ACCEPTED);
         String jobId = read(started).get("id").asString();
         JsonNode job = await().atMost(TIMEOUT).pollInSameThread()
                 .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),
                         node -> !"RUNNING".equals(node.get("status").asString()));
         assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job.get("result");
     }
 
     private JsonNode read(MvcTestResult result) {

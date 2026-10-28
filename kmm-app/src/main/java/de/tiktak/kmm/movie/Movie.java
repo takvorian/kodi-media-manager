@@ -53,11 +53,11 @@ public class Movie {
     @Column(name = "source_id", nullable = false, updatable = false)
     private Long sourceId;
 
-    @Column(name = "file_path", nullable = false, length = 1024, updatable = false)
+    @Column(name = "file_path", nullable = false, length = 1024)
     private String filePath;
 
     @JdbcTypeCode(SqlTypes.CHAR)
-    @Column(name = "file_path_hash", nullable = false, length = 64, updatable = false)
+    @Column(name = "file_path_hash", nullable = false, length = 64)
     private String filePathHash;
 
     @Enumerated(EnumType.STRING)
@@ -278,6 +278,12 @@ public class Movie {
         this.playCount = newPlayCount;
         this.lastPlayedAt = newLastPlayedAt;
         this.userRating = newUserRating;
+    }
+
+    /** Nach dem Umbenennen: die Hauptdatei liegt jetzt dort. */
+    void relocate(String newFilePath) {
+        this.filePath = Objects.requireNonNull(newFilePath, "newFilePath must not be null");
+        this.filePathHash = FilePathHash.of(newFilePath);
     }
 
     void markNfoSynchronized(Instant nfoModifiedAt) {
