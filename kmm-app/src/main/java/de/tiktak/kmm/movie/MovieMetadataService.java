@@ -2,6 +2,7 @@ package de.tiktak.kmm.movie;
 
 import java.time.Clock;
 import java.util.Optional;
+import java.util.function.UnaryOperator;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -44,6 +45,29 @@ public class MovieMetadataService {
         log.info("Metadata of movie {} saved to {}", movieId, written.file());
         events.publishEvent(new MovieFilesChangedEvent(movieId));
         return MovieDetails.from(movie, Optional.of(written));
+    }
+
+    /**
+     * Ändert die Metadaten ausgehend vom aktuellen Stand, etwa in der Stapel-Bearbeitung. Eine außerhalb von KMM
+     * geänderte NFO wird vorher eingelesen, damit die Änderung auf ihr aufsetzt.
+     *
+     * @return ob sich etwas geändert hat
+     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann
+     */
+    @Transactional
+    public boolean change(long movieId, UnaryOperator<MovieMetadata> change) {
+        Movie movie = require(movieId);
+        nfoSync.refreshIfChangedOutside(movie);
+        MovieMetadata current = movie.metadata();
+        MovieMetadata changed = change.apply(current);
+        if (changed.equals(current)) {
+            return false;
+        }
+        NfoFileState written = writeNfo(movie, changed);
+        movie.applyMetadata(changed);
+        movie.markNfoSynchronized(written.modifiedAt());
+        events.publishEvent(new MovieFilesChangedEvent(movieId));
+        return true;
     }
 
     private NfoFileState writeNfo(Movie movie, MovieMetadata metadata) {

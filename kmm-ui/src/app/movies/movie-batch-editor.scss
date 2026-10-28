@@ -1,0 +1,21 @@
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+}
+
+.row mat-form-field {
+  flex: 1 1 240px;
+}
+
+.row .mode {
+  flex: 0 1 200px;
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  color: var(--mat-sys-error);
+}

@@ -132,6 +132,35 @@ class MovieFilterIntegrationTest {
     }
 
     @Test
+    void editsTheFilteredMoviesTogether() throws IOException {
+        JsonNode ids = read(mockMvc.post().uri(MovieController.QUERY_IDS_PATH).with(csrf()).contentType(JSON)
+                .content("{\"matchAll\": true, \"conditions\": [{\"field\": \"YEAR\", \"operator\": \"AT_LEAST\","
+                        + " \"value\": \"1995\"}]}").exchange());
+        assertThat(ids.size()).isEqualTo(3);
+
+        MvcTestResult started = mockMvc.post().uri(MovieController.BATCH_PATH).with(csrf()).contentType(JSON)
+                .content(("{\"movieIds\": %s, \"genres\": {\"add\": [\"Klassiker\"], \"remove\": [\"drama\"]},"
+                        + " \"tags\": {\"add\": [\"Neu\"]}, \"mpaa\": {\"value\": \"FSK 12\"},"
+                        + " \"edition\": {\"clear\": true}}").formatted(ids)).exchange();
+        assertThat(started).hasStatus(HttpStatus.ACCEPTED);
+        JsonNode job = awaitJob(read(started).get("id").asString());
+
+        assertThat(job.get("result").get("changed").asInt()).isEqualTo(3);
+        assertThat(Files.readString(library.resolve("filme/Heat/Heat.nfo")))
+                .contains("<genre>Krimi</genre>", "<genre>Klassiker</genre>", "<mpaa>FSK 12</mpaa>", "<tag>Neu</tag>",
+                        "<tag>Favorit</tag>", "<playcount>2</playcount>")
+                .doesNotContain("Drama");
+        assertThat(titles(true, condition("TAG", "IS", "Neu"))).containsExactly("Heat", "Matrix", "Ohne Angaben");
+        assertThat(titles(true, condition("MPAA", "IS", "FSK 12"))).containsExactly("Heat", "Matrix", "Ohne Angaben");
+    }
+
+    @Test
+    void rejectsABatchWithoutMovies() {
+        assertThat(mockMvc.post().uri(MovieController.BATCH_PATH).with(csrf()).contentType(JSON)
+                .content("{\"movieIds\": [], \"tags\": {\"add\": [\"Neu\"]}}")).hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void rejectsConditionsThatDoNotFitTheirField() {
         assertThat(post("{\"matchAll\": true, \"conditions\": [{\"field\": \"WATCHED\", \"operator\": \"AT_LEAST\","
                 + " \"value\": \"1\"}]}", "")).hasStatus(HttpStatus.BAD_REQUEST);
@@ -200,10 +229,15 @@ class MovieFilterIntegrationTest {
         assertThat(source).hasStatus(HttpStatus.CREATED);
         MvcTestResult started = mockMvc.post().uri(LibraryScanController.SCAN_PATH, read(source).get("id").asLong())
                 .with(csrf()).exchange();
-        String jobId = read(started).get("id").asString();
-        await().atMost(TIMEOUT).pollInSameThread()
+        awaitJob(read(started).get("id").asString());
+    }
+
+    private JsonNode awaitJob(String jobId) {
+        JsonNode job = await().atMost(TIMEOUT).pollInSameThread()
                 .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),
                         node -> !"RUNNING".equals(node.get("status").asString()));
+        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job;
     }
 
     private JsonNode read(MvcTestResult result) {

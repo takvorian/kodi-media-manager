@@ -1,5 +1,6 @@
 .toolbar,
-.save-filter {
+.save-filter,
+.selection {
   display: flex;
   flex-wrap: wrap;
   gap: 0 16px;
@@ -14,7 +15,8 @@
   width: min(280px, 100%);
 }
 
-.filter-editor {
+.filter-editor,
+.batch-editor {
   margin-bottom: 16px;
   padding: 8px 16px;
   border: 1px solid var(--mat-sys-outline-variant);
@@ -34,4 +36,12 @@
 
 .error {
   color: var(--mat-sys-error);
+}
+
+.selection {
+  margin-bottom: 8px;
+}
+
+.job-progress {
+  margin-bottom: 8px;
 }

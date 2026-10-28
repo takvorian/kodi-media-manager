@@ -6,10 +6,13 @@ import {
 } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { Subject } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { FILTERS_URL, SavedFilter } from '../filters/saved-filter.service';
+import { Job } from '../jobs/job';
+import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { flushWhenRequested } from '../shared/testing';
 import { MoviePage, MovieSummary } from './movie';
@@ -51,9 +54,12 @@ describe('MovieList', () => {
   let fixture: ComponentFixture<MovieList>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
+  const completed = new Subject<Job>();
+  const updated: Job[] = [];
 
   beforeEach(() => {
     snackBarMessages = [];
+    updated.length = 0;
     TestBed.configureTestingModule({
       imports: [MovieList],
       providers: [
@@ -65,6 +71,15 @@ describe('MovieList', () => {
           useValue: { open: (message: string) => snackBarMessages.push(message) },
         },
         { provide: CONFIRM, useValue: () => true },
+        {
+          provide: JobStore,
+          useValue: {
+            connect: () => undefined,
+            completed,
+            runningJob: () => undefined,
+            update: (job: Job) => updated.push(job),
+          },
+        },
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -243,6 +258,70 @@ describe('MovieList', () => {
     await flushWhenRequested(fixture, httpTesting, FILTERS_URL + '?mediaType=MOVIE', [unseen]);
     await respond(page([heat, ronin]));
     expect(snackBarMessages).toContain('Filter „Krimis“ gelöscht.');
+  });
+
+  it('chooses movies, edits them together and reloads after the job', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+    expect(element().querySelector('.selection')?.textContent).toContain('1 ausgewählt');
+
+    element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+    const ids = httpTesting.expectOne(`${MOVIES_URL}/query/ids`);
+    expect(ids.request.body).toEqual({ matchAll: true, conditions: [], search: null });
+    ids.flush([1, 2, 3]);
+    fixture.detectChanges();
+    expect(element().querySelector('.selection')?.textContent).toContain('3 ausgewählt');
+
+    element().querySelector<HTMLButtonElement>('.batch-edit-button')!.click();
+    fixture.detectChanges();
+    const addGenres = element().querySelector<HTMLInputElement>('input[name="addGenres"]')!;
+    addGenres.value = 'Klassiker, Krimi';
+    addGenres.dispatchEvent(new Event('input'));
+    element().querySelector<HTMLButtonElement>('.apply-batch-button')!.click();
+    const batch = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/batch` });
+    expect(batch.request.body).toEqual({
+      movieIds: [1, 2, 3],
+      genres: { add: ['Klassiker', 'Krimi'], remove: [] },
+      tags: { add: [], remove: [] },
+      mpaa: { clear: false, value: null },
+      edition: { clear: false, value: null },
+      videoSource: { clear: false, value: null },
+    });
+    const job = {
+      id: 'b',
+      key: 'movies-batch',
+      title: '3 Filme bearbeiten',
+      status: 'RUNNING',
+    } as Job;
+    batch.flush(job);
+    expect(updated).toEqual([job]);
+
+    completed.next({
+      ...job,
+      status: 'SUCCEEDED',
+      result: { changed: 3, unchanged: 0, failed: 0, failures: [] },
+    });
+    await respond(page([heat, ronin]));
+    expect(snackBarMessages).toContain('3 Filme bearbeiten: 3 geändert, 0 unverändert.');
+  });
+
+  it('asks for at least one change before editing together', async () => {
+    await respond(page([heat]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+    element().querySelector<HTMLButtonElement>('.batch-edit-button')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.apply-batch-button')!.click();
+    fixture.detectChanges();
+
+    expect(element().querySelector('.batch-editor .error')?.textContent).toContain(
+      'mindestens eine',
+    );
+    element().querySelector<HTMLButtonElement>('.clear-chosen-button')!.click();
+    fixture.detectChanges();
+    expect(element().querySelector('.batch-editor')).toBeNull();
   });
 
   it('loads another page when paging', async () => {

@@ -54,6 +54,9 @@ class MovieControllerTest {
     @MockitoBean
     private MovieEditService editService;
 
+    @MockitoBean
+    private MovieBatchService batchService;
+
     @Test
     void listsMoviesSortedByTitleWithDefaultPageSize() {
         when(queryService.findMovies(isNull(), any()))

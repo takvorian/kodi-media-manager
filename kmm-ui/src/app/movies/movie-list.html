@@ -45,6 +45,31 @@
   </section>
 }
 
+<div class="selection">
+  <span>{{ chosen().size }} ausgewählt</span>
+  <button matButton type="button" class="choose-all-button" (click)="chooseAllFiltered()">Alle gefilterten auswählen</button>
+  @if (chosen().size > 0) {
+    <button matButton type="button" class="clear-chosen-button" (click)="clearChosen()">Auswahl aufheben</button>
+    <button matButton type="button" class="batch-edit-button" (click)="toggleBatchEditing()">
+      {{ batchEditing() ? 'Bearbeitung schließen' : 'Auswahl bearbeiten' }}
+    </button>
+  }
+</div>
+
+@let job = batchJob();
+@if (job) {
+  <div class="job-progress">
+    <mat-progress-bar mode="determinate" [value]="job.total ? (100 * job.done) / job.total : 0" />
+    <span>{{ job.title }} – {{ job.done }} von {{ job.total }}</span>
+  </div>
+}
+
+@if (batchEditing() && chosen().size > 0) {
+  <section class="batch-editor">
+    <app-movie-batch-editor [movieIds]="chosenIds()" [busy]="!!job" (submitted)="startBatch($event)" />
+  </section>
+}
+
 @if (movies.error()) {
   <p class="error">Die Filme konnten nicht geladen werden.</p>
 } @else if (movies.hasValue()) {
@@ -59,6 +84,12 @@
     }
   } @else {
     <table mat-table [dataSource]="page.content" class="movie-table">
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let movie">
+          <mat-checkbox class="choose" [checked]="isChosen(movie.id)" (change)="toggleChosen(movie.id)" />
+        </td>
+      </ng-container>
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef>Titel</th>
         <td mat-cell *matCellDef="let movie" class="movie-title">

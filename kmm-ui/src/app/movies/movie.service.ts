@@ -3,7 +3,9 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { MovieFilter, MovieFilterValues } from '../filters/movie-filter';
+import { Job } from '../jobs/job';
 import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
+import { MovieBatchEdit } from './movie-batch';
 import { CollectionReference, MovieScrapeProposal, ScrapeCandidate, ScraperInfo } from './scraper';
 
 export const MOVIES_URL = '/api/v1/movies';
@@ -30,6 +32,16 @@ export class MovieService {
   queryMovies(filter: MovieFilter, page: number, size: number): Observable<MoviePage> {
     const params = new HttpParams().set('page', page).set('size', size).set('sort', SORT_BY_TITLE);
     return this.http.post<MoviePage>(`${MOVIES_URL}/query`, filter, { params });
+  }
+
+  /** IDs aller Filme, auf die der Filter passt. */
+  queryMovieIds(filter: MovieFilter): Observable<number[]> {
+    return this.http.post<number[]>(`${MOVIES_URL}/query/ids`, filter);
+  }
+
+  /** Startet die Stapel-Bearbeitung als Job. */
+  batchEdit(edit: MovieBatchEdit): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/batch`, edit);
   }
 
   /** Vorhandene Werte je Filterfeld für Auswahllisten. */

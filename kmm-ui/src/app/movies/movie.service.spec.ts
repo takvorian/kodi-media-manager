@@ -103,6 +103,25 @@ describe('MovieService', () => {
     httpTesting.expectOne(`${MOVIES_URL}/filter-values`).flush({});
   });
 
+  it('loads the IDs of filtered movies and starts a batch edit', () => {
+    service.queryMovieIds({ matchAll: true, conditions: [] }).subscribe();
+    httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/query/ids` }).flush([1]);
+
+    const keep = { clear: false, value: null };
+    const edit = {
+      movieIds: [1],
+      genres: { add: [], remove: [] },
+      tags: { add: ['Neu'], remove: [] },
+      mpaa: keep,
+      edition: keep,
+      videoSource: keep,
+    };
+    service.batchEdit(edit).subscribe();
+    const batch = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/batch` });
+    expect(batch.request.body).toEqual(edit);
+    batch.flush({});
+  });
+
   it('loads a proposal for a search result', () => {
     service.proposal(5, 'tmdb', '949').subscribe();
 
