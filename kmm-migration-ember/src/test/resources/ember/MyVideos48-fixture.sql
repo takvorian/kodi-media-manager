@@ -164,3 +164,5 @@ ALTER TABLE episode ADD COLUMN VideoSource TEXT;
 UPDATE movie SET VideoSource = 'bluray', edition = 'Director''s Cut' WHERE idMovie = 1;
 UPDATE movie SET VideoSource = '', edition = '' WHERE idMovie = 2;
 UPDATE episode SET VideoSource = 'dvd' WHERE idEpisode = 1;
+CREATE VIEW movielist AS SELECT * FROM movie;
+CREATE VIEW 'movie-tiktak_unviewed' AS SELECT * FROM movielist WHERE movielist.Playcount IS NULL;

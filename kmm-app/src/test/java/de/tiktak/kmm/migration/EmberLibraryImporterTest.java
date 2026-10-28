@@ -22,14 +22,18 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.api.io.TempDir;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.Spy;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import de.tiktak.kmm.filter.SavedFilterData;
+import de.tiktak.kmm.filter.SavedFilterService;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.migration.ember.library.EmberLibrary;
+import de.tiktak.kmm.migration.ember.library.EmberMediaList;
 import de.tiktak.kmm.migration.ember.library.EmberMovie;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberSetLink;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSet;
@@ -47,6 +51,7 @@ import de.tiktak.kmm.source.ImportedSource;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceConflictException;
 import de.tiktak.kmm.source.MediaSourceService;
+import tools.jackson.databind.json.JsonMapper;
 
 @ExtendWith(MockitoExtension.class)
 class EmberLibraryImporterTest {
@@ -62,6 +67,9 @@ class EmberLibraryImporterTest {
 
     @Mock
     private SettingsService settingsService;
+
+    @Mock
+    private SavedFilterService savedFilterService;
 
     @Spy
     private Clock clock = Clock.systemUTC();
@@ -80,7 +88,7 @@ class EmberLibraryImporterTest {
     @BeforeEach
     void createImporter() {
         importer = new EmberLibraryImporter(new EmberSourceImporter(sourceService), tvImporter, movieImportService,
-                movieSetService, settingsService, clock);
+                movieSetService, settingsService, savedFilterService, JsonMapper.builder().build(), clock);
     }
 
     @Test
@@ -164,6 +172,23 @@ class EmberLibraryImporterTest {
 
         assertThat(dryRun.settingsChanges()).isEqualTo(real.settingsChanges()).hasSize(1);
         verify(settingsService).update(any());
+    }
+
+    @Test
+    void importsTranslatableMovieListsAsSavedFilters() {
+        when(movieImportService.startSession(anyCollection())).thenReturn(session);
+        EmberLibrary withLists = new EmberLibrary(List.of(), List.of(), List.of(), List.of(), List.of(
+                new EmberMediaList("tiktak_unviewed", "SELECT * FROM movielist WHERE movielist.Playcount IS NULL"),
+                new EmberMediaList("bond", "SELECT * FROM movielist WHERE Title LIKE '%Bond%'")));
+
+        EmberImportReport report = run(withLists, mapped());
+
+        ArgumentCaptor<SavedFilterData> saved = ArgumentCaptor.forClass(SavedFilterData.class);
+        verify(savedFilterService).importFilter(saved.capture());
+        assertThat(saved.getValue().name()).isEqualTo("tiktak_unviewed");
+        assertThat(saved.getValue().definition().get("conditions").get(0).get("field").asString()).isEqualTo("WATCHED");
+        assertThat(report.settingsChanges()).contains("Filmliste „tiktak_unviewed“ als Filter übernommen");
+        assertThat(report.warnings()).anySatisfy(warning -> assertThat(warning).contains("„bond“"));
     }
 
     @Test

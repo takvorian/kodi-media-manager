@@ -61,6 +61,10 @@ public class EmberLibraryReader {
                     LIMIT 1) AS tmdbId
             FROM sets s ORDER BY s.idSet""";
     private static final String EXCLUDED_DIRECTORIES = "SELECT Dirname FROM ExcludeDir ORDER BY Dirname";
+    /** Embers Filter-Editor legt eigene Filmlisten als Views mit diesem Präfix an. */
+    private static final String MOVIE_LIST_PREFIX = "movie-";
+    private static final String MOVIE_LISTS = "SELECT name, sql FROM sqlite_master WHERE type = 'view' "
+            + "AND name LIKE '" + MOVIE_LIST_PREFIX + "%' ORDER BY name";
 
     private static final String IMDB = "imdb";
     /** Embers {@code SortMethod_MovieSet.Title}. */
@@ -73,7 +77,7 @@ public class EmberLibraryReader {
     public EmberLibrary read(Path databaseFile) {
         try (Connection connection = EmberDatabases.openReadOnly(databaseFile)) {
             return new EmberLibrary(sources(connection), movies(connection), sets(connection),
-                    excludedDirectories(connection));
+                    excludedDirectories(connection), movieLists(connection));
         } catch (SQLException e) {
             throw EmberProfileException.unreadableDatabase(databaseFile, e);
         }
@@ -86,6 +90,11 @@ public class EmberLibraryReader {
         } catch (SQLException e) {
             throw EmberProfileException.unreadableDatabase(databaseFile, e);
         }
+    }
+
+    private static List<EmberMediaList> movieLists(Connection connection) throws SQLException {
+        return EmberQueries.query(connection, MOVIE_LISTS, row -> new EmberMediaList(
+                row.getString("name").substring(MOVIE_LIST_PREFIX.length()), row.getString("sql")));
     }
 
     private List<EmberMovieSource> sources(Connection connection) throws SQLException {

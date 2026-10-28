@@ -10,22 +10,27 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.filter.FilterMediaType;
+import de.tiktak.kmm.filter.SavedFilterData;
+import de.tiktak.kmm.filter.SavedFilterService;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.migration.ember.library.EmberLibrary;
+import de.tiktak.kmm.migration.ember.library.EmberMediaList;
 import de.tiktak.kmm.migration.ember.library.EmberMovie;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSet;
 import de.tiktak.kmm.migration.ember.library.EmberMovieSource;
 import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.movie.MovieImportResult;
+import de.tiktak.kmm.movie.MovieImportService.MovieImportSession;
 import de.tiktak.kmm.movie.MovieImportService;
 import de.tiktak.kmm.movie.MovieSetService;
 import de.tiktak.kmm.movie.SetSortMethod;
-import de.tiktak.kmm.movie.MovieImportService.MovieImportSession;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.settings.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import tools.jackson.databind.ObjectMapper;
 
 /**
  * Überträgt einen gelesenen Ember-Bestand in die KMM-Datenbank: Quellen, Filme mit allen Angaben,
@@ -44,6 +49,8 @@ class EmberLibraryImporter {
     private final MovieImportService movieImportService;
     private final MovieSetService movieSetService;
     private final SettingsService settingsService;
+    private final SavedFilterService savedFilterService;
+    private final ObjectMapper objectMapper;
     private final Clock clock;
 
     /**
@@ -54,6 +61,7 @@ class EmberLibraryImporter {
         EmberPathTranslator paths = EmberPathTranslator.of(request.pathMappings());
         Map<Long, Long> sourceIds = importSources(library.sources(), paths, progress);
         importMovies(library, sourceIds, paths, progress, context);
+        importMovieLists(library.movieLists(), progress);
         tvLibrary.ifPresent(tv -> tvImporter.importLibrary(tv, paths, progress, context));
         if (request.importSettings()) {
             importSettings(settings, library.excludedDirectories(), paths, progress, request.dryRun());
@@ -117,6 +125,20 @@ class EmberLibraryImporter {
                 .filter(set -> set.title() != null)
                 .forEach(set -> movieSetService.importSet(set.title(), set.plot(), set.tmdbCollectionId(),
                         set.sortedByTitle() ? SetSortMethod.TITLE : SetSortMethod.YEAR));
+    }
+
+    /** Eigene Filmlisten aus Embers Filter-Editor als gespeicherte Filter, soweit übersetzbar. */
+    private void importMovieLists(List<EmberMediaList> lists, EmberImportProgress progress) {
+        for (EmberMediaList list : lists) {
+            EmberMediaListTranslator.translate(list.sql()).ifPresentOrElse(
+                    filter -> {
+                        savedFilterService.importFilter(new SavedFilterData(FilterMediaType.MOVIE, list.name(),
+                                objectMapper.valueToTree(filter)));
+                        progress.settingsChanged(List.of("Filmliste „%s“ als Filter übernommen".formatted(list.name())));
+                    },
+                    () -> progress.warn("Die Ember-Filmliste „%s“ wurde nicht übernommen, ihre Bedingungen lassen "
+                            .formatted(list.name()) + "sich nicht übersetzen: " + list.sql()));
+        }
     }
 
     private void importSettings(Optional<EmberSettings> settings, List<String> excludedDirectories,

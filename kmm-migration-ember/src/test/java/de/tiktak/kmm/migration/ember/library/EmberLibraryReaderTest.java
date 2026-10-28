@@ -43,6 +43,10 @@ class EmberLibraryReaderTest {
                 new EmberMovieSet(2, "Leeres Set", null, "999", true));
         assertThat(library.setsById()).containsOnlyKeys(1L, 2L);
         assertThat(library.excludedDirectories()).containsExactly("D:\\Filme\\Privat");
+        assertThat(library.movieLists()).singleElement().satisfies(list -> {
+            assertThat(list.name()).isEqualTo("tiktak_unviewed");
+            assertThat(list.sql()).endsWith("WHERE movielist.Playcount IS NULL");
+        });
         assertThat(library.movies()).hasSize((int) EmberFixtures.MOVIE_COUNT);
     }
 
