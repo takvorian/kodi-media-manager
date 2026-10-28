@@ -12,6 +12,7 @@ import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiException;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadataService;
+import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.tvshow.EpisodeDetails;
 import de.tiktak.kmm.tvshow.TvShowDetails;
@@ -80,6 +81,17 @@ public class KodiSyncService {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {
             refreshEpisode(episodeId, targets);
+        }
+    }
+
+    /**
+     * Nach dem Umbenennen eines Films: Kodi liest den neuen Ordner ein und entfernt danach die Einträge aus dem
+     * alten, deren Dateien es nicht mehr gibt. Gesehen-Status und Bewertung kommen aus der NFO zurück.
+     */
+    void syncRenamedMovieOnRealtimeHosts(MovieRenamedEvent event) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (!targets.isEmpty()) {
+            syncAll(targets, target -> syncRenamed(target, event));
         }
     }
 
@@ -164,6 +176,18 @@ public class KodiSyncService {
         kodiClient.scan(target.endpoint(), kodiDirectory);
         return new Outcome(KodiSyncOutcome.SCAN_STARTED,
                 "„%s“ ist in Kodi noch unbekannt; Kodi liest %s ein.".formatted(title, kodiDirectory));
+    }
+
+    private Outcome syncRenamed(KodiTarget target, MovieRenamedEvent event) {
+        Optional<String> directory = target.pathMapper().toKodiDirectory(event.directory());
+        Optional<String> previous = target.pathMapper().toKodiDirectory(event.previousDirectory());
+        if (directory.isEmpty() || previous.isEmpty()) {
+            return notMapped(event.directory());
+        }
+        kodiClient.scan(target.endpoint(), directory.get());
+        kodiClient.cleanMovies(target.endpoint(), previous.get());
+        return new Outcome(KodiSyncOutcome.SCAN_STARTED,
+                "Kodi liest %s ein und entfernt die alten Einträge aus %s.".formatted(directory.get(), previous.get()));
     }
 
     private Outcome scan(KodiTarget target, MediaSource source) {

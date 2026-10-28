@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
@@ -41,6 +42,9 @@ import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieQueryService;
 import de.tiktak.kmm.movie.MovieScrapeService;
+import de.tiktak.kmm.movie.RenameTrigger;
+import de.tiktak.kmm.movie.MovieRenameService;
+import de.tiktak.kmm.movie.MovieRenamePlan;
 import de.tiktak.kmm.movie.MovieSupplement;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -76,6 +80,9 @@ class AutoScrapeServiceTest {
 
     @Mock
     private StreamDetailsService streamDetails;
+
+    @Mock
+    private MovieRenameService renameService;
 
     @InjectMocks
     private AutoScrapeService service;
@@ -135,14 +142,19 @@ class AutoScrapeServiceTest {
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(0, List.of()));
         when(artworkService.fillMissing(3L)).thenReturn(new ArtworkFillResult(2, List.of("fanart.tv: Key fehlt")));
         when(streamDetails.probeMovieAfterScrape(1L)).thenReturn(Optional.of("ffprobe fehlt"));
+        when(renameService.renameIfEnabled(anyLong(), eq(RenameTrigger.SCRAPE))).thenReturn(Optional.empty());
+        when(renameService.renameIfEnabled(3L, RenameTrigger.SCRAPE)).thenReturn(Optional.of(new MovieRenamePlan(3,
+                "Ronin", "/filme/ronin", "/filme/Ronin", List.of(), MovieRenamePlan.Status.CONFLICT,
+                "Der Ordner existiert bereits.")));
         RecordingContext context = new RecordingContext(false);
 
         AutoScrapeResult result = service.run(SOURCE_ID, context);
 
         assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, List.of("Unbekannt"),
                 List.of("Heat: Technische Angaben: ffprobe fehlt", "Kaputt: TMDB ist nicht erreichbar"),
-                List.of("fanart.tv: Key fehlt")));
+                List.of("fanart.tv: Key fehlt", "„Ronin“ nicht umbenannt: Der Ordner existiert bereits.")));
         verify(streamDetails, never()).probeMovieAfterScrape(3L);
+        verify(renameService, never()).renameIfEnabled(4L, RenameTrigger.SCRAPE);
         assertThat(context.progress).containsExactly("0/4 Heat", "1/4 Unbekannt", "2/4 Ronin", "3/4 Kaputt",
                 "4/4 null");
         verify(artworkService, never()).fillMissing(4L);

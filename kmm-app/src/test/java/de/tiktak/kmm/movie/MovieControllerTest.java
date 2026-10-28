@@ -51,6 +51,9 @@ class MovieControllerTest {
     @MockitoBean
     private MovieMetadataService metadataService;
 
+    @MockitoBean
+    private MovieEditService editService;
+
     @Test
     void listsMoviesSortedByTitleWithDefaultPageSize() {
         when(queryService.findMovies(isNull(), any()))
@@ -115,7 +118,7 @@ class MovieControllerTest {
 
     @Test
     void updatesMetadata() {
-        when(metadataService.update(eq(5L), any())).thenReturn(details());
+        when(editService.save(eq(5L), any())).thenReturn(details());
 
         assertThat(mockMvc.put().uri(MovieController.METADATA_PATH, 5L).with(csrf())
                 .contentType("application/json")
@@ -126,7 +129,7 @@ class MovieControllerTest {
                 .hasStatusOk();
 
         ArgumentCaptor<MovieMetadata> metadata = ArgumentCaptor.forClass(MovieMetadata.class);
-        verify(metadataService).update(eq(5L), metadata.capture());
+        verify(editService).save(eq(5L), metadata.capture());
         assertThat(metadata.getValue().title()).isEqualTo("Heat");
         assertThat(metadata.getValue().premiered()).isEqualTo(LocalDate.of(1995, 12, 15));
     }

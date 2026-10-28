@@ -25,6 +25,8 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
+import de.tiktak.kmm.settings.RenameSettings;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -51,12 +53,43 @@ class MovieRenameIntegrationTest {
     @Autowired
     private JdbcClient jdbcClient;
 
+    @Autowired
+    private SettingsService settingsService;
+
     @TempDir
     Path library;
 
     @AfterEach
     void cleanUp() {
         jdbcClient.sql("DELETE FROM media_source").update();
+        settingsService.update(settingsService.current().withRename(RenameSettings.DEFAULTS));
+    }
+
+    @Test
+    void renamesAfterSavingOnlyWhenEnabled() throws IOException {
+        Path filme = Files.createDirectories(library.resolve("filme"));
+        givenFile(filme.resolve("heat/heat.nfo"), "<movie><title>Heat</title></movie>");
+        givenFile(filme.resolve("heat/heat.mkv"), "");
+        long sourceId = createSource(filme);
+        scan(sourceId);
+        long movieId = jdbcClient.sql("SELECT id FROM movie").query(Long.class).single();
+
+        assertThat(save(movieId)).hasStatusOk();
+        assertThat(filme.resolve("heat/heat.mkv")).as("Auslöser aus").exists();
+
+        RenameSettings defaults = RenameSettings.DEFAULTS;
+        settingsService.update(settingsService.current().withRename(new RenameSettings("{title} ({year})", "{title}",
+                defaults.tvShowFolder(), defaults.seasonFolder(), defaults.episodeFile(), true, false, false, false,
+                false)));
+
+        assertThat(save(movieId)).hasStatusOk().bodyJson().extractingPath("$.filePath")
+                .isEqualTo(filme.resolve("Heat (1995)/Heat.mkv").toString());
+        assertThat(filme.resolve("Heat (1995)/Heat.nfo")).content().contains("<year>1995</year>");
+    }
+
+    private MvcTestResult save(long movieId) {
+        return mockMvc.put().uri(MovieController.METADATA_PATH, movieId).with(csrf()).contentType(JSON)
+                .content("{\"title\": \"Heat\", \"year\": 1995, \"genres\": []}").exchange();
     }
 
     @Test

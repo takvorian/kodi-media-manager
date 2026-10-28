@@ -30,6 +30,7 @@ public class MovieController {
 
     private final MovieQueryService queryService;
     private final MovieMetadataService metadataService;
+    private final MovieEditService editService;
 
     @GetMapping(MOVIES_PATH)
     public MoviePage findMovies(
@@ -44,11 +45,11 @@ public class MovieController {
     }
 
     /**
-     * Speichert die Metadaten und schreibt sie in die NFO des Films.
+     * Speichert die Metadaten und schreibt sie in die NFO des Films; je nach Einstellung wird er danach umbenannt.
      */
     @PutMapping(METADATA_PATH)
     public MovieDetails updateMetadata(@PathVariable long movieId, @Valid @RequestBody MovieMetadata metadata) {
-        return metadataService.update(movieId, metadata);
+        return editService.save(movieId, metadata);
     }
 
     @ExceptionHandler(PropertyReferenceException.class)

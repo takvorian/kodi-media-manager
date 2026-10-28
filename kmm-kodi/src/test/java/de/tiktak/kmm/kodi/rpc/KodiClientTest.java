@@ -102,6 +102,15 @@ class KodiClientTest {
     }
 
     @Test
+    void cleansTheMoviesOfADirectoryWithoutDialogs() {
+        client.cleanMovies(kodi.endpoint(), "smb://nas/filme/H/heat/");
+
+        assertThat(kodi.calls().getFirst().method()).isEqualTo("VideoLibrary.Clean");
+        assertThat(kodi.calls().getFirst().params()).isEqualTo(json(
+                "{\"content\": \"movies\", \"directory\": \"smb://nas/filme/H/heat/\", \"showdialogs\": false}"));
+    }
+
+    @Test
     void findsATvShowByItsDirectory() {
         kodi.respond("VideoLibrary.GetTVShows", """
                 {"tvshows": [{"tvshowid": 4, "file": "smb://nas/serien/ALF/"},

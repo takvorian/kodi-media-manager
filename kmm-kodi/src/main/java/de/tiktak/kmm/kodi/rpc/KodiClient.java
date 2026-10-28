@@ -142,6 +142,16 @@ public class KodiClient {
     }
 
     /**
+     * Kodi entfernt Filme in oder unterhalb des Verzeichnisses, deren Dateien es nicht mehr gibt. Kodi arbeitet
+     * Scan und Bereinigen nacheinander ab, ein vorher gestarteter Scan ist also fertig.
+     *
+     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     */
+    public void cleanMovies(KodiEndpoint endpoint, String directory) {
+        call(endpoint, "VideoLibrary.Clean", Map.of("content", "movies", "directory", directory, "showdialogs", false));
+    }
+
+    /**
      * Liefert den Wiedergabestand aller Filme in oder unterhalb des Verzeichnisses.
      *
      * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen

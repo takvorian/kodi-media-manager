@@ -31,6 +31,7 @@ import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieMetadataService;
+import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSupplement;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -167,6 +168,36 @@ class KodiSyncServiceTest {
         service.scanSourceOnRealtimeHosts(3);
 
         verifyNoInteractions(metadataService, sourceService);
+        assertThat(kodi.calls()).isEmpty();
+    }
+
+    @Test
+    void letsKodiScanTheNewFolderAndCleanTheOldOneAfterRenaming() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true),
+                target(2, "Ohne Zuordnung", kodi.endpoint(), new KodiPathMapper(List.of()), true),
+                target(3, "Manuell", kodi.endpoint(), FILME, false));
+
+        service.syncRenamedMovieOnRealtimeHosts(new MovieRenamedEvent(MOVIE_ID, 3,
+                LIBRARY.resolve("heat").toString(), LIBRARY.resolve("H").resolve("Heat (1995)").toString()));
+
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.Scan", "VideoLibrary.Clean");
+        assertThat(kodi.calls().get(0).params().path("directory").asString())
+                .isEqualTo("smb://nas/filme/H/Heat (1995)/");
+        assertThat(kodi.calls().get(1).params().path("directory").asString()).isEqualTo("smb://nas/filme/heat/");
+        assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> assertThat(result.message())
+                .isEqualTo("Kodi liest smb://nas/filme/H/Heat (1995)/ ein und entfernt die alten Einträge aus "
+                        + "smb://nas/filme/heat/."));
+        assertThat(syncLog.lastResult(2)).hasValueSatisfying(
+                result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
+        assertThat(syncLog.lastResult(3)).isEmpty();
+    }
+
+    @Test
+    void renamingDoesNothingWithoutRealtimeHosts() {
+        givenHosts(target(1, "Manuell", kodi.endpoint(), FILME, false));
+
+        service.syncRenamedMovieOnRealtimeHosts(new MovieRenamedEvent(MOVIE_ID, 3, "/a", "/b"));
+
         assertThat(kodi.calls()).isEmpty();
     }
 

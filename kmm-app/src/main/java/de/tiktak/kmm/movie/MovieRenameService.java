@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -12,6 +13,8 @@ import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.movie.MovieRenamePlan.Status;
+import de.tiktak.kmm.settings.RenameSettings;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,6 +37,7 @@ public class MovieRenameService {
     private final MovieRenamePlanning planning;
     private final MovieRenamer renamer;
     private final JobService jobService;
+    private final SettingsService settingsService;
 
     /**
      * @return je Film der Quelle, was das Umbenennen ändern würde, sortiert nach Ordner
@@ -60,6 +64,23 @@ public class MovieRenameService {
         MovieRenamePlanning.Planned planned = planning.planMovie(movieId, patterns.parse());
         MovieRenamePlan plan = planned.plans().getFirst();
         return plan.status() == Status.RENAME ? apply(plan, planned) : plan;
+    }
+
+    /**
+     * Benennt einen Film mit den Mustern aus den Einstellungen um, wenn der Auslöser dort eingeschaltet ist.
+     *
+     * @return der ausgeführte Plan oder leer, wenn der Auslöser ausgeschaltet ist
+     */
+    public Optional<MovieRenamePlan> renameIfEnabled(long movieId, RenameTrigger trigger) {
+        RenameSettings settings = settingsService.current().rename();
+        if (!trigger.isEnabled(settings)) {
+            return Optional.empty();
+        }
+        MovieRenamePlan plan = renameMovie(movieId, new MovieRenamePatterns(settings.movieFolder(), settings.movieFile()));
+        if (plan.status() == Status.CONFLICT || plan.status() == Status.FAILED) {
+            log.warn("Movie {} not renamed automatically: {}", movieId, plan.message());
+        }
+        return Optional.of(plan);
     }
 
     /**

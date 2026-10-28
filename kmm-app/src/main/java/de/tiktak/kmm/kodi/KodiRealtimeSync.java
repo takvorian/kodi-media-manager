@@ -8,6 +8,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
+import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
@@ -30,7 +31,10 @@ class KodiRealtimeSync implements DisposableBean {
     private final Debouncer<Long> tvShows;
     private final Debouncer<Long> episodes;
 
+    private final KodiSyncService syncService;
+
     KodiRealtimeSync(KodiSyncService syncService, KodiProperties properties) {
+        this.syncService = syncService;
         this.movies = new Debouncer<>(executor, properties.syncDelay(), syncService::refreshMovieOnRealtimeHosts);
         this.sources = new Debouncer<>(executor, properties.syncDelay(), syncService::scanSourceOnRealtimeHosts);
         this.tvShows = new Debouncer<>(executor, properties.syncDelay(), syncService::refreshTvShowOnRealtimeHosts);
@@ -41,6 +45,12 @@ class KodiRealtimeSync implements DisposableBean {
     @TransactionalEventListener(fallbackExecution = true)
     void onMovieFilesChanged(MovieFilesChangedEvent event) {
         movies.submit(event.movieId());
+    }
+
+    /** Nacheinander und ohne Entprellen: Jedes Umbenennen hat eigene Ordner. */
+    @TransactionalEventListener(fallbackExecution = true)
+    void onMovieRenamed(MovieRenamedEvent event) {
+        executor.execute(() -> syncService.syncRenamedMovieOnRealtimeHosts(event));
     }
 
     @TransactionalEventListener(fallbackExecution = true)

@@ -13,7 +13,10 @@ import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieQueryService;
+import de.tiktak.kmm.movie.MovieRenamePlan;
+import de.tiktak.kmm.movie.MovieRenameService;
 import de.tiktak.kmm.movie.MovieScrapeService;
+import de.tiktak.kmm.movie.RenameTrigger;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
@@ -33,6 +36,7 @@ public class AutoScrapeService {
     /** Präfix des Job-Schlüssels; pro Quelle läuft höchstens ein automatisches Scrapen. */
     public static final String JOB_KEY_PREFIX = "auto-scrape:";
     static final String NO_METADATA_SCRAPER = "Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.";
+    static final String NOT_RENAMED = "„%s“ nicht umbenannt: %s";
     private static final String UNEXPECTED_ERROR = "unerwarteter Fehler";
     static final String TECHNICAL_DETAILS = "Technische Angaben: ";
 
@@ -40,6 +44,7 @@ public class AutoScrapeService {
     private final MovieQueryService queryService;
     private final MovieMetadataService metadataService;
     private final MovieScrapeService scrapeService;
+    private final MovieRenameService renameService;
     private final ArtworkService artworkService;
     private final JobService jobService;
     private final TvAutoScrapeRunner tvRunner;
@@ -93,6 +98,10 @@ public class AutoScrapeService {
             ArtworkFillResult artwork = artworkService.fillMissing(movieId);
             progress.imagesSaved(artwork.saved());
             artwork.warnings().forEach(progress::warn);
+            renameService.renameIfEnabled(movieId, RenameTrigger.SCRAPE)
+                    .filter(plan -> plan.status() == MovieRenamePlan.Status.CONFLICT
+                            || plan.status() == MovieRenamePlan.Status.FAILED)
+                    .ifPresent(plan -> progress.warn(NOT_RENAMED.formatted(title, plan.message())));
         } catch (ErrorResponseException e) {
             progress.failed(title, e.getBody().getDetail());
         } catch (RuntimeException e) {

@@ -15,6 +15,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
+import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
@@ -48,6 +49,18 @@ class KodiRealtimeSyncTest {
 
         verify(syncService, timeout(WAIT_MILLIS).times(1)).refreshMovieOnRealtimeHosts(5);
         verify(syncService, after(300).times(1)).refreshMovieOnRealtimeHosts(5);
+    }
+
+    @Test
+    void syncsEveryRenamedMovie() {
+        MovieRenamedEvent first = new MovieRenamedEvent(5, 3, "/filme/heat", "/filme/Heat (1995)");
+        MovieRenamedEvent second = new MovieRenamedEvent(5, 3, "/filme/Heat (1995)", "/filme/Heat");
+
+        realtimeSync.onMovieRenamed(first);
+        realtimeSync.onMovieRenamed(second);
+
+        verify(syncService, timeout(WAIT_MILLIS)).syncRenamedMovieOnRealtimeHosts(first);
+        verify(syncService, timeout(WAIT_MILLIS)).syncRenamedMovieOnRealtimeHosts(second);
     }
 
     @Test
