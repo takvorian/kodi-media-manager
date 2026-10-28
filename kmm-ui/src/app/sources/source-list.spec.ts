@@ -426,6 +426,7 @@ describe('SourceList', () => {
       scraped: 1,
       unmatched: 1,
       imagesSaved: 9,
+      trailersSaved: 2,
       unmatchedTitles: ['Unbekannt'],
       failures: ['Kaputt: TMDB ist nicht erreichbar'],
       warnings: ['fanart.tv: Key fehlt'],
@@ -506,7 +507,8 @@ describe('SourceList', () => {
       fixture.detectChanges();
 
       expect(snackBarMessages).toEqual([
-        'Scrapen „Filme“ abgeschlossen: 4 Filme, 1 neu zugeordnet, 1 ohne Treffer, 9 Bilder gespeichert, 1 Fehler.',
+        'Scrapen „Filme“ abgeschlossen: 4 Filme, 1 neu zugeordnet, 1 ohne Treffer, 9 Bilder gespeichert, ' +
+          '2 Trailer eingetragen, 1 Fehler.',
       ]);
       expect(texts('.unmatched-titles li')).toEqual(['Unbekannt']);
       expect(texts('.failures li')).toEqual(['Kaputt: TMDB ist nicht erreichbar']);
@@ -532,7 +534,14 @@ describe('SourceList', () => {
       events.emit(
         scrapeJob({
           status: 'SUCCEEDED',
-          result: { ...result, unmatched: 0, unmatchedTitles: [], failures: [], warnings: [] },
+          result: {
+            ...result,
+            unmatched: 0,
+            trailersSaved: 0,
+            unmatchedTitles: [],
+            failures: [],
+            warnings: [],
+          },
         }),
       );
       fixture.detectChanges();

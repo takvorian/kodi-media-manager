@@ -1,10 +1,11 @@
 export type MediaType = 'MOVIE' | 'MOVIE_SET' | 'TV_SHOW' | 'TV_SEASON' | 'TV_EPISODE';
 
 /** Medienarten, für die eine Quelle angelegt werden kann. */
-export const SOURCE_MEDIA_TYPES: readonly { readonly value: MediaType; readonly label: string }[] = [
-  { value: 'MOVIE', label: 'Filme' },
-  { value: 'TV_SHOW', label: 'Serien' },
-];
+export const SOURCE_MEDIA_TYPES: readonly { readonly value: MediaType; readonly label: string }[] =
+  [
+    { value: 'MOVIE', label: 'Filme' },
+    { value: 'TV_SHOW', label: 'Serien' },
+  ];
 
 /** Antwort von GET /api/v1/sources. */
 export interface MediaSource {
@@ -61,6 +62,8 @@ export interface AutoScrapeResult {
   readonly scraped: number;
   readonly unmatched: number;
   readonly imagesSaved: number;
+  /** Neu eingetragene Trailer-Links (nur bei Filmquellen). */
+  readonly trailersSaved?: number;
   readonly unmatchedTitles: readonly string[];
   readonly failures: readonly string[];
   readonly warnings: readonly string[];
