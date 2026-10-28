@@ -148,7 +148,20 @@ public class KodiClient {
      * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
      */
     public void cleanMovies(KodiEndpoint endpoint, String directory) {
-        call(endpoint, "VideoLibrary.Clean", Map.of("content", "movies", "directory", directory, "showdialogs", false));
+        clean(endpoint, "movies", directory);
+    }
+
+    /**
+     * Wie {@link #cleanMovies}, für Serien und Episoden.
+     *
+     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     */
+    public void cleanTvShows(KodiEndpoint endpoint, String directory) {
+        clean(endpoint, "tvshows", directory);
+    }
+
+    private void clean(KodiEndpoint endpoint, String content, String directory) {
+        call(endpoint, "VideoLibrary.Clean", Map.of("content", content, "directory", directory, "showdialogs", false));
     }
 
     /**

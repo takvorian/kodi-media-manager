@@ -20,7 +20,7 @@ import de.tiktak.kmm.scanner.naming.NamePlaceholders;
  * @param episodeFile    Dateien einer Episode
  * @param movieOnEdit    Filme nach dem Speichern der Metadaten umbenennen
  * @param movieOnScrape  Filme nach dem Scrapen umbenennen
- * @param tvOnEdit       Episoden nach dem Speichern der Metadaten umbenennen
+ * @param tvOnEdit       Serien nach dem Speichern der Metadaten einer Serie oder Episode umbenennen
  * @param tvOnScrape     Serien und Episoden nach dem Scrapen umbenennen
  * @param episodesOnScan neue Episoden beim Scan umbenennen
  */

@@ -16,6 +16,9 @@ import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowQueryService;
 import de.tiktak.kmm.tvshow.TvShowScrapeService;
+import de.tiktak.kmm.tvshow.TvRenameTrigger;
+import de.tiktak.kmm.tvshow.TvShowRenamePlan;
+import de.tiktak.kmm.tvshow.TvShowRenameService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -37,6 +40,7 @@ class TvAutoScrapeRunner {
     private final TvShowScrapeService scrapeService;
     private final TvShowArtworkService artworkService;
     private final StreamDetailsService streamDetails;
+    private final TvShowRenameService renameService;
 
     TvAutoScrapeResult run(long sourceId, JobContext context) {
         List<Long> showIds = queryService.findShowIds(sourceId);
@@ -76,6 +80,10 @@ class TvAutoScrapeRunner {
             ArtworkFillResult artwork = artworkService.fillMissing(showId);
             progress.imagesSaved += artwork.saved();
             artwork.warnings().forEach(progress::warn);
+            renameService.renameIfEnabled(showId, TvRenameTrigger.SCRAPE)
+                    .filter(plan -> plan.status() == TvShowRenamePlan.Status.CONFLICT
+                            || plan.status() == TvShowRenamePlan.Status.FAILED)
+                    .ifPresent(plan -> progress.warn(AutoScrapeService.NOT_RENAMED.formatted(title, plan.message())));
         } catch (ErrorResponseException e) {
             progress.failed(title, e.getBody().getDetail());
         } catch (RuntimeException e) {

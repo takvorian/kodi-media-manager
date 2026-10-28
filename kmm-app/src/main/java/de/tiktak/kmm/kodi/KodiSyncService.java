@@ -4,11 +4,13 @@ import java.nio.file.Path;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.kodi.rpc.KodiClient;
+import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiException;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadataService;
@@ -17,6 +19,7 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.tvshow.EpisodeDetails;
 import de.tiktak.kmm.tvshow.TvShowDetails;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
+import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
@@ -91,7 +94,17 @@ public class KodiSyncService {
     void syncRenamedMovieOnRealtimeHosts(MovieRenamedEvent event) {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {
-            syncAll(targets, target -> syncRenamed(target, event));
+            syncAll(targets, target -> syncRenamed(target, event.directory(), event.previousDirectory(),
+                    kodiClient::cleanMovies));
+        }
+    }
+
+    /** Nach dem Umbenennen einer Serie wie bei Filmen: neuen Ordner einlesen, alten bereinigen. */
+    void syncRenamedTvShowOnRealtimeHosts(TvShowRenamedEvent event) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (!targets.isEmpty()) {
+            syncAll(targets, target -> syncRenamed(target, event.directory(), event.previousDirectory(),
+                    kodiClient::cleanTvShows));
         }
     }
 
@@ -178,14 +191,15 @@ public class KodiSyncService {
                 "„%s“ ist in Kodi noch unbekannt; Kodi liest %s ein.".formatted(title, kodiDirectory));
     }
 
-    private Outcome syncRenamed(KodiTarget target, MovieRenamedEvent event) {
-        Optional<String> directory = target.pathMapper().toKodiDirectory(event.directory());
-        Optional<String> previous = target.pathMapper().toKodiDirectory(event.previousDirectory());
+    private Outcome syncRenamed(KodiTarget target, String localDirectory, String localPrevious,
+                                BiConsumer<KodiEndpoint, String> clean) {
+        Optional<String> directory = target.pathMapper().toKodiDirectory(localDirectory);
+        Optional<String> previous = target.pathMapper().toKodiDirectory(localPrevious);
         if (directory.isEmpty() || previous.isEmpty()) {
-            return notMapped(event.directory());
+            return notMapped(localDirectory);
         }
         kodiClient.scan(target.endpoint(), directory.get());
-        kodiClient.cleanMovies(target.endpoint(), previous.get());
+        clean.accept(target.endpoint(), previous.get());
         return new Outcome(KodiSyncOutcome.SCAN_STARTED,
                 "Kodi liest %s ein und entfernt die alten Einträge aus %s.".formatted(directory.get(), previous.get()));
     }

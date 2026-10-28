@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.springframework.stereotype.Service;
@@ -11,6 +12,8 @@ import org.springframework.stereotype.Service;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.settings.RenameSettings;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.Status;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +37,7 @@ public class TvShowRenameService {
     private final TvShowRenamePlanning planning;
     private final TvShowRenamer renamer;
     private final JobService jobService;
+    private final SettingsService settingsService;
 
     /**
      * @return je Serie der Quelle, was das Umbenennen ändern würde, sortiert nach Ordner
@@ -60,6 +64,24 @@ public class TvShowRenameService {
         TvShowRenamePlanning.Planned planned = planning.planShow(showId, patterns.parse());
         TvShowRenamePlan plan = planned.plans().getFirst();
         return plan.status() == Status.RENAME ? apply(plan, planned) : plan;
+    }
+
+    /**
+     * Benennt eine Serie mit den Mustern aus den Einstellungen um, wenn der Auslöser dort eingeschaltet ist.
+     *
+     * @return der ausgeführte Plan oder leer, wenn der Auslöser ausgeschaltet ist
+     */
+    public Optional<TvShowRenamePlan> renameIfEnabled(long showId, TvRenameTrigger trigger) {
+        RenameSettings settings = settingsService.current().rename();
+        if (!trigger.isEnabled(settings)) {
+            return Optional.empty();
+        }
+        TvShowRenamePlan plan = renameShow(showId, new TvRenamePatterns(settings.tvShowFolder(),
+                settings.seasonFolder(), settings.episodeFile()));
+        if (plan.status() == Status.CONFLICT || plan.status() == Status.FAILED) {
+            log.warn("TV show {} not renamed automatically: {}", showId, plan.message());
+        }
+        return Optional.of(plan);
     }
 
     /**

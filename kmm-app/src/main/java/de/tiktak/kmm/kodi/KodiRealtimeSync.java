@@ -12,6 +12,7 @@ import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
+import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
 
 /**
@@ -51,6 +52,11 @@ class KodiRealtimeSync implements DisposableBean {
     @TransactionalEventListener(fallbackExecution = true)
     void onMovieRenamed(MovieRenamedEvent event) {
         executor.execute(() -> syncService.syncRenamedMovieOnRealtimeHosts(event));
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    void onTvShowRenamed(TvShowRenamedEvent event) {
+        executor.execute(() -> syncService.syncRenamedTvShowOnRealtimeHosts(event));
     }
 
     @TransactionalEventListener(fallbackExecution = true)

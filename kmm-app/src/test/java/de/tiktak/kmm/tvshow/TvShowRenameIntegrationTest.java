@@ -25,6 +25,8 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
+import de.tiktak.kmm.settings.RenameSettings;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -53,12 +55,43 @@ class TvShowRenameIntegrationTest {
     @Autowired
     private JdbcClient jdbcClient;
 
+    @Autowired
+    private SettingsService settingsService;
+
     @TempDir
     Path library;
 
     @AfterEach
     void cleanUp() {
         jdbcClient.sql("DELETE FROM media_source").update();
+        settingsService.update(settingsService.current().withRename(RenameSettings.DEFAULTS));
+    }
+
+    @Test
+    void renamesAfterSavingAndAfterScanningNewEpisodesWhenEnabled() throws IOException {
+        Path serien = Files.createDirectories(library.resolve("serien"));
+        givenFile(serien.resolve("lost/tvshow.nfo"), "<tvshow><title>Lost</title><premiered>2004-09-22</premiered></tvshow>");
+        givenFile(serien.resolve("lost/lost.s01e01.mkv"), "");
+        long sourceId = createSource(serien);
+        scan(sourceId);
+        long showId = jdbcClient.sql("SELECT id FROM tv_show").query(Long.class).single();
+        RenameSettings defaults = RenameSettings.DEFAULTS;
+        settingsService.update(settingsService.current().withRename(new RenameSettings(defaults.movieFolder(),
+                defaults.movieFile(), "{show} ({year})", "Staffel {season}", "{show} - S{season:2}E{episode:2}",
+                false, false, true, false, true)));
+
+        assertThat(mockMvc.put().uri(TvShowController.SHOW_METADATA_PATH, showId).with(csrf()).contentType(JSON)
+                .content("""
+                        {"title": "Lost", "premiered": "2004-09-22", "genres": [], "studios": [], "tags": []}""")
+                .exchange())
+                .hasStatusOk().bodyJson().extractingPath("$.directoryPath")
+                .isEqualTo(serien.resolve("Lost (2004)").toString());
+        assertThat(serien.resolve("Lost (2004)/Staffel 1/Lost - S01E01.mkv")).exists();
+
+        givenFile(serien.resolve("Lost (2004)/lost.s01e02.mkv"), "");
+        scan(sourceId);
+
+        assertThat(serien.resolve("Lost (2004)/Staffel 1/Lost - S01E02.mkv")).exists();
     }
 
     @Test

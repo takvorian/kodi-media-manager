@@ -74,7 +74,7 @@ public class TvShowScanService {
                         + "{} unchanged; {} NFO errors", source.getName(), result.showsAdded(), result.showsRemoved(),
                 result.added(), result.updated(), result.removed(), result.unchanged(), result.nfoErrors());
         events.publishEvent(new TvShowSourceScannedEvent(source.getId(), result.showsAdded() + result.added(),
-                result.newWithoutStreams()));
+                result.newWithoutStreams(), result.showsWithNewEpisodes()));
         return result;
     }
 

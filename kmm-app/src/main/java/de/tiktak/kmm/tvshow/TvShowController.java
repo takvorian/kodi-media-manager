@@ -30,6 +30,7 @@ public class TvShowController {
 
     private final TvShowQueryService queryService;
     private final TvShowMetadataService metadataService;
+    private final TvShowEditService editService;
 
     @GetMapping(SHOWS_PATH)
     public TvShowPage findShows(
@@ -46,7 +47,7 @@ public class TvShowController {
     /** Speichert die Metadaten und schreibt sie in die {@code tvshow.nfo}. */
     @PutMapping(SHOW_METADATA_PATH)
     public TvShowDetails updateShow(@PathVariable long showId, @Valid @RequestBody TvShowMetadata metadata) {
-        return metadataService.updateShow(showId, metadata);
+        return editService.saveShow(showId, metadata);
     }
 
     @GetMapping(EPISODE_PATH)
@@ -57,7 +58,7 @@ public class TvShowController {
     /** Speichert die Metadaten und schreibt sie in die NFO der Episode. */
     @PutMapping(EPISODE_METADATA_PATH)
     public EpisodeDetails updateEpisode(@PathVariable long episodeId, @Valid @RequestBody EpisodeMetadata metadata) {
-        return metadataService.updateEpisode(episodeId, metadata);
+        return editService.saveEpisode(episodeId, metadata);
     }
 
     @ExceptionHandler(PropertyReferenceException.class)

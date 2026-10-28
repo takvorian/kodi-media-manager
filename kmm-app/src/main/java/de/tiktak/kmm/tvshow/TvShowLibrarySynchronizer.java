@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -63,7 +64,7 @@ class TvShowLibrarySynchronizer {
         sourceService.markScanned(sourceId, clock.instant());
         return new TvShowScanResult(sourceId, outcome.showsAdded, outcome.showsRemoved, outcome.added,
                 outcome.updated, outcome.removed, outcome.unchanged, outcome.nfoErrors, unrecognizedFiles,
-                outcome.newWithoutStreams);
+                outcome.newWithoutStreams, List.copyOf(outcome.showsWithNewEpisodes));
     }
 
     /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs, damit der Scan nur geänderte liest. */
@@ -121,6 +122,9 @@ class TvShowLibrarySynchronizer {
             }
         }
         episodeRepository.saveAll(created);
+        if (!created.isEmpty()) {
+            outcome.showsWithNewEpisodes.add(show.getId());
+        }
         created.stream().filter(episode -> !episode.hasStreamDetails())
                 .forEach(episode -> outcome.newWithoutStreams.add(episode.getId()));
         episodeRepository.deleteAll(remaining.values());
@@ -215,5 +219,6 @@ class TvShowLibrarySynchronizer {
         private int unchanged;
         private int nfoErrors;
         private final List<Long> newWithoutStreams = new ArrayList<>();
+        private final Set<Long> showsWithNewEpisodes = new LinkedHashSet<>();
     }
 }

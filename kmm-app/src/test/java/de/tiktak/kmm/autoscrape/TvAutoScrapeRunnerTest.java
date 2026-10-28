@@ -10,6 +10,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -31,6 +32,9 @@ import de.tiktak.kmm.tvshow.TvShowMetadata;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowQueryService;
 import de.tiktak.kmm.tvshow.TvShowScrapeService;
+import de.tiktak.kmm.tvshow.TvRenameTrigger;
+import de.tiktak.kmm.tvshow.TvShowRenamePlan;
+import de.tiktak.kmm.tvshow.TvShowRenameService;
 
 @ExtendWith(MockitoExtension.class)
 class TvAutoScrapeRunnerTest {
@@ -55,6 +59,9 @@ class TvAutoScrapeRunnerTest {
     @Mock
     private StreamDetailsService streamDetails;
 
+    @Mock
+    private TvShowRenameService renameService;
+
     @InjectMocks
     private TvAutoScrapeRunner runner;
 
@@ -74,6 +81,9 @@ class TvAutoScrapeRunnerTest {
         when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(2, List.of("POSTER: 404")));
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(1, List.of()));
         when(streamDetails.probeEpisodesAfterScrape(2L)).thenReturn(List.of("ffprobe fehlt"));
+        when(renameService.renameIfEnabled(1L, TvRenameTrigger.SCRAPE)).thenReturn(Optional.empty());
+        when(renameService.renameIfEnabled(2L, TvRenameTrigger.SCRAPE)).thenReturn(Optional.of(new TvShowRenamePlan(2,
+                "Lost", "/lost", "/Lost", List.of(), TvShowRenamePlan.Status.CONFLICT, "Der Ordner existiert bereits.")));
 
         TvAutoScrapeResult result = runner.run(SOURCE_ID, context);
 
@@ -81,7 +91,9 @@ class TvAutoScrapeRunnerTest {
         assertThat(result.scraped()).isZero();
         assertThat(result.episodesUpdated()).isEqualTo(4);
         assertThat(result.imagesSaved()).isEqualTo(3);
-        assertThat(result.warnings()).containsExactly(TvAutoScrapeRunner.NO_TV_SHOW_SCRAPER, "POSTER: 404");
+        assertThat(result.warnings()).containsExactly(TvAutoScrapeRunner.NO_TV_SHOW_SCRAPER, "POSTER: 404",
+                "„Lost“ nicht umbenannt: Der Ordner existiert bereits.");
+        verify(renameService, never()).renameIfEnabled(3L, TvRenameTrigger.SCRAPE);
         assertThat(result.failures()).contains("Lost: Technische Angaben: ffprobe fehlt");
         verify(streamDetails, never()).probeEpisodesAfterScrape(1L);
         assertThat(result.failures()).hasSize(4)

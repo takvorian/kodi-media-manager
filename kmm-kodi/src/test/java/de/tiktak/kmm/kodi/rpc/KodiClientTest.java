@@ -104,7 +104,9 @@ class KodiClientTest {
     @Test
     void cleansTheMoviesOfADirectoryWithoutDialogs() {
         client.cleanMovies(kodi.endpoint(), "smb://nas/filme/H/heat/");
+        client.cleanTvShows(kodi.endpoint(), "smb://nas/serien/lost/");
 
+        assertThat(kodi.calls().get(1).params().path("content").asString()).isEqualTo("tvshows");
         assertThat(kodi.calls().getFirst().method()).isEqualTo("VideoLibrary.Clean");
         assertThat(kodi.calls().getFirst().params()).isEqualTo(json(
                 "{\"content\": \"movies\", \"directory\": \"smb://nas/filme/H/heat/\", \"showdialogs\": false}"));

@@ -19,6 +19,7 @@ import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
+import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
 
 @ExtendWith(MockitoExtension.class)
@@ -61,6 +62,15 @@ class KodiRealtimeSyncTest {
 
         verify(syncService, timeout(WAIT_MILLIS)).syncRenamedMovieOnRealtimeHosts(first);
         verify(syncService, timeout(WAIT_MILLIS)).syncRenamedMovieOnRealtimeHosts(second);
+    }
+
+    @Test
+    void syncsEveryRenamedTvShow() {
+        TvShowRenamedEvent event = new TvShowRenamedEvent(7, 2, "/serien/lost", "/serien/Lost (2004)");
+
+        realtimeSync.onTvShowRenamed(event);
+
+        verify(syncService, timeout(WAIT_MILLIS)).syncRenamedTvShowOnRealtimeHosts(event);
     }
 
     @Test

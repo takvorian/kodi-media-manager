@@ -14,6 +14,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
  * @param nfoErrors         unlesbare NFOs
  * @param unrecognizedFiles Videodateien ohne erkennbare Staffel und Episode (gekürzt)
  * @param newWithoutStreams IDs der neu gefundenen Episoden ohne technische Angaben in der NFO
+ * @param showsWithNewEpisodes IDs der Serien mit neu gefundenen Episoden
  */
 public record TvShowScanResult(
         long sourceId,
@@ -25,17 +26,19 @@ public record TvShowScanResult(
         int unchanged,
         int nfoErrors,
         List<String> unrecognizedFiles,
-        @JsonIgnore List<Long> newWithoutStreams) {
+        @JsonIgnore List<Long> newWithoutStreams,
+        @JsonIgnore List<Long> showsWithNewEpisodes) {
 
     public TvShowScanResult {
         unrecognizedFiles = List.copyOf(unrecognizedFiles);
         newWithoutStreams = newWithoutStreams == null ? List.of()
                 : newWithoutStreams.stream().filter(Objects::nonNull).toList();
+        showsWithNewEpisodes = showsWithNewEpisodes == null ? List.of() : List.copyOf(showsWithNewEpisodes);
     }
 
     public TvShowScanResult(long sourceId, int showsAdded, int showsRemoved, int added, int updated, int removed,
             int unchanged, int nfoErrors, List<String> unrecognizedFiles) {
         this(sourceId, showsAdded, showsRemoved, added, updated, removed, unchanged, nfoErrors, unrecognizedFiles,
-                List.of());
+                List.of(), List.of());
     }
 }

@@ -42,6 +42,7 @@ import de.tiktak.kmm.tvshow.EpisodeDetails;
 import de.tiktak.kmm.tvshow.TvShowDetails;
 import de.tiktak.kmm.tvshow.TvShowMetadata;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
+import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 
 @ExtendWith(MockitoExtension.class)
 class KodiSyncServiceTest {
@@ -190,6 +191,21 @@ class KodiSyncServiceTest {
         assertThat(syncLog.lastResult(2)).hasValueSatisfying(
                 result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
         assertThat(syncLog.lastResult(3)).isEmpty();
+    }
+
+    @Test
+    void letsKodiScanTheNewShowFolderAndCleanTheOldOneAfterRenaming() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
+
+        service.syncRenamedTvShowOnRealtimeHosts(new TvShowRenamedEvent(SHOW_ID, 2,
+                SERIES_LIBRARY.resolve("lost").toString(), SERIES_LIBRARY.resolve("Lost (2004)").toString()));
+
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.Scan", "VideoLibrary.Clean");
+        assertThat(kodi.calls().get(1).params().path("content").asString()).isEqualTo("tvshows");
+        assertThat(kodi.calls().get(1).params().path("directory").asString()).endsWith("/lost/");
+        service.syncRenamedTvShowOnRealtimeHosts(new TvShowRenamedEvent(SHOW_ID, 2, "/a", "/b"));
+        assertThat(syncLog.lastResult(1)).hasValueSatisfying(
+                result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
     }
 
     @Test
