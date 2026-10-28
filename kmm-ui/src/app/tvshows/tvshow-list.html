@@ -48,6 +48,37 @@
   </section>
 }
 
+<div class="selection">
+  <span>{{ chosen().size }} ausgewählt</span>
+  <button matButton type="button" class="choose-all-button" (click)="chooseAllFiltered()">Alle gefilterten auswählen</button>
+  @if (chosen().size > 0) {
+    <button matButton type="button" class="clear-chosen-button" (click)="clearChosen()">Auswahl aufheben</button>
+    <button matButton type="button" class="batch-edit-button" (click)="toggleBatchEditing()">
+      {{ batchEditing() ? 'Bearbeitung schließen' : 'Auswahl bearbeiten' }}
+    </button>
+  }
+</div>
+
+@let job = batchJob();
+@if (job) {
+  <div class="job-progress">
+    <mat-progress-bar mode="determinate" [value]="job.total ? (100 * job.done) / job.total : 0" />
+    <span>{{ job.title }} – {{ job.done }} von {{ job.total }}</span>
+  </div>
+}
+
+@if (batchEditing() && chosen().size > 0) {
+  <section class="batch-editor">
+    <app-batch-editor
+      [count]="chosen().size"
+      itemLabel="Serien"
+      [singleFields]="batchFields"
+      [busy]="!!job"
+      (submitted)="startBatch($event)"
+    />
+  </section>
+}
+
 @if (shows.error()) {
   <p class="error">Die Serien konnten nicht geladen werden.</p>
 } @else if (shows.hasValue()) {
@@ -63,6 +94,12 @@
     }
   } @else {
     <table mat-table [dataSource]="page.content" class="tvshow-table">
+      <ng-container matColumnDef="select">
+        <th mat-header-cell *matHeaderCellDef></th>
+        <td mat-cell *matCellDef="let show">
+          <mat-checkbox class="choose" [checked]="isChosen(show.id)" (change)="toggleChosen(show.id)" />
+        </td>
+      </ng-container>
       <ng-container matColumnDef="title">
         <th mat-header-cell *matHeaderCellDef>Titel</th>
         <td mat-cell *matCellDef="let show" class="tvshow-title">

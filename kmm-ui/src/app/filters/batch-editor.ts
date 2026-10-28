@@ -5,18 +5,19 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
-import { FieldChange, MovieBatchEdit } from './movie-batch';
+import { BatchChanges, BatchField, BatchFieldKey, FieldChange } from './batch';
 
 type FieldMode = 'KEEP' | 'SET' | 'CLEAR';
 
 const LIST_SEPARATOR = ',';
+const KEEP: FieldMode = 'KEEP';
 
 /**
- * Formular der Stapel-Bearbeitung: Genres und Tags hinzufügen oder entfernen, Altersfreigabe, Fassung und
- * Videoquelle setzen oder leeren. Gemeldet wird die Änderung; ausführen muss sie die Liste.
+ * Formular der Stapel-Bearbeitung: Genres und Tags hinzufügen oder entfernen und die einzelnen Felder der Liste
+ * setzen oder leeren. Gemeldet wird die Änderung; ausführen muss sie die Liste.
  */
 @Component({
-  selector: 'app-movie-batch-editor',
+  selector: 'app-batch-editor',
   imports: [
     MatButtonModule,
     MatFormFieldModule,
@@ -24,23 +25,21 @@ const LIST_SEPARATOR = ',';
     MatSelectModule,
     ReactiveFormsModule,
   ],
-  templateUrl: './movie-batch-editor.html',
-  styleUrl: './movie-batch-editor.scss',
+  templateUrl: './batch-editor.html',
+  styleUrl: './batch-editor.scss',
 })
-export class MovieBatchEditor {
-  readonly movieIds = input.required<readonly number[]>();
+export class BatchEditor {
+  readonly count = input.required<number>();
+  /** Bezeichnung der Einträge in der Mehrzahl, z. B. „Filme“. */
+  readonly itemLabel = input.required<string>();
+  readonly singleFields = input.required<readonly BatchField[]>();
   readonly busy = input(false);
-  readonly submitted = output<MovieBatchEdit>();
+  readonly submitted = output<BatchChanges>();
 
   protected readonly modes: readonly [FieldMode, string][] = [
-    ['KEEP', 'unverändert'],
+    [KEEP, 'unverändert'],
     ['SET', 'setzen'],
     ['CLEAR', 'leeren'],
-  ];
-  protected readonly singleFields: readonly ['mpaa' | 'edition' | 'videoSource', string][] = [
-    ['mpaa', 'Altersfreigabe'],
-    ['edition', 'Fassung'],
-    ['videoSource', 'Videoquelle'],
   ];
   protected readonly empty = signal(false);
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -48,39 +47,42 @@ export class MovieBatchEditor {
     removeGenres: [''],
     addTags: [''],
     removeTags: [''],
-    mpaaMode: ['KEEP' as FieldMode],
+    mpaaMode: [KEEP],
     mpaa: [''],
-    editionMode: ['KEEP' as FieldMode],
+    editionMode: [KEEP],
     edition: [''],
-    videoSourceMode: ['KEEP' as FieldMode],
+    videoSourceMode: [KEEP],
     videoSource: [''],
+    statusMode: [KEEP],
+    status: [''],
   });
 
   protected submit(): void {
     const value = this.form.getRawValue();
-    const edit: MovieBatchEdit = {
-      movieIds: this.movieIds(),
+    const fields: Record<string, FieldChange> = {};
+    for (const { key } of this.singleFields()) {
+      fields[key] = field(this.mode(key), value[key]);
+    }
+    const changes: BatchChanges = {
       genres: { add: split(value.addGenres), remove: split(value.removeGenres) },
       tags: { add: split(value.addTags), remove: split(value.removeTags) },
-      mpaa: field(value.mpaaMode, value.mpaa),
-      edition: field(value.editionMode, value.edition),
-      videoSource: field(value.videoSourceMode, value.videoSource),
+      fields,
     };
-    const listChanges = [edit.genres, edit.tags].some(
+    const listChanges = [changes.genres, changes.tags].some(
       (change) => change.add.length > 0 || change.remove.length > 0,
     );
-    const fieldChanges = [edit.mpaa, edit.edition, edit.videoSource].some(
+    const fieldChanges = Object.values(fields).some(
       (change) => change.clear || change.value !== null,
     );
     const changesSomething = listChanges || fieldChanges;
     this.empty.set(!changesSomething);
     if (changesSomething) {
-      this.submitted.emit(edit);
+      this.submitted.emit(changes);
     }
   }
 
-  protected mode(field: 'mpaa' | 'edition' | 'videoSource'): FieldMode {
-    return this.form.controls[`${field}Mode`].value;
+  protected mode(key: BatchFieldKey): FieldMode {
+    return this.form.controls[`${key}Mode`].value;
   }
 }
 
@@ -97,3 +99,6 @@ function field(mode: FieldMode, value: string): FieldChange {
     value: mode === 'SET' && value.trim() ? value.trim() : null,
   };
 }
+
+/** Ein Feld, das nicht geändert wird. */
+export const KEEP_FIELD: FieldChange = { clear: false, value: null };

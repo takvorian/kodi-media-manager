@@ -18,6 +18,8 @@ import {
   MovieFilter,
   PREDEFINED_MOVIE_FILTERS,
 } from '../filters/movie-filter';
+import { BatchChanges, batchSummary } from '../filters/batch';
+import { BatchEditor, KEEP_FIELD } from '../filters/batch-editor';
 import { ListFilter, completeConditions } from '../filters/filter';
 import { FilterEditor } from '../filters/filter-editor';
 import { SavedFilter, SavedFilterService } from '../filters/saved-filter.service';
@@ -26,8 +28,7 @@ import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { DiscFormat } from './movie';
-import { MOVIE_BATCH_JOB_KEY, MovieBatchEdit, movieBatchSummary } from './movie-batch';
-import { MovieBatchEditor } from './movie-batch-editor';
+import { MOVIE_BATCH_FIELDS, MOVIE_BATCH_JOB_KEY } from './movie-batch';
 import { MovieService } from './movie.service';
 
 export const SEARCH_DEBOUNCE_MS = 300;
@@ -55,7 +56,7 @@ const SAVED = 'saved:';
     MatSelectModule,
     MatCheckboxModule,
     MatTableModule,
-    MovieBatchEditor,
+    BatchEditor,
     FilterEditor,
     RouterLink,
   ],
@@ -74,6 +75,7 @@ export class MovieList {
   protected readonly columns = ['select', 'title', 'year', 'discFormat', 'filePath'];
   protected readonly predefined = PREDEFINED_MOVIE_FILTERS;
   protected readonly filterFields = MOVIE_FILTER_FIELDS;
+  protected readonly batchFields = MOVIE_BATCH_FIELDS;
   protected readonly searchInput = signal('');
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -146,7 +148,7 @@ export class MovieList {
         takeUntilDestroyed(),
       )
       .subscribe((job) => {
-        this.notify(movieBatchSummary(job));
+        this.notify(batchSummary(job));
         this.movies.reload();
       });
   }
@@ -186,10 +188,19 @@ export class MovieList {
     return [...this.chosen()];
   }
 
-  protected startBatch(edit: MovieBatchEdit): void {
-    if (!this.confirm(`${edit.movieIds.length} Filme ändern? Die NFOs werden neu geschrieben.`)) {
+  protected startBatch(changes: BatchChanges): void {
+    const movieIds = this.chosenIds();
+    if (!this.confirm(`${movieIds.length} Filme ändern? Die NFOs werden neu geschrieben.`)) {
       return;
     }
+    const edit = {
+      movieIds,
+      genres: changes.genres,
+      tags: changes.tags,
+      mpaa: changes.fields['mpaa'] ?? KEEP_FIELD,
+      edition: changes.fields['edition'] ?? KEEP_FIELD,
+      videoSource: changes.fields['videoSource'] ?? KEEP_FIELD,
+    };
     this.movieService.batchEdit(edit).subscribe({
       next: (job) => {
         this.jobStore.update(job);

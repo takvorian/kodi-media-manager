@@ -94,4 +94,19 @@ describe('TvShowService', () => {
     service.filterValues().subscribe();
     httpTesting.expectOne(`${TVSHOWS_URL}/filter-values`).flush({});
   });
+
+  it('starts a batch edit', () => {
+    const keep = { clear: false, value: null };
+    const edit = {
+      showIds: [1],
+      genres: { add: [], remove: [] },
+      tags: { add: [], remove: [] },
+      mpaa: keep,
+      status: { clear: false, value: 'Ended' },
+    };
+    service.batchEdit(edit).subscribe();
+    const request = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/batch` });
+    expect(request.request.body).toEqual(edit);
+    request.flush({});
+  });
 });

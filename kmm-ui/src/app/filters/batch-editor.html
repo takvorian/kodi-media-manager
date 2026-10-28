@@ -1,7 +1,7 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="batch-form">
   <p class="hint">
-    {{ movieIds().length }} Filme ausgewählt. Mehrere Einträge durch Komma trennen. Die NFOs werden geschrieben, Kodi
-    liest die Filme neu ein; umbenannt wird nicht.
+    {{ count() }} {{ itemLabel() }} ausgewählt. Mehrere Einträge durch Komma trennen. Die NFOs werden geschrieben, Kodi
+    liest die {{ itemLabel() }} neu ein; umbenannt wird nicht.
   </p>
   <div class="row">
     <mat-form-field>
@@ -23,20 +23,20 @@
       <input matInput formControlName="removeTags" name="removeTags" />
     </mat-form-field>
   </div>
-  @for (single of singleFields; track single[0]) {
+  @for (single of singleFields(); track single.key) {
     <div class="row">
       <mat-form-field class="mode">
-        <mat-label>{{ single[1] }}</mat-label>
-        <mat-select [formControlName]="single[0] + 'Mode'">
+        <mat-label>{{ single.label }}</mat-label>
+        <mat-select [formControlName]="single.key + 'Mode'">
           @for (choice of modes; track choice[0]) {
             <mat-option [value]="choice[0]">{{ choice[1] }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
-      @if (mode(single[0]) === 'SET') {
+      @if (mode(single.key) === 'SET') {
         <mat-form-field>
           <mat-label>Neuer Wert</mat-label>
-          <input matInput [formControlName]="single[0]" [attr.name]="single[0]" />
+          <input matInput [formControlName]="single.key" [attr.name]="single.key" />
         </mat-form-field>
       }
     </div>
@@ -45,6 +45,6 @@
     <p class="error">Bitte mindestens eine Änderung angeben.</p>
   }
   <button matButton="filled" type="submit" class="apply-batch-button" [disabled]="busy()">
-    {{ movieIds().length }} Filme ändern
+    {{ count() }} {{ itemLabel() }} ändern
   </button>
 </form>

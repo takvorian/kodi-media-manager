@@ -7,8 +7,11 @@ import {
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { Subject } from 'rxjs';
 
 import { FILTERS_URL } from '../filters/saved-filter.service';
+import { Job } from '../jobs/job';
+import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { flushWhenRequested } from '../shared/testing';
 
@@ -32,9 +35,12 @@ describe('TvShowList', () => {
   let fixture: ComponentFixture<TvShowList>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
+  const completed = new Subject<Job>();
+  const updated: Job[] = [];
 
   beforeEach(() => {
     snackBarMessages = [];
+    updated.length = 0;
     TestBed.configureTestingModule({
       imports: [TvShowList],
       providers: [
@@ -46,6 +52,15 @@ describe('TvShowList', () => {
           useValue: { open: (message: string) => snackBarMessages.push(message) },
         },
         { provide: CONFIRM, useValue: () => true },
+        {
+          provide: JobStore,
+          useValue: {
+            connect: () => undefined,
+            completed,
+            runningJob: () => undefined,
+            update: (job: Job) => updated.push(job),
+          },
+        },
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -169,6 +184,49 @@ describe('TvShowList', () => {
     });
     await flushWhenRequested(fixture, httpTesting, FILTERS_URL + '?mediaType=TV_SHOW', []);
     expect(snackBarMessages).toEqual(['Filter „SD-Serien“ gespeichert.']);
+  });
+
+  it('chooses filtered shows and edits them together', async () => {
+    await respond(page([alf]));
+    element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+    httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1, 4]);
+    fixture.detectChanges();
+    expect(element().querySelector('.selection')?.textContent).toContain('2 ausgewählt');
+
+    element().querySelector<HTMLButtonElement>('.batch-edit-button')!.click();
+    fixture.detectChanges();
+    expect(element().querySelector('.batch-editor')?.textContent).toContain('2 Serien ausgewählt');
+    const addTags = element().querySelector<HTMLInputElement>('input[name="addTags"]')!;
+    addTags.value = 'Kult';
+    addTags.dispatchEvent(new Event('input'));
+    element().querySelector<HTMLButtonElement>('.apply-batch-button')!.click();
+
+    const batch = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/batch` });
+    expect(batch.request.body).toEqual({
+      showIds: [1, 4],
+      genres: { add: [], remove: [] },
+      tags: { add: ['Kult'], remove: [] },
+      mpaa: { clear: false, value: null },
+      status: { clear: false, value: null },
+    });
+    const job = {
+      id: 't',
+      key: 'tvshows-batch',
+      title: '2 Serien bearbeiten',
+      status: 'RUNNING',
+    } as Job;
+    batch.flush(job);
+    expect(updated).toEqual([job]);
+
+    completed.next({
+      ...job,
+      status: 'SUCCEEDED',
+      result: { changed: 1, unchanged: 1, failed: 1, failures: ['Serie 4: gesperrt'] },
+    });
+    await respond(page([alf]));
+    expect(snackBarMessages).toContain(
+      '2 Serien bearbeiten: 1 geändert, 1 unverändert, 1 Fehler: Serie 4: gesperrt.',
+    );
   });
 
   it('shows an error when loading fails', async () => {

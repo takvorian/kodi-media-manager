@@ -1,15 +1,19 @@
 import { Component, computed, inject, signal } from '@angular/core';
-import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
-import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, filter as where, tap } from 'rxjs';
 
+import { BatchChanges, batchSummary } from '../filters/batch';
+import { BatchEditor, KEEP_FIELD } from '../filters/batch-editor';
 import { ListFilter, completeConditions } from '../filters/filter';
 import { FilterEditor } from '../filters/filter-editor';
 import { SavedFilter, SavedFilterService } from '../filters/saved-filter.service';
@@ -19,9 +23,11 @@ import {
   TVSHOW_FILTER_FIELDS,
   TvShowFilter,
 } from '../filters/tvshow-filter';
+import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
+import { TVSHOW_BATCH_FIELDS, TVSHOW_BATCH_JOB_KEY } from './tvshow-batch';
 import { TvShowService } from './tvshow.service';
 
 export const SEARCH_DEBOUNCE_MS = 300;
@@ -36,11 +42,14 @@ const SAVED = 'saved:';
 @Component({
   selector: 'app-tvshow-list',
   imports: [
+    BatchEditor,
     FilterEditor,
     MatButtonModule,
+    MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
     MatPaginatorModule,
+    MatProgressBarModule,
     MatSelectModule,
     MatTableModule,
     RouterLink,
@@ -54,9 +63,11 @@ export class TvShowList {
   private readonly sourceService = inject(MediaSourceService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
+  private readonly jobStore = inject(JobStore);
 
   protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
-  protected readonly columns = ['title', 'year', 'episodeCount', 'directoryPath'];
+  protected readonly columns = ['select', 'title', 'year', 'episodeCount', 'directoryPath'];
+  protected readonly batchFields = TVSHOW_BATCH_FIELDS;
   protected readonly predefined = PREDEFINED_TVSHOW_FILTERS;
   protected readonly filterFields = TVSHOW_FILTER_FIELDS;
   protected readonly searchInput = signal('');
@@ -67,6 +78,10 @@ export class TvShowList {
   protected readonly selection = signal(ALL);
   protected readonly editing = signal(false);
   protected readonly filterName = signal('');
+  /** Für die Stapel-Bearbeitung ausgewählte Serien, auch über Seiten hinweg. */
+  protected readonly chosen = signal<ReadonlySet<number>>(new Set());
+  protected readonly batchEditing = signal(false);
+  protected readonly batchJob = computed(() => this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY));
 
   protected readonly savedFilters = rxResource({
     stream: () => this.savedFilterService.findAll('TV_SHOW'),
@@ -118,6 +133,71 @@ export class TvShowList {
     const id = Number(selection.substring(SAVED.length));
     return this.savedFilters.value().find((saved) => saved.id === id) ?? null;
   });
+
+  constructor() {
+    this.jobStore.connect();
+    this.jobStore.completed
+      .pipe(
+        where((job) => job.key === TVSHOW_BATCH_JOB_KEY),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.notify(batchSummary(job));
+        this.shows.reload();
+      });
+  }
+
+  protected isChosen(showId: number): boolean {
+    return this.chosen().has(showId);
+  }
+
+  protected toggleChosen(showId: number): void {
+    this.chosen.update((current) => {
+      const next = new Set(current);
+      if (!next.delete(showId)) {
+        next.add(showId);
+      }
+      return next;
+    });
+  }
+
+  /** Wählt alle Serien aus, auf die der aktuelle Filter samt Suche passt, nicht nur die sichtbare Seite. */
+  protected chooseAllFiltered(): void {
+    this.tvShowService.queryShowIds(this.query().filter).subscribe({
+      next: (ids) => this.chosen.set(new Set(ids)),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  protected clearChosen(): void {
+    this.chosen.set(new Set());
+    this.batchEditing.set(false);
+  }
+
+  protected toggleBatchEditing(): void {
+    this.batchEditing.update((editing) => !editing);
+  }
+
+  protected startBatch(changes: BatchChanges): void {
+    const showIds = [...this.chosen()];
+    if (!this.confirm(`${showIds.length} Serien ändern? Die NFOs werden neu geschrieben.`)) {
+      return;
+    }
+    const edit = {
+      showIds,
+      genres: changes.genres,
+      tags: changes.tags,
+      mpaa: changes.fields['mpaa'] ?? KEEP_FIELD,
+      status: changes.fields['status'] ?? KEEP_FIELD,
+    };
+    this.tvShowService.batchEdit(edit).subscribe({
+      next: (job) => {
+        this.jobStore.update(job);
+        this.batchEditing.set(false);
+      },
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
 
   protected onSearch(event: Event): void {
     this.searchInput.set((event.target as HTMLInputElement).value);

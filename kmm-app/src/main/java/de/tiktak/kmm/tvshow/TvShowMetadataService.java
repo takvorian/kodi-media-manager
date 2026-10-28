@@ -2,6 +2,7 @@ package de.tiktak.kmm.tvshow;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.function.UnaryOperator;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
@@ -57,6 +58,30 @@ public class TvShowMetadataService {
         log.info("Metadata of TV show {} saved to {}", showId, written.file());
         events.publishEvent(new TvShowFilesChangedEvent(showId));
         return details(show);
+    }
+
+    /**
+     * Ändert die Metadaten einer Serie ausgehend vom aktuellen Stand, etwa in der Stapel-Bearbeitung. Eine außerhalb
+     * von KMM geänderte NFO wird vorher eingelesen.
+     *
+     * @return ob sich etwas geändert hat
+     * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
+     */
+    @Transactional
+    public boolean changeShow(long showId, UnaryOperator<TvShowMetadata> change) {
+        TvShow show = requireShow(showId);
+        nfoSync.refreshShowIfChangedOutside(show);
+        TvShowMetadata current = show.metadata();
+        TvShowMetadata changed = change.apply(current);
+        if (changed.equals(current)) {
+            return false;
+        }
+        TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(changed,
+                show.extras())));
+        show.applyMetadata(changed);
+        show.markNfoSynchronized(written.modifiedAt());
+        events.publishEvent(new TvShowFilesChangedEvent(showId));
+        return true;
     }
 
     public EpisodeDetails findEpisode(long episodeId) {

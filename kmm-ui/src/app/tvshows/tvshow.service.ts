@@ -3,6 +3,7 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { TvShowFilter, TvShowFilterValues } from '../filters/tvshow-filter';
+import { Job } from '../jobs/job';
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import {
   EpisodeDetails,
@@ -15,6 +16,7 @@ import {
   TvShowProposal,
   TvShowQuery,
 } from './tvshow';
+import { TvShowBatchEdit } from './tvshow-batch';
 
 export const TVSHOWS_URL = '/api/v1/tvshows';
 export const EPISODES_URL = '/api/v1/episodes';
@@ -46,6 +48,11 @@ export class TvShowService {
   /** IDs aller Serien, auf die der Filter passt. */
   queryShowIds(filter: TvShowFilter): Observable<number[]> {
     return this.http.post<number[]>(`${TVSHOWS_URL}/query/ids`, filter);
+  }
+
+  /** Startet die Stapel-Bearbeitung als Job. */
+  batchEdit(edit: TvShowBatchEdit): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/batch`, edit);
   }
 
   /** Vorhandene Werte je Filterfeld für Auswahllisten. */

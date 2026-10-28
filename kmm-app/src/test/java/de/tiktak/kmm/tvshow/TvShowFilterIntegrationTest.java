@@ -117,6 +117,27 @@ class TvShowFilterIntegrationTest {
     }
 
     @Test
+    void editsTheFilteredShowsTogether() throws IOException {
+        JsonNode ids = read(post(TvShowController.QUERY_IDS_PATH,
+                "{\"matchAll\": true, \"conditions\": [{\"field\": \"GENRE\", \"operator\": \"IS\", \"value\": \"Drama\"}]}"));
+
+        MvcTestResult started = post(TvShowController.BATCH_PATH, ("{\"showIds\": %s, \"genres\": {\"add\": [\"Mystery\"]},"
+                + " \"tags\": {\"add\": [\"Neu\"]}, \"status\": {\"value\": \"Ended\"}}").formatted(ids));
+        assertThat(started).hasStatus(HttpStatus.ACCEPTED);
+        String jobId = read(started).get("id").asString();
+        JsonNode job = await().atMost(TIMEOUT).pollInSameThread()
+                .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),
+                        node -> !"RUNNING".equals(node.get("status").asString()));
+
+        assertThat(job.get("result").get("changed").asInt()).as(job.toString()).isEqualTo(2);
+        assertThat(Files.readString(library.resolve("serien/Neu/tvshow.nfo")))
+                .contains("<genre>Drama</genre>", "<genre>Mystery</genre>", "<tag>Neu</tag>", "<status>Ended</status>");
+        assertThat(titles(true, condition("STATUS", "IS", "Continuing"))).isEmpty();
+        assertThat(post(TvShowController.BATCH_PATH, "{\"showIds\": [], \"tags\": {\"add\": [\"X\"]}}"))
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void indexesEpisodesWhoseStreamDetailsPredateTheIndex() {
         jdbcClient.sql("UPDATE episode SET audio_codecs = NULL, video_codec = NULL").update();
         assertThat(titles(true, condition("EPISODE_VIDEO_CODEC", "IS", "h264"))).isEmpty();

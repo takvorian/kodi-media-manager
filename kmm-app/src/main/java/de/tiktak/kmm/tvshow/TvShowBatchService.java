@@ -1,0 +1,71 @@
+package de.tiktak.kmm.tvshow;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.job.JobContext;
+import de.tiktak.kmm.job.JobService;
+import de.tiktak.kmm.job.JobSnapshot;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Stapel-Bearbeitung von Serien als Hintergrund-Job, je Serie in einer eigenen Transaktion. Ein Fehler bei einer
+ * Serie hält die übrigen nicht auf. Umbenannt wird dabei nicht.
+ */
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class TvShowBatchService {
+
+    static final String JOB_KEY = "tvshows-batch";
+    static final int MAX_LISTED_FAILURES = 20;
+
+    private final TvShowMetadataService metadataService;
+    private final JobService jobService;
+
+    public JobSnapshot start(TvShowBatchEdit edit) {
+        return jobService.submit(JOB_KEY, "%d Serien bearbeiten".formatted(edit.showIds().size()),
+                context -> apply(edit, context));
+    }
+
+    TvShowBatchResult apply(TvShowBatchEdit edit, JobContext context) {
+        List<String> failures = new ArrayList<>();
+        int changed = 0;
+        int unchanged = 0;
+        int failed = 0;
+        List<Long> showIds = edit.showIds();
+        for (long showId : showIds) {
+            context.throwIfCancellationRequested();
+            context.reportProgress(changed + unchanged + failed, showIds.size(), "Serie " + showId);
+            try {
+                if (metadataService.changeShow(showId, edit::apply)) {
+                    changed++;
+                } else {
+                    unchanged++;
+                }
+            } catch (ErrorResponseException e) {
+                failed++;
+                if (failures.size() < MAX_LISTED_FAILURES) {
+                    failures.add("Serie %d: %s".formatted(showId, e.getBody().getDetail()));
+                }
+            }
+        }
+        context.reportProgress(showIds.size(), showIds.size(), null);
+        log.info("TV show batch edit: {} changed, {} unchanged, {} failed", changed, unchanged, failed);
+        return new TvShowBatchResult(changed, unchanged, failed, failures);
+    }
+
+    /**
+     * @param failures die ersten Fehler mit Serien-ID, höchstens {@link #MAX_LISTED_FAILURES}
+     */
+    public record TvShowBatchResult(int changed, int unchanged, int failed, List<String> failures) {
+
+        public TvShowBatchResult {
+            failures = List.copyOf(failures);
+        }
+    }
+}

@@ -67,7 +67,13 @@
 
 @if (batchEditing() && chosen().size > 0) {
   <section class="batch-editor">
-    <app-movie-batch-editor [movieIds]="chosenIds()" [busy]="!!job" (submitted)="startBatch($event)" />
+    <app-batch-editor
+      [count]="chosen().size"
+      itemLabel="Filme"
+      [singleFields]="batchFields"
+      [busy]="!!job"
+      (submitted)="startBatch($event)"
+    />
   </section>
 }
 
