@@ -1,7 +1,9 @@
 package de.tiktak.kmm.movie;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.function.LongPredicate;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
@@ -26,6 +28,7 @@ public class MovieBatchService {
 
     private final MovieMetadataService metadataService;
     private final MovieTagService tagService;
+    private final MovieTrailerService trailerService;
     private final JobService jobService;
 
     public JobSnapshot start(MovieBatchEdit edit) {
@@ -33,17 +36,27 @@ public class MovieBatchService {
                 context -> apply(edit, context));
     }
 
+    /** Trägt für Filme ohne Trailer den besten Vorschlag ein, als Job wie die Stapel-Bearbeitung. */
+    public JobSnapshot startTrailerFill(List<Long> movieIds) {
+        List<Long> distinct = List.copyOf(new LinkedHashSet<>(movieIds));
+        return jobService.submit(JOB_KEY, "Fehlende Trailer für %d Filme holen".formatted(distinct.size()),
+                context -> apply(distinct, trailerService::fillMissing, context));
+    }
+
     MovieBatchResult apply(MovieBatchEdit edit, JobContext context) {
+        return apply(edit.movieIds(), movieId -> change(movieId, edit), context);
+    }
+
+    MovieBatchResult apply(List<Long> movieIds, LongPredicate change, JobContext context) {
         List<String> failures = new ArrayList<>();
         int changed = 0;
         int unchanged = 0;
         int failed = 0;
-        List<Long> movieIds = edit.movieIds();
         for (long movieId : movieIds) {
             context.throwIfCancellationRequested();
             context.reportProgress(changed + unchanged + failed, movieIds.size(), "Film " + movieId);
             try {
-                if (change(movieId, edit)) {
+                if (change.test(movieId)) {
                     changed++;
                 } else {
                     unchanged++;

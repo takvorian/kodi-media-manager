@@ -39,7 +39,13 @@ final class NfoSupplementReader {
                 integer(NfoDocuments.text(movie, NfoElements.PLAY_COUNT)),
                 dateTime(NfoDocuments.text(movie, NfoElements.LAST_PLAYED)),
                 dateTime(NfoDocuments.text(movie, NfoElements.DATE_ADDED)),
-                NfoStreamDetails.read(movie));
+                NfoStreamDetails.read(movie),
+                trailer(movie));
+    }
+
+    private static String trailer(Element movie) {
+        String trailer = NfoDocuments.text(movie, NfoElements.TRAILER);
+        return trailer == null ? MovieNfoSupplement.NO_TRAILER : trailer;
     }
 
     static List<NfoActor> actors(Element movie) {

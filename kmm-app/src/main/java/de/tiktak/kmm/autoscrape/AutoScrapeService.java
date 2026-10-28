@@ -16,6 +16,7 @@ import de.tiktak.kmm.movie.MovieQueryService;
 import de.tiktak.kmm.movie.MovieRenamePlan;
 import de.tiktak.kmm.movie.MovieRenameService;
 import de.tiktak.kmm.movie.MovieScrapeService;
+import de.tiktak.kmm.movie.MovieTrailerService;
 import de.tiktak.kmm.movie.RenameTrigger;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.MediaSource;
@@ -25,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Scrapt alle Filme bzw. Serien einer Quelle im Hintergrund: fehlende Metadaten (nur bei sicherem
- * Treffer) und fehlende Bilder. Vorhandene Daten und Bilder bleiben unverändert. Die Einträge werden
+ * Treffer), fehlende Bilder und fehlende Trailer-Links. Vorhandene Daten und Bilder bleiben unverändert. Die Einträge werden
  * nacheinander bearbeitet, um die Anfragelimits der Anbieter zu schonen.
  */
 @Slf4j
@@ -46,6 +47,7 @@ public class AutoScrapeService {
     private final MovieScrapeService scrapeService;
     private final MovieRenameService renameService;
     private final ArtworkService artworkService;
+    private final MovieTrailerService trailerService;
     private final JobService jobService;
     private final TvAutoScrapeRunner tvRunner;
     private final StreamDetailsService streamDetails;
@@ -76,8 +78,9 @@ public class AutoScrapeService {
         }
         context.reportProgress(movieIds.size(), movieIds.size(), null);
         AutoScrapeResult result = progress.toResult();
-        log.info("Auto-scraped source {}: {} movies, {} scraped, {} unmatched, {} images, {} failures", sourceId,
-                result.movies(), result.scraped(), result.unmatched(), result.imagesSaved(), result.failures().size());
+        log.info("Auto-scraped source {}: {} movies, {} scraped, {} unmatched, {} images, {} trailers, {} failures",
+                sourceId, result.movies(), result.scraped(), result.unmatched(), result.imagesSaved(),
+                result.trailersSaved(), result.failures().size());
         return result;
     }
 
@@ -98,6 +101,9 @@ public class AutoScrapeService {
             ArtworkFillResult artwork = artworkService.fillMissing(movieId);
             progress.imagesSaved(artwork.saved());
             artwork.warnings().forEach(progress::warn);
+            if (trailerService.fillMissing(movieId)) {
+                progress.trailerSaved();
+            }
             renameService.renameIfEnabled(movieId, RenameTrigger.SCRAPE)
                     .filter(plan -> plan.status() == MovieRenamePlan.Status.CONFLICT
                             || plan.status() == MovieRenamePlan.Status.FAILED)

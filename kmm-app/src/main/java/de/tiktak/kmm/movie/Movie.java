@@ -13,6 +13,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
 import de.tiktak.kmm.nfo.CodecNames;
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.persistence.StreamDetailsConverter;
 import de.tiktak.kmm.persistence.StreamIndex;
@@ -48,6 +49,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class Movie {
+
+    static final int MAX_TRAILER_LENGTH = 1024;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -181,6 +184,17 @@ public class Movie {
     @Column(name = "stream_details", length = Length.LONG32)
     private StreamDetails streamDetails;
 
+    /** Trailer-Link aus der NFO, etwa {@code plugin://plugin.video.youtube/…}, oder {@code null}. */
+    @Column(name = "trailer", length = MAX_TRAILER_LENGTH)
+    private String trailer;
+
+    /**
+     * Ob {@link #trailer} den Stand der NFO wiedergibt. Bei Filmen aus älteren Versionen ist er unbekannt; dann
+     * bleibt der Eintrag in der NFO beim Schreiben unverändert.
+     */
+    @Column(name = "trailer_known", nullable = false)
+    private boolean trailerKnown;
+
     /** Abfragbare Kurzform der technischen Angaben für Filter; folgt {@link #streamDetails}. */
     @Embedded
     private StreamIndex streamIndex;
@@ -284,6 +298,20 @@ public class Movie {
      */
     void indexStreams() {
         applyStreamDetails(this.streamDetails);
+    }
+
+    /** @param newTrailer Link oder {@code null} bzw. leer für „kein Trailer“ */
+    void changeTrailer(String newTrailer) {
+        this.trailer = newTrailer == null || newTrailer.isBlank() ? null : newTrailer.strip();
+        this.trailerKnown = true;
+    }
+
+    /** Trailer für die NFO: {@code null}, wenn unbekannt, sonst Link oder „kein Trailer“. */
+    String nfoTrailer() {
+        if (!trailerKnown) {
+            return null;
+        }
+        return trailer == null ? MovieNfoSupplement.NO_TRAILER : trailer;
     }
 
     void changeAddedAt(Instant newAddedAt) {

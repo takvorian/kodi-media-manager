@@ -1,0 +1,47 @@
+{
+  "id": 949,
+  "results": [
+    {
+      "iso_639_1": "de",
+      "iso_3166_1": "DE",
+      "name": "HEAT | Trailer | Deutsch",
+      "key": "2GfZl4kuVNI",
+      "site": "YouTube",
+      "size": 1080,
+      "type": "Trailer",
+      "official": true,
+      "published_at": "2015-06-01T10:00:00.000Z",
+      "id": "a1"
+    },
+    {
+      "iso_639_1": "en",
+      "iso_3166_1": "US",
+      "name": "Heat - Teaser",
+      "key": "14oNcFxiVaQ",
+      "site": "YouTube",
+      "size": 720,
+      "type": "Teaser",
+      "official": false,
+      "published_at": "",
+      "id": "a2"
+    },
+    {
+      "iso_639_1": "en",
+      "name": "Vimeo",
+      "key": "123456",
+      "site": "Vimeo",
+      "size": 1080,
+      "type": "Trailer",
+      "official": true,
+      "id": "a3"
+    },
+    {
+      "iso_639_1": "en",
+      "name": "Kaputte ID",
+      "key": "../x",
+      "site": "YouTube",
+      "type": "Trailer",
+      "id": "a4"
+    }
+  ]
+}

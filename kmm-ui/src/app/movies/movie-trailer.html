@@ -1,0 +1,87 @@
+@let link = trailer();
+<div class="current">
+  @if (link) {
+    <span class="path trailer-link">{{ link }}</span>
+    @if (watchUrl(); as watch) {
+      <a matButton class="watch-link" [href]="watch" target="_blank" rel="noopener">Ansehen</a>
+    }
+    <button matButton type="button" class="remove-trailer-button" [disabled]="busy()" (click)="remove()">
+      Entfernen
+    </button>
+  } @else {
+    <span class="hint no-trailer">Kein Trailer eingetragen.</span>
+  }
+  <button matButton="tonal" type="button" class="find-trailers-button" [disabled]="busy()" (click)="findCandidates()">
+    Vorschläge suchen
+  </button>
+</div>
+
+@let found = options();
+@if (found) {
+  @for (warning of found.warnings; track warning) {
+    <p class="hint trailer-warning">{{ warning }}</p>
+  }
+  @if (found.candidates.length === 0) {
+    <p class="hint no-candidates">Keine Trailer gefunden.</p>
+  } @else {
+    <ul class="candidates">
+      @for (candidate of found.candidates; track candidate.url) {
+        <li class="trailer-candidate">
+          @if (candidate.previewUrl) {
+            <img [src]="candidate.previewUrl" alt="" loading="lazy" />
+          }
+          <div class="candidate-facts">
+            <span class="candidate-name">{{ candidate.name }}</span>
+            <span class="hint">
+              {{ candidate.type }} · {{ candidate.language ?? 'ohne Sprache' }}
+              @if (candidate.height) {
+                · {{ candidate.height }}p
+              }
+              @if (candidate.official) {
+                · offiziell
+              }
+              @if (candidate.published) {
+                · {{ candidate.published }}
+              }
+              · {{ candidate.scraperName }}
+            </span>
+          </div>
+          <a matButton [href]="candidate.webUrl" target="_blank" rel="noopener">Ansehen</a>
+          <button
+            matButton="filled"
+            type="button"
+            class="apply-candidate-button"
+            [disabled]="busy() || candidate.url === link"
+            (click)="apply(candidate.url)"
+          >
+            {{ candidate.url === link ? 'Eingetragen' : 'Übernehmen' }}
+          </button>
+        </li>
+      }
+    </ul>
+  }
+  <button matButton type="button" class="close-candidates-button" (click)="closeCandidates()">Vorschläge schließen</button>
+}
+
+<div class="manual">
+  <mat-form-field class="manual-link">
+    <mat-label>Eigener Link</mat-label>
+    <input
+      matInput
+      name="trailerUrl"
+      placeholder="plugin://plugin.video.youtube/?action=play_video&videoid=…"
+      [value]="manualLink()"
+      (input)="manualLink.set($any($event.target).value)"
+    />
+    <mat-hint>plugin://, http(s)://, smb:// oder nfs://</mat-hint>
+  </mat-form-field>
+  <button
+    matButton
+    type="button"
+    class="apply-link-button"
+    [disabled]="busy() || !manualLink().trim()"
+    (click)="applyManualLink()"
+  >
+    Link übernehmen
+  </button>
+</div>

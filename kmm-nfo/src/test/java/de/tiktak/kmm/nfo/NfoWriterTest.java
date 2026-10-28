@@ -32,7 +32,8 @@ class NfoWriterTest {
 
         writer.write(nfoFile, nfo);
 
-        assertThat(reader.read(nfoFile)).isEqualTo(withSupplement(nfo, MovieNfoSupplement.EMPTY));
+        assertThat(reader.read(nfoFile))
+                .isEqualTo(withSupplement(nfo, MovieNfoSupplement.EMPTY.withTrailer(MovieNfoSupplement.NO_TRAILER)));
         String content = Files.readString(nfoFile);
         assertThat(content).startsWith("<?xml version=\"1.0\" encoding=\"UTF-8\" standalone=\"yes\"?>");
         assertThat(content).contains("<uniqueid default=\"true\" type=\"imdb\">tt0113277</uniqueid>");
@@ -75,6 +76,18 @@ class NfoWriterTest {
         assertThat(content).doesNotContain("<genre>Krimi</genre>", "<tagline>", "<plot>", "<premiered>", "tt0113277");
         assertThat(content).contains("<genre>Action</genre>", "<uniqueid default=\"true\" type=\"tmdb\">949</uniqueid>");
         assertThat(reader.read(nfoFile)).usingRecursiveComparison().ignoringFields("supplement").isEqualTo(changed);
+    }
+
+    @Test
+    void removesTheTrailerOnlyWhenTheSupplementSaysThereIsNone() throws IOException {
+        Path nfoFile = directory.resolve("Heat.nfo");
+        writer.write(nfoFile, withSupplement(heat("Heat"), supplement()));
+
+        writer.write(nfoFile, withSupplement(heat("Heat"), supplement().withTrailer(null)));
+        assertThat(Files.readString(nfoFile)).contains("videoid=2GfZl4kuVNI");
+
+        writer.write(nfoFile, withSupplement(heat("Heat"), supplement().withTrailer(MovieNfoSupplement.NO_TRAILER)));
+        assertThat(Files.readString(nfoFile)).doesNotContain("<trailer>");
     }
 
     @Test
@@ -204,7 +217,8 @@ class NfoWriterTest {
                 List.of("Heist", "Los Angeles"), List.of(new NfoRating("imdb", 8.3, 10, 650000, true),
                         new NfoRating("themoviedb", 7.9, 10, null, false)),
                 new NfoMovieSet("Michael Mann Collection", null, "1234"), null, 3, LocalDateTime.of(2024, 5, 1, 20, 15),
-                LocalDateTime.of(2016, 11, 30, 1, 20, 15), StreamDetails.EMPTY);
+                LocalDateTime.of(2016, 11, 30, 1, 20, 15), StreamDetails.EMPTY,
+                "plugin://plugin.video.youtube/?action=play_video&videoid=2GfZl4kuVNI");
     }
 
     private Path copyFixture(String name) throws IOException {

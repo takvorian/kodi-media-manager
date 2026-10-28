@@ -29,7 +29,7 @@ class MovieSupplementWriter {
             try {
                 NfoFileState written = nfoFiles.write(movie.companionFiles(), movie.metadata(),
                         MovieNfoMapper.toNfoSupplement(supplement, movie.streamDetails(), movie.getAddedAt(),
-                                clock.getZone()));
+                                clock.getZone(), movie.nfoTrailer()));
                 movie.markNfoSynchronized(written.modifiedAt());
             } catch (NfoException e) {
                 throw new NfoNotWritableException(e);

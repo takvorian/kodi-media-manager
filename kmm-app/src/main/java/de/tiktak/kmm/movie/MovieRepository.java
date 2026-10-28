@@ -16,6 +16,9 @@ interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationEx
     @Query("SELECT m.id FROM Movie m WHERE m.streamDetails IS NOT NULL AND m.streamIndex.audioCodecs IS NULL")
     List<Long> findIdsWithoutStreamIndex();
 
+    @Query("SELECT m.id FROM Movie m WHERE m.trailerKnown = false")
+    List<Long> findIdsWithUnknownTrailer();
+
     @Query("SELECT DISTINCT g FROM Movie m JOIN m.genres g")
     List<String> findDistinctGenres();
 

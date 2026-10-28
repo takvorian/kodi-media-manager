@@ -8,11 +8,27 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 class MovieTest {
 
     private static final String PATH = "/media/filme/Heat.mkv";
+
+    @Test
+    void leavesTheNfoTrailerAloneUntilTheTrailerIsKnown() {
+        var movie = new Movie(1L, PATH, "Heat", 1995, DiscFormat.FILE, 1);
+
+        assertThat(movie.nfoTrailer()).as("Altbestand: <trailer> der NFO bleibt").isNull();
+
+        movie.changeTrailer(" plugin://plugin.video.youtube/?action=play_video&videoid=abc ");
+        assertThat(movie.getTrailer()).isEqualTo("plugin://plugin.video.youtube/?action=play_video&videoid=abc");
+        assertThat(movie.nfoTrailer()).isEqualTo(movie.getTrailer());
+
+        movie.changeTrailer(" ");
+        assertThat(movie.getTrailer()).isNull();
+        assertThat(movie.nfoTrailer()).isEqualTo(MovieNfoSupplement.NO_TRAILER);
+    }
 
     @Test
     void derivesPathHashFromFilePath() {

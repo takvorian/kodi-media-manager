@@ -65,8 +65,9 @@ class MovieNfoMapperTest {
 
         StreamDetails streams = new StreamDetails(List.of(), List.of(), List.of(new StreamDetails.Subtitle("deu", false)));
         MovieNfoSupplement nfo = MovieNfoMapper.toNfoSupplement(supplement, streams,
-                Instant.parse("2016-11-30T00:20:15Z"), BERLIN);
+                Instant.parse("2016-11-30T00:20:15Z"), BERLIN, "plugin://trailer");
 
+        assertThat(nfo.trailer()).isEqualTo("plugin://trailer");
         assertThat(nfo.actors()).containsExactly(new NfoActor("Pacino", "Hanna", 0, null),
                 new NfoActor("De Niro", null, 1, null));
         assertThat(nfo.ratings()).containsExactly(new NfoRating("imdb", 8.3, 10, null, true));
@@ -80,7 +81,7 @@ class MovieNfoMapperTest {
     @Test
     void mapsEmptySupplementWithoutSetAndTimes() {
         assertThat(MovieNfoMapper.toSupplement(MovieNfoSupplement.EMPTY, BERLIN)).isEqualTo(MovieSupplement.EMPTY);
-        assertThat(MovieNfoMapper.toNfoSupplement(MovieSupplement.EMPTY, StreamDetails.EMPTY, null, BERLIN))
+        assertThat(MovieNfoMapper.toNfoSupplement(MovieSupplement.EMPTY, StreamDetails.EMPTY, null, BERLIN, null))
                 .isEqualTo(MovieNfoSupplement.EMPTY);
     }
 

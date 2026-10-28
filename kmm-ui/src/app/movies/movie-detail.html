@@ -75,6 +75,15 @@
     </mat-card-content>
   </mat-card>
 
+  <mat-card appearance="outlined" class="trailer-card">
+    <mat-card-header>
+      <mat-card-title>Trailer</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <app-movie-trailer [movieId]="details.id" [trailer]="details.trailer" (changed)="showTrailer($event)" />
+    </mat-card-content>
+  </mat-card>
+
   <mat-card appearance="outlined" class="artwork-card">
     <mat-card-header>
       <mat-card-title>Bilder</mat-card-title>

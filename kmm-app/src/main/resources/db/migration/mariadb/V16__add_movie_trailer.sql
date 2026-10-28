@@ -1,0 +1,3 @@
+ALTER TABLE movie
+    ADD COLUMN trailer       VARCHAR(1024) NULL,
+    ADD COLUMN trailer_known BOOLEAN       NOT NULL DEFAULT FALSE;

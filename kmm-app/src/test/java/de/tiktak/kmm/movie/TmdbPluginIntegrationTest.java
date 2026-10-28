@@ -55,6 +55,15 @@ class TmdbPluginIntegrationTest {
              "genres": [{"name": "Krimi"}],
              "release_dates": {"results": [{"iso_3166_1": "DE", "release_dates": [{"certification": "16"}]}]}}
             """;
+    private static final String VIDEOS_RESPONSE = """
+            {"id": 949, "results": [
+              {"iso_639_1": "en", "name": "Heat Trailer", "key": "enTrailer01", "site": "YouTube", "size": 1080,
+               "type": "Trailer", "official": true, "published_at": "2015-06-01T10:00:00.000Z"},
+              {"iso_639_1": "de", "name": "Heat Trailer Deutsch", "key": "deTrailer01", "site": "YouTube", "size": 720,
+               "type": "Trailer", "official": true, "published_at": "2015-06-01T10:00:00.000Z"},
+              {"iso_639_1": "de", "name": "Woanders", "key": "x", "site": "Vimeo", "size": 1080,
+               "type": "Trailer", "official": true}]}
+            """;
 
     @TempDir
     static Path pluginDirectory;
@@ -145,9 +154,26 @@ class TmdbPluginIntegrationTest {
                         """);
     }
 
+    @Test
+    void proposesYouTubeTrailersThroughThePlugin() {
+        jdbcClient.sql("UPDATE movie SET tmdb_id = '949' WHERE id = :id").param("id", movieId).update();
+
+        assertThat(mockMvc.get().uri(MovieTrailerController.CANDIDATES_PATH, movieId))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"candidates": [
+                          {"name": "Heat Trailer Deutsch", "language": "de",
+                           "url": "plugin://plugin.video.youtube/?action=play_video&videoid=deTrailer01"},
+                          {"name": "Heat Trailer", "language": "en"}],
+                         "warnings": []}
+                        """);
+    }
+
     private static HttpServer startFakeTmdb() throws IOException {
         HttpServer server = HttpServer.create(new InetSocketAddress("127.0.0.1", 0), 0);
-        Map<String, String> responses = Map.of("/3/search/movie", SEARCH_RESPONSE, "/3/movie/949", MOVIE_RESPONSE);
+        Map<String, String> responses = Map.of("/3/search/movie", SEARCH_RESPONSE, "/3/movie/949", MOVIE_RESPONSE,
+                "/3/movie/949/videos", VIDEOS_RESPONSE);
         server.createContext("/", exchange -> respond(exchange, responses.get(exchange.getRequestURI().getPath())));
         server.start();
         return server;

@@ -59,6 +59,7 @@ describe('MovieDetail', () => {
       subtitles: [{ language: 'deu', forced: true }],
     },
     nfo: { path: '/media/filme/Heat.nfo', exists: true, modifiedAt: '2026-10-25T11:00:00Z' },
+    trailer: null,
   };
 
   let fixture: ComponentFixture<MovieDetail>;
@@ -222,6 +223,23 @@ describe('MovieDetail', () => {
       'Kein Kodi-Gerät hat eine Pfad-Zuordnung.',
     ]);
     expect(button('.kodi-playback-button').disabled).toBe(false);
+  });
+
+  it('shows a new trailer without discarding unsaved changes', async () => {
+    const link = 'plugin://plugin.video.youtube/?action=play_video&videoid=2GfZl4kuVNI';
+    await load(heat);
+    await type('title', 'Heat (Director’s Cut)');
+    expect(element().querySelector('.no-trailer')).not.toBeNull();
+
+    await type('trailerUrl', link);
+    button('.apply-link-button').click();
+    httpTesting
+      .expectOne({ method: 'PUT', url: `${MOVIES_URL}/5/trailer` })
+      .flush({ ...heat, trailer: link });
+    await fixture.whenStable();
+
+    expect(element().querySelector('.trailer-link')?.textContent).toBe(link);
+    expect(input('title').value).toBe('Heat (Director’s Cut)');
   });
 
   it('reads the technical details with ffprobe', async () => {

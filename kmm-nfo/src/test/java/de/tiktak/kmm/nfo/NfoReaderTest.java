@@ -97,7 +97,7 @@ class NfoReaderTest {
                 <lastplayed>gestern</lastplayed><dateadded>2016</dateadded></movie>
                 """)).supplement();
 
-        assertThat(supplement).isEqualTo(MovieNfoSupplement.EMPTY);
+        assertThat(supplement).isEqualTo(MovieNfoSupplement.EMPTY.withTrailer(MovieNfoSupplement.NO_TRAILER));
     }
 
     @Test

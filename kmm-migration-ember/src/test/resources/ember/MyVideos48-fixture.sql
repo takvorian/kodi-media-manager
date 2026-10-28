@@ -160,6 +160,8 @@ INSERT INTO TVVStreams VALUES (3, 0, '720', '576', 'mpeg4', '2580', 'interlaced'
 
 ALTER TABLE movie ADD COLUMN VideoSource TEXT;
 ALTER TABLE movie ADD COLUMN edition TEXT;
+ALTER TABLE movie ADD COLUMN Trailer TEXT;
+UPDATE movie SET Trailer = 'plugin://plugin.video.youtube/?action=play_video&videoid=2GfZl4kuVNI' WHERE idMovie = 1;
 ALTER TABLE episode ADD COLUMN VideoSource TEXT;
 UPDATE movie SET VideoSource = 'bluray', edition = 'Director''s Cut' WHERE idMovie = 1;
 UPDATE movie SET VideoSource = '', edition = '' WHERE idMovie = 2;

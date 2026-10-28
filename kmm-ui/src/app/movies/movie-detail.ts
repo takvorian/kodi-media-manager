@@ -28,6 +28,7 @@ import {
 } from './movie-metadata-form';
 import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
 import { MovieSupplementView } from './movie-supplement';
+import { MovieTrailer } from './movie-trailer';
 import { MovieService } from './movie.service';
 import { MovieRenamePlan, renameConfirmation } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
@@ -48,6 +49,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MovieArtwork,
     MovieOnlineSearch,
     MovieSupplementView,
+    MovieTrailer,
     StreamDetailsView,
   ],
   templateUrl: './movie-detail.html',
@@ -284,6 +286,11 @@ export class MovieDetail {
           },
         },
     );
+  }
+
+  /** Übernimmt nur den Trailer, damit ungespeicherte Änderungen im Formular bleiben. */
+  protected showTrailer(changed: MovieDetails): void {
+    this.movie.update((details) => details && { ...details, trailer: changed.trailer });
   }
 
   private showStreams(streams: StreamDetails): void {

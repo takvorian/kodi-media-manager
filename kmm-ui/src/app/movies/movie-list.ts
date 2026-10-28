@@ -210,6 +210,22 @@ export class MovieList {
     });
   }
 
+  /** Trägt für die ausgewählten Filme ohne Trailer den besten Vorschlag ein; vorhandene bleiben. */
+  protected fillMissingTrailers(): void {
+    const movieIds = this.chosenIds();
+    if (
+      !this.confirm(
+        `Für ${movieIds.length} Filme fehlende Trailer holen? Die NFOs werden dabei geschrieben.`,
+      )
+    ) {
+      return;
+    }
+    this.movieService.fillMissingTrailers(movieIds).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   protected discFormatLabel(format: DiscFormat): string {
     return DISC_FORMAT_LABELS[format];
   }

@@ -9,6 +9,7 @@ import java.util.List;
  * @param scraped         Filme, deren Metadaten neu geholt wurden
  * @param unmatched       Filme ohne eindeutigen Treffer
  * @param imagesSaved     neu gespeicherte Bilder
+ * @param trailersSaved   neu eingetragene Trailer-Links
  * @param unmatchedTitles Titel der Filme ohne eindeutigen Treffer (gekürzt)
  * @param failures        Fehler je Film als „Titel: Meldung“ (gekürzt)
  * @param warnings        einmalige Hinweise, z. B. zu nicht eingerichteten Anbietern (gekürzt)
@@ -18,6 +19,7 @@ public record AutoScrapeResult(
         int scraped,
         int unmatched,
         int imagesSaved,
+        int trailersSaved,
         List<String> unmatchedTitles,
         List<String> failures,
         List<String> warnings) {

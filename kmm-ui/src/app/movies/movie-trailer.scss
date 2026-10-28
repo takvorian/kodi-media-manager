@@ -1,0 +1,53 @@
+.current,
+.manual {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.manual {
+  margin-top: 16px;
+}
+
+.manual-link {
+  flex: 1 1 360px;
+}
+
+.path {
+  font-family: monospace;
+  word-break: break-all;
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.candidates {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 16px 0 8px;
+  padding: 0;
+  list-style: none;
+}
+
+.trailer-candidate {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+
+  img {
+    width: 160px;
+    height: 90px;
+    object-fit: cover;
+    border-radius: 4px;
+  }
+}
+
+.candidate-facts {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 4px;
+}

@@ -38,6 +38,18 @@ public class ScraperProblemException extends ErrorResponseException {
                 "Es ist kein Scraper für Filmsets installiert und aktiv, etwa das TMDB-Plugin.", null);
     }
 
+    static ScraperProblemException missingIdsForTrailers() {
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Film nicht eindeutig zugeordnet",
+                "Für die Trailersuche wird eine TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen.",
+                null);
+    }
+
+    static ScraperProblemException invalidTrailer(String url) {
+        return new ScraperProblemException(HttpStatus.BAD_REQUEST, "Ungültiger Trailer",
+                "„%s“ ist kein Link, den Kodi abspielen kann (plugin://, http(s)://, smb:// oder nfs://)."
+                        .formatted(url), null);
+    }
+
     static ScraperProblemException notFoundAtProvider(Scraper scraper, String providerId) {
         return new ScraperProblemException(HttpStatus.NOT_FOUND, "Treffer nicht gefunden",
                 "%s kennt den Eintrag '%s' nicht.".formatted(scraper.displayName(), providerId), null);

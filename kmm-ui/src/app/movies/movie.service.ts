@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { MovieFilter, MovieFilterValues } from '../filters/movie-filter';
 import { Job } from '../jobs/job';
-import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
+import { MovieDetails, MovieMetadata, MoviePage, MovieQuery, TrailerOptions } from './movie';
 import { MovieBatchEdit } from './movie-batch';
 import { CollectionReference, MovieScrapeProposal, ScrapeCandidate, ScraperInfo } from './scraper';
 
@@ -98,5 +98,23 @@ export class MovieService {
   /** Speichert die Metadaten; das Backend schreibt sie zugleich in die NFO. */
   updateMetadata(movieId: number, metadata: MovieMetadata): Observable<MovieDetails> {
     return this.http.put<MovieDetails>(`${MOVIES_URL}/${movieId}/metadata`, metadata);
+  }
+
+  trailerCandidates(movieId: number): Observable<TrailerOptions> {
+    return this.http.get<TrailerOptions>(`${MOVIES_URL}/${movieId}/trailer/candidates`);
+  }
+
+  /** Trägt den Link in Bibliothek und NFO ein. */
+  applyTrailer(movieId: number, url: string): Observable<MovieDetails> {
+    return this.http.put<MovieDetails>(`${MOVIES_URL}/${movieId}/trailer`, { url });
+  }
+
+  removeTrailer(movieId: number): Observable<MovieDetails> {
+    return this.http.delete<MovieDetails>(`${MOVIES_URL}/${movieId}/trailer`);
+  }
+
+  /** Holt für die Filme ohne Trailer den besten Vorschlag, als Job. */
+  fillMissingTrailers(movieIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/trailers/fill`, { movieIds });
   }
 }

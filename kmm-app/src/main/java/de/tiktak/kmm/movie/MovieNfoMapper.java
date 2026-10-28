@@ -106,8 +106,11 @@ final class MovieNfoMapper {
                 toInstant(nfo.lastPlayed(), zone));
     }
 
+    /**
+     * @param trailer Trailer-Link, {@link MovieNfoSupplement#NO_TRAILER} oder {@code null}, wenn unbekannt
+     */
     static MovieNfoSupplement toNfoSupplement(MovieSupplement supplement, StreamDetails streams, Instant addedAt,
-            ZoneId zone) {
+            ZoneId zone, String trailer) {
         List<MovieSupplement.Actor> actors = supplement.actors();
         return new MovieNfoSupplement(
                 IntStream.range(0, actors.size())
@@ -129,7 +132,7 @@ final class MovieNfoMapper {
                 supplement.playCount(),
                 toLocal(supplement.lastPlayed(), zone),
                 toLocal(addedAt, zone),
-                streams);
+                streams).withTrailer(trailer);
     }
 
     static Instant toInstant(LocalDateTime localDateTime, ZoneId zone) {

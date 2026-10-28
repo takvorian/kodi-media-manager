@@ -33,6 +33,9 @@ final class NfoSupplementWriter {
         NfoDomEditor.replaceAll(movie, NfoElements.ACTOR,
                 supplement.actors().stream().map(actor -> actor(document, actor)).toList());
         NfoStreamDetails.write(document, movie, supplement.streams());
+        if (supplement.trailer() != null) {
+            NfoDomEditor.setText(document, movie, NfoElements.TRAILER, supplement.trailer());
+        }
     }
 
     static List<Element> ratings(Document document, List<NfoRating> ratings) {

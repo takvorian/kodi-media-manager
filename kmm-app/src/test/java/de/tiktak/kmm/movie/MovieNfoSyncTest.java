@@ -23,6 +23,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.nfo.MovieNfo;
+import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.scanner.DiscFormat;
 
@@ -48,6 +49,45 @@ class MovieNfoSyncTest {
         nfoSync = new MovieNfoSync(nfoFiles, movieSets, Clock.fixed(CHANGED, ZoneOffset.UTC));
         movie = new Movie(1L, MOVIE_FILE.toString(), "Heat", 1995, DiscFormat.FILE, 1);
         movie.markNfoSynchronized(SYNCHRONIZED);
+    }
+
+    @Test
+    void readsTheTrailerOfOlderMoviesFromTheNfo() {
+        NfoFileState unchanged = new NfoFileState(NFO_FILE, SYNCHRONIZED);
+        when(nfoFiles.find(movie.companionFiles())).thenReturn(Optional.of(unchanged));
+        when(nfoFiles.read(unchanged)).thenReturn(nfoWithTrailer("plugin://plugin.video.youtube/?videoid=abc"));
+
+        assertThat(nfoSync.readTrailerIfUnknown(movie)).isTrue();
+        assertThat(nfoSync.readTrailerIfUnknown(movie)).as("nur einmal lesen").isTrue();
+
+        assertThat(movie.getTrailer()).isEqualTo("plugin://plugin.video.youtube/?videoid=abc");
+        assertThat(movie.getTitle()).as("nur der Trailer").isEqualTo("Heat");
+        verify(nfoFiles).read(unchanged);
+    }
+
+    @Test
+    void knowsThereIsNoTrailerWithoutNfoOrTrailerElement() {
+        Movie other = new Movie(1L, MOVIE_FILE.toString(), "Heat", 1995, DiscFormat.FILE, 1);
+        NfoFileState unchanged = new NfoFileState(NFO_FILE, SYNCHRONIZED);
+        when(nfoFiles.find(movie.companionFiles())).thenReturn(Optional.empty()).thenReturn(Optional.of(unchanged));
+        when(nfoFiles.read(unchanged)).thenReturn(nfoWithTrailer(MovieNfoSupplement.NO_TRAILER));
+
+        assertThat(nfoSync.readTrailerIfUnknown(movie)).isTrue();
+        assertThat(nfoSync.readTrailerIfUnknown(other)).isTrue();
+
+        assertThat(movie.isTrailerKnown()).isTrue();
+        assertThat(other.getTrailer()).isNull();
+        assertThat(other.isTrailerKnown()).isTrue();
+    }
+
+    @Test
+    void keepsTheTrailerUnknownWhenTheNfoIsUnreadable() {
+        NfoFileState unchanged = new NfoFileState(NFO_FILE, SYNCHRONIZED);
+        when(nfoFiles.find(movie.companionFiles())).thenReturn(Optional.of(unchanged));
+        when(nfoFiles.read(unchanged)).thenThrow(mock(NfoException.class));
+
+        assertThat(nfoSync.readTrailerIfUnknown(movie)).isFalse();
+        assertThat(movie.isTrailerKnown()).isFalse();
     }
 
     @Test
@@ -86,5 +126,10 @@ class MovieNfoSyncTest {
                 .isInstanceOfSatisfying(NfoChangedOutsideException.class,
                         e -> assertThat(e.getBody().getDetail()).contains(NFO_FILE.toString()));
         assertThat(movie.getNfoModifiedAt()).isEqualTo(SYNCHRONIZED);
+    }
+
+    private static MovieNfo nfoWithTrailer(String trailer) {
+        return new MovieNfo("Heat (Director's Cut)", null, null, 1995, null, null, null, null, null, null, null, null,
+                List.of(), Map.of(), MovieNfoSupplement.EMPTY.withTrailer(trailer));
     }
 }

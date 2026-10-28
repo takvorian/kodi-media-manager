@@ -44,6 +44,31 @@ class MovieNfoSync {
         }
     }
 
+    /**
+     * Liest den Trailer aus der NFO nach, wenn KMM ihn noch nicht kennt, etwa bei Filmen aus einer Version ohne
+     * Trailer. Ohne NFO gibt es keinen Trailer.
+     *
+     * @return ob der Trailer danach bekannt ist; {@code false}, wenn die NFO nicht lesbar ist
+     */
+    boolean readTrailerIfUnknown(Movie movie) {
+        if (movie.isTrailerKnown()) {
+            return true;
+        }
+        Optional<NfoFileState> nfoFile = nfoFiles.find(movie.companionFiles());
+        if (nfoFile.isEmpty()) {
+            movie.changeTrailer(null);
+            return true;
+        }
+        try {
+            MovieNfoSupplement supplement = nfoFiles.read(nfoFile.get()).supplement();
+            movie.changeTrailer(supplement == null ? null : supplement.trailer());
+            return true;
+        } catch (NfoException e) {
+            log.warn("Trailer of movie {} unknown, NFO not readable: {}", movie.getId(), nfoFile.get().file(), e);
+            return false;
+        }
+    }
+
     /** Übernimmt Metadaten, weitere Angaben, technische Angaben und Hinzugefügt-Datum der NFO. */
     void apply(Movie movie, NfoFileState nfoFile, MovieNfo nfo, String fallbackTitle, Integer fallbackYear) {
         movie.applyMetadata(MovieNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
@@ -58,6 +83,9 @@ class MovieNfoSync {
         MovieSupplement supplement = MovieNfoMapper.toSupplement(nfoSupplement, clock.getZone());
         movie.applySupplement(supplement, movieSets.resolve(supplement.set()));
         movie.applyStreamDetails(nfoSupplement.streams());
+        if (nfoSupplement.trailer() != null) {
+            movie.changeTrailer(nfoSupplement.trailer());
+        }
         Instant dateAdded = MovieNfoMapper.toInstant(nfoSupplement.dateAdded(), clock.getZone());
         if (dateAdded != null) {
             movie.changeAddedAt(dateAdded);

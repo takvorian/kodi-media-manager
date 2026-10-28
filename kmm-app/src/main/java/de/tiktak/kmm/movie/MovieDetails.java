@@ -9,7 +9,8 @@ import de.tiktak.kmm.scanner.DiscFormat;
 /**
  * Alle Angaben zu einem Film für die Detailansicht.
  *
- * @param nfo Zustand der NFO-Datei
+ * @param nfo     Zustand der NFO-Datei
+ * @param trailer Trailer-Link oder {@code null}
  */
 public record MovieDetails(
         long id,
@@ -21,15 +22,22 @@ public record MovieDetails(
         MovieMetadata metadata,
         MovieSupplement supplement,
         StreamDetails streams,
-        NfoInfo nfo) {
+        NfoInfo nfo,
+        String trailer) {
 
-    static MovieDetails from(Movie movie, Optional<NfoFileState> nfoFile) {
+    /** Angaben ohne Trailer. */
+    public MovieDetails(long id, long sourceId, String filePath, DiscFormat discFormat, int partCount, Instant addedAt,
+            MovieMetadata metadata, MovieSupplement supplement, StreamDetails streams, NfoInfo nfo) {
+        this(id, sourceId, filePath, discFormat, partCount, addedAt, metadata, supplement, streams, nfo, null);
+    }
+
+        static MovieDetails from(Movie movie, Optional<NfoFileState> nfoFile) {
         NfoInfo nfo = nfoFile
                 .map(state -> new NfoInfo(state.file().toString(), true, state.modifiedAt()))
                 .orElseGet(() -> new NfoInfo(movie.companionFiles().nfoFile().toString(), false, null));
         return new MovieDetails(movie.getId(), movie.getSourceId(), movie.getFilePath(), movie.getDiscFormat(),
                 movie.getPartCount(), movie.getAddedAt(), movie.metadata(), movie.supplement(), movie.streamDetails(),
-                nfo);
+                nfo, movie.getTrailer());
     }
 
     /**

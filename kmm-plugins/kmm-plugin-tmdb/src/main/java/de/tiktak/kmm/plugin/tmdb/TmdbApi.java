@@ -53,6 +53,16 @@ class TmdbApi {
         return client.get("/movie/" + tmdbId + "/images", Map.of("include_image_language", imageLanguages()));
     }
 
+    /** Videos in der Bildsprache, auf Englisch und ohne Sprache; die Sprache der Metadaten gilt nur für Namen. */
+    Optional<JsonNode> movieVideos(String tmdbId) {
+        if (!isTmdbId(tmdbId)) {
+            return Optional.empty();
+        }
+        return client.get("/movie/" + tmdbId + "/videos", Map.of(
+                "language", settings.language(),
+                "include_video_language", imageLanguages()));
+    }
+
     private String imageLanguages() {
         return String.join(",", settings.imageLanguage(), FALLBACK_IMAGE_LANGUAGE, NO_LANGUAGE);
     }

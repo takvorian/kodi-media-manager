@@ -81,7 +81,7 @@ public class MovieMetadataService {
     private MovieNfoSupplement knownSupplement(Movie movie) {
         return movie.isSupplementKnown()
                 ? MovieNfoMapper.toNfoSupplement(movie.supplement(), movie.streamDetails(), movie.getAddedAt(),
-                        clock.getZone())
+                        clock.getZone(), movie.nfoTrailer())
                 : null;
     }
 

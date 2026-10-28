@@ -14,6 +14,7 @@ import de.tiktak.kmm.scanner.DiscFormat;
  * @param setOrder            Position im Set oder {@code null}
  * @param setTmdbCollectionId TMDB-Collection-ID des Sets oder {@code null}
  * @param addedAt             Aufnahme in die Bibliothek oder {@code null} für „jetzt“
+ * @param trailer             Trailer-Link oder {@code null}
  */
 public record MovieImport(
         long sourceId,
@@ -25,7 +26,8 @@ public record MovieImport(
         Integer setOrder,
         String setTmdbCollectionId,
         Instant addedAt,
-        StreamDetails streams) {
+        StreamDetails streams,
+        String trailer) {
 
     public MovieImport {
         Objects.requireNonNull(filePath, "filePath must not be null");
@@ -33,5 +35,13 @@ public record MovieImport(
         Objects.requireNonNull(metadata, "metadata must not be null");
         Objects.requireNonNull(supplement, "supplement must not be null");
         streams = streams == null ? StreamDetails.EMPTY : streams;
+    }
+
+    /** Ein Film ohne Trailer-Angabe. */
+    public MovieImport(long sourceId, String filePath, DiscFormat discFormat, int partCount, MovieMetadata metadata,
+            MovieSupplement supplement, Integer setOrder, String setTmdbCollectionId, Instant addedAt,
+            StreamDetails streams) {
+        this(sourceId, filePath, discFormat, partCount, metadata, supplement, setOrder, setTmdbCollectionId, addedAt,
+                streams, null);
     }
 }

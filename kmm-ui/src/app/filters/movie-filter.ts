@@ -36,6 +36,7 @@ export type MovieFilterField =
   | 'TMDB_ID'
   | 'IMDB_ID'
   | 'NFO'
+  | 'TRAILER'
   | 'SOURCE'
   | 'ADDED_DAYS_AGO';
 
@@ -90,6 +91,7 @@ export const MOVIE_FILTER_FIELDS: Readonly<Record<MovieFilterField, FieldDefinit
   TMDB_ID: { label: 'TMDB-ID', operators: PRESENCE_OPERATORS, values: 'none' },
   IMDB_ID: { label: 'IMDb-ID', operators: PRESENCE_OPERATORS, values: 'none' },
   NFO: { label: 'NFO', operators: PRESENCE_OPERATORS, values: 'none' },
+  TRAILER: { label: 'Trailer', operators: PRESENCE_OPERATORS, values: 'none' },
   SOURCE: { label: 'Quelle', operators: ['IS', 'IS_NOT'], values: 'sources' },
   ADDED_DAYS_AGO: {
     label: 'Hinzugefügt vor Tagen',
@@ -115,4 +117,5 @@ export const PREDEFINED_MOVIE_FILTERS: readonly PredefinedFilter<MovieFilterFiel
     filter: only({ field: 'STREAM_DETAILS', operator: 'EMPTY', value: null }),
   },
   { name: 'Ohne NFO', filter: only({ field: 'NFO', operator: 'EMPTY', value: null }) },
+  { name: 'Ohne Trailer', filter: only({ field: 'TRAILER', operator: 'EMPTY', value: null }) },
 ];

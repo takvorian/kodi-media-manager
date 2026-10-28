@@ -63,6 +63,7 @@ class MovieFilterIntegrationTest {
         Path filme = Files.createDirectories(library.resolve("filme"));
         givenMovie(filme, "Heat", 1995, "<genre>Krimi</genre><genre>Drama</genre><tag>Favorit</tag>"
                 + "<playcount>2</playcount><userrating>9</userrating><mpaa>FSK 16</mpaa>"
+                + "<trailer>plugin://plugin.video.youtube/?action=play_video&amp;videoid=2GfZl4kuVNI</trailer>"
                 + streams("1920", "1040", "h264", null, "dtshd_ma", "deu", "ac3", "ger"));
         givenMovie(filme, "Matrix", 1999, "<genre>Science-Fiction</genre><set><name>Matrix Filmreihe</name></set>"
                 + streams("3840", "1600", "hevc", "hdr10", "truehd", "deu", "ac3", "deu"));
@@ -93,6 +94,9 @@ class MovieFilterIntegrationTest {
         assertThat(titles(true, condition("TITLE", "CONTAINS", "_"))).as("_ ist kein Platzhalter").isEmpty();
         assertThat(titles(true, condition("TAG", "IS", "kinder_50%"))).containsExactly("Pippi");
         assertThat(titles(true, condition("USER_RATING", "AT_LEAST", "8"))).containsExactly("Heat");
+        assertThat(titles(true, condition("TRAILER", "NOT_EMPTY", null))).containsExactly("Heat");
+        assertThat(titles(true, condition("TRAILER", "EMPTY", null))).containsExactly("Matrix", "Ohne Angaben",
+                "Pippi");
         assertThat(titles(true, condition("ADDED_DAYS_AGO", "AT_MOST", "1"))).hasSize(4);
     }
 

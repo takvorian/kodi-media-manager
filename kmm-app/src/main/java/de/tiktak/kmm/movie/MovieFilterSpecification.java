@@ -65,6 +65,7 @@ final class MovieFilterSpecification {
                 case TMDB_ID -> predicates.presence(root.get("tmdbId"), condition.operator());
                 case IMDB_ID -> predicates.presence(root.get("imdbId"), condition.operator());
                 case NFO -> predicates.presence(root.get("nfoModifiedAt"), condition.operator());
+                case TRAILER -> predicates.presence(root.get("trailer"), condition.operator());
                 case SOURCE -> number(root.get("sourceId"), condition);
                 case ADDED_DAYS_AGO -> predicates.addedDaysAgo(root.get("addedAt"), condition.field(),
                         condition.operator(), condition.value());

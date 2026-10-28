@@ -306,6 +306,25 @@ describe('MovieList', () => {
     expect(snackBarMessages).toContain('3 Filme bearbeiten: 3 geändert, 0 unverändert.');
   });
 
+  it('fetches the missing trailers of the chosen movies as a job', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.fill-trailers-button')!.click();
+    const fill = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/trailers/fill` });
+    expect(fill.request.body).toEqual({ movieIds: [heat.id] });
+    const job = {
+      id: 't',
+      key: 'movies-batch',
+      title: 'Fehlende Trailer für 1 Filme holen',
+      status: 'RUNNING',
+    } as Job;
+    fill.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('asks for at least one change before editing together', async () => {
     await respond(page([heat]));
     element().querySelector<HTMLInputElement>('.choose input')!.click();
