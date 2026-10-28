@@ -12,12 +12,15 @@ import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import de.tiktak.kmm.nfo.CodecNames;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.persistence.StreamDetailsConverter;
+import de.tiktak.kmm.persistence.StreamIndex;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -116,6 +119,10 @@ public class Episode {
     @Column(name = "stream_details", length = Length.LONG32)
     private StreamDetails streamDetails;
 
+    /** Abfragbare Kurzform der technischen Angaben für Filter; folgt {@link #streamDetails}. */
+    @Embedded
+    private StreamIndex streamIndex;
+
     /** Änderungszeit der NFO beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
@@ -167,7 +174,7 @@ public class Episode {
         extras.ratings().forEach(rating -> ratings.add(TvRatingEntry.of(rating)));
         playCount = extras.playCount();
         lastPlayedAt = extras.lastPlayed();
-        streamDetails = extras.streams().isEmpty() ? null : extras.streams();
+        applyStreamDetails(extras.streams());
     }
 
     void changeAddedAt(Instant newAddedAt) {
@@ -183,7 +190,13 @@ public class Episode {
     }
 
     void applyStreamDetails(StreamDetails details) {
-        streamDetails = details == null || details.isEmpty() ? null : details;
+        streamDetails = details == null || details.isEmpty() ? null : CodecNames.normalize(details);
+        streamIndex = StreamIndex.of(streamDetails);
+    }
+
+    /** Legt die Kurzform an und übersetzt dabei Codec-Namen, etwa für Episoden aus älteren Versionen. */
+    void indexStreams() {
+        applyStreamDetails(streamDetails);
     }
 
     void changePlayback(Integer newPlayCount, Instant newLastPlayedAt, Integer newUserRating) {

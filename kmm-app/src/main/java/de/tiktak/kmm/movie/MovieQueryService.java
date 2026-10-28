@@ -34,7 +34,7 @@ public class MovieQueryService {
     }
 
     /**
-     * @throws InvalidFilterException wenn eine Bedingung nicht zu ihrem Feld passt
+     * @throws de.tiktak.kmm.filter.InvalidFilterException wenn eine Bedingung nicht zu ihrem Feld passt
      */
     public Page<MovieSummary> findFiltered(MovieFilter filter, Pageable pageable) {
         return movieRepository.findAll(MovieFilterSpecification.of(filter, clock), pageable).map(MovieSummary::from);

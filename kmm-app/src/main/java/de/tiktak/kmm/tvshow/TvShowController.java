@@ -1,5 +1,7 @@
 package de.tiktak.kmm.tvshow;
 
+import java.util.List;
+
 import org.springframework.data.core.PropertyReferenceException;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -9,6 +11,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,6 +27,9 @@ public class TvShowController {
     public static final String SHOWS_PATH = "/api/v1/tvshows";
     public static final String SHOW_PATH = SHOWS_PATH + "/{showId}";
     public static final String SHOW_METADATA_PATH = SHOW_PATH + "/metadata";
+    public static final String QUERY_PATH = SHOWS_PATH + "/query";
+    public static final String QUERY_IDS_PATH = QUERY_PATH + "/ids";
+    public static final String FILTER_VALUES_PATH = SHOWS_PATH + "/filter-values";
     public static final String EPISODE_PATH = "/api/v1/episodes/{episodeId}";
     public static final String EPISODE_METADATA_PATH = EPISODE_PATH + "/metadata";
     static final int DEFAULT_PAGE_SIZE = 50;
@@ -37,6 +43,25 @@ public class TvShowController {
             @RequestParam(required = false) String search,
             @PageableDefault(size = DEFAULT_PAGE_SIZE, sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
         return TvShowPage.from(queryService.findShows(search, pageable));
+    }
+
+    /** Serienliste mit Filter; ändert nichts, braucht aber einen Rumpf für die Bedingungen. */
+    @PostMapping(QUERY_PATH)
+    public TvShowPage queryShows(
+            @Valid @RequestBody TvShowFilter filter,
+            @PageableDefault(size = DEFAULT_PAGE_SIZE, sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
+        return TvShowPage.from(queryService.findFiltered(filter, pageable));
+    }
+
+    /** IDs aller Serien, auf die der Filter passt. */
+    @PostMapping(QUERY_IDS_PATH)
+    public List<Long> queryShowIds(@Valid @RequestBody TvShowFilter filter) {
+        return queryService.findShowIds(filter);
+    }
+
+    @GetMapping(FILTER_VALUES_PATH)
+    public TvShowFilterValues filterValues() {
+        return queryService.filterValues();
     }
 
     @GetMapping(SHOW_PATH)

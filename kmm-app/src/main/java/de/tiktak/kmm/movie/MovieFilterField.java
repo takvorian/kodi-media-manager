@@ -11,12 +11,13 @@ import static de.tiktak.kmm.filter.FilterOperator.NOT_EMPTY;
 import java.util.EnumSet;
 import java.util.Set;
 
+import de.tiktak.kmm.filter.FilterField;
 import de.tiktak.kmm.filter.FilterOperator;
 
 /**
  * Wonach die Filmliste gefiltert werden kann, mit den jeweils erlaubten Vergleichen.
  */
-public enum MovieFilterField {
+public enum MovieFilterField implements FilterField {
 
     TITLE(ValueType.TEXT, CONTAINS, IS, IS_NOT),
     YEAR(ValueType.NUMBER, IS, AT_LEAST, AT_MOST, EMPTY, NOT_EMPTY),
@@ -56,6 +57,7 @@ public enum MovieFilterField {
         this.operators = EnumSet.of(first, more);
     }
 
+    @Override
     public ValueType valueType() {
         return valueType;
     }
@@ -64,12 +66,9 @@ public enum MovieFilterField {
         return Set.copyOf(operators);
     }
 
-    boolean allows(FilterOperator operator) {
+    @Override
+    public boolean allows(FilterOperator operator) {
         return operators.contains(operator);
     }
 
-    /** Art des Vergleichswerts; {@link #NONE} bei Vergleichen ohne Wert. */
-    public enum ValueType {
-        TEXT, NUMBER, BOOLEAN, NONE
-    }
 }

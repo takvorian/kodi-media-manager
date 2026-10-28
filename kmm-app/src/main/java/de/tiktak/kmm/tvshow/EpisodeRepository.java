@@ -8,6 +8,31 @@ import org.springframework.data.jpa.repository.Query;
 
 interface EpisodeRepository extends JpaRepository<Episode, Long> {
 
+    @Query("SELECT e.id FROM Episode e WHERE e.streamDetails IS NOT NULL AND e.streamIndex.audioCodecs IS NULL")
+    List<Long> findIdsWithoutStreamIndex();
+
+    @Query("SELECT DISTINCT e.videoSource FROM Episode e WHERE e.videoSource IS NOT NULL")
+    List<String> findDistinctVideoSources();
+
+    @Query("SELECT DISTINCT e.streamIndex.videoResolution FROM Episode e "
+            + "WHERE e.streamIndex.videoResolution IS NOT NULL")
+    List<Integer> findDistinctResolutions();
+
+    @Query("SELECT DISTINCT e.streamIndex.videoCodec FROM Episode e WHERE e.streamIndex.videoCodec IS NOT NULL")
+    List<String> findDistinctVideoCodecs();
+
+    @Query("SELECT DISTINCT e.streamIndex.audioCodecs FROM Episode e WHERE e.streamIndex.audioCodecs IS NOT NULL")
+    List<String> findDistinctAudioCodecLists();
+
+    @Query("SELECT DISTINCT e.streamIndex.audioLanguages FROM Episode e "
+            + "WHERE e.streamIndex.audioLanguages IS NOT NULL")
+    List<String> findDistinctAudioLanguageLists();
+
+    @Query("SELECT DISTINCT e.streamIndex.subtitleLanguages FROM Episode e "
+            + "WHERE e.streamIndex.subtitleLanguages IS NOT NULL")
+    List<String> findDistinctSubtitleLanguageLists();
+
+
     List<Episode> findByTvShowIdOrderBySeasonAscEpisodeAsc(long tvShowId);
 
     List<Episode> findByTvShowIdIn(Collection<Long> tvShowIds);
