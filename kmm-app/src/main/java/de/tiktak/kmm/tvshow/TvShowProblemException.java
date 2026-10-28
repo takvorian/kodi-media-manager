@@ -1,5 +1,7 @@
 package de.tiktak.kmm.tvshow;
 
+import java.nio.file.Path;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.web.ErrorResponseException;
 
@@ -38,6 +40,12 @@ public class TvShowProblemException extends ErrorResponseException {
         return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Quelle kann nicht gescannt werden",
                 "Das Verzeichnis '%s' der Quelle '%s' ist nicht erreichbar.".formatted(source.getPath(),
                         source.getName()), null);
+    }
+
+    static TvShowProblemException nfoChangedOutside(Path file, NfoException cause) {
+        return new TvShowProblemException(HttpStatus.CONFLICT, "NFO außerhalb von KMM geändert",
+                "%s wurde außerhalb von KMM geändert und lässt sich nicht lesen (%s). KMM überschreibt sie deshalb "
+                        .formatted(file, cause.getMessage()) + "nicht; bitte die Datei prüfen.", cause);
     }
 
     static TvShowProblemException nfoNotWritable(NfoException cause) {

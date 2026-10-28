@@ -26,8 +26,20 @@ public class TvShowMetadataService {
     private final TvShowRepository showRepository;
     private final EpisodeRepository episodeRepository;
     private final TvShowNfoFiles nfoFiles;
+    private final TvNfoSync nfoSync;
     private final ApplicationEventPublisher events;
     private final Clock clock;
+
+    /**
+     * Die Metadaten einer Serie, nachdem eine außerhalb von KMM geänderte NFO eingelesen wurde; für Änderungen, die
+     * auf den bisherigen Metadaten aufbauen.
+     */
+    @Transactional
+    TvShowMetadata currentMetadata(long showId) {
+        TvShow show = requireShow(showId);
+        nfoSync.refreshShowIfChangedOutside(show);
+        return show.metadata();
+    }
 
     public TvShowDetails findShow(long showId) {
         TvShow show = requireShow(showId);
@@ -37,6 +49,7 @@ public class TvShowMetadataService {
     @Transactional
     public TvShowDetails updateShow(long showId, TvShowMetadata metadata) {
         TvShow show = requireShow(showId);
+        nfoSync.refreshShowIfChangedOutside(show);
         TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(metadata,
                 show.extras())));
         show.applyMetadata(metadata);
@@ -59,6 +72,7 @@ public class TvShowMetadataService {
     public EpisodeDetails updateEpisode(long episodeId, EpisodeMetadata metadata) {
         Episode episode = requireEpisode(episodeId);
         List<Episode> sameFile = episodeRepository.findByFilePathHash(episode.getFilePathHash());
+        nfoSync.refreshEpisodesIfChangedOutside(sameFile);
         List<EpisodeNfo> nfos = sameFile.stream()
                 .map(other -> TvNfoMapper.toNfo(other.getSeason(), other.getEpisode(),
                         other.getId().equals(episode.getId()) ? metadata : other.metadata(), other.extras(),

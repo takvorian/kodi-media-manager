@@ -65,7 +65,8 @@ class TvShowScrapeServiceTest {
         when(nfoFiles.writeShow(any(), any())).thenThrow(unwritable);
         when(nfoFiles.writeEpisodes(any(), any())).thenThrow(unwritable);
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
-                nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
+                nfoFiles, mock(TvNfoSync.class), new TvShowResultCache(Clock.systemUTC()),
+                mock(TvShowMetadataService.class),
                 new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
 
         EpisodeFillResult result = service.fillFromProvider(7, "tvdb", "73739");
@@ -89,7 +90,8 @@ class TvShowScrapeServiceTest {
         when(scraper.displayName()).thenReturn("TheTVDB");
         when(scraper.scrape(any())).thenReturn(Optional.empty());
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
-                nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
+                nfoFiles, mock(TvNfoSync.class), new TvShowResultCache(Clock.systemUTC()),
+                mock(TvShowMetadataService.class),
                 new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
 
         EpisodeThumbs thumbs = service.episodeThumbs(3);
@@ -108,8 +110,10 @@ class TvShowScrapeServiceTest {
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(unconfigured, scraper));
         when(scraper.id()).thenReturn("tmdb");
         when(scraper.scrape(any())).thenReturn(Optional.empty());
+        TvShowMetadataService metadataService = mock(TvShowMetadataService.class);
+        when(metadataService.currentMetadata(7)).thenReturn(show.metadata());
         TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
-                nfoFiles, new TvShowResultCache(Clock.systemUTC()), mock(TvShowMetadataService.class),
+                nfoFiles, mock(TvNfoSync.class), new TvShowResultCache(Clock.systemUTC()), metadataService,
                 new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
 
         assertThat(service.scrapeMissing(7).status()).isEqualTo(TvShowAutoScrapeOutcome.Status.NO_MATCH);

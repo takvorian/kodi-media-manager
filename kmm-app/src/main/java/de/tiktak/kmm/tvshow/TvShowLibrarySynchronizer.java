@@ -35,6 +35,7 @@ class TvShowLibrarySynchronizer {
     private final EpisodeRepository episodeRepository;
     private final MediaSourceService sourceService;
     private final TvShowNfoFiles nfoFiles;
+    private final TvNfoSync nfoSync;
     private final Clock clock;
 
     @Transactional
@@ -90,10 +91,9 @@ class TvShowLibrarySynchronizer {
         }
         Optional<TvShowNfo> content = scanned.loadedShowNfo(nfo.get())
                 .orElseGet(() -> nfoFiles.loadShow(nfo.get())).content();
-        content.ifPresentOrElse(read -> {
-            show.applyMetadata(TvNfoMapper.toMetadata(read, scanned.candidate().title(), scanned.candidate().year()));
-            show.applyExtras(TvNfoMapper.toExtras(read));
-        }, () -> outcome.nfoErrors++);
+        content.ifPresentOrElse(
+                read -> TvNfoSync.applyShow(show, read, scanned.candidate().title(), scanned.candidate().year()),
+                () -> outcome.nfoErrors++);
         show.markNfoSynchronized(nfo.get().modifiedAt());
     }
 
@@ -139,19 +139,8 @@ class TvShowLibrarySynchronizer {
             }
             return;
         }
-        Optional<EpisodeNfo> matching = episodes.get().stream()
-                .filter(nfo -> nfo.describes(episode.getSeason(), episode.getEpisode()))
-                .findFirst()
-                .or(() -> singleEpisodeFile && episodes.get().size() == 1 ? Optional.of(episodes.get().getFirst())
-                        : Optional.empty());
-        matching.ifPresent(nfo -> {
-            episode.applyMetadata(TvNfoMapper.toMetadata(nfo, episode.getTitle()));
-            episode.applyExtras(TvNfoMapper.toExtras(nfo, clock.getZone()));
-            Instant dateAdded = TvNfoMapper.toInstant(nfo.dateAdded(), clock.getZone());
-            if (dateAdded != null) {
-                episode.changeAddedAt(dateAdded);
-            }
-        });
+        TvNfoSync.matching(episode, episodes.get(), singleEpisodeFile)
+                .ifPresent(nfo -> nfoSync.applyEpisode(episode, nfo));
     }
 
     private static void count(Outcome outcome, boolean isNew, boolean changed) {

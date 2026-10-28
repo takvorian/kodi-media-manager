@@ -7,7 +7,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -105,6 +107,28 @@ class TagIntegrationTest {
     }
 
     @Test
+    void keepsChangesMadeOutsideKmmWhenAssigningATag() throws IOException {
+        Path filme = Files.createDirectories(library.resolve("filme"));
+        Path heatNfo = givenFile(filme.resolve("Heat/Heat.nfo"), "<movie><title>Heat</title></movie>");
+        givenFile(filme.resolve("Heat/Heat.mkv"), "");
+        Path serien = Files.createDirectories(library.resolve("serien"));
+        Path lostNfo = givenFile(serien.resolve("Lost/tvshow.nfo"), "<tvshow><title>Lost</title></tvshow>");
+        givenFile(serien.resolve("Lost/Lost - S01E01.mkv"), "");
+        scan(createSource(filme, "MOVIE"));
+        scan(createSource(serien, "TV_SHOW"));
+        changedOutside(heatNfo, "<movie><title>Heat</title><userrating>10</userrating><playcount>4</playcount>"
+                + "<tag>Ember</tag></movie>");
+        changedOutside(lostNfo, "<tvshow><title>Lost</title><plot>Flug 815</plot><tag>Ember</tag></tvshow>");
+
+        post("/assign", "{\"tag\": \"Neu\", \"movieIds\": [%d], \"showIds\": [%d]}".formatted(
+                id("SELECT id FROM movie WHERE title = 'Heat'"), id("SELECT id FROM tv_show")));
+
+        assertThat(Files.readString(heatNfo)).contains("<userrating>10</userrating>", "<playcount>4</playcount>",
+                "<tag>Ember</tag>", "<tag>Neu</tag>");
+        assertThat(Files.readString(lostNfo)).contains("<plot>Flug 815</plot>", "<tag>Ember</tag>", "<tag>Neu</tag>");
+    }
+
+    @Test
     void rejectsEmptyNames() {
         assertThat(mockMvc.post().uri(TagController.BASE_PATH + "/assign").with(csrf()).contentType(JSON)
                 .content("{\"tag\": \"  \", \"movieIds\": [], \"showIds\": []}").exchange())
@@ -118,6 +142,11 @@ class TagIntegrationTest {
 
     private long id(String sql) {
         return jdbcClient.sql(sql).query(Long.class).single();
+    }
+
+    private static void changedOutside(Path nfo, String content) throws IOException {
+        Files.writeString(nfo, content);
+        Files.setLastModifiedTime(nfo, FileTime.from(Instant.now().plusSeconds(60)));
     }
 
     private Path givenFile(Path file, String content) throws IOException {

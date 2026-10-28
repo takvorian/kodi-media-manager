@@ -46,7 +46,7 @@ public class TvShowTagService {
      */
     @Transactional
     public boolean changeTags(long showId, UnaryOperator<List<String>> change) {
-        TvShowMetadata current = metadataService.findShow(showId).metadata();
+        TvShowMetadata current = metadataService.currentMetadata(showId);
         TvShowMetadata changed = current.withTags(change.apply(current.tags()));
         if (changed.tags().equals(current.tags())) {
             return false;

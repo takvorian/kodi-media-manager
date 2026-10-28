@@ -45,6 +45,7 @@ public class TvShowScrapeService {
     private final TvShowRepository showRepository;
     private final EpisodeRepository episodeRepository;
     private final TvShowNfoFiles nfoFiles;
+    private final TvNfoSync nfoSync;
     private final TvShowResultCache cache;
     private final TvShowMetadataService metadataService;
     private final TvScrapingProperties properties;
@@ -97,6 +98,9 @@ public class TvShowScrapeService {
         int unchanged = 0;
         int unmatched = 0;
         for (List<Episode> sameFile : byFile.values()) {
+            if (!refreshed(sameFile, failedFiles)) {
+                continue;
+            }
             Map<Episode, EpisodeFill> fills = new HashMap<>();
             for (Episode episode : sameFile) {
                 EpisodeResult match = byNumber.get(EpisodeKey.of(episode));
@@ -130,13 +134,14 @@ public class TvShowScrapeService {
      */
     @Transactional
     public TvShowAutoScrapeOutcome scrapeMissing(long showId) {
+        TvShowMetadata current = metadataService.currentMetadata(showId);
         TvShow show = requireShow(showId);
         Optional<TvShowScraper> preferred = preferredReadyScraper();
         if (preferred.isEmpty()) {
             return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_SCRAPER);
         }
         TvShowScraper scraper = preferred.get();
-        Map<String, String> ids = knownIds(show.metadata());
+        Map<String, String> ids = knownIds(current);
         String providerId = ids.get(scraper.id());
         TvShowAutoScrapeOutcome.Status status = TvShowAutoScrapeOutcome.Status.ALREADY_IDENTIFIED;
         if (providerId == null) {
@@ -147,7 +152,7 @@ public class TvShowScrapeService {
                 return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_MATCH);
             }
             cache.put(scraper.id(), providerId, scraped.get());
-            metadataService.updateShow(showId, TvShowScrapeMerger.mergeShow(show.metadata(), scraped.get()));
+            metadataService.updateShow(showId, TvShowScrapeMerger.mergeShow(current, scraped.get()));
             status = TvShowAutoScrapeOutcome.Status.SCRAPED;
         }
         EpisodeFillResult filled = fill(show, scraper, providerId);
@@ -215,7 +220,26 @@ public class TvShowScrapeService {
         return new EpisodeThumbs(thumbs, warnings);
     }
 
+    /** Liest eine außerhalb von KMM geänderte Episoden-NFO ein; eine unlesbare bleibt unberührt. */
+    private boolean refreshed(List<Episode> sameFile, List<String> failedFiles) {
+        try {
+            nfoSync.refreshEpisodesIfChangedOutside(sameFile);
+            return true;
+        } catch (TvShowProblemException e) {
+            log.warn("NFO of episode file {} not written: {}", sameFile.getFirst().getFilePath(), e.getMessage());
+            failedFiles.add(sameFile.getFirst().getFilePath());
+            return false;
+        }
+    }
+
     private void fillShowExtras(TvShow show, TvShowResult scraped, List<String> failedFiles) {
+        try {
+            nfoSync.refreshShowIfChangedOutside(show);
+        } catch (TvShowProblemException e) {
+            log.warn("NFO of TV show {} not written: {}", show.getId(), e.getMessage());
+            failedFiles.add(TvShowFiles.tvShowNfo(show.directory()).toString());
+            return;
+        }
         TvShowExtras extras = TvShowScrapeMerger.fillShowExtras(show.extras(), scraped);
         if (extras.equals(show.extras())) {
             return;
