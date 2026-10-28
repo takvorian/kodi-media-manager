@@ -15,6 +15,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +24,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.artwork.MovieSetArtworkService;
+import de.tiktak.kmm.artwork.MovieSetImage;
 import de.tiktak.kmm.kodi.path.KodiPathMapper;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
 import de.tiktak.kmm.kodi.rpc.FakeKodiServer;
@@ -49,6 +52,7 @@ import de.tiktak.kmm.tvshow.TvShowDetails;
 import de.tiktak.kmm.tvshow.TvShowMetadata;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
+import tools.jackson.databind.JsonNode;
 
 @ExtendWith(MockitoExtension.class)
 class KodiSyncServiceTest {
@@ -73,6 +77,9 @@ class KodiSyncServiceTest {
     private MovieSetService movieSetService;
 
     @Mock
+    private MovieSetArtworkService movieSetArtwork;
+
+    @Mock
     private MediaSourceService sourceService;
 
     @Mock
@@ -85,7 +92,7 @@ class KodiSyncServiceTest {
     @BeforeEach
     void setUp() {
         KodiClient client = new KodiClient(HttpClient.newHttpClient(), Duration.ofSeconds(5));
-        service = new KodiSyncService(hostService, metadataService, movieSetService, tvShowService, sourceService, client, syncLog,
+        service = new KodiSyncService(hostService, metadataService, movieSetService, movieSetArtwork, tvShowService, sourceService, client, syncLog,
                 Clock.fixed(NOW, ZoneOffset.UTC));
     }
 
@@ -243,6 +250,28 @@ class KodiSyncServiceTest {
 
         when(movieSetService.find(5)).thenThrow(MovieSetProblemException.class);
         service.syncMovieSetOnRealtimeHosts(new MovieSetChangedEvent(5, "Weg"));
+    }
+
+    @Test
+    void handsTheSetImagesToKodiAndRemovesMissingOnes() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true));
+        when(movieSetService.find(4)).thenReturn(new MovieSetDetails(4, new MovieSetData("Matrix", null, null,
+                SetSortMethod.YEAR), List.of()));
+        when(movieSetArtwork.imagesForKodi(4)).thenReturn(Optional.of(List.of(
+                new MovieSetImage("poster", LIBRARY.resolve("_filmsets").resolve("Matrix-poster.jpg")),
+                new MovieSetImage("fanart", null),
+                new MovieSetImage("banner", Path.of("elsewhere", "Matrix-banner.jpg").toAbsolutePath()))));
+        kodi.respond("VideoLibrary.GetMovieSets", "{\"sets\": [{\"setid\": 9, \"title\": \"Matrix\"}]}");
+        kodi.respond("Textures.GetTextures", "{\"textures\": [{\"textureid\": 31}]}");
+
+        service.syncMovieSetOnRealtimeHosts(new MovieSetChangedEvent(4, "Matrix"));
+
+        JsonNode art = kodi.calls().get(1).params().path("art");
+        assertThat(art.path("poster").asString()).isEqualTo("smb://nas/filme/_filmsets/Matrix-poster.jpg");
+        assertThat(art.path("fanart").isNull()).isTrue();
+        assertThat(art.has("banner")).as("außerhalb der Pfad-Zuordnung").isFalse();
+        assertThat(kodi.calls()).extracting(call -> call.method()).containsExactly("VideoLibrary.GetMovieSets",
+                "VideoLibrary.SetMovieSetDetails", "Textures.GetTextures", "Textures.RemoveTexture");
     }
 
     @Test

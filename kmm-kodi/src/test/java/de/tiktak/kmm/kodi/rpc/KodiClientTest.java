@@ -13,7 +13,9 @@ import java.net.http.HttpConnectTimeoutException;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.Base64;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -110,12 +112,43 @@ class KodiClientTest {
         assertThat(client.findMovieSet(kodi.endpoint(), "matrix filmreihe")).contains(7);
         assertThat(client.findMovieSet(kodi.endpoint(), "Heat")).isEmpty();
         assertThat(client.movieSetOf(kodi.endpoint(), 12)).contains(7);
-        client.setMovieSetDetails(kodi.endpoint(), 7, "Matrix Trilogie", null);
+        client.setMovieSetDetails(kodi.endpoint(), 7, "Matrix Trilogie", null, Map.of());
 
         assertThat(kodi.calls().getLast().params()).isEqualTo(json(
                 "{\"setid\": 7, \"title\": \"Matrix Trilogie\", \"plot\": \"\"}"));
         kodi.respond("VideoLibrary.GetMovieDetails", "{\"moviedetails\": {\"movieid\": 12, \"setid\": 0}}");
         assertThat(client.movieSetOf(kodi.endpoint(), 12)).isEmpty();
+    }
+
+    @Test
+    void setsTheImagesOfAMovieSetAndRemovesMissingOnes() {
+        Map<String, String> art = new HashMap<>();
+        art.put("poster", "smb://nas/filme/_filmsets/Matrix-poster.jpg");
+        art.put("fanart", null);
+
+        client.setMovieSetDetails(kodi.endpoint(), 7, "Matrix", "Neo", art);
+
+        assertThat(kodi.calls().getLast().params()).isEqualTo(json("""
+                {"setid": 7, "title": "Matrix", "plot": "Neo",
+                 "art": {"poster": "smb://nas/filme/_filmsets/Matrix-poster.jpg", "fanart": null}}"""));
+    }
+
+    @Test
+    void removesCachedTexturesOfReplacedImages() {
+        kodi.respond("Textures.GetTextures", """
+                {"textures": [{"textureid": 11, "url": "smb://nas/a.jpg"}, {"textureid": 12, "url": "smb://nas/b.jpg"}]}
+                """);
+
+        client.removeTextures(kodi.endpoint(), List.of("smb://nas/a.jpg", "smb://nas/b.jpg"));
+        client.removeTextures(kodi.endpoint(), List.of());
+
+        assertThat(kodi.calls()).extracting(call -> call.method()).containsExactly("Textures.GetTextures",
+                "Textures.RemoveTexture", "Textures.RemoveTexture");
+        assertThat(kodi.calls().getFirst().params()).isEqualTo(json("""
+                {"properties": ["url"], "filter": {"or": [
+                  {"field": "url", "operator": "is", "value": "smb://nas/a.jpg"},
+                  {"field": "url", "operator": "is", "value": "smb://nas/b.jpg"}]}}"""));
+        assertThat(kodi.calls().get(2).params()).isEqualTo(json("{\"textureid\": 12}"));
     }
 
     @Test

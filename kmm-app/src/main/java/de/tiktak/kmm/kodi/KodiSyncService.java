@@ -2,13 +2,18 @@ package de.tiktak.kmm.kodi;
 
 import java.nio.file.Path;
 import java.time.Clock;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.artwork.MovieSetArtworkService;
+import de.tiktak.kmm.artwork.MovieSetImage;
 import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiException;
@@ -45,6 +50,7 @@ public class KodiSyncService {
     private final KodiHostService hostService;
     private final MovieMetadataService metadataService;
     private final MovieSetService movieSetService;
+    private final MovieSetArtworkService movieSetArtwork;
     private final TvShowMetadataService tvShowService;
     private final MediaSourceService sourceService;
     private final KodiClient kodiClient;
@@ -131,7 +137,8 @@ public class KodiSyncService {
         }
         Optional<String> memberFile = set.movies().stream().findFirst()
                 .map(member -> metadataService.findDetails(member.id()).filePath());
-        syncAll(targets, target -> syncSet(target, set, event.previousName(), memberFile));
+        Optional<List<MovieSetImage>> images = movieSetArtwork.imagesForKodi(event.setId());
+        syncAll(targets, target -> syncSet(target, set, event.previousName(), memberFile, images));
     }
 
     void scanSourceOnRealtimeHosts(long sourceId) {
@@ -230,7 +237,8 @@ public class KodiSyncService {
                 "Kodi liest %s ein und entfernt die alten Einträge aus %s.".formatted(directory.get(), previous.get()));
     }
 
-    private Outcome syncSet(KodiTarget target, MovieSetDetails set, String previousName, Optional<String> memberFile) {
+    private Outcome syncSet(KodiTarget target, MovieSetDetails set, String previousName, Optional<String> memberFile,
+                            Optional<List<MovieSetImage>> images) {
         String name = set.data().name();
         Optional<Integer> kodiSetId = kodiClient.findMovieSet(target.endpoint(), previousName)
                 .or(() -> kodiClient.findMovieSet(target.endpoint(), name))
@@ -241,8 +249,27 @@ public class KodiSyncService {
             return new Outcome(KodiSyncOutcome.NOT_IN_KODI,
                     "Das Filmset „%s“ ist in Kodi noch unbekannt.".formatted(name));
         }
-        kodiClient.setMovieSetDetails(target.endpoint(), kodiSetId.get(), name, set.data().overview());
+        Map<String, String> art = art(target, images);
+        kodiClient.setMovieSetDetails(target.endpoint(), kodiSetId.get(), name, set.data().overview(), art);
+        kodiClient.removeTextures(target.endpoint(), art.values().stream().filter(Objects::nonNull).toList());
         return new Outcome(KodiSyncOutcome.UPDATED, "Filmset „%s“ aktualisiert.".formatted(name));
+    }
+
+    /**
+     * Wie Ember: vorhandene Bilder als Pfad aus Sicht von Kodi, fehlende werden in Kodi entfernt. Ohne Ablage für
+     * Set-Bilder bleiben Kodis Bilder unverändert, ebenso Bilder außerhalb der Pfad-Zuordnung.
+     */
+    private static Map<String, String> art(KodiTarget target, Optional<List<MovieSetImage>> images) {
+        Map<String, String> art = new HashMap<>();
+        for (MovieSetImage image : images.orElse(List.of())) {
+            if (image.file() == null) {
+                art.put(image.kodiName(), null);
+            } else {
+                target.pathMapper().toKodiPath(image.file().toString())
+                        .ifPresent(kodiPath -> art.put(image.kodiName(), kodiPath));
+            }
+        }
+        return art;
     }
 
     private Outcome scan(KodiTarget target, MediaSource source) {

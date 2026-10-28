@@ -13,6 +13,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Base64;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.HashMap;
 import java.util.List;
@@ -103,16 +104,41 @@ public class KodiClient {
     }
 
     /**
-     * Setzt Titel und Beschreibung eines Filmsets.
+     * Setzt Titel, Beschreibung und Bilder eines Filmsets.
      *
      * @param plot Beschreibung oder {@code null}, um sie zu leeren
+     * @param art  Bilder je Kodi-Bildart ({@code poster}, …) als Pfad aus Sicht von Kodi; {@code null} entfernt ein
+     *             Bild, nicht genannte Arten bleiben, wie sie sind
      */
-    public void setMovieSetDetails(KodiEndpoint endpoint, int setId, String title, String plot) {
+    public void setMovieSetDetails(KodiEndpoint endpoint, int setId, String title, String plot,
+            Map<String, String> art) {
         Map<String, Object> params = new HashMap<>();
         params.put("setid", setId);
         params.put("title", title);
         params.put("plot", plot == null ? "" : plot);
+        if (!art.isEmpty()) {
+            params.put("art", new HashMap<>(art));
+        }
         call(endpoint, "VideoLibrary.SetMovieSetDetails", params);
+    }
+
+    /**
+     * Entfernt Bilder aus Kodis Bild-Cache, damit Kodi ein unter gleichem Pfad ersetztes Bild neu lädt.
+     *
+     * @param urls Pfade der Bilder aus Sicht von Kodi
+     */
+    public void removeTextures(KodiEndpoint endpoint, Collection<String> urls) {
+        if (urls.isEmpty()) {
+            return;
+        }
+        List<Map<String, String>> rules = urls.stream()
+                .map(url -> Map.of("field", "url", "operator", "is", "value", url))
+                .toList();
+        JsonNode textures = call(endpoint, "Textures.GetTextures",
+                Map.of("properties", List.of("url"), "filter", Map.of("or", rules))).path("textures");
+        for (JsonNode texture : textures) {
+            call(endpoint, "Textures.RemoveTexture", Map.of("textureid", texture.path("textureid").asInt()));
+        }
     }
 
     /** Kodi liest NFO und Bilder des Films neu ein. */

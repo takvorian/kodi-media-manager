@@ -186,6 +186,22 @@ class MovieSetArtworkServiceTest {
     }
 
     @Test
+    void listsTheImagesForKodiOnlyIfAStorageIsEnabled() {
+        givenSet("2344", FLAT);
+        when(artworkFiles.find(eq(FLAT), eq(TITLE), any())).thenReturn(Optional.empty());
+        when(artworkFiles.find(FLAT, TITLE, ImageType.POSTER)).thenReturn(Optional.of(POSTER));
+
+        assertThat(service.imagesForKodi(SET_ID)).hasValueSatisfying(images -> {
+            assertThat(images).hasSize(ArtworkTypes.MOVIE_SET_TYPES.size());
+            assertThat(images.getFirst()).isEqualTo(new MovieSetImage("poster", POSTER.file()));
+            assertThat(images.get(1)).isEqualTo(new MovieSetImage("fanart", null));
+        });
+
+        givenSettings(MovieSetSettings.DEFAULTS);
+        assertThat(service.imagesForKodi(SET_ID)).isEmpty();
+    }
+
+    @Test
     void movesNothingWithoutAStorage() {
         givenSet("2344", MovieSetSettings.DEFAULTS);
 

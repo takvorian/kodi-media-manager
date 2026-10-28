@@ -125,6 +125,24 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
         events.publishEvent(new MovieSetChangedEvent(setId, title));
     }
 
+    /**
+     * Die Bilder des Sets für Kodi, je verwalteter Bildart die vorhandene Datei oder {@code null} für ein fehlendes
+     * Bild.
+     *
+     * @return leer, wenn keine Ablage eingeschaltet ist; dann verwaltet KMM keine Set-Bilder
+     */
+    public Optional<List<MovieSetImage>> imagesForKodi(long setId) {
+        MovieSetSettings settings = settings();
+        if (!MovieSetArtworkFiles.hasStorage(settings)) {
+            return Optional.empty();
+        }
+        String title = data(setId).name();
+        return Optional.of(ArtworkTypes.MOVIE_SET_TYPES.stream()
+                .map(type -> new MovieSetImage(ArtworkTypes.kodiName(type),
+                        artworkFiles.find(settings, title, type).map(ArtworkFile::file).orElse(null)))
+                .toList());
+    }
+
     /** Verschiebt die Bilder eines umbenannten Sets in allen Ablagen auf den neuen Titel. */
     void moveToNewTitle(long setId, String previousTitle) {
         MovieSetSettings settings = settings();
