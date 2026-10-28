@@ -34,6 +34,23 @@ export interface MovieSetDetails {
   readonly movies: readonly MovieSetMember[];
 }
 
+/** Suchtreffer einer TMDB-Sammlung. */
+export interface MovieSetCandidate {
+  readonly providerId: string;
+  readonly title: string;
+  readonly originalTitle: string | null;
+  readonly overview: string | null;
+  readonly posterUrl: string | null;
+}
+
+/** Ergebnis von „Alle Sets ergänzen“. */
+export interface MovieSetCompletionResult {
+  readonly overviews: number;
+  readonly images: number;
+  readonly withoutCollection: number;
+  readonly problems: readonly string[];
+}
+
 export interface MovieSetChangeResult {
   readonly changed: number;
   readonly unchanged: number;
@@ -43,6 +60,14 @@ export interface MovieSetChangeResult {
 
 /** Fasst einen beendeten Set-Job für eine Snackbar-Meldung zusammen. */
 export function movieSetJobSummary(job: Job): string {
+  if (job.status === 'SUCCEEDED' && isCompletion(job.result)) {
+    const problems =
+      job.result.problems.length > 0 ? ` Hinweise: ${job.result.problems.join('; ')}` : '';
+    return (
+      `${job.title}: ${job.result.overviews} Beschreibungen und ${job.result.images} Bilder geholt, ` +
+      `${job.result.withoutCollection} Sets ohne TMDB-ID übersprungen.${problems}`
+    );
+  }
   if (job.status === 'SUCCEEDED') {
     const result = job.result as MovieSetChangeResult;
     const failed =
@@ -52,4 +77,8 @@ export function movieSetJobSummary(job: Job): string {
   return job.status === 'CANCELLED'
     ? `${job.title} abgebrochen.`
     : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+}
+
+function isCompletion(result: unknown): result is MovieSetCompletionResult {
+  return typeof result === 'object' && result !== null && 'overviews' in result;
 }

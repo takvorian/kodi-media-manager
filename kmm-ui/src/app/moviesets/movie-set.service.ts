@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 
 import { Job } from '../jobs/job';
 import { ArtworkCandidates, ArtworkInfo, ArtworkSource, versioned } from '../movies/artwork';
-import { MovieSetData, MovieSetDetails, MovieSetSummary } from './movie-set';
+import { MovieSetCandidate, MovieSetData, MovieSetDetails, MovieSetSummary } from './movie-set';
 
 export const MOVIE_SETS_URL = '/api/v1/moviesets';
 
@@ -38,6 +38,23 @@ export class MovieSetService {
 
   removeMovies(setId: number, movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${MOVIE_SETS_URL}/${setId}/movies/remove`, { movieIds });
+  }
+
+  /** Sucht Sammlungen bei TMDB. */
+  searchCollections(title: string): Observable<MovieSetCandidate[]> {
+    return this.http.get<MovieSetCandidate[]>(`${MOVIE_SETS_URL}/search`, { params: { title } });
+  }
+
+  /** Titel, Beschreibung und TMDB-ID eines Treffers als Vorschlag für das Formular. */
+  proposal(setId: number, providerId: string): Observable<MovieSetData> {
+    return this.http.get<MovieSetData>(`${MOVIE_SETS_URL}/${setId}/proposal`, {
+      params: { providerId },
+    });
+  }
+
+  /** Ergänzt fehlende Beschreibungen und Bilder aller Sets als Job. */
+  completeAll(): Observable<Job> {
+    return this.http.post<Job>(`${MOVIE_SETS_URL}/complete`, null);
   }
 
   /** Bilder eines Sets; gespeichert wird in den Ablagen aus den Einstellungen. */

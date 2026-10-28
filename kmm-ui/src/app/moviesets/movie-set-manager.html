@@ -1,4 +1,8 @@
-<h2 class="page-title">Filmsets</h2>
+<div class="page-header">
+  <h2 class="page-title">Filmsets</h2>
+  <button matButton class="complete-button" (click)="completeAll()" [disabled]="!!runningJob()">Alle Sets ergänzen</button>
+</div>
+<p class="hint">„Alle Sets ergänzen“ holt bei Sets mit TMDB-ID fehlende Beschreibungen und Bilder; vorhandene bleiben.</p>
 
 @let job = runningJob();
 @if (job) {
@@ -72,6 +76,36 @@
             <button matButton type="button" class="delete-button" (click)="delete()" [disabled]="!!job">Löschen</button>
           </div>
         </form>
+
+        <form class="search collection-search" (ngSubmit)="searchCollections()">
+          <mat-form-field class="grow">
+            <mat-label>Bei TMDB suchen</mat-label>
+            <input matInput name="collectionQuery" [ngModel]="collectionQuery()" (ngModelChange)="collectionQuery.set($event)" />
+          </mat-form-field>
+          <button matButton type="submit" class="collection-search-button">Suchen</button>
+        </form>
+        @let found = collections();
+        @if (found) {
+          <ul class="collections">
+            @for (candidate of found; track candidate.providerId) {
+              <li>
+                <button matButton type="button" class="collection" (click)="takeOver(candidate)">
+                  @if (candidate.posterUrl) {
+                    <img [src]="candidate.posterUrl" alt="" />
+                  }
+                  <span>
+                    <strong>{{ candidate.title }}</strong>
+                    @if (candidate.originalTitle && candidate.originalTitle !== candidate.title) {
+                      <span class="original">({{ candidate.originalTitle }})</span>
+                    }
+                  </span>
+                </button>
+              </li>
+            } @empty {
+              <li class="empty">Keine Sammlung gefunden.</li>
+            }
+          </ul>
+        }
 
         <h3>Bilder</h3>
         @let artwork = artworkSource();

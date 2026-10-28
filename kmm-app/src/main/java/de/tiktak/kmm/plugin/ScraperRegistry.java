@@ -9,6 +9,7 @@ import org.springframework.stereotype.Component;
 import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
+import de.tiktak.kmm.plugin.api.MovieSetScraper;
 import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +40,10 @@ public class ScraperRegistry {
         return tvShowScrapers().stream()
                 .filter(scraper -> scraper.id().equals(scraperId))
                 .findFirst();
+    }
+
+    public List<MovieSetScraper> movieSetScrapers() {
+        return pluginManager.getExtensions(MovieSetScraper.class);
     }
 
     public List<MetadataScraper> metadataScrapersFor(MediaType mediaType) {

@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.movie.MovieSetArtworkFiller;
 import de.tiktak.kmm.movie.MovieSetChangedEvent;
 import de.tiktak.kmm.movie.MovieSetData;
 import de.tiktak.kmm.movie.MovieSetService;
@@ -27,7 +28,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class MovieSetArtworkService {
+public class MovieSetArtworkService implements MovieSetArtworkFiller {
 
     private static final String TMDB = "tmdb";
 
@@ -108,6 +109,12 @@ public class MovieSetArtworkService {
             events.publishEvent(new MovieSetChangedEvent(setId, data.name()));
         }
         return new ArtworkFillResult(saved, warnings);
+    }
+
+    @Override
+    public Fill fillMissingArtwork(long setId) {
+        ArtworkFillResult result = fillMissing(setId);
+        return new Fill(result.saved(), result.warnings());
     }
 
     public void remove(long setId, ImageType type) {

@@ -26,6 +26,7 @@ import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import {
   MOVIE_SET_JOB_KEY,
+  MovieSetCandidate,
   MovieSetData,
   MovieSetSummary,
   SORT_METHOD_LABELS,
@@ -90,6 +91,8 @@ export class MovieSetManager {
   protected readonly search = signal('');
   protected readonly candidates = signal<readonly MovieSummary[]>([]);
   protected readonly chosen = signal<ReadonlySet<number>>(new Set());
+  protected readonly collectionQuery = signal('');
+  protected readonly collections = signal<readonly MovieSetCandidate[] | null>(null);
   /** Neu bei jedem Laden des Sets, damit die Galerie nach einer Umbenennung die verschobenen Bilder zeigt. */
   protected readonly artworkSource = computed(() =>
     this.set.hasValue() ? this.setService.artwork(this.set.value().id) : null,
@@ -101,6 +104,8 @@ export class MovieSetManager {
     effect(() => {
       if (this.set.hasValue()) {
         const data = this.set.value().data;
+        this.collectionQuery.set(data.name);
+        this.collections.set(null);
         this.form.reset({
           name: data.name,
           overview: data.overview ?? '',
@@ -167,6 +172,42 @@ export class MovieSetManager {
     ) {
       this.track(this.setService.delete(setId), () => this.selectedId.set(null));
     }
+  }
+
+  protected searchCollections(): void {
+    const title = this.collectionQuery().trim();
+    if (!title) {
+      return;
+    }
+    this.setService.searchCollections(title).subscribe({
+      next: (found) => this.collections.set(found),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  /** Übernimmt Titel, Beschreibung und TMDB-ID ins Formular; gespeichert wird mit „Speichern“. */
+  protected takeOver(candidate: MovieSetCandidate): void {
+    const setId = this.selectedId();
+    if (setId === null) {
+      return;
+    }
+    this.setService.proposal(setId, candidate.providerId).subscribe({
+      next: (data) => {
+        this.form.patchValue({
+          name: data.name,
+          overview: data.overview ?? '',
+          tmdbCollectionId: data.tmdbCollectionId ?? '',
+        });
+        this.form.markAsDirty();
+        this.collections.set(null);
+        this.notify(`„${data.name}“ übernommen – bitte speichern.`);
+      },
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  protected completeAll(): void {
+    this.track(this.setService.completeAll(), () => undefined);
   }
 
   protected toggleRemoval(movieId: number): void {

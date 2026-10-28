@@ -3,7 +3,7 @@ package de.tiktak.kmm.movie;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.ErrorResponseException;
 
-import de.tiktak.kmm.plugin.api.MetadataScraper;
+import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.ScraperException;
 
 /**
@@ -22,18 +22,23 @@ public class ScraperProblemException extends ErrorResponseException {
                 "Es ist kein Scraper mit der ID '%s' installiert und aktiv.".formatted(scraperId), null);
     }
 
-    static ScraperProblemException notConfigured(MetadataScraper scraper, String hint) {
+    static ScraperProblemException notConfigured(Scraper scraper, String hint) {
         return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT,
                 "%s ist nicht eingerichtet".formatted(scraper.displayName()), hint, null);
     }
 
     /** Der Anbieter ist nicht erreichbar oder lehnt ab: aus Sicht von KMM ein Gateway-Fehler. */
-    static ScraperProblemException providerFailed(MetadataScraper scraper, ScraperException cause) {
+    static ScraperProblemException providerFailed(Scraper scraper, ScraperException cause) {
         return new ScraperProblemException(HttpStatus.BAD_GATEWAY,
                 "%s meldet einen Fehler".formatted(scraper.displayName()), cause.getMessage(), cause);
     }
 
-    static ScraperProblemException notFoundAtProvider(MetadataScraper scraper, String providerId) {
+    static ScraperProblemException noMovieSetScraper() {
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Scraper für Filmsets",
+                "Es ist kein Scraper für Filmsets installiert und aktiv, etwa das TMDB-Plugin.", null);
+    }
+
+    static ScraperProblemException notFoundAtProvider(Scraper scraper, String providerId) {
         return new ScraperProblemException(HttpStatus.NOT_FOUND, "Treffer nicht gefunden",
                 "%s kennt den Eintrag '%s' nicht.".formatted(scraper.displayName(), providerId), null);
     }

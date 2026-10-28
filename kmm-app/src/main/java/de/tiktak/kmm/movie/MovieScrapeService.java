@@ -8,12 +8,14 @@ import java.util.function.Function;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.plugin.ScraperRegistry;
+import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataResult;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.SearchQuery;
+import de.tiktak.kmm.settings.SettingsService;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -29,6 +31,8 @@ public class MovieScrapeService {
     private final ScraperRegistry scraperRegistry;
     private final MovieMetadataService metadataService;
     private final ScrapingProperties properties;
+    private final SettingsService settingsService;
+    private final MovieCollectionAssigner collectionAssigner;
 
     /**
      * @param title Suchbegriff; ohne Angabe der Titel des Films
@@ -77,7 +81,14 @@ public class MovieScrapeService {
             return MetadataScrapeOutcome.NO_MATCH;
         }
         metadataService.update(movieId, ScrapedMetadataMerger.merge(current, scraped.get()));
+        assignCollection(movieId, scraped.get().collection());
         return MetadataScrapeOutcome.SCRAPED;
+    }
+
+    private void assignCollection(long movieId, CollectionReference collection) {
+        if (collection != null && settingsService.current().movieSets().assignOnScrape()) {
+            collectionAssigner.assign(movieId, collection);
+        }
     }
 
     /** Der konfigurierte Scraper, sonst der erste eingerichtete. */

@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.ScraperRegistry;
+import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataResult;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
@@ -34,6 +35,9 @@ import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.SearchQuery;
 import de.tiktak.kmm.plugin.api.SearchResult;
 import de.tiktak.kmm.scanner.DiscFormat;
+import de.tiktak.kmm.settings.KmmSettings;
+import de.tiktak.kmm.settings.MovieSetSettings;
+import de.tiktak.kmm.settings.SettingsService;
 
 @ExtendWith(MockitoExtension.class)
 class MovieScrapeServiceTest {
@@ -51,11 +55,18 @@ class MovieScrapeServiceTest {
     @Mock
     private MetadataScraper tmdb;
 
+    @Mock
+    private SettingsService settingsService;
+
+    @Mock
+    private MovieCollectionAssigner collectionAssigner;
+
     private MovieScrapeService service;
 
     @BeforeEach
     void setUp() {
-        service = new MovieScrapeService(scraperRegistry, metadataService, new ScrapingProperties("tmdb"));
+        service = new MovieScrapeService(scraperRegistry, metadataService, new ScrapingProperties("tmdb"),
+                settingsService, collectionAssigner);
         MovieDetails details = new MovieDetails(MOVIE_ID, 1L, "/media/Heat.mkv", DiscFormat.FILE, 1, null, CURRENT,
                 MovieSupplement.EMPTY, StreamDetails.EMPTY, new MovieDetails.NfoInfo("/media/Heat.nfo", false, null));
         lenient().when(metadataService.findDetails(MOVIE_ID)).thenReturn(details);
@@ -163,6 +174,38 @@ class MovieScrapeServiceTest {
         assertThat(saved.getValue().runtime()).isEqualTo(170);
         assertThat(saved.getValue().tmdbId()).isEqualTo("949");
         verify(other, never()).scrape(any());
+    }
+
+    @Test
+    void autoScrapeAssignsTheMovieToTheSetOfItsCollectionIfEnabled() {
+        MetadataScraper preferred = readyScraper("tmdb");
+        when(scraperRegistry.metadataScrapersFor(MediaType.MOVIE)).thenReturn(List.of(preferred));
+        CollectionReference matrix = new CollectionReference("2344", "Matrix Filmreihe");
+        when(preferred.scrape(any())).thenReturn(Optional.of(MetadataResult.builder().title("Matrix")
+                .uniqueIds(Map.of("tmdb", "603")).collection(matrix).build()));
+        when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS.withMovieSets(
+                new MovieSetSettings(false, null, false, null, true)));
+
+        assertThat(service.scrapeMissingMetadata(MOVIE_ID)).isEqualTo(MetadataScrapeOutcome.SCRAPED);
+
+        verify(collectionAssigner).assign(MOVIE_ID, matrix);
+    }
+
+    @Test
+    void autoScrapeLeavesTheSetAloneIfAssignmentIsDisabledOrThereIsNoCollection() {
+        MetadataScraper preferred = readyScraper("tmdb");
+        when(scraperRegistry.metadataScrapersFor(MediaType.MOVIE)).thenReturn(List.of(preferred));
+        when(preferred.scrape(any()))
+                .thenReturn(Optional.of(MetadataResult.builder().title("Matrix").uniqueIds(Map.of("tmdb", "603"))
+                        .collection(new CollectionReference("2344", "Matrix Filmreihe")).build()))
+                .thenReturn(Optional.of(MetadataResult.builder().title("Heat").uniqueIds(Map.of("tmdb", "949"))
+                        .build()));
+        when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS);
+
+        service.scrapeMissingMetadata(MOVIE_ID);
+        service.scrapeMissingMetadata(MOVIE_ID);
+
+        verify(collectionAssigner, never()).assign(anyLong(), any());
     }
 
     @Test

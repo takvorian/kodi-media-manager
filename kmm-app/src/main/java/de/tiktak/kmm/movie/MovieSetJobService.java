@@ -3,6 +3,8 @@ package de.tiktak.kmm.movie;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.function.LongPredicate;
 
 import org.springframework.stereotype.Service;
@@ -12,12 +14,13 @@ import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobTask;
+import de.tiktak.kmm.plugin.api.MovieSetResult;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
  * Änderungen an Filmsets, die die NFOs ihrer Filme betreffen, als Hintergrund-Job: Set ändern, löschen, Filme
- * hinzufügen und entfernen.
+ * hinzufügen und entfernen, alle Sets ergänzen.
  */
 @Slf4j
 @Service
@@ -30,6 +33,8 @@ public class MovieSetJobService {
     private final MovieSetService setService;
     private final MovieSetMembership membership;
     private final JobService jobService;
+    private final MovieSetScrapeService scrapeService;
+    private final MovieSetArtworkFiller artworkFiller;
 
     /**
      * Übernimmt die Angaben sofort und schreibt danach die NFOs der Filme neu, wenn sich Name oder Beschreibung
@@ -70,6 +75,53 @@ public class MovieSetJobService {
         List<Long> removed = distinct(movieIds).stream().filter(members::contains).toList();
         return submit("Filme aus „%s“ entfernen".formatted(set.data().name()), context ->
                 apply(removed, movieId -> membership.assign(movieId, null), context));
+    }
+
+    /** Ergänzt bei allen Sets mit TMDB-ID fehlende Beschreibungen und Bilder; vorhandene bleiben. */
+    public JobSnapshot completeAll() {
+        return jobService.submit(JOB_KEY, "Alle Sets ergänzen", this::complete);
+    }
+
+    MovieSetCompletionResult complete(JobContext context) {
+        List<MovieSetSummary> sets = setService.findAll();
+        Set<String> problems = new LinkedHashSet<>();
+        int overviews = 0;
+        int images = 0;
+        int withoutCollection = 0;
+        for (int index = 0; index < sets.size(); index++) {
+            MovieSetSummary set = sets.get(index);
+            context.throwIfCancellationRequested();
+            context.reportProgress(index, sets.size(), set.name());
+            if (set.tmdbCollectionId() == null) {
+                withoutCollection++;
+                continue;
+            }
+            try {
+                if (set.overview() == null && completeOverview(set)) {
+                    overviews++;
+                }
+                MovieSetArtworkFiller.Fill fill = artworkFiller.fillMissingArtwork(set.id());
+                images += fill.saved();
+                problems.addAll(fill.warnings());
+            } catch (ErrorResponseException e) {
+                problems.add("%s: %s".formatted(set.name(), e.getBody().getDetail()));
+            }
+        }
+        context.reportProgress(sets.size(), sets.size(), null);
+        log.info("Movie sets completed: {} overviews, {} images, {} without collection", overviews, images,
+                withoutCollection);
+        return new MovieSetCompletionResult(overviews, images, withoutCollection,
+                problems.stream().limit(MAX_LISTED_FAILURES).toList());
+    }
+
+    private boolean completeOverview(MovieSetSummary set) {
+        Optional<String> overview = scrapeService.fetch(set.tmdbCollectionId()).map(MovieSetResult::overview);
+        if (overview.isEmpty()) {
+            return false;
+        }
+        setService.update(set.id(), new MovieSetData(set.name(), overview.get(), set.tmdbCollectionId(),
+                set.sortMethod())).forEach(membership::rewrite);
+        return true;
     }
 
     private JobSnapshot submit(String title, JobTask<MovieSetChangeResult> task) {

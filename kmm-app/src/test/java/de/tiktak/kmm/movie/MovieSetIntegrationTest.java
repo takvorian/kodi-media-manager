@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
+import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
@@ -50,6 +51,9 @@ class MovieSetIntegrationTest {
 
     @Autowired
     private JdbcClient jdbcClient;
+
+    @Autowired
+    private MovieCollectionAssigner collectionAssigner;
 
     @TempDir
     Path library;
@@ -108,6 +112,28 @@ class MovieSetIntegrationTest {
         assertThat(Files.readString(reloadedNfo)).doesNotContain("<set>");
         assertThat(mockMvc.get().uri(MovieSetController.BASE_PATH + "/{id}", setId))
                 .hasStatus(HttpStatus.NOT_FOUND);
+    }
+
+    @Test
+    void assignsScrapedMoviesToTheSetOfTheirCollection() throws IOException {
+        Path filme = Files.createDirectories(library.resolve("filme"));
+        Path matrixNfo = givenMovie(filme, "Matrix", 1999, "<set><name>Alt</name></set>");
+        givenMovie(filme, "Matrix Reloaded", 2003, "");
+        givenMovie(filme, "Heat", 1995, "");
+        scan(filme);
+        CollectionReference matrix = new CollectionReference("2344", "Matrix Filmreihe");
+
+        assertThat(collectionAssigner.assign(movieId("Matrix"), matrix)).isTrue();
+        assertThat(collectionAssigner.assign(movieId("Matrix Reloaded"), new CollectionReference("2344", "Matrix")))
+                .isTrue();
+        assertThat(collectionAssigner.assign(movieId("Matrix"), matrix)).isFalse();
+        jdbcClient.sql("INSERT INTO movie_set (name, sort_method) VALUES ('Heat-Reihe', 'YEAR')").update();
+        assertThat(collectionAssigner.assign(movieId("Heat"), new CollectionReference("99", "HEAT-REIHE"))).isTrue();
+
+        assertThat(Files.readString(matrixNfo)).contains("<name>Matrix Filmreihe</name>").doesNotContain("Alt");
+        assertThat(jdbcClient.sql("SELECT name || ':' || tmdb_collection_id FROM movie_set m WHERE EXISTS "
+                        + "(SELECT 1 FROM movie WHERE movie_set_id = m.id) ORDER BY name").query(String.class).list())
+                .containsExactly("Heat-Reihe:99", "Matrix Filmreihe:2344");
     }
 
     @Test

@@ -48,7 +48,12 @@ describe('MovieSetManager', () => {
   };
 
   const artwork: ArtworkInfo[] = [
-    { type: 'POSTER', exists: true, path: '/sets/Matrix Filmreihe-poster.jpg', modifiedAt: '2026-10-28T12:00:00Z' },
+    {
+      type: 'POSTER',
+      exists: true,
+      path: '/sets/Matrix Filmreihe-poster.jpg',
+      modifiedAt: '2026-10-28T12:00:00Z',
+    },
     { type: 'KEYART', exists: false, path: null, modifiedAt: null },
   ];
 
@@ -199,6 +204,71 @@ describe('MovieSetManager', () => {
     await flushWhenRequested(fixture, httpTesting, MOVIE_SETS_URL, sets);
     await flushWhenRequested(fixture, httpTesting, `${MOVIE_SETS_URL}/1`, matrix);
     expect(snackBarMessages).toEqual(['Filmset speichern: 2 Filme geändert.']);
+  });
+
+  it('searches TMDB collections and takes over a match into the form', async () => {
+    await load();
+    await selectMatrix();
+    expect(input('collectionQuery').value).toBe('Matrix Filmreihe');
+
+    element()
+      .querySelector<HTMLFormElement>('.collection-search')!
+      .dispatchEvent(new Event('submit'));
+    const search = httpTesting.expectOne(
+      (request) =>
+        request.url === `${MOVIE_SETS_URL}/search` &&
+        request.params.get('title') === 'Matrix Filmreihe',
+    );
+    search.flush([
+      {
+        providerId: '2344',
+        title: 'Matrix Filmreihe',
+        originalTitle: 'The Matrix Collection',
+        overview: 'Neo.',
+        posterUrl: 'https://image.tmdb.org/t/p/w185/matrix.jpg',
+      },
+    ]);
+    await fixture.whenStable();
+    expect(texts('.collection')).toEqual(['Matrix Filmreihe(The Matrix Collection)']);
+
+    button('.collection').click();
+    const proposal = httpTesting.expectOne(
+      (request) =>
+        request.url === `${MOVIE_SETS_URL}/1/proposal` &&
+        request.params.get('providerId') === '2344',
+    );
+    proposal.flush({
+      name: 'Matrix – Sammlung',
+      overview: 'Neo.',
+      tmdbCollectionId: '2344',
+      sortMethod: 'YEAR',
+    });
+    await fixture.whenStable();
+
+    expect(input('name').value).toBe('Matrix – Sammlung');
+    expect(button('.save-button').disabled).toBe(false);
+    expect(element().querySelector('.collections')).toBeNull();
+    expect(snackBarMessages).toEqual(['„Matrix – Sammlung“ übernommen – bitte speichern.']);
+  });
+
+  it('completes all sets as a job and summarizes the result', async () => {
+    await load();
+
+    button('.complete-button').click();
+    httpTesting
+      .expectOne({ method: 'POST', url: `${MOVIE_SETS_URL}/complete` })
+      .flush(job('Alle Sets ergänzen'));
+    expect(updated.map((started) => started.title)).toEqual(['Alle Sets ergänzen']);
+
+    expect(
+      movieSetJobSummary({
+        ...job('Alle Sets ergänzen'),
+        status: 'SUCCEEDED',
+        result: { overviews: 2, images: 5, withoutCollection: 1, problems: ['fanart.tv: aus'] },
+      } as Job),
+    ).toBe(
+      'Alle Sets ergänzen: 2 Beschreibungen und 5 Bilder geholt, 1 Sets ohne TMDB-ID übersprungen. Hinweise: fanart.tv: aus',
+    );
   });
 
   it('removes marked movies and adds found ones', async () => {

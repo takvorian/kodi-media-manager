@@ -4,6 +4,7 @@ import java.net.URI;
 import java.util.List;
 
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import de.tiktak.kmm.job.JobController;
@@ -31,13 +33,35 @@ public class MovieSetController {
 
     public static final String BASE_PATH = "/api/v1/moviesets";
     public static final String SET_PATH = "/{setId}";
+    public static final String SEARCH_PATH = "/search";
+    public static final String PROPOSAL_PATH = SET_PATH + "/proposal";
+    public static final String COMPLETE_PATH = "/complete";
 
     private final MovieSetService setService;
     private final MovieSetJobService jobService;
+    private final MovieSetScrapeService scrapeService;
 
     @GetMapping
     public List<MovieSetSummary> findAll() {
         return setService.findAll();
+    }
+
+    /** Sucht Sammlungen beim Online-Dienst. */
+    @GetMapping(SEARCH_PATH)
+    public List<ScrapeCandidate> search(@RequestParam @NotBlank String title) {
+        return scrapeService.search(title);
+    }
+
+    /** Titel, Beschreibung und TMDB-ID eines Treffers als Vorschlag; gespeichert wird erst mit {@code PUT}. */
+    @GetMapping(PROPOSAL_PATH)
+    public MovieSetData proposal(@PathVariable long setId, @RequestParam @NotBlank String providerId) {
+        return scrapeService.proposal(setId, providerId);
+    }
+
+    /** Ergänzt fehlende Beschreibungen und Bilder aller Sets als Job. */
+    @PostMapping(COMPLETE_PATH)
+    public ResponseEntity<JobSnapshot> completeAll() {
+        return accepted(jobService.completeAll());
     }
 
     @GetMapping(SET_PATH)
