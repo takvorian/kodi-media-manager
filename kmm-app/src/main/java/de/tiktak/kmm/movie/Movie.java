@@ -14,12 +14,14 @@ import org.hibernate.type.SqlTypes;
 
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.persistence.StreamDetailsConverter;
+import de.tiktak.kmm.persistence.StreamIndex;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import de.tiktak.kmm.scanner.DiscFormat;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -178,6 +180,10 @@ public class Movie {
     @Column(name = "stream_details", length = Length.LONG32)
     private StreamDetails streamDetails;
 
+    /** Abfragbare Kurzform der technischen Angaben für Filter; folgt {@link #streamDetails}. */
+    @Embedded
+    private StreamIndex streamIndex;
+
     /** Änderungszeit der NFO beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
@@ -268,6 +274,12 @@ public class Movie {
 
     void applyStreamDetails(StreamDetails details) {
         this.streamDetails = details == null || details.isEmpty() ? null : details;
+        this.streamIndex = StreamIndex.of(this.streamDetails);
+    }
+
+    /** Legt die Kurzform für Filme an, deren technische Angaben vor der Kurzform gespeichert wurden. */
+    void indexStreams() {
+        this.streamIndex = StreamIndex.of(this.streamDetails);
     }
 
     void changeAddedAt(Instant newAddedAt) {

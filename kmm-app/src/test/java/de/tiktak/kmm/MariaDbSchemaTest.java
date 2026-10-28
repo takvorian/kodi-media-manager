@@ -57,6 +57,17 @@ class MariaDbSchemaTest {
         assertThat(countMovies()).isZero();
     }
 
+    /** Die Filter maskieren Platzhalter mit {@code !} statt Backslash, den MariaDB auch in Zeichenketten auswertet. */
+    @Test
+    void understandsTheLikeEscapeOfTheFilters() {
+        Object matches = entityManager.getEntityManager()
+                .createNativeQuery("SELECT CASE WHEN ' dts_hd ' LIKE '% dts!_hd %' ESCAPE '!' "
+                        + "AND NOT ' dtsxhd ' LIKE '% dts!_hd %' ESCAPE '!' THEN 1 ELSE 0 END")
+                .getSingleResult();
+
+        assertThat(((Number) matches).intValue()).isEqualTo(1);
+    }
+
     private long countMovies() {
         return ((Number) entityManager.getEntityManager().createNativeQuery(COUNT_MOVIES).getSingleResult()).longValue();
     }

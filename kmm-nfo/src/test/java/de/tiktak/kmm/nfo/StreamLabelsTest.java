@@ -20,6 +20,15 @@ class StreamLabelsTest {
 
     @ParameterizedTest
     @CsvSource(delimiter = '|', nullValues = "-", value = {
+        "720|576|576", "1280|720|720", "1920|800|1080", "3840|2160|2160", "7680|4320|4320", "9000|5000|-"
+    })
+    void numbersResolutionLevelsForComparison(Integer width, Integer height, Integer expected) {
+        assertThat(StreamLabels.resolutionLines(video(width, height, null, null)))
+                .isEqualTo(Optional.ofNullable(expected));
+    }
+
+    @ParameterizedTest
+    @CsvSource(delimiter = '|', nullValues = "-", value = {
         "left_right|-|3d", "-|2|3d", "-|12|3d", "-|1|-", "''|-|-", "-|-|-"
     })
     void marksThreeDimensionalVideosLikeEmber(String stereoMode, String multiView, String expected) {

@@ -10,6 +10,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -25,6 +26,8 @@ public class MovieController {
     public static final String MOVIES_PATH = "/api/v1/movies";
     public static final String MOVIE_PATH = MOVIES_PATH + "/{movieId}";
     public static final String METADATA_PATH = MOVIE_PATH + "/metadata";
+    public static final String QUERY_PATH = MOVIES_PATH + "/query";
+    public static final String FILTER_VALUES_PATH = MOVIES_PATH + "/filter-values";
     static final int DEFAULT_PAGE_SIZE = 50;
     static final String INVALID_SORT_TITLE = "Ungültige Sortierung";
 
@@ -37,6 +40,19 @@ public class MovieController {
             @RequestParam(required = false) String search,
             @PageableDefault(size = DEFAULT_PAGE_SIZE, sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
         return MoviePage.from(queryService.findMovies(search, pageable));
+    }
+
+    /** Filmliste mit Filter; ändert nichts, braucht aber einen Rumpf für die Bedingungen. */
+    @PostMapping(QUERY_PATH)
+    public MoviePage queryMovies(
+            @Valid @RequestBody MovieFilter filter,
+            @PageableDefault(size = DEFAULT_PAGE_SIZE, sort = "title", direction = Sort.Direction.ASC) Pageable pageable) {
+        return MoviePage.from(queryService.findFiltered(filter, pageable));
+    }
+
+    @GetMapping(FILTER_VALUES_PATH)
+    public MovieFilterValues filterValues() {
+        return queryService.filterValues();
     }
 
     @GetMapping(MOVIE_PATH)

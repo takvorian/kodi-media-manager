@@ -1,0 +1,6 @@
+ALTER TABLE movie ADD COLUMN video_resolution INTEGER;
+ALTER TABLE movie ADD COLUMN video_codec VARCHAR(32);
+ALTER TABLE movie ADD COLUMN hdr_type VARCHAR(32);
+ALTER TABLE movie ADD COLUMN audio_codecs VARCHAR(512);
+ALTER TABLE movie ADD COLUMN audio_languages VARCHAR(512);
+ALTER TABLE movie ADD COLUMN subtitle_languages VARCHAR(512);
