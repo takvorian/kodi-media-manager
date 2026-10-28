@@ -1,0 +1,23 @@
+:host {
+  display: block;
+}
+
+.condition {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 12px;
+  align-items: baseline;
+}
+
+.field,
+.match-field {
+  width: 220px;
+}
+
+.operator {
+  width: 150px;
+}
+
+.value {
+  flex: 1 1 220px;
+}

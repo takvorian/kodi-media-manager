@@ -1,8 +1,17 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  TestRequest,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 
+import { MatSnackBar } from '@angular/material/snack-bar';
+
+import { FILTERS_URL, SavedFilter } from '../filters/saved-filter.service';
+import { CONFIRM } from '../shared/confirm';
+import { flushWhenRequested } from '../shared/testing';
 import { MoviePage, MovieSummary } from './movie';
 import { DEFAULT_PAGE_SIZE, MovieList, SEARCH_DEBOUNCE_MS } from './movie-list';
 import { MOVIES_URL } from './movie.service';
@@ -20,15 +29,43 @@ describe('MovieList', () => {
     partCount: 1,
     addedAt: '2026-10-25T10:00:00Z',
   };
-  const ronin: MovieSummary = { ...heat, id: 2, title: 'Ronin', year: null, discFormat: 'DVD', partCount: 2 };
+  const ronin: MovieSummary = {
+    ...heat,
+    id: 2,
+    title: 'Ronin',
+    year: null,
+    discFormat: 'DVD',
+    partCount: 2,
+  };
+
+  const unseen: SavedFilter = {
+    id: 7,
+    mediaType: 'MOVIE',
+    name: 'tiktak_unviewed',
+    definition: {
+      matchAll: true,
+      conditions: [{ field: 'WATCHED', operator: 'IS', value: 'false' }],
+    },
+  };
 
   let fixture: ComponentFixture<MovieList>;
   let httpTesting: HttpTestingController;
+  let snackBarMessages: string[];
 
   beforeEach(() => {
+    snackBarMessages = [];
     TestBed.configureTestingModule({
       imports: [MovieList],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
+        { provide: CONFIRM, useValue: () => true },
+      ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(MovieList);
@@ -41,7 +78,7 @@ describe('MovieList', () => {
   }
 
   function expectMovies(): TestRequest {
-    return httpTesting.expectOne((request) => request.url === MOVIES_URL);
+    return httpTesting.expectOne((request) => request.url === `${MOVIES_URL}/query`);
   }
 
   function element(): HTMLElement {
@@ -50,6 +87,9 @@ describe('MovieList', () => {
 
   async function respond(moviePage: MoviePage): Promise<TestRequest> {
     fixture.detectChanges();
+    httpTesting
+      .match((request) => request.url === FILTERS_URL)
+      .forEach((request) => request.flush([unseen]));
     const request = expectMovies();
     request.flush(moviePage);
     await fixture.whenStable();
@@ -62,7 +102,9 @@ describe('MovieList', () => {
     input.value = term;
     input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
-    await new Promise((resolve) => setTimeout(resolve, SEARCH_DEBOUNCE_MS + DEBOUNCE_SAFETY_MARGIN_MS));
+    await new Promise((resolve) =>
+      setTimeout(resolve, SEARCH_DEBOUNCE_MS + DEBOUNCE_SAFETY_MARGIN_MS),
+    );
   }
 
   it('loads the first page sorted by title', async () => {
@@ -70,16 +112,17 @@ describe('MovieList', () => {
 
     expect(request.request.params.get('page')).toBe('0');
     expect(request.request.params.get('size')).toBe(String(DEFAULT_PAGE_SIZE));
-    expect(Array.from(element().querySelectorAll('.movie-title')).map((cell) => cell.textContent)).toEqual([
-      'Heat',
-      'Ronin',
-    ]);
+    expect(
+      Array.from(element().querySelectorAll('.movie-title')).map((cell) => cell.textContent),
+    ).toEqual(['Heat', 'Ronin']);
   });
 
   it('shows year, format and number of parts', async () => {
     await respond(page([ronin]));
 
-    const cells = Array.from(element().querySelectorAll('td')).map((cell) => cell.textContent?.replace(/\s+/g, ' ').trim());
+    const cells = Array.from(element().querySelectorAll('td')).map((cell) =>
+      cell.textContent?.replace(/\s+/g, ' ').trim(),
+    );
     expect(cells).toContain('–');
     expect(cells).toContain('DVD (2 Teile)');
   });
@@ -92,6 +135,7 @@ describe('MovieList', () => {
 
   it('shows an error when the movies cannot be loaded', async () => {
     fixture.detectChanges();
+    httpTesting.match(FILTERS_URL + '?mediaType=MOVIE').forEach((request) => request.flush([]));
     expectMovies().flush('boom', { status: 500, statusText: 'Server Error' });
     await fixture.whenStable();
 
@@ -104,7 +148,7 @@ describe('MovieList', () => {
     await typeSearch('ron');
     const request = await respond(page([ronin]));
 
-    expect(request.request.params.get('search')).toBe('ron');
+    expect(request.request.body.search).toBe('ron');
     expect(request.request.params.get('page')).toBe('0');
     expect(element().querySelectorAll('.movie-title')).toHaveLength(1);
   });
@@ -118,10 +162,95 @@ describe('MovieList', () => {
     expect(element().querySelector('.empty')?.textContent).toContain('Keine Filme gefunden');
   });
 
+  it('applies predefined and saved filters', async () => {
+    await respond(page([heat, ronin]));
+    const list = fixture.componentInstance as unknown as { select(selection: string): void };
+
+    list.select('predefined:3');
+    const predefined = await respond(page([ronin]));
+    expect(predefined.request.body.conditions).toEqual([
+      { field: 'RESOLUTION', operator: 'AT_LEAST', value: '2160' },
+    ]);
+
+    list.select('saved:7');
+    const saved = await respond(page([ronin]));
+    expect(saved.request.body.conditions).toEqual(unseen.definition.conditions);
+    expect(element().querySelector('.empty')).toBeNull();
+  });
+
+  it('edits conditions, skips incomplete ones and saves the filter under a name', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLButtonElement>('.edit-filter-button')!.click();
+    fixture.detectChanges();
+    httpTesting.expectOne(`${MOVIES_URL}/filter-values`).flush({
+      genres: ['Krimi'],
+      tags: [],
+      countries: [],
+      studios: [],
+      sets: [],
+      mpaa: [],
+      editions: [],
+      videoSources: [],
+      resolutions: [1080],
+      videoCodecs: [],
+      hdrTypes: [],
+      audioCodecs: [],
+      audioLanguages: [],
+      subtitleLanguages: [],
+    });
+    httpTesting.expectOne('/api/v1/sources').flush([]);
+    await fixture.whenStable();
+
+    element().querySelector<HTMLButtonElement>('.add-condition')!.click();
+    await fixture.whenStable();
+    httpTesting.expectNone((request) => request.url === `${MOVIES_URL}/query`);
+
+    const list = fixture.componentInstance as unknown as {
+      onFilterChange(filter: unknown): void;
+      filterName: { set(name: string): void };
+    };
+    list.onFilterChange({
+      matchAll: true,
+      conditions: [{ field: 'GENRE', operator: 'IS', value: 'Krimi' }],
+    });
+    const filtered = await respond(page([heat]));
+    expect(filtered.request.body.conditions).toEqual([
+      { field: 'GENRE', operator: 'IS', value: 'Krimi' },
+    ]);
+
+    list.filterName.set('Krimis');
+    fixture.detectChanges();
+    element().querySelector<HTMLButtonElement>('.save-filter-button')!.click();
+    const save = httpTesting.expectOne({ method: 'POST', url: FILTERS_URL });
+    expect(save.request.body).toEqual({
+      mediaType: 'MOVIE',
+      name: 'Krimis',
+      definition: {
+        matchAll: true,
+        conditions: [{ field: 'GENRE', operator: 'IS', value: 'Krimi' }],
+      },
+    });
+    save.flush({ ...unseen, id: 8, name: 'Krimis' });
+    await flushWhenRequested(fixture, httpTesting, FILTERS_URL + '?mediaType=MOVIE', [
+      unseen,
+      { ...unseen, id: 8, name: 'Krimis' },
+    ]);
+    await fixture.whenStable();
+    expect(snackBarMessages).toEqual(['Filter „Krimis“ gespeichert.']);
+
+    element().querySelector<HTMLButtonElement>('.delete-filter-button')!.click();
+    httpTesting.expectOne({ method: 'DELETE', url: `${FILTERS_URL}/8` }).flush(null);
+    await flushWhenRequested(fixture, httpTesting, FILTERS_URL + '?mediaType=MOVIE', [unseen]);
+    await respond(page([heat, ronin]));
+    expect(snackBarMessages).toContain('Filter „Krimis“ gelöscht.');
+  });
+
   it('loads another page when paging', async () => {
     await respond(page([heat], 120));
 
-    const nextButton = element().querySelector<HTMLButtonElement>('.mat-mdc-paginator-navigation-next')!;
+    const nextButton = element().querySelector<HTMLButtonElement>(
+      '.mat-mdc-paginator-navigation-next',
+    )!;
     nextButton.click();
     const request = await respond(page([ronin], 120));
 

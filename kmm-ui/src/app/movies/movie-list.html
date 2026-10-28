@@ -1,16 +1,56 @@
 <h2 class="page-title">Filme</h2>
 
-<mat-form-field class="search-field">
-  <mat-label>Suche nach Titel</mat-label>
-  <input matInput type="search" name="search" [value]="searchInput()" (input)="onSearch($event)" />
-</mat-form-field>
+<div class="toolbar">
+  <mat-form-field class="search-field">
+    <mat-label>Suche nach Titel</mat-label>
+    <input matInput type="search" name="search" [value]="searchInput()" (input)="onSearch($event)" />
+  </mat-form-field>
+  <mat-form-field class="filter-select">
+    <mat-label>Filter</mat-label>
+    <mat-select name="filter" [value]="selection()" (valueChange)="select($event)">
+      <mat-option value="all">Alle Filme</mat-option>
+      @for (entry of predefined; track entry.name; let index = $index) {
+        <mat-option [value]="predefinedKey(index)">{{ entry.name }}</mat-option>
+      }
+      @if (savedFilters.hasValue()) {
+        @for (saved of savedFilters.value(); track saved.id) {
+          <mat-option [value]="savedKey(saved)">{{ saved.name }}</mat-option>
+        }
+      }
+    </mat-select>
+  </mat-form-field>
+  <button matButton type="button" class="edit-filter-button" (click)="toggleEditing()">
+    {{ editing() ? 'Filter schließen' : 'Filter bearbeiten' }}
+  </button>
+</div>
+
+@if (editing()) {
+  <section class="filter-editor">
+    <app-movie-filter-editor
+      [filter]="filter()"
+      [values]="filterValues.hasValue() ? filterValues.value() : null"
+      [sources]="sources.hasValue() ? sources.value() : []"
+      (filterChange)="onFilterChange($event)"
+    />
+    <div class="save-filter">
+      <mat-form-field>
+        <mat-label>Name des Filters</mat-label>
+        <input matInput name="filterName" [value]="filterName()" (input)="filterName.set($any($event.target).value)" />
+      </mat-form-field>
+      <button matButton="filled" type="button" class="save-filter-button" (click)="saveFilter()">Speichern</button>
+      @if (selectedSaved()) {
+        <button matButton type="button" class="delete-filter-button" (click)="deleteFilter()">Löschen</button>
+      }
+    </div>
+  </section>
+}
 
 @if (movies.error()) {
   <p class="error">Die Filme konnten nicht geladen werden.</p>
 } @else if (movies.hasValue()) {
   @let page = movies.value();
   @if (page.totalElements === 0) {
-    @if (searchInput()) {
+    @if (restricted()) {
       <p class="empty">Keine Filme gefunden.</p>
     } @else {
       <p class="empty">

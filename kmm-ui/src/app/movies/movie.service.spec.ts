@@ -86,6 +86,23 @@ describe('MovieService', () => {
     expect(request.request.params.has('year')).toBe(false);
   });
 
+  it('queries movies with a filter and loads the filter values', () => {
+    const filter = {
+      matchAll: false,
+      conditions: [{ field: 'TAG' as const, operator: 'IS' as const, value: 'X' }],
+    };
+    service.queryMovies(filter, 1, 25).subscribe();
+    const query = httpTesting.expectOne((req) => req.url === `${MOVIES_URL}/query`);
+    expect(query.request.method).toBe('POST');
+    expect(query.request.body).toEqual(filter);
+    expect(query.request.params.get('page')).toBe('1');
+    expect(query.request.params.get('sort')).toBe('title,asc');
+    query.flush({});
+
+    service.filterValues().subscribe();
+    httpTesting.expectOne(`${MOVIES_URL}/filter-values`).flush({});
+  });
+
   it('loads a proposal for a search result', () => {
     service.proposal(5, 'tmdb', '949').subscribe();
 

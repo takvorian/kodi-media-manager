@@ -1,0 +1,58 @@
+@let current = filter();
+<div class="match">
+  <mat-form-field class="match-field">
+    <mat-label>Es müssen gelten</mat-label>
+    <mat-select name="matchAll" [value]="current.matchAll" (valueChange)="setMatchAll($event)">
+      <mat-option [value]="true">alle Bedingungen</mat-option>
+      <mat-option [value]="false">eine Bedingung</mat-option>
+    </mat-select>
+  </mat-form-field>
+</div>
+
+@for (condition of current.conditions; track $index; let index = $index) {
+  <div class="condition">
+    <mat-form-field class="field">
+      <mat-label>Feld</mat-label>
+      <mat-select [attr.name]="'field-' + index" [value]="condition.field" (valueChange)="setField(index, $event)">
+        @for (field of fields; track field[0]) {
+          <mat-option [value]="field[0]">{{ field[1].label }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    <mat-form-field class="operator">
+      <mat-label>Vergleich</mat-label>
+      <mat-select [attr.name]="'operator-' + index" [value]="condition.operator" (valueChange)="setOperator(index, $event)">
+        @for (operator of operators(condition); track operator) {
+          <mat-option [value]="operator">{{ operatorLabels[operator] }}</mat-option>
+        }
+      </mat-select>
+    </mat-form-field>
+    @if (needsValue(condition.operator)) {
+      @let choices = options(condition);
+      @if (choices) {
+        <mat-form-field class="value">
+          <mat-label>Wert</mat-label>
+          <mat-select [attr.name]="'value-' + index" [value]="condition.value" (valueChange)="setValue(index, $event)">
+            @for (choice of choices; track choice.value) {
+              <mat-option [value]="choice.value">{{ choice.label }}</mat-option>
+            }
+          </mat-select>
+        </mat-form-field>
+      } @else {
+        <mat-form-field class="value">
+          <mat-label>Wert</mat-label>
+          <input
+            matInput
+            [attr.name]="'value-' + index"
+            [type]="isNumber(condition) ? 'number' : 'text'"
+            [value]="condition.value ?? ''"
+            (change)="setValue(index, $any($event.target).value)"
+          />
+        </mat-form-field>
+      }
+    }
+    <button matButton type="button" class="remove-condition" (click)="remove(index)">Entfernen</button>
+  </div>
+}
+
+<button matButton type="button" class="add-condition" (click)="add()">Bedingung hinzufügen</button>

@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { MovieFilter, MovieFilterValues } from '../filters/movie-filter';
 import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
 import { CollectionReference, MovieScrapeProposal, ScrapeCandidate, ScraperInfo } from './scraper';
 
@@ -23,6 +24,17 @@ export class MovieService {
       params = params.set('search', search);
     }
     return this.http.get<MoviePage>(MOVIES_URL, { params });
+  }
+
+  /** Filmliste mit Filter, nach Titel sortiert. */
+  queryMovies(filter: MovieFilter, page: number, size: number): Observable<MoviePage> {
+    const params = new HttpParams().set('page', page).set('size', size).set('sort', SORT_BY_TITLE);
+    return this.http.post<MoviePage>(`${MOVIES_URL}/query`, filter, { params });
+  }
+
+  /** Vorhandene Werte je Filterfeld für Auswahllisten. */
+  filterValues(): Observable<MovieFilterValues> {
+    return this.http.get<MovieFilterValues>(`${MOVIES_URL}/filter-values`);
   }
 
   findMovie(movieId: number): Observable<MovieDetails> {
