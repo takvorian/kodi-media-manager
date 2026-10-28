@@ -2,6 +2,7 @@ package de.tiktak.kmm.plugin.tmdb;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.pf4j.Extension;
@@ -12,15 +13,15 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 
 /**
- * Poster, Fanart und Logos von The Movie Database (TMDB) für Filme und Serien, bei Serien auch die
- * Staffelposter.
+ * Poster, Fanart und Logos von The Movie Database (TMDB) für Filme, Filmsets (Sammlungen) und Serien, bei
+ * Serien auch die Staffelposter.
  */
 @Extension
 public class TmdbImageScraper extends AbstractTmdbScraper implements ImageScraper {
 
     @Override
     public Set<MediaType> supportedMediaTypes() {
-        return Set.of(MediaType.MOVIE, MediaType.TV_SHOW);
+        return Set.of(MediaType.MOVIE, MediaType.MOVIE_SET, MediaType.TV_SHOW);
     }
 
     @Override
@@ -30,6 +31,10 @@ public class TmdbImageScraper extends AbstractTmdbScraper implements ImageScrape
         return switch (request.mediaType()) {
             case MOVIE -> api.tmdbIdOf(request.uniqueIds())
                     .flatMap(api::movieImages)
+                    .map(mapper::toCandidates)
+                    .orElse(List.of());
+            case MOVIE_SET -> Optional.ofNullable(request.uniqueIds().get(TmdbApi.TMDB))
+                    .flatMap(api::collectionImages)
                     .map(mapper::toCandidates)
                     .orElse(List.of());
             case TV_SHOW -> api.tvShowIdOf(request.uniqueIds())

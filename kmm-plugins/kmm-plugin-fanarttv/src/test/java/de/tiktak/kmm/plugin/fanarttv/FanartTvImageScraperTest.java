@@ -43,7 +43,8 @@ class FanartTvImageScraperTest {
     void describesItself() {
         assertThat(scraper.id()).isEqualTo("fanarttv");
         assertThat(scraper.displayName()).isEqualTo("fanart.tv");
-        assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.TV_SHOW);
+        assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.MOVIE_SET,
+                MediaType.TV_SHOW);
         assertThat(scraper.missingConfiguration()).isEmpty();
     }
 
@@ -102,8 +103,16 @@ class FanartTvImageScraperTest {
     }
 
     @Test
+    void findsMovieSetImagesByTheTmdbIdOfTheCollection() {
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.MOVIE_SET, "Heat", null, Map.of("tmdb", "949"))))
+                .isNotEmpty();
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.MOVIE_SET, "Heat", null, Map.of("imdb", "tt0113277"))))
+                .isEmpty();
+    }
+
+    @Test
     void returnsNothingForUnsupportedMediaType() {
-        assertThat(scraper.findImages(new ScrapeRequest(MediaType.MOVIE_SET, "Matrix", null, Map.of("tmdb", "1"))))
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_EPISODE, "Pilot", null, Map.of("tvdb", "1"))))
                 .isEmpty();
         assertThat(fanart.requests()).isEmpty();
     }

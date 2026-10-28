@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MetadataResult;
 import de.tiktak.kmm.plugin.api.SearchResult;
 import lombok.RequiredArgsConstructor;
@@ -46,7 +47,15 @@ class TmdbMovieMapper {
                 .certification(certification(movie).orElse(null))
                 .genres(genres(movie))
                 .uniqueIds(uniqueIds(movie))
+                .collection(collection(movie).orElse(null))
                 .build();
+    }
+
+    private static Optional<CollectionReference> collection(JsonNode movie) {
+        JsonNode collection = movie.path("belongs_to_collection");
+        int id = collection.path("id").asInt(0);
+        return id > 0 ? text(collection, "name").map(name -> new CollectionReference(String.valueOf(id), name))
+                : Optional.empty();
     }
 
     private Optional<String> certification(JsonNode movie) {

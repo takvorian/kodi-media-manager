@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -104,6 +105,15 @@ class TmdbMetadataScraperTest {
                 .with("certification-country", "US").with("certification-prefix", "Rated "));
 
         assertThat(scraper.fetch("949").orElseThrow().certification()).isEqualTo("Rated R");
+    }
+
+    @Test
+    void knowsTheCollectionOfAMovie() {
+        tmdb.respond("/3/movie/603", "movie-603.json");
+
+        assertThat(scraper.fetch("603").orElseThrow().collection())
+                .isEqualTo(new CollectionReference("2344", "Matrix Filmreihe"));
+        assertThat(scraper.fetch("949").orElseThrow().collection()).isNull();
     }
 
     @Test

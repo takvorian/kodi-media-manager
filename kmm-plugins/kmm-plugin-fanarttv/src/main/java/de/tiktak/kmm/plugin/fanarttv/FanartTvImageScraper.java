@@ -43,7 +43,7 @@ public class FanartTvImageScraper implements ImageScraper {
 
     @Override
     public Set<MediaType> supportedMediaTypes() {
-        return Set.of(MediaType.MOVIE, MediaType.TV_SHOW);
+        return Set.of(MediaType.MOVIE, MediaType.MOVIE_SET, MediaType.TV_SHOW);
     }
 
     @Override
@@ -57,13 +57,20 @@ public class FanartTvImageScraper implements ImageScraper {
         return settings != null && settings.hasApiKey() ? Optional.empty() : Optional.of(MISSING_API_KEY);
     }
 
-    /** fanart.tv findet Filme über die TMDB-ID, ersatzweise über die IMDb-ID, Serien über die TVDB-ID. */
+    /**
+     * fanart.tv findet Filme über die TMDB-ID, ersatzweise über die IMDb-ID, Filmsets über die TMDB-ID der Sammlung
+     * (gleicher Endpunkt) und Serien über die TVDB-ID.
+     */
     @Override
     public List<ImageCandidate> findImages(ScrapeRequest request) {
         requireConfigured();
         return switch (request.mediaType()) {
             case MOVIE -> Optional.ofNullable(request.uniqueIds().get(TMDB))
                     .or(() -> Optional.ofNullable(request.uniqueIds().get(IMDB)))
+                    .flatMap(client::movie)
+                    .map(mapper::toCandidates)
+                    .orElse(List.of());
+            case MOVIE_SET -> Optional.ofNullable(request.uniqueIds().get(TMDB))
                     .flatMap(client::movie)
                     .map(mapper::toCandidates)
                     .orElse(List.of());

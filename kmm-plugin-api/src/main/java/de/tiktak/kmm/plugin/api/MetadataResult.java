@@ -14,6 +14,7 @@ import lombok.Builder;
  * @param runtime       Laufzeit in Minuten
  * @param certification Altersfreigabe in der Schreibweise für die NFO, z. B. {@code FSK 12}
  * @param uniqueIds     IDs je Anbieter, z. B. {@code imdb -> tt0113277}, {@code tmdb -> 949}
+ * @param collection    Sammlung (Filmset), zu der der Film gehört, oder {@code null}
  */
 @Builder
 public record MetadataResult(
@@ -26,7 +27,8 @@ public record MetadataResult(
         Integer runtime,
         String certification,
         List<String> genres,
-        Map<String, String> uniqueIds) {
+        Map<String, String> uniqueIds,
+        CollectionReference collection) {
 
     public MetadataResult {
         Objects.requireNonNull(title, "title must not be null");

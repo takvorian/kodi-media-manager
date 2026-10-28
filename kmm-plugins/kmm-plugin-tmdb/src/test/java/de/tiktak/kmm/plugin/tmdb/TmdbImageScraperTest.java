@@ -74,9 +74,19 @@ class TmdbImageScraperTest {
     }
 
     @Test
-    void returnsNothingForUnsupportedMediaType() {
-        assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.TV_SHOW);
+    void findsTheImagesOfACollection() {
+        assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.MOVIE_SET,
+                MediaType.TV_SHOW);
+        tmdb.respond("/3/collection/2344/images", "images-collection-2344.json");
+
         assertThat(scraper.findImages(new ScrapeRequest(MediaType.MOVIE_SET, "Matrix", null, Map.of("tmdb", "2344"))))
+                .extracting(ImageCandidate::type).containsExactly(ImageType.POSTER, ImageType.FANART);
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.MOVIE_SET, "Matrix", null, Map.of()))).isEmpty();
+    }
+
+    @Test
+    void returnsNothingForUnsupportedMediaType() {
+        assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_EPISODE, "Pilot", null, Map.of("tmdb", "1"))))
                 .isEmpty();
         assertThat(tmdb.requests()).isEmpty();
     }

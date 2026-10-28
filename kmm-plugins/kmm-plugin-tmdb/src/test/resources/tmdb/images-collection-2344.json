@@ -1,0 +1,9 @@
+{
+  "id": 2344,
+  "posters": [
+    {"file_path": "/set-poster.jpg", "width": 1000, "height": 1500, "iso_639_1": "de", "vote_average": 5.0}
+  ],
+  "backdrops": [
+    {"file_path": "/set-backdrop.jpg", "width": 1920, "height": 1080, "iso_639_1": null, "vote_average": 4.0}
+  ]
+}

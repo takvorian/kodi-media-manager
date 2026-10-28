@@ -57,6 +57,27 @@ class TmdbApi {
         return String.join(",", settings.imageLanguage(), FALLBACK_IMAGE_LANGUAGE, NO_LANGUAGE);
     }
 
+    Optional<JsonNode> searchCollections(String title) {
+        return client.get("/search/collection", Map.of("query", title, "language", settings.language()));
+    }
+
+    /** @param language Sprache, z. B. {@code de-DE}; Ember greift für fehlende Beschreibungen auf Englisch zurück */
+    Optional<JsonNode> collection(String collectionId, String language) {
+        if (!isTmdbId(collectionId)) {
+            return Optional.empty();
+        }
+        return client.get("/collection/" + collectionId, Map.of("language", language));
+    }
+
+    /** Bilder einer Sammlung in der eingestellten Sprache, auf Englisch und ohne Sprache. */
+    Optional<JsonNode> collectionImages(String collectionId) {
+        if (!isTmdbId(collectionId)) {
+            return Optional.empty();
+        }
+        return client.get("/collection/" + collectionId + "/images",
+                Map.of("include_image_language", imageLanguages()));
+    }
+
     Optional<JsonNode> searchTvShows(String title, Integer year) {
         Map<String, String> parameters = new HashMap<>(Map.of(
                 "query", title,
