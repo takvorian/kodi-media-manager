@@ -25,6 +25,8 @@ class CompanionFilesTest {
         var files = CompanionFiles.of(MOVIE_DIRECTORY.resolve("Heat (1995)-cd1.avi"), DiscFormat.FILE, 2);
 
         assertThat(files.nfoFile()).isEqualTo(MOVIE_DIRECTORY.resolve("Heat (1995).nfo"));
+        assertThat(files.baseName()).isEqualTo("Heat (1995)");
+        assertThat(files.movieDirectory()).isEqualTo(MOVIE_DIRECTORY.toAbsolutePath().normalize());
     }
 
     @Test
@@ -57,6 +59,7 @@ class CompanionFilesTest {
 
         assertThat(files.nfoCandidates()).containsExactly(
                 MOVIE_DIRECTORY.resolve("VIDEO_TS").resolve("VIDEO_TS.nfo"), MOVIE_DIRECTORY.resolve("movie.nfo"));
+        assertThat(files.movieDirectory()).isEqualTo(MOVIE_DIRECTORY.toAbsolutePath().normalize());
     }
 
     @Test

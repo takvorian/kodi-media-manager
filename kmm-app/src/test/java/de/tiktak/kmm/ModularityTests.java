@@ -12,7 +12,7 @@ class ModularityTests {
      * {@code de.tiktak.kmm}, gehören aber nicht zu den Modulith-Modulen von kmm-app.
      */
     private static final String[] LIBRARY_PACKAGES = {"de.tiktak.kmm.plugin.api..", "de.tiktak.kmm.migration.ember..",
-            "de.tiktak.kmm.kodi.rpc..", "de.tiktak.kmm.kodi.path.."};
+            "de.tiktak.kmm.kodi.rpc..", "de.tiktak.kmm.kodi.path..", "de.tiktak.kmm.scanner.naming.."};
 
     private final ApplicationModules modules =
             ApplicationModules.of(KodiMediaManagerApplication.class, resideInAnyPackage(LIBRARY_PACKAGES));

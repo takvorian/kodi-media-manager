@@ -72,6 +72,16 @@ public final class CompanionFiles {
         return new CompanionFiles(directory, baseName, firstPartName, movieDirectory, disc);
     }
 
+    /** Gemeinsamer Anfang der Namen von Video- und Begleitdateien, bei Stapeln ohne Teilangabe. */
+    public String baseName() {
+        return baseName;
+    }
+
+    /** Ordner des Films; bei DVD- und Blu-ray-Ordnern der Ordner über {@code VIDEO_TS} bzw. {@code BDMV}. */
+    public Path movieDirectory() {
+        return movieDirectory;
+    }
+
     /** Die NFO, die KMM neu anlegt. */
     public Path nfoFile() {
         return withSuffix(NFO_EXTENSION);
