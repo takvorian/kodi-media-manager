@@ -37,11 +37,12 @@ public class SettingsService {
      * ein Proxy ohne Passwort ({@code null}) behält das bisher gespeicherte.
      */
     /**
-     * @throws InvalidSettingsException wenn ein Namensmuster ungültig ist
+     * @throws InvalidSettingsException wenn ein Namensmuster ungültig ist oder einer Ablage der Ordner fehlt
      */
     @Transactional
     public SettingsView update(KmmSettings changes) {
         changes.rename().validate();
+        changes.movieSets().validate();
         KmmSettings previous = stored();
         KmmSettings merged = keepOverriddenValues(keepPassword(changes, previous), previous);
         store.save(merged);

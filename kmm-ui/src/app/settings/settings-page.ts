@@ -12,7 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { problemMessage } from '../shared/problem-message';
 import { ApiKeysCard } from './api-keys-card';
 import { EpisodeOrdering, SettingsField, SettingsView } from './settings';
-import { createSettingsForm, toFormValue, toSettings } from './settings-form';
+import { createSettingsForm, MAX_PATH_LENGTH, toFormValue, toSettings } from './settings-form';
 import { SettingsService } from './settings.service';
 
 const SNACKBAR_DURATION_MS = 5000;
@@ -54,6 +54,9 @@ export class SettingsPage {
     this.form.controls.proxyEnabled.valueChanges
       .pipe(takeUntilDestroyed())
       .subscribe(() => this.updateProxyValidators());
+    this.form.controls.movieSets.valueChanges
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.updateMovieSetValidators());
   }
 
   protected isOverridden(field: SettingsField): boolean {
@@ -94,10 +97,17 @@ export class SettingsPage {
     this.setEnabled('metadataLanguage', !view.overridden.includes('METADATA_LANGUAGE'));
     this.setEnabled('artworkLanguage', !view.overridden.includes('ARTWORK_LANGUAGE'));
     const proxyEditable = !view.overridden.includes('PROXY');
-    for (const control of ['proxyEnabled', 'proxyHost', 'proxyPort', 'proxyUsername', 'proxyPassword'] as const) {
+    for (const control of [
+      'proxyEnabled',
+      'proxyHost',
+      'proxyPort',
+      'proxyUsername',
+      'proxyPassword',
+    ] as const) {
       this.setEnabled(control, proxyEditable);
     }
     this.updateProxyValidators();
+    this.updateMovieSetValidators();
   }
 
   private setEnabled(control: keyof typeof this.form.controls, enabled: boolean): void {
@@ -112,6 +122,22 @@ export class SettingsPage {
     const host = this.form.controls.proxyHost;
     host.setValidators(this.form.controls.proxyEnabled.value ? Validators.required : null);
     host.updateValueAndValidity({ emitEvent: false });
+  }
+
+  /** Eine eingeschaltete Ablage braucht einen Ordner. */
+  private updateMovieSetValidators(): void {
+    const movieSets = this.form.controls.movieSets.controls;
+    for (const [enabled, folder] of [
+      [movieSets.flatImages, movieSets.flatImagesFolder],
+      [movieSets.kodiImages, movieSets.kodiImagesFolder],
+    ] as const) {
+      folder.setValidators(
+        enabled.value
+          ? [Validators.required, Validators.maxLength(MAX_PATH_LENGTH)]
+          : Validators.maxLength(MAX_PATH_LENGTH),
+      );
+      folder.updateValueAndValidity({ emitEvent: false });
+    }
   }
 
   private notify(message: string): void {

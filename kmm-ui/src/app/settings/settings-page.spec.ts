@@ -28,6 +28,13 @@ describe('SettingsPage', () => {
       tvOnScrape: false,
       episodesOnScan: false,
     },
+    movieSets: {
+      flatImages: true,
+      flatImagesFolder: '/media/filme/_filmsets',
+      kodiImages: false,
+      kodiImagesFolder: null,
+      assignOnScrape: true,
+    },
     overridden: [],
   };
   const keys: ApiKeyView[] = [
@@ -124,6 +131,7 @@ describe('SettingsPage', () => {
       tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
       mediaInfo: { ffprobePath: 'ffprobe', probeOnScrape: true, probeNewFiles: true },
       rename: stored.rename,
+      movieSets: stored.movieSets,
     });
     expect(snackBarMessages).toEqual(['Einstellungen gespeichert.']);
     expect(field('videoExtensions').value).toBe('mkv, iso');
@@ -161,6 +169,32 @@ describe('SettingsPage', () => {
       ...stored.rename,
       movieFile: '{title}',
       movieOnScrape: true,
+    });
+    request.flush(stored);
+  });
+
+  it('saves the movie set settings and requires a folder for an enabled storage', async () => {
+    await load(stored);
+    expect(field('flatImagesFolder').value).toBe('/media/filme/_filmsets');
+
+    element().querySelector<HTMLInputElement>('[name="kodiImages"] input')!.click();
+    await fixture.whenStable();
+    button('.save-button').click();
+    httpTesting.expectNone({ method: 'PUT', url: SETTINGS_URL });
+
+    await type('kodiImagesFolder', ' /media/sets ');
+    await type('flatImagesFolder', '');
+    element().querySelector<HTMLInputElement>('[name="flatImages"] input')!.click();
+    await fixture.whenStable();
+    button('.save-button').click();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
+    expect(request.request.body.movieSets).toEqual({
+      flatImages: false,
+      flatImagesFolder: null,
+      kodiImages: true,
+      kodiImagesFolder: '/media/sets',
+      assignOnScrape: true,
     });
     request.flush(stored);
   });

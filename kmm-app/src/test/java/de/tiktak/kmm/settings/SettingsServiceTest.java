@@ -67,6 +67,22 @@ class SettingsServiceTest {
     }
 
     @Test
+    void rejectsAnImageStorageWithoutFolder() {
+        var service = new SettingsService(store, SettingsOverrides.NONE);
+        var flat = KmmSettings.DEFAULTS.withMovieSets(new MovieSetSettings(true, " ", false, null, false));
+        var kodi = KmmSettings.DEFAULTS.withMovieSets(new MovieSetSettings(false, null, true, null, false));
+
+        assertThatThrownBy(() -> service.update(flat)).isInstanceOf(InvalidSettingsException.class)
+                .hasMessageContaining("flachen Schema fehlt der Ordner");
+        assertThatThrownBy(() -> service.update(kodi)).isInstanceOf(InvalidSettingsException.class)
+                .hasMessageContaining("Kodis Set-Ordnern fehlt der Ordner");
+        assertThat(service.update(KmmSettings.DEFAULTS.withMovieSets(
+                new MovieSetSettings(false, null, true, "/media/sets", true))).movieSets().kodiImagesFolder())
+                .isEqualTo("/media/sets");
+        verify(store).save(any());
+    }
+
+    @Test
     void keepsStoredProxyPasswordWhenChangeOmitsIt() {
         when(store.load()).thenReturn(KmmSettings.DEFAULTS.withProxy(PROXY));
         var service = new SettingsService(store, SettingsOverrides.NONE);

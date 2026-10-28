@@ -8,8 +8,10 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import de.tiktak.kmm.migration.ember.settings.EmberMovieSetSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
@@ -17,6 +19,7 @@ import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
 import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.MediaInfoSettings;
+import de.tiktak.kmm.settings.MovieSetSettings;
 import de.tiktak.kmm.scanner.naming.NamePattern;
 import de.tiktak.kmm.scanner.naming.NamePatternException;
 import de.tiktak.kmm.scanner.naming.NamePlaceholders;
@@ -34,6 +37,8 @@ final class EmberSettingsMapper {
     private static final Pattern ARTWORK_LANGUAGE = Pattern.compile("[a-z]{2}");
     private static final Pattern EXTENSION = Pattern.compile("\\.?[a-z0-9]{1,10}");
     private static final int DEFAULT_PROXY_PORT = 8080;
+    private static final String FLAT_IMAGES = "Set-Bilder im flachen Schema";
+    private static final String KODI_IMAGES = "Set-Bilder in Kodis Set-Ordnern";
     /** Embers {@code DayOfYear} kennen die Scraper von KMM nicht; es bleibt bei der bisherigen Reihenfolge. */
     private static final Map<String, EpisodeOrdering> ORDERINGS = Map.of(
             "Standard", EpisodeOrdering.AIRED, "DVD", EpisodeOrdering.DVD, "Absolute", EpisodeOrdering.ABSOLUTE);
@@ -41,10 +46,17 @@ final class EmberSettingsMapper {
     private EmberSettingsMapper() {
     }
 
+    /** Wie {@link #map(KmmSettings, Optional, List, Function)}, Ordner werden unverändert übernommen. */
+    static SettingsImport map(KmmSettings current, Optional<EmberSettings> ember, List<String> excludedPaths) {
+        return map(current, ember, excludedPaths, Optional::of);
+    }
+
     /**
      * @param excludedPaths aus Ember übernommene, bereits zugeordnete ausgeschlossene Ordner
+     * @param translatePath ordnet einen Ember-Pfad dem KMM-Pfad zu, leer, wenn keine Zuordnung passt
      */
-    static SettingsImport map(KmmSettings current, Optional<EmberSettings> ember, List<String> excludedPaths) {
+    static SettingsImport map(KmmSettings current, Optional<EmberSettings> ember, List<String> excludedPaths,
+            Function<String, Optional<String>> translatePath) {
         List<String> changes = new ArrayList<>();
         String metadataLanguage = current.metadataLanguage();
         String artworkLanguage = current.artworkLanguage();
@@ -82,8 +94,11 @@ final class EmberSettingsMapper {
         RenameSettings rename = ember.map(EmberSettings::rename)
                 .map(emberRename -> rename(current.rename(), emberRename, changes))
                 .orElse(current.rename());
+        MovieSetSettings movieSets = ember
+                .map(settings -> movieSets(current.movieSets(), settings.movieSet(), translatePath, changes))
+                .orElse(current.movieSets());
         KmmSettings imported = new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions,
-                List.copyOf(allExcluded), proxy, tv, mediaInfo, rename);
+                List.copyOf(allExcluded), proxy, tv, mediaInfo, rename, movieSets);
         return new SettingsImport(imported, changes);
     }
 
@@ -104,6 +119,45 @@ final class EmberSettingsMapper {
                 flag("Serien nach dem Scrapen umbenennen", ember.tvOnScrape(), current.tvOnScrape(), changes),
                 flag("Neue Episoden beim Scan umbenennen", ember.episodesOnScan(), current.episodesOnScan(),
                         changes));
+    }
+
+    /** Eine Ablage ohne zuordenbaren Ordner bleibt aus, sonst wären die Einstellungen ungültig. */
+    private static MovieSetSettings movieSets(MovieSetSettings current, EmberMovieSetSettings ember,
+            Function<String, Optional<String>> translatePath, List<String> changes) {
+        String flatFolder = folder(FLAT_IMAGES, ember.flatImagesFolder(), current.flatImagesFolder(), translatePath,
+                changes);
+        String kodiFolder = folder(KODI_IMAGES, ember.kodiImagesFolder(), current.kodiImagesFolder(), translatePath,
+                changes);
+        return new MovieSetSettings(
+                storage(FLAT_IMAGES, ember.flatImages(), current.flatImages(), flatFolder, changes),
+                flatFolder,
+                storage(KODI_IMAGES, ember.kodiImages(), current.kodiImages(), kodiFolder, changes),
+                kodiFolder,
+                flag("Filme beim Scrapen ihrem Filmset zuordnen", ember.assignOnScrape(), current.assignOnScrape(),
+                        changes));
+    }
+
+    private static String folder(String label, String ember, String current,
+            Function<String, Optional<String>> translatePath, List<String> changes) {
+        if (ember == null) {
+            return current;
+        }
+        Optional<String> translated = translatePath.apply(ember);
+        if (translated.isEmpty()) {
+            changes.add("Ordner für %s nicht übernommen: „%s“ passt zu keiner Pfadzuordnung.".formatted(label, ember));
+            return current;
+        }
+        changes.add("Ordner für %s: %s".formatted(label, translated.get()));
+        return translated.get();
+    }
+
+    private static boolean storage(String label, Boolean ember, boolean current, String folder,
+            List<String> changes) {
+        if (Boolean.TRUE.equals(ember) && folder == null) {
+            changes.add("%s bleibt aus, weil der Ordner fehlt.".formatted(label));
+            return false;
+        }
+        return flag(label, ember, current, changes);
     }
 
     private static String pattern(String label, String ember, String current, Set<String> placeholders,

@@ -26,6 +26,13 @@ describe('SettingsService', () => {
       tvOnScrape: false,
       episodesOnScan: false,
     },
+    movieSets: {
+      flatImages: true,
+      flatImagesFolder: '/media/filme/_filmsets',
+      kodiImages: false,
+      kodiImagesFolder: null,
+      assignOnScrape: true,
+    },
     overridden: [],
   };
 
@@ -33,7 +40,9 @@ describe('SettingsService', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(SettingsService);
     httpTesting = TestBed.inject(HttpTestingController);
   });

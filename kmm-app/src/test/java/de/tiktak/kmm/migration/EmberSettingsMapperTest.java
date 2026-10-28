@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.migration.ember.settings.EmberMovieSetSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
@@ -14,6 +15,7 @@ import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
 import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.MediaInfoSettings;
+import de.tiktak.kmm.settings.MovieSetSettings;
 import de.tiktak.kmm.settings.ProxySettings;
 import de.tiktak.kmm.settings.RenameSettings;
 import de.tiktak.kmm.settings.TvSettings;
@@ -33,6 +35,34 @@ class EmberSettingsMapperTest {
         assertThat(imported.settings().tv()).isEqualTo(new TvSettings("de-DE", "de", EpisodeOrdering.ABSOLUTE));
         assertThat(imported.changes()).containsExactly("Sprache der Serien-Metadaten: de-DE",
                 "Bevorzugte Bildsprache für Serien: de", "Episodenreihenfolge: Absolute");
+    }
+
+    @Test
+    void takesOverTheMovieSetSettingsWithTranslatedFolders() {
+        var ember = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null, null, null, null,
+                new EmberMovieSetSettings(true, "D:\\Filme\\_filmsets", false, null, true));
+
+        var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of(),
+                path -> Optional.of(path.replace("D:\\Filme", "/media/filme").replace('\\', '/')));
+
+        assertThat(imported.settings().movieSets())
+                .isEqualTo(new MovieSetSettings(true, "/media/filme/_filmsets", false, null, true));
+        assertThat(imported.changes()).containsExactly("Ordner für Set-Bilder im flachen Schema: /media/filme/_filmsets",
+                "Set-Bilder im flachen Schema: ja", "Set-Bilder in Kodis Set-Ordnern: nein",
+                "Filme beim Scrapen ihrem Filmset zuordnen: ja");
+    }
+
+    @Test
+    void keepsAMovieSetImageStorageOffWhenItsFolderCannotBeTranslated() {
+        var ember = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null, null, null, null,
+                new EmberMovieSetSettings(null, null, true, "\\\\nas\\sets", null));
+
+        var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of(), path -> Optional.empty());
+
+        assertThat(imported.settings().movieSets()).isEqualTo(MovieSetSettings.DEFAULTS);
+        assertThat(imported.changes()).containsExactly(
+                "Ordner für Set-Bilder in Kodis Set-Ordnern nicht übernommen: „\\\\nas\\sets“ passt zu keiner Pfadzuordnung.",
+                "Set-Bilder in Kodis Set-Ordnern bleibt aus, weil der Ordner fehlt.");
     }
 
     @Test

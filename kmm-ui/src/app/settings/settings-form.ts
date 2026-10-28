@@ -10,6 +10,7 @@ const DEFAULT_PROXY_PORT = 8080;
 const EXTENSION_SEPARATOR = ',';
 const LINE_SEPARATOR = /\r?\n/;
 const MAX_PATTERN_LENGTH = 512;
+export const MAX_PATH_LENGTH = 1024;
 
 export type SettingsForm = FormGroup<{
   metadataLanguage: FormControl<string>;
@@ -38,6 +39,13 @@ export type SettingsForm = FormGroup<{
     tvOnEdit: FormControl<boolean>;
     tvOnScrape: FormControl<boolean>;
     episodesOnScan: FormControl<boolean>;
+  }>;
+  movieSets: FormGroup<{
+    flatImages: FormControl<boolean>;
+    flatImagesFolder: FormControl<string>;
+    kodiImages: FormControl<boolean>;
+    kodiImagesFolder: FormControl<string>;
+    assignOnScrape: FormControl<boolean>;
   }>;
 }>;
 
@@ -70,6 +78,13 @@ export function createSettingsForm(formBuilder: NonNullableFormBuilder): Setting
       tvOnScrape: [false],
       episodesOnScan: [false],
     }),
+    movieSets: formBuilder.group({
+      flatImages: [false],
+      flatImagesFolder: ['', Validators.maxLength(MAX_PATH_LENGTH)],
+      kodiImages: [false],
+      kodiImagesFolder: ['', Validators.maxLength(MAX_PATH_LENGTH)],
+      assignOnScrape: [false],
+    }),
   });
 }
 
@@ -91,6 +106,11 @@ export function toFormValue(view: SettingsView): SettingsForm['value'] {
     probeOnScrape: view.mediaInfo.probeOnScrape,
     probeNewFiles: view.mediaInfo.probeNewFiles,
     rename: { ...view.rename },
+    movieSets: {
+      ...view.movieSets,
+      flatImagesFolder: view.movieSets.flatImagesFolder ?? '',
+      kodiImagesFolder: view.movieSets.kodiImagesFolder ?? '',
+    },
   };
 }
 
@@ -127,6 +147,11 @@ export function toSettings(form: SettingsForm): KmmSettings {
       tvShowFolder: value.rename.tvShowFolder.trim(),
       seasonFolder: value.rename.seasonFolder.trim(),
       episodeFile: value.rename.episodeFile.trim(),
+    },
+    movieSets: {
+      ...value.movieSets,
+      flatImagesFolder: value.movieSets.flatImagesFolder.trim() || null,
+      kodiImagesFolder: value.movieSets.kodiImagesFolder.trim() || null,
     },
   };
 }

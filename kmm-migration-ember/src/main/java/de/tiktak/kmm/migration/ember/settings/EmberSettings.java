@@ -19,6 +19,7 @@ import java.util.Optional;
  * @param metaDataScan       ob Ember beim Scrapen die Mediendaten ausliest (für Filme oder Serien), oder
  *                           {@code null}, wenn die Datei keine Angabe enthält
  * @param rename             Einstellungen des Umbenenners aus {@code AdvancedSettings.xml} oder {@code null}
+ * @param movieSet           Einstellungen für Filmsets
  */
 public record EmberSettings(
         int version,
@@ -30,13 +31,23 @@ public record EmberSettings(
         String movieImageLanguage,
         EmberTvSettings tv,
         Boolean metaDataScan,
-        EmberRenameSettings rename) {
+        EmberRenameSettings rename,
+        EmberMovieSetSettings movieSet) {
 
     public EmberSettings {
         videoExtensions = List.copyOf(videoExtensions);
         subtitleExtensions = List.copyOf(subtitleExtensions);
         Objects.requireNonNull(proxy, "proxy must not be null");
         tv = tv == null ? EmberTvSettings.NONE : tv;
+        movieSet = movieSet == null ? EmberMovieSetSettings.NONE : movieSet;
+    }
+
+    /** Einstellungen ohne die für Filmsets. */
+    public EmberSettings(int version, String language, List<String> videoExtensions, List<String> subtitleExtensions,
+            Optional<EmberProxySettings> proxy, String movieLanguage, String movieImageLanguage, EmberTvSettings tv,
+            Boolean metaDataScan, EmberRenameSettings rename) {
+        this(version, language, videoExtensions, subtitleExtensions, proxy, movieLanguage, movieImageLanguage, tv,
+                metaDataScan, rename, null);
     }
 
     /** Einstellungen ohne Angaben zu Serien. */
@@ -62,6 +73,6 @@ public record EmberSettings(
 
     public EmberSettings withRename(EmberRenameSettings newRename) {
         return new EmberSettings(version, language, videoExtensions, subtitleExtensions, proxy, movieLanguage,
-                movieImageLanguage, tv, metaDataScan, newRename);
+                movieImageLanguage, tv, metaDataScan, newRename, movieSet);
     }
 }

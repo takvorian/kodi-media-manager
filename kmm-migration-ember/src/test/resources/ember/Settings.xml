@@ -32,4 +32,9 @@
   <TVScraperOptionsOrdering>DVD</TVScraperOptionsOrdering>
   <MovieScraperMetaDataScan>true</MovieScraperMetaDataScan>
   <TVScraperMetaDataScan>false</TVScraperMetaDataScan>
+  <MovieScraperCollectionsAuto>true</MovieScraperCollectionsAuto>
+  <MovieSetUseMatrix>false</MovieSetUseMatrix>
+  <MovieSetPathMatrix />
+  <MovieSetUseExtended>true</MovieSetUseExtended>
+  <MovieSetPathExtended>D:\Filme\_filmsets</MovieSetPathExtended>
 </Settings>

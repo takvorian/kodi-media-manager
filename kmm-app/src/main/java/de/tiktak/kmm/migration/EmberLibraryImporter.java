@@ -125,7 +125,7 @@ class EmberLibraryImporter {
                 .map(paths::translate)
                 .flatMap(Optional::stream)
                 .toList();
-        var imported = EmberSettingsMapper.map(settingsService.current(), settings, excluded);
+        var imported = EmberSettingsMapper.map(settingsService.current(), settings, excluded, paths::translate);
         progress.settingsChanged(imported.changes());
         if (!dryRun && !imported.changes().isEmpty()) {
             settingsService.update(imported.settings());

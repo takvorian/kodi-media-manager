@@ -34,7 +34,8 @@ class SettingsStoreTest {
                 new ProxySettings("proxy.local", 3128, "user", "secret"), new TvSettings("de-DE", "de",
                 EpisodeOrdering.DVD), new MediaInfoSettings("/opt/ffprobe", false, true),
                 new RenameSettings("{title}", "{title} ({year})", "{show:sort}", "Staffel {season}",
-                        "{show} {season}x{episode:2}", true, true, false, true, true));
+                        "{show} {season}x{episode:2}", true, true, false, true, true),
+                new MovieSetSettings(true, "/media/filme/_filmsets", false, " ", true));
 
         store.save(settings);
         entityManager.flush();

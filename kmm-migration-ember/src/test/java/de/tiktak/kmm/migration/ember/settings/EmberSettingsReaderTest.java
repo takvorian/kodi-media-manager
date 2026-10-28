@@ -37,6 +37,8 @@ class EmberSettingsReaderTest {
         assertThat(settings.movieImageLanguage()).isEqualTo("de");
         assertThat(settings.tv()).isEqualTo(new EmberTvSettings("en-US", "en", "DVD"));
         assertThat(settings.metaDataScan()).isTrue();
+        assertThat(settings.movieSet())
+                .isEqualTo(new EmberMovieSetSettings(true, "D:\\Filme\\_filmsets", false, null, true));
     }
 
     @Test
@@ -61,6 +63,7 @@ class EmberSettingsReaderTest {
         assertThat(settings.videoExtensions()).isEmpty();
         assertThat(settings.subtitleExtensions()).isEmpty();
         assertThat(settings.proxy()).isEmpty();
+        assertThat(settings.movieSet()).isEqualTo(EmberMovieSetSettings.NONE);
     }
 
     @Test

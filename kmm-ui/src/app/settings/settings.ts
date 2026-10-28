@@ -40,6 +40,16 @@ export interface RenameSettings {
   readonly episodesOnScan: boolean;
 }
 
+/** Ablage der Set-Bilder (flaches Schema und Kodis Set-Ordner) und Zuordnung beim Scrapen. */
+export interface MovieSetSettings {
+  readonly flatImages: boolean;
+  readonly flatImagesFolder: string | null;
+  readonly kodiImages: boolean;
+  readonly kodiImagesFolder: string | null;
+  /** Filme beim Scrapen dem Set ihrer TMDB-Sammlung zuordnen. */
+  readonly assignOnScrape: boolean;
+}
+
 export type ApiKeyName =
   'TMDB_API_KEY' | 'TVDB_API_KEY' | 'TVDB_PIN' | 'FANARTTV_API_KEY' | 'FANARTTV_CLIENT_KEY';
 
@@ -62,6 +72,7 @@ export interface SettingsView {
   readonly tv: TvSettings;
   readonly mediaInfo: MediaInfoSettings;
   readonly rename: RenameSettings;
+  readonly movieSets: MovieSetSettings;
   readonly overridden: readonly SettingsField[];
 }
 
@@ -83,4 +94,5 @@ export interface KmmSettings {
   readonly tv: TvSettings;
   readonly mediaInfo: MediaInfoSettings;
   readonly rename: RenameSettings;
+  readonly movieSets: MovieSetSettings;
 }

@@ -23,6 +23,7 @@ import jakarta.validation.constraints.Size;
  * @param tv               Einstellungen für Serien; ohne Angabe wie bei Filmen
  * @param mediaInfo        Einstellungen für ffprobe; ohne Angabe die Vorgaben
  * @param rename           Muster und Auslöser für das Umbenennen; ohne Angabe die Vorgaben
+ * @param movieSets        Ablage der Set-Bilder und Zuordnung beim Scrapen; ohne Angabe die Vorgaben
  */
 public record KmmSettings(
         @NotBlank @Pattern(regexp = METADATA_LANGUAGE_PATTERN) String metadataLanguage,
@@ -32,7 +33,8 @@ public record KmmSettings(
         @Valid ProxySettings proxy,
         @Valid TvSettings tv,
         @Valid MediaInfoSettings mediaInfo,
-        @Valid RenameSettings rename) {
+        @Valid RenameSettings rename,
+        @Valid MovieSetSettings movieSets) {
 
     static final String METADATA_LANGUAGE_PATTERN = "[a-z]{2}(-[A-Z]{2})?";
     static final String ARTWORK_LANGUAGE_PATTERN = "[a-z]{2}";
@@ -59,54 +61,67 @@ public record KmmSettings(
         tv = tv != null ? tv : TvSettings.like(metadataLanguage, artworkLanguage);
         mediaInfo = mediaInfo != null ? mediaInfo : MediaInfoSettings.DEFAULTS;
         rename = rename != null ? rename : RenameSettings.DEFAULTS;
+        movieSets = movieSets != null ? movieSets : MovieSetSettings.DEFAULTS;
+    }
+
+    /** Einstellungen ohne eigene Angaben zu Filmsets. */
+    public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
+            List<String> excludedPaths, ProxySettings proxy, TvSettings tv, MediaInfoSettings mediaInfo,
+            RenameSettings rename) {
+        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, mediaInfo, rename, null);
     }
 
     /** Einstellungen ohne eigene Angaben zum Umbenennen. */
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy, TvSettings tv, MediaInfoSettings mediaInfo) {
-        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, mediaInfo, null);
+        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, mediaInfo, null, null);
     }
 
     /** Einstellungen ohne eigene Angaben für ffprobe. */
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy, TvSettings tv) {
-        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, null, null);
+        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, null, null, null);
     }
 
     /** Einstellungen ohne eigene Angaben für Serien; diese folgen den Film-Sprachen. */
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy) {
-        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, null, null, null);
+        this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, null, null, null, null);
     }
 
     KmmSettings withMetadataLanguage(String newMetadataLanguage) {
         return new KmmSettings(newMetadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv,
-                mediaInfo, rename);
+                mediaInfo, rename, movieSets);
     }
 
     KmmSettings withArtworkLanguage(String newArtworkLanguage) {
         return new KmmSettings(metadataLanguage, newArtworkLanguage, videoExtensions, excludedPaths, proxy, tv,
-                mediaInfo, rename);
+                mediaInfo, rename, movieSets);
     }
 
     KmmSettings withProxy(ProxySettings newProxy) {
         return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, newProxy, tv,
-                mediaInfo, rename);
+                mediaInfo, rename, movieSets);
     }
 
     public KmmSettings withTv(TvSettings newTv) {
         return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, newTv,
-                mediaInfo, rename);
+                mediaInfo, rename, movieSets);
     }
 
     public KmmSettings withMediaInfo(MediaInfoSettings newMediaInfo) {
         return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv,
-                newMediaInfo, rename);
+                newMediaInfo, rename, movieSets);
     }
 
     public KmmSettings withRename(RenameSettings newRename) {
         return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv,
-                mediaInfo, newRename);
+                mediaInfo, newRename, movieSets);
+    }
+
+    public KmmSettings withMovieSets(MovieSetSettings newMovieSets) {
+        return new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv,
+                mediaInfo, rename, newMovieSets);
     }
 
     private static String strip(String value) {

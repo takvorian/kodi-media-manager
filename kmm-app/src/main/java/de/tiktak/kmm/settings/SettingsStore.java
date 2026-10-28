@@ -41,6 +41,11 @@ class SettingsStore {
     static final String RENAME_TV_ON_EDIT = "rename-tv-on-edit";
     static final String RENAME_TV_ON_SCRAPE = "rename-tv-on-scrape";
     static final String RENAME_EPISODES_ON_SCAN = "rename-episodes-on-scan";
+    static final String SET_FLAT_IMAGES = "set-flat-images";
+    static final String SET_FLAT_IMAGES_FOLDER = "set-flat-images-folder";
+    static final String SET_KODI_IMAGES = "set-kodi-images";
+    static final String SET_KODI_IMAGES_FOLDER = "set-kodi-images-folder";
+    static final String SET_ASSIGN_ON_SCRAPE = "set-assign-on-scrape";
 
     private static final String LINE_SEPARATOR = "\n";
 
@@ -63,7 +68,18 @@ class SettingsStore {
                         values.getOrDefault(TV_ARTWORK_LANGUAGE, artworkLanguage),
                         EpisodeOrdering.valueOf(values.getOrDefault(TV_EPISODE_ORDERING, EpisodeOrdering.AIRED.name()))),
                 mediaInfo(values),
-                rename(values));
+                rename(values),
+                movieSets(values));
+    }
+
+    private static MovieSetSettings movieSets(Map<String, String> values) {
+        MovieSetSettings defaults = MovieSetSettings.DEFAULTS;
+        return new MovieSetSettings(
+                flag(values, SET_FLAT_IMAGES, defaults.flatImages()),
+                values.getOrDefault(SET_FLAT_IMAGES_FOLDER, defaults.flatImagesFolder()),
+                flag(values, SET_KODI_IMAGES, defaults.kodiImages()),
+                values.getOrDefault(SET_KODI_IMAGES_FOLDER, defaults.kodiImagesFolder()),
+                flag(values, SET_ASSIGN_ON_SCRAPE, defaults.assignOnScrape()));
     }
 
     private static MediaInfoSettings mediaInfo(Map<String, String> values) {
@@ -120,6 +136,12 @@ class SettingsStore {
         put(RENAME_TV_ON_EDIT, String.valueOf(rename.tvOnEdit()));
         put(RENAME_TV_ON_SCRAPE, String.valueOf(rename.tvOnScrape()));
         put(RENAME_EPISODES_ON_SCAN, String.valueOf(rename.episodesOnScan()));
+        MovieSetSettings movieSets = settings.movieSets();
+        put(SET_FLAT_IMAGES, String.valueOf(movieSets.flatImages()));
+        put(SET_FLAT_IMAGES_FOLDER, movieSets.flatImagesFolder());
+        put(SET_KODI_IMAGES, String.valueOf(movieSets.kodiImages()));
+        put(SET_KODI_IMAGES_FOLDER, movieSets.kodiImagesFolder());
+        put(SET_ASSIGN_ON_SCRAPE, String.valueOf(movieSets.assignOnScrape()));
     }
 
     private void put(String key, String value) {
