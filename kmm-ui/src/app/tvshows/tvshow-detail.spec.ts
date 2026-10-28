@@ -9,6 +9,8 @@ import { flushWhenRequested } from '../shared/testing';
 import { TvShowDetails, TvShowProposal } from './tvshow';
 import { TvShowDetail } from './tvshow-detail';
 import { TVSHOWS_URL, TV_SHOW_SCRAPERS_URL } from './tvshow.service';
+import { TvShowRenamePlan } from './tv-rename';
+import { CONFIRM } from '../shared/confirm';
 
 describe('TvShowDetail', () => {
   const alf: TvShowDetails = {
@@ -45,15 +47,49 @@ describe('TvShowDetail', () => {
       { number: 2, title: null, episodeCount: 0 },
     ],
     episodes: [
-      { id: 10, season: 0, episode: 1, title: 'Making of', aired: null, filePath: '/x0.avi', playCount: null },
-      { id: 11, season: 1, episode: 2, title: 'Der Fremde', aired: '1986-09-29', filePath: '/x1.avi', playCount: 1 },
-      { id: 12, season: 1, episode: 16, title: 'Gestatten', aired: null, filePath: '/x2.avi', playCount: null },
+      {
+        id: 10,
+        season: 0,
+        episode: 1,
+        title: 'Making of',
+        aired: null,
+        filePath: '/x0.avi',
+        playCount: null,
+      },
+      {
+        id: 11,
+        season: 1,
+        episode: 2,
+        title: 'Der Fremde',
+        aired: '1986-09-29',
+        filePath: '/x1.avi',
+        playCount: 1,
+      },
+      {
+        id: 12,
+        season: 1,
+        episode: 16,
+        title: 'Gestatten',
+        aired: null,
+        filePath: '/x2.avi',
+        playCount: null,
+      },
     ],
-    nfo: { path: '/media/serien/ALF (1986)/tvshow.nfo', exists: true, modifiedAt: '2026-10-26T09:00:00Z' },
+    nfo: {
+      path: '/media/serien/ALF (1986)/tvshow.nfo',
+      exists: true,
+      modifiedAt: '2026-10-26T09:00:00Z',
+    },
   };
 
   const scrapers: ScraperInfo[] = [
-    { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['TV_SHOW'], missingConfiguration: null, attribution: null },
+    {
+      id: 'tmdb',
+      displayName: 'TMDB',
+      mediaTypes: ['TV_SHOW'],
+      missingConfiguration: null,
+      attribution: null,
+    },
     {
       id: 'tvdb',
       displayName: 'TheTVDB',
@@ -63,7 +99,12 @@ describe('TvShowDetail', () => {
     },
   ];
   const proposal: TvShowProposal = {
-    metadata: { ...alf.metadata, title: 'ALF', plot: 'Ein Außerirdischer bei den Tanners.', tmdbId: '4658' },
+    metadata: {
+      ...alf.metadata,
+      title: 'ALF',
+      plot: 'Ein Außerirdischer bei den Tanners.',
+      tmdbId: '4658',
+    },
     matchedEpisodes: 2,
     providerEpisodes: 99,
   };
@@ -71,16 +112,30 @@ describe('TvShowDetail', () => {
   let fixture: ComponentFixture<TvShowDetail>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
+  let confirmMessages: string[];
+  let confirmAnswer: boolean;
 
   beforeEach(() => {
     snackBarMessages = [];
+    confirmMessages = [];
+    confirmAnswer = true;
     TestBed.configureTestingModule({
       imports: [TvShowDetail],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
+        {
+          provide: CONFIRM,
+          useValue: (message: string) => {
+            confirmMessages.push(message);
+            return confirmAnswer;
+          },
+        },
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -99,7 +154,9 @@ describe('TvShowDetail', () => {
   }
 
   function texts(selector: string): (string | undefined)[] {
-    return Array.from(element().querySelectorAll(selector)).map((item) => item.textContent?.replace(/\s+/g, ' ').trim());
+    return Array.from(element().querySelectorAll(selector)).map((item) =>
+      item.textContent?.replace(/\s+/g, ' ').trim(),
+    );
   }
 
   async function load(details: TvShowDetails): Promise<void> {
@@ -122,7 +179,16 @@ describe('TvShowDetail', () => {
     click('.search-button');
     httpTesting
       .expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-search`)
-      .flush([{ providerId: '78020', title: 'ALF', originalTitle: 'ALF', year: 1986, overview: null, posterUrl: null }]);
+      .flush([
+        {
+          providerId: '78020',
+          title: 'ALF',
+          originalTitle: 'ALF',
+          year: 1986,
+          overview: null,
+          posterUrl: null,
+        },
+      ]);
     await fixture.whenStable();
     click('.adopt-button');
     httpTesting
@@ -161,9 +227,17 @@ describe('TvShowDetail', () => {
     await load(alf);
 
     element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
-    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' }).flush([
-      { hostId: 1, host: 'Wohnzimmer', outcome: 'REFRESHED', message: '„ALF“ aktualisiert.', at: '' },
-    ]);
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })
+      .flush([
+        {
+          hostId: 1,
+          host: 'Wohnzimmer',
+          outcome: 'REFRESHED',
+          message: '„ALF“ aktualisiert.',
+          at: '',
+        },
+      ]);
     element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })
@@ -181,11 +255,18 @@ describe('TvShowDetail', () => {
     ]);
     await fixture.whenStable();
 
-    expect(element().querySelector('.season-artwork-title')?.textContent).toContain('Bilder der Staffel');
+    expect(element().querySelector('.season-artwork-title')?.textContent).toContain(
+      'Bilder der Staffel',
+    );
   });
 
   it('saves the metadata and reports where the NFO was written', async () => {
-    await load({ ...alf, nfo: { ...alf.nfo, exists: false, modifiedAt: null }, seasons: [], episodes: [] });
+    await load({
+      ...alf,
+      nfo: { ...alf.nfo, exists: false, modifiedAt: null },
+      seasons: [],
+      episodes: [],
+    });
     expect(element().querySelector('.nfo-status')?.textContent).toContain('Noch keine tvshow.nfo');
     expect(element().querySelector('.empty-seasons')).not.toBeNull();
 
@@ -204,7 +285,9 @@ describe('TvShowDetail', () => {
     request.flush(alf);
     await fixture.whenStable();
 
-    expect(snackBarMessages).toEqual(['Gespeichert und in /media/serien/ALF (1986)/tvshow.nfo geschrieben.']);
+    expect(snackBarMessages).toEqual([
+      'Gespeichert und in /media/serien/ALF (1986)/tvshow.nfo geschrieben.',
+    ]);
   });
 
   it('does not save invalid input and can discard changes', async () => {
@@ -243,7 +326,9 @@ describe('TvShowDetail', () => {
   it('shows the TVDB attribution only for shows with a TVDB ID', async () => {
     await load(alf);
     expect(texts('.attribution')).toEqual(['Metadata provided by TheTVDB.']);
-    expect(element().querySelector('.attribution a')?.getAttribute('href')).toBe('https://www.thetvdb.com');
+    expect(element().querySelector('.attribution a')?.getAttribute('href')).toBe(
+      'https://www.thetvdb.com',
+    );
 
     fixture.componentRef.setInput('id', '4');
     fixture.detectChanges();
@@ -261,14 +346,18 @@ describe('TvShowDetail', () => {
 
     expect(input('tmdbId').value).toBe('4658');
     expect(element().querySelector('app-tvshow-online-search')).toBeNull();
-    expect(element().querySelector('.pending-fill')?.textContent).toContain('2 Episoden mit Daten von TheTVDB');
+    expect(element().querySelector('.pending-fill')?.textContent).toContain(
+      '2 Episoden mit Daten von TheTVDB',
+    );
     expect(snackBarMessages).toEqual([
       'Daten von TheTVDB übernommen – bitte prüfen und speichern. Beim Speichern werden 2 Episoden ergänzt.',
     ]);
 
     click('.save-button');
     httpTesting.expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/metadata` }).flush(alf);
-    const fill = httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-episodes`);
+    const fill = httpTesting.expectOne(
+      (request) => request.url === `${TVSHOWS_URL}/3/scraper-episodes`,
+    );
     expect(fill.request.method).toBe('POST');
     expect(fill.request.params.get('providerId')).toBe('78020');
     fill.flush({ updated: 2, unchanged: 0, unmatched: 1, failedFiles: ['/x2.nfo'] });
@@ -297,7 +386,9 @@ describe('TvShowDetail', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
     await fixture.whenStable();
-    expect(snackBarMessages[1]).toBe('Serie gespeichert, Episoden nicht ergänzt: TVDB nicht erreichbar');
+    expect(snackBarMessages[1]).toBe(
+      'Serie gespeichert, Episoden nicht ergänzt: TVDB nicht erreichbar',
+    );
 
     await adoptFromOnlineSearch();
     click('.reset-button');
@@ -328,7 +419,10 @@ describe('TvShowDetail', () => {
     click('.missing-button');
     httpTesting
       .expectOne((req) => req.url === `${TVSHOWS_URL}/3/missing-episodes`)
-      .flush({ detail: 'nicht eindeutig zugeordnet' }, { status: 422, statusText: 'Unprocessable' });
+      .flush(
+        { detail: 'nicht eindeutig zugeordnet' },
+        { status: 422, statusText: 'Unprocessable' },
+      );
     await fixture.whenStable();
     expect(snackBarMessages).toEqual(['nicht eindeutig zugeordnet']);
 
@@ -348,5 +442,111 @@ describe('TvShowDetail', () => {
     click('.missing-button');
 
     expect(snackBarMessages).toEqual(['Es ist kein Serien-Scraper installiert oder aktiv.']);
+  });
+  describe('renaming', () => {
+    const patterns = {
+      showFolder: '{show} ({year})',
+      seasonFolder: 'Staffel {season}',
+      episodeFile: '{show}',
+    };
+    const plan: TvShowRenamePlan = {
+      showId: 3,
+      title: 'ALF',
+      currentDirectory: '/media/serien/alf',
+      targetDirectory: '/media/serien/ALF (1986)',
+      files: [
+        {
+          episodes: 'S01E01',
+          currentFolder: '',
+          targetFolder: 'Staffel 1',
+          renames: [{ currentName: 'a.mkv', targetName: 'ALF - S01E01.mkv' }],
+          status: 'RENAME',
+          message: null,
+        },
+        {
+          episodes: 'S01E02',
+          currentFolder: '',
+          targetFolder: 'Staffel 1',
+          renames: [],
+          status: 'CONFLICT',
+          message: 'belegt',
+        },
+      ],
+      status: 'RENAME',
+      message: null,
+    };
+
+    function answerSettings(): void {
+      httpTesting.expectOne({ method: 'GET', url: '/api/v1/settings' }).flush({
+        rename: {
+          tvShowFolder: patterns.showFolder,
+          seasonFolder: patterns.seasonFolder,
+          episodeFile: patterns.episodeFile,
+        },
+      });
+    }
+
+    function answerPreview(answer: TvShowRenamePlan): void {
+      const preview = httpTesting.expectOne({
+        method: 'POST',
+        url: `${TVSHOWS_URL}/3/rename/preview`,
+      });
+      expect(preview.request.body).toEqual(patterns);
+      preview.flush(answer);
+    }
+
+    it('renames the show after confirming the summary', async () => {
+      await load(alf);
+
+      click('.rename-button');
+      answerSettings();
+      answerPreview(plan);
+      httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/rename` }).flush(plan);
+      await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, alf);
+      await fixture.whenStable();
+
+      expect(confirmMessages[0]).toContain('→ /media/serien/ALF (1986)');
+      expect(confirmMessages[0]).toContain(
+        '1 Episodendateien bekommen neue Namen bzw. Staffelordner.',
+      );
+      expect(confirmMessages[0]).toContain(
+        '1 Episodendateien bleiben wegen Konflikten unverändert.',
+      );
+      expect(snackBarMessages).toEqual(['„ALF“ umbenannt.']);
+    });
+
+    it('keeps everything when the user declines and reports other outcomes', async () => {
+      await load(alf);
+      confirmAnswer = false;
+
+      click('.rename-button');
+      answerSettings();
+      answerPreview(plan);
+      click('.rename-button');
+      answerSettings();
+      answerPreview({ ...plan, status: 'UNCHANGED', files: [] });
+      click('.rename-button');
+      answerSettings();
+      answerPreview({ ...plan, status: 'CONFLICT', message: 'Der Ordner existiert bereits.' });
+
+      expect(snackBarMessages).toEqual([
+        '„ALF“ heißt schon so.',
+        '„ALF“ nicht umbenannt: Der Ordner existiert bereits.',
+      ]);
+    });
+
+    it('asks to save unsaved changes first and reports problems', async () => {
+      await load(alf);
+      click('.rename-button');
+      answerSettings();
+      httpTesting
+        .expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/rename/preview` })
+        .flush({ detail: 'kaputt' }, { status: 422, statusText: 'Unprocessable' });
+
+      await type('title', 'ALF 2');
+      click('.rename-button');
+
+      expect(snackBarMessages).toEqual(['kaputt', 'Bitte die Änderungen zuerst speichern.']);
+    });
   });
 });

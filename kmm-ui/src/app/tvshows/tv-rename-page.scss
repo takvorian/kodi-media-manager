@@ -1,0 +1,83 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.back-link {
+  align-self: flex-start;
+}
+
+.patterns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: baseline;
+}
+
+.pattern {
+  flex: 1 1 240px;
+}
+
+.hint,
+.empty {
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0;
+}
+
+.summary,
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.count-conflict,
+.count-failed,
+.status-CONFLICT > .show-header .status,
+.status-FAILED > .show-header .status,
+.message {
+  color: var(--mat-sys-error);
+}
+
+.show {
+  border-top: 1px solid var(--mat-sys-outline-variant);
+  padding: 8px 0;
+}
+
+.show-header {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.show-title {
+  font-weight: 500;
+}
+
+.folder,
+.files {
+  font-size: 0.9em;
+  word-break: break-all;
+}
+
+.target {
+  color: var(--mat-sys-primary);
+}
+
+.files {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 4px;
+
+  td {
+    vertical-align: top;
+    padding: 2px 8px;
+  }
+
+  .episodes {
+    white-space: nowrap;
+  }
+}

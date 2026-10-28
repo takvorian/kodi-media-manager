@@ -1,0 +1,111 @@
+<a matButton routerLink="/sources" class="back-link">← Quellen</a>
+
+<mat-card appearance="outlined">
+  <mat-card-header>
+    <mat-card-title>Serien umbenennen</mat-card-title>
+    <mat-card-subtitle>Erst die Vorschau prüfen; geändert wird nur, was ausgewählt ist.</mat-card-subtitle>
+  </mat-card-header>
+  <mat-card-content>
+    <form [formGroup]="form" (ngSubmit)="preview()" class="patterns">
+      <mat-form-field class="pattern">
+        <mat-label>Serienordner</mat-label>
+        <input matInput formControlName="showFolder" name="showFolder" />
+      </mat-form-field>
+      <mat-form-field class="pattern">
+        <mat-label>Staffelordner</mat-label>
+        <input matInput formControlName="seasonFolder" name="seasonFolder" />
+      </mat-form-field>
+      <mat-form-field class="pattern">
+        <mat-label>Episodendateien</mat-label>
+        <input matInput formControlName="episodeFile" name="episodeFile" />
+      </mat-form-field>
+      <button matButton="filled" class="preview-button" type="submit" [disabled]="form.invalid || loading() || !!runningJob()">
+        Vorschau
+      </button>
+    </form>
+    <p class="hint">
+      Die Vorgaben stammen aus den Einstellungen. Hier geänderte Muster gelten nur für diesen Durchlauf.
+      Staffelbilder liegen im Serienordner und bleiben, wo sie sind.
+    </p>
+    @if (loading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
+    @let job = runningJob();
+    @if (job) {
+      <div class="job-progress">
+        <mat-progress-bar [mode]="percent(job) === null ? 'indeterminate' : 'determinate'" [value]="percent(job) ?? 0" />
+        <span>{{ job.message }}</span>
+      </div>
+    }
+  </mat-card-content>
+</mat-card>
+
+@if (plans(); as all) {
+  <mat-card appearance="outlined">
+    <mat-card-content>
+      <div class="summary">
+        <span class="count-rename">{{ counts().rename }} umzubenennen</span>
+        <span class="count-unchanged">{{ counts().unchanged }} unverändert</span>
+        <span class="count-conflict">{{ counts().conflict }} Konflikte</span>
+        <span class="count-failed">{{ counts().failed }} nicht möglich</span>
+      </div>
+      <div class="toolbar">
+        <mat-checkbox class="only-changes" [checked]="onlyChanges()" (change)="onlyChanges.set($event.checked)">
+          Unveränderte ausblenden
+        </mat-checkbox>
+        <button matButton class="select-all" (click)="selectAll(true)">Alle auswählen</button>
+        <button matButton class="select-none" (click)="selectAll(false)">Keine</button>
+        <button matButton="filled" class="rename-button" (click)="rename()" [disabled]="selected().size === 0 || !!runningJob()">
+          {{ selected().size }} umbenennen
+        </button>
+      </div>
+      @for (plan of visiblePlans(); track plan.showId) {
+        <section class="show" [class]="'show status-' + plan.status">
+          <div class="show-header">
+            @if (plan.status === 'RENAME') {
+              <mat-checkbox [checked]="isSelected(plan)" (change)="toggle(plan)" [aria-label]="plan.title" />
+            }
+            <a class="show-title" [routerLink]="['/tvshows', plan.showId]">{{ plan.title }}</a>
+            <span class="status">{{ statusLabels[plan.status] }}</span>
+          </div>
+          <div class="folder">
+            <div>{{ plan.currentDirectory }}</div>
+            @if (movesFolder(plan)) {
+              <div class="target">→ {{ plan.targetDirectory }}</div>
+            }
+          </div>
+          @if (plan.message) {
+            <div class="message">{{ plan.message }}</div>
+          }
+          @if (plan.files.length > 0) {
+            <table class="files">
+              <tbody>
+                @for (file of plan.files; track file.episodes + file.currentFolder + file.renames[0]?.currentName) {
+                  <tr [class]="'status-' + file.status">
+                    <td class="episodes">{{ file.episodes }}</td>
+                    <td class="season">
+                      {{ folderLabel(file.currentFolder) }}
+                      @if (file.currentFolder !== file.targetFolder) {
+                        <span class="target">→ {{ folderLabel(file.targetFolder) }}</span>
+                      }
+                    </td>
+                    <td class="names">
+                      @for (rename of file.renames; track rename.currentName) {
+                        <div>{{ rename.currentName }} <span class="target">→ {{ rename.targetName }}</span></div>
+                      }
+                      @if (file.message) {
+                        <div class="message">{{ file.message }}</div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
+        </section>
+      } @empty {
+        <p class="empty">Alle {{ all.length }} Serien heißen schon so.</p>
+      }
+    </mat-card-content>
+  </mat-card>
+}

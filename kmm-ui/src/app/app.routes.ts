@@ -38,6 +38,11 @@ export const routes: Routes = [
     loadComponent: () => import('./movies/movie-rename-page').then((m) => m.MovieRenamePage),
   },
   {
+    path: 'sources/:id/tv-rename',
+    title: 'Serien umbenennen – KMM',
+    loadComponent: () => import('./tvshows/tv-rename-page').then((m) => m.TvRenamePage),
+  },
+  {
     path: 'kodi',
     title: 'Kodi – KMM',
     loadComponent: () => import('./kodi/kodi-hosts-page').then((m) => m.KodiHostsPage),

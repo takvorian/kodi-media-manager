@@ -9,6 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
+import { EMPTY, finalize, map, of, switchMap } from 'rxjs';
 
 import { KodiService } from '../kodi/kodi.service';
 import { kodiSyncSummary } from '../kodi/kodi';
@@ -17,8 +18,12 @@ import { ArtworkGallery } from '../movies/artwork-gallery';
 import { Attribution, ScraperInfo } from '../movies/scraper';
 import { showStreamDetailsSummary } from '../media-info/media-info';
 import { MediaInfoService } from '../media-info/media-info.service';
+import { SettingsService } from '../settings/settings.service';
+import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { TvPeople } from './tv-people';
+import { TvShowRenamePlan, tvRenameConfirmation } from './tv-rename';
+import { TvRenameService } from './tv-rename.service';
 import { defaultTvShowScraper } from './tv-scrapers';
 import {
   EpisodeFillResult,
@@ -30,7 +35,13 @@ import {
   episodeCode,
   seasonLabel,
 } from './tvshow';
-import { MAX_YEAR, MIN_YEAR, createTvShowMetadataForm, toTvShowFormValue, toTvShowMetadata } from './tvshow-forms';
+import {
+  MAX_YEAR,
+  MIN_YEAR,
+  createTvShowMetadataForm,
+  toTvShowFormValue,
+  toTvShowMetadata,
+} from './tvshow-forms';
 import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TvShowService } from './tvshow.service';
@@ -67,6 +78,9 @@ export class TvShowDetail {
   private readonly snackBar = inject(MatSnackBar);
   private readonly artworkService = inject(TvShowArtworkService);
   private readonly kodiService = inject(KodiService);
+  private readonly renameService = inject(TvRenameService);
+  private readonly settingsService = inject(SettingsService);
+  private readonly confirm = inject(CONFIRM);
 
   /** Serien-ID aus der Route `/tvshows/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -92,6 +106,7 @@ export class TvShowDetail {
   );
   protected readonly searchingOnline = signal(false);
   protected readonly refreshingKodi = signal(false);
+  protected readonly renaming = signal(false);
   /** Übernommener Treffer, dessen Episodendaten beim nächsten Speichern ergänzt werden. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
@@ -153,7 +168,9 @@ export class TvShowDetail {
 
   /** Fragt beim bevorzugten Serien-Scraper, welche Episoden ohne Datei es gibt. */
   protected showMissingEpisodes(): void {
-    const scraper = this.scrapers.hasValue() ? defaultTvShowScraper(this.scrapers.value()) : undefined;
+    const scraper = this.scrapers.hasValue()
+      ? defaultTvShowScraper(this.scrapers.value())
+      : undefined;
     if (!scraper) {
       this.notify('Es ist kein Serien-Scraper installiert oder aktiv.');
       return;
@@ -228,8 +245,62 @@ export class TvShowDetail {
           this.notify(summary);
         }
       },
-      error: (error: unknown) => this.notify(`Technische Angaben nicht ausgelesen: ${problemMessage(error)}`),
+      error: (error: unknown) =>
+        this.notify(`Technische Angaben nicht ausgelesen: ${problemMessage(error)}`),
     });
+  }
+
+  /**
+   * Benennt Serienordner, Staffelordner und Episodendateien nach den Mustern aus den Einstellungen um; vorher
+   * werden die Änderungen zur Bestätigung zusammengefasst. Ungespeicherte Änderungen müssen erst gespeichert werden.
+   */
+  protected renameShow(): void {
+    if (this.form.dirty) {
+      this.notify('Bitte die Änderungen zuerst speichern.');
+      return;
+    }
+    this.renaming.set(true);
+    this.settingsService
+      .load()
+      .pipe(
+        map((settings) => ({
+          showFolder: settings.rename.tvShowFolder,
+          seasonFolder: settings.rename.seasonFolder,
+          episodeFile: settings.rename.episodeFile,
+        })),
+        switchMap((patterns) =>
+          this.renameService
+            .previewShow(this.id(), patterns)
+            .pipe(map((plan) => ({ patterns, plan }))),
+        ),
+        switchMap(({ patterns, plan }) => {
+          if (plan.status !== 'RENAME') {
+            return of(plan);
+          }
+          return this.confirm(tvRenameConfirmation(plan))
+            ? this.renameService.renameShow(this.id(), patterns)
+            : EMPTY;
+        }),
+        finalize(() => this.renaming.set(false)),
+      )
+      .subscribe({
+        next: (plan) => this.showRenamed(plan),
+        error: (error: unknown) => this.notify(problemMessage(error)),
+      });
+  }
+
+  private showRenamed(plan: TvShowRenamePlan): void {
+    switch (plan.status) {
+      case 'RENAME':
+        this.notify(`„${plan.title}“ umbenannt.`);
+        this.show.reload();
+        break;
+      case 'UNCHANGED':
+        this.notify(`„${plan.title}“ heißt schon so.`);
+        break;
+      default:
+        this.notify(`„${plan.title}“ nicht umbenannt: ${plan.message}`);
+    }
   }
 
   private notify(message: string): void {
@@ -239,14 +310,21 @@ export class TvShowDetail {
 
 function fillSummary(scraperName: string, result: EpisodeFillResult): string {
   const failed =
-    result.failedFiles.length > 0 ? ` ${result.failedFiles.length} NFOs konnten nicht geschrieben werden.` : '';
+    result.failedFiles.length > 0
+      ? ` ${result.failedFiles.length} NFOs konnten nicht geschrieben werden.`
+      : '';
   return `Gespeichert; ${result.updated} Episoden mit Daten von ${scraperName} ergänzt.${failed}`;
 }
 
 /** TheTVDB verlangt den Hinweis, wo seine Daten genutzt werden; die Serie trägt dann eine TVDB-ID. */
-function attributionsFor(metadata: TvShowMetadata, scrapers: readonly ScraperInfo[]): Attribution[] {
+function attributionsFor(
+  metadata: TvShowMetadata,
+  scrapers: readonly ScraperInfo[],
+): Attribution[] {
   const ids: Record<string, string | null> = { tvdb: metadata.tvdbId, tmdb: metadata.tmdbId };
-  return scrapers.flatMap((scraper) => (scraper.attribution && ids[scraper.id] ? [scraper.attribution] : []));
+  return scrapers.flatMap((scraper) =>
+    scraper.attribution && ids[scraper.id] ? [scraper.attribution] : [],
+  );
 }
 
 function groupBySeason(details: TvShowDetails): SeasonWithEpisodes[] {

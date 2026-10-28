@@ -33,6 +33,7 @@ import {
 } from '../media-info/media-info';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { movieRenameJobKey } from '../movies/movie-rename';
+import { tvRenameJobKey } from '../tvshows/tv-rename';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import {
@@ -151,7 +152,8 @@ export class SourceList {
       this.jobStore.runningJob(kodiPlaybackJobKey(source.id)) ??
       this.jobStore.runningJob(streamDetailsJobKey(source.id)) ??
       this.jobStore.runningJob(newFilesStreamDetailsJobKey(source.id)) ??
-      this.jobStore.runningJob(movieRenameJobKey(source.id))
+      this.jobStore.runningJob(movieRenameJobKey(source.id)) ??
+      this.jobStore.runningJob(tvRenameJobKey(source.id))
     );
   }
 

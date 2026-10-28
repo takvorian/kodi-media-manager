@@ -112,8 +112,10 @@ describe('SourceList', () => {
     expect(element().querySelectorAll('.scan-button')).toHaveLength(2);
     expect(element().querySelectorAll('.scrape-button')).toHaveLength(2);
     const renameLinks = element().querySelectorAll<HTMLAnchorElement>('.rename-link');
-    expect(renameLinks).toHaveLength(1);
-    expect(renameLinks[0].getAttribute('href')).toBe('/sources/1/rename');
+    expect([...renameLinks].map((link) => link.getAttribute('href'))).toEqual([
+      '/sources/1/rename',
+      '/sources/2/tv-rename',
+    ]);
   });
 
   it('reports episodes without recognizable number after a TV scan', async () => {
@@ -148,17 +150,15 @@ describe('SourceList', () => {
     expect(element().querySelectorAll('.kodi-scan-button')).toHaveLength(2);
 
     element().querySelector<HTMLButtonElement>('.kodi-scan-button')!.click();
-    httpTesting
-      .expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' })
-      .flush([
-        {
-          hostId: 1,
-          host: 'Wohnzimmer',
-          outcome: 'SCAN_STARTED',
-          message: 'Kodi sucht nach neuen Filmen.',
-          at: '',
-        },
-      ]);
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' }).flush([
+      {
+        hostId: 1,
+        host: 'Wohnzimmer',
+        outcome: 'SCAN_STARTED',
+        message: 'Kodi sucht nach neuen Filmen.',
+        at: '',
+      },
+    ]);
     element().querySelector<HTMLButtonElement>('.kodi-scan-button')!.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' })
