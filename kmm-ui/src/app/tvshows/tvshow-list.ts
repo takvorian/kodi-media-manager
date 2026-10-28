@@ -1,32 +1,84 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource, toObservable, toSignal } from '@angular/core/rxjs-interop';
+import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, tap } from 'rxjs';
 
-import { TvShowQuery } from './tvshow';
+import { ListFilter, completeConditions } from '../filters/filter';
+import { FilterEditor } from '../filters/filter-editor';
+import { SavedFilter, SavedFilterService } from '../filters/saved-filter.service';
+import {
+  ALL_TVSHOWS,
+  PREDEFINED_TVSHOW_FILTERS,
+  TVSHOW_FILTER_FIELDS,
+  TvShowFilter,
+} from '../filters/tvshow-filter';
+import { CONFIRM } from '../shared/confirm';
+import { problemMessage } from '../shared/problem-message';
+import { MediaSourceService } from '../sources/media-source.service';
 import { TvShowService } from './tvshow.service';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 export const DEFAULT_PAGE_SIZE = 50;
 
+const SNACKBAR_DURATION_MS = 5000;
+const ALL = 'all';
+const PREDEFINED = 'predefined:';
+const SAVED = 'saved:';
+
+/** Serienliste mit Titelsuche und Filtern, auch über die Episoden. */
 @Component({
   selector: 'app-tvshow-list',
-  imports: [MatFormFieldModule, MatInputModule, MatPaginatorModule, MatTableModule, RouterLink],
+  imports: [
+    FilterEditor,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatPaginatorModule,
+    MatSelectModule,
+    MatTableModule,
+    RouterLink,
+  ],
   templateUrl: './tvshow-list.html',
   styleUrl: './tvshow-list.scss',
 })
 export class TvShowList {
   private readonly tvShowService = inject(TvShowService);
+  private readonly savedFilterService = inject(SavedFilterService);
+  private readonly sourceService = inject(MediaSourceService);
+  private readonly snackBar = inject(MatSnackBar);
+  private readonly confirm = inject(CONFIRM);
 
   protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
   protected readonly columns = ['title', 'year', 'episodeCount', 'directoryPath'];
+  protected readonly predefined = PREDEFINED_TVSHOW_FILTERS;
+  protected readonly filterFields = TVSHOW_FILTER_FIELDS;
   protected readonly searchInput = signal('');
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  protected readonly filter = signal<TvShowFilter>(ALL_TVSHOWS);
+  /** Gewählter Eintrag der Filterauswahl: `all`, `predefined:<Index>` oder `saved:<ID>`. */
+  protected readonly selection = signal(ALL);
+  protected readonly editing = signal(false);
+  protected readonly filterName = signal('');
+
+  protected readonly savedFilters = rxResource({
+    stream: () => this.savedFilterService.findAll('TV_SHOW'),
+  });
+  protected readonly filterValues = rxResource({
+    params: () => (this.editing() ? true : undefined),
+    stream: () => this.tvShowService.filterValues(),
+  });
+  protected readonly sources = rxResource({
+    params: () => (this.editing() ? true : undefined),
+    stream: () => this.sourceService.findAll(),
+  });
 
   private readonly search = toSignal(
     toObservable(this.searchInput).pipe(
@@ -37,15 +89,34 @@ export class TvShowList {
     { initialValue: '' },
   );
 
-  private readonly query = computed<TvShowQuery>(() => ({
-    search: this.search(),
-    page: this.pageIndex(),
-    size: this.pageSize(),
-  }));
+  /** Neu geladen wird nur, wenn sich die Abfrage inhaltlich ändert. */
+  private readonly query = computed(
+    () => ({
+      filter: { ...completeConditions(this.filter()), search: this.search().trim() || null },
+      page: this.pageIndex(),
+      size: this.pageSize(),
+    }),
+    { equal: (previous, next) => JSON.stringify(previous) === JSON.stringify(next) },
+  );
 
   protected readonly shows = rxResource({
     params: () => this.query(),
-    stream: ({ params }) => this.tvShowService.findShows(params),
+    stream: ({ params }) => this.tvShowService.queryShows(params.filter, params.page, params.size),
+  });
+
+  /** Ob die Liste eingeschränkt ist; dann heißt eine leere Liste „nichts gefunden“. */
+  protected readonly restricted = computed(
+    () =>
+      this.searchInput().trim() !== '' || completeConditions(this.filter()).conditions.length > 0,
+  );
+
+  protected readonly selectedSaved = computed<SavedFilter | null>(() => {
+    const selection = this.selection();
+    if (!selection.startsWith(SAVED) || !this.savedFilters.hasValue()) {
+      return null;
+    }
+    const id = Number(selection.substring(SAVED.length));
+    return this.savedFilters.value().find((saved) => saved.id === id) ?? null;
   });
 
   protected onSearch(event: Event): void {
@@ -55,5 +126,82 @@ export class TvShowList {
   protected onPage(event: PageEvent): void {
     this.pageIndex.set(event.pageIndex);
     this.pageSize.set(event.pageSize);
+  }
+
+  protected select(selection: string): void {
+    this.selection.set(selection);
+    this.filterName.set('');
+    if (selection.startsWith(PREDEFINED)) {
+      this.applyFilter(this.predefined[Number(selection.substring(PREDEFINED.length))].filter);
+    } else if (selection.startsWith(SAVED)) {
+      const saved = this.selectedSaved();
+      this.applyFilter(saved ? (saved.definition as TvShowFilter) : ALL_TVSHOWS);
+      this.filterName.set(saved?.name ?? '');
+    } else {
+      this.applyFilter(ALL_TVSHOWS);
+    }
+  }
+
+  protected toggleEditing(): void {
+    this.editing.update((editing) => !editing);
+  }
+
+  protected onFilterChange(filter: ListFilter): void {
+    this.applyFilter(filter as TvShowFilter);
+  }
+
+  /** Speichert unter dem eingegebenen Namen: einen gewählten gespeicherten Filter ändern, sonst neu anlegen. */
+  protected saveFilter(): void {
+    const name = this.filterName().trim();
+    if (!name) {
+      this.notify('Bitte einen Namen für den Filter eingeben.');
+      return;
+    }
+    const definition = completeConditions(this.filter());
+    const saved = this.selectedSaved();
+    const request =
+      saved && saved.name.toLowerCase() === name.toLowerCase()
+        ? this.savedFilterService.update(saved.id, 'TV_SHOW', name, definition)
+        : this.savedFilterService.create('TV_SHOW', name, definition);
+    request.subscribe({
+      next: (stored) => {
+        this.notify(`Filter „${stored.name}“ gespeichert.`);
+        this.savedFilters.reload();
+        this.selection.set(SAVED + stored.id);
+      },
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  protected deleteFilter(): void {
+    const saved = this.selectedSaved();
+    if (!saved || !this.confirm(`Filter „${saved.name}“ löschen?`)) {
+      return;
+    }
+    this.savedFilterService.delete(saved.id).subscribe({
+      next: () => {
+        this.notify(`Filter „${saved.name}“ gelöscht.`);
+        this.savedFilters.reload();
+        this.select(ALL);
+      },
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  protected savedKey(saved: SavedFilter): string {
+    return SAVED + saved.id;
+  }
+
+  protected predefinedKey(index: number): string {
+    return PREDEFINED + index;
+  }
+
+  private applyFilter(filter: TvShowFilter): void {
+    this.filter.set(filter);
+    this.pageIndex.set(0);
+  }
+
+  private notify(message: string): void {
+    this.snackBar.open(message, 'OK', { duration: SNACKBAR_DURATION_MS });
   }
 }

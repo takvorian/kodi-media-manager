@@ -12,8 +12,14 @@ import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, filter as where, tap } from 'rxjs';
 
-import { ALL_MOVIES, MovieFilter, PREDEFINED_MOVIE_FILTERS } from '../filters/movie-filter';
-import { MovieFilterEditor, completeConditions } from '../filters/movie-filter-editor';
+import {
+  ALL_MOVIES,
+  MOVIE_FILTER_FIELDS,
+  MovieFilter,
+  PREDEFINED_MOVIE_FILTERS,
+} from '../filters/movie-filter';
+import { ListFilter, completeConditions } from '../filters/filter';
+import { FilterEditor } from '../filters/filter-editor';
 import { SavedFilter, SavedFilterService } from '../filters/saved-filter.service';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
@@ -50,7 +56,7 @@ const SAVED = 'saved:';
     MatCheckboxModule,
     MatTableModule,
     MovieBatchEditor,
-    MovieFilterEditor,
+    FilterEditor,
     RouterLink,
   ],
   templateUrl: './movie-list.html',
@@ -67,6 +73,7 @@ export class MovieList {
   protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
   protected readonly columns = ['select', 'title', 'year', 'discFormat', 'filePath'];
   protected readonly predefined = PREDEFINED_MOVIE_FILTERS;
+  protected readonly filterFields = MOVIE_FILTER_FIELDS;
   protected readonly searchInput = signal('');
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
@@ -212,7 +219,7 @@ export class MovieList {
       this.applyFilter(this.predefined[Number(selection.substring(PREDEFINED.length))].filter);
     } else if (selection.startsWith(SAVED)) {
       const saved = this.selectedSaved();
-      this.applyFilter(saved ? saved.definition : ALL_MOVIES);
+      this.applyFilter(saved ? (saved.definition as MovieFilter) : ALL_MOVIES);
       this.filterName.set(saved?.name ?? '');
     } else {
       this.applyFilter(ALL_MOVIES);
@@ -223,8 +230,8 @@ export class MovieList {
     this.editing.update((editing) => !editing);
   }
 
-  protected onFilterChange(filter: MovieFilter): void {
-    this.applyFilter(filter);
+  protected onFilterChange(filter: ListFilter): void {
+    this.applyFilter(filter as MovieFilter);
   }
 
   /** Speichert unter dem eingegebenen Namen: einen gewählten gespeicherten Filter ändern, sonst neu anlegen. */

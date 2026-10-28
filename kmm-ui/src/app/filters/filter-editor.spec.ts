@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { MediaSource } from '../sources/media-source';
-import { FilterCondition, MovieFilter, MovieFilterValues } from './movie-filter';
-import { MovieFilterEditor, completeConditions } from './movie-filter-editor';
+import { FilterCondition, ListFilter, completeConditions } from './filter';
+import { FilterEditor } from './filter-editor';
+import { MOVIE_FILTER_FIELDS, MovieFilter, MovieFilterValues } from './movie-filter';
 
 type EditorApi = {
   setField(index: number, field: string): void;
@@ -13,7 +14,7 @@ type EditorApi = {
   options(condition: FilterCondition): readonly { value: string; label: string }[] | null;
 };
 
-describe('MovieFilterEditor', () => {
+describe('FilterEditor', () => {
   const values: MovieFilterValues = {
     genres: ['Drama', 'Krimi'],
     tags: [],
@@ -39,12 +40,13 @@ describe('MovieFilterEditor', () => {
     conditions: [{ field: 'GENRE', operator: 'IS', value: 'Western' }],
   };
 
-  let fixture: ComponentFixture<MovieFilterEditor>;
-  let emitted: MovieFilter[];
+  let fixture: ComponentFixture<FilterEditor>;
+  let emitted: ListFilter[];
 
   beforeEach(async () => {
     emitted = [];
-    fixture = TestBed.createComponent(MovieFilterEditor);
+    fixture = TestBed.createComponent(FilterEditor);
+    fixture.componentRef.setInput('fields', MOVIE_FILTER_FIELDS);
     fixture.componentRef.setInput('filter', genre);
     fixture.componentRef.setInput('values', values);
     fixture.componentRef.setInput('sources', sources);

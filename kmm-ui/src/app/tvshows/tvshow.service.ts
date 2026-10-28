@@ -2,6 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { TvShowFilter, TvShowFilterValues } from '../filters/tvshow-filter';
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import {
   EpisodeDetails,
@@ -25,12 +26,31 @@ export class TvShowService {
   private readonly http = inject(HttpClient);
 
   findShows(query: TvShowQuery): Observable<TvShowPage> {
-    let params = new HttpParams().set('page', query.page).set('size', query.size).set('sort', SORT_BY_TITLE);
+    let params = new HttpParams()
+      .set('page', query.page)
+      .set('size', query.size)
+      .set('sort', SORT_BY_TITLE);
     const search = query.search.trim();
     if (search) {
       params = params.set('search', search);
     }
     return this.http.get<TvShowPage>(TVSHOWS_URL, { params });
+  }
+
+  /** Serienliste mit Filter, nach Titel sortiert. */
+  queryShows(filter: TvShowFilter, page: number, size: number): Observable<TvShowPage> {
+    const params = new HttpParams().set('page', page).set('size', size).set('sort', SORT_BY_TITLE);
+    return this.http.post<TvShowPage>(`${TVSHOWS_URL}/query`, filter, { params });
+  }
+
+  /** IDs aller Serien, auf die der Filter passt. */
+  queryShowIds(filter: TvShowFilter): Observable<number[]> {
+    return this.http.post<number[]>(`${TVSHOWS_URL}/query/ids`, filter);
+  }
+
+  /** Vorhandene Werte je Filterfeld für Auswahllisten. */
+  filterValues(): Observable<TvShowFilterValues> {
+    return this.http.get<TvShowFilterValues>(`${TVSHOWS_URL}/filter-values`);
   }
 
   findShow(showId: number): Observable<TvShowDetails> {
@@ -46,7 +66,12 @@ export class TvShowService {
     return this.http.get<ScraperInfo[]>(TV_SHOW_SCRAPERS_URL);
   }
 
-  searchOnline(showId: number, scraper: string, title: string, year: number | null): Observable<ScrapeCandidate[]> {
+  searchOnline(
+    showId: number,
+    scraper: string,
+    title: string,
+    year: number | null,
+  ): Observable<ScrapeCandidate[]> {
     let params = new HttpParams().set('scraper', scraper).set('title', title);
     if (year !== null) {
       params = params.set('year', year);
@@ -62,7 +87,9 @@ export class TvShowService {
   /** Ergänzt leere Angaben der Episoden aus dem Treffer und schreibt deren NFOs. */
   fillEpisodes(showId: number, scraper: string, providerId: string): Observable<EpisodeFillResult> {
     const params = new HttpParams().set('scraper', scraper).set('providerId', providerId);
-    return this.http.post<EpisodeFillResult>(`${TVSHOWS_URL}/${showId}/scraper-episodes`, null, { params });
+    return this.http.post<EpisodeFillResult>(`${TVSHOWS_URL}/${showId}/scraper-episodes`, null, {
+      params,
+    });
   }
 
   missingEpisodes(showId: number, scraper: string): Observable<MissingEpisode[]> {

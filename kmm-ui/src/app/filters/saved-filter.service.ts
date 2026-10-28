@@ -2,7 +2,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { MovieFilter } from './movie-filter';
+import { ListFilter } from './filter';
 
 export const FILTERS_URL = '/api/v1/filters';
 
@@ -13,7 +13,7 @@ export interface SavedFilter {
   readonly id: number;
   readonly mediaType: FilterMediaType;
   readonly name: string;
-  readonly definition: MovieFilter;
+  readonly definition: ListFilter;
 }
 
 @Injectable({ providedIn: 'root' })
@@ -29,7 +29,7 @@ export class SavedFilterService {
   create(
     mediaType: FilterMediaType,
     name: string,
-    definition: MovieFilter,
+    definition: ListFilter,
   ): Observable<SavedFilter> {
     return this.http.post<SavedFilter>(FILTERS_URL, { mediaType, name, definition });
   }
@@ -38,7 +38,7 @@ export class SavedFilterService {
     id: number,
     mediaType: FilterMediaType,
     name: string,
-    definition: MovieFilter,
+    definition: ListFilter,
   ): Observable<SavedFilter> {
     return this.http.put<SavedFilter>(`${FILTERS_URL}/${id}`, { mediaType, name, definition });
   }

@@ -1,5 +1,28 @@
+.toolbar,
+.save-filter {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 16px;
+  align-items: baseline;
+}
+
 .search-field {
   width: min(480px, 100%);
+}
+
+.filter-select {
+  width: min(280px, 100%);
+}
+
+.filter-editor {
+  margin-bottom: 16px;
+  padding: 8px 16px;
+  border: 1px solid var(--mat-sys-outline-variant);
+  border-radius: 8px;
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .tvshow-table {

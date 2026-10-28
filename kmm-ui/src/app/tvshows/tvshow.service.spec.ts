@@ -10,7 +10,9 @@ describe('TvShowService', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(TvShowService);
     httpTesting = TestBed.inject(HttpTestingController);
   });
@@ -24,7 +26,9 @@ describe('TvShowService', () => {
     const requests = httpTesting.match((request) => request.url === TVSHOWS_URL);
     expect(requests.map((request) => request.request.params.get('search'))).toEqual(['alf', null]);
     expect(requests[0].request.params.get('page')).toBe('1');
-    requests.forEach((request) => request.flush({ content: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }));
+    requests.forEach((request) =>
+      request.flush({ content: [], page: 0, size: 25, totalElements: 0, totalPages: 0 }),
+    );
   });
 
   it('reads and updates shows and episodes', () => {
@@ -48,14 +52,22 @@ describe('TvShowService', () => {
     service.missingEpisodes(3, 'tvdb').subscribe();
 
     httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush([]);
-    const searches = httpTesting.match((request) => request.url === `${TVSHOWS_URL}/3/scraper-search`);
+    const searches = httpTesting.match(
+      (request) => request.url === `${TVSHOWS_URL}/3/scraper-search`,
+    );
     expect(searches.map((request) => request.request.params.get('year'))).toEqual(['1986', null]);
     searches.forEach((request) => request.flush([]));
-    httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-proposal`).flush({});
-    const fill = httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-episodes`);
+    httpTesting
+      .expectOne((request) => request.url === `${TVSHOWS_URL}/3/scraper-proposal`)
+      .flush({});
+    const fill = httpTesting.expectOne(
+      (request) => request.url === `${TVSHOWS_URL}/3/scraper-episodes`,
+    );
     expect(fill.request.method).toBe('POST');
     fill.flush({});
-    httpTesting.expectOne((request) => request.url === `${TVSHOWS_URL}/3/missing-episodes`).flush([]);
+    httpTesting
+      .expectOne((request) => request.url === `${TVSHOWS_URL}/3/missing-episodes`)
+      .flush([]);
   });
 
   it('formats episode codes and season labels', () => {
@@ -63,6 +75,23 @@ describe('TvShowService', () => {
     expect(episodeCode(1970, 112)).toBe('S1970E112');
     expect(seasonLabel({ number: 0, title: null, episodeCount: 1 })).toBe('Specials');
     expect(seasonLabel({ number: 2, title: 'Staffel 2', episodeCount: 1 })).toBe('Staffel 2');
-    expect(seasonLabel({ number: 2, title: 'Rückkehr', episodeCount: 1 })).toBe('Staffel 2 – Rückkehr');
+    expect(seasonLabel({ number: 2, title: 'Rückkehr', episodeCount: 1 })).toBe(
+      'Staffel 2 – Rückkehr',
+    );
+  });
+
+  it('queries shows with a filter, their IDs and the filter values', () => {
+    const filter = { matchAll: true, conditions: [] };
+    service.queryShows(filter, 0, 50).subscribe();
+    const query = httpTesting.expectOne((req) => req.url === `${TVSHOWS_URL}/query`);
+    expect(query.request.method).toBe('POST');
+    expect(query.request.params.get('sort')).toBe('title,asc');
+    query.flush({});
+
+    service.queryShowIds(filter).subscribe();
+    httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/query/ids` }).flush([]);
+
+    service.filterValues().subscribe();
+    httpTesting.expectOne(`${TVSHOWS_URL}/filter-values`).flush({});
   });
 });

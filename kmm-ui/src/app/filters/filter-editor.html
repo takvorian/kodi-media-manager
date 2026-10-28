@@ -14,7 +14,7 @@
     <mat-form-field class="field">
       <mat-label>Feld</mat-label>
       <mat-select [attr.name]="'field-' + index" [value]="condition.field" (valueChange)="setField(index, $event)">
-        @for (field of fields; track field[0]) {
+        @for (field of fieldEntries(); track field[0]) {
           <mat-option [value]="field[0]">{{ field[1].label }}</mat-option>
         }
       </mat-select>

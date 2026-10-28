@@ -26,7 +26,8 @@
 
 @if (editing()) {
   <section class="filter-editor">
-    <app-movie-filter-editor
+    <app-filter-editor
+      [fields]="filterFields"
       [filter]="filter()"
       [values]="filterValues.hasValue() ? filterValues.value() : null"
       [sources]="sources.hasValue() ? sources.value() : []"
