@@ -99,7 +99,8 @@ final class MovieNfoMapper {
                         .map(rating -> new MovieSupplement.Rating(rating.name(), rating.value(), rating.max(),
                                 rating.votes(), rating.defaultValue()))
                         .toList(),
-                nfo.set() == null ? null : new MovieSupplement.SetReference(nfo.set().name(), nfo.set().overview()),
+                nfo.set() == null ? null : new MovieSupplement.SetReference(nfo.set().name(), nfo.set().overview(),
+                        nfo.set().tmdbId()),
                 nfo.userRating() == null || nfo.userRating() == NO_USER_RATING ? null : nfo.userRating(),
                 nfo.playCount(),
                 toInstant(nfo.lastPlayed(), zone));
@@ -122,7 +123,8 @@ final class MovieNfoMapper {
                         .map(rating -> new NfoRating(rating.source(), rating.value(), rating.max(), rating.votes(),
                                 rating.defaultRating()))
                         .toList(),
-                supplement.set() == null ? null : new NfoMovieSet(supplement.set().name(), supplement.set().overview()),
+                supplement.set() == null ? null : new NfoMovieSet(supplement.set().name(), supplement.set().overview(),
+                        supplement.set().tmdbCollectionId()),
                 supplement.userRating(),
                 supplement.playCount(),
                 toLocal(supplement.lastPlayed(), zone),

@@ -203,7 +203,7 @@ class NfoWriterTest {
                 List.of("Michael Mann"), List.of("Michael Mann"), List.of("Regency"), List.of("USA"),
                 List.of("Heist", "Los Angeles"), List.of(new NfoRating("imdb", 8.3, 10, 650000, true),
                         new NfoRating("themoviedb", 7.9, 10, null, false)),
-                new NfoMovieSet("Michael Mann Collection", null), null, 3, LocalDateTime.of(2024, 5, 1, 20, 15),
+                new NfoMovieSet("Michael Mann Collection", null, "1234"), null, 3, LocalDateTime.of(2024, 5, 1, 20, 15),
                 LocalDateTime.of(2016, 11, 30, 1, 20, 15), StreamDetails.EMPTY);
     }
 

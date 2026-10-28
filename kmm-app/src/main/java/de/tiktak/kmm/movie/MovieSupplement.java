@@ -86,13 +86,22 @@ public record MovieSupplement(
     /**
      * Verweis auf ein Filmset.
      *
-     * @param overview Beschreibung des Sets oder {@code null}
+     * @param overview         Beschreibung des Sets oder {@code null}
+     * @param tmdbCollectionId TMDB-ID der Sammlung oder {@code null}
      */
-    public record SetReference(String name, String overview) {
+    public record SetReference(String name, String overview, String tmdbCollectionId) {
+
+        private static final int MAX_ID_LENGTH = 16;
 
         public SetReference {
             name = Objects.requireNonNull(Texts.clean(name, MAX_NAME_LENGTH), "name must not be blank");
             overview = Texts.clean(overview, Integer.MAX_VALUE);
+            tmdbCollectionId = Texts.clean(tmdbCollectionId, MAX_ID_LENGTH);
+        }
+
+        /** Ein Set ohne TMDB-ID. */
+        public SetReference(String name, String overview) {
+            this(name, overview, null);
         }
     }
 

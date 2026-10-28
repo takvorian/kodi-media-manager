@@ -24,6 +24,7 @@ public class MovieTagService {
 
     private final MovieRepository movieRepository;
     private final MovieSupplementWriter supplementWriter;
+    private final MovieNfoSync nfoSync;
 
     /** @return je Tag die Anzahl der Filme */
     public Map<String, Long> countByTag() {
@@ -50,6 +51,7 @@ public class MovieTagService {
     @Transactional
     public boolean changeTags(long movieId, UnaryOperator<List<String>> change) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new MovieNotFoundException(movieId));
+        nfoSync.refreshIfChangedOutside(movie);
         MovieSupplement current = movie.supplement();
         MovieSupplement changed = current.withTags(change.apply(current.tags()));
         if (changed.tags().equals(current.tags())) {

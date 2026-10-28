@@ -61,8 +61,9 @@ class MovieLibrarySynchronizerTest {
 
     @BeforeEach
     void setUp() {
-        synchronizer = new MovieLibrarySynchronizer(movieRepository, sourceService, nfoFiles, movieSets,
-                Clock.fixed(NOW, ZoneOffset.UTC));
+        Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
+        synchronizer = new MovieLibrarySynchronizer(movieRepository, sourceService, nfoFiles,
+                new MovieNfoSync(nfoFiles, movieSets, clock), clock);
     }
 
     @Test

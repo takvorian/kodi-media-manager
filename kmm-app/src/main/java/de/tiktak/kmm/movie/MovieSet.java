@@ -76,6 +76,6 @@ class MovieSet {
     }
 
     MovieSupplement.SetReference toReference() {
-        return new MovieSupplement.SetReference(name, overview);
+        return new MovieSupplement.SetReference(name, overview, tmdbCollectionId);
     }
 }

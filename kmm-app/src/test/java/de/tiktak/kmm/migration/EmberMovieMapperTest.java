@@ -75,7 +75,7 @@ class EmberMovieMapperTest {
         MovieImport movieImport = EmberMovieMapper.toImport(matrix, 7, file("Matrix.mkv"), SETS, BERLIN);
 
         assertThat(movieImport.supplement().set())
-                .isEqualTo(new MovieSupplement.SetReference("Matrix Collection", "Neo gegen die Maschinen."));
+                .isEqualTo(new MovieSupplement.SetReference("Matrix Collection", "Neo gegen die Maschinen.", "2344"));
         assertThat(movieImport.setOrder()).isEqualTo(3);
         assertThat(movieImport.setTmdbCollectionId()).isEqualTo("2344");
         assertThat(EmberMovieMapper.belongsToSeveralSets(matrix)).isTrue();

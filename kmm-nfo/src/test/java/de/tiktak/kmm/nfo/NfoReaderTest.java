@@ -61,6 +61,13 @@ class NfoReaderTest {
     }
 
     @Test
+    void readsTheTmdbIdOfASetLikeEmberWritesIt() throws IOException {
+        Path nfo = write("<movie><set><name>Matrix Filmreihe</name><tmdb>2344</tmdb></set></movie>");
+
+        assertThat(reader.read(nfo).supplement().set()).isEqualTo(new NfoMovieSet("Matrix Filmreihe", null, "2344"));
+    }
+
+    @Test
     void readsLegacySetNameAndDateWithoutTime() throws IOException {
         MovieNfoSupplement supplement = reader.read(write(
                 "<movie><set> Matrix Collection </set><dateadded>2016-11-30</dateadded></movie>")).supplement();

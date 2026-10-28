@@ -64,6 +64,7 @@ final class NfoSupplementWriter {
         Element element = document.createElement(NfoElements.SET);
         appendIfPresent(document, element, NfoElements.NAME, set.name());
         appendIfPresent(document, element, NfoElements.OVERVIEW, set.overview());
+        appendIfPresent(document, element, NfoElements.LEGACY_TMDB, set.tmdbId());
         return List.of(element);
     }
 

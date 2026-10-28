@@ -20,6 +20,7 @@ class MovieSetMembership {
     private final MovieRepository movieRepository;
     private final MovieSetRepository setRepository;
     private final MovieSupplementWriter supplementWriter;
+    private final MovieNfoSync nfoSync;
 
     /**
      * @param setId das neue Set oder {@code null}, um den Film aus seinem Set zu nehmen
@@ -28,6 +29,7 @@ class MovieSetMembership {
     @Transactional
     public boolean assign(long movieId, Long setId) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new MovieNotFoundException(movieId));
+        nfoSync.refreshIfChangedOutside(movie);
         MovieSet set = setId == null ? null : setRepository.findById(setId)
                 .orElseThrow(() -> MovieSetProblemException.notFound(setId));
         Long current = movie.getMovieSet() == null ? null : movie.getMovieSet().getId();
@@ -44,6 +46,7 @@ class MovieSetMembership {
     @Transactional
     public boolean rewrite(long movieId) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new MovieNotFoundException(movieId));
+        nfoSync.refreshIfChangedOutside(movie);
         supplementWriter.write(movie, movie.supplement());
         return true;
     }

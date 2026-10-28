@@ -5,6 +5,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
+import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
@@ -50,11 +52,15 @@ class MovieMetadataServiceTest {
     @Mock
     private ApplicationEventPublisher events;
 
+    @Mock
+    private MovieNfoSync nfoSync;
+
     private MovieMetadataService service;
 
     @BeforeEach
     void setUp() {
-        service = new MovieMetadataService(movieRepository, nfoFiles, Clock.fixed(NFO_TIME, ZoneOffset.UTC), events);
+        service = new MovieMetadataService(movieRepository, nfoFiles, nfoSync, Clock.fixed(NFO_TIME, ZoneOffset.UTC),
+                events);
     }
 
     @Test
@@ -93,6 +99,9 @@ class MovieMetadataServiceTest {
         assertThat(movie.getNfoModifiedAt()).isEqualTo(NFO_TIME);
         assertThat(details.nfo().exists()).isTrue();
         verify(events).publishEvent(new MovieFilesChangedEvent(MOVIE_ID));
+        InOrder order = inOrder(nfoSync, nfoFiles);
+        order.verify(nfoSync).refreshIfChangedOutside(movie);
+        order.verify(nfoFiles).write(any(), any(), any());
     }
 
     @Test

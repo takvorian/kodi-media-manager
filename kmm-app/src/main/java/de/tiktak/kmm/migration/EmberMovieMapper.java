@@ -128,7 +128,8 @@ final class EmberMovieMapper {
             if (set == null || set.title() == null) {
                 return null;
             }
-            return new SetAssignment(new MovieSupplement.SetReference(set.title(), set.plot()), link.order(),
+            return new SetAssignment(new MovieSupplement.SetReference(set.title(), set.plot(), set.tmdbCollectionId()),
+                    link.order(),
                     set.tmdbCollectionId());
         }
     }

@@ -23,6 +23,9 @@ class MovieSets {
         MovieSet set = repository.findByName(reference.name())
                 .orElseGet(() -> repository.save(new MovieSet(reference.name())));
         set.describe(reference.overview());
+        if (set.getTmdbCollectionId() == null) {
+            set.identify(reference.tmdbCollectionId());
+        }
         return set;
     }
 }

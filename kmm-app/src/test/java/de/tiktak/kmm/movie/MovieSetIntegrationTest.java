@@ -7,7 +7,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -134,6 +136,27 @@ class MovieSetIntegrationTest {
         assertThat(jdbcClient.sql("SELECT name || ':' || tmdb_collection_id FROM movie_set m WHERE EXISTS "
                         + "(SELECT 1 FROM movie WHERE movie_set_id = m.id) ORDER BY name").query(String.class).list())
                 .containsExactly("Heat-Reihe:99", "Matrix Filmreihe:2344");
+    }
+
+    @Test
+    void readsANfoChangedOutsideKmmBeforeRewritingIt() throws IOException {
+        Path filme = Files.createDirectories(library.resolve("filme"));
+        Path nfo = givenMovie(filme, "Alles steht Kopf 2", 2024, "");
+        scan(filme);
+        Files.writeString(nfo, "<movie><title>Alles steht Kopf 2</title><year>2024</year><userrating>10</userrating>"
+                + "<playcount>4</playcount><tag>Pixar</tag></movie>");
+        Files.setLastModifiedTime(nfo, FileTime.from(Instant.now().plusSeconds(60)));
+        MvcTestResult created = mockMvc.post().uri(MovieSetController.BASE_PATH).with(csrf()).contentType(JSON)
+                .content("{\"name\": \"Alles steht Kopf Filmreihe\", \"tmdbCollectionId\": \"1022790\","
+                        + " \"sortMethod\": \"YEAR\"}").exchange();
+        long setId = read(created).get("id").asLong();
+
+        JsonNode added = runJob(mockMvc.post().uri(MovieSetController.BASE_PATH + "/{id}/movies", setId).with(csrf())
+                .contentType(JSON).content("{\"movieIds\": [%d]}".formatted(movieId("Alles steht Kopf 2"))).exchange());
+
+        assertThat(Files.readString(nfo)).contains("<userrating>10</userrating>", "<playcount>4</playcount>",
+                "<tag>Pixar</tag>", "<name>Alles steht Kopf Filmreihe</name>", "<tmdb>1022790</tmdb>");
+        assertThat(added.get("changed").asInt()).isEqualTo(1);
     }
 
     @Test

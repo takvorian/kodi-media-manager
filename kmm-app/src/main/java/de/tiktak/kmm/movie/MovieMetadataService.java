@@ -25,6 +25,7 @@ public class MovieMetadataService {
 
     private final MovieRepository movieRepository;
     private final MovieNfoFiles nfoFiles;
+    private final MovieNfoSync nfoSync;
     private final Clock clock;
     private final ApplicationEventPublisher events;
 
@@ -36,6 +37,7 @@ public class MovieMetadataService {
     @Transactional
     public MovieDetails update(long movieId, MovieMetadata metadata) {
         Movie movie = require(movieId);
+        nfoSync.refreshIfChangedOutside(movie);
         NfoFileState written = writeNfo(movie, metadata);
         movie.applyMetadata(metadata);
         movie.markNfoSynchronized(written.modifiedAt());

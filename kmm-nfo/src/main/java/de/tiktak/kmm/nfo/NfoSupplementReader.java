@@ -80,7 +80,8 @@ final class NfoSupplementReader {
         Element set = sets.getFirst();
         boolean structured = !NfoDocuments.children(set, NfoElements.NAME).isEmpty();
         String name = structured ? NfoDocuments.text(set, NfoElements.NAME) : blankToNull(set.getTextContent());
-        return name == null ? null : new NfoMovieSet(name, NfoDocuments.text(set, NfoElements.OVERVIEW));
+        return name == null ? null : new NfoMovieSet(name, NfoDocuments.text(set, NfoElements.OVERVIEW),
+                structured ? NfoDocuments.text(set, NfoElements.LEGACY_TMDB) : null);
     }
 
     /** Ganze Zahl; Tausendertrennzeichen („650,000“) werden ignoriert. */

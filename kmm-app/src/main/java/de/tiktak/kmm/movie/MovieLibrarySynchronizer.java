@@ -14,7 +14,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.MovieNfo;
-import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.scanner.MovieCandidate;
 import de.tiktak.kmm.source.MediaSourceService;
@@ -34,7 +33,7 @@ class MovieLibrarySynchronizer {
     private final MovieRepository movieRepository;
     private final MediaSourceService sourceService;
     private final MovieNfoFiles nfoFiles;
-    private final MovieSets movieSets;
+    private final MovieNfoSync nfoSync;
     private final Clock clock;
 
     /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs je Filmdatei, damit der Scan nur geänderte liest. */
@@ -108,27 +107,12 @@ class MovieLibrarySynchronizer {
         NfoFileState nfoFile = scanned.nfo().get();
         try {
             MovieNfo nfo = scanned.loaded().isPresent() ? scanned.loaded().get().content() : nfoFiles.read(nfoFile);
-            movie.applyMetadata(MovieNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
-            applySupplement(movie, nfo.supplement());
-            movie.markNfoSynchronized(nfoFile.modifiedAt());
+            nfoSync.apply(movie, nfoFile, nfo, fallbackTitle, fallbackYear);
             return true;
         } catch (NfoException e) {
             log.warn("Skipping unreadable NFO: {}", e.getMessage());
             outcome.nfoErrors++;
             return false;
-        }
-    }
-
-    private void applySupplement(Movie movie, MovieNfoSupplement nfoSupplement) {
-        if (nfoSupplement == null) {
-            return;
-        }
-        MovieSupplement supplement = MovieNfoMapper.toSupplement(nfoSupplement, clock.getZone());
-        movie.applySupplement(supplement, movieSets.resolve(supplement.set()));
-        movie.applyStreamDetails(nfoSupplement.streams());
-        Instant dateAdded = MovieNfoMapper.toInstant(nfoSupplement.dateAdded(), clock.getZone());
-        if (dateAdded != null) {
-            movie.changeAddedAt(dateAdded);
         }
     }
 
