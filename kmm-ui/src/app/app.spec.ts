@@ -11,7 +11,12 @@ import { routes } from './app.routes';
 describe('App', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideRouter(routes), provideHttpClient(), provideHttpClientTesting(), new FakeJobEvents().provider()],
+      providers: [
+        provideRouter(routes),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        new FakeJobEvents().provider(),
+      ],
     });
   });
 
@@ -21,9 +26,12 @@ describe('App', () => {
     const element = fixture.nativeElement as HTMLElement;
 
     expect(element.querySelector('h1')?.textContent).toContain('Kodi Media Manager');
-    expect(Array.from(element.querySelectorAll('nav a')).map((link) => link.textContent?.trim())).toEqual([
+    expect(
+      Array.from(element.querySelectorAll('nav a')).map((link) => link.textContent?.trim()),
+    ).toEqual([
       'Filme',
       'Serien',
+      'Filmsets',
       'Tags',
       'Quellen',
       'Kodi',

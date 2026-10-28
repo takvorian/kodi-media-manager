@@ -23,6 +23,7 @@ export class App {
   protected readonly navigation = [
     { path: '/movies', label: 'Filme' },
     { path: '/tvshows', label: 'Serien' },
+    { path: '/moviesets', label: 'Filmsets' },
     { path: '/tags', label: 'Tags' },
     { path: '/sources', label: 'Quellen' },
     { path: '/kodi', label: 'Kodi' },

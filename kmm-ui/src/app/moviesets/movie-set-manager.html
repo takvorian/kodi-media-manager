@@ -1,0 +1,113 @@
+<h2 class="page-title">Filmsets</h2>
+
+@let job = runningJob();
+@if (job) {
+  <div class="job-progress">
+    <mat-progress-bar mode="indeterminate" />
+    <span>{{ job.title }} – {{ job.message }}</span>
+  </div>
+}
+
+<div class="layout">
+  <mat-card appearance="outlined" class="set-list">
+    <mat-card-content>
+      <form class="new-set" (ngSubmit)="create(newSet.value); newSet.value = ''">
+        <mat-form-field class="full">
+          <mat-label>Neues Set</mat-label>
+          <input matInput #newSet name="newSet" />
+        </mat-form-field>
+      </form>
+      <mat-form-field class="full">
+        <mat-label>Sets filtern</mat-label>
+        <input matInput name="filter" [ngModel]="filterText()" (ngModelChange)="filterText.set($event)" />
+      </mat-form-field>
+      <ul class="sets">
+        @for (set of visibleSets(); track set.id) {
+          <li>
+            <button matButton class="set" [class.active]="set.id === selectedId()" (click)="select(set)">
+              {{ set.name }}
+              <span class="count">{{ set.movies }}</span>
+            </button>
+          </li>
+        } @empty {
+          <li class="empty">Keine Sets.</li>
+        }
+      </ul>
+    </mat-card-content>
+  </mat-card>
+
+  @if (set.hasValue()) {
+    @let details = set.value();
+    <mat-card appearance="outlined" class="set-detail">
+      <mat-card-content>
+        <form [formGroup]="form" (ngSubmit)="save()" class="set-form">
+          <mat-form-field class="full">
+            <mat-label>Name</mat-label>
+            <input matInput formControlName="name" name="name" />
+            <mat-error>Bitte einen Namen angeben</mat-error>
+          </mat-form-field>
+          <mat-form-field class="full">
+            <mat-label>Beschreibung</mat-label>
+            <textarea matInput formControlName="overview" name="overview" rows="4"></textarea>
+          </mat-form-field>
+          <div class="row">
+            <mat-form-field>
+              <mat-label>TMDB-Sammlung</mat-label>
+              <input matInput formControlName="tmdbCollectionId" name="tmdbCollectionId" />
+              <mat-error>Nur Ziffern</mat-error>
+            </mat-form-field>
+            <mat-form-field>
+              <mat-label>Reihenfolge</mat-label>
+              <mat-select formControlName="sortMethod" name="sortMethod">
+                @for (method of sortMethods; track method[0]) {
+                  <mat-option [value]="method[0]">{{ method[1] }}</mat-option>
+                }
+              </mat-select>
+            </mat-form-field>
+          </div>
+          <div class="actions">
+            <button matButton="filled" type="submit" class="save-button" [disabled]="form.invalid || form.pristine || !!job">
+              Speichern
+            </button>
+            <button matButton type="button" class="delete-button" (click)="delete()" [disabled]="!!job">Löschen</button>
+          </div>
+        </form>
+
+        <h3>Filme ({{ details.movies.length }})</h3>
+        <ul class="members">
+          @for (movie of details.movies; track movie.id) {
+            <li>
+              <mat-checkbox [checked]="removal().has(movie.id)" (change)="toggleRemoval(movie.id)" />
+              <a [routerLink]="['/movies', movie.id]">{{ label(movie) }}</a>
+            </li>
+          } @empty {
+            <li class="empty">Noch keine Filme.</li>
+          }
+        </ul>
+        <button matButton class="remove-button" (click)="removeMarked()" [disabled]="!!job || removal().size === 0">
+          {{ removal().size }} entfernen
+        </button>
+
+        <h3>Filme hinzufügen</h3>
+        <form class="search" (ngSubmit)="find()">
+          <mat-form-field class="full">
+            <mat-label>Filme suchen</mat-label>
+            <input matInput name="search" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+          </mat-form-field>
+          <button matButton type="submit" class="search-button">Suchen</button>
+        </form>
+        <ul class="candidates">
+          @for (movie of candidates(); track movie.id) {
+            <li>
+              <mat-checkbox [checked]="chosen().has(movie.id)" (change)="toggleChosen(movie.id)">{{ label(movie) }}</mat-checkbox>
+            </li>
+          }
+        </ul>
+        <p class="hint">Filme in einem anderen Set wechseln in dieses; Kodi kennt nur ein Set je Film.</p>
+        <button matButton="filled" class="add-button" (click)="addChosen()" [disabled]="!!job || chosen().size === 0">
+          {{ chosen().size }} hinzufügen
+        </button>
+      </mat-card-content>
+    </mat-card>
+  }
+</div>

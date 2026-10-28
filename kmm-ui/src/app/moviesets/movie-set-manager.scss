@@ -1,0 +1,59 @@
+.layout {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 2fr;
+  gap: 16px;
+  align-items: start;
+
+  @media (max-width: 800px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.full {
+  width: 100%;
+}
+
+.sets,
+.members,
+.candidates {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.sets {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.set {
+  width: 100%;
+  justify-content: space-between;
+
+  &.active {
+    background: var(--mat-sys-secondary-container);
+  }
+}
+
+.count {
+  margin-left: 8px;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.row,
+.actions,
+.search {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  align-items: baseline;
+}
+
+.hint,
+.empty {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.job-progress {
+  margin-bottom: 8px;
+}
