@@ -47,7 +47,10 @@ describe('SettingsPage', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -127,14 +130,21 @@ describe('SettingsPage', () => {
   });
 
   it('saves separate settings for TV shows', async () => {
-    await load({ ...stored, tv: { metadataLanguage: 'en-US', artworkLanguage: 'en', episodeOrdering: 'DVD' } });
+    await load({
+      ...stored,
+      tv: { metadataLanguage: 'en-US', artworkLanguage: 'en', episodeOrdering: 'DVD' },
+    });
     expect(field('tvMetadataLanguage').value).toBe('en-US');
 
     await type('tvArtworkLanguage', 'de');
     button('.save-button').click();
 
     const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
-    expect(request.request.body.tv).toEqual({ metadataLanguage: 'en-US', artworkLanguage: 'de', episodeOrdering: 'DVD' });
+    expect(request.request.body.tv).toEqual({
+      metadataLanguage: 'en-US',
+      artworkLanguage: 'de',
+      episodeOrdering: 'DVD',
+    });
     request.flush(stored);
   });
 
@@ -147,7 +157,11 @@ describe('SettingsPage', () => {
     button('.save-button').click();
 
     const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
-    expect(request.request.body.rename).toEqual({ ...stored.rename, movieFile: '{title}', movieOnScrape: true });
+    expect(request.request.body.rename).toEqual({
+      ...stored.rename,
+      movieFile: '{title}',
+      movieOnScrape: true,
+    });
     request.flush(stored);
   });
 
@@ -231,7 +245,9 @@ describe('SettingsPage', () => {
     fixture.detectChanges();
 
     httpTesting.expectNone({ method: 'PUT' });
-    expect(element().querySelector('mat-error')?.textContent).toContain('Der Host ist erforderlich.');
+    expect(element().querySelector('mat-error')?.textContent).toContain(
+      'Der Host ist erforderlich.',
+    );
   });
 
   it('locks settings fixed by the configuration', async () => {
@@ -270,7 +286,9 @@ describe('SettingsPage', () => {
 
   it('shows an error when the settings cannot be loaded', async () => {
     fixture.detectChanges();
-    httpTesting.expectOne({ method: 'GET', url: SETTINGS_URL }).flush('boom', { status: 500, statusText: 'Error' });
+    httpTesting
+      .expectOne({ method: 'GET', url: SETTINGS_URL })
+      .flush('boom', { status: 500, statusText: 'Error' });
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();

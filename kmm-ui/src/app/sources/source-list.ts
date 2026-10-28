@@ -11,11 +11,17 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatTableModule } from '@angular/material/table';
+import { RouterLink } from '@angular/router';
 import { Observable, filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
-import { KODI_PLAYBACK_JOB_KEY_PREFIX, kodiPlaybackJobKey, kodiPlaybackSummary, kodiSyncSummary } from '../kodi/kodi';
+import {
+  KODI_PLAYBACK_JOB_KEY_PREFIX,
+  kodiPlaybackJobKey,
+  kodiPlaybackSummary,
+  kodiSyncSummary,
+} from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import {
   NEW_FILES_STREAM_DETAILS_JOB_KEY_PREFIX,
@@ -26,6 +32,7 @@ import {
   streamDetailsSummary,
 } from '../media-info/media-info';
 import { MediaInfoService } from '../media-info/media-info.service';
+import { movieRenameJobKey } from '../movies/movie-rename';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import {
@@ -54,6 +61,7 @@ export interface ScrapeReport {
   imports: [
     DatePipe,
     ReactiveFormsModule,
+    RouterLink,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -133,7 +141,7 @@ export class SourceList {
   }
 
   /**
-   * Laufender Job der Quelle (Scan, Scrapen, Gesehen-Status, technische Angaben); sie schließen sich in der
+   * Laufender Job der Quelle (Scan, Scrapen, Gesehen-Status, technische Angaben, Umbenennen); sie schließen sich in der
    * Oberfläche aus.
    */
   protected runningJob(source: MediaSource): Job | undefined {
@@ -142,7 +150,8 @@ export class SourceList {
       this.jobStore.runningJob(autoScrapeJobKey(source.id)) ??
       this.jobStore.runningJob(kodiPlaybackJobKey(source.id)) ??
       this.jobStore.runningJob(streamDetailsJobKey(source.id)) ??
-      this.jobStore.runningJob(newFilesStreamDetailsJobKey(source.id))
+      this.jobStore.runningJob(newFilesStreamDetailsJobKey(source.id)) ??
+      this.jobStore.runningJob(movieRenameJobKey(source.id))
     );
   }
 
@@ -207,7 +216,9 @@ export class SourceList {
   }
 
   protected delete(source: MediaSource): void {
-    if (!this.confirm(`Quelle „${source.name}“ und alle ihre Filme aus der Bibliothek entfernen?`)) {
+    if (
+      !this.confirm(`Quelle „${source.name}“ und alle ihre Filme aus der Bibliothek entfernen?`)
+    ) {
       return;
     }
     this.sourceService.delete(source.id).subscribe({

@@ -1,7 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  TestRequest,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { provideRouter } from '@angular/router';
 
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
 import { Job } from '../jobs/job';
@@ -19,7 +24,13 @@ describe('SourceList', () => {
     createdAt: '2026-10-25T10:00:00Z',
     lastScannedAt: null,
   };
-  const series: MediaSource = { ...films, id: 2, name: 'Serien', path: '/media/serien', mediaType: 'TV_SHOW' };
+  const series: MediaSource = {
+    ...films,
+    id: 2,
+    name: 'Serien',
+    path: '/media/serien',
+    mediaType: 'TV_SHOW',
+  };
 
   let fixture: ComponentFixture<SourceList>;
   let httpTesting: HttpTestingController;
@@ -36,7 +47,11 @@ describe('SourceList', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
+        provideRouter([]),
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
         { provide: CONFIRM, useValue: () => confirmAnswer },
         events.provider(),
       ],
@@ -72,7 +87,10 @@ describe('SourceList', () => {
   }
 
   async function fillForm(name: string, path: string): Promise<void> {
-    for (const [field, value] of [['name', name], ['path', path]]) {
+    for (const [field, value] of [
+      ['name', name],
+      ['path', path],
+    ]) {
       const input = element().querySelector<HTMLInputElement>(`input[name="${field}"]`)!;
       input.value = value;
       input.dispatchEvent(new Event('input'));
@@ -83,10 +101,9 @@ describe('SourceList', () => {
   it('lists the sources', async () => {
     await loadSources([films, series]);
 
-    expect(Array.from(element().querySelectorAll('.source-name')).map((cell) => cell.textContent)).toEqual([
-      'Filme',
-      'Serien',
-    ]);
+    expect(
+      Array.from(element().querySelectorAll('.source-name')).map((cell) => cell.textContent),
+    ).toEqual(['Filme', 'Serien']);
   });
 
   it('offers scanning for movie and TV sources but scraping only for movies', async () => {
@@ -94,6 +111,9 @@ describe('SourceList', () => {
 
     expect(element().querySelectorAll('.scan-button')).toHaveLength(2);
     expect(element().querySelectorAll('.scrape-button')).toHaveLength(2);
+    const renameLinks = element().querySelectorAll<HTMLAnchorElement>('.rename-link');
+    expect(renameLinks).toHaveLength(1);
+    expect(renameLinks[0].getAttribute('href')).toBe('/sources/1/rename');
   });
 
   it('reports episodes without recognizable number after a TV scan', async () => {
@@ -105,7 +125,15 @@ describe('SourceList', () => {
         key: 'scan:2',
         title: 'Scan „Serien“',
         status: 'SUCCEEDED',
-        result: { sourceId: 2, added: 4, updated: 0, removed: 0, unchanged: 0, nfoErrors: 0, unrecognizedFiles: ['x.avi'] },
+        result: {
+          sourceId: 2,
+          added: 4,
+          updated: 0,
+          removed: 0,
+          unchanged: 0,
+          nfoErrors: 0,
+          unrecognizedFiles: ['x.avi'],
+        },
       }),
     );
     await answerReload([series]);
@@ -120,29 +148,55 @@ describe('SourceList', () => {
     expect(element().querySelectorAll('.kodi-scan-button')).toHaveLength(2);
 
     element().querySelector<HTMLButtonElement>('.kodi-scan-button')!.click();
-    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' }).flush([
-      { hostId: 1, host: 'Wohnzimmer', outcome: 'SCAN_STARTED', message: 'Kodi sucht nach neuen Filmen.', at: '' },
-    ]);
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' })
+      .flush([
+        {
+          hostId: 1,
+          host: 'Wohnzimmer',
+          outcome: 'SCAN_STARTED',
+          message: 'Kodi sucht nach neuen Filmen.',
+          at: '',
+        },
+      ]);
     element().querySelector<HTMLButtonElement>('.kodi-scan-button')!.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' })
       .flush({ detail: 'Quelle nicht gefunden' }, { status: 404, statusText: 'Not Found' });
 
-    expect(snackBarMessages).toEqual(['Wohnzimmer: Kodi sucht nach neuen Filmen.', 'Quelle nicht gefunden']);
+    expect(snackBarMessages).toEqual([
+      'Wohnzimmer: Kodi sucht nach neuen Filmen.',
+      'Quelle nicht gefunden',
+    ]);
   });
 
   it('imports the watched status of a source from Kodi as job', async () => {
     await loadSources([films, series]);
-    const playbackJob = job({ id: 'job-7', key: 'kodi-playback:1', title: 'Gesehen-Status „Filme“ aus Kodi' });
+    const playbackJob = job({
+      id: 'job-7',
+      key: 'kodi-playback:1',
+      title: 'Gesehen-Status „Filme“ aus Kodi',
+    });
 
     button('.kodi-playback-button').click();
-    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/playback' }).flush(playbackJob);
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/playback' })
+      .flush(playbackJob);
     fixture.detectChanges();
     expect(element().querySelector('.job-progress')).not.toBeNull();
     events.emit({
       ...playbackJob,
       status: 'SUCCEEDED',
-      result: { sourceId: 1, host: 'Wohnzimmer', updated: 1, unchanged: 2, kept: 0, notInKodi: 0, failed: 0, failures: [] },
+      result: {
+        sourceId: 1,
+        host: 'Wohnzimmer',
+        updated: 1,
+        unchanged: 2,
+        kept: 0,
+        notInKodi: 0,
+        failed: 0,
+        failures: [],
+      },
     });
     fixture.detectChanges();
 
@@ -153,7 +207,11 @@ describe('SourceList', () => {
 
   it('reads the technical details of a source as job', async () => {
     await loadSources([films, series]);
-    const probeJob = job({ id: 'job-8', key: 'stream-details:1', title: 'Technische Angaben „Filme“' });
+    const probeJob = job({
+      id: 'job-8',
+      key: 'stream-details:1',
+      title: 'Technische Angaben „Filme“',
+    });
 
     button('.stream-details-button').click();
     fixture.detectChanges();
@@ -176,7 +234,10 @@ describe('SourceList', () => {
       .expectOne({ method: 'POST', url: '/api/v1/sources/1/stream-details?scope=MISSING' })
       .flush({ detail: 'ffprobe fehlt' }, { status: 409, statusText: 'Conflict' });
 
-    expect(snackBarMessages).toEqual(['Technische Angaben „Filme“ abgeschlossen: 3 ausgelesen.', 'ffprobe fehlt']);
+    expect(snackBarMessages).toEqual([
+      'Technische Angaben „Filme“ abgeschlossen: 3 ausgelesen.',
+      'ffprobe fehlt',
+    ]);
   });
 
   it('shows a hint without sources', async () => {
@@ -199,7 +260,11 @@ describe('SourceList', () => {
 
     button('.create-button').click();
     const request = httpTesting.expectOne({ method: 'POST', url: SOURCES_URL });
-    expect(request.request.body).toEqual({ name: 'Filme', path: '/media/filme', mediaType: 'MOVIE' });
+    expect(request.request.body).toEqual({
+      name: 'Filme',
+      path: '/media/filme',
+      mediaType: 'MOVIE',
+    });
     request.flush(films);
     await answerReload([films]);
 
@@ -221,7 +286,10 @@ describe('SourceList', () => {
     button('.create-button').click();
     httpTesting
       .expectOne({ method: 'POST', url: SOURCES_URL })
-      .flush({ detail: "'/fehlt' ist kein erreichbares Verzeichnis." }, { status: 422, statusText: 'Unprocessable' });
+      .flush(
+        { detail: "'/fehlt' ist kein erreichbares Verzeichnis." },
+        { status: 422, statusText: 'Unprocessable' },
+      );
     await fixture.whenStable();
 
     expect(snackBarMessages).toEqual(["'/fehlt' ist kein erreichbares Verzeichnis."]);
@@ -237,7 +305,9 @@ describe('SourceList', () => {
     fixture.detectChanges();
 
     expect(element().querySelector('.scan-button')).toBeNull();
-    expect(element().querySelector('.job-message')?.textContent).toContain('NFOs werden geprüft (25 %)');
+    expect(element().querySelector('.job-message')?.textContent).toContain(
+      'NFOs werden geprüft (25 %)',
+    );
     expect(button('.delete-button').disabled).toBe(true);
   });
 
@@ -268,7 +338,10 @@ describe('SourceList', () => {
     events.emit(job({ id: 'job-2', status: 'CANCELLED' }));
     await answerReload([films]);
 
-    expect(snackBarMessages).toEqual(['Scan „Filme“ fehlgeschlagen: Verzeichnis weg', 'Scan „Filme“ abgebrochen.']);
+    expect(snackBarMessages).toEqual([
+      'Scan „Filme“ fehlgeschlagen: Verzeichnis weg',
+      'Scan „Filme“ abgebrochen.',
+    ]);
   });
 
   it('ignores jobs of other kinds', async () => {
@@ -359,14 +432,17 @@ describe('SourceList', () => {
     };
 
     function texts(selector: string): (string | undefined)[] {
-      return Array.from(element().querySelectorAll(selector)).map((item) => item.textContent?.trim());
+      return Array.from(element().querySelectorAll(selector)).map((item) =>
+        item.textContent?.trim(),
+      );
     }
 
     it('summarizes the scrape of a tv source', async () => {
       await loadSources([series]);
 
       button('.scrape-button').click();
-      httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/2/auto-scrape` })
+      httpTesting
+        .expectOne({ method: 'POST', url: `${SOURCES_URL}/2/auto-scrape` })
         .flush(scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: 'Scrapen „Serien“' }));
       events.emit(scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: 'Scrapen „Serien“' }));
       events.emit(
@@ -399,7 +475,9 @@ describe('SourceList', () => {
       await loadSources([films]);
 
       button('.scrape-button').click();
-      httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/1/auto-scrape` }).flush(scrapeJob());
+      httpTesting
+        .expectOne({ method: 'POST', url: `${SOURCES_URL}/1/auto-scrape` })
+        .flush(scrapeJob());
       events.emit(scrapeJob({ done: 1, total: 4, message: 'Heat' }));
       fixture.detectChanges();
 
@@ -415,7 +493,9 @@ describe('SourceList', () => {
 
       button('.cancel-button').click();
 
-      httpTesting.expectOne({ method: 'POST', url: '/api/v1/jobs/job-9/cancel' }).flush(scrapeJob());
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/jobs/job-9/cancel' })
+        .flush(scrapeJob());
     });
 
     it('summarizes the result and lists what still needs attention', async () => {

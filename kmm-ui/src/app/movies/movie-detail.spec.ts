@@ -1,5 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  TestRequest,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
@@ -7,6 +11,8 @@ import { provideRouter } from '@angular/router';
 import { EMPTY_SUPPLEMENT, MovieDetails } from './movie';
 import { MovieDetail } from './movie-detail';
 import { MOVIES_URL } from './movie.service';
+import { MovieRenamePlan } from './movie-rename';
+import { CONFIRM } from '../shared/confirm';
 
 describe('MovieDetail', () => {
   const heat: MovieDetails = {
@@ -57,16 +63,30 @@ describe('MovieDetail', () => {
   let fixture: ComponentFixture<MovieDetail>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
+  let confirmMessages: string[];
+  let confirmAnswer: boolean;
 
   beforeEach(() => {
     snackBarMessages = [];
+    confirmMessages = [];
+    confirmAnswer = true;
     TestBed.configureTestingModule({
       imports: [MovieDetail],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
+        {
+          provide: CONFIRM,
+          useValue: (message: string) => {
+            confirmMessages.push(message);
+            return confirmAnswer;
+          },
+        },
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -126,7 +146,9 @@ describe('MovieDetail', () => {
     expect(input('title').value).toBe('Heat');
     expect(input('genres').value).toBe('Krimi');
     expect(button('.save-button').disabled).toBe(true);
-    expect(element().querySelector('.videos')?.textContent?.trim()).toBe('H.264 · 1280×536 · 2.39:1 · 1 h 36 min');
+    expect(element().querySelector('.videos')?.textContent?.trim()).toBe(
+      'H.264 · 1280×536 · 2.39:1 · 1 h 36 min',
+    );
     expect(element().querySelector('.audios')?.textContent?.trim()).toBe('deu · DTS · 5.1');
     expect(element().querySelector('.subtitles')?.textContent?.trim()).toBe('deu (erzwungen)');
   });
@@ -138,7 +160,13 @@ describe('MovieDetail', () => {
     fixture.detectChanges();
     expect(button('.kodi-refresh-button').disabled).toBe(true);
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/refresh' }).flush([
-      { hostId: 1, host: 'Wohnzimmer', outcome: 'REFRESHED', message: '„Heat“ aktualisiert.', at: '' },
+      {
+        hostId: 1,
+        host: 'Wohnzimmer',
+        outcome: 'REFRESHED',
+        message: '„Heat“ aktualisiert.',
+        at: '',
+      },
       { hostId: 2, host: 'Küche', outcome: 'FAILED', message: 'nicht erreichbar.', at: '' },
     ]);
     fixture.detectChanges();
@@ -182,7 +210,10 @@ describe('MovieDetail', () => {
     button('.kodi-playback-button').click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/playback' })
-      .flush({ detail: 'Kein Kodi-Gerät hat eine Pfad-Zuordnung.' }, { status: 422, statusText: 'Unprocessable' });
+      .flush(
+        { detail: 'Kein Kodi-Gerät hat eine Pfad-Zuordnung.' },
+        { status: 422, statusText: 'Unprocessable' },
+      );
     fixture.detectChanges();
 
     expect(snackBarMessages).toEqual([
@@ -209,17 +240,28 @@ describe('MovieDetail', () => {
     button('.stream-details-button').click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/movies/5/stream-details' })
-      .flush({ detail: 'ffprobe kann nicht gestartet werden' }, { status: 422, statusText: 'Unprocessable' });
+      .flush(
+        { detail: 'ffprobe kann nicht gestartet werden' },
+        { status: 422, statusText: 'Unprocessable' },
+      );
     fixture.detectChanges();
 
-    expect(snackBarMessages).toEqual(['Technische Angaben ausgelesen.', 'ffprobe kann nicht gestartet werden']);
+    expect(snackBarMessages).toEqual([
+      'Technische Angaben ausgelesen.',
+      'ffprobe kann nicht gestartet werden',
+    ]);
     expect(button('.stream-details-button').disabled).toBe(false);
   });
 
   it('announces where a missing NFO will be created', async () => {
-    await load({ ...heat, nfo: { path: '/media/filme/Heat.nfo', exists: false, modifiedAt: null } });
+    await load({
+      ...heat,
+      nfo: { path: '/media/filme/Heat.nfo', exists: false, modifiedAt: null },
+    });
 
-    expect(element().querySelector('.nfo-status')?.textContent).toContain('wird beim Speichern angelegt');
+    expect(element().querySelector('.nfo-status')?.textContent).toContain(
+      'wird beim Speichern angelegt',
+    );
   });
 
   it('saves changed metadata and shows where the NFO was written', async () => {
@@ -229,7 +271,11 @@ describe('MovieDetail', () => {
 
     button('.save-button').click();
     const request = expectSave();
-    expect(request.request.body).toMatchObject({ title: 'Heat (Director’s Cut)', genres: ['Krimi', 'Drama'], year: 1995 });
+    expect(request.request.body).toMatchObject({
+      title: 'Heat (Director’s Cut)',
+      genres: ['Krimi', 'Drama'],
+      year: 1995,
+    });
     request.flush({ ...heat, metadata: { ...heat.metadata, title: 'Heat (Director’s Cut)' } });
     await fixture.whenStable();
 
@@ -255,7 +301,10 @@ describe('MovieDetail', () => {
 
     button('.save-button').click();
     expectSave().flush(
-      { detail: 'Die NFO-Datei kann nicht geschrieben werden. Bitte Schreibrechte im Filmordner prüfen.' },
+      {
+        detail:
+          'Die NFO-Datei kann nicht geschrieben werden. Bitte Schreibrechte im Filmordner prüfen.',
+      },
       { status: 422, statusText: 'Unprocessable' },
     );
     await fixture.whenStable();
@@ -279,14 +328,25 @@ describe('MovieDetail', () => {
 
     button('.online-search-button').click();
     fixture.detectChanges();
-    httpTesting.expectOne('/api/v1/scrapers/metadata').flush([
-      { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['MOVIE'], missingConfiguration: null },
-    ]);
+    httpTesting
+      .expectOne('/api/v1/scrapers/metadata')
+      .flush([
+        { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['MOVIE'], missingConfiguration: null },
+      ]);
     await fixture.whenStable();
     button('.search-button').click();
     httpTesting
       .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-search`)
-      .flush([{ providerId: '949', title: 'Heat', originalTitle: 'Heat', year: 1995, overview: null, posterUrl: null }]);
+      .flush([
+        {
+          providerId: '949',
+          title: 'Heat',
+          originalTitle: 'Heat',
+          year: 1995,
+          overview: null,
+          posterUrl: null,
+        },
+      ]);
     await fixture.whenStable();
     button('.adopt-button').click();
     httpTesting
@@ -310,7 +370,11 @@ describe('MovieDetail', () => {
     expectSave().flush(heat);
     httpTesting
       .expectOne({ method: 'POST', url: `${MOVIES_URL}/5/stream-details/after-scrape` })
-      .flush({ videos: [], audios: [{ codec: 'truehd', language: 'deu', channels: 8, bitrate: null }], subtitles: [] });
+      .flush({
+        videos: [],
+        audios: [{ codec: 'truehd', language: 'deu', channels: 8, bitrate: null }],
+        subtitles: [],
+      });
     await fixture.whenStable();
 
     expect(element().querySelector('app-stream-details')?.textContent).toContain('Dolby TrueHD');
@@ -334,7 +398,9 @@ describe('MovieDetail', () => {
       .flush({ detail: 'ffprobe fehlt' }, { status: 422, statusText: 'Unprocessable' });
     await fixture.whenStable();
 
-    expect(snackBarMessages).toContain('Gespeichert, technische Angaben nicht ausgelesen: ffprobe fehlt');
+    expect(snackBarMessages).toContain(
+      'Gespeichert, technische Angaben nicht ausgelesen: ffprobe fehlt',
+    );
     expect(button('.stream-details-button').disabled).toBe(false);
   });
 
@@ -354,14 +420,25 @@ describe('MovieDetail', () => {
   async function adoptFromOnlineSearch(): Promise<void> {
     button('.online-search-button').click();
     fixture.detectChanges();
-    httpTesting.expectOne('/api/v1/scrapers/metadata').flush([
-      { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['MOVIE'], missingConfiguration: null },
-    ]);
+    httpTesting
+      .expectOne('/api/v1/scrapers/metadata')
+      .flush([
+        { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['MOVIE'], missingConfiguration: null },
+      ]);
     await fixture.whenStable();
     button('.search-button').click();
     httpTesting
       .expectOne((request) => request.url === `${MOVIES_URL}/5/scraper-search`)
-      .flush([{ providerId: '949', title: 'Heat', originalTitle: 'Heat', year: 1995, overview: null, posterUrl: null }]);
+      .flush([
+        {
+          providerId: '949',
+          title: 'Heat',
+          originalTitle: 'Heat',
+          year: 1995,
+          overview: null,
+          posterUrl: null,
+        },
+      ]);
     await fixture.whenStable();
     button('.adopt-button').click();
     httpTesting
@@ -384,9 +461,105 @@ describe('MovieDetail', () => {
 
   it('shows an error when the movie cannot be loaded', async () => {
     fixture.detectChanges();
-    httpTesting.expectOne(`${MOVIES_URL}/5`).flush({ title: 'Film nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+    httpTesting
+      .expectOne(`${MOVIES_URL}/5`)
+      .flush({ title: 'Film nicht gefunden' }, { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();
+  });
+  describe('renaming', () => {
+    const patterns = { folder: '{title} ({year})', file: '{title}' };
+    const plan: MovieRenamePlan = {
+      movieId: 5,
+      title: 'Heat',
+      currentDirectory: '/media/filme/heat',
+      targetDirectory: '/media/filme/Heat (1995)',
+      renames: [{ currentName: 'heat.mkv', targetName: 'Heat.mkv' }],
+      status: 'RENAME',
+      message: null,
+    };
+
+    function answerSettings(): void {
+      httpTesting
+        .expectOne({ method: 'GET', url: '/api/v1/settings' })
+        .flush({ rename: { movieFolder: patterns.folder, movieFile: patterns.file } });
+    }
+
+    function answerPreview(answer: MovieRenamePlan): void {
+      const preview = httpTesting.expectOne({
+        method: 'POST',
+        url: `${MOVIES_URL}/5/rename/preview`,
+      });
+      expect(preview.request.body).toEqual(patterns);
+      preview.flush(answer);
+    }
+
+    it('renames the movie after confirming the new names', async () => {
+      await load(heat);
+
+      button('.rename-button').click();
+      answerSettings();
+      answerPreview(plan);
+      httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/5/rename` }).flush(plan);
+      await renderPendingChanges();
+      httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5` }).flush(heat);
+      await renderPendingChanges();
+      httpTesting.match(`${MOVIES_URL}/5/artwork`).forEach((request) => request.flush([]));
+
+      expect(confirmMessages[0]).toContain('→ /media/filme/Heat (1995)');
+      expect(confirmMessages[0]).toContain('heat.mkv → Heat.mkv');
+      expect(snackBarMessages).toEqual(['„Heat“ umbenannt.']);
+    });
+
+    it('keeps everything when the user declines', async () => {
+      await load(heat);
+      confirmAnswer = false;
+
+      button('.rename-button').click();
+      answerSettings();
+      answerPreview(plan);
+
+      expect(snackBarMessages).toEqual([]);
+      expect(button('.rename-button').disabled).toBe(false);
+    });
+
+    it('reports names that are right already and conflicts', async () => {
+      await load(heat);
+
+      button('.rename-button').click();
+      answerSettings();
+      answerPreview({ ...plan, status: 'UNCHANGED', renames: [] });
+      button('.rename-button').click();
+      answerSettings();
+      answerPreview({ ...plan, status: 'CONFLICT', message: 'Der Ordner existiert bereits.' });
+
+      expect(confirmMessages).toEqual([]);
+      expect(snackBarMessages).toEqual([
+        '„Heat“ heißt schon so.',
+        '„Heat“ nicht umbenannt: Der Ordner existiert bereits.',
+      ]);
+    });
+
+    it('asks to save unsaved changes first', async () => {
+      await load(heat);
+      await type('title', 'Heat 2');
+
+      button('.rename-button').click();
+
+      expect(snackBarMessages).toEqual(['Bitte die Änderungen zuerst speichern.']);
+    });
+
+    it('reports problems', async () => {
+      await load(heat);
+
+      button('.rename-button').click();
+      answerSettings();
+      httpTesting
+        .expectOne({ method: 'POST', url: `${MOVIES_URL}/5/rename/preview` })
+        .flush({ detail: 'Ordnermuster: kaputt' }, { status: 422, statusText: 'Unprocessable' });
+
+      expect(snackBarMessages).toEqual(['Ordnermuster: kaputt']);
+    });
   });
 });

@@ -40,7 +40,8 @@ export interface RenameSettings {
   readonly episodesOnScan: boolean;
 }
 
-export type ApiKeyName = 'TMDB_API_KEY' | 'TVDB_API_KEY' | 'TVDB_PIN' | 'FANARTTV_API_KEY' | 'FANARTTV_CLIENT_KEY';
+export type ApiKeyName =
+  'TMDB_API_KEY' | 'TVDB_API_KEY' | 'TVDB_PIN' | 'FANARTTV_API_KEY' | 'FANARTTV_CLIENT_KEY';
 
 /** Zustand eines API-Keys; der Key selbst wird nie ausgeliefert. */
 export interface ApiKeyView {

@@ -2,7 +2,11 @@ import { Routes } from '@angular/router';
 
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'movies' },
-  { path: 'movies', title: 'Filme – KMM', loadComponent: () => import('./movies/movie-list').then((m) => m.MovieList) },
+  {
+    path: 'movies',
+    title: 'Filme – KMM',
+    loadComponent: () => import('./movies/movie-list').then((m) => m.MovieList),
+  },
   {
     path: 'movies/:id',
     title: 'Film – KMM',
@@ -27,6 +31,11 @@ export const routes: Routes = [
     path: 'sources',
     title: 'Quellen – KMM',
     loadComponent: () => import('./sources/source-list').then((m) => m.SourceList),
+  },
+  {
+    path: 'sources/:id/rename',
+    title: 'Filme umbenennen – KMM',
+    loadComponent: () => import('./movies/movie-rename-page').then((m) => m.MovieRenamePage),
   },
   {
     path: 'kodi',

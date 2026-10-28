@@ -8,18 +8,29 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
+import { EMPTY, finalize, map, of, switchMap } from 'rxjs';
 
 import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { MediaInfoService } from '../media-info/media-info.service';
+import { SettingsService } from '../settings/settings.service';
+import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
-import { MAX_YEAR, MIN_YEAR, createMovieMetadataForm, toFormValue, toMetadata } from './movie-metadata-form';
+import {
+  MAX_YEAR,
+  MIN_YEAR,
+  createMovieMetadataForm,
+  toFormValue,
+  toMetadata,
+} from './movie-metadata-form';
 import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
 import { MovieSupplementView } from './movie-supplement';
 import { MovieService } from './movie.service';
+import { MovieRenamePlan, renameConfirmation } from './movie-rename';
+import { MovieRenameService } from './movie-rename.service';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -46,6 +57,9 @@ export class MovieDetail {
   private readonly kodiService = inject(KodiService);
   private readonly mediaInfoService = inject(MediaInfoService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly renameService = inject(MovieRenameService);
+  private readonly settingsService = inject(SettingsService);
+  private readonly confirm = inject(CONFIRM);
 
   /** Film-ID aus der Route {@code /movies/:id}. */
   readonly id = input.required({ transform: numberAttribute });
@@ -58,6 +72,7 @@ export class MovieDetail {
   protected readonly refreshingKodi = signal(false);
   protected readonly importingPlayback = signal(false);
   protected readonly probingStreams = signal(false);
+  protected readonly renaming = signal(false);
   /** Ob das Formular einen Treffer der Online-Suche enthält; nach dem Speichern werden die Angaben ausgelesen. */
   private readonly adoptedProposal = signal(false);
   protected readonly movie = rxResource({
@@ -66,7 +81,9 @@ export class MovieDetail {
   });
 
   /** Eigenes Signal, damit Änderungen außerhalb der Metadaten (Gesehen-Status) das Formular nicht zurücksetzen. */
-  private readonly metadata = computed(() => (this.movie.hasValue() ? this.movie.value().metadata : null));
+  private readonly metadata = computed(() =>
+    this.movie.hasValue() ? this.movie.value().metadata : null,
+  );
 
   constructor() {
     effect(() => {
@@ -144,6 +161,45 @@ export class MovieDetail {
     });
   }
 
+  /**
+   * Benennt Ordner und Dateien nach den Mustern aus den Einstellungen um; vorher werden die neuen Namen zur
+   * Bestätigung gezeigt. Ungespeicherte Änderungen müssen erst gespeichert werden, denn die Namen entstehen aus
+   * den gespeicherten Angaben.
+   */
+  protected renameMovie(): void {
+    if (this.form.dirty) {
+      this.notify('Bitte die Änderungen zuerst speichern.');
+      return;
+    }
+    this.renaming.set(true);
+    this.settingsService
+      .load()
+      .pipe(
+        map((settings) => ({
+          folder: settings.rename.movieFolder,
+          file: settings.rename.movieFile,
+        })),
+        switchMap((patterns) =>
+          this.renameService
+            .previewMovie(this.id(), patterns)
+            .pipe(map((plan) => ({ patterns, plan }))),
+        ),
+        switchMap(({ patterns, plan }) => {
+          if (plan.status !== 'RENAME') {
+            return of(plan);
+          }
+          return this.confirm(renameConfirmation(plan))
+            ? this.renameService.renameMovie(this.id(), patterns)
+            : EMPTY;
+        }),
+        finalize(() => this.renaming.set(false)),
+      )
+      .subscribe({
+        next: (plan) => this.showRenamed(plan),
+        error: (error: unknown) => this.notify(problemMessage(error)),
+      });
+  }
+
   /** Liest Codecs, Auflösung und Spuren mit ffprobe aus und schreibt sie in NFO und Bibliothek. */
   protected probeStreams(): void {
     this.probingStreams.set(true);
@@ -190,21 +246,36 @@ export class MovieDetail {
   }
 
   private showPlayback(result: KodiPlaybackResult): void {
-    this.movie.update((details) =>
-      details && {
-        ...details,
-        supplement: {
-          ...details.supplement,
-          playCount: result.playCount,
-          lastPlayed: result.lastPlayedAt,
-          userRating: result.userRating,
+    this.movie.update(
+      (details) =>
+        details && {
+          ...details,
+          supplement: {
+            ...details.supplement,
+            playCount: result.playCount,
+            lastPlayed: result.lastPlayedAt,
+            userRating: result.userRating,
+          },
         },
-      },
     );
   }
 
   private showStreams(streams: StreamDetails): void {
     this.movie.update((details) => details && { ...details, streams });
+  }
+
+  private showRenamed(plan: MovieRenamePlan): void {
+    switch (plan.status) {
+      case 'RENAME':
+        this.notify(`„${plan.title}“ umbenannt.`);
+        this.movie.reload();
+        break;
+      case 'UNCHANGED':
+        this.notify(`„${plan.title}“ heißt schon so.`);
+        break;
+      default:
+        this.notify(`„${plan.title}“ nicht umbenannt: ${plan.message}`);
+    }
   }
 
   private notify(message: string): void {

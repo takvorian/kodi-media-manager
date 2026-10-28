@@ -81,6 +81,9 @@
               </button>
             </mat-menu>
           }
+          @if (source.mediaType === 'MOVIE') {
+            <a matButton class="rename-link" [routerLink]="['/sources', source.id, 'rename']">Umbenennen</a>
+          }
         }
         <button matButton class="delete-button" (click)="delete(source)" [disabled]="!!job">Entfernen</button>
       </td>
