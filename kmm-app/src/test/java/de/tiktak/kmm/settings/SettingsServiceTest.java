@@ -1,6 +1,9 @@
 package de.tiktak.kmm.settings;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -45,6 +48,22 @@ class SettingsServiceTest {
         assertThat(service.current()).isEqualTo(changes);
         assertThat(view.metadataLanguage()).isEqualTo("en-US");
         assertThat(view.overridden()).isEmpty();
+    }
+
+    @Test
+    void rejectsInvalidRenamePatternsWithoutSaving() {
+        var service = new SettingsService(store, SettingsOverrides.NONE);
+        var folderInFile = KmmSettings.DEFAULTS.withRename(new RenameSettings("{title}", "{title:first}/{title}",
+                "{show}", "{season}", "{episode}", false, false, false, false, false));
+        var unknown = KmmSettings.DEFAULTS.withRename(new RenameSettings("{titel}", "{title}", "{show}", "{season}",
+                "{episode}", false, false, false, false, false));
+
+        assertThatThrownBy(() -> service.update(folderInFile)).isInstanceOf(InvalidSettingsException.class)
+                .hasMessageContaining("Muster für Filmdateien: Ordner (/) sind hier nicht erlaubt.");
+        assertThatThrownBy(() -> service.update(unknown)).isInstanceOfSatisfying(InvalidSettingsException.class,
+                e -> assertThat(e.getBody().getDetail())
+                        .isEqualTo("Muster für Filmordner: Unbekannter Platzhalter „{titel}“ (Stelle 1)."));
+        verify(store, never()).save(any());
     }
 
     @Test

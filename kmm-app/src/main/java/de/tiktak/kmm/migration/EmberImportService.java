@@ -23,6 +23,7 @@ import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberTvLibraryReader;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsException;
+import de.tiktak.kmm.migration.ember.settings.EmberAdvancedSettingsReader;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -45,6 +46,7 @@ public class EmberImportService {
     private final EmberLibraryReader libraryReader;
     private final EmberTvLibraryReader tvLibraryReader;
     private final EmberSettingsReader settingsReader;
+    private final EmberAdvancedSettingsReader advancedSettingsReader;
     private final EmberKodiHostsReader kodiHostsReader;
     private final EmberLibraryImporter importer;
     private final EmberKodiHostImporter kodiHostImporter;
@@ -121,11 +123,18 @@ public class EmberImportService {
         if (!request.importSettings() || profile.settingsFile().isEmpty()) {
             return Optional.empty();
         }
+        EmberSettings settings;
         try {
-            return Optional.of(settingsReader.read(profile.settingsFile().get()));
+            settings = settingsReader.read(profile.settingsFile().get());
         } catch (EmberSettingsException e) {
             progress.warn("Die Ember-Einstellungen konnten nicht gelesen werden: " + e.getMessage());
             return Optional.empty();
+        }
+        try {
+            return Optional.of(settings.withRename(advancedSettingsReader.readRenameSettings(profile).orElse(null)));
+        } catch (EmberSettingsException e) {
+            progress.warn("Die Einstellungen zum Umbenennen konnten nicht gelesen werden: " + e.getMessage());
+            return Optional.of(settings);
         }
     }
 }

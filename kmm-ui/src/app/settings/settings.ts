@@ -26,6 +26,20 @@ export interface MediaInfoSettings {
   readonly probeNewFiles: boolean;
 }
 
+/** Muster und Auslöser für das Umbenennen, z. B. `{title}[ ({year})]`. */
+export interface RenameSettings {
+  readonly movieFolder: string;
+  readonly movieFile: string;
+  readonly tvShowFolder: string;
+  readonly seasonFolder: string;
+  readonly episodeFile: string;
+  readonly movieOnEdit: boolean;
+  readonly movieOnScrape: boolean;
+  readonly tvOnEdit: boolean;
+  readonly tvOnScrape: boolean;
+  readonly episodesOnScan: boolean;
+}
+
 export type ApiKeyName = 'TMDB_API_KEY' | 'TVDB_API_KEY' | 'TVDB_PIN' | 'FANARTTV_API_KEY' | 'FANARTTV_CLIENT_KEY';
 
 /** Zustand eines API-Keys; der Key selbst wird nie ausgeliefert. */
@@ -46,6 +60,7 @@ export interface SettingsView {
   readonly proxy: ProxyView | null;
   readonly tv: TvSettings;
   readonly mediaInfo: MediaInfoSettings;
+  readonly rename: RenameSettings;
   readonly overridden: readonly SettingsField[];
 }
 
@@ -66,4 +81,5 @@ export interface KmmSettings {
   readonly proxy: ProxySettings | null;
   readonly tv: TvSettings;
   readonly mediaInfo: MediaInfoSettings;
+  readonly rename: RenameSettings;
 }

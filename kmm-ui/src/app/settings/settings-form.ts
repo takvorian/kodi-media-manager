@@ -9,6 +9,7 @@ const MAX_PORT = 65535;
 const DEFAULT_PROXY_PORT = 8080;
 const EXTENSION_SEPARATOR = ',';
 const LINE_SEPARATOR = /\r?\n/;
+const MAX_PATTERN_LENGTH = 512;
 
 export type SettingsForm = FormGroup<{
   metadataLanguage: FormControl<string>;
@@ -26,6 +27,18 @@ export type SettingsForm = FormGroup<{
   ffprobePath: FormControl<string>;
   probeOnScrape: FormControl<boolean>;
   probeNewFiles: FormControl<boolean>;
+  rename: FormGroup<{
+    movieFolder: FormControl<string>;
+    movieFile: FormControl<string>;
+    tvShowFolder: FormControl<string>;
+    seasonFolder: FormControl<string>;
+    episodeFile: FormControl<string>;
+    movieOnEdit: FormControl<boolean>;
+    movieOnScrape: FormControl<boolean>;
+    tvOnEdit: FormControl<boolean>;
+    tvOnScrape: FormControl<boolean>;
+    episodesOnScan: FormControl<boolean>;
+  }>;
 }>;
 
 export function createSettingsForm(formBuilder: NonNullableFormBuilder): SettingsForm {
@@ -45,6 +58,18 @@ export function createSettingsForm(formBuilder: NonNullableFormBuilder): Setting
     ffprobePath: ['ffprobe', Validators.required],
     probeOnScrape: [true],
     probeNewFiles: [true],
+    rename: formBuilder.group({
+      movieFolder: ['', [Validators.required, Validators.maxLength(MAX_PATTERN_LENGTH)]],
+      movieFile: ['', [Validators.required, Validators.maxLength(MAX_PATTERN_LENGTH)]],
+      tvShowFolder: ['', [Validators.required, Validators.maxLength(MAX_PATTERN_LENGTH)]],
+      seasonFolder: ['', [Validators.required, Validators.maxLength(MAX_PATTERN_LENGTH)]],
+      episodeFile: ['', [Validators.required, Validators.maxLength(MAX_PATTERN_LENGTH)]],
+      movieOnEdit: [false],
+      movieOnScrape: [false],
+      tvOnEdit: [false],
+      tvOnScrape: [false],
+      episodesOnScan: [false],
+    }),
   });
 }
 
@@ -65,6 +90,7 @@ export function toFormValue(view: SettingsView): SettingsForm['value'] {
     ffprobePath: view.mediaInfo.ffprobePath,
     probeOnScrape: view.mediaInfo.probeOnScrape,
     probeNewFiles: view.mediaInfo.probeNewFiles,
+    rename: { ...view.rename },
   };
 }
 
@@ -93,6 +119,14 @@ export function toSettings(form: SettingsForm): KmmSettings {
       ffprobePath: value.ffprobePath.trim(),
       probeOnScrape: value.probeOnScrape,
       probeNewFiles: value.probeNewFiles,
+    },
+    rename: {
+      ...value.rename,
+      movieFolder: value.rename.movieFolder.trim(),
+      movieFile: value.rename.movieFile.trim(),
+      tvShowFolder: value.rename.tvShowFolder.trim(),
+      seasonFolder: value.rename.seasonFolder.trim(),
+      episodeFile: value.rename.episodeFile.trim(),
     },
   };
 }

@@ -36,8 +36,12 @@ public class SettingsService {
      * Speichert die Einstellungen. Durch die Konfiguration festgelegte Werte bleiben unverändert;
      * ein Proxy ohne Passwort ({@code null}) behält das bisher gespeicherte.
      */
+    /**
+     * @throws InvalidSettingsException wenn ein Namensmuster ungültig ist
+     */
     @Transactional
     public SettingsView update(KmmSettings changes) {
+        changes.rename().validate();
         KmmSettings previous = stored();
         KmmSettings merged = keepOverriddenValues(keepPassword(changes, previous), previous);
         store.save(merged);

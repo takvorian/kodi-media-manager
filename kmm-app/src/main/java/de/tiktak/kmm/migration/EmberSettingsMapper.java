@@ -11,12 +11,17 @@ import java.util.Set;
 import java.util.regex.Pattern;
 
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
+import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
 import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.MediaInfoSettings;
+import de.tiktak.kmm.scanner.naming.NamePattern;
+import de.tiktak.kmm.scanner.naming.NamePatternException;
+import de.tiktak.kmm.scanner.naming.NamePlaceholders;
 import de.tiktak.kmm.settings.ProxySettings;
+import de.tiktak.kmm.settings.RenameSettings;
 import de.tiktak.kmm.settings.TvSettings;
 
 /**
@@ -74,9 +79,61 @@ final class EmberSettingsMapper {
         }
         MediaInfoSettings mediaInfo = ember.map(settings -> mediaInfo(current.mediaInfo(), settings, changes))
                 .orElse(current.mediaInfo());
+        RenameSettings rename = ember.map(EmberSettings::rename)
+                .map(emberRename -> rename(current.rename(), emberRename, changes))
+                .orElse(current.rename());
         KmmSettings imported = new KmmSettings(metadataLanguage, artworkLanguage, videoExtensions,
-                List.copyOf(allExcluded), proxy, tv, mediaInfo);
+                List.copyOf(allExcluded), proxy, tv, mediaInfo, rename);
         return new SettingsImport(imported, changes);
+    }
+
+    /** Muster ohne Gegenstück in KMM bleiben beim bisherigen Wert; das steht im Bericht. */
+    private static RenameSettings rename(RenameSettings current, EmberRenameSettings ember, List<String> changes) {
+        return new RenameSettings(
+                pattern("Filmordner", ember.movieFolder(), current.movieFolder(), NamePlaceholders.MOVIE, changes),
+                pattern("Filmdateien", ember.movieFile(), current.movieFile(), NamePlaceholders.MOVIE, changes),
+                pattern("Serienordner", ember.tvShowFolder(), current.tvShowFolder(), NamePlaceholders.TV_SHOW,
+                        changes),
+                pattern("Staffelordner", ember.seasonFolder(), current.seasonFolder(),
+                        NamePlaceholders.SEASON_FOLDER, changes),
+                pattern("Episodendateien", ember.episodeFile(), current.episodeFile(), NamePlaceholders.EPISODE_FILE,
+                        changes),
+                flag("Filme nach dem Bearbeiten umbenennen", ember.movieOnEdit(), current.movieOnEdit(), changes),
+                flag("Filme nach dem Scrapen umbenennen", ember.movieOnScrape(), current.movieOnScrape(), changes),
+                flag("Episoden nach dem Bearbeiten umbenennen", ember.tvOnEdit(), current.tvOnEdit(), changes),
+                flag("Serien nach dem Scrapen umbenennen", ember.tvOnScrape(), current.tvOnScrape(), changes),
+                flag("Neue Episoden beim Scan umbenennen", ember.episodesOnScan(), current.episodesOnScan(),
+                        changes));
+    }
+
+    private static String pattern(String label, String ember, String current, Set<String> placeholders,
+                                  List<String> changes) {
+        if (ember == null || ember.isBlank()) {
+            return current;
+        }
+        Optional<String> translated = EmberRenamePatterns.translate(ember).filter(pattern -> {
+            try {
+                NamePattern.parse(pattern, placeholders);
+                return true;
+            } catch (NamePatternException e) {
+                return false;
+            }
+        });
+        if (translated.isEmpty()) {
+            changes.add("Muster für %s nicht übernommen: „%s“ lässt sich nicht übersetzen, es bleibt „%s“."
+                    .formatted(label, ember, current));
+            return current;
+        }
+        changes.add("Muster für %s: %s (Ember: %s)".formatted(label, translated.get(), ember));
+        return translated.get();
+    }
+
+    private static boolean flag(String label, Boolean ember, boolean current, List<String> changes) {
+        if (ember == null) {
+            return current;
+        }
+        changes.add("%s: %s".formatted(label, ember ? "ja" : "nein"));
+        return ember;
     }
 
     private static MediaInfoSettings mediaInfo(MediaInfoSettings current, EmberSettings ember, List<String> changes) {

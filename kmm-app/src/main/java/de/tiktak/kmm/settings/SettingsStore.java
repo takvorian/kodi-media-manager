@@ -31,6 +31,16 @@ class SettingsStore {
     static final String FFPROBE_PATH = "ffprobe-path";
     static final String PROBE_ON_SCRAPE = "probe-on-scrape";
     static final String PROBE_NEW_FILES = "probe-new-files";
+    static final String RENAME_MOVIE_FOLDER = "rename-movie-folder";
+    static final String RENAME_MOVIE_FILE = "rename-movie-file";
+    static final String RENAME_TV_SHOW_FOLDER = "rename-tv-show-folder";
+    static final String RENAME_SEASON_FOLDER = "rename-season-folder";
+    static final String RENAME_EPISODE_FILE = "rename-episode-file";
+    static final String RENAME_MOVIE_ON_EDIT = "rename-movie-on-edit";
+    static final String RENAME_MOVIE_ON_SCRAPE = "rename-movie-on-scrape";
+    static final String RENAME_TV_ON_EDIT = "rename-tv-on-edit";
+    static final String RENAME_TV_ON_SCRAPE = "rename-tv-on-scrape";
+    static final String RENAME_EPISODES_ON_SCAN = "rename-episodes-on-scan";
 
     private static final String LINE_SEPARATOR = "\n";
 
@@ -52,7 +62,8 @@ class SettingsStore {
                         values.getOrDefault(TV_METADATA_LANGUAGE, metadataLanguage),
                         values.getOrDefault(TV_ARTWORK_LANGUAGE, artworkLanguage),
                         EpisodeOrdering.valueOf(values.getOrDefault(TV_EPISODE_ORDERING, EpisodeOrdering.AIRED.name()))),
-                mediaInfo(values));
+                mediaInfo(values),
+                rename(values));
     }
 
     private static MediaInfoSettings mediaInfo(Map<String, String> values) {
@@ -61,6 +72,25 @@ class SettingsStore {
                 values.getOrDefault(FFPROBE_PATH, defaults.ffprobePath()),
                 Boolean.parseBoolean(values.getOrDefault(PROBE_ON_SCRAPE, String.valueOf(defaults.probeOnScrape()))),
                 Boolean.parseBoolean(values.getOrDefault(PROBE_NEW_FILES, String.valueOf(defaults.probeNewFiles()))));
+    }
+
+    private static RenameSettings rename(Map<String, String> values) {
+        RenameSettings defaults = RenameSettings.DEFAULTS;
+        return new RenameSettings(
+                values.getOrDefault(RENAME_MOVIE_FOLDER, defaults.movieFolder()),
+                values.getOrDefault(RENAME_MOVIE_FILE, defaults.movieFile()),
+                values.getOrDefault(RENAME_TV_SHOW_FOLDER, defaults.tvShowFolder()),
+                values.getOrDefault(RENAME_SEASON_FOLDER, defaults.seasonFolder()),
+                values.getOrDefault(RENAME_EPISODE_FILE, defaults.episodeFile()),
+                flag(values, RENAME_MOVIE_ON_EDIT, defaults.movieOnEdit()),
+                flag(values, RENAME_MOVIE_ON_SCRAPE, defaults.movieOnScrape()),
+                flag(values, RENAME_TV_ON_EDIT, defaults.tvOnEdit()),
+                flag(values, RENAME_TV_ON_SCRAPE, defaults.tvOnScrape()),
+                flag(values, RENAME_EPISODES_ON_SCAN, defaults.episodesOnScan()));
+    }
+
+    private static boolean flag(Map<String, String> values, String key, boolean defaultValue) {
+        return Boolean.parseBoolean(values.getOrDefault(key, String.valueOf(defaultValue)));
     }
 
     void save(KmmSettings settings) {
@@ -79,6 +109,17 @@ class SettingsStore {
         put(FFPROBE_PATH, settings.mediaInfo().ffprobePath());
         put(PROBE_ON_SCRAPE, String.valueOf(settings.mediaInfo().probeOnScrape()));
         put(PROBE_NEW_FILES, String.valueOf(settings.mediaInfo().probeNewFiles()));
+        RenameSettings rename = settings.rename();
+        put(RENAME_MOVIE_FOLDER, rename.movieFolder());
+        put(RENAME_MOVIE_FILE, rename.movieFile());
+        put(RENAME_TV_SHOW_FOLDER, rename.tvShowFolder());
+        put(RENAME_SEASON_FOLDER, rename.seasonFolder());
+        put(RENAME_EPISODE_FILE, rename.episodeFile());
+        put(RENAME_MOVIE_ON_EDIT, String.valueOf(rename.movieOnEdit()));
+        put(RENAME_MOVIE_ON_SCRAPE, String.valueOf(rename.movieOnScrape()));
+        put(RENAME_TV_ON_EDIT, String.valueOf(rename.tvOnEdit()));
+        put(RENAME_TV_ON_SCRAPE, String.valueOf(rename.tvOnScrape()));
+        put(RENAME_EPISODES_ON_SCAN, String.valueOf(rename.episodesOnScan()));
     }
 
     private void put(String key, String value) {

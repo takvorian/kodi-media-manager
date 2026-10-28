@@ -14,6 +14,18 @@ describe('SettingsService', () => {
     proxy: null,
     tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
     mediaInfo: { ffprobePath: 'ffprobe', probeOnScrape: true, probeNewFiles: true },
+    rename: {
+      movieFolder: '{title}[ ({year})]',
+      movieFile: '{title}[.{source}]',
+      tvShowFolder: '{show}',
+      seasonFolder: 'Season {season:2}',
+      episodeFile: '{show} - S{season:2}E{episode:2}[ - {title}]',
+      movieOnEdit: false,
+      movieOnScrape: false,
+      tvOnEdit: false,
+      tvOnScrape: false,
+      episodesOnScan: false,
+    },
     overridden: [],
   };
 

@@ -16,6 +16,18 @@ describe('SettingsPage', () => {
     proxy: { host: 'proxy.local', port: 3128, username: 'user', passwordSet: true },
     tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
     mediaInfo: { ffprobePath: 'ffprobe', probeOnScrape: true, probeNewFiles: true },
+    rename: {
+      movieFolder: '{title}[ ({year})]',
+      movieFile: '{title}[.{source}]',
+      tvShowFolder: '{show}',
+      seasonFolder: 'Season {season:2}',
+      episodeFile: '{show} - S{season:2}E{episode:2}[ - {title}]',
+      movieOnEdit: false,
+      movieOnScrape: false,
+      tvOnEdit: false,
+      tvOnScrape: false,
+      episodesOnScan: false,
+    },
     overridden: [],
   };
   const keys: ApiKeyView[] = [
@@ -108,6 +120,7 @@ describe('SettingsPage', () => {
       proxy: { host: 'proxy.local', port: 3128, username: 'user', password: null },
       tv: { metadataLanguage: 'de-DE', artworkLanguage: 'de', episodeOrdering: 'AIRED' },
       mediaInfo: { ffprobePath: 'ffprobe', probeOnScrape: true, probeNewFiles: true },
+      rename: stored.rename,
     });
     expect(snackBarMessages).toEqual(['Einstellungen gespeichert.']);
     expect(field('videoExtensions').value).toBe('mkv, iso');
@@ -122,6 +135,19 @@ describe('SettingsPage', () => {
 
     const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
     expect(request.request.body.tv).toEqual({ metadataLanguage: 'en-US', artworkLanguage: 'de', episodeOrdering: 'DVD' });
+    request.flush(stored);
+  });
+
+  it('saves the rename settings', async () => {
+    await load(stored);
+    expect(field('movieFolder').value).toBe('{title}[ ({year})]');
+
+    await type('movieFile', ' {title} ');
+    element().querySelector<HTMLInputElement>('[name="movieOnScrape"] input')!.click();
+    button('.save-button').click();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: SETTINGS_URL });
+    expect(request.request.body.rename).toEqual({ ...stored.rename, movieFile: '{title}', movieOnScrape: true });
     request.flush(stored);
   });
 

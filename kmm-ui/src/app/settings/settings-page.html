@@ -81,6 +81,53 @@
       </mat-card-content>
     </mat-card>
 
+    <mat-card appearance="outlined" formGroupName="rename">
+      <mat-card-header>
+        <mat-card-title>Umbenennen</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        <p class="hint">
+          Platzhalter in <code>{{ '{' }} {{ '}' }}</code>, z. B. <code>{{ '{' }}title{{ '}' }}</code>,
+          <code>{{ '{' }}year{{ '}' }}</code>, <code>{{ '{' }}source{{ '}' }}</code>; Format nach Doppelpunkt:
+          <code>{{ '{' }}season:2{{ '}' }}</code> (zweistellig), <code>:first</code>, <code>:sort</code>,
+          <code>:lower</code>, <code>:upper</code>. Teile in <code>[ ]</code> entfallen, wenn ein Platzhalter darin
+          leer ist; <code>/</code> legt Unterordner an (nur beim Filmordner, relativ zur Quelle).
+        </p>
+        <mat-form-field class="full">
+          <mat-label>Filmordner</mat-label>
+          <input matInput formControlName="movieFolder" name="movieFolder" />
+          <mat-hint>z. B. {{ '{' }}title{{ '}' }}[ ({{ '{' }}year{{ '}' }})]</mat-hint>
+          <mat-error>Bitte ein Muster angeben</mat-error>
+        </mat-form-field>
+        <mat-form-field class="full">
+          <mat-label>Filmdateien</mat-label>
+          <input matInput formControlName="movieFile" name="movieFile" />
+          <mat-hint>z. B. {{ '{' }}title{{ '}' }}[.{{ '{' }}source{{ '}' }}]</mat-hint>
+          <mat-error>Bitte ein Muster angeben</mat-error>
+        </mat-form-field>
+        <mat-form-field class="full">
+          <mat-label>Serienordner</mat-label>
+          <input matInput formControlName="tvShowFolder" name="tvShowFolder" />
+          <mat-error>Bitte ein Muster angeben</mat-error>
+        </mat-form-field>
+        <mat-form-field class="full">
+          <mat-label>Staffelordner</mat-label>
+          <input matInput formControlName="seasonFolder" name="seasonFolder" />
+          <mat-error>Bitte ein Muster angeben</mat-error>
+        </mat-form-field>
+        <mat-form-field class="full">
+          <mat-label>Episodendateien</mat-label>
+          <input matInput formControlName="episodeFile" name="episodeFile" />
+          <mat-error>Bitte ein Muster angeben</mat-error>
+        </mat-form-field>
+        <div><mat-checkbox formControlName="movieOnEdit" name="movieOnEdit">Filme nach dem Speichern umbenennen</mat-checkbox></div>
+        <div><mat-checkbox formControlName="movieOnScrape" name="movieOnScrape">Filme nach dem Scrapen umbenennen</mat-checkbox></div>
+        <div><mat-checkbox formControlName="tvOnEdit" name="tvOnEdit">Episoden nach dem Speichern umbenennen</mat-checkbox></div>
+        <div><mat-checkbox formControlName="tvOnScrape" name="tvOnScrape">Serien nach dem Scrapen umbenennen</mat-checkbox></div>
+        <div><mat-checkbox formControlName="episodesOnScan" name="episodesOnScan">Neue Episoden beim Scan umbenennen</mat-checkbox></div>
+      </mat-card-content>
+    </mat-card>
+
     <mat-card appearance="outlined">
       <mat-card-header>
         <mat-card-title>Scan</mat-card-title>

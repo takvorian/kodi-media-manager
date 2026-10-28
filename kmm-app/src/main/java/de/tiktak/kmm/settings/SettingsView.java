@@ -17,6 +17,7 @@ public record SettingsView(
         Proxy proxy,
         TvSettings tv,
         MediaInfoSettings mediaInfo,
+        RenameSettings rename,
         Set<SettingsField> overridden) {
 
     static SettingsView of(KmmSettings settings, Set<SettingsField> overridden) {
@@ -24,7 +25,7 @@ public record SettingsView(
         return new SettingsView(settings.metadataLanguage(), settings.artworkLanguage(), settings.videoExtensions(),
                 settings.excludedPaths(),
                 proxy == null ? null : new Proxy(proxy.host(), proxy.port(), proxy.username(), proxy.password() != null),
-                settings.tv(), settings.mediaInfo(), Set.copyOf(overridden));
+                settings.tv(), settings.mediaInfo(), settings.rename(), Set.copyOf(overridden));
     }
 
     /**

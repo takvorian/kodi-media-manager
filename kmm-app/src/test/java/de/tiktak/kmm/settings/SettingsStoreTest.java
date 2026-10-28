@@ -32,7 +32,9 @@ class SettingsStoreTest {
     void savesAndLoadsAllValues() {
         var settings = new KmmSettings("en-US", "en", List.of("mkv", "iso"), List.of("/media/privat", "/media/tmp"),
                 new ProxySettings("proxy.local", 3128, "user", "secret"), new TvSettings("de-DE", "de",
-                EpisodeOrdering.DVD));
+                EpisodeOrdering.DVD), new MediaInfoSettings("/opt/ffprobe", false, true),
+                new RenameSettings("{title}", "{title} ({year})", "{show:sort}", "Staffel {season}",
+                        "{show} {season}x{episode:2}", true, true, false, true, true));
 
         store.save(settings);
         entityManager.flush();

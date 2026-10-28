@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<AdvancedSettings xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+  <Setting Section="*EmberAPP" Name="FileStacking" DefaultValue="">(.*?)</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="Movie" Name="FoldersPattern" DefaultValue="">$T {($Y)}</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="TVSeason" Name="FoldersPattern" DefaultValue="">Staffel $K1_?</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="TVShow" Name="FoldersPattern" DefaultValue="">$Z</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="TVEpisode" Name="FilesPattern" DefaultValue="">$Z - $W2_S?2E?{ - $T}</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="Movie" Name="FilesPattern" DefaultValue="">$T{.$S}</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="Movie" Name="RenameEdit" DefaultValue="">False</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="TVShow" Name="RenameEdit" DefaultValue="">True</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="Movie" Name="RenameMulti" DefaultValue="">False</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="Movie" Name="RenameSingle" DefaultValue="">True</Setting>
+  <Setting Section="generic.EmberCore.BulkRename" Content="TVEpisode" Name="RenameUpdate" DefaultValue="">False</Setting>
+  <ComplexSettings>
+    <Table Section="*EmberAPP" Name="VideoSourceMapping">
+      <Item Name="(?i)bluray">bluray</Item>
+    </Table>
+  </ComplexSettings>
+</AdvancedSettings>

@@ -40,6 +40,9 @@ import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberTvLibraryReader;
 import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsException;
+import de.tiktak.kmm.migration.ember.settings.EmberAdvancedSettingsReader;
+import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
+import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
 
 @ExtendWith(MockitoExtension.class)
@@ -64,6 +67,9 @@ class EmberImportServiceTest {
 
     @Mock
     private EmberSettingsReader settingsReader;
+
+    @Mock
+    private EmberAdvancedSettingsReader advancedSettingsReader;
 
     @Mock
     private EmberKodiHostsReader kodiHostsReader;
@@ -120,6 +126,34 @@ class EmberImportServiceTest {
         verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.empty()), eq(Optional.empty()), any(), any(),
                 any());
         verify(tvLibraryReader, never()).read(any());
+    }
+
+    @Test
+    void addsTheRenameSettingsAndContinuesWithoutThemIfUnreadable() {
+        givenTransaction();
+        when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
+        EmberSettings settings = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null);
+        when(settingsReader.read(any())).thenReturn(settings);
+        EmberRenameSettings rename = new EmberRenameSettings("$T", null, null, null, null, null, null, null, null,
+                null);
+        when(advancedSettingsReader.readRenameSettings(PROFILE)).thenReturn(Optional.of(rename));
+        EmberImportRequest request = new EmberImportRequest("ember", List.of(), true, false, false, false);
+
+        service().run(PROFILE, request, mock(JobContext.class));
+
+        verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.empty()),
+                eq(Optional.of(settings.withRename(rename))), any(), any(), any());
+
+        EmberSettingsException unreadable = mock(EmberSettingsException.class);
+        when(unreadable.getMessage()).thenReturn("kaputt");
+        when(advancedSettingsReader.readRenameSettings(PROFILE)).thenThrow(unreadable);
+
+        EmberImportReport report = service().run(PROFILE, request, mock(JobContext.class));
+
+        assertThat(report.warnings())
+                .containsExactly("Die Einstellungen zum Umbenennen konnten nicht gelesen werden: kaputt");
+        verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.empty()), eq(Optional.of(settings)), any(),
+                any(), any());
     }
 
     @Test
@@ -218,6 +252,6 @@ class EmberImportServiceTest {
 
     private EmberImportService service() {
         return new EmberImportService(profileInspector, profileDetector, libraryReader, tvLibraryReader, settingsReader,
-                kodiHostsReader, importer, kodiHostImporter, jobService, new TransactionTemplate(transactionManager));
+                advancedSettingsReader, kodiHostsReader, importer, kodiHostImporter, jobService, new TransactionTemplate(transactionManager));
     }
 }

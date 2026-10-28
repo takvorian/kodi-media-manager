@@ -8,12 +8,14 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
+import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberTvSettings;
 import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.MediaInfoSettings;
 import de.tiktak.kmm.settings.ProxySettings;
+import de.tiktak.kmm.settings.RenameSettings;
 import de.tiktak.kmm.settings.TvSettings;
 
 class EmberSettingsMapperTest {
@@ -44,6 +46,29 @@ class EmberSettingsMapperTest {
         var withoutValue = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null, null);
         assertThat(EmberSettingsMapper.map(CURRENT, Optional.of(withoutValue), List.of()).settings().mediaInfo())
                 .isEqualTo(MediaInfoSettings.DEFAULTS);
+    }
+
+    @Test
+    void translatesTheRenamePatternsAndKeepsThoseWithoutCounterpart() {
+        var ember = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null, null, null,
+                new EmberRenameSettings("$T {($Y)}", "$F", null, "Staffel $K1_?", "$Z - $W2_S?2E?{ - $T}", false,
+                        true, null, null, false));
+
+        var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of());
+
+        assertThat(imported.settings().rename()).isEqualTo(new RenameSettings("{title} [({year})]",
+                RenameSettings.DEFAULTS.movieFile(), RenameSettings.DEFAULTS.tvShowFolder(), "Staffel {season}",
+                "{show} - S{season:2}E{episode:2}[ - {title}]", false, true, false, false, false));
+        assertThat(imported.changes()).containsExactly(
+                "Muster für Filmordner: {title} [({year})] (Ember: $T {($Y)})",
+                "Muster für Filmdateien nicht übernommen: „$F“ lässt sich nicht übersetzen, es bleibt „{title}[.{source}]“.",
+                "Muster für Staffelordner: Staffel {season} (Ember: Staffel $K1_?)",
+                "Muster für Episodendateien: {show} - S{season:2}E{episode:2}[ - {title}] (Ember: $Z - $W2_S?2E?{ - $T})",
+                "Filme nach dem Bearbeiten umbenennen: nein",
+                "Filme nach dem Scrapen umbenennen: ja",
+                "Neue Episoden beim Scan umbenennen: nein");
+        assertThat(EmberSettingsMapper.map(CURRENT, Optional.of(ember.withRename(null)), List.of()).settings()
+                .rename()).isEqualTo(RenameSettings.DEFAULTS);
     }
 
     @Test
