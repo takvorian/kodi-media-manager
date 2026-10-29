@@ -66,8 +66,8 @@ export interface AutoScrapeResult {
   readonly trailersSaved?: number;
   /** Neu gespeicherte Titelmusik (theme.mp3). */
   readonly themesSaved?: number;
-  /** Einträge mit neu ergänzten Bewertungen weiterer Anbieter (etwa Trakt). */
-  readonly ratingsAdded?: number;
+  /** Einträge mit ergänzten Bewertungen oder Feldern (etwa Trakt, OMDb). */
+  readonly enriched?: number;
   readonly unmatchedTitles: readonly string[];
   readonly failures: readonly string[];
   readonly warnings: readonly string[];

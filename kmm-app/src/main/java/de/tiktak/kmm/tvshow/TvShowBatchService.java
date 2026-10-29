@@ -28,7 +28,7 @@ public class TvShowBatchService {
 
     private final TvShowMetadataService metadataService;
     private final TvShowTrailerService trailerService;
-    private final TvShowRatingService ratingService;
+    private final TvShowEnrichmentService enrichmentService;
     private final JobService jobService;
 
     public JobSnapshot start(TvShowBatchEdit edit) {
@@ -41,9 +41,9 @@ public class TvShowBatchService {
         return startFill("Fehlende Trailer für %d Serien holen", showIds, trailerService::fillMissing);
     }
 
-    /** Ergänzt fehlende Bewertungen weiterer Anbieter (etwa Trakt), als Job wie die Stapel-Bearbeitung. */
-    public JobSnapshot startRatingFill(List<Long> showIds) {
-        return startFill("Fehlende Bewertungen für %d Serien holen", showIds, ratingService::fillMissing);
+    /** Aktualisiert Bewertungen und füllt leere Felder über die Ergänzungs-Scraper, als Job. */
+    public JobSnapshot startEnrichment(List<Long> showIds) {
+        return startFill("Bewertungen für %d Serien aktualisieren", showIds, enrichmentService::refresh);
     }
 
     /**

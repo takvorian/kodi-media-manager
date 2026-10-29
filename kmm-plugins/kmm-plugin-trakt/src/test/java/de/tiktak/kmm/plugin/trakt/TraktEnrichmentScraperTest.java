@@ -22,13 +22,14 @@ import org.junit.jupiter.api.Test;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ProviderRating;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
 
-class TraktRatingScraperTest {
+class TraktEnrichmentScraperTest {
 
     private static final String CLIENT_ID = "0123456789abcdef";
     private static final String HEAT_RATINGS = """
@@ -37,7 +38,7 @@ class TraktRatingScraperTest {
     private final Map<String, Answer> answers = new ConcurrentHashMap<>();
     private final List<Request> requests = new CopyOnWriteArrayList<>();
     private HttpServer server;
-    private TraktRatingScraper scraper;
+    private TraktEnrichmentScraper scraper;
 
     @BeforeEach
     void setUp() throws IOException {
@@ -63,8 +64,8 @@ class TraktRatingScraperTest {
 
     @Test
     void findsTheMovieRatingByImdbIdWithTheClientId() {
-        assertThat(scraper.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt0113277", "tmdb", "949"))))
-                .contains(new ProviderRating("trakt", 8.2, 10, 41234));
+        assertThat(scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277", "tmdb", "949"))))
+                .contains(Enrichment.ofRatings(List.of(new ProviderRating("trakt", 8.2, 10, 41234))));
         assertThat(requests).singleElement().satisfies(request -> {
             assertThat(request.apiKey()).isEqualTo(CLIENT_ID);
             assertThat(request.apiVersion()).isEqualTo("2");
@@ -73,9 +74,9 @@ class TraktRatingScraperTest {
 
     @Test
     void looksUpTmdbAndTvdbIdsWhenThereIsNoImdbId() {
-        assertThat(scraper.findRating(request(MediaType.MOVIE, Map.of("tmdb", "949")))).isPresent();
-        assertThat(scraper.findRating(request(MediaType.TV_SHOW, Map.of("tvdb", "78020", "tmdb", "4658"))))
-                .contains(new ProviderRating("trakt", 7.4, 10, 9400));
+        assertThat(scraper.findEnrichment(request(MediaType.MOVIE, Map.of("tmdb", "949")))).isPresent();
+        assertThat(scraper.findEnrichment(request(MediaType.TV_SHOW, Map.of("tvdb", "78020", "tmdb", "4658"))))
+                .contains(Enrichment.ofRatings(List.of(new ProviderRating("trakt", 7.4, 10, 9400))));
         assertThat(requests).extracting(Request::path).containsExactly("/search/tmdb/949?type=movie",
                 "/movies/1203/ratings", "/search/tvdb/78020?type=show", "/search/tmdb/4658?type=show",
                 "/shows/1414/ratings");
@@ -83,48 +84,48 @@ class TraktRatingScraperTest {
 
     @Test
     void returnsNothingForUnknownUnratedOrInvalidEntries() {
-        assertThat(scraper.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt0000001")))).isEmpty();
-        assertThat(scraper.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt9999999")))).isEmpty();
-        assertThat(scraper.findRating(request(MediaType.MOVIE, Map.of("imdb", "../x", "tmdb", "1;2")))).isEmpty();
-        assertThat(scraper.findRating(request(MediaType.TV_EPISODE, Map.of("imdb", "tt0113277")))).isEmpty();
-        assertThat(scraper.findRating(request(MediaType.TV_SHOW, Map.of()))).isEmpty();
+        assertThat(scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0000001")))).isEmpty();
+        assertThat(scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt9999999")))).isEmpty();
+        assertThat(scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "../x", "tmdb", "1;2")))).isEmpty();
+        assertThat(scraper.findEnrichment(request(MediaType.TV_EPISODE, Map.of("imdb", "tt0113277")))).isEmpty();
+        assertThat(scraper.findEnrichment(request(MediaType.TV_SHOW, Map.of()))).isEmpty();
         assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.TV_SHOW);
         assertThat(scraper.id()).isEqualTo("trakt");
         assertThat(scraper.displayName()).isEqualTo("Trakt");
-        assertThat(scraper.ratingSource()).isEqualTo("trakt");
+        assertThat(scraper.ratingSources()).containsExactly("trakt");
     }
 
     @Test
     void needsAClientIdAndReportsRejectedOnes() {
-        TraktRatingScraper unconfigured = scraper(" ");
-        assertThat(unconfigured.missingConfiguration()).contains(TraktRatingScraper.MISSING_CLIENT_ID);
-        assertThat(unconfigured.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt0113277")))).isEmpty();
-        assertThat(new TraktRatingScraper().missingConfiguration()).isPresent();
-        assertThatThrownBy(() -> new TraktRatingScraper().findRating(request(MediaType.MOVIE, Map.of())))
+        TraktEnrichmentScraper unconfigured = scraper(" ");
+        assertThat(unconfigured.missingConfiguration()).contains(TraktEnrichmentScraper.MISSING_CLIENT_ID);
+        assertThat(unconfigured.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277")))).isEmpty();
+        assertThat(new TraktEnrichmentScraper().missingConfiguration()).isPresent();
+        assertThatThrownBy(() -> new TraktEnrichmentScraper().findEnrichment(request(MediaType.MOVIE, Map.of())))
                 .isInstanceOf(IllegalStateException.class);
 
         answers.put("/movies/tt0113277/ratings", new Answer(401, "{}"));
-        assertThatThrownBy(() -> scraper.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
+        assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
                 .isInstanceOf(ScraperException.class).hasMessageContaining("Client-ID");
         answers.put("/movies/tt0113277/ratings", new Answer(503, "{}"));
-        assertThatThrownBy(() -> scraper.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
+        assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
                 .isInstanceOf(ScraperException.class).hasMessageContaining("503");
         answers.put("/movies/tt0113277/ratings", new Answer(200, "kein JSON"));
-        assertThatThrownBy(() -> scraper.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
+        assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
                 .isInstanceOf(ScraperException.class).hasMessageContaining("unerwartete");
     }
 
     @Test
     void reportsAnUnreachableApi() {
-        TraktRatingScraper offline = new TraktRatingScraper();
+        TraktEnrichmentScraper offline = new TraktEnrichmentScraper();
         offline.initialize(context(Map.of("client-id", CLIENT_ID, "base-url", "http://127.0.0.1:1")));
 
-        assertThatThrownBy(() -> offline.findRating(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
+        assertThatThrownBy(() -> offline.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
                 .isInstanceOf(ScraperException.class).hasMessageContaining("nicht erreichbar");
     }
 
-    private TraktRatingScraper scraper(String clientId) {
-        TraktRatingScraper created = new TraktRatingScraper();
+    private TraktEnrichmentScraper scraper(String clientId) {
+        TraktEnrichmentScraper created = new TraktEnrichmentScraper();
         created.initialize(context(Map.of("client-id", clientId,
                 "base-url", "http://127.0.0.1:" + server.getAddress().getPort() + "/")));
         return created;

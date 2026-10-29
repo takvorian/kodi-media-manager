@@ -1,5 +1,6 @@
 package de.tiktak.kmm.plugin.trakt;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -7,10 +8,11 @@ import java.util.regex.Pattern;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.plugin.api.Enrichment;
+import de.tiktak.kmm.plugin.api.EnrichmentScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ProviderRating;
-import de.tiktak.kmm.plugin.api.RatingScraper;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import tools.jackson.databind.JsonNode;
 
@@ -19,7 +21,7 @@ import tools.jackson.databind.JsonNode;
  * der Eintrag über die IMDb-ID, sonst über TMDB- bzw. TVDB-ID.
  */
 @Extension
-public class TraktRatingScraper implements RatingScraper {
+public class TraktEnrichmentScraper implements EnrichmentScraper {
 
     static final String ID = "trakt";
     static final String RATING_SOURCE = "trakt";
@@ -42,8 +44,8 @@ public class TraktRatingScraper implements RatingScraper {
     }
 
     @Override
-    public String ratingSource() {
-        return RATING_SOURCE;
+    public Set<String> ratingSources() {
+        return Set.of(RATING_SOURCE);
     }
 
     @Override
@@ -63,7 +65,7 @@ public class TraktRatingScraper implements RatingScraper {
     }
 
     @Override
-    public Optional<ProviderRating> findRating(ScrapeRequest request) {
+    public Optional<Enrichment> findEnrichment(ScrapeRequest request) {
         if (client == null) {
             throw new IllegalStateException("Trakt scraper has not been initialized");
         }
@@ -73,7 +75,8 @@ public class TraktRatingScraper implements RatingScraper {
         String type = request.mediaType() == MediaType.MOVIE ? "movies" : "shows";
         return traktId(request)
                 .flatMap(id -> client.get("/%s/%s/ratings".formatted(type, id)))
-                .flatMap(TraktRatingScraper::toRating);
+                .flatMap(TraktEnrichmentScraper::toRating)
+                .map(rating -> Enrichment.ofRatings(List.of(rating)));
     }
 
     /** Trakt nimmt die IMDb-ID direkt; TMDB- und TVDB-IDs werden über die Suche in die Trakt-ID übersetzt. */

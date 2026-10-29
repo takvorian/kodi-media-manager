@@ -29,7 +29,7 @@ public class MovieBatchService {
     private final MovieMetadataService metadataService;
     private final MovieTagService tagService;
     private final MovieTrailerService trailerService;
-    private final MovieRatingService ratingService;
+    private final MovieEnrichmentService enrichmentService;
     private final JobService jobService;
 
     public JobSnapshot start(MovieBatchEdit edit) {
@@ -42,9 +42,9 @@ public class MovieBatchService {
         return startFill("Fehlende Trailer für %d Filme holen", movieIds, trailerService::fillMissing);
     }
 
-    /** Ergänzt fehlende Bewertungen weiterer Anbieter (etwa Trakt), als Job wie die Stapel-Bearbeitung. */
-    public JobSnapshot startRatingFill(List<Long> movieIds) {
-        return startFill("Fehlende Bewertungen für %d Filme holen", movieIds, ratingService::fillMissing);
+    /** Aktualisiert Bewertungen und füllt leere Felder über die Ergänzungs-Scraper, als Job. */
+    public JobSnapshot startEnrichment(List<Long> movieIds) {
+        return startFill("Bewertungen für %d Filme aktualisieren", movieIds, enrichmentService::refresh);
     }
 
     /**

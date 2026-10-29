@@ -210,17 +210,17 @@ export class MovieList {
     });
   }
 
-  /** Ergänzt für die Auswahl fehlende Bewertungen weiterer Anbieter (etwa Trakt); vorhandene bleiben. */
-  protected fillMissingRatings(): void {
+  /** Aktualisiert die Bewertungen der Auswahl (etwa Trakt, OMDb) und füllt leere Felder; vorhandene Angaben bleiben. */
+  protected refreshRatings(): void {
     const ids = this.chosenIds();
     if (
       !this.confirm(
-        `Für ${ids.length} Filme fehlende Bewertungen (z. B. Trakt) holen? Die NFOs werden dabei geschrieben.`,
+        `Bewertungen für ${ids.length} Filme aktualisieren und leere Felder füllen (Trakt, OMDb)? Die NFOs werden dabei geschrieben.`,
       )
     ) {
       return;
     }
-    this.movieService.fillMissingRatings(ids).subscribe({
+    this.movieService.refreshRatings(ids).subscribe({
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });

@@ -13,7 +13,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieQueryService;
-import de.tiktak.kmm.movie.MovieRatingService;
+import de.tiktak.kmm.movie.MovieEnrichmentService;
 import de.tiktak.kmm.movie.MovieRenamePlan;
 import de.tiktak.kmm.movie.MovieRenameService;
 import de.tiktak.kmm.movie.MovieScrapeService;
@@ -43,7 +43,7 @@ public class AutoScrapeService {
     private static final String UNEXPECTED_ERROR = "unerwarteter Fehler";
     static final String TECHNICAL_DETAILS = "Technische Angaben: ";
     static final String THEME = "Titelmusik: ";
-    static final String RATINGS = "Bewertungen: ";
+    static final String ENRICHMENT = "Ergänzen: ";
 
     private final MediaSourceService sourceService;
     private final MovieQueryService queryService;
@@ -53,7 +53,7 @@ public class AutoScrapeService {
     private final ArtworkService artworkService;
     private final MovieTrailerService trailerService;
     private final ThemeService themeService;
-    private final MovieRatingService ratingService;
+    private final MovieEnrichmentService enrichmentService;
     private final JobService jobService;
     private final TvAutoScrapeRunner tvRunner;
     private final StreamDetailsService streamDetails;
@@ -111,7 +111,7 @@ public class AutoScrapeService {
                 progress.trailerSaved();
             }
             fillTheme(movieId, title, progress);
-            fillRatings(movieId, title, progress);
+            enrich(movieId, title, progress);
             renameService.renameIfEnabled(movieId, RenameTrigger.SCRAPE)
                     .filter(plan -> plan.status() == MovieRenamePlan.Status.CONFLICT
                             || plan.status() == MovieRenamePlan.Status.FAILED)
@@ -124,14 +124,14 @@ public class AutoScrapeService {
         }
     }
 
-    /** Fehlende Bewertungen weiterer Anbieter; ein Fehler dabei hält den Rest nicht auf. */
-    private void fillRatings(long movieId, String title, AutoScrapeProgress progress) {
+    /** Fehlende Bewertungen und leere Felder (etwa Trakt, OMDb); ein Fehler dabei hält den Rest nicht auf. */
+    private void enrich(long movieId, String title, AutoScrapeProgress progress) {
         try {
-            if (ratingService.fillMissing(movieId)) {
-                progress.ratingsAdded();
+            if (enrichmentService.fillMissing(movieId)) {
+                progress.enriched();
             }
         } catch (ErrorResponseException e) {
-            progress.failed(title, RATINGS + e.getBody().getDetail());
+            progress.failed(title, ENRICHMENT + e.getBody().getDetail());
         }
     }
 

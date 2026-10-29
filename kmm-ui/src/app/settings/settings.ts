@@ -56,7 +56,8 @@ export type ApiKeyName =
   | 'TVDB_PIN'
   | 'FANARTTV_API_KEY'
   | 'FANARTTV_CLIENT_KEY'
-  | 'TRAKT_CLIENT_ID';
+  | 'TRAKT_CLIENT_ID'
+  | 'OMDB_API_KEY';
 
 /** Zustand eines API-Keys; der Key selbst wird nie ausgeliefert. */
 export interface ApiKeyView {

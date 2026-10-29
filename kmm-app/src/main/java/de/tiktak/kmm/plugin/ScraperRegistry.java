@@ -7,10 +7,10 @@ import org.pf4j.PluginManager;
 import org.springframework.stereotype.Component;
 
 import de.tiktak.kmm.plugin.api.ImageScraper;
+import de.tiktak.kmm.plugin.api.EnrichmentScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
 import de.tiktak.kmm.plugin.api.MovieSetScraper;
-import de.tiktak.kmm.plugin.api.RatingScraper;
 import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.ThemeScraper;
 import de.tiktak.kmm.plugin.api.TrailerScraper;
@@ -53,8 +53,8 @@ public class ScraperRegistry {
         return supporting(pluginManager.getExtensions(TrailerScraper.class), mediaType);
     }
 
-    public List<RatingScraper> ratingScrapersFor(MediaType mediaType) {
-        return supporting(pluginManager.getExtensions(RatingScraper.class), mediaType);
+    public List<EnrichmentScraper> enrichmentScrapersFor(MediaType mediaType) {
+        return supporting(pluginManager.getExtensions(EnrichmentScraper.class), mediaType);
     }
 
     public List<ThemeScraper> themeScrapersFor(MediaType mediaType) {

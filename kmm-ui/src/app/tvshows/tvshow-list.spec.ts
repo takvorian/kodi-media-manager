@@ -249,19 +249,19 @@ describe('TvShowList', () => {
     expect(updated).toEqual([job]);
   });
 
-  it('fetches the missing ratings of the chosen shows as a job', async () => {
+  it('refreshes the ratings of the chosen shows as a job', async () => {
     await respond(page([alf]));
     element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
     httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1]);
     fixture.detectChanges();
 
-    element().querySelector<HTMLButtonElement>('.fill-ratings-button')!.click();
-    const fill = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/ratings/fill` });
+    element().querySelector<HTMLButtonElement>('.refresh-ratings-button')!.click();
+    const fill = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/ratings/refresh` });
     expect(fill.request.body).toEqual({ showIds: [1] });
     const job = {
       id: 'r',
       key: 'tvshows-batch',
-      title: 'Fehlende Bewertungen',
+      title: 'Bewertungen aktualisieren',
       status: 'RUNNING',
     } as Job;
     fill.flush(job);

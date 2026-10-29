@@ -56,8 +56,9 @@ export class TvShowService {
   }
 
   /** Holt für die Serien ohne Trailer den besten Vorschlag, als Job. */
-  fillMissingRatings(showIds: readonly number[]): Observable<Job> {
-    return this.http.post<Job>(`${TVSHOWS_URL}/ratings/fill`, { showIds });
+  /** Aktualisiert Bewertungen und füllt leere Felder über Trakt und OMDb, als Job. */
+  refreshRatings(showIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/ratings/refresh`, { showIds });
   }
 
   fillMissingThemes(showIds: readonly number[]): Observable<Job> {

@@ -63,6 +63,9 @@ kmm:
         api-key: ${KMM_TVDB_API_KEY:}
         # PIN eines TVDB-Abonnements, nur bei Keys für Abonnenten nötig
         pin: ${KMM_TVDB_PIN:}
+      omdb:
+        # OMDb-API-Key (kostenlos 1.000 Abfragen am Tag): https://www.omdbapi.com/apikey.aspx
+        api-key: ${KMM_OMDB_API_KEY:}
       trakt:
         # Client-ID einer eigenen Trakt-App für die öffentlichen Bewertungen: https://trakt.tv/oauth/applications
         client-id: ${KMM_TRAKT_CLIENT_ID:}

@@ -41,7 +41,7 @@ import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieQueryService;
-import de.tiktak.kmm.movie.MovieRatingService;
+import de.tiktak.kmm.movie.MovieEnrichmentService;
 import de.tiktak.kmm.movie.MovieScrapeService;
 import de.tiktak.kmm.movie.RenameTrigger;
 import de.tiktak.kmm.movie.MovieRenameService;
@@ -94,7 +94,7 @@ class AutoScrapeServiceTest {
     private ThemeService themeService;
 
     @Mock
-    private MovieRatingService ratingService;
+    private MovieEnrichmentService enrichmentService;
 
     @InjectMocks
     private AutoScrapeService service;
@@ -156,8 +156,8 @@ class AutoScrapeServiceTest {
         when(streamDetails.probeMovieAfterScrape(1L)).thenReturn(Optional.of("ffprobe fehlt"));
         when(trailerService.fillMissing(1L)).thenReturn(true);
         when(themeService.fillMovie(1L)).thenReturn(false);
-        when(ratingService.fillMissing(1L)).thenReturn(true);
-        when(ratingService.fillMissing(2L)).thenThrow(problem("NFO gesperrt"));
+        when(enrichmentService.fillMissing(1L)).thenReturn(true);
+        when(enrichmentService.fillMissing(2L)).thenThrow(problem("NFO gesperrt"));
         when(themeService.fillMovie(2L)).thenReturn(true);
         when(themeService.fillMovie(3L)).thenThrow(problem("TelevisionTunes ist nicht erreichbar"));
         when(renameService.renameIfEnabled(anyLong(), eq(RenameTrigger.SCRAPE))).thenReturn(Optional.empty());
@@ -169,7 +169,7 @@ class AutoScrapeServiceTest {
         AutoScrapeResult result = service.run(SOURCE_ID, context);
 
         assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, 1, 1, 1, List.of("Unbekannt"),
-                List.of("Heat: Technische Angaben: ffprobe fehlt", "Unbekannt: Bewertungen: NFO gesperrt",
+                List.of("Heat: Technische Angaben: ffprobe fehlt", "Unbekannt: Ergänzen: NFO gesperrt",
                         "Ronin: Titelmusik: TelevisionTunes ist nicht erreichbar", "Kaputt: TMDB ist nicht erreichbar"),
                 List.of("fanart.tv: Key fehlt", "„Ronin“ nicht umbenannt: Der Ordner existiert bereits.")));
         verify(streamDetails, never()).probeMovieAfterScrape(3L);
@@ -179,7 +179,7 @@ class AutoScrapeServiceTest {
         verify(artworkService, never()).fillMissing(4L);
         verify(trailerService, never()).fillMissing(4L);
         verify(themeService, never()).fillMovie(4L);
-        verify(ratingService, never()).fillMissing(4L);
+        verify(enrichmentService, never()).fillMissing(4L);
     }
 
     @Test

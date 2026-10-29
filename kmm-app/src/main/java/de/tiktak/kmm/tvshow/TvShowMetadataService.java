@@ -3,7 +3,6 @@ package de.tiktak.kmm.tvshow;
 import java.time.Clock;
 import java.util.List;
 import java.util.Optional;
-import java.util.function.BiFunction;
 import java.util.function.UnaryOperator;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -121,24 +120,25 @@ public class TvShowMetadataService {
     }
 
     /**
-     * Ändert die weiteren Angaben einer Serie (etwa Bewertungen) ausgehend vom aktuellen Stand; eine außerhalb von KMM
-     * geänderte oder noch nicht eingelesene NFO wird vorher eingelesen.
+     * Ändert Metadaten und weitere Angaben einer Serie (etwa Bewertungen) ausgehend vom aktuellen Stand in einem
+     * Schreibvorgang; eine außerhalb von KMM geänderte oder noch nicht eingelesene NFO wird vorher eingelesen.
      *
      * @return ob sich etwas geändert hat
      * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
      */
     @Transactional
-    public boolean changeExtras(long showId, BiFunction<TvShowMetadata, TvShowExtras, TvShowExtras> change) {
+    public boolean changeContent(long showId, UnaryOperator<TvShowContent> change) {
         TvShow show = requireShow(showId);
         nfoSync.refreshShowIfChangedOutside(show);
-        TvShowExtras current = show.extras();
-        TvShowExtras changed = change.apply(show.metadata(), current);
+        TvShowContent current = new TvShowContent(show.metadata(), show.extras());
+        TvShowContent changed = change.apply(current);
         if (changed.equals(current)) {
             return false;
         }
-        TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(show.metadata(),
-                changed, show.nfoTrailer())));
-        show.applyExtras(changed);
+        TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(changed.metadata(),
+                changed.extras(), show.nfoTrailer())));
+        show.applyMetadata(changed.metadata());
+        show.applyExtras(changed.extras());
         show.markNfoSynchronized(written.modifiedAt());
         events.publishEvent(new TvShowFilesChangedEvent(showId));
         return true;

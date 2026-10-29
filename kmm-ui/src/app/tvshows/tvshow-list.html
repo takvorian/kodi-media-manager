@@ -62,8 +62,8 @@
     <button matButton type="button" class="fill-themes-button" [disabled]="!!batchJob()" (click)="fillMissingThemes()">
       Fehlende Titelmusik holen
     </button>
-    <button matButton type="button" class="fill-ratings-button" [disabled]="!!batchJob()" (click)="fillMissingRatings()">
-      Fehlende Bewertungen holen
+    <button matButton type="button" class="refresh-ratings-button" [disabled]="!!batchJob()" (click)="refreshRatings()">
+      Bewertungen aktualisieren
     </button>
   }
 </div>

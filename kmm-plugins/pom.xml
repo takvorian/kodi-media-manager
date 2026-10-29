@@ -23,6 +23,7 @@
         <module>kmm-plugin-televisiontunes</module>
         <module>kmm-plugin-youtube</module>
         <module>kmm-plugin-trakt</module>
+        <module>kmm-plugin-omdb</module>
     </modules>
 
     <properties>
