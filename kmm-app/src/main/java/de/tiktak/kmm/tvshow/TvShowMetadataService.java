@@ -43,8 +43,11 @@ public class TvShowMetadataService {
         return show.metadata();
     }
 
+    /** Die Serie; stammen ihre Angaben noch nicht aus der NFO (Ember-Import), wird diese vorher eingelesen. */
+    @Transactional
     public TvShowDetails findShow(long showId) {
         TvShow show = requireShow(showId);
+        nfoSync.readShowIfNotRead(show);
         return details(show);
     }
 
@@ -108,8 +111,13 @@ public class TvShowMetadataService {
         return details(show);
     }
 
+    /** Die Episode; stammen ihre Angaben noch nicht aus der NFO (Ember-Import), wird diese vorher eingelesen. */
+    @Transactional
     public EpisodeDetails findEpisode(long episodeId) {
         Episode episode = requireEpisode(episodeId);
+        if (!episode.isNfoRead()) {
+            nfoSync.readEpisodesIfNotRead(episodeRepository.findByFilePathHash(episode.getFilePathHash()));
+        }
         return episodeDetails(episode);
     }
 

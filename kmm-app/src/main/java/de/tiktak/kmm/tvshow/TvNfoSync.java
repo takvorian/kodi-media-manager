@@ -69,6 +69,33 @@ class TvNfoSync {
      * Übernimmt die {@code tvshow.nfo}. Stammen die Angaben bisher nicht aus der NFO (Ember-Import), bleiben
      * Darsteller erhalten, die nur in Embers Daten stehen.
      */
+    /**
+     * Liest die {@code tvshow.nfo} ein, wenn die Angaben der Serie noch nicht aus ihr stammen (Ember-Import), damit
+     * etwa die Serienansicht die Werte der NFO zeigt. Eine unlesbare NFO bleibt hier unberücksichtigt.
+     */
+    void readShowIfNotRead(TvShow show) {
+        if (show.isNfoRead()) {
+            return;
+        }
+        try {
+            refreshShowIfChangedOutside(show);
+        } catch (TvShowProblemException e) {
+            log.warn("NFO of TV show {} not read: {}", show.getId(), e.getMessage());
+        }
+    }
+
+    /** Wie {@link #readShowIfNotRead}, für alle Episoden einer Datei. */
+    void readEpisodesIfNotRead(List<Episode> sameFile) {
+        if (sameFile.stream().allMatch(Episode::isNfoRead)) {
+            return;
+        }
+        try {
+            refreshEpisodesIfChangedOutside(sameFile);
+        } catch (TvShowProblemException e) {
+            log.warn("NFO of episode file {} not read: {}", sameFile.getFirst().getFilePath(), e.getMessage());
+        }
+    }
+
     static void applyShow(TvShow show, TvShowNfo nfo, String fallbackTitle, Integer fallbackYear) {
         TvShowExtras extras = TvNfoMapper.toExtras(nfo);
         if (!show.isNfoRead()) {

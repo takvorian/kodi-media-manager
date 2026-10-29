@@ -146,19 +146,23 @@ class TvShowLibraryIntegrationTest {
         Path nfo = library.resolve("ALF (1986)/Staffel 1/ALF - S01E02 - Der Fremde.nfo");
         Files.writeString(nfo, """
                 <episodedetails><title>Der Fremde</title><season>1</season><episode>2</episode>
-                <director>Tom Patchett</director>
+                <director>Tom Patchett</director><userrating>10</userrating>
                 <actor><name>Paul Fusco</name><role>ALF</role><tmdbid>1234</tmdbid></actor></episodedetails>""");
         scan(createSource());
         long alfId = idOf(mockMvc.get().uri(TvShowController.SHOWS_PATH).param("search", "alf").exchange());
         long episodeId = read(mockMvc.get().uri(TvShowController.SHOW_PATH, alfId).exchange())
                 .get("episodes").get(0).get("id").asLong();
         jdbcClient.sql("DELETE FROM episode_credit WHERE episode_id = :id").param("id", episodeId).update();
-        jdbcClient.sql("UPDATE episode SET nfo_read = FALSE WHERE id = :id").param("id", episodeId).update();
+        jdbcClient.sql("UPDATE episode SET nfo_read = FALSE, user_rating = NULL WHERE id = :id")
+                .param("id", episodeId).update();
 
+        JsonNode opened = read(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId).exchange());
+        assertThat(opened.get("metadata").get("userRating").asInt()).as("Wert der NFO, nicht Embers").isEqualTo(10);
+        ((tools.jackson.databind.node.ObjectNode) opened.get("metadata")).put("title", "Der Fremde (neu)");
         assertThat(mockMvc.put().uri(TvShowController.EPISODE_METADATA_PATH, episodeId).with(csrf()).contentType(JSON)
-                .content("{\"title\": \"Der Fremde (neu)\"}")).hasStatusOk();
+                .content(opened.get("metadata").toString())).hasStatusOk();
 
-        assertThat(Files.readString(nfo)).contains("<title>Der Fremde (neu)</title>",
+        assertThat(Files.readString(nfo)).contains("<title>Der Fremde (neu)</title>", "<userrating>10</userrating>",
                 "<director>Tom Patchett</director>", "<name>Paul Fusco</name>", "<tmdbid>1234</tmdbid>");
         assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId)).bodyJson().isLenientlyEqualTo("""
                 {"extras": {"directors": ["Tom Patchett"], "actors": [{"name": "Paul Fusco"}]}}
