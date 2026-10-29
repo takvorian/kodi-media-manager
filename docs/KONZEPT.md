@@ -231,5 +231,5 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 - **API-Keys:** TMDB, TVDB v4 (kostenpflichtig bzw. Projekt-Key), FanartTV, OMDb.
 - **HTML-Scraper** sind rechtlich und technisch fragil.
 - **Docker:** Dateirechte (`PUID`/`PGID`) und Pfad-Mapping Container ↔ Kodi (SMB/NFS).
-- **Lizenz:** noch offen. Ember steht unter GPL-3.0. Werden Code oder Logik direkt übernommen, muss KMM ebenfalls GPL-3.0 sein.
+- **Lizenz** ✅: GPL-3.0 wie Ember, aus dem KMM Logik übernimmt (`LICENSE`).
 - **Schriftarten** ✅: Roboto kommt als Paket `@fontsource/roboto` (SIL Open Font License) mit; die UI lädt nichts mehr von Google Fonts und funktioniert offline.

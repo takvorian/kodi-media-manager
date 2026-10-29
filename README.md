@@ -160,3 +160,7 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
   `POST /api/v1/kodi/sources/{id}/scan` (alle Kodi-Geräte, Ergebnis je Gerät)
 - `GET /api/v1/migrations/ember/inspect?path=…`, `POST /api/v1/migrations/ember/import` → `202 Accepted` mit dem gestarteten Job
   (`{"profilePath": …, "pathMappings": [{"emberPath": "a:\\filme", "kmmPath": "/media/filme"}], "importSettings": true, "importKodiHosts": true, "dryRun": true}`)
+
+## Lizenz
+
+KMM steht unter der [GNU General Public License v3.0](LICENSE), wie Ember Media Manager, aus dem es Logik übernimmt.
