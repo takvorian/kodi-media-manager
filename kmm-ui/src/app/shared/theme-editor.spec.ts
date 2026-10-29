@@ -30,7 +30,7 @@ describe('ThemeEditor', () => {
   const video: ThemeOption = {
     ...main,
     name: 'ALF Intro (HD)',
-    subject: 'ALF Intro (HD)',
+    subject: null,
     source: 'https://www.youtube.com/watch?v=abc',
     previewUrl: null,
     durationSeconds: null,
@@ -107,10 +107,15 @@ describe('ThemeEditor', () => {
 
     const candidates = element().querySelectorAll('.theme-candidate');
     expect(candidates.length).toBe(2);
-    expect(candidates[0].textContent).toContain('ALF – Main Theme');
+    expect(
+      candidates[0].querySelector('.candidate-name')?.textContent?.replace(/\s+/g, ' ').trim(),
+    ).toBe('ALF – Main Theme');
     expect(candidates[0].textContent).toContain('gleicher Titel');
     expect(candidates[0].querySelector('audio')?.getAttribute('src')).toBe(main.previewUrl);
     expect(candidates[1].querySelector('audio')).toBeNull();
+    expect(candidates[1].querySelector('.candidate-name')?.textContent?.trim()).toBe(
+      'ALF Intro (HD)',
+    );
     expect(element().querySelector('.theme-warning')?.textContent).toBe('YouTube: yt-dlp fehlt');
 
     confirmAnswer = false;

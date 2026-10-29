@@ -21,6 +21,7 @@
         <module>kmm-plugin-fanarttv</module>
         <module>kmm-plugin-tvdb</module>
         <module>kmm-plugin-televisiontunes</module>
+        <module>kmm-plugin-youtube</module>
     </modules>
 
     <properties>

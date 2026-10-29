@@ -30,6 +30,12 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg curl \
     && rm -rf /var/lib/apt/lists/*
 
+# yt-dlp lädt Titelmusik von YouTube. YouTube ändert sich oft; deshalb die jeweils aktuelle Version.
+ARG TARGETARCH
+RUN case "$TARGETARCH" in arm64) asset=yt-dlp_linux_aarch64 ;; *) asset=yt-dlp_linux ;; esac \
+    && curl -fsSL -o /usr/local/bin/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$asset" \
+    && chmod 755 /usr/local/bin/yt-dlp
+
 ENV SPRING_PROFILES_ACTIVE=docker \
     JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75" \
     TZ=Europe/Berlin

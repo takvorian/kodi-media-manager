@@ -30,7 +30,12 @@
       @for (candidate of found.candidates; track candidate.source) {
         <li class="theme-candidate">
           <div class="candidate-facts">
-            <span class="candidate-name">{{ candidate.subject }} – {{ candidate.name }}</span>
+            <span class="candidate-name">
+              @if (candidate.subject) {
+                {{ candidate.subject }} –
+              }
+              {{ candidate.name }}
+            </span>
             <span class="hint">
               {{ candidate.scraperName }}
               @if (candidate.sameTitle) {

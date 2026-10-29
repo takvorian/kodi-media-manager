@@ -63,6 +63,11 @@ kmm:
         api-key: ${KMM_TVDB_API_KEY:}
         # PIN eines TVDB-Abonnements, nur bei Keys für Abonnenten nötig
         pin: ${KMM_TVDB_PIN:}
+      youtube:
+        # yt-dlp für Titelmusik von YouTube: https://github.com/yt-dlp/yt-dlp; ohne Pfad aus dem Suchpfad
+        yt-dlp: ${KMM_YTDLP:yt-dlp}
+        # Ordner von ffmpeg für das Umwandeln in MP3; leer, wenn ffmpeg im Suchpfad liegt
+        ffmpeg-location: ${KMM_FFMPEG_LOCATION:}
   settings:
     # Gesetzte Werte haben Vorrang vor den Einstellungen in der Oberfläche und sind dort gesperrt.
     # Sprache der Metadaten beim Scrapen, z. B. de-DE
