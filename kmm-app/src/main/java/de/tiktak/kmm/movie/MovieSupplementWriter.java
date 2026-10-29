@@ -1,6 +1,7 @@
 package de.tiktak.kmm.movie;
 
 import java.time.Clock;
+import java.util.Optional;
 
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
@@ -34,6 +35,26 @@ class MovieSupplementWriter {
             } catch (NfoException e) {
                 throw new NfoNotWritableException(e);
             }
+        }
+        events.publishEvent(new MovieFilesChangedEvent(movie.getId()));
+    }
+
+    /**
+     * Schreibt den Trailer-Link des Films; in einer vorhandenen NFO ändert sich nur {@code <trailer>}. Ohne NFO wird sie
+     * wie bei {@link #write} angelegt.
+     *
+     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann
+     */
+    void writeTrailer(Movie movie) {
+        Optional<NfoFileState> nfo = nfoFiles.find(movie.companionFiles());
+        if (nfo.isEmpty()) {
+            write(movie, movie.supplement());
+            return;
+        }
+        try {
+            movie.markNfoSynchronized(nfoFiles.writeTrailer(nfo.get(), movie.getTrailer()).modifiedAt());
+        } catch (NfoException e) {
+            throw new NfoNotWritableException(e);
         }
         events.publishEvent(new MovieFilesChangedEvent(movie.getId()));
     }

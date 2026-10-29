@@ -16,7 +16,8 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Übernimmt den Inhalt von Serien- und Episoden-NFOs. Bevor KMM eine NFO neu schreibt, liest es sie ein, wenn sie
- * seit dem letzten Einlesen außerhalb von KMM geändert wurde; sonst gingen diese Änderungen verloren.
+ * seit dem letzten Einlesen außerhalb von KMM geändert wurde; sonst gingen diese Änderungen verloren. Eine
+ * {@code tvshow.nfo} liest es auch ein, wenn die Angaben der Serie nicht aus ihr stammen (Ember-Import).
  */
 @Slf4j
 @Component
@@ -31,13 +32,13 @@ class TvNfoSync {
      */
     void refreshShowIfChangedOutside(TvShow show) {
         Optional<TvNfoState> nfo = nfoFiles.findShowNfo(show.directory());
-        if (nfo.isEmpty() || nfo.get().modifiedAt().equals(show.getNfoModifiedAt())) {
+        if (nfo.isEmpty() || show.isNfoRead() && nfo.get().modifiedAt().equals(show.getNfoModifiedAt())) {
             return;
         }
         TvShowMetadata current = show.metadata();
         applyShow(show, read(nfo.get(), nfoFiles::readShow), current.title(), current.year());
         show.markNfoSynchronized(nfo.get().modifiedAt());
-        log.info("NFO of TV show {} was changed outside KMM and has been read again: {}", show.getId(),
+        log.info("NFO of TV show {} was changed outside KMM or not read yet and has been read: {}", show.getId(),
                 nfo.get().file());
     }
 
@@ -66,6 +67,7 @@ class TvNfoSync {
         if (nfo.trailer() != null) {
             show.changeTrailer(nfo.trailer());
         }
+        show.markNfoRead();
     }
 
     /**

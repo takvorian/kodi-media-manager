@@ -87,6 +87,28 @@ class TvShowNfoTest {
     }
 
     @Test
+    void keepsWhatKmmDoesNotKnowAboutAnActor() throws IOException {
+        Path nfoFile = Files.writeString(directory.resolve("tvshow.nfo"), """
+                <tvshow><title>After Life</title>
+                <actor><name>Ricky Gervais</name><role>Tony</role><tmdbid>17835</tmdbid><profile>x</profile></actor>
+                <actor><name>Tom Basden</name><tmdbid>134229</tmdbid></actor>
+                </tvshow>""");
+        TvShowNfo nfo = new TvShowNfo("After Life", null, null, null, null, null, null, null, null, null, null, null,
+                null, List.of(new NfoActor("Ricky Gervais", "Tony Johnson", 0, null),
+                        new NfoActor("Ashley Jensen", "Emma", 1, null)), null, null);
+
+        writer.write(nfoFile, nfo);
+
+        String content = Files.readString(nfoFile);
+        assertThat(content).contains("<role>Tony Johnson</role>", "<tmdbid>17835</tmdbid>", "<profile>x</profile>",
+                "<name>Ashley Jensen</name>").doesNotContain("Tom Basden", "134229");
+        assertThat(content.indexOf("<tmdbid>17835")).isGreaterThan(content.indexOf("<role>Tony Johnson"))
+                .isLessThan(content.indexOf("Ashley Jensen"));
+        assertThat(new TvShowNfoReader().read(nfoFile).actors()).extracting(NfoActor::name)
+                .containsExactly("Ricky Gervais", "Ashley Jensen");
+    }
+
+    @Test
     void writesReplacesAndRemovesTheTrailerButKeepsAnUnknownOne() throws IOException {
         Path nfoFile = directory.resolve("tvshow.nfo");
         TvShowNfo nfo = new TvShowNfo("Lost", null, null, null, null, null, null, null, null, null, null, null, null,

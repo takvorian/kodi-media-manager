@@ -17,6 +17,7 @@ import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.NfoPlayback;
 import de.tiktak.kmm.nfo.PlaybackNfoWriter;
 import de.tiktak.kmm.nfo.StreamDetailsNfoWriter;
+import de.tiktak.kmm.nfo.TrailerNfoWriter;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.nfo.TvShowNfoReader;
 import de.tiktak.kmm.nfo.TvShowNfoWriter;
@@ -36,6 +37,7 @@ class TvShowNfoFiles {
     private final EpisodeNfoWriter episodeWriter = new EpisodeNfoWriter();
     private final PlaybackNfoWriter playbackWriter = new PlaybackNfoWriter();
     private final StreamDetailsNfoWriter streamDetailsWriter = new StreamDetailsNfoWriter();
+    private final TrailerNfoWriter trailerWriter = new TrailerNfoWriter();
 
     Optional<TvNfoState> findShowNfo(Path showDirectory) {
         return state(TvShowFiles.tvShowNfo(showDirectory));
@@ -105,6 +107,17 @@ class TvShowNfoFiles {
      */
     TvNfoState writeStreamDetails(TvNfoState nfo, List<EpisodeStreamDetails> episodes) {
         streamDetailsWriter.writeEpisodes(nfo.file(), episodes);
+        return written(nfo.file());
+    }
+
+    /**
+     * Ändert nur den Trailer-Link in der vorhandenen {@code tvshow.nfo}; alles andere bleibt Zeichen für Zeichen.
+     *
+     * @param trailer Link oder {@code null}, um ihn zu entfernen
+     * @throws NfoException wenn die NFO keine Serie enthält oder nicht geschrieben werden kann
+     */
+    TvNfoState writeShowTrailer(TvNfoState nfo, String trailer) {
+        trailerWriter.writeTvShow(nfo.file(), trailer);
         return written(nfo.file());
     }
 

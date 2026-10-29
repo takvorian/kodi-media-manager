@@ -146,6 +146,13 @@ public class TvShow {
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
 
+    /**
+     * Ob die Angaben aus der {@code tvshow.nfo} stammen. Bei Serien aus dem Ember-Import stammen sie aus Embers
+     * Datenbank und können von der NFO abweichen; dann liest KMM die NFO vor dem ersten Schreiben ein.
+     */
+    @Column(name = "nfo_read", nullable = false)
+    private boolean nfoRead;
+
     TvShow(long sourceId, String directoryPath, String title, Integer releaseYear) {
         this.sourceId = sourceId;
         this.directoryPath = Objects.requireNonNull(directoryPath, "directoryPath must not be null");
@@ -212,6 +219,15 @@ public class TvShow {
 
     void changeAddedAt(Instant newAddedAt) {
         this.addedAt = Objects.requireNonNull(newAddedAt, "addedAt must not be null");
+    }
+
+    void markNfoRead() {
+        this.nfoRead = true;
+    }
+
+    /** Die Angaben stammen nicht aus der NFO, etwa nach einem Import. */
+    void markNfoNotRead() {
+        this.nfoRead = false;
     }
 
     void markNfoSynchronized(Instant modifiedAt) {

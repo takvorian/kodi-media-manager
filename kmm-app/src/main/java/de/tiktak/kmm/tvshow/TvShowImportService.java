@@ -81,6 +81,7 @@ public class TvShowImportService {
             TvShow show = showsByHash.computeIfAbsent(hash, key -> newShow(showImport));
             show.applyMetadata(showImport.metadata());
             show.applyExtras(showImport.extras());
+            show.markNfoNotRead();
             Optional<TvNfoState> nfo = nfoFiles.findShowNfo(show.directory());
             nfo.ifPresent(state -> show.markNfoSynchronized(state.modifiedAt()));
             return new ImportedTvShow(show.getId(), new TvImportResult(created, nfo.isPresent()));

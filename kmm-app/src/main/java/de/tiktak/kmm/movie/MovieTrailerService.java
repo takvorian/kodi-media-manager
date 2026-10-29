@@ -87,7 +87,7 @@ public class MovieTrailerService {
         Movie movie = require(movieId);
         nfoSync.refreshIfChangedOutside(movie);
         movie.changeTrailer(trailer);
-        supplementWriter.write(movie, movie.supplement());
+        supplementWriter.writeTrailer(movie);
         log.info("Trailer of movie {} set to {}", movieId, trailer);
         return metadataService.findDetails(movieId);
     }

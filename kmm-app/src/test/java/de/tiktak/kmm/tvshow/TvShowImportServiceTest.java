@@ -81,6 +81,7 @@ class TvShowImportServiceTest {
     void updatesKnownShowsAndEpisodesAndKeepsTheirStreamsWithoutNewOnes() {
         TvShow known = new TvShow(3, SHOW_DIRECTORY, "Lost", null);
         ReflectionTestUtils.setField(known, "id", 7L);
+        known.markNfoRead();
         Episode knownEpisode = new Episode(7, EPISODE_FILE, 1, 1, "Alt");
         knownEpisode.applyExtras(new EpisodeExtras(List.of(), List.of(), List.of(), List.of(), null, null, STREAMS));
         when(showRepository.findByDirectoryPathHashIn(anyCollection())).thenReturn(List.of(known));
@@ -92,6 +93,7 @@ class TvShowImportServiceTest {
 
         assertThat(show.result().created()).isFalse();
         assertThat(known.getTitle()).isEqualTo("Lost – Verschollen");
+        assertThat(known.isNfoRead()).as("Angaben stammen aus Ember, nicht aus der NFO").isFalse();
         assertThat(result).isEqualTo(new TvImportResult(false, false));
         assertThat(knownEpisode.getTitle()).isEqualTo("Pilot (1)");
         assertThat(knownEpisode.extras().streams()).isEqualTo(STREAMS);

@@ -93,6 +93,23 @@ class TvNfoSyncTest {
     }
 
     @Test
+    void readsAShowNfoBeforeTheFirstWriteWhenTheDataCameFromEmber() {
+        TvShow show = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
+        show.markNfoSynchronized(SYNCHRONIZED);
+        TvNfoState unchanged = new TvNfoState(SHOW_DIRECTORY.resolve("tvshow.nfo"), SYNCHRONIZED);
+        when(nfoFiles.findShowNfo(SHOW_DIRECTORY)).thenReturn(Optional.of(unchanged));
+        when(nfoFiles.readShow(unchanged)).thenReturn(new TvShowNfo("ALF", null, null, null, null, null, "Germany:6",
+                null, null, null, null, Map.of(), null, null, null, null));
+
+        nfoSync.refreshShowIfChangedOutside(show);
+        nfoSync.refreshShowIfChangedOutside(show);
+
+        assertThat(show.metadata().mpaa()).isEqualTo("Germany:6");
+        assertThat(show.isNfoRead()).isTrue();
+        verify(nfoFiles).readShow(unchanged);
+    }
+
+    @Test
     void takesTheTrailerFromTheShowNfo() {
         TvShow show = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
 

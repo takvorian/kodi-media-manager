@@ -136,6 +136,27 @@ class MovieFilterIntegrationTest {
     }
 
     @Test
+    void changesOnlyTheTrailerLineOfTheNfo() throws IOException {
+        Path nfo = library.resolve("filme/Pippi/Pippi.nfo");
+        String ember = String.join("\r\n", "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "<movie>",
+                "  <title>Pippi</title>", "  <mpaa>Germany:0</mpaa>", "</movie>");
+        Files.writeString(nfo, ember);
+        JsonNode ids = read(mockMvc.post().uri(MovieController.QUERY_IDS_PATH).with(csrf()).contentType(JSON)
+                .content("{\"matchAll\": true, \"conditions\": [{\"field\": \"TITLE\", \"operator\": \"IS\","
+                        + " \"value\": \"Pippi\"}]}").exchange());
+        String trailer = "https://example.org/pippi.mp4";
+
+        assertThat(mockMvc.put().uri(MovieTrailerController.TRAILER_PATH, ids.get(0).asLong()).with(csrf())
+                .contentType(JSON).content("{\"url\": \"%s\"}".formatted(trailer)).exchange()).hasStatusOk();
+        assertThat(Files.readString(nfo)).isEqualTo(ember.replace("</movie>",
+                "  <trailer>" + trailer + "</trailer>\r\n</movie>"));
+
+        assertThat(mockMvc.delete().uri(MovieTrailerController.TRAILER_PATH, ids.get(0).asLong()).with(csrf())
+                .exchange()).hasStatusOk();
+        assertThat(Files.readString(nfo)).isEqualTo(ember);
+    }
+
+    @Test
     void editsTheFilteredMoviesTogether() throws IOException {
         JsonNode ids = read(mockMvc.post().uri(MovieController.QUERY_IDS_PATH).with(csrf()).contentType(JSON)
                 .content("{\"matchAll\": true, \"conditions\": [{\"field\": \"YEAR\", \"operator\": \"AT_LEAST\","

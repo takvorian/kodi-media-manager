@@ -102,7 +102,7 @@ class MovieTrailerServiceTest {
         assertThat(details.trailer()).isEqualTo(GERMAN_TRAILER);
         assertThat(movie.nfoTrailer()).isEqualTo(GERMAN_TRAILER);
         verify(nfoSync).refreshIfChangedOutside(movie);
-        verify(supplementWriter).write(any(Movie.class), any(MovieSupplement.class));
+        verify(supplementWriter).writeTrailer(movie);
     }
 
     @Test
@@ -123,7 +123,7 @@ class MovieTrailerServiceTest {
 
         assertThat(details.trailer()).isNull();
         assertThat(movie.nfoTrailer()).isEqualTo(MovieNfoSupplement.NO_TRAILER);
-        verify(supplementWriter).write(any(Movie.class), any(MovieSupplement.class));
+        verify(supplementWriter).writeTrailer(movie);
     }
 
     @Test
@@ -134,7 +134,7 @@ class MovieTrailerServiceTest {
         assertThat(service.fillMissing(MOVIE_ID)).isTrue();
 
         assertThat(movie.getTrailer()).isEqualTo(GERMAN_TRAILER);
-        verify(supplementWriter).write(any(Movie.class), any(MovieSupplement.class));
+        verify(supplementWriter).writeTrailer(movie);
     }
 
     @Test

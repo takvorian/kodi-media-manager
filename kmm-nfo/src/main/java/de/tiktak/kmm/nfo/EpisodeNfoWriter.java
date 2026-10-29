@@ -65,8 +65,7 @@ public class EpisodeNfoWriter {
         NfoDomEditor.setText(document, element, NfoElements.DATE_ADDED, NfoSupplementWriter.toText(nfo.dateAdded()));
         NfoDomEditor.setTexts(document, element, NfoElements.DIRECTOR, nfo.directors());
         NfoDomEditor.setTexts(document, element, NfoElements.CREDITS, nfo.writers());
-        NfoDomEditor.replaceAll(element, NfoElements.ACTOR,
-                nfo.actors().stream().map(actor -> NfoSupplementWriter.actor(document, actor)).toList());
+        NfoSupplementWriter.replaceActors(document, element, nfo.actors());
         NfoStreamDetails.write(document, element, nfo.streams());
     }
 }

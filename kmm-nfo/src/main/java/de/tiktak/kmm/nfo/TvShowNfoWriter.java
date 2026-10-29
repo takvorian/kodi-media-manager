@@ -45,8 +45,7 @@ public class TvShowNfoWriter {
         NfoDomEditor.replaceAll(show, NfoElements.RATINGS, NfoSupplementWriter.ratings(document, nfo.ratings()));
         NfoDomEditor.setText(document, show, NfoElements.USER_RATING, NfoSupplementWriter.toText(nfo.userRating()));
         NfoDomEditor.replaceAll(show, NfoElements.NAMED_SEASON, seasonNames(document, nfo.seasonNames()));
-        NfoDomEditor.replaceAll(show, NfoElements.ACTOR,
-                nfo.actors().stream().map(actor -> NfoSupplementWriter.actor(document, actor)).toList());
+        NfoSupplementWriter.replaceActors(document, show, nfo.actors());
         if (nfo.trailer() != null) {
             NfoDomEditor.setText(document, show, NfoElements.TRAILER, nfo.trailer());
         }

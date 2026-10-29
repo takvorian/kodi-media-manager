@@ -2,6 +2,7 @@ package de.tiktak.kmm.tvshow;
 
 import java.time.Clock;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.UnaryOperator;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -86,7 +87,7 @@ public class TvShowMetadataService {
 
     /**
      * Ändert den Trailer-Link einer Serie in Datenbank und NFO. Eine außerhalb von KMM geänderte NFO wird vorher
-     * eingelesen.
+     * eingelesen; in einer vorhandenen NFO ändert sich nur {@code <trailer>}, sonst wird sie neu angelegt.
      *
      * @param trailer Link oder {@code null} für „kein Trailer“
      * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
@@ -96,8 +97,11 @@ public class TvShowMetadataService {
         TvShow show = requireShow(showId);
         nfoSync.refreshShowIfChangedOutside(show);
         show.changeTrailer(trailer);
-        TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(show.metadata(),
-                show.extras(), show.nfoTrailer())));
+        Optional<TvNfoState> nfo = nfoFiles.findShowNfo(show.directory());
+        TvNfoState written = write(() -> nfo.isPresent()
+                ? nfoFiles.writeShowTrailer(nfo.get(), show.getTrailer())
+                : nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(show.metadata(), show.extras(),
+                        show.nfoTrailer())));
         show.markNfoSynchronized(written.modifiedAt());
         log.info("Trailer of TV show {} set to {}", showId, trailer);
         events.publishEvent(new TvShowFilesChangedEvent(showId));

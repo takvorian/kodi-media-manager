@@ -18,6 +18,7 @@ import de.tiktak.kmm.nfo.NfoWriter;
 import de.tiktak.kmm.nfo.PlaybackNfoWriter;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.nfo.StreamDetailsNfoWriter;
+import de.tiktak.kmm.nfo.TrailerNfoWriter;
 import de.tiktak.kmm.scanner.CompanionFiles;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +36,7 @@ class MovieNfoFiles {
     private final NfoWriter writer;
     private final PlaybackNfoWriter playbackWriter = new PlaybackNfoWriter();
     private final StreamDetailsNfoWriter streamDetailsWriter = new StreamDetailsNfoWriter();
+    private final TrailerNfoWriter trailerWriter = new TrailerNfoWriter();
 
     Optional<NfoFileState> find(CompanionFiles companionFiles) {
         return companionFiles.nfoCandidates().stream()
@@ -82,6 +84,19 @@ class MovieNfoFiles {
      */
     NfoFileState writeStreamDetails(NfoFileState nfoFile, StreamDetails details) {
         streamDetailsWriter.writeMovie(nfoFile.file(), details);
+        return state(nfoFile.file())
+                .orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + nfoFile.file()));
+    }
+
+    /**
+     * Ändert nur den Trailer-Link in der vorhandenen NFO; alles andere bleibt Zeichen für Zeichen.
+     *
+     * @param trailer Link oder {@code null}, um ihn zu entfernen
+     * @return Zustand der geschriebenen Datei
+     * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
+     */
+    NfoFileState writeTrailer(NfoFileState nfoFile, String trailer) {
+        trailerWriter.writeMovie(nfoFile.file(), trailer);
         return state(nfoFile.file())
                 .orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + nfoFile.file()));
     }

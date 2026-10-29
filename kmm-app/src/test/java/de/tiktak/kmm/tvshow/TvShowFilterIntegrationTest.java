@@ -168,6 +168,27 @@ class TvShowFilterIntegrationTest {
     }
 
     @Test
+    void readsTheNfoOfAnEmberShowFirstAndChangesOnlyItsTrailerLine() throws IOException {
+        Path nfo = library.resolve("serien/Neu/tvshow.nfo");
+        String ember = String.join("\r\n", "<?xml version=\"1.0\" encoding=\"utf-8\"?>", "<tvshow>",
+                "  <title>Neu</title>", "  <mpaa>Germany:16</mpaa>", "  <actor>", "    <name>Ricky Gervais</name>",
+                "    <tmdbid>17835</tmdbid>", "  </actor>", "</tvshow>");
+        Files.writeString(nfo, ember);
+        long neu = showId("Neu");
+        jdbcClient.sql("UPDATE tv_show SET mpaa = 'FSK 16', nfo_read = FALSE, nfo_modified_at = :modified "
+                + "WHERE id = :id").param("modified", Files.getLastModifiedTime(nfo).toInstant())
+                .param("id", neu).update();
+
+        assertThat(mockMvc.put().uri(TvShowTrailerController.TRAILER_PATH, neu).with(csrf()).contentType(JSON)
+                .content("{\"url\": \"%s\"}".formatted(LOST_TRAILER)).exchange()).hasStatusOk();
+
+        assertThat(Files.readString(nfo)).isEqualTo(ember.replace("</tvshow>",
+                "  <trailer>" + LOST_TRAILER + "</trailer>\r\n</tvshow>"));
+        assertThat(jdbcClient.sql("SELECT mpaa FROM tv_show WHERE id = :id").param("id", neu).query(String.class)
+                .single()).as("aus der NFO eingelesen").isEqualTo("Germany:16");
+    }
+
+    @Test
     void fillsMissingTrailersWithoutTouchingExistingOnes() throws IOException {
         Path alfNfo = library.resolve("serien/ALF/tvshow.nfo");
         String before = Files.readString(alfNfo);
