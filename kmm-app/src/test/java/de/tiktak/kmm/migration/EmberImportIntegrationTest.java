@@ -14,10 +14,12 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONException;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -34,6 +36,7 @@ import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.migration.ember.EmberFixtures;
 import de.tiktak.kmm.kodi.KodiHostController;
 import de.tiktak.kmm.movie.MovieController;
+import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.SettingsController;
 import de.tiktak.kmm.settings.SettingsService;
@@ -79,6 +82,9 @@ class EmberImportIntegrationTest {
 
     @Autowired
     private SettingsService settingsService;
+
+    @Autowired
+    private MovieMetadataService movieService;
 
     @BeforeEach
     void createProfileAndLibrary() throws IOException {
@@ -127,13 +133,13 @@ class EmberImportIntegrationTest {
     }
 
     @Test
-    void importsMoviesWithAllDetailsAndUpdatesThemOnRepeat() {
+    void importsMoviesWithAllDetailsAndUpdatesThemOnRepeat() throws JSONException {
         JsonNode report = awaitJob(startImport(false));
 
         assertThat(report.get("moviesCreated").asInt()).isEqualTo(3);
         assertThat(report.get("skippedSources").isEmpty()).isTrue();
         long heatId = movieId("Heat");
-        assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, heatId)).bodyJson().isLenientlyEqualTo("""
+        JSONAssert.assertEquals("""
                 {"filePath": "%s", "addedAt": "%s",
                  "metadata": {"title": "Heat", "year": 1995, "mpaa": "FSK 16", "runtime": 170,
                               "genres": ["Krimi", "Drama"], "imdbId": "tt0113277", "tmdbId": "949"},
@@ -143,7 +149,8 @@ class EmberImportIntegrationTest {
                                 "tags": ["Heist"], "userRating": 9, "playCount": 2,
                                 "ratings": [{"source": "imdb", "value": 8.3}, {"source": "themoviedb"}]},
                  "nfo": {"exists": true}}
-                """.formatted(json(library.resolve("Heat (1995)/Heat.mkv").toString()), EMBER_DATE_ADDED));
+                """.formatted(json(library.resolve("Heat (1995)/Heat.mkv").toString()), EMBER_DATE_ADDED),
+                objectMapper.writeValueAsString(movieService.findDetails(heatId)), false);
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId("Matrix Reloaded"))).bodyJson()
                 .extractingPath("$.supplement.set.name").isEqualTo("Matrix Collection");
         assertThat(jdbcClient.sql("SELECT tmdb_collection_id FROM movie_set WHERE name = 'Matrix Collection'")
@@ -172,8 +179,10 @@ class EmberImportIntegrationTest {
 
         assertThat(scan.get("added").asInt()).isZero();
         assertThat(scan.get("removed").asInt()).isZero();
+        assertThat(movieService.findDetails(movieId("Heat")).metadata().title())
+                .as("der Scan behält Embers Werte").isEqualTo("Heat");
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId("Heat"))).bodyJson()
-                .extractingPath("$.metadata.title").isEqualTo("Heat");
+                .extractingPath("$.metadata.title").as("beim Öffnen gilt die NFO").isEqualTo("Heat aus der NFO");
     }
 
     @Test

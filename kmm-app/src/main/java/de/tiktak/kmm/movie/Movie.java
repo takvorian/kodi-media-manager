@@ -177,6 +177,13 @@ public class Movie {
     @Column(name = "supplement_known", nullable = false)
     private boolean supplementKnown;
 
+    /**
+     * Ob die Angaben aus der NFO stammen. Bei Filmen aus dem Ember-Import stammen sie aus Embers Datenbank und können
+     * von der NFO abweichen; dann liest KMM die NFO vor dem ersten Schreiben ein.
+     */
+    @Column(name = "nfo_read", nullable = false)
+    private boolean nfoRead;
+
     /** Video-, Ton- und Untertitelspuren aus NFO oder Migration. */
     @Getter(AccessLevel.NONE)
     @Convert(converter = StreamDetailsConverter.class)
@@ -328,6 +335,15 @@ public class Movie {
     void relocate(String newFilePath) {
         this.filePath = Objects.requireNonNull(newFilePath, "newFilePath must not be null");
         this.filePathHash = FilePathHash.of(newFilePath);
+    }
+
+    void markNfoRead() {
+        this.nfoRead = true;
+    }
+
+    /** Die Angaben stammen nicht aus der NFO, etwa nach einem Import. */
+    void markNfoNotRead() {
+        this.nfoRead = false;
     }
 
     void markNfoSynchronized(Instant nfoModifiedAt) {

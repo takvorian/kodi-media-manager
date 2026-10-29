@@ -46,6 +46,12 @@ public record MovieSupplement(
         ratings = withoutNulls(ratings);
     }
 
+    /** Kopie mit anderen Darstellern. */
+    public MovieSupplement withActors(List<Actor> newActors) {
+        return new MovieSupplement(newActors, directors, writers, studios, countries, tags, ratings, set, userRating,
+                playCount, lastPlayed);
+    }
+
     /** Kopie mit anderen Bewertungen. */
     public MovieSupplement withRatings(List<Rating> newRatings) {
         return new MovieSupplement(actors, directors, writers, studios, countries, tags, newRatings, set, userRating,

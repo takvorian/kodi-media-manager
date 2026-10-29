@@ -67,6 +67,7 @@ public class MovieImportService {
             MovieSet set = set(movieImport);
             movie.applySupplement(movieImport.supplement(), set);
             movie.changeTrailer(movieImport.trailer());
+            movie.markNfoNotRead();
             movie.assignSet(set, movieImport.setOrder());
             if (!movieImport.streams().isEmpty()) {
                 movie.applyStreamDetails(movieImport.streams());
