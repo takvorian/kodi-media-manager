@@ -25,11 +25,12 @@ import { FilterEditor } from '../filters/filter-editor';
 import { SavedFilter, SavedFilterService } from '../filters/saved-filter.service';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
+import { ExportMenu } from '../shared/export-menu';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { DiscFormat } from './movie';
 import { MOVIE_BATCH_FIELDS, MOVIE_BATCH_JOB_KEY } from './movie-batch';
-import { MovieService } from './movie.service';
+import { MOVIES_URL, MovieService } from './movie.service';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 export const DEFAULT_PAGE_SIZE = 50;
@@ -57,6 +58,7 @@ const SAVED = 'saved:';
     MatCheckboxModule,
     MatTableModule,
     BatchEditor,
+    ExportMenu,
     FilterEditor,
     RouterLink,
   ],
@@ -109,6 +111,13 @@ export class MovieList {
     ),
     { initialValue: '' },
   );
+
+  protected readonly exportEndpoint = `${MOVIES_URL}/export`;
+  /** Der gewählte Filter samt Suche, wie ihn die Liste anzeigt. */
+  protected readonly exportFilter = computed(() => ({
+    ...completeConditions(this.filter()),
+    search: this.search().trim() || null,
+  }));
 
   /** Neu geladen wird nur, wenn sich die Abfrage inhaltlich ändert, nicht schon bei einer leeren neuen Zeile. */
   private readonly query = computed(

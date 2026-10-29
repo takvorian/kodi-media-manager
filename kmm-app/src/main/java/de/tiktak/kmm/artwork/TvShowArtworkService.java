@@ -66,6 +66,11 @@ public class TvShowArtworkService {
                 .orElseThrow(() -> ArtworkProblemException.imageMissing(type));
     }
 
+    /** Die Poster-Datei der Serie, etwa für den Export. */
+    public Optional<Path> posterFile(TvShowDetails show) {
+        return artworkFiles.find(slot(directory(show), ImageType.POSTER, null)).map(ArtworkFile::file);
+    }
+
     public ArtworkCandidates candidates(long showId, ImageType type, Integer season) {
         requireSupported(type, season);
         TvShowMetadata metadata = metadataService.findShow(showId).metadata();

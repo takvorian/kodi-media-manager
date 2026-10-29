@@ -3,7 +3,13 @@
 <div class="toolbar">
   <mat-form-field class="search-field">
     <mat-label>Suche nach Titel</mat-label>
-    <input matInput type="search" name="search" [value]="searchInput()" (input)="onSearch($event)" />
+    <input
+      matInput
+      type="search"
+      name="search"
+      [value]="searchInput()"
+      (input)="onSearch($event)"
+    />
   </mat-form-field>
   <mat-form-field class="filter-select">
     <mat-label>Filter</mat-label>
@@ -22,6 +28,11 @@
   <button matButton type="button" class="edit-filter-button" (click)="toggleEditing()">
     {{ editing() ? 'Filter schließen' : 'Filter bearbeiten' }}
   </button>
+  <app-export-menu
+    [endpoint]="exportEndpoint"
+    [filter]="exportFilter()"
+    fallbackName="kmm-serien"
+  />
 </div>
 
 @if (editing()) {
@@ -38,11 +49,20 @@
     <div class="save-filter">
       <mat-form-field>
         <mat-label>Name des Filters</mat-label>
-        <input matInput name="filterName" [value]="filterName()" (input)="filterName.set($any($event.target).value)" />
+        <input
+          matInput
+          name="filterName"
+          [value]="filterName()"
+          (input)="filterName.set($any($event.target).value)"
+        />
       </mat-form-field>
-      <button matButton="filled" type="button" class="save-filter-button" (click)="saveFilter()">Speichern</button>
+      <button matButton="filled" type="button" class="save-filter-button" (click)="saveFilter()">
+        Speichern
+      </button>
       @if (selectedSaved()) {
-        <button matButton type="button" class="delete-filter-button" (click)="deleteFilter()">Löschen</button>
+        <button matButton type="button" class="delete-filter-button" (click)="deleteFilter()">
+          Löschen
+        </button>
       }
     </div>
   </section>
@@ -50,19 +70,41 @@
 
 <div class="selection">
   <span>{{ chosen().size }} ausgewählt</span>
-  <button matButton type="button" class="choose-all-button" (click)="chooseAllFiltered()">Alle gefilterten auswählen</button>
+  <button matButton type="button" class="choose-all-button" (click)="chooseAllFiltered()">
+    Alle gefilterten auswählen
+  </button>
   @if (chosen().size > 0) {
-    <button matButton type="button" class="clear-chosen-button" (click)="clearChosen()">Auswahl aufheben</button>
+    <button matButton type="button" class="clear-chosen-button" (click)="clearChosen()">
+      Auswahl aufheben
+    </button>
     <button matButton type="button" class="batch-edit-button" (click)="toggleBatchEditing()">
       {{ batchEditing() ? 'Bearbeitung schließen' : 'Auswahl bearbeiten' }}
     </button>
-    <button matButton type="button" class="fill-trailers-button" [disabled]="!!batchJob()" (click)="fillMissingTrailers()">
+    <button
+      matButton
+      type="button"
+      class="fill-trailers-button"
+      [disabled]="!!batchJob()"
+      (click)="fillMissingTrailers()"
+    >
       Fehlende Trailer holen
     </button>
-    <button matButton type="button" class="fill-themes-button" [disabled]="!!batchJob()" (click)="fillMissingThemes()">
+    <button
+      matButton
+      type="button"
+      class="fill-themes-button"
+      [disabled]="!!batchJob()"
+      (click)="fillMissingThemes()"
+    >
       Fehlende Titelmusik holen
     </button>
-    <button matButton type="button" class="refresh-ratings-button" [disabled]="!!batchJob()" (click)="refreshRatings()">
+    <button
+      matButton
+      type="button"
+      class="refresh-ratings-button"
+      [disabled]="!!batchJob()"
+      (click)="refreshRatings()"
+    >
       Bewertungen aktualisieren
     </button>
   }
@@ -97,8 +139,8 @@
       <p class="empty">Keine Serien gefunden.</p>
     } @else {
       <p class="empty">
-        Noch keine Serien. Lege unter <a routerLink="/sources">Quellen</a> ein Verzeichnis mit dem Inhalt „Serien“ an
-        und scanne es.
+        Noch keine Serien. Lege unter <a routerLink="/sources">Quellen</a> ein Verzeichnis mit dem
+        Inhalt „Serien“ an und scanne es.
       </p>
     }
   } @else {
@@ -106,7 +148,11 @@
       <ng-container matColumnDef="select">
         <th mat-header-cell *matHeaderCellDef></th>
         <td mat-cell *matCellDef="let show">
-          <mat-checkbox class="choose" [checked]="isChosen(show.id)" (change)="toggleChosen(show.id)" />
+          <mat-checkbox
+            class="choose"
+            [checked]="isChosen(show.id)"
+            (change)="toggleChosen(show.id)"
+          />
         </td>
       </ng-container>
       <ng-container matColumnDef="title">

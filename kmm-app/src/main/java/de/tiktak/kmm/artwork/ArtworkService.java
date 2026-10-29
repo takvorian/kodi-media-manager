@@ -53,6 +53,11 @@ public class ArtworkService {
                 .orElseThrow(() -> ArtworkProblemException.imageMissing(type));
     }
 
+    /** Die Poster-Datei des Films, etwa für den Export. */
+    public Optional<Path> posterFile(MovieDetails movie) {
+        return artworkFiles.find(companionFiles(movie), ImageType.POSTER).map(ArtworkFile::file);
+    }
+
     public ArtworkCandidates candidates(long movieId, ImageType type) {
         requireSupported(type);
         MovieMetadata metadata = metadataService.findDetails(movieId).metadata();

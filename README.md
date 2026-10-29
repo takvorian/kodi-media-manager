@@ -135,6 +135,8 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 - `GET /api/v1/jobs/events` (Server-Sent Events, Ereignis `job`)
 - `GET /api/v1/movies?search=…&page=…&size=…`
 - `GET /api/v1/movies/{id}`, `PUT /api/v1/movies/{id}/metadata` (schreibt die NFO)
+- `POST /api/v1/movies/export?format=HTML|CSV|JSON`, `POST /api/v1/tvshows/export?format=…` mit dem Filter als Body
+  (`{"matchAll": true, "conditions": [], "search": null}`) → Download; HTML ist eine Liste mit Postern als ZIP
 - `GET /api/v1/tvshows?search=…&page=…&size=…`, `GET /api/v1/tvshows/{id}` (mit Staffeln und Episoden),
   `PUT /api/v1/tvshows/{id}/metadata` (schreibt die `tvshow.nfo`)
 - `GET /api/v1/scrapers/tvshows` (Serien-Scraper mit Attribution), `GET /api/v1/tvshows/{id}/scraper-search?scraper=…`,

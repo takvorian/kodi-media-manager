@@ -25,10 +25,11 @@ import {
 } from '../filters/tvshow-filter';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
+import { ExportMenu } from '../shared/export-menu';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { TVSHOW_BATCH_FIELDS, TVSHOW_BATCH_JOB_KEY } from './tvshow-batch';
-import { TvShowService } from './tvshow.service';
+import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 export const DEFAULT_PAGE_SIZE = 50;
@@ -43,6 +44,7 @@ const SAVED = 'saved:';
   selector: 'app-tvshow-list',
   imports: [
     BatchEditor,
+    ExportMenu,
     FilterEditor,
     MatButtonModule,
     MatCheckboxModule,
@@ -103,6 +105,13 @@ export class TvShowList {
     ),
     { initialValue: '' },
   );
+
+  protected readonly exportEndpoint = `${TVSHOWS_URL}/export`;
+  /** Der gewählte Filter samt Suche, wie ihn die Liste anzeigt. */
+  protected readonly exportFilter = computed(() => ({
+    ...completeConditions(this.filter()),
+    search: this.search().trim() || null,
+  }));
 
   /** Neu geladen wird nur, wenn sich die Abfrage inhaltlich ändert. */
   private readonly query = computed(
