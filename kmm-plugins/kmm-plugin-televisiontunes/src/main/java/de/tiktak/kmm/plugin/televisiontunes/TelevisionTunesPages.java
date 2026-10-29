@@ -1,10 +1,8 @@
 package de.tiktak.kmm.plugin.televisiontunes;
 
-import java.text.Normalizer;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -22,9 +20,6 @@ final class TelevisionTunesPages {
     private static final Pattern TRACK = Pattern.compile("playInBar\\(" + JS_STRING + "\\s*,\\s*" + JS_STRING
             + "\\s*,\\s*" + JS_STRING + "\\s*,\\s*" + JS_STRING);
     private static final String AUDIO_PATH_PREFIX = "/uploads/audio/";
-    private static final Pattern NOT_ALPHANUMERIC = Pattern.compile("[^\\p{Alnum}]+");
-    private static final Pattern LEADING_ARTICLE = Pattern.compile("^(the|der|die|das)\\s+");
-    private static final Pattern DIACRITICS = Pattern.compile("\\p{M}+");
 
     private TelevisionTunesPages() {
     }
@@ -56,13 +51,6 @@ final class TelevisionTunesPages {
 
     static boolean isAudioPath(String path) {
         return path != null && path.startsWith(AUDIO_PATH_PREFIX) && !path.contains("..");
-    }
-
-    /** Vergleichbare Form eines Titels: ohne Groß-/Kleinschreibung, Akzente, Artikel am Anfang und Satzzeichen. */
-    static String normalize(String title) {
-        String plain = DIACRITICS.matcher(Normalizer.normalize(title, Normalizer.Form.NFD)).replaceAll("")
-                .toLowerCase(Locale.ROOT).strip();
-        return NOT_ALPHANUMERIC.matcher(LEADING_ARTICLE.matcher(plain).replaceFirst("")).replaceAll("");
     }
 
     private static String unescapeJs(String value) {

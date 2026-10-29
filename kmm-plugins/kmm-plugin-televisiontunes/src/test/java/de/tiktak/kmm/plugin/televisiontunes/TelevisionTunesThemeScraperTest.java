@@ -139,13 +139,6 @@ class TelevisionTunesThemeScraperTest {
                 .isInstanceOf(IllegalStateException.class);
     }
 
-    @Test
-    void normalizesTitlesForComparison() {
-        assertThat(TelevisionTunesPages.normalize("The Muppet Show")).isEqualTo("muppetshow");
-        assertThat(TelevisionTunesPages.normalize("Die Märchenbraut")).isEqualTo("marchenbraut");
-        assertThat(TelevisionTunesPages.normalize("11.22.63")).isEqualTo("112263");
-    }
-
     private URI url(String path) {
         return URI.create(site.baseUrl() + path);
     }

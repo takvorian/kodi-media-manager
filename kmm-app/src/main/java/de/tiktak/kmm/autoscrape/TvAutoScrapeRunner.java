@@ -16,6 +16,7 @@ import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowQueryService;
 import de.tiktak.kmm.tvshow.TvShowScrapeService;
+import de.tiktak.kmm.theme.ThemeService;
 import de.tiktak.kmm.tvshow.TvShowTrailerService;
 import de.tiktak.kmm.tvshow.TvRenameTrigger;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan;
@@ -41,6 +42,7 @@ class TvAutoScrapeRunner {
     private final TvShowScrapeService scrapeService;
     private final TvShowArtworkService artworkService;
     private final TvShowTrailerService trailerService;
+    private final ThemeService themeService;
     private final StreamDetailsService streamDetails;
     private final TvShowRenameService renameService;
 
@@ -57,8 +59,9 @@ class TvAutoScrapeRunner {
         context.reportProgress(showIds.size(), showIds.size(), null);
         TvAutoScrapeResult result = progress.toResult(showIds.size());
         log.info("Auto-scraped TV source {}: {} shows, {} scraped, {} unmatched, {} episodes, {} images, {} trailers, "
-                + "{} failures", sourceId, result.shows(), result.scraped(), result.unmatched(),
-                result.episodesUpdated(), result.imagesSaved(), result.trailersSaved(), result.failures().size());
+                + "{} themes, {} failures", sourceId, result.shows(), result.scraped(), result.unmatched(),
+                result.episodesUpdated(), result.imagesSaved(), result.trailersSaved(), result.themesSaved(),
+                result.failures().size());
         return result;
     }
 
@@ -85,6 +88,7 @@ class TvAutoScrapeRunner {
             if (trailerService.fillMissing(showId)) {
                 progress.trailersSaved++;
             }
+            fillTheme(showId, title, progress);
             renameService.renameIfEnabled(showId, TvRenameTrigger.SCRAPE)
                     .filter(plan -> plan.status() == TvShowRenamePlan.Status.CONFLICT
                             || plan.status() == TvShowRenamePlan.Status.FAILED)
@@ -97,6 +101,17 @@ class TvAutoScrapeRunner {
         }
     }
 
+    /** Fehlende Titelmusik bei sicherem Treffer; ein Fehler dabei hält den Rest nicht auf. */
+    private void fillTheme(long showId, String title, Progress progress) {
+        try {
+            if (themeService.fillShow(showId)) {
+                progress.themesSaved++;
+            }
+        } catch (ErrorResponseException e) {
+            progress.failed(title, AutoScrapeService.THEME + e.getBody().getDetail());
+        }
+    }
+
     /** Sammelt das Ergebnis; Listen werden gekürzt, damit der Job-Zustand klein bleibt. */
     private static final class Progress {
 
@@ -105,6 +120,7 @@ class TvAutoScrapeRunner {
         private int episodesUpdated;
         private int imagesSaved;
         private int trailersSaved;
+        private int themesSaved;
         private final List<String> unmatchedTitles = new ArrayList<>();
         private final List<String> failures = new ArrayList<>();
         private final Set<String> warnings = new LinkedHashSet<>();
@@ -126,7 +142,7 @@ class TvAutoScrapeRunner {
 
         TvAutoScrapeResult toResult(int shows) {
             return new TvAutoScrapeResult(shows, scraped, unmatched, episodesUpdated, imagesSaved, trailersSaved,
-                    unmatchedTitles, failures, List.copyOf(warnings));
+                    themesSaved, unmatchedTitles, failures, List.copyOf(warnings));
         }
 
         private static void addLimited(List<String> entries, String entry) {

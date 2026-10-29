@@ -18,6 +18,7 @@ final class AutoScrapeProgress {
     private int unmatched;
     private int imagesSaved;
     private int trailersSaved;
+    private int themesSaved;
     private final List<String> unmatchedTitles = new ArrayList<>();
     private final List<String> failures = new ArrayList<>();
     private final Set<String> warnings = new LinkedHashSet<>();
@@ -43,6 +44,10 @@ final class AutoScrapeProgress {
         trailersSaved++;
     }
 
+    void themeSaved() {
+        themesSaved++;
+    }
+
     void failed(String title, String message) {
         addLimited(failures, "%s: %s".formatted(title, message));
     }
@@ -54,7 +59,8 @@ final class AutoScrapeProgress {
     }
 
     AutoScrapeResult toResult() {
-        return new AutoScrapeResult(movies, scraped, unmatched, imagesSaved, trailersSaved, unmatchedTitles, failures,
+        return new AutoScrapeResult(movies, scraped, unmatched, imagesSaved, trailersSaved, themesSaved,
+                unmatchedTitles, failures,
                 List.copyOf(warnings));
     }
 

@@ -20,6 +20,7 @@ import de.tiktak.kmm.movie.MovieTrailerService;
 import de.tiktak.kmm.movie.RenameTrigger;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.MediaSource;
+import de.tiktak.kmm.theme.ThemeService;
 import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,6 +41,7 @@ public class AutoScrapeService {
     static final String NOT_RENAMED = "„%s“ nicht umbenannt: %s";
     private static final String UNEXPECTED_ERROR = "unerwarteter Fehler";
     static final String TECHNICAL_DETAILS = "Technische Angaben: ";
+    static final String THEME = "Titelmusik: ";
 
     private final MediaSourceService sourceService;
     private final MovieQueryService queryService;
@@ -48,6 +50,7 @@ public class AutoScrapeService {
     private final MovieRenameService renameService;
     private final ArtworkService artworkService;
     private final MovieTrailerService trailerService;
+    private final ThemeService themeService;
     private final JobService jobService;
     private final TvAutoScrapeRunner tvRunner;
     private final StreamDetailsService streamDetails;
@@ -78,9 +81,9 @@ public class AutoScrapeService {
         }
         context.reportProgress(movieIds.size(), movieIds.size(), null);
         AutoScrapeResult result = progress.toResult();
-        log.info("Auto-scraped source {}: {} movies, {} scraped, {} unmatched, {} images, {} trailers, {} failures",
-                sourceId, result.movies(), result.scraped(), result.unmatched(), result.imagesSaved(),
-                result.trailersSaved(), result.failures().size());
+        log.info("Auto-scraped source {}: {} movies, {} scraped, {} unmatched, {} images, {} trailers, {} themes, "
+                + "{} failures", sourceId, result.movies(), result.scraped(), result.unmatched(), result.imagesSaved(),
+                result.trailersSaved(), result.themesSaved(), result.failures().size());
         return result;
     }
 
@@ -104,6 +107,7 @@ public class AutoScrapeService {
             if (trailerService.fillMissing(movieId)) {
                 progress.trailerSaved();
             }
+            fillTheme(movieId, title, progress);
             renameService.renameIfEnabled(movieId, RenameTrigger.SCRAPE)
                     .filter(plan -> plan.status() == MovieRenamePlan.Status.CONFLICT
                             || plan.status() == MovieRenamePlan.Status.FAILED)
@@ -113,6 +117,17 @@ public class AutoScrapeService {
         } catch (RuntimeException e) {
             log.warn("Auto-scraping movie {} failed", movieId, e);
             progress.failed(title, UNEXPECTED_ERROR);
+        }
+    }
+
+    /** Fehlende Titelmusik bei sicherem Treffer; ein Fehler dabei hält den Rest nicht auf. */
+    private void fillTheme(long movieId, String title, AutoScrapeProgress progress) {
+        try {
+            if (themeService.fillMovie(movieId)) {
+                progress.themeSaved();
+            }
+        } catch (ErrorResponseException e) {
+            progress.failed(title, THEME + e.getBody().getDetail());
         }
     }
 }

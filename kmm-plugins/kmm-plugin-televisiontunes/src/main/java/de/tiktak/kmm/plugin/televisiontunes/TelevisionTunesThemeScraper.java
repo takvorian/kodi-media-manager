@@ -13,6 +13,7 @@ import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.ThemeCandidate;
 import de.tiktak.kmm.plugin.api.ThemeScraper;
+import de.tiktak.kmm.plugin.api.Titles;
 import de.tiktak.kmm.plugin.televisiontunes.TelevisionTunesPages.ShowLink;
 import de.tiktak.kmm.plugin.televisiontunes.TelevisionTunesPages.Track;
 
@@ -76,10 +77,7 @@ public class TelevisionTunesThemeScraper implements ThemeScraper {
 
     private List<ShowLink> showsFor(String title) {
         List<ShowLink> shows = TelevisionTunesPages.shows(client.search(title.strip()));
-        String wanted = TelevisionTunesPages.normalize(title);
-        List<ShowLink> exact = shows.stream()
-                .filter(show -> TelevisionTunesPages.normalize(show.name()).equals(wanted))
-                .toList();
+        List<ShowLink> exact = shows.stream().filter(show -> Titles.same(show.name(), title)).toList();
         return exact.isEmpty() ? shows.stream().limit(MAX_FALLBACK_SHOWS).toList() : exact;
     }
 

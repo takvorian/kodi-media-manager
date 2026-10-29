@@ -11,6 +11,7 @@ import java.util.List;
  * @param episodesUpdated Episoden, bei denen leere Angaben ergänzt wurden
  * @param imagesSaved     neu gespeicherte Bilder (Serie, Staffeln, Standbilder)
  * @param trailersSaved   neu eingetragene Trailer-Links
+ * @param themesSaved     neu gespeicherte Titelmusik ({@code theme.mp3})
  * @param unmatchedTitles Titel der Serien ohne eindeutigen Treffer (gekürzt)
  * @param failures        Fehler je Serie als „Titel: Meldung“ (gekürzt)
  * @param warnings        einmalige Hinweise, z. B. zu nicht eingerichteten Anbietern (gekürzt)
@@ -22,6 +23,7 @@ public record TvAutoScrapeResult(
         int episodesUpdated,
         int imagesSaved,
         int trailersSaved,
+        int themesSaved,
         List<String> unmatchedTitles,
         List<String> failures,
         List<String> warnings) {

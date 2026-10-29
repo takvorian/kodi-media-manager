@@ -52,6 +52,7 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.theme.ThemeService;
 
 @ExtendWith(MockitoExtension.class)
 class AutoScrapeServiceTest {
@@ -88,6 +89,9 @@ class AutoScrapeServiceTest {
     @Mock
     private MovieTrailerService trailerService;
 
+    @Mock
+    private ThemeService themeService;
+
     @InjectMocks
     private AutoScrapeService service;
 
@@ -104,13 +108,13 @@ class AutoScrapeServiceTest {
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
         verify(jobService).submit(anyString(), anyString(), task.capture());
         assertThat(task.getValue().run(new RecordingContext(false)))
-                .isEqualTo(new AutoScrapeResult(0, 0, 0, 0, 0, List.of(), List.of(), List.of()));
+                .isEqualTo(new AutoScrapeResult(0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of()));
     }
 
     @Test
     void runsTheTvShowScrapeForTvSources() {
         givenSource(MediaType.TV_SHOW);
-        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 1, 0, 3, 2, 1, List.of(), List.of(), List.of());
+        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 1, 0, 3, 2, 1, 1, List.of(), List.of(), List.of());
         RecordingContext context = new RecordingContext(false);
         when(tvRunner.run(SOURCE_ID, context)).thenReturn(result);
 
@@ -147,6 +151,9 @@ class AutoScrapeServiceTest {
         when(artworkService.fillMissing(3L)).thenReturn(new ArtworkFillResult(2, List.of("fanart.tv: Key fehlt")));
         when(streamDetails.probeMovieAfterScrape(1L)).thenReturn(Optional.of("ffprobe fehlt"));
         when(trailerService.fillMissing(1L)).thenReturn(true);
+        when(themeService.fillMovie(1L)).thenReturn(false);
+        when(themeService.fillMovie(2L)).thenReturn(true);
+        when(themeService.fillMovie(3L)).thenThrow(problem("TelevisionTunes ist nicht erreichbar"));
         when(renameService.renameIfEnabled(anyLong(), eq(RenameTrigger.SCRAPE))).thenReturn(Optional.empty());
         when(renameService.renameIfEnabled(3L, RenameTrigger.SCRAPE)).thenReturn(Optional.of(new MovieRenamePlan(3,
                 "Ronin", "/filme/ronin", "/filme/Ronin", List.of(), MovieRenamePlan.Status.CONFLICT,
@@ -155,8 +162,9 @@ class AutoScrapeServiceTest {
 
         AutoScrapeResult result = service.run(SOURCE_ID, context);
 
-        assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, 1, List.of("Unbekannt"),
-                List.of("Heat: Technische Angaben: ffprobe fehlt", "Kaputt: TMDB ist nicht erreichbar"),
+        assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, 1, 1, List.of("Unbekannt"),
+                List.of("Heat: Technische Angaben: ffprobe fehlt", "Ronin: Titelmusik: TelevisionTunes ist nicht "
+                        + "erreichbar", "Kaputt: TMDB ist nicht erreichbar"),
                 List.of("fanart.tv: Key fehlt", "„Ronin“ nicht umbenannt: Der Ordner existiert bereits.")));
         verify(streamDetails, never()).probeMovieAfterScrape(3L);
         verify(renameService, never()).renameIfEnabled(4L, RenameTrigger.SCRAPE);
@@ -164,6 +172,7 @@ class AutoScrapeServiceTest {
                 "4/4 null");
         verify(artworkService, never()).fillMissing(4L);
         verify(trailerService, never()).fillMissing(4L);
+        verify(themeService, never()).fillMovie(4L);
     }
 
     @Test

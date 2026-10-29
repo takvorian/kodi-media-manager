@@ -38,9 +38,19 @@ public class MovieBatchService {
 
     /** Trägt für Filme ohne Trailer den besten Vorschlag ein, als Job wie die Stapel-Bearbeitung. */
     public JobSnapshot startTrailerFill(List<Long> movieIds) {
+        return startFill("Fehlende Trailer für %d Filme holen", movieIds, trailerService::fillMissing);
+    }
+
+    /**
+     * Ändert jeden Film der Auswahl als Job wie die Stapel-Bearbeitung.
+     *
+     * @param title  Titel des Jobs mit {@code %d} für die Anzahl der Filme
+     * @param change Änderung je Film; liefert, ob sich etwas geändert hat
+     */
+    public JobSnapshot startFill(String title, List<Long> movieIds, LongPredicate change) {
         List<Long> distinct = List.copyOf(new LinkedHashSet<>(movieIds));
-        return jobService.submit(JOB_KEY, "Fehlende Trailer für %d Filme holen".formatted(distinct.size()),
-                context -> apply(distinct, trailerService::fillMissing, context));
+        return jobService.submit(JOB_KEY, title.formatted(distinct.size()), context -> apply(distinct, change,
+                context));
     }
 
     MovieBatchResult apply(MovieBatchEdit edit, JobContext context) {

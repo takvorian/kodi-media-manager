@@ -37,9 +37,19 @@ public class TvShowBatchService {
 
     /** Trägt für Serien ohne Trailer den besten Vorschlag ein, als Job wie die Stapel-Bearbeitung. */
     public JobSnapshot startTrailerFill(List<Long> showIds) {
+        return startFill("Fehlende Trailer für %d Serien holen", showIds, trailerService::fillMissing);
+    }
+
+    /**
+     * Ändert jede Serie der Auswahl als Job wie die Stapel-Bearbeitung.
+     *
+     * @param title  Titel des Jobs mit {@code %d} für die Anzahl der Serien
+     * @param change Änderung je Serie; liefert, ob sich etwas geändert hat
+     */
+    public JobSnapshot startFill(String title, List<Long> showIds, LongPredicate change) {
         List<Long> distinct = List.copyOf(new LinkedHashSet<>(showIds));
-        return jobService.submit(JOB_KEY, "Fehlende Trailer für %d Serien holen".formatted(distinct.size()),
-                context -> apply(distinct, trailerService::fillMissing, context));
+        return jobService.submit(JOB_KEY, title.formatted(distinct.size()), context -> apply(distinct, change,
+                context));
     }
 
     TvShowBatchResult apply(TvShowBatchEdit edit, JobContext context) {
