@@ -45,6 +45,18 @@ class MovieNfoSync {
     }
 
     /**
+     * Liest eine außerhalb von KMM geänderte NFO ein, damit die Filmansicht ihre Werte zeigt und beim Speichern nicht
+     * ältere zurückschreibt. Eine unlesbare NFO bleibt hier unberücksichtigt.
+     */
+    void readIfOutdated(Movie movie) {
+        try {
+            refreshIfChangedOutside(movie);
+        } catch (NfoChangedOutsideException e) {
+            log.warn("NFO of movie {} not read: {}", movie.getId(), e.getMessage());
+        }
+    }
+
+    /**
      * Liest den Trailer aus der NFO nach, wenn KMM ihn noch nicht kennt, etwa bei Filmen aus einer Version ohne
      * Trailer. Ohne NFO gibt es keinen Trailer.
      *

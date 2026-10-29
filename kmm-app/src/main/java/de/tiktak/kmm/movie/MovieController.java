@@ -78,7 +78,7 @@ public class MovieController {
 
     @GetMapping(MOVIE_PATH)
     public MovieDetails findMovie(@PathVariable long movieId) {
-        return metadataService.findDetails(movieId);
+        return metadataService.open(movieId);
     }
 
     /**

@@ -79,7 +79,7 @@ public class TvShowController {
 
     @GetMapping(SHOW_PATH)
     public TvShowDetails findShow(@PathVariable long showId) {
-        return metadataService.findShow(showId);
+        return metadataService.openShow(showId);
     }
 
     /** Speichert die Metadaten und schreibt sie in die {@code tvshow.nfo}. */
@@ -90,7 +90,7 @@ public class TvShowController {
 
     @GetMapping(EPISODE_PATH)
     public EpisodeDetails findEpisode(@PathVariable long episodeId) {
-        return metadataService.findEpisode(episodeId);
+        return metadataService.openEpisode(episodeId);
     }
 
     /** Speichert die Metadaten und schreibt sie in die NFO der Episode. */

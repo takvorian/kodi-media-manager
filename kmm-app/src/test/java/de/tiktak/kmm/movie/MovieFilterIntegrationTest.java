@@ -7,7 +7,9 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.FileTime;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 
@@ -133,6 +135,20 @@ class MovieFilterIntegrationTest {
         assertThat(values.get("audioCodecs").valueStream().map(JsonNode::asString))
                 .containsExactly("ac3", "dtshd_ma", "truehd");
         assertThat(values.get("subtitleLanguages").valueStream().map(JsonNode::asString)).containsExactly("deu", "ger");
+    }
+
+    @Test
+    void showsAnNfoChangedOutsideKmmWhenTheMovieIsOpened() throws IOException {
+        Path nfo = library.resolve("filme/Pippi/Pippi.nfo");
+        Files.writeString(nfo, "<movie><title>Pippi Langstrumpf</title><year>1969</year><userrating>8</userrating>"
+                + "</movie>");
+        Files.setLastModifiedTime(nfo, FileTime.from(Instant.now().plusSeconds(5)));
+        JsonNode ids = read(mockMvc.post().uri(MovieController.QUERY_IDS_PATH).with(csrf()).contentType(JSON)
+                .content("{\"matchAll\": true, \"conditions\": [{\"field\": \"TITLE\", \"operator\": \"IS\","
+                        + " \"value\": \"Pippi\"}]}").exchange());
+
+        assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, ids.get(0).asLong())).hasStatusOk().bodyJson()
+                .extractingPath("$.metadata.title").isEqualTo("Pippi Langstrumpf");
     }
 
     @Test

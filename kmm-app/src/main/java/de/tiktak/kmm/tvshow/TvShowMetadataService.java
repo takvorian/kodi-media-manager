@@ -43,11 +43,19 @@ public class TvShowMetadataService {
         return show.metadata();
     }
 
-    /** Die Serie; stammen ihre Angaben noch nicht aus der NFO (Ember-Import), wird diese vorher eingelesen. */
-    @Transactional
     public TvShowDetails findShow(long showId) {
         TvShow show = requireShow(showId);
-        nfoSync.readShowIfNotRead(show);
+        return details(show);
+    }
+
+    /**
+     * Die Serie für die Serienansicht. Eine außerhalb von KMM geänderte NFO, oder eine, aus der die Angaben noch nicht
+     * stammen (Ember-Import), wird vorher eingelesen; sonst schriebe das Speichern ältere Werte zurück.
+     */
+    @Transactional
+    public TvShowDetails openShow(long showId) {
+        TvShow show = requireShow(showId);
+        nfoSync.readShowIfOutdated(show);
         return details(show);
     }
 
@@ -111,13 +119,16 @@ public class TvShowMetadataService {
         return details(show);
     }
 
-    /** Die Episode; stammen ihre Angaben noch nicht aus der NFO (Ember-Import), wird diese vorher eingelesen. */
-    @Transactional
     public EpisodeDetails findEpisode(long episodeId) {
         Episode episode = requireEpisode(episodeId);
-        if (!episode.isNfoRead()) {
-            nfoSync.readEpisodesIfNotRead(episodeRepository.findByFilePathHash(episode.getFilePathHash()));
-        }
+        return episodeDetails(episode);
+    }
+
+    /** Die Episode für die Episodenansicht; eine veraltete NFO wird vorher eingelesen wie bei {@link #openShow}. */
+    @Transactional
+    public EpisodeDetails openEpisode(long episodeId) {
+        Episode episode = requireEpisode(episodeId);
+        nfoSync.readEpisodesIfOutdated(episodeRepository.findByFilePathHash(episode.getFilePathHash()));
         return episodeDetails(episode);
     }
 

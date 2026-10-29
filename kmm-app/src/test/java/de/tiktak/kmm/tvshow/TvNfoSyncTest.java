@@ -125,13 +125,13 @@ class TvNfoSyncTest {
     }
 
     @Test
-    void readsNfosNotYetReadWhenOpenedButIgnoresUnreadableOnes() {
+    void readsOutdatedNfosWhenOpenedButIgnoresUnreadableOnes() {
         TvShow show = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
         TvNfoState nfo = new TvNfoState(SHOW_DIRECTORY.resolve("tvshow.nfo"), SYNCHRONIZED);
         when(nfoFiles.findShowNfo(SHOW_DIRECTORY)).thenReturn(Optional.of(nfo));
         when(nfoFiles.readShow(nfo)).thenThrow(mock(NfoException.class));
 
-        nfoSync.readShowIfNotRead(show);
+        nfoSync.readShowIfOutdated(show);
         assertThat(show.isNfoRead()).isFalse();
 
         first.markNfoNotRead();
@@ -139,12 +139,13 @@ class TvNfoSyncTest {
         when(nfoFiles.findEpisodeNfo(EPISODE_FILE)).thenReturn(Optional.of(episodes));
         when(nfoFiles.readEpisodes(episodes)).thenThrow(mock(NfoException.class));
 
-        nfoSync.readEpisodesIfNotRead(List.of(first, second));
+        nfoSync.readEpisodesIfOutdated(List.of(first, second));
         assertThat(first.isNfoRead()).isFalse();
 
         show.markNfoRead();
-        nfoSync.readShowIfNotRead(show);
-        nfoSync.readEpisodesIfNotRead(List.of(second));
+        show.markNfoSynchronized(SYNCHRONIZED);
+        nfoSync.readShowIfOutdated(show);
+        nfoSync.readEpisodesIfOutdated(List.of(second));
         verify(nfoFiles).readShow(nfo);
         verify(nfoFiles).readEpisodes(episodes);
     }

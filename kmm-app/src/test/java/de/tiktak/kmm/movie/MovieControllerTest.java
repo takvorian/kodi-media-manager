@@ -101,7 +101,7 @@ class MovieControllerTest {
 
     @Test
     void returnsMovieDetails() {
-        when(metadataService.findDetails(5L)).thenReturn(details());
+        when(metadataService.open(5L)).thenReturn(details());
 
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, 5L))
                 .hasStatusOk()
@@ -114,7 +114,7 @@ class MovieControllerTest {
 
     @Test
     void answersUnknownMovieWithNotFound() {
-        when(metadataService.findDetails(9L)).thenThrow(new MovieNotFoundException(9L));
+        when(metadataService.open(9L)).thenThrow(new MovieNotFoundException(9L));
 
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, 9L)).hasStatus(404);
     }

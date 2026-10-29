@@ -35,6 +35,14 @@ public class MovieMetadataService {
         return MovieDetails.from(movie, nfoFiles.find(movie.companionFiles()));
     }
 
+    /** Der Film für die Filmansicht; eine außerhalb von KMM geänderte NFO wird vorher eingelesen. */
+    @Transactional
+    public MovieDetails open(long movieId) {
+        Movie movie = require(movieId);
+        nfoSync.readIfOutdated(movie);
+        return MovieDetails.from(movie, nfoFiles.find(movie.companionFiles()));
+    }
+
     @Transactional
     public MovieDetails update(long movieId, MovieMetadata metadata) {
         Movie movie = require(movieId);

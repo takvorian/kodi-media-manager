@@ -70,13 +70,11 @@ class TvNfoSync {
      * Darsteller erhalten, die nur in Embers Daten stehen.
      */
     /**
-     * Liest die {@code tvshow.nfo} ein, wenn die Angaben der Serie noch nicht aus ihr stammen (Ember-Import), damit
-     * etwa die Serienansicht die Werte der NFO zeigt. Eine unlesbare NFO bleibt hier unberücksichtigt.
+     * Liest die {@code tvshow.nfo} ein, wenn sie außerhalb von KMM geändert wurde oder die Angaben noch nicht aus ihr
+     * stammen (Ember-Import), damit die Serienansicht die Werte der NFO zeigt und beim Speichern nicht ältere
+     * zurückschreibt. Eine unlesbare NFO bleibt hier unberücksichtigt.
      */
-    void readShowIfNotRead(TvShow show) {
-        if (show.isNfoRead()) {
-            return;
-        }
+    void readShowIfOutdated(TvShow show) {
         try {
             refreshShowIfChangedOutside(show);
         } catch (TvShowProblemException e) {
@@ -84,11 +82,8 @@ class TvNfoSync {
         }
     }
 
-    /** Wie {@link #readShowIfNotRead}, für alle Episoden einer Datei. */
-    void readEpisodesIfNotRead(List<Episode> sameFile) {
-        if (sameFile.stream().allMatch(Episode::isNfoRead)) {
-            return;
-        }
+    /** Wie {@link #readShowIfOutdated}, für alle Episoden einer Datei. */
+    void readEpisodesIfOutdated(List<Episode> sameFile) {
         try {
             refreshEpisodesIfChangedOutside(sameFile);
         } catch (TvShowProblemException e) {
