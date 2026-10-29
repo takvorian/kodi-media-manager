@@ -38,4 +38,9 @@ public record EpisodeExtras(
         playCount = playCount != null && playCount >= 0 ? playCount : null;
         streams = streams == null ? StreamDetails.EMPTY : streams;
     }
+
+    /** Dieselben Angaben mit anderen technischen Angaben. */
+    public EpisodeExtras withStreams(StreamDetails newStreams) {
+        return new EpisodeExtras(directors, writers, actors, ratings, playCount, lastPlayed, newStreams);
+    }
 }

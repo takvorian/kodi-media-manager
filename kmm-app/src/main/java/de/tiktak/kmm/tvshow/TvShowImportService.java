@@ -96,6 +96,7 @@ public class TvShowImportService {
                     episodeImport.metadata().title()));
             episode.applyMetadata(episodeImport.metadata());
             episode.applyExtras(keepingKnownStreams(episodeImport.extras(), episode));
+            episode.markNfoNotRead();
             if (episodeImport.addedAt() != null) {
                 episode.changeAddedAt(episodeImport.addedAt());
             }
@@ -117,8 +118,7 @@ public class TvShowImportService {
             if (!extras.streams().isEmpty()) {
                 return extras;
             }
-            return new EpisodeExtras(extras.directors(), extras.writers(), extras.actors(), extras.ratings(),
-                    extras.playCount(), extras.lastPlayed(), episode.extras().streams());
+            return extras.withStreams(episode.extras().streams());
         }
     }
 

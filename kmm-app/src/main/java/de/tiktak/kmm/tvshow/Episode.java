@@ -127,6 +127,13 @@ public class Episode {
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
 
+    /**
+     * Ob die Angaben aus der NFO stammen. Bei Episoden aus dem Ember-Import stammen sie aus Embers Datenbank und
+     * können von der NFO abweichen; dann liest KMM die NFO vor dem ersten Neuschreiben ein.
+     */
+    @Column(name = "nfo_read", nullable = false)
+    private boolean nfoRead;
+
     Episode(long tvShowId, String filePath, int season, int episode, String title) {
         this.tvShowId = tvShowId;
         this.filePath = Objects.requireNonNull(filePath, "filePath must not be null");
@@ -203,6 +210,15 @@ public class Episode {
         this.playCount = newPlayCount;
         this.lastPlayedAt = newLastPlayedAt;
         this.userRating = newUserRating;
+    }
+
+    void markNfoRead() {
+        this.nfoRead = true;
+    }
+
+    /** Die Angaben stammen nicht aus der NFO, etwa nach einem Import. */
+    void markNfoNotRead() {
+        this.nfoRead = false;
     }
 
     void markNfoSynchronized(Instant modifiedAt) {

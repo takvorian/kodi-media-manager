@@ -141,6 +141,31 @@ class TvShowLibraryIntegrationTest {
     }
 
     @Test
+    void readsTheNfoOfAnEmberEpisodeBeforeWritingIt() throws IOException {
+        createFile("ALF (1986)/Staffel 1/ALF - S01E02 - Der Fremde.avi");
+        Path nfo = library.resolve("ALF (1986)/Staffel 1/ALF - S01E02 - Der Fremde.nfo");
+        Files.writeString(nfo, """
+                <episodedetails><title>Der Fremde</title><season>1</season><episode>2</episode>
+                <director>Tom Patchett</director>
+                <actor><name>Paul Fusco</name><role>ALF</role><tmdbid>1234</tmdbid></actor></episodedetails>""");
+        scan(createSource());
+        long alfId = idOf(mockMvc.get().uri(TvShowController.SHOWS_PATH).param("search", "alf").exchange());
+        long episodeId = read(mockMvc.get().uri(TvShowController.SHOW_PATH, alfId).exchange())
+                .get("episodes").get(0).get("id").asLong();
+        jdbcClient.sql("DELETE FROM episode_credit WHERE episode_id = :id").param("id", episodeId).update();
+        jdbcClient.sql("UPDATE episode SET nfo_read = FALSE WHERE id = :id").param("id", episodeId).update();
+
+        assertThat(mockMvc.put().uri(TvShowController.EPISODE_METADATA_PATH, episodeId).with(csrf()).contentType(JSON)
+                .content("{\"title\": \"Der Fremde (neu)\"}")).hasStatusOk();
+
+        assertThat(Files.readString(nfo)).contains("<title>Der Fremde (neu)</title>",
+                "<director>Tom Patchett</director>", "<name>Paul Fusco</name>", "<tmdbid>1234</tmdbid>");
+        assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId)).bodyJson().isLenientlyEqualTo("""
+                {"extras": {"directors": ["Tom Patchett"], "actors": [{"name": "Paul Fusco"}]}}
+                """);
+    }
+
+    @Test
     void answersUnknownShowsAndEpisodesAndRejectsInvalidMetadata() {
         assertThat(mockMvc.get().uri(TvShowController.SHOW_PATH, 999L)).hasStatus(404);
         assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, 999L)).hasStatus(404);

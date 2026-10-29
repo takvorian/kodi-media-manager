@@ -49,16 +49,17 @@ class TvNfoSync {
      */
     void refreshEpisodesIfChangedOutside(List<Episode> sameFile) {
         Optional<TvNfoState> nfo = nfoFiles.findEpisodeNfo(sameFile.getFirst().file());
-        if (nfo.isEmpty() || sameFile.stream().allMatch(episode ->
-                nfo.get().modifiedAt().equals(episode.getNfoModifiedAt()))) {
+        if (nfo.isEmpty() || sameFile.stream().allMatch(episode -> episode.isNfoRead()
+                && nfo.get().modifiedAt().equals(episode.getNfoModifiedAt()))) {
             return;
         }
         List<EpisodeNfo> episodes = read(nfo.get(), nfoFiles::readEpisodes);
         for (Episode episode : sameFile) {
             matching(episode, episodes, sameFile.size() == 1).ifPresent(match -> applyEpisode(episode, match));
             episode.markNfoSynchronized(nfo.get().modifiedAt());
+            episode.markNfoRead();
         }
-        log.info("NFO {} was changed outside KMM and has been read again", nfo.get().file());
+        log.info("NFO {} was changed outside KMM or not read yet and has been read", nfo.get().file());
     }
 
     static void applyShow(TvShow show, TvShowNfo nfo, String fallbackTitle, Integer fallbackYear) {
@@ -103,9 +104,18 @@ class TvNfoSync {
                         : Optional.empty());
     }
 
+    /**
+     * Übernimmt die NFO. Stammen die Angaben bisher nicht aus der NFO (Ember-Import) und hat sie keine technischen
+     * Angaben, bleiben die bekannten erhalten.
+     */
     void applyEpisode(Episode episode, EpisodeNfo nfo) {
+        EpisodeExtras extras = TvNfoMapper.toExtras(nfo, clock.getZone());
+        if (!episode.isNfoRead() && extras.streams().isEmpty()) {
+            extras = extras.withStreams(episode.extras().streams());
+        }
         episode.applyMetadata(TvNfoMapper.toMetadata(nfo, episode.getTitle()));
-        episode.applyExtras(TvNfoMapper.toExtras(nfo, clock.getZone()));
+        episode.applyExtras(extras);
+        episode.markNfoRead();
         Instant dateAdded = TvNfoMapper.toInstant(nfo.dateAdded(), clock.getZone());
         if (dateAdded != null) {
             episode.changeAddedAt(dateAdded);

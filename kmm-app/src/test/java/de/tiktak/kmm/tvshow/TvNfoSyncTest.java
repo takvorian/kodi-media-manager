@@ -52,6 +52,8 @@ class TvNfoSyncTest {
         second = new Episode(1L, EPISODE_FILE.toString(), 1, 2, "Teil 2");
         first.markNfoSynchronized(SYNCHRONIZED);
         second.markNfoSynchronized(SYNCHRONIZED);
+        first.markNfoRead();
+        second.markNfoRead();
     }
 
     @Test
@@ -67,6 +69,25 @@ class TvNfoSyncTest {
         assertThat(second.getTitle()).isEqualTo("Neu");
         assertThat(first.getNfoModifiedAt()).isEqualTo(CHANGED);
         assertThat(second.getNfoModifiedAt()).isEqualTo(CHANGED);
+    }
+
+    @Test
+    void readsTheNfoOfEmberEpisodesOnceAndKeepsTheirStreamsIfItHasNone() {
+        StreamDetails ember = new StreamDetails(List.of(), List.of(new StreamDetails.Audio("ac3", "deu", 2, null)),
+                List.of());
+        first.applyExtras(EpisodeExtras.EMPTY.withStreams(ember));
+        first.markNfoNotRead();
+        TvNfoState unchanged = new TvNfoState(EPISODE_NFO, SYNCHRONIZED);
+        when(nfoFiles.findEpisodeNfo(EPISODE_FILE)).thenReturn(Optional.of(unchanged));
+        when(nfoFiles.readEpisodes(unchanged)).thenReturn(List.of(episode(1, "Heimweh", 4), episode(2, "Neu", null)));
+
+        nfoSync.refreshEpisodesIfChangedOutside(List.of(first, second));
+        nfoSync.refreshEpisodesIfChangedOutside(List.of(first, second));
+
+        assertThat(first.getTitle()).isEqualTo("Heimweh");
+        assertThat(first.extras().streams()).isEqualTo(ember);
+        assertThat(first.isNfoRead()).isTrue();
+        verify(nfoFiles).readEpisodes(unchanged);
     }
 
     @Test

@@ -83,6 +83,7 @@ class TvShowImportServiceTest {
         ReflectionTestUtils.setField(known, "id", 7L);
         known.markNfoRead();
         Episode knownEpisode = new Episode(7, EPISODE_FILE, 1, 1, "Alt");
+        knownEpisode.markNfoRead();
         knownEpisode.applyExtras(new EpisodeExtras(List.of(), List.of(), List.of(), List.of(), null, null, STREAMS));
         when(showRepository.findByDirectoryPathHashIn(anyCollection())).thenReturn(List.of(known));
         when(episodeRepository.findByTvShowIdIn(anyCollection())).thenReturn(List.of(knownEpisode));
@@ -96,6 +97,7 @@ class TvShowImportServiceTest {
         assertThat(known.isNfoRead()).as("Angaben stammen aus Ember, nicht aus der NFO").isFalse();
         assertThat(result).isEqualTo(new TvImportResult(false, false));
         assertThat(knownEpisode.getTitle()).isEqualTo("Pilot (1)");
+        assertThat(knownEpisode.isNfoRead()).isFalse();
         assertThat(knownEpisode.extras().streams()).isEqualTo(STREAMS);
         assertThat(knownEpisode.extras().playCount()).isEqualTo(2);
         assertThat(knownEpisode.getAddedAt()).isEqualTo(ADDED_AT);
