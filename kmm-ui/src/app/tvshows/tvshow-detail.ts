@@ -21,6 +21,7 @@ import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
+import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { TvPeople } from './tv-people';
 import { TvShowRenamePlan, tvRenameConfirmation } from './tv-rename';
@@ -69,6 +70,7 @@ export interface SeasonWithEpisodes {
     TvPeople,
     TvShowOnlineSearch,
     ArtworkGallery,
+    ThemeEditor,
     TrailerEditor,
   ],
   templateUrl: './tvshow-detail.html',
@@ -100,6 +102,7 @@ export class TvShowDetail {
     this.show.hasValue() ? this.show.value().metadata : null,
   );
   protected readonly trailerEndpoint = computed(() => `${TVSHOWS_URL}/${this.id()}/trailer`);
+  protected readonly themeEndpoint = computed(() => `${TVSHOWS_URL}/${this.id()}/theme`);
   protected readonly seasons = computed<SeasonWithEpisodes[]>(() =>
     this.show.hasValue() ? groupBySeason(this.show.value()) : [],
   );

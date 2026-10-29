@@ -325,6 +325,25 @@ describe('MovieList', () => {
     expect(updated).toEqual([job]);
   });
 
+  it('fetches the missing themes of the chosen movies as a job', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.fill-themes-button')!.click();
+    const fill = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/themes/fill` });
+    expect(fill.request.body).toEqual({ movieIds: [heat.id] });
+    const job = {
+      id: 't',
+      key: 'movies-batch',
+      title: 'Fehlende Titelmusik',
+      status: 'RUNNING',
+    } as Job;
+    fill.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('asks for at least one change before editing together', async () => {
     await respond(page([heat]));
     element().querySelector<HTMLInputElement>('.choose input')!.click();

@@ -249,6 +249,26 @@ describe('TvShowList', () => {
     expect(updated).toEqual([job]);
   });
 
+  it('fetches the missing themes of the chosen shows as a job', async () => {
+    await respond(page([alf]));
+    element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+    httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1]);
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.fill-themes-button')!.click();
+    const fill = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/themes/fill` });
+    expect(fill.request.body).toEqual({ showIds: [1] });
+    const job = {
+      id: 't',
+      key: 'tvshows-batch',
+      title: 'Fehlende Titelmusik',
+      status: 'RUNNING',
+    } as Job;
+    fill.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('shows an error when loading fails', async () => {
     fixture.detectChanges();
     httpTesting.match((req) => req.url === FILTERS_URL).forEach((req) => req.flush([]));

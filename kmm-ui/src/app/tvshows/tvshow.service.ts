@@ -56,6 +56,10 @@ export class TvShowService {
   }
 
   /** Holt für die Serien ohne Trailer den besten Vorschlag, als Job. */
+  fillMissingThemes(showIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/themes/fill`, { showIds });
+  }
+
   fillMissingTrailers(showIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/trailers/fill`, { showIds });
   }

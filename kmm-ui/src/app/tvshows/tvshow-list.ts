@@ -199,6 +199,22 @@ export class TvShowList {
     });
   }
 
+  /** Holt für die Auswahl fehlende Titelmusik (theme.mp3), nur bei gleichem Titel beim Anbieter. */
+  protected fillMissingThemes(): void {
+    const ids = [...this.chosen()];
+    if (
+      !this.confirm(
+        `Für ${ids.length} Serien fehlende Titelmusik holen? Sie wird als theme.mp3 im Ordner gespeichert.`,
+      )
+    ) {
+      return;
+    }
+    this.tvShowService.fillMissingThemes(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   /** Trägt für die ausgewählten Serien ohne Trailer den besten Vorschlag ein; vorhandene bleiben. */
   protected fillMissingTrailers(): void {
     const showIds = [...this.chosen()];

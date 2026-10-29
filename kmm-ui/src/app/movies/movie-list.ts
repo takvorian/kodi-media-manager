@@ -210,6 +210,22 @@ export class MovieList {
     });
   }
 
+  /** Holt für die Auswahl fehlende Titelmusik (theme.mp3), nur bei gleichem Titel beim Anbieter. */
+  protected fillMissingThemes(): void {
+    const ids = this.chosenIds();
+    if (
+      !this.confirm(
+        `Für ${ids.length} Filme fehlende Titelmusik holen? Sie wird als theme.mp3 im Ordner gespeichert.`,
+      )
+    ) {
+      return;
+    }
+    this.movieService.fillMissingThemes(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   /** Trägt für die ausgewählten Filme ohne Trailer den besten Vorschlag ein; vorhandene bleiben. */
   protected fillMissingTrailers(): void {
     const movieIds = this.chosenIds();

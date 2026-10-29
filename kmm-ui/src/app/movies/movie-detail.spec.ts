@@ -7,6 +7,7 @@ import {
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 
 import { EMPTY_SUPPLEMENT, MovieDetails } from './movie';
 import { MovieDetail } from './movie-detail';
@@ -14,6 +15,8 @@ import { MOVIES_URL } from './movie.service';
 import { MovieRenamePlan } from './movie-rename';
 import { CollectionReference } from './scraper';
 import { CONFIRM } from '../shared/confirm';
+import { NO_THEME } from '../shared/testing';
+import { ThemeService } from '../shared/theme';
 
 describe('MovieDetail', () => {
   const heat: MovieDetails = {
@@ -75,6 +78,7 @@ describe('MovieDetail', () => {
     TestBed.configureTestingModule({
       imports: [MovieDetail],
       providers: [
+        { provide: ThemeService, useValue: { info: () => of(NO_THEME) } },
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),

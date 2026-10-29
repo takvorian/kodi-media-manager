@@ -17,6 +17,7 @@ import { SettingsService } from '../settings/settings.service';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
+import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
@@ -50,6 +51,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MovieOnlineSearch,
     MovieSupplementView,
     StreamDetailsView,
+    ThemeEditor,
     TrailerEditor,
   ],
   templateUrl: './movie-detail.html',
@@ -81,6 +83,7 @@ export class MovieDetail {
   /** Sammlung des übernommenen Treffers; nach dem Speichern wird der Film ihrem Set zugeordnet, wenn eingestellt. */
   private readonly adoptedCollection = signal<CollectionReference | null>(null);
   protected readonly trailerEndpoint = computed(() => `${MOVIES_URL}/${this.id()}/trailer`);
+  protected readonly themeEndpoint = computed(() => `${MOVIES_URL}/${this.id()}/theme`);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),

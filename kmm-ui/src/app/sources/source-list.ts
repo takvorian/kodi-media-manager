@@ -275,13 +275,14 @@ function autoScrapeSummary(job: Job): string {
     const result = job.result as AutoScrapeResult;
     const errors = result.failures.length > 0 ? `, ${result.failures.length} Fehler` : '';
     const trailers = result.trailersSaved ? `, ${result.trailersSaved} Trailer eingetragen` : '';
+    const themes = result.themesSaved ? `, ${result.themesSaved} Titelmusik gespeichert` : '';
     const items =
       result.shows === undefined
         ? `${result.movies} Filme`
         : `${result.shows} Serien, ${result.episodesUpdated} Episoden ergänzt`;
     return (
       `${job.title} abgeschlossen: ${items}, ${result.scraped} neu zugeordnet, ` +
-      `${result.unmatched} ohne Treffer, ${result.imagesSaved} Bilder gespeichert${trailers}${errors}.`
+      `${result.unmatched} ohne Treffer, ${result.imagesSaved} Bilder gespeichert${trailers}${themes}${errors}.`
     );
   }
   return unsuccessfulSummary(job);

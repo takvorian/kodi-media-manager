@@ -3,9 +3,11 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { of } from 'rxjs';
 
 import { ScraperInfo } from '../movies/scraper';
-import { flushWhenRequested } from '../shared/testing';
+import { NO_THEME, flushWhenRequested } from '../shared/testing';
+import { ThemeService } from '../shared/theme';
 import { TvShowDetails, TvShowProposal } from './tvshow';
 import { TvShowDetail } from './tvshow-detail';
 import { TVSHOWS_URL, TV_SHOW_SCRAPERS_URL } from './tvshow.service';
@@ -123,6 +125,7 @@ describe('TvShowDetail', () => {
     TestBed.configureTestingModule({
       imports: [TvShowDetail],
       providers: [
+        { provide: ThemeService, useValue: { info: () => of(NO_THEME) } },
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),

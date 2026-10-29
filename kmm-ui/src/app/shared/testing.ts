@@ -1,6 +1,8 @@
 import { HttpTestingController } from '@angular/common/http/testing';
 import { ComponentFixture } from '@angular/core/testing';
 
+import { ThemeInfo } from './theme';
+
 const MAX_RENDER_ROUNDS = 10;
 
 /**
@@ -24,3 +26,11 @@ export async function flushWhenRequested(
   }
   throw new Error(`No request to ${url}`);
 }
+
+/** Antwort ohne theme.mp3 für Ansichten, deren Titelmusik-Karte beim Rendern nachfragt. */
+export const NO_THEME: ThemeInfo = {
+  exists: false,
+  path: 'theme.mp3',
+  sizeBytes: null,
+  modifiedAt: null,
+};
