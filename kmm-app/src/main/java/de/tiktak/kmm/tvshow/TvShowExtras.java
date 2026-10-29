@@ -33,4 +33,9 @@ public record TvShowExtras(List<TvActor> actors, List<TvRating> ratings, SortedM
         }
         seasonNames = Collections.unmodifiableSortedMap(names);
     }
+
+    /** Dieselben Angaben mit anderen Darstellern. */
+    public TvShowExtras withActors(List<TvActor> newActors) {
+        return new TvShowExtras(newActors, ratings, seasonNames);
+    }
 }

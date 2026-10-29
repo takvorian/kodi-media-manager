@@ -24,6 +24,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import de.tiktak.kmm.nfo.EpisodeNfo;
+import de.tiktak.kmm.nfo.NfoActor;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.nfo.TvShowNfo;
@@ -88,6 +89,39 @@ class TvNfoSyncTest {
         assertThat(first.extras().streams()).isEqualTo(ember);
         assertThat(first.isNfoRead()).isTrue();
         verify(nfoFiles).readEpisodes(unchanged);
+    }
+
+    @Test
+    void keepsGuestStarsThatOnlyEmberKnewWhenReadingTheNfoFirst() {
+        first.applyExtras(EpisodeExtras.EMPTY.withActors(List.of(new TvActor("Ricky Gervais", "Tony", null),
+                new TvActor("Tim Plester", "Julian", null))));
+        first.markNfoNotRead();
+        TvNfoState unchanged = new TvNfoState(EPISODE_NFO, SYNCHRONIZED);
+        when(nfoFiles.findEpisodeNfo(EPISODE_FILE)).thenReturn(Optional.of(unchanged));
+        EpisodeNfo withActor = new EpisodeNfo("Heimweh", null, 1, 1, null, null, null, null, Map.of(), List.of(),
+                List.of(), List.of(), List.of(new NfoActor("Ricky Gervais", "Tony Johnson", 0, null)), null, null,
+                null, null, StreamDetails.EMPTY);
+        when(nfoFiles.readEpisodes(unchanged)).thenReturn(List.of(withActor, episode(2, "Neu", null)));
+
+        nfoSync.refreshEpisodesIfChangedOutside(List.of(first, second));
+
+        assertThat(first.extras().actors()).containsExactly(new TvActor("Ricky Gervais", "Tony Johnson", null),
+                new TvActor("Tim Plester", "Julian", null));
+    }
+
+    @Test
+    void keepsActorsOnlyEmberKnewWhenReadingAShowNfoFirst() {
+        TvShow show = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
+        show.applyExtras(TvShowExtras.EMPTY.withActors(List.of(new TvActor("Max Wright", "Willie", null))));
+
+        TvNfoSync.applyShow(show, new TvShowNfo("ALF", null, null, null, null, null, null, null, null, null, null,
+                Map.of(), null, List.of(new NfoActor("Paul Fusco", "ALF", 0, null)), null, null), "ALF", 1986);
+        assertThat(show.extras().actors()).extracting(TvActor::name).containsExactly("Paul Fusco", "Max Wright");
+
+        TvNfoSync.applyShow(show, new TvShowNfo("ALF", null, null, null, null, null, null, null, null, null, null,
+                Map.of(), null, List.of(new NfoActor("Paul Fusco", "ALF", 0, null)), null, null), "ALF", 1986);
+        assertThat(show.extras().actors()).as("danach gilt die NFO").extracting(TvActor::name)
+                .containsExactly("Paul Fusco");
     }
 
     @Test

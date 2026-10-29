@@ -4,7 +4,10 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Component;
 
@@ -62,9 +65,17 @@ class TvNfoSync {
         log.info("NFO {} was changed outside KMM or not read yet and has been read", nfo.get().file());
     }
 
+    /**
+     * Übernimmt die {@code tvshow.nfo}. Stammen die Angaben bisher nicht aus der NFO (Ember-Import), bleiben
+     * Darsteller erhalten, die nur in Embers Daten stehen.
+     */
     static void applyShow(TvShow show, TvShowNfo nfo, String fallbackTitle, Integer fallbackYear) {
+        TvShowExtras extras = TvNfoMapper.toExtras(nfo);
+        if (!show.isNfoRead()) {
+            extras = extras.withActors(withMissingActors(extras.actors(), show.extras().actors()));
+        }
         show.applyMetadata(TvNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
-        show.applyExtras(TvNfoMapper.toExtras(nfo));
+        show.applyExtras(extras);
         if (nfo.trailer() != null) {
             show.changeTrailer(nfo.trailer());
         }
@@ -105,13 +116,17 @@ class TvNfoSync {
     }
 
     /**
-     * Übernimmt die NFO. Stammen die Angaben bisher nicht aus der NFO (Ember-Import) und hat sie keine technischen
-     * Angaben, bleiben die bekannten erhalten.
+     * Übernimmt die NFO. Stammen die Angaben bisher nicht aus der NFO (Ember-Import), bleiben Darsteller erhalten, die
+     * nur in Embers Daten stehen (etwa Gaststars), und ohne technische Angaben in der NFO die bekannten.
      */
     void applyEpisode(Episode episode, EpisodeNfo nfo) {
         EpisodeExtras extras = TvNfoMapper.toExtras(nfo, clock.getZone());
-        if (!episode.isNfoRead() && extras.streams().isEmpty()) {
-            extras = extras.withStreams(episode.extras().streams());
+        if (!episode.isNfoRead()) {
+            EpisodeExtras known = episode.extras();
+            extras = extras.withActors(withMissingActors(extras.actors(), known.actors()));
+            if (extras.streams().isEmpty()) {
+                extras = extras.withStreams(known.streams());
+            }
         }
         episode.applyMetadata(TvNfoMapper.toMetadata(nfo, episode.getTitle()));
         episode.applyExtras(extras);
@@ -120,6 +135,13 @@ class TvNfoSync {
         if (dateAdded != null) {
             episode.changeAddedAt(dateAdded);
         }
+    }
+
+    /** Die Darsteller der NFO, dahinter die bekannten, die in der NFO fehlen. */
+    static List<TvActor> withMissingActors(List<TvActor> fromNfo, List<TvActor> known) {
+        Set<String> names = fromNfo.stream().map(TvActor::name).collect(Collectors.toSet());
+        return Stream.concat(fromNfo.stream(), known.stream().filter(actor -> !names.contains(actor.name())))
+                .toList();
     }
 
     private static <T> T read(TvNfoState nfo, Function<TvNfoState, T> reader) {

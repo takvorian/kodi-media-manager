@@ -39,6 +39,11 @@ public record EpisodeExtras(
         streams = streams == null ? StreamDetails.EMPTY : streams;
     }
 
+    /** Dieselben Angaben mit anderen Darstellern. */
+    public EpisodeExtras withActors(List<TvActor> newActors) {
+        return new EpisodeExtras(directors, writers, newActors, ratings, playCount, lastPlayed, streams);
+    }
+
     /** Dieselben Angaben mit anderen technischen Angaben. */
     public EpisodeExtras withStreams(StreamDetails newStreams) {
         return new EpisodeExtras(directors, writers, actors, ratings, playCount, lastPlayed, newStreams);
