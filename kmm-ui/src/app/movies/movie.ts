@@ -118,23 +118,3 @@ export interface MovieDetails {
   /** Trailer-Link der NFO, den Kodi abspielt. */
   readonly trailer: string | null;
 }
-
-/** Ein Trailer-Vorschlag; `url` kommt in die NFO, `webUrl` öffnet ihn im Browser. */
-export interface TrailerOption {
-  readonly name: string;
-  readonly url: string;
-  readonly webUrl: string;
-  readonly previewUrl: string | null;
-  readonly language: string | null;
-  readonly type: string;
-  readonly official: boolean;
-  readonly height: number | null;
-  readonly published: string | null;
-  readonly scraperName: string;
-}
-
-/** Vorschläge, die besten zuerst, und Hinweise zu nicht eingerichteten oder fehlerhaften Anbietern. */
-export interface TrailerOptions {
-  readonly candidates: readonly TrailerOption[];
-  readonly warnings: readonly string[];
-}

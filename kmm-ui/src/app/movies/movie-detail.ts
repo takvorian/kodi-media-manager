@@ -17,6 +17,7 @@ import { SettingsService } from '../settings/settings.service';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
+import { TrailerEditor } from '../shared/trailer-editor';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
 import {
@@ -28,8 +29,7 @@ import {
 } from './movie-metadata-form';
 import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
 import { MovieSupplementView } from './movie-supplement';
-import { MovieTrailer } from './movie-trailer';
-import { MovieService } from './movie.service';
+import { MOVIES_URL, MovieService } from './movie.service';
 import { MovieRenamePlan, renameConfirmation } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
 import { CollectionReference } from './scraper';
@@ -49,8 +49,8 @@ const SNACKBAR_DURATION_MS = 5000;
     MovieArtwork,
     MovieOnlineSearch,
     MovieSupplementView,
-    MovieTrailer,
     StreamDetailsView,
+    TrailerEditor,
   ],
   templateUrl: './movie-detail.html',
   styleUrl: './movie-detail.scss',
@@ -80,6 +80,7 @@ export class MovieDetail {
   private readonly adoptedProposal = signal(false);
   /** Sammlung des übernommenen Treffers; nach dem Speichern wird der Film ihrem Set zugeordnet, wenn eingestellt. */
   private readonly adoptedCollection = signal<CollectionReference | null>(null);
+  protected readonly trailerEndpoint = computed(() => `${MOVIES_URL}/${this.id()}/trailer`);
   protected readonly movie = rxResource({
     params: () => this.id(),
     stream: ({ params }) => this.movieService.findMovie(params),
@@ -289,8 +290,8 @@ export class MovieDetail {
   }
 
   /** Übernimmt nur den Trailer, damit ungespeicherte Änderungen im Formular bleiben. */
-  protected showTrailer(changed: MovieDetails): void {
-    this.movie.update((details) => details && { ...details, trailer: changed.trailer });
+  protected showTrailer(trailer: string | null): void {
+    this.movie.update((details) => details && { ...details, trailer });
   }
 
   private showStreams(streams: StreamDetails): void {

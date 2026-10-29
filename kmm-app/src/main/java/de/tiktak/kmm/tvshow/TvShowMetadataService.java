@@ -52,7 +52,7 @@ public class TvShowMetadataService {
         TvShow show = requireShow(showId);
         nfoSync.refreshShowIfChangedOutside(show);
         TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(metadata,
-                show.extras())));
+                show.extras(), show.nfoTrailer())));
         show.applyMetadata(metadata);
         show.markNfoSynchronized(written.modifiedAt());
         log.info("Metadata of TV show {} saved to {}", showId, written.file());
@@ -77,11 +77,31 @@ public class TvShowMetadataService {
             return false;
         }
         TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(changed,
-                show.extras())));
+                show.extras(), show.nfoTrailer())));
         show.applyMetadata(changed);
         show.markNfoSynchronized(written.modifiedAt());
         events.publishEvent(new TvShowFilesChangedEvent(showId));
         return true;
+    }
+
+    /**
+     * Ändert den Trailer-Link einer Serie in Datenbank und NFO. Eine außerhalb von KMM geänderte NFO wird vorher
+     * eingelesen.
+     *
+     * @param trailer Link oder {@code null} für „kein Trailer“
+     * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
+     */
+    @Transactional
+    public TvShowDetails changeTrailer(long showId, String trailer) {
+        TvShow show = requireShow(showId);
+        nfoSync.refreshShowIfChangedOutside(show);
+        show.changeTrailer(trailer);
+        TvNfoState written = write(() -> nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(show.metadata(),
+                show.extras(), show.nfoTrailer())));
+        show.markNfoSynchronized(written.modifiedAt());
+        log.info("Trailer of TV show {} set to {}", showId, trailer);
+        events.publishEvent(new TvShowFilesChangedEvent(showId));
+        return details(show);
     }
 
     public EpisodeDetails findEpisode(long episodeId) {

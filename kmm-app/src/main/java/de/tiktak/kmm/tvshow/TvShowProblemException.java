@@ -53,6 +53,18 @@ public class TvShowProblemException extends ErrorResponseException {
                 cause.getMessage() + " Bitte Schreibrechte im Serienordner prüfen.", cause);
     }
 
+    static TvShowProblemException missingIdsForTrailers() {
+        return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Serie nicht eindeutig zugeordnet",
+                "Für die Trailersuche wird eine TVDB-, TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ "
+                        + "nutzen.", null);
+    }
+
+    static TvShowProblemException invalidTrailer(String url) {
+        return new TvShowProblemException(HttpStatus.BAD_REQUEST, "Ungültiger Trailer",
+                "„%s“ ist kein Link, den Kodi abspielen kann (plugin://, http(s)://, smb:// oder nfs://)."
+                        .formatted(url), null);
+    }
+
     static TvShowProblemException unknownScraper(String scraperId) {
         return new TvShowProblemException(HttpStatus.NOT_FOUND, "Scraper nicht gefunden",
                 "Es ist kein Serien-Scraper mit der ID '%s' installiert und aktiv.".formatted(scraperId), null);

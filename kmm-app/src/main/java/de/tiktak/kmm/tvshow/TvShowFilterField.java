@@ -32,6 +32,7 @@ public enum TvShowFilterField implements FilterField {
     TMDB_ID(ValueType.NONE, EMPTY, NOT_EMPTY),
     IMDB_ID(ValueType.NONE, EMPTY, NOT_EMPTY),
     NFO(ValueType.NONE, EMPTY, NOT_EMPTY),
+    TRAILER(ValueType.NONE, EMPTY, NOT_EMPTY),
     /** ID der Quelle. */
     SOURCE(ValueType.NUMBER, IS, IS_NOT),
     /** Vor wie vielen Tagen die Serie hinzugefügt wurde. */

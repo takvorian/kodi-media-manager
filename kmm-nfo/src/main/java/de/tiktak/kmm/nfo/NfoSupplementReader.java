@@ -43,8 +43,9 @@ final class NfoSupplementReader {
                 trailer(movie));
     }
 
-    private static String trailer(Element movie) {
-        String trailer = NfoDocuments.text(movie, NfoElements.TRAILER);
+    /** Der Trailer-Link oder {@link MovieNfoSupplement#NO_TRAILER}, wenn das Element fehlt. */
+    static String trailer(Element element) {
+        String trailer = NfoDocuments.text(element, NfoElements.TRAILER);
         return trailer == null ? MovieNfoSupplement.NO_TRAILER : trailer;
     }
 

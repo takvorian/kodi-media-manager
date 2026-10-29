@@ -50,13 +50,16 @@ final class TvNfoMapper {
         return new TvShowExtras(actors(nfo.actors()), ratings(nfo.ratings()), nfo.seasonNames());
     }
 
-    static TvShowNfo toNfo(TvShowMetadata metadata, TvShowExtras extras) {
+    /**
+     * @param trailer Trailer-Link, {@link TvShowNfo#NO_TRAILER} oder {@code null}, wenn unbekannt
+     */
+    static TvShowNfo toNfo(TvShowMetadata metadata, TvShowExtras extras, String trailer) {
         return new TvShowNfo(metadata.title(), metadata.originalTitle(), metadata.sortTitle(), metadata.premiered(),
                 metadata.plot(), metadata.runtime(), metadata.mpaa(), metadata.status(), metadata.genres(),
                 metadata.studios(), metadata.tags(),
                 ids(metadata.tvdbId(), metadata.tmdbId(), metadata.imdbId()),
                 nfoRatings(extras.ratings()), nfoActors(extras.actors()), extras.seasonNames(),
-                metadata.userRating());
+                metadata.userRating(), trailer);
     }
 
     static EpisodeMetadata toMetadata(EpisodeNfo nfo, String fallbackTitle) {

@@ -1,0 +1,3 @@
+ALTER TABLE tv_show
+    ADD COLUMN trailer       VARCHAR(1024) NULL,
+    ADD COLUMN trailer_known BOOLEAN       NOT NULL DEFAULT FALSE;

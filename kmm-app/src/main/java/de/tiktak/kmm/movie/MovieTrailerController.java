@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.trailer.TrailerOptions;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotEmpty;
@@ -37,7 +38,7 @@ public class MovieTrailerController {
     private final MovieBatchService batchService;
 
     @GetMapping(CANDIDATES_PATH)
-    public MovieTrailerService.TrailerOptions candidates(@PathVariable long movieId) {
+    public TrailerOptions candidates(@PathVariable long movieId) {
         return trailerService.candidates(movieId);
     }
 

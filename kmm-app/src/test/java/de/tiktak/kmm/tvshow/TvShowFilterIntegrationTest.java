@@ -42,6 +42,8 @@ class TvShowFilterIntegrationTest {
 
     private static final String JSON = "application/json";
     private static final Duration TIMEOUT = Duration.ofSeconds(10);
+    private static final String ALF_TRAILER = "plugin://plugin.video.youtube/?action=play_video&videoid=alfTrailer1";
+    private static final String LOST_TRAILER = "https://example.org/lost-trailer.mp4";
 
     @Autowired
     private MockMvcTester mockMvc;
@@ -61,7 +63,8 @@ class TvShowFilterIntegrationTest {
     @BeforeEach
     void givenLibrary() throws IOException {
         Path serien = Files.createDirectories(library.resolve("serien"));
-        givenShow(serien, "ALF", 1986, "<genre>Comedy</genre><status>Ended</status><tag>Kult</tag>");
+        givenShow(serien, "ALF", 1986, "<genre>Comedy</genre><status>Ended</status><tag>Kult</tag><trailer>"
+                + ALF_TRAILER.replace("&", "&amp;") + "</trailer>");
         givenEpisode(serien, "ALF", 1, 1, "<playcount>1</playcount>" + streams("720", "576", "mpeg2video", "ac3", "deu"));
         givenEpisode(serien, "ALF", 1, 2, "<playcount>2</playcount>" + streams("720", "576", "mpeg2video", "ac3", "eng"));
         givenShow(serien, "Lost", 2004, "<genre>Drama</genre><status>Ended</status>");
@@ -138,6 +141,66 @@ class TvShowFilterIntegrationTest {
     }
 
     @Test
+    void filtersByTrailerAndChangesItInTheNfo() throws IOException {
+        assertThat(titles(true, condition("TRAILER", "NOT_EMPTY", null))).containsExactly("ALF");
+        assertThat(titles(true, condition("TRAILER", "EMPTY", null))).containsExactly("Lost", "Neu");
+        long lost = showId("Lost");
+        Path lostNfo = library.resolve("serien/Lost/tvshow.nfo");
+
+        MvcTestResult applied = mockMvc.put().uri(TvShowTrailerController.TRAILER_PATH, lost).with(csrf())
+                .contentType(JSON).content("{\"url\": \"%s\"}".formatted(LOST_TRAILER)).exchange();
+        assertThat(applied).hasStatusOk();
+        assertThat(read(applied).get("trailer").asString()).isEqualTo(LOST_TRAILER);
+        assertThat(Files.readString(lostNfo)).contains("<trailer>" + LOST_TRAILER + "</trailer>",
+                "<title>Lost</title>");
+        assertThat(titles(true, condition("TRAILER", "EMPTY", null))).containsExactly("Neu");
+
+        assertThat(mockMvc.put().uri(TvShowTrailerController.TRAILER_PATH, lost).with(csrf()).contentType(JSON)
+                .content("{\"url\": \"ftp://nas/lost.mkv\"}").exchange()).hasStatus(HttpStatus.BAD_REQUEST);
+        assertThat(mockMvc.get().uri(TvShowTrailerController.CANDIDATES_PATH, lost).exchange())
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT);
+
+        MvcTestResult removed = mockMvc.delete().uri(TvShowTrailerController.TRAILER_PATH, lost).with(csrf())
+                .exchange();
+        assertThat(removed).hasStatusOk();
+        assertThat(read(removed).get("trailer").isNull()).isTrue();
+        assertThat(Files.readString(lostNfo)).doesNotContain("<trailer").contains("<title>Lost</title>");
+    }
+
+    @Test
+    void fillsMissingTrailersWithoutTouchingExistingOnes() throws IOException {
+        Path alfNfo = library.resolve("serien/ALF/tvshow.nfo");
+        String before = Files.readString(alfNfo);
+
+        MvcTestResult started = post(TvShowTrailerController.FILL_PATH,
+                "{\"showIds\": [%d, %d, %d]}".formatted(showId("ALF"), showId("Lost"), showId("ALF")));
+        assertThat(started).hasStatus(HttpStatus.ACCEPTED);
+        assertThat(read(started).get("title").asString()).isEqualTo("Fehlende Trailer für 2 Serien holen");
+        String jobId = read(started).get("id").asString();
+        JsonNode job = await().atMost(TIMEOUT).pollInSameThread()
+                .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),
+                        node -> !"RUNNING".equals(node.get("status").asString()));
+
+        assertThat(job.get("result").get("changed").asInt()).as(job.toString()).isZero();
+        assertThat(job.get("result").get("unchanged").asInt()).as(job.toString()).isEqualTo(2);
+        assertThat(Files.readString(alfNfo)).isEqualTo(before);
+        assertThat(post(TvShowTrailerController.FILL_PATH, "{\"showIds\": []}")).hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
+    void keepsTheTrailerWhenEditingTheShow() throws IOException {
+        MvcTestResult started = post(TvShowController.BATCH_PATH,
+                "{\"showIds\": [%d], \"tags\": {\"add\": [\"Neu\"]}}".formatted(showId("ALF")));
+        String jobId = read(started).get("id").asString();
+        await().atMost(TIMEOUT).pollInSameThread()
+                .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),
+                        node -> !"RUNNING".equals(node.get("status").asString()));
+
+        assertThat(Files.readString(library.resolve("serien/ALF/tvshow.nfo")))
+                .contains("<tag>Neu</tag>", "<trailer>" + ALF_TRAILER.replace("&", "&amp;") + "</trailer>");
+    }
+
+    @Test
     void indexesEpisodesWhoseStreamDetailsPredateTheIndex() {
         jdbcClient.sql("UPDATE episode SET audio_codecs = NULL, video_codec = NULL").update();
         assertThat(titles(true, condition("EPISODE_VIDEO_CODEC", "IS", "h264"))).isEmpty();
@@ -153,6 +216,13 @@ class TvShowFilterIntegrationTest {
                 objectMapper.writeValueAsString(Map.of("matchAll", matchAll, "conditions", List.of(conditions))));
         assertThat(result).hasStatusOk();
         return read(result).get("content").valueStream().map(show -> show.get("title").asString()).toList();
+    }
+
+    private long showId(String title) {
+        JsonNode ids = read(post(TvShowController.QUERY_IDS_PATH, objectMapper.writeValueAsString(Map.of(
+                "matchAll", true, "conditions", List.of(condition("TITLE", "IS", title))))));
+        assertThat(ids.size()).isEqualTo(1);
+        return ids.get(0).asLong();
     }
 
     private static Map<String, String> condition(String field, String operator, String value) {

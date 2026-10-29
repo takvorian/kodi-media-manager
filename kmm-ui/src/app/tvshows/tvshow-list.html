@@ -56,6 +56,9 @@
     <button matButton type="button" class="batch-edit-button" (click)="toggleBatchEditing()">
       {{ batchEditing() ? 'Bearbeitung schließen' : 'Auswahl bearbeiten' }}
     </button>
+    <button matButton type="button" class="fill-trailers-button" [disabled]="!!batchJob()" (click)="fillMissingTrailers()">
+      Fehlende Trailer holen
+    </button>
   }
 </div>
 

@@ -110,7 +110,7 @@ class AutoScrapeServiceTest {
     @Test
     void runsTheTvShowScrapeForTvSources() {
         givenSource(MediaType.TV_SHOW);
-        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 1, 0, 3, 2, List.of(), List.of(), List.of());
+        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 1, 0, 3, 2, 1, List.of(), List.of(), List.of());
         RecordingContext context = new RecordingContext(false);
         when(tvRunner.run(SOURCE_ID, context)).thenReturn(result);
 

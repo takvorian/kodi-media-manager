@@ -1,23 +1,18 @@
 package de.tiktak.kmm.movie;
 
-import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
-import de.tiktak.kmm.plugin.api.ScraperException;
-import de.tiktak.kmm.plugin.api.TrailerScraper;
 import de.tiktak.kmm.settings.SettingsService;
+import de.tiktak.kmm.trailer.TrailerFinder;
+import de.tiktak.kmm.trailer.TrailerOption;
+import de.tiktak.kmm.trailer.TrailerOptions;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -32,43 +27,23 @@ public class MovieTrailerService {
 
     private static final String TMDB = "tmdb";
     private static final String IMDB = "imdb";
-    private static final String ENGLISH = "en";
-    private static final String TRAILER_TYPE = "Trailer";
-    /** Kodi spielt Plugin-Links (z. B. YouTube-Addon) sowie Web- und Dateipfade ab. */
-    private static final Pattern PLAYABLE = Pattern.compile("(?i)(plugin|https?|smb|nfs)://\\S+");
 
     private final MovieRepository movieRepository;
     private final MovieMetadataService metadataService;
     private final MovieNfoSync nfoSync;
     private final MovieSupplementWriter supplementWriter;
-    private final ScraperRegistry scraperRegistry;
+    private final TrailerFinder trailerFinder;
     private final SettingsService settingsService;
 
-    /** Vorschläge, die besten zuerst: bevorzugte Sprache, dann Englisch; Trailer vor Teasern, offizielle zuerst. */
+    /** Vorschläge, die besten zuerst: bevorzugte Sprache der Bilder, dann Englisch. */
     public TrailerOptions candidates(long movieId) {
         MovieMetadata metadata = metadataService.findDetails(movieId).metadata();
         Map<String, String> ids = uniqueIds(metadata);
         if (ids.isEmpty()) {
             throw ScraperProblemException.missingIdsForTrailers();
         }
-        List<String> warnings = new ArrayList<>();
-        List<TrailerOption> options = new ArrayList<>();
-        ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, metadata.title(), metadata.year(), ids);
-        for (TrailerScraper scraper : scraperRegistry.trailerScrapersFor(MediaType.MOVIE)) {
-            Optional<String> missing = scraper.missingConfiguration();
-            if (missing.isPresent()) {
-                warnings.add(missing.get());
-                continue;
-            }
-            try {
-                scraper.findTrailers(request).forEach(candidate ->
-                        options.add(TrailerOption.of(candidate, scraper.displayName())));
-            } catch (ScraperException e) {
-                warnings.add("%s: %s".formatted(scraper.displayName(), e.getMessage()));
-            }
-        }
-        options.sort(preference(settingsService.current().artworkLanguage()));
-        return new TrailerOptions(options, warnings);
+        return trailerFinder.find(new ScrapeRequest(MediaType.MOVIE, metadata.title(), metadata.year(), ids),
+                settingsService.current().artworkLanguage());
     }
 
     /**
@@ -79,7 +54,7 @@ public class MovieTrailerService {
     @Transactional
     public MovieDetails apply(long movieId, String url) {
         String trailer = url == null ? "" : url.strip();
-        if (!PLAYABLE.matcher(trailer).matches()) {
+        if (!TrailerFinder.isPlayable(trailer)) {
             throw ScraperProblemException.invalidTrailer(trailer);
         }
         return change(movieId, trailer);
@@ -121,23 +96,6 @@ public class MovieTrailerService {
         return movieRepository.findById(movieId).orElseThrow(() -> new MovieNotFoundException(movieId));
     }
 
-    static Comparator<TrailerOption> preference(String preferredLanguage) {
-        return Comparator.comparingInt((TrailerOption option) -> languageRank(option.language(), preferredLanguage))
-                .thenComparing(option -> !TRAILER_TYPE.equalsIgnoreCase(option.type()))
-                .thenComparing(option -> !option.official())
-                .thenComparing(option -> option.height() == null ? 0 : option.height(), Comparator.reverseOrder())
-                .thenComparing(option -> option.published() == null ? "" : option.published(),
-                        Comparator.reverseOrder());
-    }
-
-    private static int languageRank(String language, String preferred) {
-        String normalized = language == null ? "" : language.toLowerCase(Locale.ROOT);
-        if (normalized.equals(preferred)) {
-            return 0;
-        }
-        return normalized.equals(ENGLISH) ? 1 : 2;
-    }
-
     private static Map<String, String> uniqueIds(MovieMetadata metadata) {
         Map<String, String> ids = new LinkedHashMap<>();
         if (metadata.tmdbId() != null) {
@@ -147,16 +105,5 @@ public class MovieTrailerService {
             ids.put(IMDB, metadata.imdbId());
         }
         return ids;
-    }
-
-    /**
-     * @param warnings Hinweise zu nicht eingerichteten oder fehlerhaften Anbietern
-     */
-    public record TrailerOptions(List<TrailerOption> candidates, List<String> warnings) {
-
-        public TrailerOptions {
-            candidates = List.copyOf(candidates);
-            warnings = List.copyOf(warnings);
-        }
     }
 }

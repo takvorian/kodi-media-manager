@@ -3,8 +3,8 @@ package de.tiktak.kmm.movie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
-import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -24,15 +24,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import de.tiktak.kmm.nfo.MovieNfoSupplement;
-import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
-import de.tiktak.kmm.plugin.api.ScraperException;
-import de.tiktak.kmm.plugin.api.TrailerCandidate;
-import de.tiktak.kmm.plugin.api.TrailerScraper;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.settings.KmmSettings;
 import de.tiktak.kmm.settings.SettingsService;
+import de.tiktak.kmm.trailer.TrailerFinder;
+import de.tiktak.kmm.trailer.TrailerOption;
+import de.tiktak.kmm.trailer.TrailerOptions;
 
 @ExtendWith(MockitoExtension.class)
 class MovieTrailerServiceTest {
@@ -53,21 +52,18 @@ class MovieTrailerServiceTest {
     private MovieSupplementWriter supplementWriter;
 
     @Mock
-    private ScraperRegistry scraperRegistry;
+    private TrailerFinder trailerFinder;
 
     @Mock
     private SettingsService settingsService;
-
-    @Mock
-    private TrailerScraper scraper;
 
     private MovieTrailerService service;
     private Movie movie;
 
     @BeforeEach
     void setUp() {
-        service = new MovieTrailerService(movieRepository, metadataService, nfoSync, supplementWriter,
-                scraperRegistry, settingsService);
+        service = new MovieTrailerService(movieRepository, metadataService, nfoSync, supplementWriter, trailerFinder,
+                settingsService);
         movie = new Movie(1L, "/filme/Heat.mkv", "Heat", 1995, DiscFormat.FILE, 1);
         ReflectionTestUtils.setField(movie, "id", MOVIE_ID);
         lenient().when(movieRepository.findById(MOVIE_ID)).thenReturn(Optional.of(movie));
@@ -75,57 +71,20 @@ class MovieTrailerServiceTest {
                 .thenAnswer(invocation -> MovieDetails.from(movie, Optional.empty()));
         lenient().when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS);
         lenient().when(nfoSync.readTrailerIfUnknown(movie)).thenReturn(true);
-        lenient().when(scraper.displayName()).thenReturn("TMDB");
-        lenient().when(scraper.missingConfiguration()).thenReturn(Optional.empty());
-        lenient().when(scraperRegistry.trailerScrapersFor(MediaType.MOVIE)).thenReturn(List.of(scraper));
     }
 
     @Test
-    void listsCandidatesInThePreferredLanguageFirst() {
+    void searchesTrailersByProviderIdsInThePreferredArtworkLanguage() {
         givenTmdbId();
-        when(scraper.findTrailers(any())).thenReturn(List.of(
-                candidate("Teaser en", "en", "Teaser", true, 1080, "2020-01-01"),
-                candidate("Trailer fr", "fr", "Trailer", true, 2160, "2020-01-01"),
-                candidate("Trailer en", "en", "Trailer", true, 720, "2020-01-01"),
-                candidate("Trailer de inoffiziell", "de", "Trailer", false, 1080, "2021-01-01"),
-                candidate("Trailer de", "de", "Trailer", true, 720, null)));
+        TrailerOptions options = options(GERMAN_TRAILER);
+        when(trailerFinder.find(any(), eq(KmmSettings.DEFAULTS.artworkLanguage()))).thenReturn(options);
 
-        MovieTrailerService.TrailerOptions options = service.candidates(MOVIE_ID);
+        assertThat(service.candidates(MOVIE_ID)).isEqualTo(options);
 
-        assertThat(options.candidates()).extracting(TrailerOption::name).containsExactly("Trailer de",
-                "Trailer de inoffiziell", "Trailer en", "Teaser en", "Trailer fr");
-        assertThat(options.candidates().getFirst().scraperName()).isEqualTo("TMDB");
-        assertThat(options.warnings()).isEmpty();
         ArgumentCaptor<ScrapeRequest> request = ArgumentCaptor.forClass(ScrapeRequest.class);
-        verify(scraper).findTrailers(request.capture());
+        verify(trailerFinder).find(request.capture(), any());
+        assertThat(request.getValue().mediaType()).isEqualTo(MediaType.MOVIE);
         assertThat(request.getValue().uniqueIds()).isEqualTo(Map.of("tmdb", "949", "imdb", "tt0113277"));
-    }
-
-    @Test
-    void prefersHigherAndNewerTrailersWhenEverythingElseIsEqual() {
-        TrailerOption older = TrailerOption.of(candidate("älter", "de", "Trailer", true, 1080, "2019-01-01"), "TMDB");
-        TrailerOption newer = TrailerOption.of(candidate("neuer", "de", "Trailer", true, 1080, "2020-01-01"), "TMDB");
-        TrailerOption smaller = TrailerOption.of(candidate("klein", "DE", "Trailer", true, null, null), "TMDB");
-
-        List<TrailerOption> sorted = List.of(smaller, older, newer).stream()
-                .sorted(MovieTrailerService.preference("de")).toList();
-
-        assertThat(sorted).containsExactly(newer, older, smaller);
-    }
-
-    @Test
-    void reportsUnconfiguredAndFailingScrapersAsWarnings() {
-        givenTmdbId();
-        TrailerScraper unconfigured = org.mockito.Mockito.mock(TrailerScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("YouTube: API-Key fehlt"));
-        when(scraperRegistry.trailerScrapersFor(MediaType.MOVIE)).thenReturn(List.of(unconfigured, scraper));
-        when(scraper.findTrailers(any())).thenThrow(new ScraperException("nicht erreichbar"));
-
-        MovieTrailerService.TrailerOptions options = service.candidates(MOVIE_ID);
-
-        assertThat(options.candidates()).isEmpty();
-        assertThat(options.warnings()).containsExactly("YouTube: API-Key fehlt", "TMDB: nicht erreichbar");
-        verify(unconfigured, never()).findTrailers(any());
     }
 
     @Test
@@ -133,7 +92,7 @@ class MovieTrailerServiceTest {
         assertThatThrownBy(() -> service.candidates(MOVIE_ID))
                 .isInstanceOfSatisfying(ScraperProblemException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT));
-        verifyNoInteractions(scraper);
+        verifyNoInteractions(trailerFinder);
     }
 
     @Test
@@ -170,9 +129,7 @@ class MovieTrailerServiceTest {
     @Test
     void fillsAMissingTrailerWithTheBestCandidate() {
         givenTmdbId();
-        when(scraper.findTrailers(any())).thenReturn(List.of(
-                candidate("Trailer en", "en", "Trailer", true, 1080, null),
-                candidate("Trailer de", "de", "Trailer", true, 1080, null)));
+        when(trailerFinder.find(any(), any())).thenReturn(options(GERMAN_TRAILER, "https://example.org/en.mp4"));
 
         assertThat(service.fillMissing(MOVIE_ID)).isTrue();
 
@@ -188,7 +145,7 @@ class MovieTrailerServiceTest {
         assertThat(service.fillMissing(MOVIE_ID)).isFalse();
 
         verify(nfoSync).refreshIfChangedOutside(movie);
-        verifyNoInteractions(scraper, supplementWriter);
+        verifyNoInteractions(trailerFinder, supplementWriter);
     }
 
     @Test
@@ -198,16 +155,16 @@ class MovieTrailerServiceTest {
 
         assertThat(service.fillMissing(MOVIE_ID)).isFalse();
 
-        verifyNoInteractions(scraper, supplementWriter);
+        verifyNoInteractions(trailerFinder, supplementWriter);
     }
 
     @Test
     void skipsMoviesWithoutProviderIdOrCandidatesWhenFilling() {
         assertThat(service.fillMissing(MOVIE_ID)).isFalse();
-        verifyNoInteractions(scraper);
+        verifyNoInteractions(trailerFinder);
 
         givenTmdbId();
-        when(scraper.findTrailers(any())).thenReturn(List.of());
+        when(trailerFinder.find(any(), any())).thenReturn(options());
 
         assertThat(service.fillMissing(MOVIE_ID)).isFalse();
         verifyNoInteractions(supplementWriter);
@@ -218,11 +175,10 @@ class MovieTrailerServiceTest {
                 List.of(), "tt0113277", "949", null, null));
     }
 
-    private static TrailerCandidate candidate(String name, String language, String type, boolean official,
-            Integer height, String published) {
-        String id = name.equals("Trailer de") ? "de1" : name.replace(' ', '-');
-        return new TrailerCandidate(name, "plugin://plugin.video.youtube/?action=play_video&videoid=" + id,
-                URI.create("https://www.youtube.com/watch?v=" + id), null, language, type, official, height,
-                published);
+    private static TrailerOptions options(String... urls) {
+        return new TrailerOptions(List.of(urls).stream()
+                .map(url -> new TrailerOption("Trailer", url, URI.create("https://www.youtube.com/watch?v=de1"), null,
+                        "de", "Trailer", true, 1080, null, "TMDB"))
+                .toList(), List.of());
     }
 }

@@ -3,13 +3,12 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
-import { CONFIRM } from '../shared/confirm';
-import { MovieDetails, TrailerOption } from './movie';
-import { MovieTrailer } from './movie-trailer';
-import { MOVIES_URL } from './movie.service';
+import { CONFIRM } from './confirm';
+import { TrailerOption, WithTrailer } from './trailer';
+import { TrailerEditor } from './trailer-editor';
 
-describe('MovieTrailer', () => {
-  const trailerUrl = `${MOVIES_URL}/5/trailer`;
+describe('TrailerEditor', () => {
+  const trailerUrl = '/api/v1/tvshows/5/trailer';
   const youtube = 'plugin://plugin.video.youtube/?action=play_video&videoid=2GfZl4kuVNI';
   const german: TrailerOption = {
     name: 'HEAT | Trailer | Deutsch',
@@ -35,7 +34,7 @@ describe('MovieTrailer', () => {
     published: null,
   };
 
-  let fixture: ComponentFixture<MovieTrailer>;
+  let fixture: ComponentFixture<TrailerEditor>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
   let confirmAnswer: boolean;
@@ -46,7 +45,7 @@ describe('MovieTrailer', () => {
     confirmAnswer = true;
     emitted = [];
     TestBed.configureTestingModule({
-      imports: [MovieTrailer],
+      imports: [TrailerEditor],
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
@@ -58,9 +57,9 @@ describe('MovieTrailer', () => {
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
-    fixture = TestBed.createComponent(MovieTrailer);
-    fixture.componentRef.setInput('movieId', 5);
-    fixture.componentInstance.changed.subscribe((details) => emitted.push(details.trailer));
+    fixture = TestBed.createComponent(TrailerEditor);
+    fixture.componentRef.setInput('endpoint', trailerUrl);
+    fixture.componentInstance.changed.subscribe((trailer) => emitted.push(trailer));
   });
 
   afterEach(() => httpTesting.verify());
@@ -73,8 +72,8 @@ describe('MovieTrailer', () => {
     return element().querySelector<HTMLButtonElement>(selector)!;
   }
 
-  function details(trailer: string | null): MovieDetails {
-    return { id: 5, trailer } as MovieDetails;
+  function details(trailer: string | null): WithTrailer {
+    return { trailer };
   }
 
   function show(trailer: string | null): void {

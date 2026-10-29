@@ -41,6 +41,7 @@ class TvShowNfoTest {
         assertThat(nfo.actors()).containsExactly(new NfoActor("Benji Gregory", "Brian Tanner", 0,
                 "http://image.example.org/benji.jpg"), new NfoActor("Andrea Elson", "Lynn Tanner", null, null));
         assertThat(nfo.seasonNames()).containsExactly(Map.entry(0, "Specials"), Map.entry(1, "Die Ankunft"));
+        assertThat(nfo.trailer()).isEqualTo(TvShowNfo.NO_TRAILER);
     }
 
     @Test
@@ -61,7 +62,7 @@ class TvShowNfoTest {
         TvShowNfo changed = new TvShowNfo("Die Testserie (neu)", null, "Testserie", LocalDate.of(1986, 9, 22),
                 "Neue Handlung", 25, "FSK 6", "Ended", List.of("Komödie"), List.of("NBC"), List.of("Kult"),
                 Map.of("tvdb", "78020"), List.of(), List.of(new NfoActor("ALF", null, 0, null)),
-                new TreeMap<>(Map.of(2, "Zweite")), 8);
+                new TreeMap<>(Map.of(2, "Zweite")), 8, TvShowNfo.NO_TRAILER);
 
         writer.write(nfoFile, changed);
 
@@ -78,11 +79,30 @@ class TvShowNfoTest {
     void createsANewNfo() {
         Path nfoFile = directory.resolve("tvshow.nfo");
         TvShowNfo nfo = new TvShowNfo("Neu", null, null, null, null, null, null, null, null, null, null, null, null,
-                null, null, null);
+                null, null, null).withTrailer(TvShowNfo.NO_TRAILER);
 
         writer.write(nfoFile, nfo);
 
         assertThat(reader.read(nfoFile)).isEqualTo(nfo);
+    }
+
+    @Test
+    void writesReplacesAndRemovesTheTrailerButKeepsAnUnknownOne() throws IOException {
+        Path nfoFile = directory.resolve("tvshow.nfo");
+        TvShowNfo nfo = new TvShowNfo("Lost", null, null, null, null, null, null, null, null, null, null, null, null,
+                null, null, null);
+        String youtube = "plugin://plugin.video.youtube/?action=play_video&videoid=KTu8iDynwNc";
+
+        writer.write(nfoFile, nfo.withTrailer(youtube));
+        assertThat(reader.read(nfoFile).trailer()).isEqualTo(youtube);
+        assertThat(Files.readString(nfoFile)).contains("<trailer>" + youtube.replace("&", "&amp;") + "</trailer>");
+
+        writer.write(nfoFile, nfo);
+        assertThat(reader.read(nfoFile).trailer()).isEqualTo(youtube);
+
+        writer.write(nfoFile, nfo.withTrailer(TvShowNfo.NO_TRAILER));
+        assertThat(reader.read(nfoFile).trailer()).isEqualTo(TvShowNfo.NO_TRAILER);
+        assertThat(Files.readString(nfoFile)).doesNotContain("<trailer");
     }
 
     @Test

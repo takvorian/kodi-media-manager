@@ -56,7 +56,8 @@ public class TvShowNfoReader {
                 NfoSupplementReader.ratings(show),
                 NfoSupplementReader.actors(show),
                 seasonNames(show),
-                NfoSupplementReader.integer(NfoDocuments.text(show, NfoElements.USER_RATING)));
+                NfoSupplementReader.integer(NfoDocuments.text(show, NfoElements.USER_RATING)),
+                NfoSupplementReader.trailer(show));
     }
 
     private static Map<String, String> legacyIds(Element show) {

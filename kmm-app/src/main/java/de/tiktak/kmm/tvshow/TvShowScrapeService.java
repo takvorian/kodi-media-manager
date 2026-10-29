@@ -245,7 +245,8 @@ public class TvShowScrapeService {
             return;
         }
         try {
-            TvNfoState written = nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(show.metadata(), extras));
+            TvNfoState written = nfoFiles.writeShow(show.directory(), TvNfoMapper.toNfo(show.metadata(), extras,
+                    show.nfoTrailer()));
             show.applyExtras(extras);
             show.markNfoSynchronized(written.modifiedAt());
             events.publishEvent(new TvShowFilesChangedEvent(show.getId()));

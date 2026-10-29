@@ -62,7 +62,7 @@ export interface AutoScrapeResult {
   readonly scraped: number;
   readonly unmatched: number;
   readonly imagesSaved: number;
-  /** Neu eingetragene Trailer-Links (nur bei Filmquellen). */
+  /** Neu eingetragene Trailer-Links. */
   readonly trailersSaved?: number;
   readonly unmatchedTitles: readonly string[];
   readonly failures: readonly string[];

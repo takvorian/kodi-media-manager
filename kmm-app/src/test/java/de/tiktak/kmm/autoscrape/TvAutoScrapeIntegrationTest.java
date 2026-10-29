@@ -49,6 +49,8 @@ import de.tiktak.kmm.plugin.api.ImageCandidate;
 import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.TrailerCandidate;
+import de.tiktak.kmm.plugin.api.TrailerScraper;
 import de.tiktak.kmm.plugin.api.TvShowResult;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 import de.tiktak.kmm.source.MediaSourceController;
@@ -67,6 +69,7 @@ class TvAutoScrapeIntegrationTest {
 
     private static final byte[] IMAGE = {(byte) 0xFF, (byte) 0xD8, 7};
     private static final Duration JOB_TIMEOUT = Duration.ofSeconds(20);
+    private static final String LOST_TRAILER = "plugin://plugin.video.youtube/?action=play_video&videoid=KTu8iDynwNc";
 
     private static HttpServer server;
 
@@ -142,6 +145,12 @@ class TvAutoScrapeIntegrationTest {
                 ImageCandidate.builder().type(ImageType.POSTER).url(url("/poster.jpg")).build(),
                 ImageCandidate.builder().type(ImageType.POSTER).url(url("/season.jpg")).season(1).build()));
         when(scraperRegistry.imageScrapersFor(de.tiktak.kmm.plugin.api.MediaType.TV_SHOW)).thenReturn(List.of(images));
+        TrailerScraper trailers = mock(TrailerScraper.class);
+        when(trailers.displayName()).thenReturn("TMDB");
+        when(trailers.findTrailers(any())).thenReturn(List.of(new TrailerCandidate("Lost Trailer", LOST_TRAILER,
+                URI.create("https://www.youtube.com/watch?v=KTu8iDynwNc"), null, "en", "Trailer", true, 480, null)));
+        when(scraperRegistry.trailerScrapersFor(de.tiktak.kmm.plugin.api.MediaType.TV_SHOW))
+                .thenReturn(List.of(trailers));
     }
 
     @AfterEach
@@ -155,10 +164,12 @@ class TvAutoScrapeIntegrationTest {
                 String.valueOf(sourceId))));
 
         assertThat(result.toString()).isEqualTo("{\"shows\":2,\"scraped\":1,\"unmatched\":1,\"episodesUpdated\":1,"
-                + "\"imagesSaved\":3,\"unmatchedTitles\":[\"Unbekannt\"],\"failures\":[],\"warnings\":[]}");
+                + "\"imagesSaved\":3,\"trailersSaved\":1,\"unmatchedTitles\":[\"Unbekannt\"],\"failures\":[],"
+                + "\"warnings\":[]}");
         assertThat(jdbcClient.sql("SELECT tvdb_id FROM tv_show WHERE title = 'Lost'").query(String.class).single())
                 .isEqualTo("73739");
-        assertThat(Files.readString(library.resolve("Lost (2004)/tvshow.nfo"))).contains("73739");
+        assertThat(Files.readString(library.resolve("Lost (2004)/tvshow.nfo"))).contains("73739",
+                "<trailer>" + LOST_TRAILER.replace("&", "&amp;") + "</trailer>");
         assertThat(Files.readString(library.resolve("Lost (2004)/Staffel 1/Lost - S01E01.nfo")))
                 .contains("<title>Gestrandet</title>");
         assertThat(library.resolve("Lost (2004)/poster.jpg")).exists();

@@ -5,32 +5,35 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 
-import { CONFIRM } from '../shared/confirm';
-import { problemMessage } from '../shared/problem-message';
-import { MovieDetails, TrailerOptions } from './movie';
-import { MovieService } from './movie.service';
+import { CONFIRM } from './confirm';
+import { problemMessage } from './problem-message';
+import { TrailerOptions, TrailerService } from './trailer';
 
 const SNACKBAR_DURATION_MS = 5000;
 const YOUTUBE_VIDEO_ID = /[?&]videoid=([A-Za-z0-9_-]+)/;
 const WEB_LINK = /^https?:\/\//i;
 const YOUTUBE_WATCH = 'https://www.youtube.com/watch?v=';
 
-/** Trailer-Link der NFO, den Kodi abspielt: anzeigen, aus Vorschlägen wählen, selbst eintragen oder entfernen. */
+/**
+ * Trailer-Link der NFO eines Films oder einer Serie, den Kodi abspielt: anzeigen, aus Vorschlägen wählen, selbst
+ * eintragen oder entfernen.
+ */
 @Component({
-  selector: 'app-movie-trailer',
+  selector: 'app-trailer-editor',
   imports: [MatButtonModule, MatFormFieldModule, MatInputModule],
-  templateUrl: './movie-trailer.html',
-  styleUrl: './movie-trailer.scss',
+  templateUrl: './trailer-editor.html',
+  styleUrl: './trailer-editor.scss',
 })
-export class MovieTrailer {
-  private readonly movieService = inject(MovieService);
+export class TrailerEditor {
+  private readonly trailerService = inject(TrailerService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
 
-  readonly movieId = input.required<number>();
+  /** Trailer-Endpunkt, z. B. `/api/v1/movies/5/trailer`. */
+  readonly endpoint = input.required<string>();
   readonly trailer = input<string | null>(null);
-  /** Der Film nach der Änderung. */
-  readonly changed = output<MovieDetails>();
+  /** Der neue Trailer-Link oder `null`, wenn er entfernt wurde. */
+  readonly changed = output<string | null>();
 
   protected readonly busy = signal(false);
   protected readonly options = signal<TrailerOptions | null>(null);
@@ -51,8 +54,8 @@ export class MovieTrailer {
 
   protected findCandidates(): void {
     this.busy.set(true);
-    this.movieService
-      .trailerCandidates(this.movieId())
+    this.trailerService
+      .candidates(this.endpoint())
       .pipe(finalize(() => this.busy.set(false)))
       .subscribe({
         next: (options) => this.options.set(options),
@@ -62,14 +65,14 @@ export class MovieTrailer {
 
   protected apply(url: string): void {
     this.busy.set(true);
-    this.movieService
-      .applyTrailer(this.movieId(), url.trim())
+    this.trailerService
+      .apply(this.endpoint(), url.trim())
       .pipe(finalize(() => this.busy.set(false)))
       .subscribe({
         next: (details) => {
           this.options.set(null);
           this.manualLink.set('');
-          this.changed.emit(details);
+          this.changed.emit(details.trailer);
           this.notify('Trailer übernommen und in die NFO geschrieben.');
         },
         error: (error: unknown) => this.notify(problemMessage(error)),
@@ -87,12 +90,12 @@ export class MovieTrailer {
       return;
     }
     this.busy.set(true);
-    this.movieService
-      .removeTrailer(this.movieId())
+    this.trailerService
+      .remove(this.endpoint())
       .pipe(finalize(() => this.busy.set(false)))
       .subscribe({
         next: (details) => {
-          this.changed.emit(details);
+          this.changed.emit(details.trailer);
           this.notify('Trailer entfernt.');
         },
         error: (error: unknown) => this.notify(problemMessage(error)),

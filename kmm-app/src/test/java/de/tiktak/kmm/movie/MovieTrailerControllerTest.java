@@ -25,6 +25,8 @@ import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+import de.tiktak.kmm.trailer.TrailerOption;
+import de.tiktak.kmm.trailer.TrailerOptions;
 
 @WebMvcTest(controllers = MovieTrailerController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -45,7 +47,7 @@ class MovieTrailerControllerTest {
 
     @Test
     void listsTheCandidates() {
-        when(trailerService.candidates(7L)).thenReturn(new MovieTrailerService.TrailerOptions(List.of(
+        when(trailerService.candidates(7L)).thenReturn(new TrailerOptions(List.of(
                 new TrailerOption("Trailer", LINK, URI.create("https://www.youtube.com/watch?v=abc"), null, "de",
                         "Trailer", true, 1080, "2020-01-01", "TMDB")), List.of("fanart.tv: Key fehlt")));
 

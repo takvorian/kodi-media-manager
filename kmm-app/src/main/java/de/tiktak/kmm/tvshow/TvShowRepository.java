@@ -19,6 +19,9 @@ interface TvShowRepository extends JpaRepository<TvShow, Long>, JpaSpecification
     @Query("SELECT s.directoryPath, s.nfoModifiedAt FROM TvShow s WHERE s.sourceId = :sourceId")
     List<Object[]> findNfoTimestampsBySourceId(long sourceId);
 
+    @Query("SELECT s.id FROM TvShow s WHERE s.trailerKnown = false")
+    List<Long> findIdsWithUnknownTrailer();
+
     Page<TvShow> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
     /** Je Tag die Anzahl der Serien. */

@@ -47,6 +47,9 @@ public class TvShowNfoWriter {
         NfoDomEditor.replaceAll(show, NfoElements.NAMED_SEASON, seasonNames(document, nfo.seasonNames()));
         NfoDomEditor.replaceAll(show, NfoElements.ACTOR,
                 nfo.actors().stream().map(actor -> NfoSupplementWriter.actor(document, actor)).toList());
+        if (nfo.trailer() != null) {
+            NfoDomEditor.setText(document, show, NfoElements.TRAILER, nfo.trailer());
+        }
     }
 
     private static List<Element> seasonNames(Document document, Map<Integer, String> names) {

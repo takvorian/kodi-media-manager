@@ -199,6 +199,22 @@ export class TvShowList {
     });
   }
 
+  /** Trägt für die ausgewählten Serien ohne Trailer den besten Vorschlag ein; vorhandene bleiben. */
+  protected fillMissingTrailers(): void {
+    const showIds = [...this.chosen()];
+    if (
+      !this.confirm(
+        `Für ${showIds.length} Serien fehlende Trailer holen? Die NFOs werden dabei geschrieben.`,
+      )
+    ) {
+      return;
+    }
+    this.tvShowService.fillMissingTrailers(showIds).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   protected onSearch(event: Event): void {
     this.searchInput.set((event.target as HTMLInputElement).value);
   }

@@ -229,6 +229,26 @@ describe('TvShowList', () => {
     );
   });
 
+  it('fetches the missing trailers of the chosen shows as a job', async () => {
+    await respond(page([alf]));
+    element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+    httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1, 4]);
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.fill-trailers-button')!.click();
+    const fill = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/trailers/fill` });
+    expect(fill.request.body).toEqual({ showIds: [1, 4] });
+    const job = {
+      id: 't',
+      key: 'tvshows-batch',
+      title: 'Fehlende Trailer für 2 Serien holen',
+      status: 'RUNNING',
+    } as Job;
+    fill.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('shows an error when loading fails', async () => {
     fixture.detectChanges();
     httpTesting.match((req) => req.url === FILTERS_URL).forEach((req) => req.flush([]));

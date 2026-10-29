@@ -53,6 +53,15 @@
     </mat-card-content>
   </mat-card>
 
+  <mat-card appearance="outlined" class="trailer-card">
+    <mat-card-header>
+      <mat-card-title>Trailer</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      <app-trailer-editor [endpoint]="trailerEndpoint()" [trailer]="details.trailer" (changed)="showTrailer($event)" />
+    </mat-card-content>
+  </mat-card>
+
   <mat-card appearance="outlined" class="artwork-card">
     <mat-card-header>
       <mat-card-title>Bilder der Serie</mat-card-title>

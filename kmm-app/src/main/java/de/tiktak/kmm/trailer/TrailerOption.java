@@ -1,11 +1,11 @@
-package de.tiktak.kmm.movie;
+package de.tiktak.kmm.trailer;
 
 import java.net.URI;
 
 import de.tiktak.kmm.plugin.api.TrailerCandidate;
 
 /**
- * Ein Trailer zur Auswahl in der Filmansicht.
+ * Ein Trailer zur Auswahl in der Film- oder Serienansicht.
  *
  * @param url         Link für die NFO, den Kodi abspielt
  * @param webUrl      Adresse zum Ansehen im Browser

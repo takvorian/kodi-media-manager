@@ -24,7 +24,9 @@ class TmdbTrailerScraperTest {
     void setUp() {
         tmdb = new FakeTmdbServer()
                 .respond("/3/movie/949/videos", "videos-949.json")
-                .respond("/3/find/tt0113277", "find-tt0113277.json");
+                .respond("/3/find/tt0113277", "find-tt0113277.json")
+                .respond("/3/tv/4607/videos", "videos-tv-4607.json")
+                .respond("/3/find/73739", "find-tvdb-73739.json");
         scraper = new TmdbTrailerScraper();
         scraper.initialize(new TestPluginContext().with("api-key", API_KEY).with("base-url", tmdb.baseUrl().toString()));
     }
@@ -56,9 +58,32 @@ class TmdbTrailerScraperTest {
     void findsTheMovieByImdbIdAndReturnsNothingForOtherMedia() {
         assertThat(scraper.findTrailers(request(Map.of("imdb", "tt0113277")))).hasSize(2);
         assertThat(scraper.findTrailers(request(Map.of()))).isEmpty();
-        assertThat(scraper.findTrailers(new ScrapeRequest(MediaType.TV_SHOW, "Lost", null, Map.of("tmdb", "4607"))))
-                .isEmpty();
-        assertThat(scraper.supportedMediaTypes()).containsExactly(MediaType.MOVIE);
+        assertThat(scraper.findTrailers(new ScrapeRequest(MediaType.TV_EPISODE, "Pilot", null,
+                Map.of("tmdb", "4607")))).isEmpty();
+        assertThat(scraper.supportedMediaTypes()).containsExactlyInAnyOrder(MediaType.MOVIE, MediaType.TV_SHOW);
+    }
+
+    @Test
+    void findsTvShowTrailersInTheTvLanguage() {
+        var trailers = scraper.findTrailers(tvRequest(Map.of("tmdb", "4607")));
+
+        assertThat(trailers).extracting(TrailerCandidate::kodiUrl)
+                .containsExactly("plugin://plugin.video.youtube/?action=play_video&videoid=KTu8iDynwNc");
+        assertThat(trailers.getFirst().language()).isEqualTo("en");
+        assertThat(tmdb.requests().getFirst().query())
+                .contains("include_video_language=de%2Cen%2Cnull")
+                .contains("language=de-DE");
+    }
+
+    @Test
+    void findsTheTvShowByTvdbId() {
+        assertThat(scraper.findTrailers(tvRequest(Map.of("tvdb", "73739")))).hasSize(1);
+        assertThat(tmdb.requests()).extracting(FakeTmdbServer.HttpExchangeRecord::path)
+                .containsExactly("/3/find/73739", "/3/tv/4607/videos");
+    }
+
+    private static ScrapeRequest tvRequest(Map<String, String> ids) {
+        return new ScrapeRequest(MediaType.TV_SHOW, "Lost", 2004, ids);
     }
 
     private static ScrapeRequest request(Map<String, String> ids) {

@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.StreamDetails;
+import de.tiktak.kmm.nfo.TvShowNfo;
 
 @ExtendWith(MockitoExtension.class)
 class TvNfoSyncTest {
@@ -35,6 +36,7 @@ class TvNfoSyncTest {
     private static final Path EPISODE_NFO = SHOW_DIRECTORY.resolve("ALF - S01E01-E02.nfo");
     private static final Instant SYNCHRONIZED = Instant.parse("2026-10-27T12:00:00Z");
     private static final Instant CHANGED = Instant.parse("2026-10-28T12:00:00Z");
+    private static final String TRAILER = "plugin://plugin.video.youtube/?action=play_video&videoid=alfTrailer1";
 
     @Mock
     private TvShowNfoFiles nfoFiles;
@@ -88,6 +90,58 @@ class TvNfoSyncTest {
                 .isInstanceOfSatisfying(TvShowProblemException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.CONFLICT));
         assertThat(show.getNfoModifiedAt()).isEqualTo(SYNCHRONIZED);
+    }
+
+    @Test
+    void takesTheTrailerFromTheShowNfo() {
+        TvShow show = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
+
+        TvNfoSync.applyShow(show, showNfo().withTrailer(TRAILER), "ALF", 1986);
+        assertThat(show.getTrailer()).isEqualTo(TRAILER);
+
+        TvNfoSync.applyShow(show, showNfo(), "ALF", 1986);
+        assertThat(show.getTrailer()).as("unbekannt bleibt wie bisher").isEqualTo(TRAILER);
+
+        TvNfoSync.applyShow(show, showNfo().withTrailer(TvShowNfo.NO_TRAILER), "ALF", 1986);
+        assertThat(show.getTrailer()).isNull();
+        assertThat(show.nfoTrailer()).isEqualTo(TvShowNfo.NO_TRAILER);
+    }
+
+    @Test
+    void readsAnUnknownTrailerFromTheNfoOnce() {
+        TvShow show = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
+        TvNfoState nfo = new TvNfoState(SHOW_DIRECTORY.resolve("tvshow.nfo"), SYNCHRONIZED);
+        when(nfoFiles.findShowNfo(SHOW_DIRECTORY)).thenReturn(Optional.of(nfo));
+        when(nfoFiles.readShow(nfo)).thenReturn(showNfo().withTrailer(TRAILER));
+
+        assertThat(show.nfoTrailer()).isNull();
+        assertThat(nfoSync.readTrailerIfUnknown(show)).isTrue();
+        assertThat(nfoSync.readTrailerIfUnknown(show)).isTrue();
+
+        assertThat(show.getTrailer()).isEqualTo(TRAILER);
+        verify(nfoFiles).readShow(nfo);
+    }
+
+    @Test
+    void treatsAShowWithoutNfoAsHavingNoTrailerAndKeepsUnreadableOnesUnknown() {
+        TvShow withoutNfo = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
+        when(nfoFiles.findShowNfo(SHOW_DIRECTORY)).thenReturn(Optional.empty());
+
+        assertThat(nfoSync.readTrailerIfUnknown(withoutNfo)).isTrue();
+        assertThat(withoutNfo.nfoTrailer()).isEqualTo(TvShowNfo.NO_TRAILER);
+
+        TvShow unreadable = new TvShow(1L, SHOW_DIRECTORY.toString(), "ALF", 1986);
+        TvNfoState nfo = new TvNfoState(SHOW_DIRECTORY.resolve("tvshow.nfo"), SYNCHRONIZED);
+        when(nfoFiles.findShowNfo(SHOW_DIRECTORY)).thenReturn(Optional.of(nfo));
+        when(nfoFiles.readShow(nfo)).thenThrow(mock(NfoException.class));
+
+        assertThat(nfoSync.readTrailerIfUnknown(unreadable)).isFalse();
+        assertThat(unreadable.isTrailerKnown()).isFalse();
+    }
+
+    private static TvShowNfo showNfo() {
+        return new TvShowNfo("ALF", null, null, null, null, null, null, null, null, null, null, Map.of(), null, null,
+                null, null);
     }
 
     private static EpisodeNfo episode(int number, String title, Integer playCount) {

@@ -80,6 +80,7 @@ describe('TvShowDetail', () => {
       exists: true,
       modifiedAt: '2026-10-26T09:00:00Z',
     },
+    trailer: null,
   };
 
   const scrapers: ScraperInfo[] = [
@@ -223,21 +224,36 @@ describe('TvShowDetail', () => {
     expect(input('tvdbId').value).toBe('78020');
   });
 
+  it('shows a new trailer without discarding unsaved changes', async () => {
+    const link = 'plugin://plugin.video.youtube/?action=play_video&videoid=alfTrailer1';
+    await load(alf);
+    await type('title', 'ALF (neu)');
+    expect(element().querySelector('.no-trailer')).not.toBeNull();
+
+    await type('trailerUrl', link);
+    click('.apply-link-button');
+    httpTesting
+      .expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/trailer` })
+      .flush({ ...alf, trailer: link });
+    await fixture.whenStable();
+
+    expect(element().querySelector('.trailer-link')?.textContent).toBe(link);
+    expect(input('title').value).toBe('ALF (neu)');
+  });
+
   it('refreshes the show in Kodi on request', async () => {
     await load(alf);
 
     element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
-    httpTesting
-      .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })
-      .flush([
-        {
-          hostId: 1,
-          host: 'Wohnzimmer',
-          outcome: 'REFRESHED',
-          message: '„ALF“ aktualisiert.',
-          at: '',
-        },
-      ]);
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' }).flush([
+      {
+        hostId: 1,
+        host: 'Wohnzimmer',
+        outcome: 'REFRESHED',
+        message: '„ALF“ aktualisiert.',
+        at: '',
+      },
+    ]);
     element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })

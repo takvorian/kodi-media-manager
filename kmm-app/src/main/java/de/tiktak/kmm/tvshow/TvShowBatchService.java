@@ -1,7 +1,9 @@
 package de.tiktak.kmm.tvshow;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.function.LongPredicate;
 
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
@@ -25,6 +27,7 @@ public class TvShowBatchService {
     static final int MAX_LISTED_FAILURES = 20;
 
     private final TvShowMetadataService metadataService;
+    private final TvShowTrailerService trailerService;
     private final JobService jobService;
 
     public JobSnapshot start(TvShowBatchEdit edit) {
@@ -32,17 +35,27 @@ public class TvShowBatchService {
                 context -> apply(edit, context));
     }
 
+    /** Trägt für Serien ohne Trailer den besten Vorschlag ein, als Job wie die Stapel-Bearbeitung. */
+    public JobSnapshot startTrailerFill(List<Long> showIds) {
+        List<Long> distinct = List.copyOf(new LinkedHashSet<>(showIds));
+        return jobService.submit(JOB_KEY, "Fehlende Trailer für %d Serien holen".formatted(distinct.size()),
+                context -> apply(distinct, trailerService::fillMissing, context));
+    }
+
     TvShowBatchResult apply(TvShowBatchEdit edit, JobContext context) {
+        return apply(edit.showIds(), showId -> metadataService.changeShow(showId, edit::apply), context);
+    }
+
+    TvShowBatchResult apply(List<Long> showIds, LongPredicate change, JobContext context) {
         List<String> failures = new ArrayList<>();
         int changed = 0;
         int unchanged = 0;
         int failed = 0;
-        List<Long> showIds = edit.showIds();
         for (long showId : showIds) {
             context.throwIfCancellationRequested();
             context.reportProgress(changed + unchanged + failed, showIds.size(), "Serie " + showId);
             try {
-                if (metadataService.changeShow(showId, edit::apply)) {
+                if (change.test(showId)) {
                     changed++;
                 } else {
                     unchanged++;

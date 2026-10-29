@@ -63,6 +63,33 @@ class TvNfoSync {
     static void applyShow(TvShow show, TvShowNfo nfo, String fallbackTitle, Integer fallbackYear) {
         show.applyMetadata(TvNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
         show.applyExtras(TvNfoMapper.toExtras(nfo));
+        if (nfo.trailer() != null) {
+            show.changeTrailer(nfo.trailer());
+        }
+    }
+
+    /**
+     * Liest den Trailer aus der NFO nach, wenn KMM ihn noch nicht kennt, etwa bei Serien aus einer Version ohne
+     * Trailer. Ohne NFO gibt es keinen Trailer.
+     *
+     * @return ob der Trailer danach bekannt ist; {@code false}, wenn die NFO nicht lesbar ist
+     */
+    boolean readTrailerIfUnknown(TvShow show) {
+        if (show.isTrailerKnown()) {
+            return true;
+        }
+        Optional<TvNfoState> nfo = nfoFiles.findShowNfo(show.directory());
+        if (nfo.isEmpty()) {
+            show.changeTrailer(null);
+            return true;
+        }
+        try {
+            show.changeTrailer(nfoFiles.readShow(nfo.get()).trailer());
+            return true;
+        } catch (NfoException e) {
+            log.warn("Trailer of TV show {} unknown, NFO not readable: {}", show.getId(), nfo.get().file(), e);
+            return false;
+        }
     }
 
     /** Die Episode in der NFO; eine Datei mit nur einer Episode darf auch eine anders nummerierte enthalten. */

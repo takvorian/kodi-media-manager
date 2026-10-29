@@ -15,7 +15,7 @@ import de.tiktak.kmm.plugin.api.TrailerScraper;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Trailer von The Movie Database (TMDB). TMDB verweist auf YouTube-Videos; Kodi spielt sie über das YouTube-Addon
+ * Trailer von Filmen und Serien von The Movie Database (TMDB). TMDB verweist auf YouTube-Videos; Kodi spielt sie über das YouTube-Addon
  * ab, wie Embers „Kodi-Trailer-Format“. Andere Seiten (z. B. Vimeo) werden übergangen.
  */
 @Extension
@@ -31,18 +31,19 @@ public class TmdbTrailerScraper extends AbstractTmdbScraper implements TrailerSc
 
     @Override
     public Set<MediaType> supportedMediaTypes() {
-        return Set.of(MediaType.MOVIE);
+        return Set.of(MediaType.MOVIE, MediaType.TV_SHOW);
     }
 
     @Override
     public List<TrailerCandidate> findTrailers(ScrapeRequest request) {
-        if (request.mediaType() != MediaType.MOVIE) {
-            return List.of();
-        }
         TmdbApi api = api();
-        return api.tmdbIdOf(request.uniqueIds())
-                .flatMap(api::movieVideos)
-                .map(videos -> JsonNodes.elements(videos.path("results"))
+        Optional<JsonNode> videos = switch (request.mediaType()) {
+            case MOVIE -> api.tmdbIdOf(request.uniqueIds()).flatMap(api::movieVideos);
+            case TV_SHOW -> api.tvShowIdOf(request.uniqueIds()).flatMap(api::tvVideos);
+            default -> Optional.empty();
+        };
+        return videos
+                .map(response -> JsonNodes.elements(response.path("results"))
                         .map(TmdbTrailerScraper::toCandidate)
                         .flatMap(Optional::stream)
                         .toList())

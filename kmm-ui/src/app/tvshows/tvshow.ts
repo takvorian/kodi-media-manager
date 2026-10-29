@@ -98,6 +98,8 @@ export interface TvShowDetails {
   readonly seasons: readonly Season[];
   readonly episodes: readonly EpisodeSummary[];
   readonly nfo: NfoInfo;
+  /** Trailer-Link der tvshow.nfo, den Kodi abspielt. */
+  readonly trailer: string | null;
 }
 
 /** Bearbeitbare Metadaten einer Episode; Staffel und Episode stehen im Dateinamen. */

@@ -123,6 +123,16 @@ class TmdbApi {
         return client.get("/tv/" + tmdbId + "/images", Map.of("include_image_language", imageLanguages()));
     }
 
+    /** Videos einer Serie in der Bildsprache, auf Englisch und ohne Sprache; Namen in der Seriensprache. */
+    Optional<JsonNode> tvVideos(String tmdbId) {
+        if (!isTmdbId(tmdbId)) {
+            return Optional.empty();
+        }
+        return client.get("/tv/" + tmdbId + "/videos", Map.of(
+                "language", settings.tvLanguage(),
+                "include_video_language", imageLanguages()));
+    }
+
     Optional<JsonNode> tvSeasonImages(String tmdbId, int season) {
         if (!isTmdbId(tmdbId)) {
             return Optional.empty();

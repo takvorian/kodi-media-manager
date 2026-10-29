@@ -16,6 +16,7 @@ import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowQueryService;
 import de.tiktak.kmm.tvshow.TvShowScrapeService;
+import de.tiktak.kmm.tvshow.TvShowTrailerService;
 import de.tiktak.kmm.tvshow.TvRenameTrigger;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan;
 import de.tiktak.kmm.tvshow.TvShowRenameService;
@@ -24,7 +25,7 @@ import lombok.extern.slf4j.Slf4j;
 
 /**
  * Scrapt alle Serien einer Quelle nacheinander: Zuordnung (nur bei sicherem Treffer), leere
- * Episodenfelder und fehlende Bilder. Vorhandene Daten und Bilder bleiben unverändert.
+ * Episodenfelder, fehlende Bilder und fehlende Trailer-Links. Vorhandene Daten und Bilder bleiben unverändert.
  */
 @Slf4j
 @Component
@@ -39,6 +40,7 @@ class TvAutoScrapeRunner {
     private final TvShowMetadataService metadataService;
     private final TvShowScrapeService scrapeService;
     private final TvShowArtworkService artworkService;
+    private final TvShowTrailerService trailerService;
     private final StreamDetailsService streamDetails;
     private final TvShowRenameService renameService;
 
@@ -54,9 +56,9 @@ class TvAutoScrapeRunner {
         }
         context.reportProgress(showIds.size(), showIds.size(), null);
         TvAutoScrapeResult result = progress.toResult(showIds.size());
-        log.info("Auto-scraped TV source {}: {} shows, {} scraped, {} unmatched, {} episodes, {} images, {} failures",
-                sourceId, result.shows(), result.scraped(), result.unmatched(), result.episodesUpdated(),
-                result.imagesSaved(), result.failures().size());
+        log.info("Auto-scraped TV source {}: {} shows, {} scraped, {} unmatched, {} episodes, {} images, {} trailers, "
+                + "{} failures", sourceId, result.shows(), result.scraped(), result.unmatched(),
+                result.episodesUpdated(), result.imagesSaved(), result.trailersSaved(), result.failures().size());
         return result;
     }
 
@@ -80,6 +82,9 @@ class TvAutoScrapeRunner {
             ArtworkFillResult artwork = artworkService.fillMissing(showId);
             progress.imagesSaved += artwork.saved();
             artwork.warnings().forEach(progress::warn);
+            if (trailerService.fillMissing(showId)) {
+                progress.trailersSaved++;
+            }
             renameService.renameIfEnabled(showId, TvRenameTrigger.SCRAPE)
                     .filter(plan -> plan.status() == TvShowRenamePlan.Status.CONFLICT
                             || plan.status() == TvShowRenamePlan.Status.FAILED)
@@ -99,6 +104,7 @@ class TvAutoScrapeRunner {
         private int unmatched;
         private int episodesUpdated;
         private int imagesSaved;
+        private int trailersSaved;
         private final List<String> unmatchedTitles = new ArrayList<>();
         private final List<String> failures = new ArrayList<>();
         private final Set<String> warnings = new LinkedHashSet<>();
@@ -119,8 +125,8 @@ class TvAutoScrapeRunner {
         }
 
         TvAutoScrapeResult toResult(int shows) {
-            return new TvAutoScrapeResult(shows, scraped, unmatched, episodesUpdated, imagesSaved, unmatchedTitles,
-                    failures, List.copyOf(warnings));
+            return new TvAutoScrapeResult(shows, scraped, unmatched, episodesUpdated, imagesSaved, trailersSaved,
+                    unmatchedTitles, failures, List.copyOf(warnings));
         }
 
         private static void addLimited(List<String> entries, String entry) {

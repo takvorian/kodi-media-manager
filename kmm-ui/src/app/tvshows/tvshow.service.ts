@@ -55,6 +55,11 @@ export class TvShowService {
     return this.http.post<Job>(`${TVSHOWS_URL}/batch`, edit);
   }
 
+  /** Holt für die Serien ohne Trailer den besten Vorschlag, als Job. */
+  fillMissingTrailers(showIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/trailers/fill`, { showIds });
+  }
+
   /** Vorhandene Werte je Filterfeld für Auswahllisten. */
   filterValues(): Observable<TvShowFilterValues> {
     return this.http.get<TvShowFilterValues>(`${TVSHOWS_URL}/filter-values`);

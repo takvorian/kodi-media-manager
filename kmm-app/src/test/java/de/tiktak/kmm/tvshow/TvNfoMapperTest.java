@@ -38,7 +38,9 @@ class TvNfoMapperTest {
                 "tt0090390", 9));
         assertThat(extras.actors()).containsExactly(new TvActor("Paul Fusco", "ALF", null));
         assertThat(extras.seasonNames()).containsExactly(Map.entry(1, "Ankunft"));
-        TvShowNfo back = TvNfoMapper.toNfo(metadata, extras);
+        TvShowNfo back = TvNfoMapper.toNfo(metadata, extras, TvShowNfo.NO_TRAILER);
+        assertThat(back.trailer()).isEqualTo(TvShowNfo.NO_TRAILER);
+        assertThat(TvNfoMapper.toNfo(metadata, extras, null).trailer()).isNull();
         assertThat(back.uniqueIds()).containsExactly(Map.entry("tvdb", "78020"), Map.entry("tmdb", "4658"),
                 Map.entry("imdb", "tt0090390"));
         assertThat(back.actors()).containsExactly(new NfoActor("Paul Fusco", "ALF", 0, null));

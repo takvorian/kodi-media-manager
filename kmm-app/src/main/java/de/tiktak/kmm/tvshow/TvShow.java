@@ -12,6 +12,7 @@ import org.hibernate.Length;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
+import de.tiktak.kmm.nfo.TvShowNfo;
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
 import jakarta.persistence.ElementCollection;
@@ -37,6 +38,8 @@ import lombok.NoArgsConstructor;
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 public class TvShow {
+
+    static final int MAX_TRAILER_LENGTH = 1024;
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -91,6 +94,17 @@ public class TvShow {
 
     @Column(name = "user_rating")
     private Integer userRating;
+
+    /** Trailer-Link aus der NFO, etwa {@code plugin://plugin.video.youtube/…}, oder {@code null}. */
+    @Column(name = "trailer", length = MAX_TRAILER_LENGTH)
+    private String trailer;
+
+    /**
+     * Ob {@link #trailer} den Stand der NFO wiedergibt. Bei Serien aus älteren Versionen ist er unbekannt; dann
+     * bleibt der Eintrag in der NFO beim Schreiben unverändert.
+     */
+    @Column(name = "trailer_known", nullable = false)
+    private boolean trailerKnown;
 
     @ElementCollection
     @CollectionTable(name = "tv_show_genre", joinColumns = @JoinColumn(name = "tv_show_id"))
@@ -180,6 +194,20 @@ public class TvShow {
         extras.ratings().forEach(rating -> ratings.add(TvRatingEntry.of(rating)));
         seasons.clear();
         extras.seasonNames().forEach((number, name) -> seasons.add(new TvSeason(number, name)));
+    }
+
+    /** @param newTrailer Link oder {@code null} bzw. leer für „kein Trailer“ */
+    void changeTrailer(String newTrailer) {
+        this.trailer = newTrailer == null || newTrailer.isBlank() ? null : newTrailer.strip();
+        this.trailerKnown = true;
+    }
+
+    /** Trailer für die NFO: {@code null}, wenn unbekannt, sonst Link oder „kein Trailer“. */
+    String nfoTrailer() {
+        if (!trailerKnown) {
+            return null;
+        }
+        return trailer == null ? TvShowNfo.NO_TRAILER : trailer;
     }
 
     void changeAddedAt(Instant newAddedAt) {

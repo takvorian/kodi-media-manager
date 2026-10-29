@@ -21,6 +21,7 @@ import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
+import { TrailerEditor } from '../shared/trailer-editor';
 import { TvPeople } from './tv-people';
 import { TvShowRenamePlan, tvRenameConfirmation } from './tv-rename';
 import { TvRenameService } from './tv-rename.service';
@@ -44,7 +45,7 @@ import {
 } from './tvshow-forms';
 import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
-import { TvShowService } from './tvshow.service';
+import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -68,6 +69,7 @@ export interface SeasonWithEpisodes {
     TvPeople,
     TvShowOnlineSearch,
     ArtworkGallery,
+    TrailerEditor,
   ],
   templateUrl: './tvshow-detail.html',
   styleUrl: './tvshow-detail.scss',
@@ -93,6 +95,11 @@ export class TvShowDetail {
     params: () => this.id(),
     stream: ({ params }) => this.tvShowService.findShow(params),
   });
+  /** Eigenes Signal, damit Änderungen außerhalb der Metadaten (Trailer) das Formular nicht zurücksetzen. */
+  private readonly metadata = computed(() =>
+    this.show.hasValue() ? this.show.value().metadata : null,
+  );
+  protected readonly trailerEndpoint = computed(() => `${TVSHOWS_URL}/${this.id()}/trailer`);
   protected readonly seasons = computed<SeasonWithEpisodes[]>(() =>
     this.show.hasValue() ? groupBySeason(this.show.value()) : [],
   );
@@ -114,10 +121,16 @@ export class TvShowDetail {
 
   constructor() {
     effect(() => {
-      if (this.show.hasValue()) {
-        this.form.reset(toTvShowFormValue(this.show.value().metadata));
+      const metadata = this.metadata();
+      if (metadata) {
+        this.form.reset(toTvShowFormValue(metadata));
       }
     });
+  }
+
+  /** Übernimmt nur den Trailer, damit ungespeicherte Änderungen im Formular bleiben. */
+  protected showTrailer(trailer: string | null): void {
+    this.show.update((details) => details && { ...details, trailer });
   }
 
   protected seasonArtwork(season: Season): ArtworkSource {
