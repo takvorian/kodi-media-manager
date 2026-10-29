@@ -17,7 +17,7 @@
     <properties>
         <test-plugins.directory>${project.build.directory}/test-plugins</test-plugins.directory>
         <test-plugin.artifactId>kmm-plugin-testdata</test-plugin.artifactId>
-        <bundled-plugins.artifactIds>kmm-plugin-tmdb,kmm-plugin-fanarttv,kmm-plugin-tvdb,kmm-plugin-televisiontunes,kmm-plugin-youtube</bundled-plugins.artifactIds>
+        <bundled-plugins.artifactIds>kmm-plugin-tmdb,kmm-plugin-fanarttv,kmm-plugin-tvdb,kmm-plugin-televisiontunes,kmm-plugin-youtube,kmm-plugin-trakt</bundled-plugins.artifactIds>
         <bundled-plugins.directory>${project.build.outputDirectory}/bundled-plugins</bundled-plugins.directory>
     </properties>
 
@@ -221,6 +221,11 @@
             <artifactId>kmm-plugin-youtube</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-plugin-trakt</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -278,6 +283,7 @@
                         <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-tvdb</classpathDependencyExclude>
                         <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-televisiontunes</classpathDependencyExclude>
                         <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-youtube</classpathDependencyExclude>
+                        <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-trakt</classpathDependencyExclude>
                     </classpathDependencyExcludes>
                     <systemPropertyVariables>
                         <kmm.test-plugins.directory>${test-plugins.directory}</kmm.test-plugins.directory>

@@ -28,6 +28,7 @@ public class TvShowBatchService {
 
     private final TvShowMetadataService metadataService;
     private final TvShowTrailerService trailerService;
+    private final TvShowRatingService ratingService;
     private final JobService jobService;
 
     public JobSnapshot start(TvShowBatchEdit edit) {
@@ -38,6 +39,11 @@ public class TvShowBatchService {
     /** Trägt für Serien ohne Trailer den besten Vorschlag ein, als Job wie die Stapel-Bearbeitung. */
     public JobSnapshot startTrailerFill(List<Long> showIds) {
         return startFill("Fehlende Trailer für %d Serien holen", showIds, trailerService::fillMissing);
+    }
+
+    /** Ergänzt fehlende Bewertungen weiterer Anbieter (etwa Trakt), als Job wie die Stapel-Bearbeitung. */
+    public JobSnapshot startRatingFill(List<Long> showIds) {
+        return startFill("Fehlende Bewertungen für %d Serien holen", showIds, ratingService::fillMissing);
     }
 
     /**

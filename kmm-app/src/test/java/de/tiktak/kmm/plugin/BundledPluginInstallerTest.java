@@ -29,12 +29,13 @@ class BundledPluginInstallerTest {
 
         int installed = installer.installInto(pluginDirectory);
 
-        assertThat(installed).isEqualTo(5);
+        assertThat(installed).isEqualTo(6);
         assertThat(pluginDirectory.resolve("kmm-plugin-tmdb.jar")).isRegularFile();
         assertThat(pluginDirectory.resolve("kmm-plugin-fanarttv.jar")).isRegularFile();
         assertThat(pluginDirectory.resolve("kmm-plugin-tvdb.jar")).isRegularFile();
         assertThat(pluginDirectory.resolve("kmm-plugin-televisiontunes.jar")).isRegularFile();
         assertThat(pluginDirectory.resolve("kmm-plugin-youtube.jar")).isRegularFile();
+        assertThat(pluginDirectory.resolve("kmm-plugin-trakt.jar")).isRegularFile();
     }
 
     @Test

@@ -11,6 +11,7 @@ import java.util.List;
  * @param imagesSaved     neu gespeicherte Bilder
  * @param trailersSaved   neu eingetragene Trailer-Links
  * @param themesSaved     neu gespeicherte Titelmusik ({@code theme.mp3})
+ * @param ratingsAdded    Filme mit neu ergänzten Bewertungen weiterer Anbieter (etwa Trakt)
  * @param unmatchedTitles Titel der Filme ohne eindeutigen Treffer (gekürzt)
  * @param failures        Fehler je Film als „Titel: Meldung“ (gekürzt)
  * @param warnings        einmalige Hinweise, z. B. zu nicht eingerichteten Anbietern (gekürzt)
@@ -22,6 +23,7 @@ public record AutoScrapeResult(
         int imagesSaved,
         int trailersSaved,
         int themesSaved,
+        int ratingsAdded,
         List<String> unmatchedTitles,
         List<String> failures,
         List<String> warnings) {

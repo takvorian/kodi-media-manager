@@ -10,6 +10,7 @@ import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
 import de.tiktak.kmm.plugin.api.MovieSetScraper;
+import de.tiktak.kmm.plugin.api.RatingScraper;
 import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.ThemeScraper;
 import de.tiktak.kmm.plugin.api.TrailerScraper;
@@ -50,6 +51,10 @@ public class ScraperRegistry {
 
     public List<TrailerScraper> trailerScrapersFor(MediaType mediaType) {
         return supporting(pluginManager.getExtensions(TrailerScraper.class), mediaType);
+    }
+
+    public List<RatingScraper> ratingScrapersFor(MediaType mediaType) {
+        return supporting(pluginManager.getExtensions(RatingScraper.class), mediaType);
     }
 
     public List<ThemeScraper> themeScrapersFor(MediaType mediaType) {

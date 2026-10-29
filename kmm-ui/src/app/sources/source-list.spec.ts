@@ -428,6 +428,7 @@ describe('SourceList', () => {
       imagesSaved: 9,
       trailersSaved: 2,
       themesSaved: 3,
+      ratingsAdded: 4,
       unmatchedTitles: ['Unbekannt'],
       failures: ['Kaputt: TMDB ist nicht erreichbar'],
       warnings: ['fanart.tv: Key fehlt'],
@@ -509,7 +510,7 @@ describe('SourceList', () => {
 
       expect(snackBarMessages).toEqual([
         'Scrapen „Filme“ abgeschlossen: 4 Filme, 1 neu zugeordnet, 1 ohne Treffer, 9 Bilder gespeichert, ' +
-          '2 Trailer eingetragen, 3 Titelmusik gespeichert, 1 Fehler.',
+          '2 Trailer eingetragen, 3 Titelmusik gespeichert, 4 mit neuen Bewertungen, 1 Fehler.',
       ]);
       expect(texts('.unmatched-titles li')).toEqual(['Unbekannt']);
       expect(texts('.failures li')).toEqual(['Kaputt: TMDB ist nicht erreichbar']);
@@ -540,6 +541,7 @@ describe('SourceList', () => {
             unmatched: 0,
             trailersSaved: 0,
             themesSaved: 0,
+            ratingsAdded: 0,
             unmatchedTitles: [],
             failures: [],
             warnings: [],

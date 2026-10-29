@@ -63,6 +63,9 @@ kmm:
         api-key: ${KMM_TVDB_API_KEY:}
         # PIN eines TVDB-Abonnements, nur bei Keys für Abonnenten nötig
         pin: ${KMM_TVDB_PIN:}
+      trakt:
+        # Client-ID einer eigenen Trakt-App für die öffentlichen Bewertungen: https://trakt.tv/oauth/applications
+        client-id: ${KMM_TRAKT_CLIENT_ID:}
       youtube:
         # yt-dlp für Titelmusik von YouTube: https://github.com/yt-dlp/yt-dlp; ohne Pfad aus dem Suchpfad
         yt-dlp: ${KMM_YTDLP:yt-dlp}

@@ -210,6 +210,22 @@ export class MovieList {
     });
   }
 
+  /** Ergänzt für die Auswahl fehlende Bewertungen weiterer Anbieter (etwa Trakt); vorhandene bleiben. */
+  protected fillMissingRatings(): void {
+    const ids = this.chosenIds();
+    if (
+      !this.confirm(
+        `Für ${ids.length} Filme fehlende Bewertungen (z. B. Trakt) holen? Die NFOs werden dabei geschrieben.`,
+      )
+    ) {
+      return;
+    }
+    this.movieService.fillMissingRatings(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   /** Holt für die Auswahl fehlende Titelmusik (theme.mp3), nur bei gleichem Titel beim Anbieter. */
   protected fillMissingThemes(): void {
     const ids = this.chosenIds();

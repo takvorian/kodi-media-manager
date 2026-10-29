@@ -11,7 +11,8 @@ public enum ApiKey {
     TVDB_API_KEY("tvdb", "api-key", "TVDB-API-Key (v4)"),
     TVDB_PIN("tvdb", "pin", "TVDB-Abonnenten-PIN"),
     FANARTTV_API_KEY("fanarttv", "api-key", "fanart.tv-Projekt-Key"),
-    FANARTTV_CLIENT_KEY("fanarttv", "client-key", "fanart.tv-Persönlicher-Key");
+    FANARTTV_CLIENT_KEY("fanarttv", "client-key", "fanart.tv-Persönlicher-Key"),
+    TRAKT_CLIENT_ID("trakt", "client-id", "Trakt-Client-ID");
 
     private static final String STORE_PREFIX = "plugin.";
 

@@ -101,6 +101,10 @@ export class MovieService {
   }
 
   /** Holt für die Filme ohne Trailer den besten Vorschlag, als Job. */
+  fillMissingRatings(movieIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/ratings/fill`, { movieIds });
+  }
+
   fillMissingThemes(movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${MOVIES_URL}/themes/fill`, { movieIds });
   }

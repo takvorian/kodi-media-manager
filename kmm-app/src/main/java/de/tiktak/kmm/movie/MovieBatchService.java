@@ -29,6 +29,7 @@ public class MovieBatchService {
     private final MovieMetadataService metadataService;
     private final MovieTagService tagService;
     private final MovieTrailerService trailerService;
+    private final MovieRatingService ratingService;
     private final JobService jobService;
 
     public JobSnapshot start(MovieBatchEdit edit) {
@@ -39,6 +40,11 @@ public class MovieBatchService {
     /** Trägt für Filme ohne Trailer den besten Vorschlag ein, als Job wie die Stapel-Bearbeitung. */
     public JobSnapshot startTrailerFill(List<Long> movieIds) {
         return startFill("Fehlende Trailer für %d Filme holen", movieIds, trailerService::fillMissing);
+    }
+
+    /** Ergänzt fehlende Bewertungen weiterer Anbieter (etwa Trakt), als Job wie die Stapel-Bearbeitung. */
+    public JobSnapshot startRatingFill(List<Long> movieIds) {
+        return startFill("Fehlende Bewertungen für %d Filme holen", movieIds, ratingService::fillMissing);
     }
 
     /**

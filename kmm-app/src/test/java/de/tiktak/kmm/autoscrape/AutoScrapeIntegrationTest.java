@@ -119,7 +119,7 @@ class AutoScrapeIntegrationTest {
         JsonNode result = awaitJob(post(AutoScrapeController.AUTO_SCRAPE_PATH, sourceId));
 
         assertThat(objectMapper.treeToValue(result, AutoScrapeResult.class)).isEqualTo(new AutoScrapeResult(3, 1, 1, 5, 0,
-                0, List.of("Unbekannt"), List.of(), List.of()));
+                0, 0, List.of("Unbekannt"), List.of(), List.of()));
         assertThat(Files.readString(library.resolve("Heat (1995)/Heat (1995).nfo")))
                 .contains("<title>Heat</title>", "<runtime>170</runtime>", ">949</uniqueid>");
         assertThat(library.resolve("Heat (1995)/Heat (1995)-poster.jpg")).hasBinaryContent(JPEG);

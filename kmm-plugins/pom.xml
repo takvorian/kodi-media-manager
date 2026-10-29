@@ -22,6 +22,7 @@
         <module>kmm-plugin-tvdb</module>
         <module>kmm-plugin-televisiontunes</module>
         <module>kmm-plugin-youtube</module>
+        <module>kmm-plugin-trakt</module>
     </modules>
 
     <properties>

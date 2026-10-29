@@ -33,6 +33,7 @@ import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowQueryService;
 import de.tiktak.kmm.tvshow.TvShowScrapeService;
 import de.tiktak.kmm.theme.ThemeService;
+import de.tiktak.kmm.tvshow.TvShowRatingService;
 import de.tiktak.kmm.tvshow.TvShowTrailerService;
 import de.tiktak.kmm.tvshow.TvRenameTrigger;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan;
@@ -60,6 +61,9 @@ class TvAutoScrapeRunnerTest {
 
     @Mock
     private ThemeService themeService;
+
+    @Mock
+    private TvShowRatingService ratingService;
 
     @Mock
     private JobContext context;
@@ -90,6 +94,8 @@ class TvAutoScrapeRunnerTest {
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(1, List.of()));
         when(trailerService.fillMissing(1L)).thenReturn(true);
         when(themeService.fillShow(1L)).thenReturn(true);
+        when(ratingService.fillMissing(1L)).thenReturn(true);
+        when(ratingService.fillMissing(2L)).thenThrow(new ErrorResponseException(HttpStatus.CONFLICT));
         when(themeService.fillShow(2L)).thenThrow(new ErrorResponseException(HttpStatus.BAD_GATEWAY));
         when(streamDetails.probeEpisodesAfterScrape(2L)).thenReturn(List.of("ffprobe fehlt"));
         when(renameService.renameIfEnabled(1L, TvRenameTrigger.SCRAPE)).thenReturn(Optional.empty());
@@ -104,15 +110,17 @@ class TvAutoScrapeRunnerTest {
         assertThat(result.imagesSaved()).isEqualTo(3);
         assertThat(result.trailersSaved()).isEqualTo(1);
         assertThat(result.themesSaved()).isEqualTo(1);
+        assertThat(result.ratingsAdded()).isEqualTo(1);
         assertThat(result.warnings()).containsExactly(TvAutoScrapeRunner.NO_TV_SHOW_SCRAPER, "POSTER: 404",
                 "„Lost“ nicht umbenannt: Der Ordner existiert bereits.");
         verify(renameService, never()).renameIfEnabled(3L, TvRenameTrigger.SCRAPE);
         assertThat(result.failures()).contains("Lost: Technische Angaben: ffprobe fehlt");
         verify(streamDetails, never()).probeEpisodesAfterScrape(1L);
-        assertThat(result.failures()).hasSize(5)
+        assertThat(result.failures()).hasSize(6)
                 .first().asString().isEqualTo("Lost: NFO nicht geschrieben: /lost/x.nfo");
         assertThat(result.failures()).contains("Lost: Titelmusik: null");
-        assertThat(result.failures().get(4)).isEqualTo("Defekt: unerwarteter Fehler");
+        assertThat(result.failures()).contains("Lost: Bewertungen: null");
+        assertThat(result.failures().get(5)).isEqualTo("Defekt: unerwarteter Fehler");
         verify(context).reportProgress(4, 4, null);
     }
 

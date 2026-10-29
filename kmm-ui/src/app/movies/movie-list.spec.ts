@@ -325,6 +325,25 @@ describe('MovieList', () => {
     expect(updated).toEqual([job]);
   });
 
+  it('fetches the missing ratings of the chosen movies as a job', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.fill-ratings-button')!.click();
+    const fill = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/ratings/fill` });
+    expect(fill.request.body).toEqual({ movieIds: [heat.id] });
+    const job = {
+      id: 'r',
+      key: 'movies-batch',
+      title: 'Fehlende Bewertungen',
+      status: 'RUNNING',
+    } as Job;
+    fill.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('fetches the missing themes of the chosen movies as a job', async () => {
     await respond(page([heat, ronin]));
     element().querySelector<HTMLInputElement>('.choose input')!.click();

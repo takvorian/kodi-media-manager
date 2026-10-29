@@ -36,6 +36,7 @@ services:
       KMM_TMDB_API_KEY: ${KMM_TMDB_API_KEY:-}
       KMM_FANARTTV_API_KEY: ${KMM_FANARTTV_API_KEY:-}
       KMM_TVDB_API_KEY: ${KMM_TVDB_API_KEY:-}
+      KMM_TRAKT_CLIENT_ID: ${KMM_TRAKT_CLIENT_ID:-}
       # Optional: gesetzte Werte haben Vorrang vor der Einstellungsseite und sind dort gesperrt.
       KMM_TMDB_LANGUAGE: ${KMM_TMDB_LANGUAGE:-}
       KMM_ARTWORK_LANGUAGE: ${KMM_ARTWORK_LANGUAGE:-}

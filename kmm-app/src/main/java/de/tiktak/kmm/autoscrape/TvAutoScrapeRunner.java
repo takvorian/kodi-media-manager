@@ -17,6 +17,7 @@ import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowQueryService;
 import de.tiktak.kmm.tvshow.TvShowScrapeService;
 import de.tiktak.kmm.theme.ThemeService;
+import de.tiktak.kmm.tvshow.TvShowRatingService;
 import de.tiktak.kmm.tvshow.TvShowTrailerService;
 import de.tiktak.kmm.tvshow.TvRenameTrigger;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan;
@@ -43,6 +44,7 @@ class TvAutoScrapeRunner {
     private final TvShowArtworkService artworkService;
     private final TvShowTrailerService trailerService;
     private final ThemeService themeService;
+    private final TvShowRatingService ratingService;
     private final StreamDetailsService streamDetails;
     private final TvShowRenameService renameService;
 
@@ -89,6 +91,7 @@ class TvAutoScrapeRunner {
                 progress.trailersSaved++;
             }
             fillTheme(showId, title, progress);
+            fillRatings(showId, title, progress);
             renameService.renameIfEnabled(showId, TvRenameTrigger.SCRAPE)
                     .filter(plan -> plan.status() == TvShowRenamePlan.Status.CONFLICT
                             || plan.status() == TvShowRenamePlan.Status.FAILED)
@@ -98,6 +101,17 @@ class TvAutoScrapeRunner {
         } catch (RuntimeException e) {
             log.warn("Auto-scraping TV show {} failed", showId, e);
             progress.failed(title, UNEXPECTED_ERROR);
+        }
+    }
+
+    /** Fehlende Bewertungen weiterer Anbieter; ein Fehler dabei hält den Rest nicht auf. */
+    private void fillRatings(long showId, String title, Progress progress) {
+        try {
+            if (ratingService.fillMissing(showId)) {
+                progress.ratingsAdded++;
+            }
+        } catch (ErrorResponseException e) {
+            progress.failed(title, AutoScrapeService.RATINGS + e.getBody().getDetail());
         }
     }
 
@@ -121,6 +135,7 @@ class TvAutoScrapeRunner {
         private int imagesSaved;
         private int trailersSaved;
         private int themesSaved;
+        private int ratingsAdded;
         private final List<String> unmatchedTitles = new ArrayList<>();
         private final List<String> failures = new ArrayList<>();
         private final Set<String> warnings = new LinkedHashSet<>();
@@ -142,7 +157,7 @@ class TvAutoScrapeRunner {
 
         TvAutoScrapeResult toResult(int shows) {
             return new TvAutoScrapeResult(shows, scraped, unmatched, episodesUpdated, imagesSaved, trailersSaved,
-                    themesSaved, unmatchedTitles, failures, List.copyOf(warnings));
+                    themesSaved, ratingsAdded, unmatchedTitles, failures, List.copyOf(warnings));
         }
 
         private static void addLimited(List<String> entries, String entry) {

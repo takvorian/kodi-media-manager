@@ -46,6 +46,12 @@ public record MovieSupplement(
         ratings = withoutNulls(ratings);
     }
 
+    /** Kopie mit anderen Bewertungen. */
+    public MovieSupplement withRatings(List<Rating> newRatings) {
+        return new MovieSupplement(actors, directors, writers, studios, countries, tags, newRatings, set, userRating,
+                playCount, lastPlayed);
+    }
+
     /** Kopie mit anderen Tags. */
     public MovieSupplement withTags(List<String> newTags) {
         return new MovieSupplement(actors, directors, writers, studios, countries, newTags, ratings, set, userRating,

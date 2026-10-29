@@ -164,7 +164,7 @@ class TvAutoScrapeIntegrationTest {
                 String.valueOf(sourceId))));
 
         assertThat(result.toString()).isEqualTo("{\"shows\":2,\"scraped\":1,\"unmatched\":1,\"episodesUpdated\":1,"
-                + "\"imagesSaved\":3,\"trailersSaved\":1,\"themesSaved\":0,\"unmatchedTitles\":[\"Unbekannt\"],\"failures\":[],"
+                + "\"imagesSaved\":3,\"trailersSaved\":1,\"themesSaved\":0,\"ratingsAdded\":0,\"unmatchedTitles\":[\"Unbekannt\"],\"failures\":[],"
                 + "\"warnings\":[]}");
         assertThat(jdbcClient.sql("SELECT tvdb_id FROM tv_show WHERE title = 'Lost'").query(String.class).single())
                 .isEqualTo("73739");

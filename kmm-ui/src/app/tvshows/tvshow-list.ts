@@ -199,6 +199,22 @@ export class TvShowList {
     });
   }
 
+  /** Ergänzt für die Auswahl fehlende Bewertungen weiterer Anbieter (etwa Trakt); vorhandene bleiben. */
+  protected fillMissingRatings(): void {
+    const ids = [...this.chosen()];
+    if (
+      !this.confirm(
+        `Für ${ids.length} Serien fehlende Bewertungen (z. B. Trakt) holen? Die NFOs werden dabei geschrieben.`,
+      )
+    ) {
+      return;
+    }
+    this.tvShowService.fillMissingRatings(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   /** Holt für die Auswahl fehlende Titelmusik (theme.mp3), nur bei gleichem Titel beim Anbieter. */
   protected fillMissingThemes(): void {
     const ids = [...this.chosen()];
