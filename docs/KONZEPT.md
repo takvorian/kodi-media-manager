@@ -232,4 +232,4 @@ Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von
 - **HTML-Scraper** sind rechtlich und technisch fragil.
 - **Docker:** Dateirechte (`PUID`/`PGID`) und Pfad-Mapping Container ↔ Kodi (SMB/NFS).
 - **Lizenz:** noch offen. Ember steht unter GPL-3.0. Werden Code oder Logik direkt übernommen, muss KMM ebenfalls GPL-3.0 sein.
-- **Schriftarten:** Die UI lädt Roboto derzeit von Google Fonts. Für den Offline- bzw. NAS-Betrieb sollte die Schrift selbst gehostet werden.
+- **Schriftarten** ✅: Roboto kommt als Paket `@fontsource/roboto` (SIL Open Font License) mit; die UI lädt nichts mehr von Google Fonts und funktioniert offline.
