@@ -20,6 +20,7 @@
         <module>kmm-plugin-tmdb</module>
         <module>kmm-plugin-fanarttv</module>
         <module>kmm-plugin-tvdb</module>
+        <module>kmm-plugin-televisiontunes</module>
     </modules>
 
     <properties>
