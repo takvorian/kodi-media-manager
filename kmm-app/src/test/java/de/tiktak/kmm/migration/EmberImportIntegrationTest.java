@@ -224,8 +224,10 @@ class EmberImportIntegrationTest {
 
         assertThat(scan.get("added").asInt()).as(scan.toString()).isZero();
         assertThat(scan.get("removed").asInt()).isZero();
+        assertThat(jdbcClient.sql("SELECT title FROM episode WHERE id = :id").param("id", episodeId(3))
+                .query(String.class).single()).as("der Scan behält Embers Werte").isEqualTo("Tabula Rasa");
         assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId(3))).bodyJson()
-                .extractingPath("$.metadata.title").isEqualTo("Tabula Rasa");
+                .extractingPath("$.metadata.title").as("beim Öffnen gilt die NFO").isEqualTo("Aus der NFO");
     }
 
     @Test
