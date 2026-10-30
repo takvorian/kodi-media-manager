@@ -7,8 +7,6 @@ import java.util.List;
 
 import javax.sql.DataSource;
 
-import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.boot.info.BuildProperties;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 
@@ -24,21 +22,16 @@ public class SystemInfoService {
     static final String UNKNOWN = "unbekannt";
 
     private final Environment environment;
-    private final ObjectProvider<BuildProperties> buildProperties;
+    private final ReleaseInfoService releaseInfoService;
     private final DataSource dataSource;
 
     public SystemInfo currentSystemInfo() {
         return new SystemInfo(
                 environment.getProperty(APPLICATION_NAME_PROPERTY, UNKNOWN),
-                applicationVersion(),
+                releaseInfoService.currentVersion(),
                 Runtime.version().toString(),
                 activeProfiles(),
                 databaseProductName());
-    }
-
-    private String applicationVersion() {
-        BuildProperties properties = buildProperties.getIfAvailable();
-        return properties == null ? UNKNOWN : properties.getVersion();
     }
 
     private List<String> activeProfiles() {

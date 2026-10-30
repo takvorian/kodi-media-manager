@@ -14,4 +14,5 @@ export class SystemStatus {
   private readonly systemInfoService = inject(SystemInfoService);
 
   protected readonly systemInfo = rxResource({ stream: () => this.systemInfoService.load() });
+  protected readonly changelog = rxResource({ stream: () => this.systemInfoService.changelog() });
 }

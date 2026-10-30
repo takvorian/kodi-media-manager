@@ -1,5 +1,5 @@
 import { Component, computed, inject } from '@angular/core';
-import { toSignal } from '@angular/core/rxjs-interop';
+import { rxResource, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
@@ -7,6 +7,7 @@ import { filter, map } from 'rxjs';
 
 import { chapterForUrl } from './help/help';
 import { JobIndicator } from './jobs/job-indicator';
+import { SystemInfoService } from './system/system-info.service';
 
 @Component({
   selector: 'app-root',
@@ -22,7 +23,10 @@ import { JobIndicator } from './jobs/job-indicator';
   styleUrl: './app.scss',
 })
 export class App {
+  private readonly systemInfoService = inject(SystemInfoService);
+
   protected readonly title = 'Kodi Media Manager';
+  protected readonly systemInfo = rxResource({ stream: () => this.systemInfoService.load() });
   protected readonly navigation = [
     { path: '/movies', label: 'Filme' },
     { path: '/tvshows', label: 'Serien' },

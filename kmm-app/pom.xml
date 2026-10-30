@@ -323,6 +323,8 @@
                 <installer.name>Kodi Media Manager</installer.name>
                 <installer.upgrade-uuid>6cff534d-eb86-5f8d-b555-4ad792b82bec</installer.upgrade-uuid>
                 <installer.input>${project.build.directory}/installer-input</installer.input>
+                <!-- Die CI setzt den neuesten Git-Tag ein: Nur mit steigender Version ersetzt eine MSI die alte. -->
+                <installer.app-version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</installer.app-version>
             </properties>
             <build>
                 <plugins>
@@ -380,7 +382,7 @@
                                         <argument>--name</argument>
                                         <argument>${installer.name}</argument>
                                         <argument>--app-version</argument>
-                                        <argument>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</argument>
+                                        <argument>${installer.app-version}</argument>
                                         <argument>--vendor</argument>
                                         <argument>tiktak</argument>
                                         <argument>--description</argument>

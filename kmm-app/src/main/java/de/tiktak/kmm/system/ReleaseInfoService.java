@@ -1,0 +1,93 @@
+package de.tiktak.kmm.system;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.List;
+
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.stereotype.Service;
+
+import lombok.extern.slf4j.Slf4j;
+
+/**
+ * Liest beim Start die von {@code release.sh} erzeugte {@code changelog.md}:
+ * <pre>
+ * ## v0.2 - 2026-11-02
+ * - Betreff (abc1234)
+ * </pre>
+ * Die aktuelle Version ist der oberste Abschnitt. Vor dem ersten Release fehlt die Datei; die Version
+ * ist dann {@value #DEV_VERSION}.
+ */
+@Slf4j
+@Service
+public class ReleaseInfoService {
+
+    static final String RESOURCE_NAME = "changelog.md";
+    static final String DEV_VERSION = "dev";
+
+    private static final String VERSION_PREFIX = "## ";
+    private static final String CHANGE_PREFIX = "- ";
+    private static final String DATE_SEPARATOR = " - ";
+
+    private final List<ChangelogVersion> changelog;
+
+    public ReleaseInfoService() {
+        this(RESOURCE_NAME);
+    }
+
+    ReleaseInfoService(String resourceName) {
+        changelog = load(resourceName);
+    }
+
+    public String currentVersion() {
+        return changelog.isEmpty() ? DEV_VERSION : changelog.getFirst().version();
+    }
+
+    public List<ChangelogVersion> changelog() {
+        return changelog;
+    }
+
+    private static List<ChangelogVersion> load(String resourceName) {
+        ClassPathResource resource = new ClassPathResource(resourceName);
+        if (!resource.exists()) {
+            log.info("No {} on the classpath, running as version '{}'", resourceName, DEV_VERSION);
+            return List.of();
+        }
+        try {
+            return parse(resource.getContentAsString(StandardCharsets.UTF_8).lines().toList());
+        } catch (IOException e) {
+            log.warn("{} could not be read", resourceName, e);
+            return List.of();
+        }
+    }
+
+    static List<ChangelogVersion> parse(List<String> lines) {
+        List<ChangelogVersion> versions = new ArrayList<>();
+        String heading = null;
+        List<String> changes = new ArrayList<>();
+        for (String raw : lines) {
+            String line = raw.strip();
+            if (line.startsWith(VERSION_PREFIX)) {
+                addVersion(versions, heading, changes);
+                heading = line.substring(VERSION_PREFIX.length()).strip();
+                changes = new ArrayList<>();
+            } else if (heading != null && line.startsWith(CHANGE_PREFIX)) {
+                changes.add(line.substring(CHANGE_PREFIX.length()).strip());
+            }
+        }
+        addVersion(versions, heading, changes);
+        return List.copyOf(versions);
+    }
+
+    private static void addVersion(List<ChangelogVersion> versions, String heading, List<String> changes) {
+        if (heading == null) {
+            return;
+        }
+        int separator = heading.indexOf(DATE_SEPARATOR);
+        versions.add(separator < 0
+                ? new ChangelogVersion(heading, "", changes)
+                : new ChangelogVersion(heading.substring(0, separator).strip(),
+                        heading.substring(separator + DATE_SEPARATOR.length()).strip(), changes));
+    }
+}

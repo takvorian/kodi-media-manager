@@ -1,5 +1,10 @@
 <mat-toolbar class="toolbar">
   <h1 class="title">{{ title }}</h1>
+  @if (systemInfo.hasValue()) {
+    <a class="app-version" routerLink="/system" title="Version und Änderungen">{{
+      systemInfo.value().version
+    }}</a>
+  }
   <nav class="navigation">
     @for (item of navigation; track item.path) {
       <a matButton [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ item.label }}</a>

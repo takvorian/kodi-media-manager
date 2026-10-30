@@ -21,7 +21,8 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    image: kodi-media-manager:latest
+    # Ohne Quelltext genügt: docker compose pull && docker compose up -d. Selbst bauen: docker compose up -d --build
+    image: takvorian/kodi-media-manager:${KMM_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       db:

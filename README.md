@@ -46,6 +46,21 @@ Den Windows-Installer baut das Profil `installer`. Dafür muss [WiX 3](https://g
 ./mvnw -Pinstaller -DskipTests package   # kmm-app/target/installer/Kodi Media Manager-<Version>.msi
 ```
 
+## Release
+
+```bash
+./release.sh --dry-run   # zeigt die nächste Version und das Changelog
+./release.sh
+```
+
+`release.sh` zählt die Version aus den Git-Tags weiter (`v0.1`, `v0.2`, …) und erzeugt `kmm-app/src/main/resources/changelog.md` aus den Commit-Betreffs. Es committet das Changelog, setzt den Tag, pusht beides und ruft `build-push.sh <version>` auf. Das Skript baut das Image für `linux/amd64` aus dem Tag und lädt es als `takvorian/kodi-media-manager:<version>` und `:latest` zu Docker Hub.
+
+Voraussetzungen: Docker und `docker login`, `gh` mit Anmeldung, Branch `main` auf dem Stand von `origin` mit sauberem Arbeitsbaum und grüner CI für den aktuellen Commit. Die App zeigt die oberste Version des Changelogs an, ohne Changelog `dev`; zwischen zwei Releases gebaute Stände zeigen also noch die letzte Version.
+
+Scheitert nur der Image-Build oder der Upload, sind Commit und Tag schon gepusht; dann `./build-push.sh <version>` wiederholen statt `release.sh`, das sonst die nächste Version anlegt. Das gilt auch, wenn der Maven-Schritt im Image-Build nach 30 Minuten abbricht.
+
+Die CI versieht die Windows-MSI mit dem neuesten Tag. Eine neue MSI ersetzt die alte nur bei höherer Version, also nur die MSI eines neuen Releases installieren.
+
 ## Starten
 
 ### Windows-Installer
@@ -72,8 +87,11 @@ java -jar kmm-app/target/kmm-app.jar \
 ```bash
 cd docker
 cp .env.example .env     # Passwörter setzen
-docker compose up -d --build
+docker compose pull      # fertiges Image von Docker Hub; selbst bauen: docker compose up -d --build
+docker compose up -d
 ```
+
+Eine feste Version statt der neuesten legt `KMM_IMAGE_TAG` in der `.env` fest, z. B. `0.1`.
 
 | Volume | Zweck |
 |---|---|
@@ -141,7 +159,7 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
 ## API
 
 - OpenAPI/Swagger UI: `/swagger-ui.html` (im Docker-Profil mit Anmeldung)
-- `GET /api/v1/system/info`
+- `GET /api/v1/system/info`, `GET /api/v1/system/changelog`
 - `GET /api/v1/sources`, `POST /api/v1/sources`, `DELETE /api/v1/sources/{id}`
 - `POST /api/v1/sources/{id}/scan` → `202 Accepted` mit dem gestarteten Job (Film- oder Serien-Scan je nach Quelle)
 - `POST /api/v1/sources/{id}/auto-scrape` → `202 Accepted`; ergänzt fehlende Metadaten und Bilder aller Filme bzw. Serien (inkl. Episoden und Staffeln) der Quelle

@@ -18,6 +18,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import de.tiktak.kmm.plugin.PluginController;
 import de.tiktak.kmm.plugin.PluginInfo;
 import de.tiktak.kmm.plugin.PluginService;
+import de.tiktak.kmm.system.ReleaseInfoService;
 import de.tiktak.kmm.system.SystemInfo;
 import de.tiktak.kmm.system.SystemInfoController;
 import de.tiktak.kmm.system.SystemInfoService;
@@ -43,6 +44,9 @@ class SecurityConfigurationTest {
 
         @MockitoBean
         private SystemInfoService systemInfoService;
+
+        @MockitoBean
+        private ReleaseInfoService releaseInfoService;
 
         @MockitoBean
         private PluginService pluginService;

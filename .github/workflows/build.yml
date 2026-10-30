@@ -63,6 +63,8 @@ jobs:
     needs: build
     steps:
       - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
 
       - uses: actions/setup-java@v5
         with:
@@ -81,7 +83,10 @@ jobs:
           Add-Content $env:GITHUB_PATH "$env:RUNNER_TEMP\wix"
 
       - name: Build installer
-        run: ./mvnw -B -Pinstaller -DskipTests package
+        shell: bash
+        run: |
+          tag="$(git describe --tags --abbrev=0 --match 'v*' 2>/dev/null || true)"
+          ./mvnw -B -Pinstaller -DskipTests ${tag:+"-Dinstaller.app-version=${tag#v}"} package
 
       - name: Upload installer
         uses: actions/upload-artifact@v5

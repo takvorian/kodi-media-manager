@@ -78,7 +78,7 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
 - **Betrieb:** Actuator (Health/Probes), OpenAPI (springdoc, `/swagger-ui.html`).
 
 ### Deployment
-- **Docker:** Multi-Stage-Build (Temurin 25 JDK → JRE + ffmpeg), Layered JAR, `docker/docker-compose.yml` mit App + MariaDB. Volumes: `/config`, `/media`, `/import/ember` (read-only). Berechtigungen über `PUID`/`PGID`.
+- **Docker:** Multi-Stage-Build (Temurin 25 JDK → JRE + ffmpeg), Layered JAR, `docker/docker-compose.yml` mit App + MariaDB. Veröffentlicht auf Docker Hub als `takvorian/kodi-media-manager` (nur `linux/amd64`), Tags `<version>` und `latest`; `release.sh` zählt `v0.x` aus den Git-Tags weiter, erzeugt das Changelog aus den Commit-Betreffs und baut per `build-push.sh` aus einem Worktree des Tags. Es bricht ab, wenn die CI für den Commit nicht grün ist, weil der Image-Build die Tests überspringt. Version und Changelog zeigt die App in der Kopfleiste und auf der Seite System (`ReleaseInfoService`). Volumes: `/config`, `/media`, `/import/ember` (read-only). Berechtigungen über `PUID`/`PGID`.
 - **Standalone:** Fat-JAR `java -jar kmm-app.jar` oder Windows-Installer (MSI per `jpackage`, Maven-Profil `installer`, enthält Java).
 
 ---

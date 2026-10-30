@@ -7,6 +7,17 @@
   margin: 0;
 }
 
+.app-version {
+  margin-left: -16px;
+  font: var(--mat-sys-label-small);
+  color: var(--mat-sys-on-surface-variant);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
 .navigation {
   display: flex;
   gap: 4px;

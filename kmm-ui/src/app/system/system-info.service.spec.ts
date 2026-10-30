@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 
 import { SystemInfo } from './system-info';
-import { SYSTEM_INFO_URL, SystemInfoService } from './system-info.service';
+import { CHANGELOG_URL, SYSTEM_INFO_URL, SystemInfoService } from './system-info.service';
 
 describe('SystemInfoService', () => {
   const systemInfo: SystemInfo = {
@@ -38,11 +38,23 @@ describe('SystemInfoService', () => {
     expect(received).toEqual(systemInfo);
   });
 
+  it('loads the changelog from the backend', () => {
+    const changelog = [{ version: 'v0.1', date: '2026-10-30', changes: ['Erste (abc1234)'] }];
+    let received: unknown;
+
+    service.changelog().subscribe((versions) => (received = versions));
+    httpTesting.expectOne(CHANGELOG_URL).flush(changelog);
+
+    expect(received).toEqual(changelog);
+  });
+
   it('propagates backend errors', () => {
     let failed = false;
 
     service.load().subscribe({ error: () => (failed = true) });
-    httpTesting.expectOne(SYSTEM_INFO_URL).flush('boom', { status: 500, statusText: 'Server Error' });
+    httpTesting
+      .expectOne(SYSTEM_INFO_URL)
+      .flush('boom', { status: 500, statusText: 'Server Error' });
 
     expect(failed).toBe(true);
   });

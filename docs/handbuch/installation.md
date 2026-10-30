@@ -49,7 +49,8 @@ Im Docker-Image sind FFmpeg und yt-dlp schon enthalten. KMM läuft dort mit eine
 ```bash
 cd docker
 cp .env.example .env     # Passwörter und Verzeichnisse eintragen
-docker compose up -d --build
+docker compose pull
+docker compose up -d
 ```
 
 Die Oberfläche ist dann unter `http://<Server>:8080` erreichbar. Benutzer und Passwort stehen in der `.env` (`KMM_ADMIN_USER`, `KMM_ADMIN_PASSWORD`).
@@ -62,6 +63,12 @@ Die Oberfläche ist dann unter `http://<Server>:8080` erreichbar. Benutzer und P
 
 `PUID` und `PGID` legen fest, mit welchem Benutzer KMM auf deine Medien zugreift. Dieser Benutzer braucht Schreibrechte, sonst können weder NFOs noch Bilder gespeichert werden.
 
+**Aktualisieren:** `docker compose pull` und danach `docker compose up -d`. Deine Daten bleiben dabei erhalten.
+
+**Feste Version:** Ohne weitere Angabe holt `pull` die neueste Version. Trage in der `.env` zum Beispiel `KMM_IMAGE_TAG=0.1` ein, um bei einer Version zu bleiben oder zu einer früheren zurückzukehren. Das Zurückgehen klappt nur, wenn die Datenbank noch nicht von einer neueren Version geändert wurde, sichere sie also vor Aktualisierungen.
+
 ## Version prüfen
 
-Die Seite **System** zeigt die KMM-Version, die Java-Version, die verwendete Datenbank und die aktiven Profile. Steht dort, dass das Backend nicht erreichbar ist, läuft KMM nicht mehr, siehe [Fehlerbehebung](fehlerbehebung.md).
+Die aktuelle Version steht in der Kopfleiste neben dem Titel, ein Klick darauf öffnet die Seite **System**. Dort stehen auch die **Änderungen** jeder Version. Bei `dev` ist es ein selbst gebauter Stand ohne veröffentlichte Version.
+
+Die Seite **System** zeigt außerdem die Java-Version, die verwendete Datenbank und die aktiven Profile. Steht dort, dass das Backend nicht erreichbar ist, läuft KMM nicht mehr, siehe [Fehlerbehebung](fehlerbehebung.md).

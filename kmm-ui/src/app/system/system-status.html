@@ -21,3 +21,34 @@
     }
   </mat-card-content>
 </mat-card>
+
+<mat-card appearance="outlined" class="changelog">
+  <mat-card-header>
+    <mat-card-title>Änderungen</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    @if (changelog.error()) {
+      <p class="error">Die Änderungen konnten nicht geladen werden.</p>
+    } @else if (changelog.hasValue()) {
+      @for (release of changelog.value(); track release.version) {
+        <section class="release">
+          <h3>
+            {{ release.version }}
+            @if (release.date) {
+              <span class="release-date">{{ release.date }}</span>
+            }
+          </h3>
+          <ul>
+            @for (change of release.changes; track $index) {
+              <li>{{ change }}</li>
+            }
+          </ul>
+        </section>
+      } @empty {
+        <p class="no-release">Noch keine Version veröffentlicht.</p>
+      }
+    } @else {
+      <p class="status">Lade Änderungen …</p>
+    }
+  </mat-card-content>
+</mat-card>

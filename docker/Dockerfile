@@ -18,9 +18,11 @@ COPY docs/handbuch/ docs/handbuch/
 COPY kmm-app/ kmm-app/
 
 # Tests laufen in der CI; das Image baut nur das Artefakt.
+# Das Zeitlimit beendet einen hängenden Build: Fällt beim npm-Download die optionale Sass-Binärdatei aus,
+# meldet npm das nicht, und ng build wartet danach endlos.
 RUN --mount=type=cache,target=/root/.m2 \
     --mount=type=cache,target=/workspace/kmm-ui/node \
-    ./mvnw -B -DskipTests package \
+    timeout 30m ./mvnw -B -DskipTests package \
     && java -Djarmode=tools -jar kmm-app/target/kmm-app.jar extract --layers --launcher --destination /extracted
 
 # ---- Runtime --------------------------------------------------------------
