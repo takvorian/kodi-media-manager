@@ -36,7 +36,17 @@ Voraussetzung: JDK 25. Maven und Node.js lädt der Build selbst herunter.
 
 Der Test gegen MariaDB (Testcontainers) läuft nur mit Docker und wird sonst übersprungen.
 
+Den Windows-Installer baut das Profil `installer`. Dafür muss [WiX 3](https://github.com/wixtoolset/wix3/releases) auf dem `PATH` liegen, die `wix314-binaries.zip` genügt:
+
+```bash
+./mvnw -Pinstaller -DskipTests package   # kmm-app/target/installer/Kodi Media Manager-<Version>.msi
+```
+
 ## Starten
+
+### Windows-Installer
+
+Die MSI bringt Java mit, installiert nur für den angemeldeten Benutzer und braucht keine Administratorrechte. Sie ist nicht signiert, Windows SmartScreen warnt deshalb beim Ausführen. Die Verknüpfung startet KMM in einem Konsolenfenster, die Oberfläche ist dann unter <http://localhost:8080> erreichbar. Schließen des Fensters beendet KMM. Eine neue Version ersetzt die alte; die Daten unter `~/.kodi-media-manager` bleiben auch beim Deinstallieren erhalten.
 
 ### Standalone
 

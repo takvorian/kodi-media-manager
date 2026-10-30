@@ -35,6 +35,39 @@ jobs:
           path: '**/target/site/jacoco/'
           if-no-files-found: ignore
 
+  installer:
+    runs-on: windows-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      # jpackage braucht WiX 3 auf dem PATH. Die Programmdateien kommen ohne Installation aus.
+      - name: Install WiX
+        shell: pwsh
+        run: |
+          $zip = "$env:RUNNER_TEMP\wix314-binaries.zip"
+          Invoke-WebRequest https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip -OutFile $zip
+          if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne '6AC824E1642D6F7277D0ED7EA09411A508F6116BA6FAE0AA5F2C7DAA2FF43D31') { throw 'Prüfsumme von WiX stimmt nicht' }
+          Expand-Archive $zip "$env:RUNNER_TEMP\wix"
+          Add-Content $env:GITHUB_PATH "$env:RUNNER_TEMP\wix"
+
+      - name: Build installer
+        run: ./mvnw -B -Pinstaller -DskipTests package
+
+      - name: Upload installer
+        uses: actions/upload-artifact@v5
+        with:
+          name: windows-installer
+          path: kmm-app/target/installer/*.msi
+          if-no-files-found: error
+          retention-days: 7
+
   docker:
     runs-on: ubuntu-latest
     needs: build

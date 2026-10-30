@@ -310,4 +310,109 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!--
+            Windows-Installer: ./mvnw -Pinstaller -DskipTests package legt die MSI unter kmm-app/target/installer ab.
+            jpackage braucht WiX 3 auf dem PATH. Die Upgrade-ID darf sich nie ändern, sonst ersetzt eine neue
+            Version die alte nicht.
+        -->
+        <profile>
+            <id>installer</id>
+            <properties>
+                <installer.name>Kodi Media Manager</installer.name>
+                <installer.upgrade-uuid>6cff534d-eb86-5f8d-b555-4ad792b82bec</installer.upgrade-uuid>
+                <installer.input>${project.build.directory}/installer-input</installer.input>
+            </properties>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>build-helper-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>parse-installer-version</id>
+                                <goals>
+                                    <goal>parse-version</goal>
+                                </goals>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-resources-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>copy-installer-input</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>copy-resources</goal>
+                                </goals>
+                                <configuration>
+                                    <outputDirectory>${installer.input}</outputDirectory>
+                                    <resources>
+                                        <resource>
+                                            <directory>${project.build.directory}</directory>
+                                            <includes>
+                                                <include>${project.build.finalName}.jar</include>
+                                            </includes>
+                                        </resource>
+                                    </resources>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                    <plugin>
+                        <groupId>org.codehaus.mojo</groupId>
+                        <artifactId>exec-maven-plugin</artifactId>
+                        <executions>
+                            <execution>
+                                <id>jpackage</id>
+                                <phase>package</phase>
+                                <goals>
+                                    <goal>exec</goal>
+                                </goals>
+                                <configuration>
+                                    <executable>${java.home}/bin/jpackage</executable>
+                                    <arguments>
+                                        <argument>--type</argument>
+                                        <argument>msi</argument>
+                                        <argument>--name</argument>
+                                        <argument>${installer.name}</argument>
+                                        <argument>--app-version</argument>
+                                        <argument>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</argument>
+                                        <argument>--vendor</argument>
+                                        <argument>tiktak</argument>
+                                        <argument>--description</argument>
+                                        <argument>Medienverwaltung für Kodi</argument>
+                                        <argument>--about-url</argument>
+                                        <argument>https://github.com/takvorian/kodi-media-manager</argument>
+                                        <argument>--license-file</argument>
+                                        <argument>${maven.multiModuleProjectDirectory}/LICENSE</argument>
+                                        <argument>--icon</argument>
+                                        <argument>${maven.multiModuleProjectDirectory}/kmm-ui/public/favicon.ico</argument>
+                                        <argument>--input</argument>
+                                        <argument>${installer.input}</argument>
+                                        <argument>--main-jar</argument>
+                                        <argument>${project.build.finalName}.jar</argument>
+                                        <argument>--dest</argument>
+                                        <argument>${project.build.directory}/installer</argument>
+                                        <argument>--win-console</argument>
+                                        <argument>--win-per-user-install</argument>
+                                        <argument>--win-dir-chooser</argument>
+                                        <argument>--win-menu</argument>
+                                        <argument>--win-menu-group</argument>
+                                        <argument>Kodi Media Manager</argument>
+                                        <argument>--win-shortcut</argument>
+                                        <argument>--win-upgrade-uuid</argument>
+                                        <argument>${installer.upgrade-uuid}</argument>
+                                    </arguments>
+                                </configuration>
+                            </execution>
+                        </executions>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
