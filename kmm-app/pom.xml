@@ -17,7 +17,7 @@
     <properties>
         <test-plugins.directory>${project.build.directory}/test-plugins</test-plugins.directory>
         <test-plugin.artifactId>kmm-plugin-testdata</test-plugin.artifactId>
-        <bundled-plugins.artifactIds>kmm-plugin-tmdb,kmm-plugin-fanarttv,kmm-plugin-tvdb,kmm-plugin-televisiontunes,kmm-plugin-youtube,kmm-plugin-trakt,kmm-plugin-omdb</bundled-plugins.artifactIds>
+        <bundled-plugins.artifactIds>kmm-plugin-tmdb,kmm-plugin-fanarttv,kmm-plugin-tvdb,kmm-plugin-televisiontunes,kmm-plugin-youtube,kmm-plugin-trakt,kmm-plugin-omdb,kmm-plugin-moviepilot,kmm-plugin-ofdb</bundled-plugins.artifactIds>
         <bundled-plugins.directory>${project.build.outputDirectory}/bundled-plugins</bundled-plugins.directory>
     </properties>
 
@@ -231,6 +231,16 @@
             <artifactId>kmm-plugin-omdb</artifactId>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-plugin-moviepilot</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-plugin-ofdb</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>
@@ -290,6 +300,8 @@
                         <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-youtube</classpathDependencyExclude>
                         <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-trakt</classpathDependencyExclude>
                         <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-omdb</classpathDependencyExclude>
+                        <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-moviepilot</classpathDependencyExclude>
+                        <classpathDependencyExclude>de.tiktak.kmm:kmm-plugin-ofdb</classpathDependencyExclude>
                     </classpathDependencyExcludes>
                     <systemPropertyVariables>
                         <kmm.test-plugins.directory>${test-plugins.directory}</kmm.test-plugins.directory>

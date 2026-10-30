@@ -24,6 +24,8 @@
         <module>kmm-plugin-youtube</module>
         <module>kmm-plugin-trakt</module>
         <module>kmm-plugin-omdb</module>
+        <module>kmm-plugin-moviepilot</module>
+        <module>kmm-plugin-ofdb</module>
     </modules>
 
     <properties>

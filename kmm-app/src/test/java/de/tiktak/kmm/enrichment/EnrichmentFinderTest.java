@@ -8,6 +8,7 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -81,6 +82,32 @@ class EnrichmentFinderTest {
         assertThat(EnrichmentFinder.contributes(false, Set.of(), false).test(trakt)).isTrue();
         assertThat(EnrichmentFinder.contributes(false, Set.of("imdb"), true).test(omdb)).isTrue();
         assertThat(EnrichmentFinder.contributes(false, Set.of("imdb"), false).test(omdb)).isFalse();
+    }
+
+    @Test
+    void asksProvidersWithoutRatingsOnlyForEmptyFields() {
+        EnrichmentScraper moviepilot = mock(EnrichmentScraper.class);
+        when(moviepilot.ratingSources()).thenReturn(Set.of());
+        when(moviepilot.providesDetails()).thenReturn(true);
+
+        assertThat(EnrichmentFinder.contributes(true, Set.of(), false).test(moviepilot)).isFalse();
+        assertThat(EnrichmentFinder.contributes(false, Set.of(), false).test(moviepilot)).isFalse();
+        assertThat(EnrichmentFinder.contributes(false, Set.of(), true).test(moviepilot)).isTrue();
+    }
+
+    @Test
+    void asksProvidersInTheirOrder() {
+        EnrichmentScraper german = mock(EnrichmentScraper.class);
+        Enrichment germanEnrichment = Enrichment.ofRatings(List.of());
+        when(german.order()).thenReturn(-1);
+        when(german.missingConfiguration()).thenReturn(Optional.empty());
+        when(german.findEnrichment(any())).thenReturn(Optional.of(germanEnrichment));
+        List<EnrichmentScraper> registered = new ArrayList<>(scraperRegistry.enrichmentScrapersFor(MediaType.MOVIE));
+        registered.add(german);
+        when(scraperRegistry.enrichmentScrapersFor(MediaType.MOVIE)).thenReturn(registered);
+
+        assertThat(finder.find(MediaType.MOVIE, "Heat", 1995, IDS, scraper -> true).getFirst())
+                .isSameAs(germanEnrichment);
     }
 
     @Test

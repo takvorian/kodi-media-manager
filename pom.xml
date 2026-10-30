@@ -140,6 +140,16 @@
                 <version>${project.version}</version>
             </dependency>
             <dependency>
+                <groupId>de.tiktak.kmm</groupId>
+                <artifactId>kmm-plugin-moviepilot</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>de.tiktak.kmm</groupId>
+                <artifactId>kmm-plugin-ofdb</artifactId>
+                <version>${project.version}</version>
+            </dependency>
+            <dependency>
                 <groupId>org.pf4j</groupId>
                 <artifactId>pf4j</artifactId>
                 <version>${pf4j.version}</version>

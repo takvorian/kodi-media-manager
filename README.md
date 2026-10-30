@@ -21,7 +21,7 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 | `kmm-nfo` | Kodi-NFOs für Filme, Serien und Episoden lesen und schreiben (unbekannte Elemente bleiben erhalten) |
 | `kmm-migration-ember` | Lesen von Ember-Profilen (Datenbank + `Settings.xml`), Pfad-Mapping; Import über die Seite **Ember-Import** |
 | `kmm-kodi` | JSON-RPC-Client für Kodi, Zuordnung von KMM-Pfaden zu Kodi-Pfaden |
-| `kmm-plugins` | mitgelieferte Plugins: `kmm-plugin-tmdb` (Film- und Serien-Metadaten, Bilder), `kmm-plugin-tvdb` (Serien-Metadaten und -Bilder), `kmm-plugin-fanarttv` (Bilder für Filme und Serien), `kmm-plugin-televisiontunes` und `kmm-plugin-youtube` (Titelmusik; YouTube braucht yt-dlp), `kmm-plugin-trakt` und `kmm-plugin-omdb` (Bewertungen, OMDb füllt auch leere Felder) |
+| `kmm-plugins` | mitgelieferte Plugins: `kmm-plugin-tmdb` (Film- und Serien-Metadaten, Bilder), `kmm-plugin-tvdb` (Serien-Metadaten und -Bilder), `kmm-plugin-fanarttv` (Bilder für Filme und Serien), `kmm-plugin-televisiontunes` und `kmm-plugin-youtube` (Titelmusik; YouTube braucht yt-dlp), `kmm-plugin-trakt` und `kmm-plugin-omdb` (Bewertungen, OMDb füllt auch leere Felder), `kmm-plugin-moviepilot` und `kmm-plugin-ofdb` (deutsche Angaben für leere Felder von Filmen, ohne API-Key) |
 | `kmm-ui` | Angular-Oberfläche |
 | `kmm-app` | Spring-Boot-Anwendung |
 

@@ -10,12 +10,19 @@ import java.util.Set;
  */
 public interface EnrichmentScraper extends Scraper {
 
+    int DEFAULT_ORDER = 100;
+
     /** Kennungen der Bewertungen in der NFO, z. B. {@code trakt} oder {@code imdb}. */
     Set<String> ratingSources();
 
     /** Ob der Anbieter auch Angaben für leere Felder liefert. */
     default boolean providesDetails() {
         return false;
+    }
+
+    /** Reihenfolge der Anbieter für leere Felder: kleinere Zahlen zuerst, deutsche Angaben also vor englischen. */
+    default int order() {
+        return DEFAULT_ORDER;
     }
 
     /**

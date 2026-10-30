@@ -1,6 +1,7 @@
 package de.tiktak.kmm.enrichment;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -41,7 +42,9 @@ public class EnrichmentFinder {
             return List.of();
         }
         List<Enrichment> found = new ArrayList<>();
-        for (EnrichmentScraper scraper : scraperRegistry.enrichmentScrapersFor(mediaType)) {
+        List<EnrichmentScraper> scrapers = scraperRegistry.enrichmentScrapersFor(mediaType).stream()
+                .sorted(Comparator.comparingInt(EnrichmentScraper::order)).toList();
+        for (EnrichmentScraper scraper : scrapers) {
             if (scraper.missingConfiguration().isPresent() || !wanted.test(scraper)) {
                 continue;
             }
@@ -57,13 +60,13 @@ public class EnrichmentFinder {
     /**
      * Ob ein Anbieter etwas beitragen kann.
      *
-     * @param refresh        vorhandene Bewertungen werden aktualisiert; dann zählt jeder Anbieter
+     * @param refresh        vorhandene Bewertungen werden aktualisiert; dann zählt jeder Anbieter mit Bewertungen
      * @param presentRatings Kennungen der vorhandenen Bewertungen
      * @param emptyFields    ob Felder leer sind, die Anbieter mit Angaben füllen können
      */
     public static Predicate<EnrichmentScraper> contributes(boolean refresh, Set<String> presentRatings,
             boolean emptyFields) {
-        return scraper -> refresh || !presentRatings.containsAll(scraper.ratingSources())
+        return scraper -> refresh && !scraper.ratingSources().isEmpty() || !presentRatings.containsAll(scraper.ratingSources())
                 || scraper.providesDetails() && emptyFields;
     }
 
