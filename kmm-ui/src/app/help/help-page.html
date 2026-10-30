@@ -1,0 +1,64 @@
+<div class="help-layout">
+  <aside class="help-index">
+    <mat-form-field class="help-search" subscriptSizing="dynamic">
+      <mat-label>Im Handbuch suchen</mat-label>
+      <input
+        matInput
+        type="search"
+        name="helpSearch"
+        [value]="query()"
+        (input)="query.set($any($event.target).value)"
+      />
+    </mat-form-field>
+
+    @if (hits.value(); as found) {
+      <ul class="help-hits">
+        @for (hit of found; track hit.slug) {
+          <li>
+            <a [routerLink]="['/help', hit.slug]" [fragment]="hit.anchor || undefined">
+              <strong>{{ hit.chapter }}</strong>
+              @if (hit.section !== hit.chapter) {
+                <span class="help-section">{{ hit.section }}</span>
+              }
+              @if (hit.snippet) {
+                <span class="help-snippet">{{ hit.snippet }}</span>
+              }
+            </a>
+          </li>
+        } @empty {
+          <li class="help-no-hits">Nichts gefunden.</li>
+        }
+      </ul>
+    } @else {
+      <nav class="help-chapters" aria-label="Kapitel">
+        @for (entry of chapters; track entry.slug) {
+          <a [routerLink]="['/help', entry.slug]" [class.active]="entry.slug === chapter()">{{
+            entry.title
+          }}</a>
+        }
+      </nav>
+    }
+  </aside>
+
+  <article class="help-article">
+    @if (content.error()) {
+      <p class="error">Dieses Kapitel konnte nicht geladen werden.</p>
+    } @else if (content.hasValue()) {
+      <div class="help-content" [innerHTML]="content.value()" (click)="followLink($event)"></div>
+      <div class="help-pager">
+        @if (previous(); as entry) {
+          <a matButton class="help-previous" [routerLink]="['/help', entry.slug]"
+            >← {{ entry.title }}</a
+          >
+        }
+        @if (next(); as entry) {
+          <a matButton class="help-next" [routerLink]="['/help', entry.slug]"
+            >{{ entry.title }} →</a
+          >
+        }
+      </div>
+    } @else {
+      <p class="loading">Lade Kapitel …</p>
+    }
+  </article>
+</div>

@@ -14,6 +14,7 @@ COPY kmm-kodi/ kmm-kodi/
 COPY kmm-media/ kmm-media/
 COPY kmm-plugins/ kmm-plugins/
 COPY kmm-ui/ kmm-ui/
+COPY docs/handbuch/ docs/handbuch/
 COPY kmm-app/ kmm-app/
 
 # Tests laufen in der CI; das Image baut nur das Artefakt.

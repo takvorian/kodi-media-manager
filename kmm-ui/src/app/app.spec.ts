@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { App } from './app';
@@ -38,7 +38,23 @@ describe('App', () => {
       'Einstellungen',
       'Ember-Import',
       'System',
+      'Hilfe',
     ]);
+  });
+
+  it('links the question mark to the chapter of the current page', async () => {
+    const fixture = TestBed.createComponent(App);
+    const element = fixture.nativeElement as HTMLElement;
+    const link = () => element.querySelector('.page-help');
+
+    await TestBed.inject(Router).navigateByUrl('/kodi');
+    fixture.detectChanges();
+    expect(link()?.getAttribute('href')).toBe('/help/kodi');
+    expect(link()?.getAttribute('target')).toBe('_blank');
+
+    await TestBed.inject(Router).navigateByUrl('/tags');
+    fixture.detectChanges();
+    expect(link()?.getAttribute('href')).toBe('/help/tags');
   });
 
   it('redirects the start page and unknown routes to the movie list', async () => {

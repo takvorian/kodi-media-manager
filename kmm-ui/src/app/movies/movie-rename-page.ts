@@ -24,6 +24,7 @@ import {
   movieRenameSummary,
 } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 8000;
 
@@ -34,6 +35,7 @@ const SNACKBAR_DURATION_MS = 8000;
 @Component({
   selector: 'app-movie-rename-page',
   imports: [
+    HelpLink,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,

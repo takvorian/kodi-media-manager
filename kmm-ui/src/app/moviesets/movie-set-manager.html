@@ -59,6 +59,7 @@
               <mat-label>TMDB-Sammlung</mat-label>
               <input matInput formControlName="tmdbCollectionId" name="tmdbCollectionId" />
               <mat-error>Nur Ziffern</mat-error>
+              <mat-hint>ID bei TMDB; nötig für Bilder</mat-hint>
             </mat-form-field>
             <mat-form-field>
               <mat-label>Reihenfolge</mat-label>
@@ -112,7 +113,10 @@
         @if (artwork) {
           <app-artwork-gallery [source]="artwork" />
         }
-        <p class="hint">Wo Set-Bilder liegen, steht in den Einstellungen unter „Filmsets“.</p>
+        <p class="hint">
+          Wo Set-Bilder liegen, steht in den Einstellungen unter „Filmsets“.
+          <app-help-link chapter="filmsets" anchor="set-bilder">Mehr dazu</app-help-link>
+        </p>
 
         <h3>Filme ({{ details.movies.length }})</h3>
         <ul class="members">

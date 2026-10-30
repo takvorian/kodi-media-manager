@@ -1,0 +1,152 @@
+// Baut aus docs/handbuch ein PDF: alle Kapitel in einer HTML-Datei, gedruckt mit Chrome im Hintergrund.
+// Bricht ab, wenn ein Link oder ein Bild ins Leere zeigt, und prüft so auch das Handbuch selbst.
+// Aufruf: npm run handbuch:pdf; Ausgabe: target/handbuch/KMM-Handbuch.pdf; Chrome notfalls über CHROME_BIN.
+import { execFileSync } from 'node:child_process';
+import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { Marked } from 'marked';
+
+const source = new URL('../../docs/handbuch/', import.meta.url);
+const target = new URL('../target/handbuch/', import.meta.url);
+const chapters = JSON.parse(readFileSync(new URL('kapitel.json', source), 'utf8'));
+const slugs = new Set(chapters.map((chapter) => chapter.slug));
+const CHROME_CANDIDATES = [
+  process.env.CHROME_BIN,
+  'C:/Program Files/Google/Chrome/Application/chrome.exe',
+  '/usr/bin/google-chrome',
+  '/usr/bin/chromium',
+].filter(Boolean);
+
+const anchors = new Set();
+const links = [];
+const problems = [];
+
+// Wie headingAnchor in src/app/help/help.ts, dort gelten dieselben Anker für die Hilfeseite.
+function headingAnchor(text) {
+  return text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
+    .trim()
+    .replace(/\s/g, '-');
+}
+
+function escapeHtml(text) {
+  return text
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;');
+}
+
+function render(chapter) {
+  const marked = new Marked({
+    renderer: {
+      heading({ tokens, depth, text }) {
+        const id = depth === 1 ? chapter.slug : `${chapter.slug}--${headingAnchor(text)}`;
+        anchors.add(id);
+        return `<h${depth} id="${id}">${this.parser.parseInline(tokens)}</h${depth}>\n`;
+      },
+      link({ href, tokens }) {
+        const internal = /^([a-z-]+)\.md(?:#(.*))?$/.exec(href);
+        if (!internal) {
+          if (!/^https?:/.test(href)) {
+            problems.push(`${chapter.slug}: unbekannter Link ${href}`);
+          }
+          return `<a href="${escapeHtml(href)}">${this.parser.parseInline(tokens)}</a>`;
+        }
+        const [, slug, anchor] = internal;
+        if (!slugs.has(slug)) {
+          problems.push(`${chapter.slug}: Kapitel ${slug} gibt es nicht`);
+        }
+        const id = anchor ? `${slug}--${anchor}` : slug;
+        links.push({ from: chapter.slug, id });
+        return `<a href="#${id}">${this.parser.parseInline(tokens)}</a>`;
+      },
+      image({ href, text }) {
+        const file = new URL(href, source);
+        if (!existsSync(file)) {
+          problems.push(`${chapter.slug}: Bild ${href} fehlt`);
+        }
+        return `<img src="${file.href}" alt="${escapeHtml(text)}" />`;
+      },
+    },
+  });
+  return marked.parse(readFileSync(new URL(`${chapter.slug}.md`, source), 'utf8'));
+}
+
+const body = chapters.map((chapter) => `<section>${render(chapter)}</section>`).join('\n');
+for (const { from, id } of links) {
+  if (!anchors.has(id)) {
+    problems.push(`${from}: Anker ${id} gibt es nicht`);
+  }
+}
+if (problems.length > 0) {
+  console.error(problems.join('\n'));
+  process.exit(1);
+}
+
+const contents = chapters
+  .map((chapter) => `<li><a href="#${chapter.slug}">${escapeHtml(chapter.title)}</a></li>`)
+  .join('');
+const html = `<!doctype html>
+<html lang="de"><head><meta charset="utf-8"><title>Kodi Media Manager – Handbuch</title>
+<style>
+  @page { size: A4; margin: 20mm 18mm; }
+  body { font: 11pt/1.45 Arial, Helvetica, sans-serif; color: #1a1a1a; }
+  .cover { height: 240mm; display: flex; flex-direction: column; justify-content: center; }
+  .cover h1 { font-size: 30pt; margin: 0 0 8pt; }
+  .cover p { font-size: 14pt; color: #555; margin: 0; }
+  .contents { page-break-after: always; }
+  .contents h2 { margin-top: 0; }
+  .contents ol { line-height: 1.9; }
+  section { page-break-before: always; }
+  h1 { font-size: 22pt; margin: 0 0 10pt; }
+  h2 { font-size: 15pt; margin: 18pt 0 6pt; }
+  h3 { font-size: 12pt; margin: 14pt 0 4pt; }
+  h2, h3 { page-break-after: avoid; }
+  a { color: #0b57d0; text-decoration: none; }
+  img { display: block; max-width: 100%; margin: 8pt 0; border: 1px solid #ccc; page-break-inside: avoid; }
+  code { font: 9.5pt Consolas, 'DejaVu Sans Mono', monospace; background: #f2f2f2; padding: 0 2pt; overflow-wrap: anywhere; }
+  pre { background: #f2f2f2; padding: 8pt; white-space: pre-wrap; }
+  pre code { padding: 0; }
+  table { border-collapse: collapse; width: 100%; margin: 8pt 0; }
+  tr { page-break-inside: avoid; }
+  th, td { border: 1px solid #bbb; padding: 3pt 6pt; text-align: left; vertical-align: top; }
+  th { background: #f2f2f2; }
+</style></head><body>
+<div class="cover"><h1>Kodi Media Manager</h1><p>Handbuch</p></div>
+<div class="contents"><h2>Inhalt</h2><ol>${contents}</ol></div>
+${body}
+</body></html>`;
+
+const chrome = CHROME_CANDIDATES.find((candidate) => existsSync(candidate));
+if (!chrome) {
+  console.error(
+    `Chrome nicht gefunden, CHROME_BIN setzen. Gesucht: ${CHROME_CANDIDATES.join(', ')}`,
+  );
+  process.exit(1);
+}
+
+mkdirSync(target, { recursive: true });
+const page = new URL('handbuch.html', target);
+const pdf = new URL('KMM-Handbuch.pdf', target);
+rmSync(pdf, { force: true });
+writeFileSync(page, html);
+execFileSync(
+  chrome,
+  [
+    '--headless',
+    '--disable-gpu',
+    '--no-sandbox',
+    '--no-pdf-header-footer',
+    `--user-data-dir=${fileURLToPath(new URL('chrome-profile/', target))}`,
+    `--print-to-pdf=${fileURLToPath(pdf)}`,
+    page.href,
+  ],
+  { stdio: 'ignore', timeout: 120000 },
+);
+if (!existsSync(pdf)) {
+  console.error('Chrome hat kein PDF erzeugt.');
+  process.exit(1);
+}
+console.log(fileURLToPath(pdf));

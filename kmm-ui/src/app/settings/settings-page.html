@@ -40,11 +40,13 @@
         <mat-form-field>
           <mat-label>Metadaten</mat-label>
           <input matInput formControlName="tvMetadataLanguage" name="tvMetadataLanguage" placeholder="de-DE" />
+          <mat-hint>z. B. de-DE oder en-US</mat-hint>
           <mat-error>Format: de oder de-DE</mat-error>
         </mat-form-field>
         <mat-form-field>
           <mat-label>Bevorzugte Bildsprache</mat-label>
           <input matInput formControlName="tvArtworkLanguage" name="tvArtworkLanguage" placeholder="de" />
+          <mat-hint>Zweistelliger Sprachcode, z. B. de</mat-hint>
           <mat-error>Format: zwei Kleinbuchstaben, z. B. de</mat-error>
         </mat-form-field>
         <mat-form-field>
@@ -54,7 +56,7 @@
               <mat-option [value]="ordering.value">{{ ordering.label }}</mat-option>
             }
           </mat-select>
-          <mat-hint>Für das Scrapen von Serien</mat-hint>
+          <mat-hint>Für das Scrapen von Serien, wirkt nur bei TVDB</mat-hint>
         </mat-form-field>
       </mat-card-content>
     </mat-card>
@@ -92,6 +94,7 @@
           <code>{{ '{' }}season:2{{ '}' }}</code> (zweistellig), <code>:first</code>, <code>:sort</code>,
           <code>:lower</code>, <code>:upper</code>. Teile in <code>[ ]</code> entfallen, wenn ein Platzhalter darin
           leer ist; <code>/</code> legt Unterordner an (nur beim Filmordner, relativ zur Quelle).
+          <app-help-link chapter="umbenennen" anchor="platzhalter">Alle Platzhalter</app-help-link>
         </p>
         <mat-form-field class="full">
           <mat-label>Filmordner</mat-label>
@@ -120,6 +123,7 @@
           <input matInput formControlName="episodeFile" name="episodeFile" />
           <mat-error>Bitte ein Muster angeben</mat-error>
         </mat-form-field>
+        <p class="hint">Die folgenden Auslöser benennen ohne Vorschau um; schalte sie erst ein, wenn deine Muster bewährt sind.</p>
         <div><mat-checkbox formControlName="movieOnEdit" name="movieOnEdit">Filme nach dem Speichern umbenennen</mat-checkbox></div>
         <div><mat-checkbox formControlName="movieOnScrape" name="movieOnScrape">Filme nach dem Scrapen umbenennen</mat-checkbox></div>
         <div><mat-checkbox formControlName="tvOnEdit" name="tvOnEdit">Serien nach dem Speichern umbenennen (Serie oder Episode)</mat-checkbox></div>
@@ -137,6 +141,7 @@
           <mat-checkbox formControlName="assignOnScrape" name="assignOnScrape">
             Filme beim Scrapen ihrem Filmset zuordnen (TMDB-Sammlung; ersetzt ein anderes Set)
           </mat-checkbox>
+          <app-help-link chapter="filmsets" anchor="filme-automatisch-zuordnen">Mehr dazu</app-help-link>
         </div>
         <div>
           <mat-checkbox formControlName="flatImages" name="flatImages">Set-Bilder im flachen Schema ablegen (wie Ember)</mat-checkbox>

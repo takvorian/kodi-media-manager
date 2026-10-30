@@ -34,12 +34,14 @@ import { MOVIES_URL, MovieService } from './movie.service';
 import { MovieRenamePlan, renameConfirmation } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
 import { CollectionReference } from './scraper';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
 
 @Component({
   selector: 'app-movie-detail',
   imports: [
+    HelpLink,
     DatePipe,
     ReactiveFormsModule,
     RouterLink,

@@ -23,6 +23,7 @@ import {
   resolutionLabel,
   valuesOf,
 } from './filter';
+import { HelpLink } from '../shared/help-link';
 
 const BOOLEAN_OPTIONS: readonly FilterOption[] = [
   { value: 'true', label: 'ja' },
@@ -37,7 +38,7 @@ const NEW_CONDITION_FIELD = 'GENRE';
  */
 @Component({
   selector: 'app-filter-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [HelpLink, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
   templateUrl: './filter-editor.html',
   styleUrl: './filter-editor.scss',
 })

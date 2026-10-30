@@ -2,6 +2,10 @@
   "name": "kmm-ui",
   "version": "0.0.0",
   "scripts": {
+    "help": "node scripts/copy-help.mjs",
+    "handbuch:pdf": "node scripts/handbuch-pdf.mjs",
+    "prestart": "npm run help",
+    "prebuild": "npm run help",
     "ng": "ng",
     "start": "ng serve",
     "build": "ng build",
@@ -20,6 +24,7 @@
     "@angular/platform-browser": "^22.2.0",
     "@angular/router": "^22.2.0",
     "@fontsource/roboto": "5.2.6",
+    "marked": "^18.1.2",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },

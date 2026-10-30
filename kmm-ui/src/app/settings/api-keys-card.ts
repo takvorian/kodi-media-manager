@@ -1,6 +1,11 @@
 import { Component, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
-import { FormControl, FormRecord, NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormControl,
+  FormRecord,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
@@ -10,6 +15,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { problemMessage } from '../shared/problem-message';
 import { ApiKeyName, ApiKeyView } from './settings';
 import { SettingsService } from './settings.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -19,7 +25,14 @@ const SNACKBAR_DURATION_MS = 5000;
  */
 @Component({
   selector: 'app-api-keys-card',
-  imports: [ReactiveFormsModule, MatButtonModule, MatCardModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    HelpLink,
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatCardModule,
+    MatFormFieldModule,
+    MatInputModule,
+  ],
   templateUrl: './api-keys-card.html',
   styleUrl: './settings-page.scss',
 })
@@ -53,7 +66,10 @@ export class ApiKeysCard {
   }
 
   protected hasChanges(): boolean {
-    return this.deletions().size > 0 || Object.values(this.form.getRawValue()).some((value) => value.trim() !== '');
+    return (
+      this.deletions().size > 0 ||
+      Object.values(this.form.getRawValue()).some((value) => value.trim() !== '')
+    );
   }
 
   protected save(): void {

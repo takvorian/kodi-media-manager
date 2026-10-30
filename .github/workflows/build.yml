@@ -35,6 +35,29 @@ jobs:
           path: '**/target/site/jacoco/'
           if-no-files-found: ignore
 
+  handbuch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: '24'
+
+      - name: Build PDF
+        working-directory: kmm-ui
+        run: |
+          npm ci --no-audit --no-fund --ignore-scripts
+          npm run handbuch:pdf
+
+      - name: Upload PDF
+        uses: actions/upload-artifact@v5
+        with:
+          name: handbuch
+          path: kmm-ui/target/handbuch/KMM-Handbuch.pdf
+          if-no-files-found: error
+          retention-days: 30
+
   installer:
     runs-on: windows-latest
     needs: build

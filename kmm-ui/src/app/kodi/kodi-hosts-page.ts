@@ -13,8 +13,14 @@ import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { KodiHost, KodiSyncResult, syncFailed } from './kodi';
-import { createKodiHostForm, createPathMappingForm, fillKodiHostForm, toKodiHostCommand } from './kodi-host-form';
+import {
+  createKodiHostForm,
+  createPathMappingForm,
+  fillKodiHostForm,
+  toKodiHostCommand,
+} from './kodi-host-form';
 import { KodiService } from './kodi.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -30,6 +36,7 @@ type Editing = KodiHost | 'new' | null;
 @Component({
   selector: 'app-kodi-hosts-page',
   imports: [
+    HelpLink,
     DatePipe,
     ReactiveFormsModule,
     MatButtonModule,
@@ -63,7 +70,11 @@ export class KodiHostsPage {
   /** Schlägt für ein neues Gerät die Verzeichnisse der Quellen als Pfade in KMM vor. */
   protected add(): void {
     this.sourceService.findAll().subscribe({
-      next: (sources) => this.startEditing('new', sources.map((source) => source.path)),
+      next: (sources) =>
+        this.startEditing(
+          'new',
+          sources.map((source) => source.path),
+        ),
       error: () => this.startEditing('new', []),
     });
   }
@@ -92,7 +103,9 @@ export class KodiHostsPage {
     const host = this.editedHost();
     const command = toKodiHostCommand(this.form);
     this.saving.set(true);
-    const request = host ? this.kodiService.update(host.id, command) : this.kodiService.create(command);
+    const request = host
+      ? this.kodiService.update(host.id, command)
+      : this.kodiService.create(command);
     request.subscribe({
       next: (saved) => {
         this.saving.set(false);
@@ -123,8 +136,10 @@ export class KodiHostsPage {
   protected testConnection(host: KodiHost): void {
     this.testing.update((ids) => new Set(ids).add(host.id));
     this.kodiService.testConnection(host.id).subscribe({
-      next: (result) => this.showConnectionResult(host, { ok: true, message: `Verbunden mit ${result.version}` }),
-      error: (error: unknown) => this.showConnectionResult(host, { ok: false, message: problemMessage(error) }),
+      next: (result) =>
+        this.showConnectionResult(host, { ok: true, message: `Verbunden mit ${result.version}` }),
+      error: (error: unknown) =>
+        this.showConnectionResult(host, { ok: false, message: problemMessage(error) }),
     });
   }
 
@@ -141,7 +156,12 @@ export class KodiHostsPage {
   }
 
   private startEditing(editing: Editing, suggestedLocalPaths: readonly string[]): void {
-    fillKodiHostForm(this.form, this.formBuilder, editing === 'new' ? null : editing, suggestedLocalPaths);
+    fillKodiHostForm(
+      this.form,
+      this.formBuilder,
+      editing === 'new' ? null : editing,
+      suggestedLocalPaths,
+    );
     this.editing.set(editing);
   }
 

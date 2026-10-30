@@ -15,6 +15,7 @@ kmm-ui/node/
 kmm-ui/node_modules/
 kmm-ui/dist/
 kmm-ui/.angular/
+kmm-ui/public/help/
 
 # Runtime
 *.log

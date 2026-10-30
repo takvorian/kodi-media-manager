@@ -25,6 +25,10 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 | `kmm-ui` | Angular-Oberfläche |
 | `kmm-app` | Spring-Boot-Anwendung |
 
+## Handbuch
+
+Das [Handbuch](docs/handbuch/einfuehrung.md) beschreibt die Bedienung; die Kapitel stehen in `docs/handbuch/kapitel.json`. Dieselben Texte zeigt die Anwendung auf der Seite **Hilfe**, das Fragezeichen in der Kopfleiste öffnet das Kapitel zur aktuellen Seite. `npm run handbuch:pdf` in `kmm-ui` baut daraus ein PDF und prüft dabei alle Links und Bilder (braucht Chrome); die CI hebt das PDF als Artefakt `handbuch` auf.
+
 ## Bauen
 
 Voraussetzung: JDK 25. Maven und Node.js lädt der Build selbst herunter.

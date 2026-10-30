@@ -6,6 +6,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 
 import { BatchChanges, BatchField, BatchFieldKey, FieldChange } from './batch';
+import { HelpLink } from '../shared/help-link';
 
 type FieldMode = 'KEEP' | 'SET' | 'CLEAR';
 
@@ -19,6 +20,7 @@ const KEEP: FieldMode = 'KEEP';
 @Component({
   selector: 'app-batch-editor',
   imports: [
+    HelpLink,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,

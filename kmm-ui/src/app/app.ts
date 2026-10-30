@@ -1,8 +1,11 @@
-import { Component } from '@angular/core';
+import { Component, computed, inject } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatToolbarModule } from '@angular/material/toolbar';
-import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter, map } from 'rxjs';
 
+import { chapterForUrl } from './help/help';
 import { JobIndicator } from './jobs/job-indicator';
 
 @Component({
@@ -30,5 +33,17 @@ export class App {
     { path: '/settings', label: 'Einstellungen' },
     { path: '/migration', label: 'Ember-Import' },
     { path: '/system', label: 'System' },
+    { path: '/help', label: 'Hilfe' },
   ];
+
+  private readonly url = toSignal(
+    inject(Router).events.pipe(
+      filter((event) => event instanceof NavigationEnd),
+      map((event) => event.urlAfterRedirects),
+    ),
+    { initialValue: '' },
+  );
+
+  /** Öffnet in einem neuen Tab, damit nicht gespeicherte Eingaben der aktuellen Seite erhalten bleiben. */
+  protected readonly pageHelp = computed(() => `/help/${chapterForUrl(this.url())}`);
 }

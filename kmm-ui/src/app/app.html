@@ -5,6 +5,16 @@
       <a matButton [routerLink]="item.path" routerLinkActive="active" ariaCurrentWhenActive="page">{{ item.label }}</a>
     }
   </nav>
+  <a
+    matButton
+    class="page-help"
+    [href]="pageHelp()"
+    target="_blank"
+    rel="noopener"
+    title="Hilfe zu dieser Seite (neuer Tab)"
+    aria-label="Hilfe zu dieser Seite"
+    >?</a
+  >
 </mat-toolbar>
 <app-job-indicator />
 

@@ -24,6 +24,7 @@ import {
   tvRenameSummary,
 } from './tv-rename';
 import { TvRenameService } from './tv-rename.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 8000;
 
@@ -34,6 +35,7 @@ const SNACKBAR_DURATION_MS = 8000;
 @Component({
   selector: 'app-tv-rename-page',
   imports: [
+    HelpLink,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,

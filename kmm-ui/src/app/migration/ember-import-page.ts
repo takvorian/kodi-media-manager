@@ -1,6 +1,12 @@
 import { Component, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { FormControl, FormGroup, NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormControl,
+  FormGroup,
+  NonNullableFormBuilder,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -14,8 +20,14 @@ import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
-import { EMBER_IMPORT_JOB_KEY, EmberImportReport, EmberInspection, PathMapping } from './ember-migration';
+import {
+  EMBER_IMPORT_JOB_KEY,
+  EmberImportReport,
+  EmberInspection,
+  PathMapping,
+} from './ember-migration';
 import { EmberMigrationService } from './ember-migration.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 8000;
 
@@ -25,6 +37,7 @@ type MappingForm = FormGroup<{ emberPath: FormControl<string>; kmmPath: FormCont
 @Component({
   selector: 'app-ember-import-page',
   imports: [
+    HelpLink,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
@@ -168,7 +181,10 @@ function trimmed(mapping: PathMapping): PathMapping {
 }
 
 function confirmation(inspection: EmberInspection, withTvShows: boolean): string {
-  const tvShows = withTvShows && inspection.library.tvShows > 0 ? ` und ${inspection.library.tvShows} Serien` : '';
+  const tvShows =
+    withTvShows && inspection.library.tvShows > 0
+      ? ` und ${inspection.library.tvShows} Serien`
+      : '';
   return `${inspection.library.movies} Filme${tvShows} aus Ember in die Bibliothek übernehmen?`;
 }
 

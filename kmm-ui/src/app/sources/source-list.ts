@@ -48,6 +48,7 @@ import {
   scanJobKey,
 } from './media-source';
 import { MediaSourceService } from './media-source.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -60,6 +61,7 @@ export interface ScrapeReport {
 @Component({
   selector: 'app-source-list',
   imports: [
+    HelpLink,
     DatePipe,
     ReactiveFormsModule,
     RouterLink,

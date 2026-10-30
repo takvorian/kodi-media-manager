@@ -14,12 +14,14 @@ import { ApiKeysCard } from './api-keys-card';
 import { EpisodeOrdering, SettingsField, SettingsView } from './settings';
 import { createSettingsForm, MAX_PATH_LENGTH, toFormValue, toSettings } from './settings-form';
 import { SettingsService } from './settings.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
 
 @Component({
   selector: 'app-settings-page',
   imports: [
+    HelpLink,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,

@@ -96,9 +96,13 @@
           <mat-checkbox formControlName="realtimeSync" name="realtimeSync">
             Echtzeit-Sync: Kodi nach jeder Änderung automatisch aktualisieren
           </mat-checkbox>
+          <app-help-link chapter="kodi" anchor="echtzeit-sync">Was passiert dabei?</app-help-link>
 
           <h3>Pfad-Zuordnung</h3>
-          <p class="hint">Verzeichnisse der KMM-Quellen und wie Kodi sie erreicht.</p>
+          <p class="hint">
+            Verzeichnisse der KMM-Quellen und wie Kodi sie erreicht. Den Pfad in Kodi zeigt Kodi unter „Videos → Dateien“.
+            <app-help-link chapter="kodi" anchor="pfad-zuordnung">Mehr dazu</app-help-link>
+          </p>
           @for (mapping of form.controls.pathMappings.controls; track mapping) {
             <div class="row mapping" [formGroup]="mapping">
               <mat-form-field class="wide">

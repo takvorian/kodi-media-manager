@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { DEFAULT_HELP_CHAPTER } from './help/help';
+
 export const routes: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'movies' },
   {
@@ -71,6 +73,12 @@ export const routes: Routes = [
     path: 'system',
     title: 'System – KMM',
     loadComponent: () => import('./system/system-status').then((m) => m.SystemStatus),
+  },
+  { path: 'help', pathMatch: 'full', redirectTo: `help/${DEFAULT_HELP_CHAPTER}` },
+  {
+    path: 'help/:chapter',
+    title: 'Hilfe – KMM',
+    loadComponent: () => import('./help/help-page').then((m) => m.HelpPage),
   },
   { path: '**', redirectTo: 'movies' },
 ];

@@ -34,6 +34,7 @@ import {
   movieSetJobSummary,
 } from './movie-set';
 import { MovieSetService } from './movie-set.service';
+import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 8000;
 const SEARCH_SIZE = 20;
@@ -46,6 +47,7 @@ const TMDB_ID_PATTERN = /^\s*(\d{1,10})?\s*$/;
 @Component({
   selector: 'app-movie-set-manager',
   imports: [
+    HelpLink,
     FormsModule,
     ReactiveFormsModule,
     RouterLink,
