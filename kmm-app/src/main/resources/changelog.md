@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.2 - 2026-10-31
+- Ember-Import: Profil im Browser hochladen statt Pfad und Volume (7aec72f)
+
 ## v0.1 - 2026-10-30
 - Release-Skripte fuer Docker Hub; Version und Changelog in der App (d7027aa)
 - Handbuch und Hilfe in der App (f1fc96d)
