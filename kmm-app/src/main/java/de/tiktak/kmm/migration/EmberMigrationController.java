@@ -1,20 +1,21 @@
 package de.tiktak.kmm.migration;
 
 import java.net.URI;
-import java.nio.file.InvalidPathException;
-import java.nio.file.Path;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.ExceptionHandler;
-import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -34,17 +35,26 @@ public class EmberMigrationController {
     private final EmberImportService importService;
 
     /**
-     * Analysiert ein Ember-Profil, ohne Daten zu übernehmen.
+     * Nimmt ein Ember-Profil an und analysiert es, ohne Daten zu übernehmen.
      *
-     * @param path Ember-Profilverzeichnis oder Ember-Installationsverzeichnis
+     * @param files Datenbank {@code MyVideosNN.emm} und, soweit vorhanden, die Einstellungsdateien des Profils
      */
-    @GetMapping("/inspect")
-    public EmberInspectionResponse inspect(@RequestParam String path) {
-        return importService.inspect(Path.of(path));
+    @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public EmberInspectionResponse upload(@RequestPart("files") List<MultipartFile> files) {
+        return importService.upload(files);
     }
 
     /**
-     * Startet den Import (bzw. Probelauf) als Hintergrund-Job.
+     * Verwirft das hochgeladene Profil.
+     */
+    @DeleteMapping("/upload")
+    public ResponseEntity<Void> discardUpload() {
+        importService.discardUpload();
+        return ResponseEntity.noContent().build();
+    }
+
+    /**
+     * Startet den Import (bzw. Probelauf) des hochgeladenen Profils als Hintergrund-Job.
      */
     @PostMapping("/import")
     public ResponseEntity<JobSnapshot> startImport(@Valid @RequestBody EmberImportRequest request) {
@@ -59,10 +69,9 @@ public class EmberMigrationController {
         return problem;
     }
 
-    @ExceptionHandler(InvalidPathException.class)
-    ProblemDetail handleInvalidPath(InvalidPathException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "'%s' ist kein gültiger Pfad.".formatted(exception.getInput()));
+    @ExceptionHandler(EmberProfileUploadException.class)
+    ProblemDetail handleInvalidUpload(EmberProfileUploadException exception) {
+        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
         problem.setTitle(INVALID_PROFILE_TITLE);
         return problem;
     }

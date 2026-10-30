@@ -5,6 +5,7 @@ import static org.awaitility.Awaitility.await;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -21,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.skyscreamer.jsonassert.JSONAssert;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
@@ -28,6 +30,7 @@ import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
@@ -61,6 +64,7 @@ class EmberImportIntegrationTest {
             LocalDateTime.of(2016, 11, 30, 0, 20, 15).atZone(ZoneId.systemDefault()).toInstant();
     private static final Duration JOB_TIMEOUT = Duration.ofSeconds(20);
     private static final String IMPORT_PATH = EmberMigrationController.BASE_PATH + "/import";
+    private static final String UPLOAD_PATH = EmberMigrationController.BASE_PATH + "/upload";
 
     @TempDir
     Path profile;
@@ -70,6 +74,9 @@ class EmberImportIntegrationTest {
 
     @TempDir
     Path series;
+
+    @Value("${kmm.home}")
+    private Path home;
 
     @Autowired
     private MockMvcTester mockMvc;
@@ -265,17 +272,29 @@ class EmberImportIntegrationTest {
     }
 
     @Test
-    void rejectsInvalidProfile() {
+    void rejectsAnImportWithoutUpload() {
+        assertThat(mockMvc.delete().uri(UPLOAD_PATH).with(csrf())).hasStatus(204);
+
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(Map.of("profilePath", library.toString(),
+                .content(objectMapper.writeValueAsString(Map.of(
                         "pathMappings", List.of(), "importSettings", false, "importKodiHosts", false,
                         "importTvShows", false, "dryRun", true))))
-                .hasStatus(422);
+                .hasStatus(422)
+                .bodyJson().extractingPath("$.detail").asString().contains("hochladen");
+    }
+
+    @Test
+    void deletesTheUploadAfterTheImportButNotAfterADryRun() {
+        awaitJob(startImport(true));
+        assertThat(uploadDirectory()).isDirectory();
+
+        awaitJob(startImport(false));
+        assertThat(uploadDirectory()).doesNotExist();
     }
 
     @Test
     void listsEmberSourcesForPathMappings() {
-        assertThat(mockMvc.get().uri(EmberMigrationController.BASE_PATH + "/inspect").param("path", profile.toString()))
+        assertThat(upload())
                 .bodyJson().isLenientlyEqualTo("""
                         {"sources": [{"name": "Filme", "path": "D:\\\\Filme"}],
                          "tvSources": [{"name": "Serien", "path": "\\\\\\\\nas\\\\serien"}],
@@ -284,10 +303,32 @@ class EmberImportIntegrationTest {
                         """);
     }
 
+    private MvcTestResult upload() {
+        var request = mockMvc.post().uri(UPLOAD_PATH).with(csrf()).multipart();
+        try (var files = Files.list(profile)) {
+            for (Path file : files.filter(EmberImportIntegrationTest::belongsToUpload).toList()) {
+                request = request.file(new MockMultipartFile("files", file.getFileName().toString(), null,
+                        Files.readAllBytes(file)));
+            }
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        return request.exchange();
+    }
+
+    private static boolean belongsToUpload(Path file) {
+        String name = file.getFileName().toString();
+        return name.endsWith(".emm") || name.endsWith(".xml");
+    }
+
+    private Path uploadDirectory() {
+        return home.resolve(EmberProfileUpload.DIRECTORY_NAME);
+    }
+
     private String startImport(boolean dryRun) {
+        assertThat(upload()).hasStatusOk();
         MvcTestResult result = mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(Map.of(
-                        "profilePath", profile.toString(),
                         "pathMappings", List.of(Map.of("emberPath", "D:\\Filme", "kmmPath", library.toString()),
                                 Map.of("emberPath", "\\\\nas\\serien", "kmmPath", series.toString())),
                         "importSettings", true,

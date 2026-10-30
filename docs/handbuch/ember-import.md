@@ -4,9 +4,13 @@ Der Assistent übernimmt deine Bibliothek aus Ember Media Manager. **Dein Ember-
 
 ![Der Ember-Import](bilder/ember-import.png)
 
-## 1. Profil analysieren
+## 1. Profil hochladen
 
-Trage das Ember-Installations- oder Profilverzeichnis ein und klicke auf **Analysieren**. Unter Docker liegt das Profil unter `/import/ember`. KMM zeigt dir, was es gefunden hat: Filme, Filmsets, Serien, Episoden, Kodi-Geräte und Einstellungen.
+Klicke auf **Ember-Ordner wählen** und wähle den Ember-Installationsordner oder den Ordner `Profiles\Default` auf deinem Rechner. KMM muss dafür nicht auf demselben Rechner laufen wie Ember. Der Browser fragt womöglich, ob alle Dateien des Ordners hochgeladen werden sollen; hochgeladen werden aber nur die neueste Datenbank (`MyVideos48.emm`), `Settings.xml`, `AdvancedSettings.xml` und `Interface.Kodi.xml`.
+
+KMM zeigt dir danach, was es gefunden hat: Filme, Filmsets, Serien, Episoden, Kodi-Geräte und Einstellungen.
+
+**Zugangsdaten:** Diese Dateien enthalten die Zugangsdaten deiner Kodi-Geräte. Sie werden über dieselbe Verbindung wie die Oberfläche übertragen, ohne HTTPS also unverschlüsselt. Im Heimnetz ist das vertretbar, lade das Profil aber nicht ohne HTTPS über das Internet hoch. Mit **Hochgeladenes Profil verwerfen** löschst du die Dateien auf dem Server sofort; der Import und ein Neustart von KMM löschen sie ebenfalls.
 
 ## 2. Pfade zuordnen
 
@@ -22,7 +26,7 @@ Darunter wählst du, was du übernehmen willst:
 
 Klicke zuerst auf **Probelauf**. Er führt den Import vollständig aus und macht ihn dann rückgängig. Der Bericht zeigt also genau, was der Import ändern würde.
 
-Passt alles, klicke auf **Importieren**.
+Passt alles, klicke auf **Importieren**. Nach dem Import löscht KMM das hochgeladene Profil, auch wenn der Import fehlschlägt oder du ihn abbrichst. Der Probelauf behält es für den Import danach.
 
 ## Der Bericht
 

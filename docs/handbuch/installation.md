@@ -59,7 +59,6 @@ Die Oberfläche ist dann unter `http://<Server>:8080` erreichbar. Benutzer und P
 |---|---|---|
 | `/config` | `KMM_CONFIG_DIR` | Plugins, Cache, Logs |
 | `/media` | `KMM_MEDIA_DIR` | deine Medien |
-| `/import/ember` | `EMBER_PROFILE_DIR` | Ember-Profil, nur lesend |
 
 `PUID` und `PGID` legen fest, mit welchem Benutzer KMM auf deine Medien zugreift. Dieser Benutzer braucht Schreibrechte, sonst können weder NFOs noch Bilder gespeichert werden.
 

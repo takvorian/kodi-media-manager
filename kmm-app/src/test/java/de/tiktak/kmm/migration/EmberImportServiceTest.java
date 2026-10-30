@@ -11,8 +11,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -22,9 +24,12 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.support.SimpleTransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
+import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.job.JobTask;
 import de.tiktak.kmm.migration.ember.EmberLibraryStatistics;
 import de.tiktak.kmm.migration.ember.EmberProfile;
@@ -86,13 +91,17 @@ class EmberImportServiceTest {
     @Mock
     private PlatformTransactionManager transactionManager;
 
+    @Mock
+    private EmberProfileUpload profileUpload;
+
     private final SimpleTransactionStatus status = new SimpleTransactionStatus();
 
     @Test
     void startsJobWithTitleOfTheRun() {
+        when(profileUpload.directory()).thenReturn(PROFILE_DIRECTORY);
         when(profileDetector.detect(PROFILE_DIRECTORY)).thenReturn(PROFILE);
 
-        service().start(new EmberImportRequest("ember", List.of(), false, false, false, true));
+        service().start(new EmberImportRequest(List.of(), false, false, false, true));
 
         verify(jobService).submit(eq(EmberImportService.JOB_KEY), eq("Ember-Import (Probelauf)"), any());
     }
@@ -103,7 +112,7 @@ class EmberImportServiceTest {
         when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
 
         EmberImportReport report = service().run(PROFILE,
-                new EmberImportRequest("ember", List.of(), false, false, false, true), mock(JobContext.class));
+                new EmberImportRequest(List.of(), false, false, false, true), mock(JobContext.class));
 
         assertThat(report.dryRun()).isTrue();
         assertThat(status.isRollbackOnly()).isTrue();
@@ -119,7 +128,7 @@ class EmberImportServiceTest {
         when(settingsReader.read(any())).thenThrow(unreadable);
 
         EmberImportReport report = service().run(PROFILE,
-                new EmberImportRequest("ember", List.of(), true, false, false, false), mock(JobContext.class));
+                new EmberImportRequest(List.of(), true, false, false, false), mock(JobContext.class));
 
         assertThat(report.warnings()).containsExactly("Die Ember-Einstellungen konnten nicht gelesen werden: kaputt");
         assertThat(status.isRollbackOnly()).isFalse();
@@ -137,7 +146,7 @@ class EmberImportServiceTest {
         EmberRenameSettings rename = new EmberRenameSettings("$T", null, null, null, null, null, null, null, null,
                 null);
         when(advancedSettingsReader.readRenameSettings(PROFILE)).thenReturn(Optional.of(rename));
-        EmberImportRequest request = new EmberImportRequest("ember", List.of(), true, false, false, false);
+        EmberImportRequest request = new EmberImportRequest(List.of(), true, false, false, false);
 
         service().run(PROFILE, request, mock(JobContext.class));
 
@@ -164,7 +173,7 @@ class EmberImportServiceTest {
         when(tvLibraryReader.read(PROFILE.databaseFile())).thenReturn(tvLibrary);
 
         EmberImportReport report = service().run(PROFILE,
-                new EmberImportRequest("ember", List.of(), false, false, true, false), mock(JobContext.class));
+                new EmberImportRequest(List.of(), false, false, true, false), mock(JobContext.class));
 
         assertThat(report.tvShows().episodesCreated()).isZero();
         verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.of(tvLibrary)), eq(Optional.empty()), any(),
@@ -189,9 +198,9 @@ class EmberImportServiceTest {
         List<EmberKodiHost> hosts = List.of(new EmberKodiHost("Wohnzimmer", "kodi", 8080, null, null, true, List.of()));
         when(kodiHostsReader.read(PROFILE)).thenReturn(hosts);
 
-        service().run(PROFILE, new EmberImportRequest("ember", List.of(), false, false, false, false),
+        service().run(PROFILE, new EmberImportRequest(List.of(), false, false, false, false),
                 mock(JobContext.class));
-        service().run(PROFILE, new EmberImportRequest("ember", List.of(), false, true, false, false),
+        service().run(PROFILE, new EmberImportRequest(List.of(), false, true, false, false),
                 mock(JobContext.class));
 
         verify(kodiHostImporter).importHosts(eq(List.of()), any(), any());
@@ -206,7 +215,7 @@ class EmberImportServiceTest {
                 PROFILE_DIRECTORY.resolve("Interface.Kodi.xml"), new IllegalStateException()));
 
         EmberImportReport report = service().run(PROFILE,
-                new EmberImportRequest("ember", List.of(), false, true, false, false), mock(JobContext.class));
+                new EmberImportRequest(List.of(), false, true, false, false), mock(JobContext.class));
 
         assertThat(report.warnings()).singleElement().asString()
                 .startsWith("Die Kodi-Geräte konnten nicht gelesen werden: ");
@@ -225,23 +234,91 @@ class EmberImportServiceTest {
 
     @Test
     void runsTheImportInsideTheJob() {
+        when(profileUpload.directory()).thenReturn(PROFILE_DIRECTORY);
         when(profileDetector.detect(PROFILE_DIRECTORY)).thenReturn(PROFILE);
         givenTransaction();
         when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
         EmberImportService service = service();
 
-        service.start(new EmberImportRequest("ember", List.of(), false, false, false, false));
+        service.start(new EmberImportRequest(List.of(), false, false, false, false));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
         verify(jobService).submit(anyString(), anyString(), task.capture());
         assertThat(task.getValue().run(mock(JobContext.class))).isInstanceOf(EmberImportReport.class);
+        verify(profileUpload).discard();
+    }
+
+    @Test
+    void keepsTheUploadAfterADryRun() {
+        when(profileUpload.directory()).thenReturn(PROFILE_DIRECTORY);
+        when(profileDetector.detect(PROFILE_DIRECTORY)).thenReturn(PROFILE);
+        givenTransaction();
+        when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
+
+        service().start(new EmberImportRequest(List.of(), false, false, false, true));
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(anyString(), anyString(), task.capture());
+        task.getValue().run(mock(JobContext.class));
+        verify(profileUpload, never()).discard();
+    }
+
+    @Test
+    void deletesTheUploadWhenTheImportFails() {
+        when(profileUpload.directory()).thenReturn(PROFILE_DIRECTORY);
+        when(profileDetector.detect(PROFILE_DIRECTORY)).thenReturn(PROFILE);
+        when(libraryReader.read(PROFILE.databaseFile())).thenThrow(new IllegalStateException("kaputt"));
+
+        service().start(new EmberImportRequest(List.of(), false, false, false, false));
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(anyString(), anyString(), task.capture());
+        assertThatThrownBy(() -> task.getValue().run(mock(JobContext.class))).hasMessage("kaputt");
+        verify(profileUpload).discard();
+    }
+
+    @Test
+    void analyzesAnUploadAndDiscardsItIfItIsUnusable() {
+        List<MultipartFile> files = List.of(mock(MultipartFile.class));
+        when(profileUpload.directory()).thenReturn(PROFILE_DIRECTORY);
+        when(profileInspector.inspect(PROFILE_DIRECTORY)).thenReturn(new EmberProfileInspection(PROFILE,
+                new EmberLibraryStatistics(5, 0, 0, 0, 0, 0), Optional.empty()));
+
+        assertThat(service().upload(files).library().movies()).isEqualTo(5);
+        verify(profileUpload).store(files);
+        verify(profileUpload, never()).discard();
+
+        when(profileInspector.inspect(PROFILE_DIRECTORY)).thenThrow(new IllegalStateException("kaputt"));
+
+        assertThatThrownBy(() -> service().upload(files)).hasMessage("kaputt");
+        verify(profileUpload).discard();
+    }
+
+    @Test
+    void leavesTheFilesOfARunningImportAlone() {
+        when(jobService.findAll()).thenReturn(List.of(new JobSnapshot(UUID.randomUUID(), EmberImportService.JOB_KEY,
+                "Ember-Import", JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null)));
+
+        assertThatThrownBy(() -> service().upload(List.of())).isInstanceOf(EmberProfileUploadException.class);
+        assertThatThrownBy(() -> service().discardUpload()).isInstanceOf(EmberProfileUploadException.class);
+
+        verify(profileUpload, never()).store(any());
+        verify(profileUpload, never()).discard();
+    }
+
+    @Test
+    void discardsTheUploadOnRequest() {
+        service().discardUpload();
+
+        verify(profileUpload).discard();
     }
 
     @Test
     void rejectsInvalidProfileBeforeStarting() {
+        when(profileUpload.directory()).thenReturn(PROFILE_DIRECTORY);
         when(profileDetector.detect(any())).thenThrow(new IllegalStateException("kein Profil"));
 
-        assertThatThrownBy(() -> service().start(new EmberImportRequest("leer", List.of(), false, false, false, false)))
+        assertThatThrownBy(() -> service().start(new EmberImportRequest(List.of(), false, false, false, false)))
                 .hasMessage("kein Profil");
         verify(jobService, never()).submit(anyString(), anyString(), any());
     }
@@ -252,6 +329,7 @@ class EmberImportServiceTest {
 
     private EmberImportService service() {
         return new EmberImportService(profileInspector, profileDetector, libraryReader, tvLibraryReader, settingsReader,
-                advancedSettingsReader, kodiHostsReader, importer, kodiHostImporter, jobService, new TransactionTemplate(transactionManager));
+                advancedSettingsReader, kodiHostsReader, importer, kodiHostImporter, jobService, new TransactionTemplate(transactionManager),
+                profileUpload);
     }
 }

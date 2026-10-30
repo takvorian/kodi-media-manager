@@ -1,3 +1,45 @@
+const DATABASE_FILE = /^MyVideos(\d+)\.emm$/i;
+const SETTINGS_FILES = new Set(['Settings.xml', 'AdvancedSettings.xml', 'Interface.Kodi.xml']);
+const DEFAULT_PROFILE = /(^|\/)Profiles\/Default$/;
+
+/** Ein Ordner mit Ember-Datenbank aus dem gewählten Verzeichnis, samt der neuesten Datenbank. */
+interface ProfileFolder {
+  readonly path: string;
+  readonly database: File;
+  readonly schemaVersion: number;
+}
+
+/**
+ * Wählt aus einem Ember-Ordner die Dateien aus, die der Import braucht; alles andere bleibt auf diesem Rechner. Der
+ * Ordner darf die Installation oder das Profil sein. Unter mehreren Profilen gewinnt {@code Profiles/Default}.
+ * Liefert eine leere Liste, wenn keine Ember-Datenbank dabei ist.
+ */
+export function emberProfileFiles(files: readonly File[]): File[] {
+  const folders = new Map<string, ProfileFolder>();
+  for (const file of files) {
+    const version = DATABASE_FILE.exec(file.name)?.[1];
+    const path = parentFolder(file);
+    if (version && Number(version) > (folders.get(path)?.schemaVersion ?? -1)) {
+      folders.set(path, { path, database: file, schemaVersion: Number(version) });
+    }
+  }
+  const candidates = [...folders.values()];
+  const chosen =
+    candidates.find((folder) => DEFAULT_PROFILE.test(folder.path)) ??
+    candidates.sort((a, b) => b.schemaVersion - a.schemaVersion)[0];
+  if (!chosen) {
+    return [];
+  }
+  return [
+    chosen.database,
+    ...files.filter((file) => parentFolder(file) === chosen.path && SETTINGS_FILES.has(file.name)),
+  ];
+}
+
+function parentFolder(file: File): string {
+  return file.webkitRelativePath.split('/').slice(0, -1).join('/');
+}
+
 /** Job-Schlüssel des Imports; muss zu EmberImportService.JOB_KEY passen. */
 export const EMBER_IMPORT_JOB_KEY = 'ember-import';
 
@@ -29,7 +71,7 @@ export interface EmberSettingsSummary {
   readonly videoExtensions: readonly string[];
 }
 
-/** Antwort von GET /api/v1/migrations/ember/inspect. */
+/** Antwort von POST /api/v1/migrations/ember/upload. */
 export interface EmberInspection {
   readonly profileDirectory: string;
   readonly schemaVersion: number;
@@ -47,7 +89,6 @@ export interface PathMapping {
 
 /** Inhalt von POST /api/v1/migrations/ember/import. */
 export interface EmberImportRequest {
-  readonly profilePath: string;
   readonly pathMappings: readonly PathMapping[];
   readonly importSettings: boolean;
   readonly importKodiHosts: boolean;

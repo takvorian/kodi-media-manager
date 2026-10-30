@@ -11,8 +11,16 @@ export const EMBER_MIGRATION_URL = '/api/v1/migrations/ember';
 export class EmberMigrationService {
   private readonly http = inject(HttpClient);
 
-  inspect(path: string): Observable<EmberInspection> {
-    return this.http.get<EmberInspection>(`${EMBER_MIGRATION_URL}/inspect`, { params: { path } });
+  /** Lädt die Profildateien hoch und liefert die Analyse des Profils. */
+  upload(files: readonly File[]): Observable<EmberInspection> {
+    const form = new FormData();
+    files.forEach((file) => form.append('files', file, file.name));
+    return this.http.post<EmberInspection>(`${EMBER_MIGRATION_URL}/upload`, form);
+  }
+
+  /** Löscht das hochgeladene Profil auf dem Server. */
+  discardUpload(): Observable<void> {
+    return this.http.delete<void>(`${EMBER_MIGRATION_URL}/upload`);
   }
 
   /** Startet Import oder Probelauf im Hintergrund und liefert den gestarteten Job. */

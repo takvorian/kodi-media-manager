@@ -6,10 +6,12 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.migration.ember.EmberProfile;
 import de.tiktak.kmm.migration.ember.EmberProfileDetector;
 import de.tiktak.kmm.migration.ember.EmberProfileException;
@@ -52,8 +54,36 @@ public class EmberImportService {
     private final EmberKodiHostImporter kodiHostImporter;
     private final JobService jobService;
     private final TransactionTemplate transactionTemplate;
+    private final EmberProfileUpload profileUpload;
 
-    public EmberInspectionResponse inspect(Path directory) {
+    /**
+     * Nimmt das hochgeladene Profil an und analysiert es. Ein unbrauchbares Profil bleibt nicht liegen.
+     *
+     * @throws EmberProfileUploadException wenn die Dateien nicht passen oder gerade ein Import läuft
+     * @throws de.tiktak.kmm.migration.ember.EmberProfileException wenn das Profil ungültig ist
+     */
+    public EmberInspectionResponse upload(List<MultipartFile> files) {
+        requireNoRunningImport();
+        profileUpload.store(files);
+        try {
+            return inspect(profileUpload.directory());
+        } catch (RuntimeException e) {
+            profileUpload.discard();
+            throw e;
+        }
+    }
+
+    /**
+     * Verwirft das hochgeladene Profil.
+     *
+     * @throws EmberProfileUploadException wenn gerade ein Import läuft
+     */
+    public void discardUpload() {
+        requireNoRunningImport();
+        profileUpload.discard();
+    }
+
+    EmberInspectionResponse inspect(Path directory) {
         var inspection = profileInspector.inspect(directory);
         Path databaseFile = inspection.profile().databaseFile();
         List<EmberMovieSource> sources = libraryReader.readSources(databaseFile);
@@ -62,14 +92,24 @@ public class EmberImportService {
     }
 
     /**
-     * Prüft das Profil und startet den Import.
+     * Prüft das hochgeladene Profil und startet den Import. Nach dem echten Import wird es gelöscht, auch wenn er
+     * fehlschlägt oder abgebrochen wird; ein Probelauf behält es für den Import danach.
      *
+     * @throws EmberProfileUploadException wenn kein Profil hochgeladen ist
      * @throws de.tiktak.kmm.migration.ember.EmberProfileException wenn das Profil ungültig ist
      */
     public JobSnapshot start(EmberImportRequest request) {
-        EmberProfile profile = profileDetector.detect(Path.of(request.profilePath()));
+        EmberProfile profile = profileDetector.detect(profileUpload.directory());
         String title = request.dryRun() ? "Ember-Import (Probelauf)" : "Ember-Import";
-        return jobService.submit(JOB_KEY, title, context -> run(profile, request, context));
+        return jobService.submit(JOB_KEY, title, context -> {
+            try {
+                return run(profile, request, context);
+            } finally {
+                if (!request.dryRun()) {
+                    profileUpload.discard();
+                }
+            }
+        });
     }
 
     EmberImportReport run(EmberProfile profile, EmberImportRequest request, JobContext context) {
@@ -93,6 +133,13 @@ public class EmberImportService {
                 request.dryRun() ? " (dry run)" : "", report.moviesCreated(), report.moviesUpdated(),
                 report.moviesSkipped(), report.tvShows().episodesCreated(), report.tvShows().episodesUpdated());
         return report;
+    }
+
+    private void requireNoRunningImport() {
+        if (jobService.findAll().stream()
+                .anyMatch(job -> JOB_KEY.equals(job.key()) && job.status() == JobStatus.RUNNING)) {
+            throw new EmberProfileUploadException("Gerade läuft ein Ember-Import. Bitte warte, bis er fertig ist.");
+        }
     }
 
     /** Fehlerhafte Kodi-Einstellungen sollen die Analyse des übrigen Profils nicht verhindern. */

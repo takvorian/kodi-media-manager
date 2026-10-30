@@ -22,6 +22,7 @@ import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import {
   EMBER_IMPORT_JOB_KEY,
+  emberProfileFiles,
   EmberImportReport,
   EmberInspection,
   PathMapping,
@@ -30,10 +31,13 @@ import { EmberMigrationService } from './ember-migration.service';
 import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 8000;
+const DRY_RUN_TITLE = 'Probelauf';
+const NO_PROFILE_MESSAGE =
+  'In diesem Ordner ist keine Ember-Datenbank (MyVideos48.emm). Bitte den Ember-Ordner oder den Ordner Profiles\\Default wählen.';
 
 type MappingForm = FormGroup<{ emberPath: FormControl<string>; kmmPath: FormControl<string> }>;
 
-/** Assistent für die Übernahme eines Ember-Profils: analysieren, Pfade zuordnen, Probelauf, Import. */
+/** Assistent für die Übernahme eines Ember-Profils: hochladen, Pfade zuordnen, Probelauf, Import. */
 @Component({
   selector: 'app-ember-import-page',
   imports: [
@@ -56,13 +60,12 @@ export class EmberImportPage {
   private readonly confirm = inject(CONFIRM);
   private readonly formBuilder = inject(NonNullableFormBuilder);
 
-  protected readonly profilePath = this.formBuilder.control('', Validators.required);
   protected readonly mappings = this.formBuilder.array<MappingForm>([]);
   protected readonly importSettings = this.formBuilder.control(true);
   protected readonly importKodiHosts = this.formBuilder.control(true);
   protected readonly importTvShows = this.formBuilder.control(true);
   protected readonly inspection = signal<EmberInspection | null>(null);
-  protected readonly inspecting = signal(false);
+  protected readonly uploading = signal(false);
   protected readonly report = signal<EmberImportReport | null>(null);
 
   constructor() {
@@ -83,23 +86,36 @@ export class EmberImportPage {
     return progressPercent(job);
   }
 
-  protected inspect(): void {
-    if (this.profilePath.invalid) {
+  /** Lädt aus dem gewählten Ordner nur die Dateien hoch, die der Import braucht. */
+  protected upload(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const files = emberProfileFiles(Array.from(input.files ?? []));
+    // Sonst löst dieselbe Auswahl beim nächsten Mal kein Ereignis aus.
+    input.value = '';
+    if (files.length === 0) {
+      this.notify(NO_PROFILE_MESSAGE);
       return;
     }
-    this.inspecting.set(true);
+    this.uploading.set(true);
     this.report.set(null);
-    this.migrationService.inspect(this.profilePath.value.trim()).subscribe({
+    this.migrationService.upload(files).subscribe({
       next: (inspection) => {
-        this.inspecting.set(false);
+        this.uploading.set(false);
         this.inspection.set(inspection);
         this.showMappings(inspection);
       },
       error: (error: unknown) => {
-        this.inspecting.set(false);
-        this.inspection.set(null);
+        this.uploading.set(false);
+        this.forgetProfile();
         this.notify(problemMessage(error));
       },
+    });
+  }
+
+  protected discard(): void {
+    this.migrationService.discardUpload().subscribe({
+      next: () => this.forgetProfile(),
+      error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }
 
@@ -115,7 +131,6 @@ export class EmberImportPage {
     this.report.set(null);
     this.migrationService
       .startImport({
-        profilePath: inspection.profileDirectory,
         pathMappings: this.mappings.getRawValue().map(trimmed),
         importSettings: this.importSettings.value,
         importKodiHosts: this.importKodiHosts.value,
@@ -159,7 +174,16 @@ export class EmberImportPage {
     }
   }
 
+  private forgetProfile(): void {
+    this.inspection.set(null);
+    this.mappings.clear();
+  }
+
   private onImportFinished(job: Job): void {
+    if (!job.title.includes(DRY_RUN_TITLE)) {
+      // Nach dem echten Import löscht der Server das hochgeladene Profil.
+      this.forgetProfile();
+    }
     if (job.status === 'SUCCEEDED') {
       const report = job.result as EmberImportReport;
       this.report.set(report);

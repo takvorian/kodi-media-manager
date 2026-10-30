@@ -49,7 +49,7 @@ COPY --from=build /extracted/spring-boot-loader/ ./
 COPY --from=build /extracted/snapshot-dependencies/ ./
 COPY --from=build /extracted/application/ ./
 
-RUN mkdir -p /config /media /import/ember && chmod 777 /config
+RUN mkdir -p /config /media && chmod 777 /config
 VOLUME ["/config"]
 EXPOSE 8080
 

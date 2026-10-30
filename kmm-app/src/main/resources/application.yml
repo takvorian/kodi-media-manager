@@ -12,6 +12,11 @@ spring:
       ddl-auto: validate
   flyway:
     locations: classpath:db/migration/{vendor}
+  servlet:
+    # Das Ember-Profil wird hochgeladen; seine Datenbank wächst mit der Bibliothek.
+    multipart:
+      max-file-size: 500MB
+      max-request-size: 510MB
   mvc:
     problemdetails:
       enabled: true

@@ -51,8 +51,6 @@ services:
     volumes:
       - ${KMM_CONFIG_DIR:-./data/config}:/config
       - ${KMM_MEDIA_DIR:-./data/media}:/media
-      # Ember-Profil (Profiles/Default) für die Migration, nur lesend
-      - ${EMBER_PROFILE_DIR:-./data/ember}:/import/ember:ro
 
 volumes:
   db-data:

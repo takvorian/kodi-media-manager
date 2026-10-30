@@ -97,7 +97,6 @@ Eine feste Version statt der neuesten legt `KMM_IMAGE_TAG` in der `.env` fest, z
 |---|---|
 | `/config` | Plugins, Cache, Logs |
 | `/media` | Medienbibliothek |
-| `/import/ember` | Ember-Profil für die Migration (read-only) |
 
 ## API-Keys
 
@@ -192,8 +191,8 @@ cd kmm-ui && npm start                   # Angular-Dev-Server auf :4200, Proxy a
   `POST /api/v1/kodi/hosts/{id}/test`
 - `POST /api/v1/kodi/movies/{id}/refresh`, `POST /api/v1/kodi/tvshows/{id}/refresh`, `POST /api/v1/kodi/episodes/{id}/refresh`,
   `POST /api/v1/kodi/sources/{id}/scan` (alle Kodi-Geräte, Ergebnis je Gerät)
-- `GET /api/v1/migrations/ember/inspect?path=…`, `POST /api/v1/migrations/ember/import` → `202 Accepted` mit dem gestarteten Job
-  (`{"profilePath": …, "pathMappings": [{"emberPath": "a:\\filme", "kmmPath": "/media/filme"}], "importSettings": true, "importKodiHosts": true, "dryRun": true}`)
+- `POST /api/v1/migrations/ember/upload` (multipart, Teil `files`: `MyVideosNN.emm` und die Einstellungsdateien; liefert die Analyse), `DELETE …/upload`, `POST /api/v1/migrations/ember/import` → `202 Accepted` mit dem gestarteten Job
+  (`{"pathMappings": [{"emberPath": "a:\\filme", "kmmPath": "/media/filme"}], "importSettings": true, "importKodiHosts": true, "dryRun": true}`)
 
 ## Lizenz
 

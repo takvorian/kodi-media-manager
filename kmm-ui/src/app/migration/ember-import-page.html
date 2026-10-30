@@ -6,35 +6,45 @@
   </mat-card-header>
   <mat-card-content>
     <p class="hint">
-      Ember-Installations- oder Profilverzeichnis (enthält <code>MyVideos48.emm</code>). Ember wird nur gelesen, nie
-      verändert. Unter Docker ist das Profil unter <code>/import/ember</code> eingebunden.
+      Wähle den Ember-Ordner auf diesem Rechner. KMM lädt daraus nur die Datenbank <code>MyVideos48.emm</code> und die
+      Einstellungen hoch; der Browser fragt dabei womöglich, ob alle Dateien hochgeladen werden sollen. Ember wird nicht
+      verändert, und nach dem Import löscht KMM die hochgeladenen Dateien.
+      <app-help-link chapter="ember-import" anchor="1-profil-hochladen">Mehr dazu</app-help-link>
     </p>
+    <input
+      #picker
+      class="profile-picker"
+      type="file"
+      name="profileFolder"
+      webkitdirectory
+      multiple
+      hidden
+      (change)="upload($event)"
+    />
     <div class="row">
-      <mat-form-field class="wide">
-        <mat-label>Verzeichnis</mat-label>
-        <input
-          matInput
-          [formControl]="profilePath"
-          name="profilePath"
-          placeholder="z. B. C:\Ember Media Manager"
-          (keydown.enter)="inspect()"
-        />
-      </mat-form-field>
       <button
         matButton="tonal"
         type="button"
-        class="inspect-button"
-        [disabled]="profilePath.invalid || inspecting()"
-        (click)="inspect()"
+        class="choose-button"
+        [disabled]="uploading() || !!runningJob()"
+        (click)="picker.click()"
       >
-        {{ inspecting() ? 'Analysiere …' : 'Analysieren' }}
+        {{ uploading() ? 'Lade hoch …' : 'Ember-Ordner wählen' }}
       </button>
+      @if (inspection() && !uploading() && !runningJob()) {
+        <button matButton type="button" class="discard-button" (click)="discard()">
+          Hochgeladenes Profil verwerfen
+        </button>
+      }
     </div>
+    @if (uploading()) {
+      <mat-progress-bar mode="indeterminate" />
+    }
 
     @if (inspection(); as found) {
       <dl class="facts inspection">
-        <dt>Profil</dt>
-        <dd class="path">{{ found.profileDirectory }} (Schema v{{ found.schemaVersion }})</dd>
+        <dt>Datenbank</dt>
+        <dd class="schema">Version {{ found.schemaVersion }}</dd>
         <dt>Bestand</dt>
         <dd class="library">
           {{ found.library.movies }} Filme, {{ found.library.movieSets }} Filmsets, {{ found.library.tvShows }} Serien
@@ -69,7 +79,6 @@
       <p class="hint">
         Wo liegen Embers Film- und Serienquellen aus Sicht von KMM? Läuft KMM auf demselben Rechner, bleiben die
         Pfade gleich; unter Docker z. B. <code>/media/filme</code> eintragen. Der Probelauf ändert nichts.
-        <app-help-link chapter="ember-import">Mehr dazu</app-help-link>
       </p>
       @for (mapping of mappings.controls; track $index) {
         <div class="row mapping" [formGroup]="mapping">

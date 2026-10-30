@@ -2,6 +2,7 @@ package de.tiktak.kmm.migration;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
@@ -17,10 +18,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
+import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
@@ -40,7 +43,8 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 @WithMockUser
 class EmberMigrationControllerTest {
 
-    private static final String INSPECT_PATH = EmberMigrationController.BASE_PATH + "/inspect";
+    private static final String UPLOAD_PATH = EmberMigrationController.BASE_PATH + "/upload";
+    private static final MockMultipartFile DATABASE = new MockMultipartFile("files", "MyVideos48.emm", null, new byte[1]);
     private static final String IMPORT_PATH = EmberMigrationController.BASE_PATH + "/import";
     private static final Path PROFILE_DIRECTORY = Path.of("ember", "Profiles", "Default");
     private static final EmberProfile PROFILE = new EmberProfile(
@@ -57,14 +61,14 @@ class EmberMigrationControllerTest {
     void returnsInspectionWithSettings() {
         var settings = new EmberSettings(1, "de-DE", List.of(".mkv"), List.of(".srt"),
                 Optional.of(new EmberProxySettings("http://proxy.local", 3128, "proxyuser")), "de-DE", "de");
-        when(importService.inspect(Path.of("ember"))).thenReturn(EmberInspectionResponse.from(
+        when(importService.upload(List.of(DATABASE))).thenReturn(EmberInspectionResponse.from(
                 new EmberProfileInspection(PROFILE, LIBRARY, Optional.of(settings)),
                 List.of(new EmberMovieSource(6, "filme", "a:\\medien\\filme", "de-DE")),
                 List.of(new EmberTvShowSource(2, "serien", "a:\\medien\\serien", "de-DE")),
                 List.of(new EmberKodiHost("FireKodi", "firetv.local", 8080, "kodi", "geheim", true,
                         List.of(new EmberKodiHost.Source("Movie", "a:\\medien\\filme", "smb://nas/filme/"))))));
 
-        assertThat(mockMvc.get().uri(INSPECT_PATH).param("path", "ember"))
+        assertThat(upload())
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
@@ -88,10 +92,10 @@ class EmberMigrationControllerTest {
 
     @Test
     void returnsInspectionWithoutSettings() {
-        when(importService.inspect(any())).thenReturn(EmberInspectionResponse.from(
+        when(importService.upload(any())).thenReturn(EmberInspectionResponse.from(
                 new EmberProfileInspection(PROFILE, LIBRARY, Optional.empty()), List.of(), List.of(), List.of()));
 
-        assertThat(mockMvc.get().uri(INSPECT_PATH).param("path", "ember"))
+        assertThat(upload())
                 .hasStatusOk()
                 .bodyJson()
                 .satisfies(json -> assertThat(json.getJson()).contains("\"settings\":null"))
@@ -100,43 +104,53 @@ class EmberMigrationControllerTest {
 
     @Test
     void answersInvalidProfileWithUnprocessableContent() {
-        when(importService.inspect(any())).thenThrow(new InvalidProfileException("Keine Ember-Datenbank gefunden."));
+        when(importService.upload(any())).thenThrow(new InvalidProfileException("Keine Ember-Datenbank gefunden."));
 
-        assertThat(mockMvc.get().uri(INSPECT_PATH).param("path", "leer"))
+        assertThat(upload())
                 .hasStatus(422)
                 .bodyJson()
                 .extractingPath("$.detail").isEqualTo("Keine Ember-Datenbank gefunden.");
     }
 
     @Test
-    void answersInvalidPathWithBadRequest() {
-        assertThat(mockMvc.get().uri(INSPECT_PATH).param("path", "invalid\u0000path"))
-                .hasStatus(400)
+    void answersAnUnusableUploadWithUnprocessableContent() {
+        when(importService.upload(any())).thenThrow(new EmberProfileUploadException("Keine Datenbank."));
+
+        assertThat(upload())
+                .hasStatus(422)
                 .bodyJson()
                 .extractingPath("$.title").isEqualTo(EmberMigrationController.INVALID_PROFILE_TITLE);
     }
 
     @Test
-    void requiresPathParameter() {
-        assertThat(mockMvc.get().uri(INSPECT_PATH)).hasStatus(400);
+    void requiresFiles() {
+        assertThat(mockMvc.post().uri(UPLOAD_PATH).with(csrf()).multipart()).hasStatus(400);
+    }
+
+    @Test
+    void discardsTheUpload() {
+        assertThat(mockMvc.delete().uri(UPLOAD_PATH).with(csrf())).hasStatus(204);
+
+        verify(importService).discardUpload();
     }
 
     @Test
     @WithAnonymousUser
     void requiresAuthentication() {
-        assertThat(mockMvc.get().uri(INSPECT_PATH).param("path", "ember")).hasStatus(401);
+        assertThat(upload()).hasStatus(401);
+        assertThat(mockMvc.delete().uri(UPLOAD_PATH).with(csrf())).hasStatus(401);
     }
 
     @Test
     void startsImportAsJob() {
         UUID jobId = UUID.fromString("7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f02");
-        var request = new EmberImportRequest("ember",
+        var request = new EmberImportRequest(
                 List.of(new EmberImportRequest.PathMapping("a:\\medien\\filme", "/media/filme")), true, true, true, true);
         when(importService.start(request)).thenReturn(new JobSnapshot(jobId, EmberImportService.JOB_KEY,
                 "Ember-Import (Probelauf)", JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null));
 
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
-                {"profilePath": "ember", "pathMappings": [{"emberPath": "a:\\\\medien\\\\filme", "kmmPath": "/media/filme"}],
+                {"pathMappings": [{"emberPath": "a:\\\\medien\\\\filme", "kmmPath": "/media/filme"}],
                  "importSettings": true, "importKodiHosts": true, "importTvShows": true, "dryRun": true}
                 """))
                 .hasStatus(202)
@@ -146,7 +160,7 @@ class EmberMigrationControllerTest {
     @Test
     void rejectsIncompleteImportRequest() {
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
-                {"profilePath": " ", "pathMappings": [{"emberPath": "a:\\\\filme", "kmmPath": ""}]}
+                {"pathMappings": [{"emberPath": "a:\\\\filme", "kmmPath": ""}]}
                 """))
                 .hasStatus(400);
         verifyNoInteractions(importService);
@@ -157,10 +171,14 @@ class EmberMigrationControllerTest {
         when(importService.start(any())).thenThrow(new InvalidProfileException("Keine Ember-Datenbank gefunden."));
 
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
-                {"profilePath": "leer", "pathMappings": [], "importSettings": false, "importKodiHosts": false,
+                {"pathMappings": [], "importSettings": false, "importKodiHosts": false,
                  "importTvShows": false, "dryRun": false}
                 """))
                 .hasStatus(422);
+    }
+
+    private MvcTestResult upload() {
+        return mockMvc.post().uri(UPLOAD_PATH).with(csrf()).multipart().file(DATABASE).exchange();
     }
 
     /** Macht den geschützten Konstruktor für Testfälle zugänglich. */

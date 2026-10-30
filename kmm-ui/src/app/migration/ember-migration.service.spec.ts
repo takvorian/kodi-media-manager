@@ -11,27 +11,39 @@ describe('EmberMigrationService', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(EmberMigrationService);
     httpTesting = TestBed.inject(HttpTestingController);
   });
 
   afterEach(() => httpTesting.verify());
 
-  it('inspects a profile', () => {
+  it('uploads the profile files without their folders', () => {
     let received: EmberInspection | undefined;
+    const file = new File(['x'], 'MyVideos48.emm');
 
-    service.inspect('C:\\Ember').subscribe((inspection) => (received = inspection));
-    const request = httpTesting.expectOne((req) => req.url === `${EMBER_MIGRATION_URL}/inspect`);
+    service.upload([file]).subscribe((inspection) => (received = inspection));
+    const request = httpTesting.expectOne({ method: 'POST', url: `${EMBER_MIGRATION_URL}/upload` });
     request.flush({ schemaVersion: 48 });
 
-    expect(request.request.params.get('path')).toBe('C:\\Ember');
+    const sent = (request.request.body as FormData).getAll('files') as File[];
+    expect(sent.map((part) => part.name)).toEqual(['MyVideos48.emm']);
     expect(received?.schemaVersion).toBe(48);
+  });
+
+  it('discards the upload', () => {
+    let done = false;
+
+    service.discardUpload().subscribe(() => (done = true));
+    httpTesting.expectOne({ method: 'DELETE', url: `${EMBER_MIGRATION_URL}/upload` }).flush(null);
+
+    expect(done).toBe(true);
   });
 
   it('starts an import job', () => {
     const importRequest: EmberImportRequest = {
-      profilePath: 'C:\\Ember',
       pathMappings: [{ emberPath: 'a:\\filme', kmmPath: '/media/filme' }],
       importSettings: true,
       importKodiHosts: true,
