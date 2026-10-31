@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.5 - 2026-10-31
+- Quellen: Ergebnis des letzten Scans bleibt sichtbar (f6d5162)
+
 ## v0.4 - 2026-10-31
 - Sicherung: Seite mit Export und Import, Handbuch-Kapitel (46f4e0a)
 - Sicherung: Import mit Ersetzen oder Zusammenfuehren und Pfad-Zuordnung (f17ba32)
