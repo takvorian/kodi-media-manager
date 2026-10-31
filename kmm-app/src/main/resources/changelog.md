@@ -1,5 +1,11 @@
 # Changelog
 
+## v0.4 - 2026-10-31
+- Sicherung: Seite mit Export und Import, Handbuch-Kapitel (46f4e0a)
+- Sicherung: Import mit Ersetzen oder Zusammenfuehren und Pfad-Zuordnung (f17ba32)
+- Sicherung: Export aller KMM-Daten als Datei (7687f76)
+- Datenbank leeren auf der Seite System (6a0e6cf)
+
 ## v0.3 - 2026-10-31
 - Docker: /config beim Start dem Benutzer PUID:PGID geben (5552f69)
 
