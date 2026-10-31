@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.3 - 2026-10-31
+- Docker: /config beim Start dem Benutzer PUID:PGID geben (5552f69)
+
 ## v0.2 - 2026-10-31
 - Ember-Import: Profil im Browser hochladen statt Pfad und Volume (7aec72f)
 
