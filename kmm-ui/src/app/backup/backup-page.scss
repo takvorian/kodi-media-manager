@@ -1,0 +1,71 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 1000px;
+}
+
+.row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0 16px;
+}
+
+.wide {
+  flex: 1 1 280px;
+}
+
+.arrow {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.hint {
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.warning {
+  color: var(--mat-sys-error);
+}
+
+.credentials-checkbox {
+  display: block;
+  margin-bottom: 12px;
+}
+
+.modes {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 16px;
+}
+
+.replace-confirmation {
+  display: block;
+  max-width: 320px;
+  margin-bottom: 16px;
+}
+
+.job-progress {
+  margin-bottom: 8px;
+}
+
+.facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 8px 24px;
+  margin: 16px 0 0;
+
+  dt {
+    font-weight: 500;
+  }
+
+  dd {
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+.warnings {
+  padding-left: 20px;
+}

@@ -70,6 +70,11 @@ export const routes: Routes = [
     loadComponent: () => import('./migration/ember-import-page').then((m) => m.EmberImportPage),
   },
   {
+    path: 'backup',
+    title: 'Sicherung – KMM',
+    loadComponent: () => import('./backup/backup-page').then((m) => m.BackupPage),
+  },
+  {
     path: 'system',
     title: 'System – KMM',
     loadComponent: () => import('./system/system-status').then((m) => m.SystemStatus),

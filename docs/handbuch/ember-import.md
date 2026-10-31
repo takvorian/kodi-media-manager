@@ -40,7 +40,7 @@ Er zählt neue, aktualisierte und übersprungene Einträge und nennt
 ## Gut zu wissen
 
 - **Ember gewinnt:** Metadaten kommen aus Embers Datenbank. Die NFO gilt danach als eingelesen, damit der nächste Scan die Ember-Daten nicht überschreibt.
-- **Wiederholbar:** Ein erneuter Import aktualisiert, statt zu verdoppeln.
+- **Wiederholbar:** Ein erneuter Import aktualisiert, statt zu verdoppeln. Das gilt aber nur bei gleichen Pfaden. Änderst du die Zuordnung, entstehen die Einträge doppelt; leere dann vorher die Datenbank, siehe [Neu anfangen](fehlerbehebung.md#neu-anfangen).
 - **Umrechnung:** Freigaben wie `Germany:16` werden zu `FSK 16`.
 - **Eigene Filmlisten** aus Ember werden zu gespeicherten [Filtern](filter.md), soweit sie sich übersetzen lassen.
 - **Umbenennungs-Muster** aus Ember werden in die neue Schreibweise übersetzt.

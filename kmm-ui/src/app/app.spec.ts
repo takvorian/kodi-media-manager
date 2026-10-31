@@ -43,6 +43,7 @@ describe('App', () => {
       'Kodi',
       'Einstellungen',
       'Ember-Import',
+      'Sicherung',
       'System',
       'Hilfe',
     ]);

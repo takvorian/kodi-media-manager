@@ -36,6 +36,7 @@ export class App {
     { path: '/kodi', label: 'Kodi' },
     { path: '/settings', label: 'Einstellungen' },
     { path: '/migration', label: 'Ember-Import' },
+    { path: '/backup', label: 'Sicherung' },
     { path: '/system', label: 'System' },
     { path: '/help', label: 'Hilfe' },
   ];

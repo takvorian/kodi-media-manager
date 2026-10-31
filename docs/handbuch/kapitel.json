@@ -13,6 +13,7 @@
   { "slug": "kodi", "title": "Kodi", "routes": ["/kodi"] },
   { "slug": "ember-import", "title": "Ember-Import", "routes": ["/migration"] },
   { "slug": "export", "title": "Export", "routes": [] },
+  { "slug": "sicherung", "title": "Sicherung", "routes": ["/backup"] },
   { "slug": "einstellungen", "title": "Einstellungen", "routes": ["/settings"] },
   { "slug": "fehlerbehebung", "title": "Fehlerbehebung", "routes": [] }
 ]

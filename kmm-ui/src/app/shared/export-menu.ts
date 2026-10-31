@@ -6,9 +6,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { finalize } from 'rxjs';
 
 import { problemMessage } from './problem-message';
+import { saveDownload } from './save-download';
 
 const SNACKBAR_DURATION_MS = 5000;
-const FILE_NAME = /filename="?([^";]+)"?/;
 
 /** Formate des Exports; HTML ist eine Liste mit Postern als ZIP. */
 export type ExportFormat = 'HTML' | 'CSV' | 'JSON';
@@ -68,14 +68,7 @@ export class ExportMenu {
   }
 
   private save(response: HttpResponse<Blob>, format: ExportFormat): void {
-    const disposition = response.headers.get('Content-Disposition') ?? '';
     const extension = format === 'HTML' ? 'zip' : format.toLowerCase();
-    const name = FILE_NAME.exec(disposition)?.[1] ?? `${this.fallbackName()}.${extension}`;
-    const url = URL.createObjectURL(response.body ?? new Blob());
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = name;
-    link.click();
-    URL.revokeObjectURL(url);
+    saveDownload(response, `${this.fallbackName()}.${extension}`);
   }
 }
