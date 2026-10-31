@@ -1,5 +1,12 @@
 # Changelog
 
+## v0.6 - 2026-11-01
+- Seitenleiste auf Deutsch (c74e2b8)
+- Quellen: Bericht nach dem Scan nennt jeden betroffenen Eintrag (5c9c7cd)
+- Listen: Sortieren per Spaltenkopf, Seitenleiste oben, Spalte Hinzugefuegt (dc06f73)
+- Quellen: Test nach Prettier formatiert (29983e7)
+- Quellen: Letzter Scan in der Sprache des Browsers (dd5e271)
+
 ## v0.5 - 2026-10-31
 - Quellen: Ergebnis des letzten Scans bleibt sichtbar (f6d5162)
 
