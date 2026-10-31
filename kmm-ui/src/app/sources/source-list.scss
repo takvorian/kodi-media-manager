@@ -48,6 +48,17 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
+.report-hint,
+.more-entries {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.report-hint {
+  margin: 0 0 4px;
+}
+
+.scan-report,
 .scrape-report {
   margin-top: 24px;
 

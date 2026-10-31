@@ -28,6 +28,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.source.MediaSourceController;
+import de.tiktak.kmm.source.ScanEntry;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
@@ -73,7 +74,12 @@ class MovieLibraryIntegrationTest {
         Files.writeString(library.resolve("Heat (1995)/Heat (1995).nfo"), "<movie><title>kaputt</movie>");
         long sourceId = createSource();
 
-        assertThat(scan(sourceId)).isEqualTo(new ScanResult(sourceId, 2, 0, 0, 0, 1));
+        ScanResult first = scan(sourceId);
+        assertThat(first).usingRecursiveComparison().ignoringFields("details").isEqualTo(new ScanResult(sourceId, 2, 0, 0, 0, 1));
+        assertThat(first.details().added()).extracting(ScanEntry::label)
+                .containsExactlyInAnyOrder("Heat (1995)", "The Matrix (1999)");
+        assertThat(first.details().added()).allSatisfy(entry -> assertThat(entry.id()).isNotNull());
+        assertThat(first.details().unreadableNfos()).hasSize(1);
         assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH))
                 .bodyJson().isLenientlyEqualTo("""
                         {"totalElements": 2, "content": [{"title": "Heat", "year": 1995}, {"title": "The Matrix", "year": 1999}]}
@@ -83,7 +89,7 @@ class MovieLibraryIntegrationTest {
 
         Files.delete(heat);
         createFile("Ronin (1998).mkv");
-        assertThat(scan(sourceId)).isEqualTo(new ScanResult(sourceId, 1, 0, 1, 1, 0));
+        assertThat(scan(sourceId)).usingRecursiveComparison().ignoringFields("details").isEqualTo(new ScanResult(sourceId, 1, 0, 1, 1, 0));
         assertThat(mockMvc.get().uri(MediaSourceController.BASE_PATH))
                 .bodyJson().extractingPath("$[0].lastScannedAt").isNotNull();
 

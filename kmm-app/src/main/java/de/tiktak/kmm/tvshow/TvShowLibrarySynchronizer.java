@@ -18,8 +18,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.TvShowNfo;
+import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.EpisodeCandidate;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.source.ScanDetails;
+import de.tiktak.kmm.source.ScanEntry;
 import lombok.RequiredArgsConstructor;
 
 /**
@@ -49,23 +52,30 @@ class TvShowLibrarySynchronizer {
 
         for (ScannedTvShow scanned : scannedShows) {
             TvShow show = knownShows.remove(scanned.path());
-            if (show == null) {
+            boolean isNew = show == null;
+            if (isNew) {
                 show = showRepository.save(new TvShow(sourceId, scanned.path(), scanned.candidate().title(),
                         scanned.candidate().year()));
                 outcome.showsAdded++;
             }
             synchronizeShowNfo(show, scanned, outcome);
+            if (isNew) {
+                outcome.details.addedShow(showEntry(show, show.getId()));
+            }
             synchronizeEpisodes(show, scanned, knownEpisodes.getOrDefault(show.getId(), List.of()), outcome);
         }
         for (TvShow removed : knownShows.values()) {
-            outcome.removed += knownEpisodes.getOrDefault(removed.getId(), List.of()).size();
+            List<Episode> episodes = knownEpisodes.getOrDefault(removed.getId(), List.of());
+            outcome.removed += episodes.size();
+            episodes.forEach(episode -> outcome.details.removed(episodeEntry(removed, episode, null)));
             showRepository.delete(removed);
             outcome.showsRemoved++;
+            outcome.details.removedShow(showEntry(removed, null));
         }
         sourceService.markScanned(sourceId, clock.instant());
         return new TvShowScanResult(sourceId, outcome.showsAdded, outcome.showsRemoved, outcome.added,
                 outcome.updated, outcome.removed, outcome.unchanged, outcome.nfoErrors, unrecognizedFiles,
-                outcome.newWithoutStreams, List.copyOf(outcome.showsWithNewEpisodes));
+                outcome.details.build(), outcome.newWithoutStreams, List.copyOf(outcome.showsWithNewEpisodes));
     }
 
     /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs, damit der Scan nur geänderte liest. */
@@ -93,7 +103,10 @@ class TvShowLibrarySynchronizer {
                 .orElseGet(() -> nfoFiles.loadShow(nfo.get())).content();
         content.ifPresentOrElse(
                 read -> TvNfoSync.applyShow(show, read, scanned.candidate().title(), scanned.candidate().year()),
-                () -> outcome.nfoErrors++);
+                () -> {
+                    outcome.nfoErrors++;
+                    outcome.details.unreadableNfo(scanned.path());
+                });
         show.markNfoSynchronized(nfo.get().modifiedAt());
     }
 
@@ -119,15 +132,20 @@ class TvShowLibrarySynchronizer {
                     episode.markNfoSynchronized(nfo.modifiedAt());
                 }
                 count(outcome, isNew, changed);
+                if (!isNew && changed) {
+                    outcome.details.updated(episodeEntry(show, episode, episode.getId()));
+                }
             }
         }
         episodeRepository.saveAll(created);
+        created.forEach(episode -> outcome.details.added(episodeEntry(show, episode, episode.getId())));
         if (!created.isEmpty()) {
             outcome.showsWithNewEpisodes.add(show.getId());
         }
         created.stream().filter(episode -> !episode.hasStreamDetails())
                 .forEach(episode -> outcome.newWithoutStreams.add(episode.getId()));
         episodeRepository.deleteAll(remaining.values());
+        remaining.values().forEach(episode -> outcome.details.removed(episodeEntry(show, episode, null)));
         outcome.removed += remaining.size();
     }
 
@@ -136,6 +154,7 @@ class TvShowLibrarySynchronizer {
         if (episodes.isEmpty()) {
             if (content.reportFailureOnce()) {
                 outcome.nfoErrors++;
+                outcome.details.unreadableNfo(episode.getFilePath());
             }
             return;
         }
@@ -151,6 +170,15 @@ class TvShowLibrarySynchronizer {
         } else {
             outcome.unchanged++;
         }
+    }
+
+    private static ScanEntry showEntry(TvShow show, Long id) {
+        return new ScanEntry(MediaType.TV_SHOW, id, show.getTitle());
+    }
+
+    private static ScanEntry episodeEntry(TvShow show, Episode episode, Long id) {
+        return new ScanEntry(MediaType.TV_EPISODE, id, "%s – S%02dE%02d – %s".formatted(show.getTitle(),
+                episode.getSeason(), episode.getEpisode(), episode.getTitle()));
     }
 
     /** Titel aus dem Dateinamen, bei Mehrfachepisoden mit der Episodennummer. */
@@ -209,5 +237,6 @@ class TvShowLibrarySynchronizer {
         private int nfoErrors;
         private final List<Long> newWithoutStreams = new ArrayList<>();
         private final Set<Long> showsWithNewEpisodes = new LinkedHashSet<>();
+        private final ScanDetails.Builder details = new ScanDetails.Builder();
     }
 }

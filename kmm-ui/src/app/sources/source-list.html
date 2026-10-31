@@ -63,6 +63,9 @@
         <span class="last-scanned-at">{{ lastScannedAt(source) }}</span>
         @if (lastScanResult(source); as result) {
           <div class="last-scan-result">{{ result }}</div>
+          @if (hasScanReport(source)) {
+            <button matButton class="scan-details-button" (click)="openScanReport(source)">Details</button>
+          }
         }
       </td>
     </ng-container>
@@ -114,6 +117,39 @@
   </table>
 } @else {
   <p class="loading">Lade Quellen …</p>
+}
+
+@if (scanReport(); as report) {
+  <mat-card appearance="outlined" class="scan-report">
+    <mat-card-header>
+      <mat-card-title>{{ report.title }}: Details</mat-card-title>
+    </mat-card-header>
+    <mat-card-content>
+      @for (section of report.sections; track section.title) {
+        <h3>{{ section.title }} ({{ section.total }})</h3>
+        @if (section.hint) {
+          <p class="report-hint">{{ section.hint }}</p>
+        }
+        <ul>
+          @for (row of section.rows; track $index) {
+            <li>
+              @if (row.link) {
+                <a [routerLink]="row.link">{{ row.label }}</a>
+              } @else {
+                {{ row.label }}
+              }
+            </li>
+          }
+          @if (section.total > section.rows.length) {
+            <li class="more-entries">… und {{ section.total - section.rows.length }} weitere</li>
+          }
+        </ul>
+      }
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button matButton class="close-scan-report-button" (click)="closeScanReport()">Schließen</button>
+    </mat-card-actions>
+  </mat-card>
 }
 
 @if (scrapeReport(); as report) {

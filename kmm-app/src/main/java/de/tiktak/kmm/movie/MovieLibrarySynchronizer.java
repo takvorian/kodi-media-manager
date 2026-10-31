@@ -15,8 +15,11 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.MovieNfo;
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.MovieCandidate;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.source.ScanDetails;
+import de.tiktak.kmm.source.ScanEntry;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -62,6 +65,7 @@ class MovieLibrarySynchronizer {
             } else if (nfoChanged(movie, scanned)
                     && applyNfo(movie, scanned, movie.getTitle(), movie.getReleaseYear(), outcome)) {
                 outcome.updated++;
+                outcome.details.updated(entry(movie, movie.getId()));
             }
         }
         List<Movie> removed = known.values().stream()
@@ -70,6 +74,8 @@ class MovieLibrarySynchronizer {
 
         movieRepository.saveAll(outcome.added);
         movieRepository.deleteAll(removed);
+        outcome.added.forEach(movie -> outcome.details.added(entry(movie, movie.getId())));
+        removed.forEach(movie -> outcome.details.removed(entry(movie, null)));
         sourceService.markScanned(sourceId, clock.instant());
         int unchanged = known.size() - removed.size() - outcome.updated;
         List<Long> withoutStreams = outcome.added.stream()
@@ -77,7 +83,12 @@ class MovieLibrarySynchronizer {
                 .map(Movie::getId)
                 .toList();
         return new ScanResult(sourceId, outcome.added.size(), outcome.updated, removed.size(), unchanged,
-                outcome.nfoErrors, withoutStreams);
+                outcome.nfoErrors, outcome.details.build(), withoutStreams);
+    }
+
+    private static ScanEntry entry(Movie movie, Long id) {
+        String year = movie.getReleaseYear() == null ? "" : " (%d)".formatted(movie.getReleaseYear());
+        return new ScanEntry(MediaType.MOVIE, id, movie.getTitle() + year);
     }
 
     private Movie newMovie(long sourceId, ScannedMovie scanned, Outcome outcome) {
@@ -112,6 +123,7 @@ class MovieLibrarySynchronizer {
         } catch (NfoException e) {
             log.warn("Skipping unreadable NFO: {}", e.getMessage());
             outcome.nfoErrors++;
+            outcome.details.unreadableNfo(scanned.path());
             return false;
         }
     }
@@ -122,5 +134,6 @@ class MovieLibrarySynchronizer {
         private final List<Movie> added = new ArrayList<>();
         private int updated;
         private int nfoErrors;
+        private final ScanDetails.Builder details = new ScanDetails.Builder();
     }
 }

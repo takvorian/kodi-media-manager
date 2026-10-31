@@ -50,6 +50,7 @@ import {
   scanJobKey,
 } from './media-source';
 import { MediaSourceService } from './media-source.service';
+import { scanReportSections } from './scan-report';
 import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
@@ -100,6 +101,12 @@ export class SourceList {
   );
   protected readonly saving = signal(false);
   protected readonly scrapeReport = signal<ScrapeReport | null>(null);
+  private readonly reportedScanId = signal<string | null>(null);
+  /** Geöffneter Bericht eines Scans; er kommt aus dem Job-Verlauf des Servers. */
+  protected readonly scanReport = computed(() => {
+    const job = this.jobStore.jobs().find((candidate) => candidate.id === this.reportedScanId());
+    return job ? { title: job.title, sections: scanReportSections(job) } : null;
+  });
 
   protected readonly form = inject(NonNullableFormBuilder).group({
     name: ['', Validators.required],
@@ -183,13 +190,25 @@ export class SourceList {
 
   /** Ergebnis des letzten beendeten Scans; bleibt sichtbar, bis der Server neu startet. */
   protected lastScanResult(source: MediaSource): string | null {
-    const lastScan = this.jobStore
-      .jobs()
-      .find((job) => job.key === scanJobKey(source.id) && !isRunning(job));
+    const lastScan = this.lastScan(source);
     if (!lastScan) {
       return null;
     }
     return lastScan.status === 'SUCCEEDED' ? scanCounts(lastScan) : unsuccessfulSummary(lastScan);
+  }
+
+  /** Ob der letzte Scan etwas geändert oder gemeldet hat, das sich einzeln ansehen lässt. */
+  protected hasScanReport(source: MediaSource): boolean {
+    const lastScan = this.lastScan(source);
+    return !!lastScan && scanReportSections(lastScan).length > 0;
+  }
+
+  protected openScanReport(source: MediaSource): void {
+    this.reportedScanId.set(this.lastScan(source)?.id ?? null);
+  }
+
+  protected closeScanReport(): void {
+    this.reportedScanId.set(null);
   }
 
   protected create(): void {
@@ -263,6 +282,10 @@ export class SourceList {
     });
   }
 
+  private lastScan(source: MediaSource): Job | undefined {
+    return this.jobStore.jobs().find((job) => job.key === scanJobKey(source.id) && !isRunning(job));
+  }
+
   private sortValue(source: MediaSource, column: string): string | null {
     switch (column) {
       case 'mediaType':
@@ -291,6 +314,7 @@ export class SourceList {
 
   private onScanFinished(job: Job): void {
     this.notify(scanSummary(job));
+    this.reportedScanId.set(scanReportSections(job).length > 0 ? job.id : null);
     this.sources.reload();
   }
 
@@ -308,12 +332,14 @@ function scanSummary(job: Job): string {
 function scanCounts(job: Job): string {
   const result = job.result as ScanResult;
   const errors = result.nfoErrors > 0 ? `, ${result.nfoErrors} NFO-Fehler` : '';
-  const unrecognized = result.unrecognizedFiles?.length
-    ? `, ${result.unrecognizedFiles.length} Dateien ohne erkennbare Episode`
+  const unrecognizedCount = result.unrecognizedFiles?.length ?? 0;
+  const unrecognized = unrecognizedCount
+    ? `, ${unrecognizedCount} ${unrecognizedCount === 1 ? 'Datei' : 'Dateien'} ohne erkennbare Episode`
     : '';
+  const newShows = result.showsAdded ? `, ${result.showsAdded} neue Serien` : '';
   return (
     `${result.added} neu, ${result.updated} aktualisiert, ` +
-    `${result.removed} entfernt, ${result.unchanged} unverändert${errors}${unrecognized}`
+    `${result.removed} entfernt, ${result.unchanged} unverändert${newShows}${errors}${unrecognized}`
   );
 }
 

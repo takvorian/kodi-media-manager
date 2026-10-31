@@ -32,7 +32,9 @@ import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.MovieCandidate;
+import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.source.ScanEntry;
 
 @ExtendWith(MockitoExtension.class)
 class MovieLibrarySynchronizerTest {
@@ -76,7 +78,13 @@ class MovieLibrarySynchronizerTest {
                 scanned("Heat.mkv", "Heat", 1995),
                 scanned("The Matrix.mkv", "The Matrix", 1999)));
 
-        assertThat(result).isEqualTo(new ScanResult(SOURCE_ID, 1, 0, 1, 1, 0));
+        assertThat(result).usingRecursiveComparison().ignoringFields("details").isEqualTo(new ScanResult(SOURCE_ID, 1, 0, 1, 1, 0));
+        assertThat(result.details().added()).extracting(ScanEntry::label).singleElement().asString()
+                .startsWith("The Matrix");
+        assertThat(result.details().removed()).singleElement().satisfies(entry -> {
+            assertThat(entry.type()).isEqualTo(MediaType.MOVIE);
+            assertThat(entry.id()).isNull();
+        });
         verify(movieRepository).saveAll(moviesCaptor.capture());
         assertThat(moviesCaptor.getValue()).singleElement().satisfies(movie -> {
             assertThat(movie.getTitle()).isEqualTo("The Matrix");
@@ -168,7 +176,9 @@ class MovieLibrarySynchronizerTest {
         ScanResult result = synchronizer.synchronize(SOURCE_ID,
                 List.of(heat, scannedWithNfo("Ronin.mkv", "Ronin", null)));
 
-        assertThat(result).isEqualTo(new ScanResult(SOURCE_ID, 0, 1, 0, 1, 0));
+        assertThat(result).usingRecursiveComparison().ignoringFields("details").isEqualTo(new ScanResult(SOURCE_ID, 0, 1, 0, 1, 0));
+        assertThat(result.details().updated()).extracting(ScanEntry::label).singleElement().asString()
+                .startsWith("Heat (neu)");
         assertThat(changed.getTitle()).isEqualTo("Heat (neu)");
         assertThat(changed.getNfoModifiedAt()).isEqualTo(NFO_TIME);
         assertThat(untouched.getTitle()).isEqualTo("Ronin");
@@ -195,7 +205,8 @@ class MovieLibrarySynchronizerTest {
 
         ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(scanned));
 
-        assertThat(result).isEqualTo(new ScanResult(SOURCE_ID, 1, 0, 0, 0, 1));
+        assertThat(result).usingRecursiveComparison().ignoringFields("details").isEqualTo(new ScanResult(SOURCE_ID, 1, 0, 0, 0, 1));
+        assertThat(result.details().unreadableNfos()).hasSize(1);
         verify(movieRepository).saveAll(moviesCaptor.capture());
         assertThat(moviesCaptor.getValue().getFirst().getTitle()).isEqualTo("Heat");
     }
@@ -209,7 +220,7 @@ class MovieLibrarySynchronizerTest {
 
         ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(scanned));
 
-        assertThat(result).isEqualTo(new ScanResult(SOURCE_ID, 0, 0, 0, 1, 1));
+        assertThat(result).usingRecursiveComparison().ignoringFields("details").isEqualTo(new ScanResult(SOURCE_ID, 0, 0, 0, 1, 1));
     }
 
     @Test

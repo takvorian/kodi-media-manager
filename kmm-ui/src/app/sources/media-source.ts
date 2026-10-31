@@ -30,6 +30,23 @@ export function scanJobKey(sourceId: number): string {
   return `${SCAN_JOB_KEY_PREFIX}${sourceId}`;
 }
 
+/** Ein Eintrag im Bericht eines Scans; ohne ID, wenn er nicht mehr in der Bibliothek steht. */
+export interface ScanEntry {
+  readonly type: MediaType;
+  readonly id: number | null;
+  readonly label: string;
+}
+
+/** Was ein Scan geändert hat; die Listen sind serverseitig gekürzt. */
+export interface ScanDetails {
+  readonly added: readonly ScanEntry[];
+  readonly updated: readonly ScanEntry[];
+  readonly removed: readonly ScanEntry[];
+  readonly addedShows: readonly ScanEntry[];
+  readonly removedShows: readonly ScanEntry[];
+  readonly unreadableNfos: readonly string[];
+}
+
 /** Ergebnis eines erfolgreichen Scan-Jobs. */
 /** Ergebnis eines Scans; bei Serienquellen zählen die Felder Episoden. */
 export interface ScanResult {
@@ -39,6 +56,11 @@ export interface ScanResult {
   readonly removed: number;
   readonly unchanged: number;
   readonly nfoErrors: number;
+  readonly details?: ScanDetails;
+  /** Nur bei Serien: neu gefundene Serien. */
+  readonly showsAdded?: number;
+  /** Nur bei Serien: verschwundene Serien. */
+  readonly showsRemoved?: number;
   /** Nur bei Serien: Videodateien ohne erkennbare Staffel und Episode. */
   readonly unrecognizedFiles?: readonly string[];
 }

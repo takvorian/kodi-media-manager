@@ -34,7 +34,16 @@ Klicke dann auf **Hinzufügen**.
 
 Während eine Aufgabe läuft, zeigt die Zeile den Fortschritt und einen Knopf **Abbrechen**.
 
-Das Ergebnis des letzten Scans steht in der Spalte **Letzter Scan**, auch wenn du die Seite zwischendurch verlassen hast. Nach einem Neustart von KMM verschwindet es dort, bis du wieder scannst.
+## Der Bericht nach dem Scan
+
+Das Ergebnis des letzten Scans steht in der Spalte **Letzter Scan**, auch wenn du die Seite zwischendurch verlassen hast. Hat der Scan etwas gefunden, öffnet sich unten ein Bericht, den du über **Details** jederzeit wieder aufrufst. Er nennt
+
+- neue Filme, Serien und Episoden mit einem Link zum jeweiligen Eintrag,
+- aktualisierte und entfernte Einträge,
+- NFOs, die KMM nicht lesen konnte,
+- bei Serien die **Dateien ohne erkennbare Episode**. KMM nimmt sie nicht auf, weil der Name keine Staffel und Episode wie `S01E05` enthält. Benenne sie um und scanne erneut.
+
+Bei Serien zählen **neu**, **aktualisiert** und **entfernt** die Episoden. Lange Listen kürzt KMM nach 200 Einträgen. Ergebnis und Bericht gehen bei einem Neustart von KMM verloren, bis du wieder scannst.
 
 ## Der Bericht nach dem Scrapen
 

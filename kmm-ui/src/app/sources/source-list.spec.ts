@@ -141,7 +141,7 @@ describe('SourceList', () => {
     await answerReload([series]);
 
     expect(snackBarMessages).toEqual([
-      'Scan „Serien“ abgeschlossen: 4 neu, 0 aktualisiert, 0 entfernt, 0 unverändert, 1 Dateien ohne erkennbare Episode.',
+      'Scan „Serien“ abgeschlossen: 4 neu, 0 aktualisiert, 0 entfernt, 0 unverändert, 1 Datei ohne erkennbare Episode.',
     ]);
   });
 
@@ -353,6 +353,92 @@ describe('SourceList', () => {
         timeStyle: 'short',
       }),
     );
+  });
+
+  describe('report of the last scan', () => {
+    const scanJob = job({
+      key: 'scan:2',
+      title: 'Scan „Serien“',
+      status: 'SUCCEEDED',
+      result: {
+        sourceId: 2,
+        showsAdded: 1,
+        showsRemoved: 0,
+        added: 3,
+        updated: 0,
+        removed: 1,
+        unchanged: 5,
+        nfoErrors: 0,
+        unrecognizedFiles: ['ALF/x.avi'],
+        details: {
+          added: [{ type: 'TV_EPISODE', id: 7, label: 'ALF – S01E03 – Der Fremde' }],
+          updated: [],
+          removed: [{ type: 'TV_EPISODE', id: null, label: 'ALF – S01E09 – Weg' }],
+          addedShows: [{ type: 'TV_SHOW', id: 2, label: 'ALF' }],
+          removedShows: [],
+          unreadableNfos: [],
+        },
+      },
+    });
+
+    function headings(): (string | null)[] {
+      return Array.from(element().querySelectorAll('.scan-report h3')).map(
+        (heading) => heading.textContent,
+      );
+    }
+
+    it('opens by itself when the scan ends and names every entry', async () => {
+      await loadSources([series]);
+      events.emit({ ...scanJob, status: 'RUNNING', result: null });
+
+      events.emit(scanJob);
+      await answerReload([series]);
+
+      expect(headings()).toEqual([
+        'Neue Serien (1)',
+        'Neue Episoden (3)',
+        'Entfernte Episoden (1)',
+        'Dateien ohne erkennbare Episode (1)',
+      ]);
+      const links = Array.from(element().querySelectorAll<HTMLAnchorElement>('.scan-report a'));
+      expect(links.map((link) => link.getAttribute('href'))).toEqual(['/tvshows/2', '/episodes/7']);
+      const text = element().querySelector('.scan-report')!.textContent;
+      expect(text).toContain('ALF – S01E03 – Der Fremde');
+      expect(text).toContain('… und 2 weitere');
+      expect(text).toContain('ALF – S01E09 – Weg');
+      expect(text).toContain('ALF/x.avi');
+    });
+
+    it('can be closed and opened again, also after coming back to the page', async () => {
+      await loadSources([series]);
+      events.emit(scanJob);
+      await fixture.whenStable();
+      expect(element().querySelector('.scan-report')).toBeNull();
+
+      button('.scan-details-button').click();
+      await fixture.whenStable();
+      expect(headings()).toContain('Neue Episoden (3)');
+
+      button('.close-scan-report-button').click();
+      await fixture.whenStable();
+      expect(element().querySelector('.scan-report')).toBeNull();
+    });
+
+    it('offers no details when nothing happened', async () => {
+      await loadSources([films]);
+      events.emit(job());
+
+      events.emit(
+        job({
+          status: 'SUCCEEDED',
+          result: { sourceId: 1, added: 0, updated: 0, removed: 0, unchanged: 7, nfoErrors: 0 },
+        }),
+      );
+      await answerReload([films]);
+
+      expect(element().querySelector('.scan-details-button')).toBeNull();
+      expect(element().querySelector('.scan-report')).toBeNull();
+    });
   });
 
   describe('result of the last scan', () => {

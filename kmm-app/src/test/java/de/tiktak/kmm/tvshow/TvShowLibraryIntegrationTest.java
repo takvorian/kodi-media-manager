@@ -87,6 +87,15 @@ class TvShowLibraryIntegrationTest {
         assertThat(result.get("added").asInt()).isEqualTo(4);
         assertThat(result.get("nfoErrors").asInt()).isZero();
         assertThat(result.get("unrecognizedFiles").toString()).contains("So1E99.avi");
+        JsonNode details = result.get("details");
+        assertThat(details.get("addedShows")).extracting(show -> show.get("label").asString())
+                .containsExactlyInAnyOrder("ALF", "Chernobyl");
+        assertThat(details.get("added")).extracting(episode -> episode.get("label").asString())
+                .contains("ALF – S01E02 – Der Fremde", "Chernobyl – S01E01 – Stunde Null");
+        assertThat(details.get("added")).allSatisfy(episode -> {
+            assertThat(episode.get("type").asString()).isEqualTo("TV_EPISODE");
+            assertThat(episode.get("id").isNumber()).isTrue();
+        });
 
         assertThat(mockMvc.get().uri(TvShowController.SHOWS_PATH)).bodyJson().isLenientlyEqualTo("""
                 {"totalElements": 2, "content": [{"title": "ALF", "year": 1986, "episodeCount": 3},
