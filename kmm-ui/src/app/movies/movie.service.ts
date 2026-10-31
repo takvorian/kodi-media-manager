@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { MovieFilter, MovieFilterValues } from '../filters/movie-filter';
 import { Job } from '../jobs/job';
+import { ListSort, SORT_BY_TITLE as TITLE_ORDER, withSort } from '../shared/list-sort';
 import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
 import { MovieBatchEdit } from './movie-batch';
 import { CollectionReference, MovieScrapeProposal, ScrapeCandidate, ScraperInfo } from './scraper';
@@ -28,9 +29,14 @@ export class MovieService {
     return this.http.get<MoviePage>(MOVIES_URL, { params });
   }
 
-  /** Filmliste mit Filter, nach Titel sortiert. */
-  queryMovies(filter: MovieFilter, page: number, size: number): Observable<MoviePage> {
-    const params = new HttpParams().set('page', page).set('size', size).set('sort', SORT_BY_TITLE);
+  /** Filmliste mit Filter, standardmäßig nach Titel sortiert. */
+  queryMovies(
+    filter: MovieFilter,
+    page: number,
+    size: number,
+    sort: ListSort = TITLE_ORDER,
+  ): Observable<MoviePage> {
+    const params = withSort(new HttpParams().set('page', page).set('size', size), sort);
     return this.http.post<MoviePage>(`${MOVIES_URL}/query`, filter, { params });
   }
 

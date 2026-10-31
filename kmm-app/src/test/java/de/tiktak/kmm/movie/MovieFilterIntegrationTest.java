@@ -125,6 +125,21 @@ class MovieFilterIntegrationTest {
     }
 
     @Test
+    void sortsTheListByEveryColumn() {
+        String all = "{\"matchAll\": true, \"conditions\": []}";
+
+        assertThat(sortedTitles(all, "sort=releaseYear,asc&sort=title,asc,ignorecase").getFirst()).isEqualTo("Pippi");
+        for (String sort : List.of("title,desc,ignorecase", "discFormat,asc", "filePath,asc,ignorecase", "addedAt,desc")) {
+            assertThat(sortedTitles(all, "sort=" + sort)).contains("Heat", "Matrix");
+        }
+        assertThat(post(all, "sort=unbekannt,asc")).hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    private List<String> sortedTitles(String body, String parameters) {
+        return query(body, parameters).get("content").valueStream().map(movie -> movie.get("title").asString()).toList();
+    }
+
+    @Test
     void offersTheExistingValuesForSelection() {
         JsonNode values = read(mockMvc.get().uri(MovieController.FILTER_VALUES_PATH).exchange());
 

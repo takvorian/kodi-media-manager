@@ -11,6 +11,7 @@ import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -170,6 +171,24 @@ class TvShowLibraryIntegrationTest {
     }
 
     @Test
+    void sortsTheListByEveryColumn() throws IOException {
+        createFile("beta (2001)/S01E01.avi");
+        createFile("beta (2001)/S01E02.avi");
+        createFile("Alpha (2005)/S01E01.avi");
+        createFile("Gamma (1999)/S01E01.avi");
+        createFile("Gamma (1999)/S01E02.avi");
+        createFile("Gamma (1999)/S01E03.avi");
+        scan(createSource());
+
+        assertThat(sortedTitles("title,asc,ignorecase")).containsExactly("Alpha", "beta", "Gamma");
+        assertThat(sortedTitles("releaseYear,desc")).containsExactly("Alpha", "beta", "Gamma");
+        assertThat(sortedTitles("episodeCount,desc")).containsExactly("Gamma", "beta", "Alpha");
+        assertThat(sortedTitles("episodeCount,asc")).containsExactly("Alpha", "beta", "Gamma");
+        assertThat(sortedTitles("directoryPath,desc,ignorecase")).containsExactly("Gamma", "beta", "Alpha");
+        assertThat(sortedTitles("addedAt,asc")).hasSize(3);
+    }
+
+    @Test
     void answersUnknownShowsAndEpisodesAndRejectsInvalidMetadata() {
         assertThat(mockMvc.get().uri(TvShowController.SHOW_PATH, 999L)).hasStatus(404);
         assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, 999L)).hasStatus(404);
@@ -210,6 +229,12 @@ class TvShowLibraryIntegrationTest {
                         node -> !"RUNNING".equals(node.get("status").asString()));
         assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
         return job.get("result");
+    }
+
+    private List<String> sortedTitles(String sort) {
+        MvcTestResult result = mockMvc.post().uri(TvShowController.QUERY_PATH).param("sort", sort).with(csrf())
+                .contentType(JSON).content("{\"matchAll\": true, \"conditions\": []}").exchange();
+        return read(result).get("content").valueStream().map(show -> show.get("title").asString()).toList();
     }
 
     private long idOf(MvcTestResult page) {

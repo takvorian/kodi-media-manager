@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, filter as where, tap } from 'rxjs';
@@ -25,7 +27,9 @@ import { FilterEditor } from '../filters/filter-editor';
 import { SavedFilter, SavedFilterService } from '../filters/saved-filter.service';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
+import { localDateTime } from '../shared/date-time';
 import { ExportMenu } from '../shared/export-menu';
+import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { DiscFormat } from './movie';
@@ -56,7 +60,9 @@ const SAVED = 'saved:';
     MatProgressBarModule,
     MatSelectModule,
     MatCheckboxModule,
+    MatSortModule,
     MatTableModule,
+    NgTemplateOutlet,
     BatchEditor,
     ExportMenu,
     FilterEditor,
@@ -74,13 +80,15 @@ export class MovieList {
   private readonly jobStore = inject(JobStore);
 
   protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
-  protected readonly columns = ['select', 'title', 'year', 'discFormat', 'filePath'];
+  protected readonly columns = ['select', 'title', 'year', 'discFormat', 'addedAt', 'filePath'];
   protected readonly predefined = PREDEFINED_MOVIE_FILTERS;
   protected readonly filterFields = MOVIE_FILTER_FIELDS;
   protected readonly batchFields = MOVIE_BATCH_FIELDS;
   protected readonly searchInput = signal('');
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  protected readonly sort = signal<ListSort>(SORT_BY_TITLE);
+  protected readonly localDateTime = localDateTime;
   protected readonly filter = signal<MovieFilter>(ALL_MOVIES);
   /** Gewählter Eintrag der Filterauswahl: `all`, `predefined:<Index>` oder `saved:<ID>`. */
   protected readonly selection = signal(ALL);
@@ -125,13 +133,15 @@ export class MovieList {
       filter: { ...completeConditions(this.filter()), search: this.search().trim() || null },
       page: this.pageIndex(),
       size: this.pageSize(),
+      sort: this.sort(),
     }),
     { equal: (previous, next) => JSON.stringify(previous) === JSON.stringify(next) },
   );
 
   protected readonly movies = rxResource({
     params: () => this.query(),
-    stream: ({ params }) => this.movieService.queryMovies(params.filter, params.page, params.size),
+    stream: ({ params }) =>
+      this.movieService.queryMovies(params.filter, params.page, params.size, params.sort),
   });
 
   /** Ob die Liste eingeschränkt ist; dann heißt eine leere Liste „nichts gefunden“ statt „Bibliothek leer“. */
@@ -273,6 +283,11 @@ export class MovieList {
 
   protected onSearch(event: Event): void {
     this.searchInput.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onSort(sort: Sort): void {
+    this.sort.set(listSortOf(sort));
+    this.pageIndex.set(0);
   }
 
   protected onPage(event: PageEvent): void {

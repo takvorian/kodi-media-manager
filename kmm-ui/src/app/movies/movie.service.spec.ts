@@ -96,7 +96,7 @@ describe('MovieService', () => {
     expect(query.request.method).toBe('POST');
     expect(query.request.body).toEqual(filter);
     expect(query.request.params.get('page')).toBe('1');
-    expect(query.request.params.get('sort')).toBe('title,asc');
+    expect(query.request.params.get('sort')).toBe('title,asc,ignorecase');
     query.flush({});
 
     service.filterValues().subscribe();

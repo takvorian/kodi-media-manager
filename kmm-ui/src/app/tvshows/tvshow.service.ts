@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { TvShowFilter, TvShowFilterValues } from '../filters/tvshow-filter';
 import { Job } from '../jobs/job';
+import { ListSort, SORT_BY_TITLE as TITLE_ORDER, withSort } from '../shared/list-sort';
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import {
   EpisodeDetails,
@@ -39,9 +40,14 @@ export class TvShowService {
     return this.http.get<TvShowPage>(TVSHOWS_URL, { params });
   }
 
-  /** Serienliste mit Filter, nach Titel sortiert. */
-  queryShows(filter: TvShowFilter, page: number, size: number): Observable<TvShowPage> {
-    const params = new HttpParams().set('page', page).set('size', size).set('sort', SORT_BY_TITLE);
+  /** Serienliste mit Filter, standardmäßig nach Titel sortiert. */
+  queryShows(
+    filter: TvShowFilter,
+    page: number,
+    size: number,
+    sort: ListSort = TITLE_ORDER,
+  ): Observable<TvShowPage> {
+    const params = withSort(new HttpParams().set('page', page).set('size', size), sort);
     return this.http.post<TvShowPage>(`${TVSHOWS_URL}/query`, filter, { params });
   }
 

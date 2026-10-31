@@ -1,3 +1,4 @@
+import { NgTemplateOutlet } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -8,6 +9,7 @@ import { MatPaginatorModule, PageEvent } from '@angular/material/paginator';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, filter as where, tap } from 'rxjs';
@@ -25,7 +27,9 @@ import {
 } from '../filters/tvshow-filter';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
+import { localDateTime } from '../shared/date-time';
 import { ExportMenu } from '../shared/export-menu';
+import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { TVSHOW_BATCH_FIELDS, TVSHOW_BATCH_JOB_KEY } from './tvshow-batch';
@@ -53,7 +57,9 @@ const SAVED = 'saved:';
     MatPaginatorModule,
     MatProgressBarModule,
     MatSelectModule,
+    MatSortModule,
     MatTableModule,
+    NgTemplateOutlet,
     RouterLink,
   ],
   templateUrl: './tvshow-list.html',
@@ -68,13 +74,22 @@ export class TvShowList {
   private readonly jobStore = inject(JobStore);
 
   protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
-  protected readonly columns = ['select', 'title', 'year', 'episodeCount', 'directoryPath'];
+  protected readonly columns = [
+    'select',
+    'title',
+    'year',
+    'episodeCount',
+    'addedAt',
+    'directoryPath',
+  ];
   protected readonly batchFields = TVSHOW_BATCH_FIELDS;
   protected readonly predefined = PREDEFINED_TVSHOW_FILTERS;
   protected readonly filterFields = TVSHOW_FILTER_FIELDS;
   protected readonly searchInput = signal('');
   protected readonly pageIndex = signal(0);
   protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
+  protected readonly sort = signal<ListSort>(SORT_BY_TITLE);
+  protected readonly localDateTime = localDateTime;
   protected readonly filter = signal<TvShowFilter>(ALL_TVSHOWS);
   /** Gewählter Eintrag der Filterauswahl: `all`, `predefined:<Index>` oder `saved:<ID>`. */
   protected readonly selection = signal(ALL);
@@ -119,13 +134,15 @@ export class TvShowList {
       filter: { ...completeConditions(this.filter()), search: this.search().trim() || null },
       page: this.pageIndex(),
       size: this.pageSize(),
+      sort: this.sort(),
     }),
     { equal: (previous, next) => JSON.stringify(previous) === JSON.stringify(next) },
   );
 
   protected readonly shows = rxResource({
     params: () => this.query(),
-    stream: ({ params }) => this.tvShowService.queryShows(params.filter, params.page, params.size),
+    stream: ({ params }) =>
+      this.tvShowService.queryShows(params.filter, params.page, params.size, params.sort),
   });
 
   /** Ob die Liste eingeschränkt ist; dann heißt eine leere Liste „nichts gefunden“. */
@@ -258,6 +275,11 @@ export class TvShowList {
 
   protected onSearch(event: Event): void {
     this.searchInput.set((event.target as HTMLInputElement).value);
+  }
+
+  protected onSort(sort: Sort): void {
+    this.sort.set(listSortOf(sort));
+    this.pageIndex.set(0);
   }
 
   protected onPage(event: PageEvent): void {

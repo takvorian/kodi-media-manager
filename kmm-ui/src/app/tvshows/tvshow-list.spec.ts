@@ -16,6 +16,7 @@ import { CONFIRM } from '../shared/confirm';
 import { flushWhenRequested } from '../shared/testing';
 
 import { TvShowPage, TvShowSummary } from './tvshow';
+import { localDateTime } from '../shared/date-time';
 import { DEFAULT_PAGE_SIZE, SEARCH_DEBOUNCE_MS, TvShowList } from './tvshow-list';
 import { TVSHOWS_URL } from './tvshow.service';
 
@@ -90,12 +91,43 @@ describe('TvShowList', () => {
     return request;
   }
 
+  it('sorts by a column header and starts again at the first page', async () => {
+    await respond(page([alf]));
+
+    element()
+      .querySelector<HTMLElement>('th.mat-column-episodeCount .mat-sort-header-container')!
+      .click();
+    fixture.detectChanges();
+    const request = httpTesting.expectOne((candidate) => candidate.url === `${TVSHOWS_URL}/query`);
+
+    expect(request.request.params.getAll('sort')).toEqual([
+      'episodeCount,asc',
+      'title,asc,ignorecase',
+    ]);
+    expect(request.request.params.get('page')).toBe('0');
+    request.flush(page([alf]));
+  });
+
+  it('shows the paginator above and below the list', async () => {
+    await respond(page([alf]));
+
+    expect(element().querySelectorAll('mat-paginator')).toHaveLength(2);
+  });
+
+  it('shows when a show was added in the language of the browser', async () => {
+    await respond(page([alf]));
+
+    expect(element().querySelector('.added-at')?.textContent?.trim()).toBe(
+      localDateTime(alf.addedAt),
+    );
+  });
+
   it('lists the shows with year and number of episodes', async () => {
     const request = await respond(
       page([alf, { ...alf, id: 2, title: 'Dark', year: null, episodeCount: 26 }]),
     );
 
-    expect(request.request.params.get('sort')).toBe('title,asc');
+    expect(request.request.params.get('sort')).toBe('title,asc,ignorecase');
     expect(
       Array.from(element().querySelectorAll('.tvshow-title a')).map((link) =>
         link.getAttribute('href'),

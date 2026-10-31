@@ -231,7 +231,12 @@ class MovieRenameIntegrationTest {
     }
 
     private JsonNode scan(long sourceId) {
-        return runJob(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange());
+        JsonNode result = runJob(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange());
+        // Die technischen Angaben neuer Dateien werden danach gelesen; unter Windows sperrt das die Dateien.
+        await().atMost(TIMEOUT).pollInSameThread()
+                .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH).exchange()).valueStream()
+                        .noneMatch(job -> "RUNNING".equals(job.get("status").asString())));
+        return result;
     }
 
     private JsonNode runJob(MvcTestResult started) {

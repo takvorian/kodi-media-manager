@@ -2,7 +2,7 @@
 
 ## Die Filmliste
 
-Die Seite **Filme** zeigt alle Filme mit Titel, Jahr, Format und Datei. Oben kannst du nach dem Titel suchen und einen [Filter](filter.md) wählen. Über die Häkchen links wählst du Filme für [Stapel-Aktionen](filter.md#stapel-bearbeitung) aus, und über **Exportieren** lädst du die aktuelle Liste als [Export](export.md) herunter.
+Die Seite **Filme** zeigt alle Filme mit Titel, Jahr, Format, Hinzugefügt und Datei. Ein Klick auf einen Spaltenkopf sortiert die Liste danach, ein zweiter dreht die Richtung um. So siehst du zum Beispiel mit **Hinzugefügt** die neuesten Filme zuerst. Die Seitenleiste steht über und unter der Liste. Oben kannst du nach dem Titel suchen und einen [Filter](filter.md) wählen. Über die Häkchen links wählst du Filme für [Stapel-Aktionen](filter.md#stapel-bearbeitung) aus, und über **Exportieren** lädst du die aktuelle Liste als [Export](export.md) herunter.
 
 ![Die Filmliste](bilder/filmliste.png)
 

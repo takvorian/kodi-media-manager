@@ -16,6 +16,7 @@ import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { flushWhenRequested } from '../shared/testing';
 import { MoviePage, MovieSummary } from './movie';
+import { localDateTime } from '../shared/date-time';
 import { DEFAULT_PAGE_SIZE, MovieList, SEARCH_DEBOUNCE_MS } from './movie-list';
 import { MOVIES_URL } from './movie.service';
 
@@ -130,6 +131,34 @@ describe('MovieList', () => {
     expect(
       Array.from(element().querySelectorAll('.movie-title')).map((cell) => cell.textContent),
     ).toEqual(['Heat', 'Ronin']);
+  });
+
+  it('sorts by a column header and starts again at the first page', async () => {
+    await respond(page([heat, ronin]));
+
+    element()
+      .querySelector<HTMLElement>('th.mat-column-addedAt .mat-sort-header-container')!
+      .click();
+    fixture.detectChanges();
+    const request = httpTesting.expectOne((candidate) => candidate.url === `${MOVIES_URL}/query`);
+
+    expect(request.request.params.getAll('sort')).toEqual(['addedAt,desc', 'title,asc,ignorecase']);
+    expect(request.request.params.get('page')).toBe('0');
+    request.flush(page([ronin, heat]));
+  });
+
+  it('shows the paginator above and below the list', async () => {
+    await respond(page([heat, ronin]));
+
+    expect(element().querySelectorAll('mat-paginator')).toHaveLength(2);
+  });
+
+  it('shows when a movie was added in the language of the browser', async () => {
+    await respond(page([heat]));
+
+    expect(element().querySelector('.added-at')?.textContent?.trim()).toBe(
+      localDateTime(heat.addedAt),
+    );
   });
 
   it('shows year, format and number of parts', async () => {

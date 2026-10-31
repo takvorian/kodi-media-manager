@@ -85,7 +85,7 @@ describe('TvShowService', () => {
     service.queryShows(filter, 0, 50).subscribe();
     const query = httpTesting.expectOne((req) => req.url === `${TVSHOWS_URL}/query`);
     expect(query.request.method).toBe('POST');
-    expect(query.request.params.get('sort')).toBe('title,asc');
+    expect(query.request.params.get('sort')).toBe('title,asc,ignorecase');
     query.flush({});
 
     service.queryShowIds(filter).subscribe();

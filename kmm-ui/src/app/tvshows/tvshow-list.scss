@@ -38,6 +38,10 @@
   color: var(--mat-sys-on-surface-variant);
 }
 
+.added-at {
+  white-space: nowrap;
+}
+
 .error {
   color: var(--mat-sys-error);
 }

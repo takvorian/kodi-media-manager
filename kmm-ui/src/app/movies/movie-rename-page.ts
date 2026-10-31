@@ -8,12 +8,14 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule } from '@angular/material/sort';
 import { RouterLink } from '@angular/router';
 import { filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { SettingsService } from '../settings/settings.service';
+import { ListSort, listSortOf, sortedBy } from '../shared/list-sort';
 import { problemMessage } from '../shared/problem-message';
 import {
   MovieRenamePatterns,
@@ -44,6 +46,7 @@ const SNACKBAR_DURATION_MS = 8000;
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
+    MatSortModule,
   ],
   templateUrl: './movie-rename-page.html',
   styleUrl: './movie-rename-page.scss',
@@ -66,8 +69,14 @@ export class MovieRenamePage {
   protected readonly onlyChanges = signal(true);
   protected readonly selected = signal<ReadonlySet<number>>(new Set());
 
+  protected readonly sort = signal<ListSort>({ active: 'title', direction: 'asc' });
+  protected readonly listSortOf = listSortOf;
   protected readonly visiblePlans = computed(() =>
-    (this.plans() ?? []).filter((plan) => !this.onlyChanges() || plan.status !== 'UNCHANGED'),
+    sortedBy(
+      (this.plans() ?? []).filter((plan) => !this.onlyChanges() || plan.status !== 'UNCHANGED'),
+      this.sort(),
+      (plan, column) => this.sortValue(plan, column),
+    ),
   );
   protected readonly counts = computed(() => {
     const plans = this.plans() ?? [];
@@ -171,6 +180,17 @@ export class MovieRenamePage {
   private patterns(): MovieRenamePatterns {
     const value = this.form.getRawValue();
     return { folder: value.folder.trim(), file: value.file.trim() };
+  }
+
+  private sortValue(plan: MovieRenamePlan, column: string): string {
+    switch (column) {
+      case 'folder':
+        return plan.currentDirectory;
+      case 'status':
+        return this.statusLabels[plan.status];
+      default:
+        return plan.title;
+    }
   }
 
   private notify(message: string): void {

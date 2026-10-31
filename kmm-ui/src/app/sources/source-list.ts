@@ -1,4 +1,4 @@
-import { Component, inject, signal } from '@angular/core';
+import { Component, computed, inject, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -9,6 +9,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { Observable, filter } from 'rxjs';
@@ -34,6 +35,8 @@ import { MediaInfoService } from '../media-info/media-info.service';
 import { movieRenameJobKey } from '../movies/movie-rename';
 import { tvRenameJobKey } from '../tvshows/tv-rename';
 import { CONFIRM } from '../shared/confirm';
+import { localDateTime } from '../shared/date-time';
+import { ListSort, listSortOf, sortedBy } from '../shared/list-sort';
 import { problemMessage } from '../shared/problem-message';
 import {
   AUTO_SCRAPE_JOB_KEY_PREFIX,
@@ -50,7 +53,6 @@ import { MediaSourceService } from './media-source.service';
 import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
-const DATE_TIME_FORMAT: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' };
 
 /** Bericht des letzten Scrape-Laufs, solange er Titel ohne Treffer, Fehler oder Hinweise enthält. */
 export interface ScrapeReport {
@@ -71,6 +73,7 @@ export interface ScrapeReport {
     MatMenuModule,
     MatProgressBarModule,
     MatSelectModule,
+    MatSortModule,
     MatTableModule,
   ],
   templateUrl: './source-list.html',
@@ -87,6 +90,14 @@ export class SourceList {
   protected readonly mediaTypes = SOURCE_MEDIA_TYPES;
   protected readonly columns = ['name', 'path', 'mediaType', 'lastScannedAt', 'actions'];
   protected readonly sources = rxResource({ stream: () => this.sourceService.findAll() });
+  protected readonly sort = signal<ListSort>({ active: 'name', direction: 'asc' });
+  protected readonly sortedSources = computed(() =>
+    this.sources.hasValue()
+      ? sortedBy(this.sources.value(), this.sort(), (source, column) =>
+          this.sortValue(source, column),
+        )
+      : [],
+  );
   protected readonly saving = signal(false);
   protected readonly scrapeReport = signal<ScrapeReport | null>(null);
 
@@ -128,6 +139,10 @@ export class SourceList {
       .subscribe((job) => this.notify(streamDetailsSummary(job)));
   }
 
+  protected onSort(sort: Sort): void {
+    this.sort.set(listSortOf(sort));
+  }
+
   protected mediaTypeLabel(mediaType: MediaType): string {
     return this.mediaTypes.find((type) => type.value === mediaType)?.label ?? mediaType;
   }
@@ -162,11 +177,8 @@ export class SourceList {
     return progressPercent(job);
   }
 
-  /** Datum und Uhrzeit in der Sprache des Browsers. */
   protected lastScannedAt(source: MediaSource): string {
-    return source.lastScannedAt
-      ? new Date(source.lastScannedAt).toLocaleString(undefined, DATE_TIME_FORMAT)
-      : '–';
+    return localDateTime(source.lastScannedAt);
   }
 
   /** Ergebnis des letzten beendeten Scans; bleibt sichtbar, bis der Server neu startet. */
@@ -249,6 +261,19 @@ export class SourceList {
       },
       error: (error: unknown) => this.notify(problemMessage(error)),
     });
+  }
+
+  private sortValue(source: MediaSource, column: string): string | null {
+    switch (column) {
+      case 'mediaType':
+        return this.mediaTypeLabel(source.mediaType);
+      case 'path':
+        return source.path;
+      case 'lastScannedAt':
+        return source.lastScannedAt;
+      default:
+        return source.name;
+    }
   }
 
   private track(start: Observable<Job>): void {

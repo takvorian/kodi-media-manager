@@ -35,21 +35,30 @@
 } @else if (sources.hasValue() && sources.value().length === 0) {
   <p class="empty">Noch keine Quellen angelegt.</p>
 } @else if (sources.hasValue()) {
-  <table mat-table [dataSource]="sources.value()" class="source-table">
+  <table
+    mat-table
+    matSort
+    matSortDisableClear
+    [dataSource]="sortedSources()"
+    [matSortActive]="sort().active"
+    [matSortDirection]="sort().direction"
+    (matSortChange)="onSort($event)"
+    class="source-table"
+  >
     <ng-container matColumnDef="name">
-      <th mat-header-cell *matHeaderCellDef>Name</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Name</th>
       <td mat-cell *matCellDef="let source" class="source-name">{{ source.name }}</td>
     </ng-container>
     <ng-container matColumnDef="path">
-      <th mat-header-cell *matHeaderCellDef>Verzeichnis</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Verzeichnis</th>
       <td mat-cell *matCellDef="let source" class="path">{{ source.path }}</td>
     </ng-container>
     <ng-container matColumnDef="mediaType">
-      <th mat-header-cell *matHeaderCellDef>Inhalt</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>Inhalt</th>
       <td mat-cell *matCellDef="let source">{{ mediaTypeLabel(source.mediaType) }}</td>
     </ng-container>
     <ng-container matColumnDef="lastScannedAt">
-      <th mat-header-cell *matHeaderCellDef>Letzter Scan</th>
+      <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc">Letzter Scan</th>
       <td mat-cell *matCellDef="let source">
         <span class="last-scanned-at">{{ lastScannedAt(source) }}</span>
         @if (lastScanResult(source); as result) {

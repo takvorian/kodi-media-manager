@@ -144,11 +144,23 @@ describe('MovieRenamePage', () => {
     expect(element().querySelector('.summary')!.textContent).toContain('2 umzubenennen');
     expect(element().querySelector('.count-conflict')!.textContent).toContain('1 Konflikte');
     expect(rows()).toEqual([
+      'Brazil | /filme/brazil → /filme/Brazil (1985) | Konflikt Der Ordner existiert bereits.',
       'Heat | /filme/heat → /filme/Heat (1995) | heat.mkv → Heat.mkv | wird umbenannt',
       'Ronin | /filme/ronin → /filme/Ronin (1998) | ronin.mkv → Ronin.mkv | wird umbenannt',
-      'Brazil | /filme/brazil → /filme/Brazil (1985) | Konflikt Der Ordner existiert bereits.',
     ]);
     expect(button('.rename-button').textContent).toContain('2 umbenennen');
+  });
+
+  it('sorts the preview by a column header', async () => {
+    await load();
+    await preview();
+
+    element()
+      .querySelector<HTMLElement>('th[mat-sort-header="title"] .mat-sort-header-container')!
+      .click();
+    await fixture.whenStable();
+
+    expect(rows()[0]).toContain('Ronin');
   });
 
   it('shows unchanged movies on request', async () => {

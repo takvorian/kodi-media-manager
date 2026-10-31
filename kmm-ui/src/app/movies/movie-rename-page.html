@@ -75,14 +75,21 @@
           {{ selected().size }} umbenennen
         </button>
       </div>
-      <table class="plans">
+      <table
+        class="plans"
+        matSort
+        matSortDisableClear
+        [matSortActive]="sort().active"
+        [matSortDirection]="sort().direction"
+        (matSortChange)="sort.set(listSortOf($event))"
+      >
         <thead>
           <tr>
             <th></th>
-            <th>Film</th>
-            <th>Ordner</th>
+            <th mat-sort-header="title">Film</th>
+            <th mat-sort-header="folder">Ordner</th>
             <th>Dateien</th>
-            <th>Status</th>
+            <th mat-sort-header="status">Status</th>
           </tr>
         </thead>
         <tbody>

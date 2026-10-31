@@ -9,6 +9,7 @@ import java.util.Objects;
 import java.util.TreeMap;
 
 import org.hibernate.Length;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.JdbcTypeCode;
 import org.hibernate.type.SqlTypes;
 
@@ -47,6 +48,10 @@ public class TvShow {
 
     @Column(name = "source_id", nullable = false, updatable = false)
     private Long sourceId;
+
+    /** Nur zum Sortieren der Liste; beim Laden berechnet. */
+    @Formula("(select count(*) from episode e where e.tv_show_id = id)")
+    private long episodeCount;
 
     @Column(name = "directory_path", nullable = false, length = 1024)
     private String directoryPath;

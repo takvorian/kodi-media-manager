@@ -329,6 +329,18 @@ describe('SourceList', () => {
     expect(element().querySelector('.scan-button')).not.toBeNull();
   });
 
+  it('sorts by a column header', async () => {
+    await loadSources([series, films]);
+    const names = () =>
+      Array.from(element().querySelectorAll('.source-name')).map((cell) => cell.textContent);
+    expect(names()).toEqual(['Filme', 'Serien']);
+
+    element().querySelector<HTMLElement>('th.mat-column-name .mat-sort-header-container')!.click();
+    await fixture.whenStable();
+
+    expect(names()).toEqual(['Serien', 'Filme']);
+  });
+
   it('shows the time of the last scan in the language of the browser', async () => {
     const lastScannedAt = '2026-10-25T12:30:00Z';
     await loadSources([films, { ...series, lastScannedAt }]);
