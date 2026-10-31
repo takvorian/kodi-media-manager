@@ -9,6 +9,7 @@ import java.sql.SQLException;
 import java.sql.Types;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.Calendar;
 import java.util.LinkedHashMap;
 import java.util.Locale;
@@ -126,8 +127,9 @@ class BackupWriter {
             case Types.DECIMAL, Types.NUMERIC, Types.REAL, Types.FLOAT, Types.DOUBLE ->
                     json.writeNumber(row.getBigDecimal(column));
             case Types.DATE -> json.writeString(row.getObject(column, LocalDate.class).toString());
-            case Types.TIMESTAMP, Types.TIMESTAMP_WITH_TIMEZONE ->
-                    json.writeString(row.getTimestamp(column, utc()).toInstant().toString());
+            case Types.TIMESTAMP_WITH_TIMEZONE ->
+                    json.writeString(row.getObject(column, OffsetDateTime.class).toInstant().toString());
+            case Types.TIMESTAMP -> json.writeString(row.getTimestamp(column, utc()).toInstant().toString());
             default -> json.writeString(row.getString(column));
         }
     }

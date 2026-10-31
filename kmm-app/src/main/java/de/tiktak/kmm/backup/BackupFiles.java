@@ -4,17 +4,23 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Clock;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.web.multipart.MultipartFile;
 
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verwaltet die Dateien der Sicherung unter {@code ${kmm.home}/backup}. Exporte können Zugangsdaten enthalten; Reste
- * eines abgebrochenen Downloads löscht deshalb der nächste Start.
+ * Verwaltet die Dateien der Sicherung unter {@code ${kmm.home}/backup}. Exporte und Uploads können Zugangsdaten
+ * enthalten; Reste eines abgebrochenen Ablaufs löscht deshalb der nächste Start.
  */
 @Slf4j
 @Component
@@ -24,11 +30,74 @@ class BackupFiles {
 
     private static final String EXPORT_PREFIX = "export-";
     private static final String EXPORT_SUFFIX = ".tmp";
+    private static final String UPLOAD_NAME = "upload.json.gz";
+    private static final String SAFETY_PREFIX = "vor-import-";
+    private static final String SAFETY_SUFFIX = ".json.gz";
+    private static final DateTimeFormatter SAFETY_TIME = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss-SSS");
+    private static final int SAFETY_COPIES_KEPT = 3;
 
     private final Path directory;
+    private final Clock clock;
 
-    BackupFiles(@Value("${kmm.home}") Path home) {
+    BackupFiles(@Value("${kmm.home}") Path home, Clock clock) {
         directory = home.resolve(DIRECTORY_NAME);
+        this.clock = clock;
+    }
+
+    /** Ersetzt die hochgeladene Datei; es gibt nur eine zur Zeit. */
+    void storeUpload(MultipartFile file) {
+        try {
+            Files.createDirectories(directory);
+            file.transferTo(directory.resolve(UPLOAD_NAME));
+        } catch (IOException e) {
+            discardUpload();
+            throw new UncheckedIOException(e);
+        }
+    }
+
+    /**
+     * @throws BackupFileException wenn keine Datei hochgeladen ist
+     */
+    Path upload() {
+        Path upload = directory.resolve(UPLOAD_NAME);
+        if (!Files.isRegularFile(upload)) {
+            throw new BackupFileException("Bitte zuerst eine Sicherung hochladen.");
+        }
+        return upload;
+    }
+
+    void discardUpload() {
+        try {
+            Files.deleteIfExists(directory.resolve(UPLOAD_NAME));
+        } catch (IOException e) {
+            log.warn("Uploaded backup could not be deleted", e);
+        }
+    }
+
+    /** Datei für den Stand vor einem Import; ältere räumt {@link #pruneSafetyCopies()} auf. */
+    Path newSafetyCopy() {
+        try {
+            Files.createDirectories(directory);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        String time = SAFETY_TIME.format(LocalDateTime.ofInstant(clock.instant(), clock.getZone()));
+        return directory.resolve(SAFETY_PREFIX + time + SAFETY_SUFFIX);
+    }
+
+    /** Der Name enthält die Zeit, die neuesten stehen also alphabetisch hinten. */
+    void pruneSafetyCopies() {
+        try (Stream<Path> files = Files.list(directory)) {
+            List<Path> copies = files
+                    .filter(file -> file.getFileName().toString().startsWith(SAFETY_PREFIX))
+                    .sorted()
+                    .toList();
+            for (Path copy : copies.subList(0, Math.max(0, copies.size() - SAFETY_COPIES_KEPT))) {
+                Files.deleteIfExists(copy);
+            }
+        } catch (IOException e) {
+            log.warn("Old backup safety copies could not be deleted", e);
+        }
     }
 
     Path newExportFile() {
@@ -45,6 +114,7 @@ class BackupFiles {
         if (!Files.isDirectory(directory)) {
             return;
         }
+        discardUpload();
         try (var files = Files.newDirectoryStream(directory, EXPORT_PREFIX + "*" + EXPORT_SUFFIX)) {
             for (Path file : files) {
                 Files.deleteIfExists(file);

@@ -38,6 +38,7 @@ public class JobService {
     private final JobProperties properties;
     private final Map<UUID, RunningJob> running = new ConcurrentHashMap<>();
     private final Deque<JobSnapshot> history = new ArrayDeque<>();
+    private UUID exclusiveJob;
 
     /**
      * Startet einen Job im Hintergrund.
@@ -45,6 +46,7 @@ public class JobService {
      * @throws JobAlreadyRunningException wenn für den Schlüssel bereits ein Job läuft
      */
     public synchronized JobSnapshot submit(String key, String title, JobTask<?> task) {
+        rejectWhileExclusiveJobRuns();
         findRunning(key).ifPresent(job -> {
             throw new JobAlreadyRunningException(job.snapshot());
         });
@@ -59,14 +61,24 @@ public class JobService {
     }
 
     /**
+     * Startet einen Job, der allein läuft: Er startet nur, wenn gerade keiner läuft, und bis er endet, startet keiner.
+     *
+     * @throws JobAlreadyRunningException wenn gerade ein Job läuft
+     */
+    public synchronized JobSnapshot submitExclusive(String key, String title, JobTask<?> task) {
+        rejectWhileAnyJobRuns();
+        JobSnapshot started = submit(key, title, task);
+        exclusiveJob = started.id();
+        return started;
+    }
+
+    /**
      * Führt eine Aktion aus, wenn kein Job läuft. Bis sie fertig ist, startet auch keiner.
      *
      * @throws JobAlreadyRunningException wenn gerade ein Job läuft
      */
     public synchronized void runWhileIdle(Runnable action) {
-        running.values().stream().findFirst().ifPresent(job -> {
-            throw new JobAlreadyRunningException(job.snapshot());
-        });
+        rejectWhileAnyJobRuns();
         action.run();
     }
 
@@ -123,9 +135,24 @@ public class JobService {
 
     private synchronized void archive(RunningJob job, JobSnapshot finished) {
         running.remove(finished.id(), job);
+        if (finished.id().equals(exclusiveJob)) {
+            exclusiveJob = null;
+        }
         history.addFirst(finished);
         while (history.size() > properties.historySize()) {
             history.removeLast();
+        }
+    }
+
+    private void rejectWhileAnyJobRuns() {
+        running.values().stream().findFirst().ifPresent(job -> {
+            throw new JobAlreadyRunningException(job.snapshot());
+        });
+    }
+
+    private void rejectWhileExclusiveJobRuns() {
+        if (exclusiveJob != null && running.containsKey(exclusiveJob)) {
+            throw new JobAlreadyRunningException(running.get(exclusiveJob).snapshot());
         }
     }
 

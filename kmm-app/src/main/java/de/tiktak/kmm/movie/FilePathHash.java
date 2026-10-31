@@ -9,14 +9,14 @@ import java.util.HexFormat;
  * SHA-256 eines Dateipfads als Hex-Zeichenkette. Dient als eindeutiger Schlüssel, weil ein
  * Unique-Index über den vollständigen Pfad die Indexgrenzen mancher Datenbanken überschreitet.
  */
-final class FilePathHash {
+public final class FilePathHash {
 
     private static final String ALGORITHM = "SHA-256";
 
     private FilePathHash() {
     }
 
-    static String of(String filePath) {
+    public static String of(String filePath) {
         try {
             byte[] digest = MessageDigest.getInstance(ALGORITHM).digest(filePath.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);

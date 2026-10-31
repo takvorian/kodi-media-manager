@@ -137,6 +137,26 @@ class JobServiceTest {
     }
 
     @Test
+    void startsAnExclusiveJobOnlyWhileNoOtherJobIsRunning() {
+        service.submit("scan:1", "Scan Filme", context -> "fertig");
+
+        assertThatThrownBy(() -> service.submitExclusive("import", "Import", context -> "fertig"))
+                .isInstanceOf(JobAlreadyRunningException.class);
+    }
+
+    @Test
+    void startsNoOtherJobWhileAnExclusiveJobIsRunning() {
+        JobSnapshot exclusive = service.submitExclusive("import", "Import", context -> "fertig");
+
+        assertThatThrownBy(() -> service.submit("scan:1", "Scan Filme", context -> "fertig"))
+                .isInstanceOfSatisfying(JobAlreadyRunningException.class, exception ->
+                        assertThat(exception.getBody().getProperties()).containsEntry("jobId", exclusive.id()));
+
+        executor.runAll();
+        assertThat(service.submit("scan:1", "Scan Filme", context -> "fertig").status()).isEqualTo(JobStatus.RUNNING);
+    }
+
+    @Test
     void rejectsSecondJobWithSameKeyWhileFirstIsRunning() {
         JobSnapshot first = service.submit("scan:1", "Scan Filme", context -> "fertig");
 
