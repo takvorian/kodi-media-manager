@@ -329,6 +329,71 @@ describe('SourceList', () => {
     expect(element().querySelector('.scan-button')).not.toBeNull();
   });
 
+  describe('result of the last scan', () => {
+    const counts = { sourceId: 1, updated: 0, removed: 0, unchanged: 7, nfoErrors: 0 };
+
+    function lastScanResults(): (string | null)[] {
+      return Array.from(element().querySelectorAll('.last-scan-result')).map(
+        (result) => result.textContent,
+      );
+    }
+
+    it('stays next to the source and updates by itself', async () => {
+      await loadSources([films]);
+      expect(lastScanResults()).toEqual([]);
+
+      events.emit(job());
+      events.emit(job({ status: 'SUCCEEDED', result: { ...counts, added: 3 } }));
+      await answerReload([films]);
+
+      expect(lastScanResults()).toEqual(['3 neu, 0 aktualisiert, 0 entfernt, 7 unverändert']);
+    });
+
+    it('shows a scan that ended before the page was opened', async () => {
+      await loadSources([films, series]);
+
+      events.emit(job({ status: 'SUCCEEDED', result: { ...counts, added: 3 } }));
+      await fixture.whenStable();
+
+      expect(snackBarMessages).toEqual([]);
+      expect(lastScanResults()).toEqual(['3 neu, 0 aktualisiert, 0 entfernt, 7 unverändert']);
+    });
+
+    it('shows the newest finished scan, not one still running', async () => {
+      await loadSources([films]);
+
+      events.emit(
+        job({
+          id: 'old',
+          startedAt: '2026-10-25T10:00:00Z',
+          status: 'SUCCEEDED',
+          result: { ...counts, added: 1 },
+        }),
+      );
+      events.emit(
+        job({
+          id: 'new',
+          startedAt: '2026-10-25T11:00:00Z',
+          status: 'SUCCEEDED',
+          result: { ...counts, added: 2 },
+        }),
+      );
+      events.emit(job({ id: 'running', startedAt: '2026-10-25T12:00:00Z' }));
+      await fixture.whenStable();
+
+      expect(lastScanResults()).toEqual(['2 neu, 0 aktualisiert, 0 entfernt, 7 unverändert']);
+    });
+
+    it('shows a failed scan', async () => {
+      await loadSources([films]);
+
+      events.emit(job({ status: 'FAILED', message: 'Verzeichnis weg' }));
+      await fixture.whenStable();
+
+      expect(lastScanResults()).toEqual(['Scan „Filme“ fehlgeschlagen: Verzeichnis weg']);
+    });
+  });
+
   it('reports failed and cancelled scans', async () => {
     await loadSources([films]);
     events.emit(job());

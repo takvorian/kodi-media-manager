@@ -14,7 +14,7 @@ import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
 import { Observable, filter } from 'rxjs';
 
-import { Job, progressPercent } from '../jobs/job';
+import { Job, isRunning, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import {
   KODI_PLAYBACK_JOB_KEY_PREFIX,
@@ -163,6 +163,17 @@ export class SourceList {
     return progressPercent(job);
   }
 
+  /** Ergebnis des letzten beendeten Scans; bleibt sichtbar, bis der Server neu startet. */
+  protected lastScanResult(source: MediaSource): string | null {
+    const lastScan = this.jobStore
+      .jobs()
+      .find((job) => job.key === scanJobKey(source.id) && !isRunning(job));
+    if (!lastScan) {
+      return null;
+    }
+    return lastScan.status === 'SUCCEEDED' ? scanCounts(lastScan) : unsuccessfulSummary(lastScan);
+  }
+
   protected create(): void {
     if (this.form.invalid) {
       return;
@@ -258,18 +269,21 @@ export class SourceList {
 }
 
 function scanSummary(job: Job): string {
-  if (job.status === 'SUCCEEDED') {
-    const result = job.result as ScanResult;
-    const errors = result.nfoErrors > 0 ? `, ${result.nfoErrors} NFO-Fehler` : '';
-    const unrecognized = result.unrecognizedFiles?.length
-      ? `, ${result.unrecognizedFiles.length} Dateien ohne erkennbare Episode`
-      : '';
-    return (
-      `${job.title} abgeschlossen: ${result.added} neu, ${result.updated} aktualisiert, ` +
-      `${result.removed} entfernt, ${result.unchanged} unverändert${errors}${unrecognized}.`
-    );
-  }
-  return unsuccessfulSummary(job);
+  return job.status === 'SUCCEEDED'
+    ? `${job.title} abgeschlossen: ${scanCounts(job)}.`
+    : unsuccessfulSummary(job);
+}
+
+function scanCounts(job: Job): string {
+  const result = job.result as ScanResult;
+  const errors = result.nfoErrors > 0 ? `, ${result.nfoErrors} NFO-Fehler` : '';
+  const unrecognized = result.unrecognizedFiles?.length
+    ? `, ${result.unrecognizedFiles.length} Dateien ohne erkennbare Episode`
+    : '';
+  return (
+    `${result.added} neu, ${result.updated} aktualisiert, ` +
+    `${result.removed} entfernt, ${result.unchanged} unverändert${errors}${unrecognized}`
+  );
 }
 
 function autoScrapeSummary(job: Job): string {

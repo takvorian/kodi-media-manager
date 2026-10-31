@@ -34,6 +34,8 @@ Klicke dann auf **Hinzufügen**.
 
 Während eine Aufgabe läuft, zeigt die Zeile den Fortschritt und einen Knopf **Abbrechen**.
 
+Das Ergebnis des letzten Scans steht in der Spalte **Letzter Scan**, auch wenn du die Seite zwischendurch verlassen hast. Nach einem Neustart von KMM verschwindet es dort, bis du wieder scannst.
+
 ## Der Bericht nach dem Scrapen
 
 Bleibt beim Scrapen etwas offen, erscheint unten ein Bericht:

@@ -43,6 +43,11 @@
   text-overflow: ellipsis;
 }
 
+.last-scan-result {
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
 .scrape-report {
   margin-top: 24px;
 
