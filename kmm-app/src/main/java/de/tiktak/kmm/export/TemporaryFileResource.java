@@ -11,11 +11,11 @@ import org.springframework.core.io.FileSystemResource;
 /**
  * Eine temporäre Datei, die nach dem Lesen gelöscht wird.
  */
-class TemporaryFileResource extends FileSystemResource {
+public class TemporaryFileResource extends FileSystemResource {
 
     private final Path file;
 
-    TemporaryFileResource(Path file) {
+    public TemporaryFileResource(Path file) {
         super(file);
         this.file = file;
     }
