@@ -49,11 +49,12 @@ COPY --from=build /extracted/spring-boot-loader/ ./
 COPY --from=build /extracted/snapshot-dependencies/ ./
 COPY --from=build /extracted/application/ ./
 
-RUN mkdir -p /config /media && chmod 777 /config
+COPY docker/entrypoint.sh /entrypoint.sh
+RUN chmod 755 /entrypoint.sh && mkdir -p /config /media
 VOLUME ["/config"]
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -fs http://localhost:8080/actuator/health/liveness || exit 1
 
-ENTRYPOINT ["java", "org.springframework.boot.loader.launch.JarLauncher"]
+ENTRYPOINT ["/entrypoint.sh", "java", "org.springframework.boot.loader.launch.JarLauncher"]

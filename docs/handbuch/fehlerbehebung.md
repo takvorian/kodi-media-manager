@@ -2,6 +2,8 @@
 
 ## KMM startet nicht
 
+**Unter Docker steht im Log `AccessDeniedException: /config/plugins` oder `/config ist nicht beschreibbar`.** Der Benutzer des Containers darf nicht in `/config` schreiben. Das passiert mit einer Compose-Datei von KMM vor Version 0.3, die noch eine Zeile `user:` enthält. Entferne diese Zeile, trage unter `environment` die Zeilen `PUID: ${PUID:-1000}` und `PGID: ${PGID:-1000}` ein und starte neu, siehe [Docker](installation.md#docker).
+
 **Das Konsolenfenster schließt sich sofort oder zeigt einen Fehler.** Häufige Ursachen:
 
 - **Port belegt:** Meldung `Port 8080 was already in use`. Beende das andere Programm oder setze `KMM_PORT` auf einen anderen Port.

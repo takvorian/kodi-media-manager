@@ -7,3 +7,4 @@ kmm-ui/.angular/
 .vscode/
 docker/data/
 docker/.env
+misc/

@@ -60,7 +60,7 @@ Die Oberfläche ist dann unter `http://<Server>:8080` erreichbar. Benutzer und P
 | `/config` | `KMM_CONFIG_DIR` | Plugins, Cache, Logs |
 | `/media` | `KMM_MEDIA_DIR` | deine Medien |
 
-`PUID` und `PGID` legen fest, mit welchem Benutzer KMM auf deine Medien zugreift. Dieser Benutzer braucht Schreibrechte, sonst können weder NFOs noch Bilder gespeichert werden.
+`PUID` und `PGID` legen fest, mit welchem Benutzer KMM läuft und auf deine Medien zugreift. Trage hier den Besitzer deiner Mediendateien ein, ihn zeigt `ls -ln` auf dem Server. Dieser Benutzer braucht in `/media` Schreibrechte, sonst können weder NFOs noch Bilder gespeichert werden. Das Verzeichnis `/config` gibt KMM ihm beim Start selbst.
 
 **Aktualisieren:** `docker compose pull` und danach `docker compose up -d`. Deine Daten bleiben dabei erhalten.
 
