@@ -89,6 +89,11 @@ public class ApiKeyService {
         return true;
     }
 
+    /** Vergisst die zwischengespeicherten Keys, nachdem der Einstellungsspeicher von außen geändert wurde. */
+    public void reload() {
+        stored.set(null);
+    }
+
     private void put(ApiKey key, String value) {
         repository.findById(key.storeKey()).ifPresentOrElse(
                 setting -> setting.changeValue(value),

@@ -55,6 +55,14 @@
 
 **Ein Ordner wird nicht umbenannt.** KMM benennt einen Filmordner nur um, wenn er allein diesem Film gehört.
 
+## Neu anfangen
+
+Auf der Seite **System** leert **Datenbank leeren** KMM, zum Beispiel wenn ein [Ember-Import](ember-import.md) mit falschen Pfaden gelaufen ist. Gib dazu das Wort `LEEREN` ein. Das geht nur, solange kein Job läuft, und lässt sich nicht rückgängig machen.
+
+Gelöscht werden Quellen, Filme, Serien, Episoden, Filmsets, Filter und Kodi-Geräte. Medien, NFOs und Bilder bleiben unberührt. Was du in KMM bearbeitet hast und nicht in einer NFO steht, geht verloren.
+
+Einstellungen und API-Keys bleiben erhalten, solange du den Haken nicht entfernst. Entfernst du ihn, gelten wieder die Standardwerte. API-Keys aus der Konfiguration trägt KMM beim nächsten Start wieder ein.
+
 ## Speichern schlägt fehl
 
 KMM braucht Schreibrechte in deinen Medienordnern. Unter Docker bestimmen das `PUID` und `PGID`.

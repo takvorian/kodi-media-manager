@@ -1,5 +1,7 @@
+import { HttpErrorResponse } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 
 import { ChangelogVersion, SystemInfo } from './system-info';
 import { SystemInfoService } from './system-info.service';
@@ -83,5 +85,90 @@ describe('SystemStatus', () => {
     const element = await render(throwError(() => new Error('offline')));
 
     expect(element.querySelector('.error')?.textContent).toContain('nicht erreichbar');
+  });
+
+  describe('clearing the database', () => {
+    let clearDatabase: ReturnType<typeof vi.fn>;
+
+    async function renderClearCard(result: Observable<void> = of(undefined)) {
+      clearDatabase = vi.fn(() => result);
+      TestBed.configureTestingModule({
+        imports: [SystemStatus],
+        providers: [
+          {
+            provide: SystemInfoService,
+            useValue: { load: () => of(systemInfo), changelog: () => of([]), clearDatabase },
+          },
+        ],
+      });
+      const fixture = TestBed.createComponent(SystemStatus);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      fixture.detectChanges();
+      const element = fixture.nativeElement as HTMLElement;
+      return {
+        element,
+        button: element.querySelector<HTMLButtonElement>('.clear-button')!,
+        type(word: string) {
+          const input = element.querySelector<HTMLInputElement>('.clear-confirmation input')!;
+          input.value = word;
+          input.dispatchEvent(new Event('input'));
+          fixture.detectChanges();
+        },
+        click() {
+          element.querySelector<HTMLButtonElement>('.clear-button')!.click();
+          fixture.detectChanges();
+        },
+        toggleKeepSettings() {
+          element.querySelector<HTMLInputElement>('.keep-settings input')!.click();
+          fixture.detectChanges();
+        },
+      };
+    }
+
+    it('stays disabled until the exact word is typed', async () => {
+      const card = await renderClearCard();
+
+      expect(card.button.disabled).toBe(true);
+      card.type('leeren');
+      expect(card.button.disabled).toBe(true);
+      card.type('LEEREN');
+      expect(card.button.disabled).toBe(false);
+    });
+
+    it('keeps the settings by default and confirms the result', async () => {
+      const card = await renderClearCard();
+
+      card.type('LEEREN');
+      card.click();
+
+      expect(clearDatabase).toHaveBeenCalledWith(true);
+      expect(card.element.querySelector('.cleared')?.textContent).toContain('geleert');
+      expect(card.button.disabled).toBe(true);
+    });
+
+    it('deletes the settings only when the checkbox is cleared', async () => {
+      const card = await renderClearCard();
+
+      card.toggleKeepSettings();
+      card.type('LEEREN');
+      card.click();
+
+      expect(clearDatabase).toHaveBeenCalledWith(false);
+    });
+
+    it('shows why the database could not be cleared', async () => {
+      const problem = new HttpErrorResponse({
+        status: 409,
+        error: { detail: 'Scan „Filme“ läuft bereits.' },
+      });
+      const card = await renderClearCard(throwError(() => problem));
+
+      card.type('LEEREN');
+      card.click();
+
+      expect(card.element.querySelector('.clear-error')?.textContent).toContain('läuft bereits');
+      expect(card.element.querySelector('.cleared')).toBeNull();
+    });
   });
 });

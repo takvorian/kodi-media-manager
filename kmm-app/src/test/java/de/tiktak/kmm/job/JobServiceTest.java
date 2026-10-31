@@ -117,6 +117,26 @@ class JobServiceTest {
     }
 
     @Test
+    void runsActionWhileNoJobIsRunning() {
+        List<String> calls = new ArrayList<>();
+
+        service.runWhileIdle(() -> calls.add("leeren"));
+
+        assertThat(calls).containsExactly("leeren");
+    }
+
+    @Test
+    void refusesActionWhileAJobIsRunning() {
+        JobSnapshot running = service.submit("scan:1", "Scan Filme", context -> "fertig");
+        List<String> calls = new ArrayList<>();
+
+        assertThatThrownBy(() -> service.runWhileIdle(() -> calls.add("leeren")))
+                .isInstanceOfSatisfying(JobAlreadyRunningException.class, exception ->
+                        assertThat(exception.getBody().getProperties()).containsEntry("jobId", running.id()));
+        assertThat(calls).isEmpty();
+    }
+
+    @Test
     void rejectsSecondJobWithSameKeyWhileFirstIsRunning() {
         JobSnapshot first = service.submit("scan:1", "Scan Filme", context -> "fertig");
 

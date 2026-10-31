@@ -51,6 +51,11 @@ public class SettingsService {
         return view();
     }
 
+    /** Vergisst die zwischengespeicherten Werte, nachdem der Einstellungsspeicher von außen geändert wurde. */
+    public void reload() {
+        stored.set(null);
+    }
+
     private KmmSettings keepOverriddenValues(KmmSettings changes, KmmSettings previous) {
         Set<SettingsField> fields = overrides.fields();
         KmmSettings merged = changes;

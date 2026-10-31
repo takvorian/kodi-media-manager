@@ -22,6 +22,51 @@
   </mat-card-content>
 </mat-card>
 
+<mat-card appearance="outlined" class="clear-database">
+  <mat-card-header>
+    <mat-card-title>Datenbank leeren</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p>
+      Löscht alle Quellen, Filme, Serien, Episoden, Filmsets, Filter und Kodi-Geräte aus KMM.
+      <strong>Das lässt sich nicht rückgängig machen.</strong> Deine Medien, NFOs und Bilder bleiben
+      unberührt, aber von Hand in KMM bearbeitete Angaben, die nicht in einer NFO stehen, gehen
+      verloren.
+    </p>
+    <mat-checkbox
+      class="keep-settings"
+      [checked]="keepSettings()"
+      (change)="keepSettings.set($event.checked)"
+    >
+      Einstellungen und API-Keys behalten
+    </mat-checkbox>
+    <mat-form-field class="clear-confirmation" appearance="outline" subscriptSizing="dynamic">
+      <mat-label>Zur Bestätigung {{ clearWord }} eingeben</mat-label>
+      <input
+        matInput
+        autocomplete="off"
+        [value]="confirmation()"
+        (input)="confirmation.set($any($event.target).value)"
+      />
+    </mat-form-field>
+    <button
+      matButton="filled"
+      class="clear-button"
+      type="button"
+      [disabled]="!canClear()"
+      (click)="clearDatabase()"
+    >
+      Datenbank leeren
+    </button>
+    @if (cleared()) {
+      <p class="cleared" role="status">Die Datenbank wurde geleert.</p>
+    }
+    @if (clearError(); as message) {
+      <p class="error clear-error" role="alert">{{ message }}</p>
+    }
+  </mat-card-content>
+</mat-card>
+
 <mat-card appearance="outlined" class="changelog">
   <mat-card-header>
     <mat-card-title>Änderungen</mat-card-title>

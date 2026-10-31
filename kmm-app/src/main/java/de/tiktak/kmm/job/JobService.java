@@ -58,6 +58,18 @@ public class JobService {
         return job.snapshot();
     }
 
+    /**
+     * Führt eine Aktion aus, wenn kein Job läuft. Bis sie fertig ist, startet auch keiner.
+     *
+     * @throws JobAlreadyRunningException wenn gerade ein Job läuft
+     */
+    public synchronized void runWhileIdle(Runnable action) {
+        running.values().stream().findFirst().ifPresent(job -> {
+            throw new JobAlreadyRunningException(job.snapshot());
+        });
+        action.run();
+    }
+
     /** Laufende Jobs zuerst, danach die beendeten, jeweils die neuesten oben. */
     public synchronized List<JobSnapshot> findAll() {
         Stream<JobSnapshot> active = running.values().stream()

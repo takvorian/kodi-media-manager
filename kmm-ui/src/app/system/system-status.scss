@@ -2,6 +2,21 @@
   max-width: 480px;
 }
 
+.clear-database {
+  max-width: 860px;
+  margin-top: 16px;
+
+  .keep-settings,
+  .clear-confirmation {
+    display: block;
+    margin-bottom: 12px;
+  }
+
+  .clear-confirmation {
+    max-width: 320px;
+  }
+}
+
 .changelog {
   max-width: 860px;
   margin-top: 16px;
