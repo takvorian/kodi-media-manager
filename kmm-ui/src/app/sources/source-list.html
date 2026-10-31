@@ -51,7 +51,7 @@
     <ng-container matColumnDef="lastScannedAt">
       <th mat-header-cell *matHeaderCellDef>Letzter Scan</th>
       <td mat-cell *matCellDef="let source">
-        {{ source.lastScannedAt ? (source.lastScannedAt | date: 'short') : '–' }}
+        <span class="last-scanned-at">{{ lastScannedAt(source) }}</span>
         @if (lastScanResult(source); as result) {
           <div class="last-scan-result">{{ result }}</div>
         }

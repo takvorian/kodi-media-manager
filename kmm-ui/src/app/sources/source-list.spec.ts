@@ -329,6 +329,17 @@ describe('SourceList', () => {
     expect(element().querySelector('.scan-button')).not.toBeNull();
   });
 
+  it('shows the time of the last scan in the language of the browser', async () => {
+    const lastScannedAt = '2026-10-25T12:30:00Z';
+    await loadSources([films, { ...series, lastScannedAt }]);
+
+    const cells = element().querySelectorAll('.last-scanned-at');
+    expect(cells[0].textContent).toBe('–');
+    expect(cells[1].textContent).toBe(
+      new Date(lastScannedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
+    );
+  });
+
   describe('result of the last scan', () => {
     const counts = { sourceId: 1, updated: 0, removed: 0, unchanged: 7, nfoErrors: 0 };
 

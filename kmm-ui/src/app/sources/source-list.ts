@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -51,6 +50,7 @@ import { MediaSourceService } from './media-source.service';
 import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
+const DATE_TIME_FORMAT: Intl.DateTimeFormatOptions = { dateStyle: 'medium', timeStyle: 'short' };
 
 /** Bericht des letzten Scrape-Laufs, solange er Titel ohne Treffer, Fehler oder Hinweise enthält. */
 export interface ScrapeReport {
@@ -62,7 +62,6 @@ export interface ScrapeReport {
   selector: 'app-source-list',
   imports: [
     HelpLink,
-    DatePipe,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -161,6 +160,13 @@ export class SourceList {
 
   protected percent(job: Job): number | null {
     return progressPercent(job);
+  }
+
+  /** Datum und Uhrzeit in der Sprache des Browsers. */
+  protected lastScannedAt(source: MediaSource): string {
+    return source.lastScannedAt
+      ? new Date(source.lastScannedAt).toLocaleString(undefined, DATE_TIME_FORMAT)
+      : '–';
   }
 
   /** Ergebnis des letzten beendeten Scans; bleibt sichtbar, bis der Server neu startet. */
