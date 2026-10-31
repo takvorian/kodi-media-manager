@@ -336,7 +336,10 @@ describe('SourceList', () => {
     const cells = element().querySelectorAll('.last-scanned-at');
     expect(cells[0].textContent).toBe('–');
     expect(cells[1].textContent).toBe(
-      new Date(lastScannedAt).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }),
+      new Date(lastScannedAt).toLocaleString(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+      }),
     );
   });
 
