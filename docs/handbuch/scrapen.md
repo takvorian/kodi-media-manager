@@ -7,7 +7,7 @@
 1. Lege die Datei in den Ordner der Quelle.
 2. Klicke auf der Seite **Quellen** auf **Scannen**. Der Bericht nennt den neuen Film, mit einem Klick öffnest du ihn.
 3. Klicke in der Filmansicht auf **Scrapen**. KMM holt Metadaten, Bilder, Trailer, Titelmusik und Bewertungen.
-4. Steht der Film danach unter **Ohne eindeutigen Treffer**, ordne ihn über die [Online-Suche](#online-suche) zu und klicke danach noch einmal auf **Scrapen**.
+4. Steht der Film danach unter **Ohne eindeutigen Treffer**, ordne ihn über die [Online-Suche](scrapen.md#online-suche) zu und klicke danach noch einmal auf **Scrapen**.
 
 Bei Serien gehst du genauso vor. Mehrere neue Einträge bearbeitest du am schnellsten in der Liste: Filter **Neu (letzte 30 Tage)** wählen, **Alle gefilterten auswählen**, **Scrapen**.
 
