@@ -6,9 +6,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.net.http.HttpClient;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.TimeoutException;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -22,11 +22,13 @@ class KodiLibrarySchedulerTest {
     private static final Duration LONG = Duration.ofSeconds(10);
 
     private final FakeKodiServer kodi = new FakeKodiServer();
+    private final ExecutorService threads = Executors.newVirtualThreadPerTaskExecutor();
     private final KodiLibraryScheduler scheduler = new KodiLibraryScheduler(
             new KodiClient(HttpClient.newHttpClient(), Duration.ofSeconds(5)), Duration.ofMillis(5));
 
     @AfterEach
     void stopKodi() {
+        threads.shutdownNow();
         kodi.close();
     }
 
@@ -41,7 +43,7 @@ class KodiLibrarySchedulerTest {
     void waitsForTheRunningScanInsteadOfCancellingIt() throws Exception {
         kodi.respond(IS_SCANNING, BUSY);
 
-        CompletableFuture<Void> scan = CompletableFuture.runAsync(() -> scheduler.scan(kodi.endpoint(), DIRECTORY, LONG));
+        CompletableFuture<Void> scan = inBackground(() -> scheduler.scan(kodi.endpoint(), DIRECTORY, LONG));
 
         awaitRepeatedQuestions();
         assertThat(kodi.methods()).doesNotContain("VideoLibrary.Scan");
@@ -55,8 +57,8 @@ class KodiLibrarySchedulerTest {
         kodi.respond(IS_SCANNING, BUSY);
 
         CompletableFuture<Void> clean = CompletableFuture.allOf(
-                CompletableFuture.runAsync(() -> scheduler.cleanMovies(kodi.endpoint(), DIRECTORY, LONG)),
-                CompletableFuture.runAsync(() -> scheduler.cleanTvShows(kodi.endpoint(), DIRECTORY, LONG)));
+                inBackground(() -> scheduler.cleanMovies(kodi.endpoint(), DIRECTORY, LONG)),
+                inBackground(() -> scheduler.cleanTvShows(kodi.endpoint(), DIRECTORY, LONG)));
 
         awaitRepeatedQuestions();
         assertThat(kodi.methods()).doesNotContain("VideoLibrary.Clean");
@@ -107,11 +109,16 @@ class KodiLibrarySchedulerTest {
         assertThat(kodi.methods()).doesNotContain("VideoLibrary.Scan");
     }
 
-    private void awaitRepeatedQuestions() throws InterruptedException, ExecutionException, TimeoutException {
-        CompletableFuture.runAsync(() -> {
-            while (kodi.methods().stream().filter(IS_SCANNING::equals).count() < 3) {
-                Thread.onSpinWait();
-            }
-        }).get(5, TimeUnit.SECONDS);
+    /** Eigene Threads: Der gemeinsame Pool hat auf kleinen CI-Rechnern nur einen, den der erste Wartende belegt. */
+    private CompletableFuture<Void> inBackground(Runnable task) {
+        return CompletableFuture.runAsync(task, threads);
+    }
+
+    private void awaitRepeatedQuestions() throws InterruptedException {
+        long deadline = System.nanoTime() + LONG.toNanos();
+        while (kodi.methods().stream().filter(IS_SCANNING::equals).count() < 3) {
+            assertThat(System.nanoTime()).as("Kodi wird wiederholt gefragt").isLessThan(deadline);
+            Thread.sleep(5);
+        }
     }
 }
