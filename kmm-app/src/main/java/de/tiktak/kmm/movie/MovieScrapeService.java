@@ -44,9 +44,9 @@ public class MovieScrapeService {
      */
     public List<ScrapeCandidate> search(long movieId, String scraperId, String title, Integer year) {
         MovieMetadata current = metadataService.findDetails(movieId).metadata();
-        boolean customTitle = title != null && !title.isBlank();
-        SearchQuery query = new SearchQuery(MediaType.MOVIE, customTitle ? title : current.title(),
-                customTitle ? year : current.year());
+        boolean customTitle = title != null && !title.isBlank() && !title.strip().equals(current.title());
+        SearchQuery query = new SearchQuery(MediaType.MOVIE, customTitle ? title : MovieSearchTitle.of(current),
+                customTitle ? year : MovieSearchTitle.yearOf(current));
         return inLanguageOf(movieId, () -> call(scraper(scraperId), scraper -> scraper.search(query)).stream()
                 .map(ScrapeCandidate::from)
                 .toList());
@@ -93,7 +93,8 @@ public class MovieScrapeService {
                 return MetadataScrapeOutcome.NO_SCRAPER;
             }
             Map<String, String> knownIds = current.imdbId() == null ? Map.of() : Map.of(IMDB, current.imdbId());
-            ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, current.title(), current.year(), knownIds);
+            ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, MovieSearchTitle.of(current),
+                    MovieSearchTitle.yearOf(current), knownIds);
             Optional<MetadataResult> scraped = call(scraper.get(), s -> s.scrape(request));
             if (scraped.isEmpty()) {
                 return MetadataScrapeOutcome.NO_MATCH;
@@ -122,7 +123,8 @@ public class MovieScrapeService {
             Map<String, String> knownIds = new HashMap<>();
             Optional.ofNullable(current.imdbId()).ifPresent(id -> knownIds.put(IMDB, id));
             Optional.ofNullable(current.tmdbId()).ifPresent(id -> knownIds.put(TMDB, id));
-            ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, current.title(), current.year(), knownIds);
+            ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, MovieSearchTitle.of(current),
+                    MovieSearchTitle.yearOf(current), knownIds);
             MetadataResult scraped = call(scraper, s -> s.scrape(request))
                     .orElseThrow(() -> ScraperProblemException.notIdentified(scraper, current.title()));
             MovieMetadata merged = ScrapedMetadataMerger.merge(current, scraped);

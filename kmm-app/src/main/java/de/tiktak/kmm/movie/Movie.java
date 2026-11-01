@@ -269,6 +269,20 @@ public class Movie {
         return fillYear || fillImdbId;
     }
 
+    /**
+     * Ersetzt einen Titel, der noch aus dem Dateinamen stammt, durch den aus dem Verzeichnisnamen. Ein von Hand, aus einer
+     * NFO, aus Ember oder von einem Anbieter stammender Titel bleibt.
+     *
+     * @return ob sich der Titel geändert hat
+     */
+    boolean replaceFileTitle(String fileTitle, String directoryTitle) {
+        if (tmdbId != null || !title.equals(fileTitle) || title.equals(directoryTitle)) {
+            return false;
+        }
+        title = directoryTitle;
+        return true;
+    }
+
     /** @return ob sich die Sprache geändert hat */
     boolean changeMetadataLanguage(String language) {
         boolean changed = !Objects.equals(metadataLanguage, language);

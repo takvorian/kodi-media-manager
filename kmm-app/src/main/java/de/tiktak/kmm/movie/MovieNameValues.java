@@ -41,9 +41,9 @@ record MovieNameValues(MovieMetadata metadata, MovieSupplement supplement, Strea
     /** @return der Wert oder {@code null}, wenn er fehlt */
     String value(String placeholder) {
         return switch (placeholder) {
-            case TITLE -> metadata.title();
+            case TITLE -> MovieSearchTitle.of(metadata);
             case ORIGINAL_TITLE -> metadata.originalTitle();
-            case SORT_TITLE -> metadata.sortTitle() != null ? metadata.sortTitle() : metadata.title();
+            case SORT_TITLE -> metadata.sortTitle() != null ? metadata.sortTitle() : MovieSearchTitle.of(metadata);
             case YEAR -> text(metadata.year());
             case EDITION -> metadata.edition();
             case SET -> supplement.set() == null ? null : supplement.set().name();

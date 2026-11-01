@@ -180,11 +180,14 @@ public class MovieDirectoryScanner {
                     .toList();
         }
 
-        /** Nur für den einzigen Film eines Ordners: Bei mehreren wäre unklar, zu welchem Jahr und ID gehören. */
+        /** Nur für den einzigen Film eines Ordners: Bei mehreren wäre unklar, zu welchem der Name gehört. */
         private MovieCandidate withDirectoryName(MovieCandidate candidate) {
             Path directory = candidate.file().getParent();
-            return directory.equals(root) ? candidate
-                    : candidate.withMissing(nameParser.parse(directory.getFileName().toString()));
+            if (directory.equals(root)) {
+                return candidate;
+            }
+            String name = directory.getFileName().toString();
+            return candidate.withDirectoryName(name, nameParser.parse(name));
         }
 
         private MovieCandidate stackCandidate(List<StackPart> parts) {
@@ -199,7 +202,8 @@ public class MovieDirectoryScanner {
                         .withPreferredImdbId(parsed.imdbId());
             }
             String title = parsed.hasTitle() ? parsed.title() : name;
-            return new MovieCandidate(file, title, parsed.year(), parsed.imdbId(), format, partCount);
+            return new MovieCandidate(file, format == DiscFormat.FILE ? title : name, parsed.year(), parsed.imdbId(),
+                    format, partCount, title);
         }
     }
 

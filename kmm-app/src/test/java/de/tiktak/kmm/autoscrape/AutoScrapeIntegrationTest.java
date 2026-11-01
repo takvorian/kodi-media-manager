@@ -122,7 +122,7 @@ class AutoScrapeIntegrationTest {
         JsonNode result = awaitJob(post(AutoScrapeController.AUTO_SCRAPE_PATH, sourceId));
 
         assertThat(objectMapper.treeToValue(result, AutoScrapeResult.class)).isEqualTo(new AutoScrapeResult(3, 1, 1, 5, 0,
-                0, 0, List.of(new ScanEntry(MediaType.MOVIE, movieIdOf("Unbekannt"), "Unbekannt")), List.of(), List.of()));
+                0, 0, List.of(new ScanEntry(MediaType.MOVIE, movieIdOf("Unbekannt (2001)"), "Unbekannt (2001)")), List.of(), List.of()));
         assertThat(Files.readString(library.resolve("Heat (1995)/Heat (1995).nfo")))
                 .contains("<title>Heat</title>", "<runtime>170</runtime>", ">949</uniqueid>");
         assertThat(library.resolve("Heat (1995)/Heat (1995)-poster.jpg")).hasBinaryContent(JPEG);
@@ -140,7 +140,7 @@ class AutoScrapeIntegrationTest {
         createFile("Ronin (1998)/Ronin (1998).mkv");
         awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
 
-        JsonNode result = awaitJob(post(AutoScrapeController.MOVIE_PATH, movieIdOf("Heat")));
+        JsonNode result = awaitJob(post(AutoScrapeController.MOVIE_PATH, movieIdOf("Heat (1995)")));
 
         assertThat(result.get("movies").asInt()).isEqualTo(1);
         assertThat(library.resolve("Heat (1995)/Heat (1995).nfo")).exists();
@@ -155,7 +155,7 @@ class AutoScrapeIntegrationTest {
         awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
         MvcTestResult started = mockMvc.post().uri(AutoScrapeController.MOVIES_PATH).with(csrf())
                 .contentType("application/json")
-                .content(objectMapper.writeValueAsString(Map.of("movieIds", List.of(movieIdOf("Heat")))))
+                .content(objectMapper.writeValueAsString(Map.of("movieIds", List.of(movieIdOf("Heat (1995)")))))
                 .exchange();
         assertThat(started).hasStatus(202);
 
@@ -171,7 +171,7 @@ class AutoScrapeIntegrationTest {
     void findsAMovieByTheImdbIdInItsDirectoryName() throws IOException {
         createFile("Heat (1995) tt0113277/gibtsnicht.mkv");
         awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
-        long movieId = movieIdOf("gibtsnicht");
+        long movieId = movieIdOf("Heat (1995) tt0113277");
         assertThat(jdbcClient.sql("SELECT imdb_id FROM movie WHERE id = ?").param(movieId).query(String.class).single())
                 .isEqualTo("tt0113277");
 
@@ -182,6 +182,10 @@ class AutoScrapeIntegrationTest {
         assertThat(jdbcClient.sql("SELECT release_year FROM movie WHERE id = ?").param(movieId).query(Integer.class)
                 .single()).isEqualTo(1995);
         assertThat(library.resolve("Heat (1995) tt0113277/gibtsnicht.nfo")).exists();
+
+        awaitJob(post(LibraryScanController.SCAN_PATH, jdbcClient.sql("SELECT id FROM media_source")
+                .query(Long.class).single()));
+        assertThat(movieIdOf("Heat")).as("ein neuer Scan lässt den Titel des Anbieters").isEqualTo(movieId);
     }
 
     @Test
@@ -189,7 +193,7 @@ class AutoScrapeIntegrationTest {
         createFile("Heat (1995)/Heat (1995).mkv");
         long sourceId = createSource();
         awaitJob(post(LibraryScanController.SCAN_PATH, sourceId));
-        long movieId = movieIdOf("Heat");
+        long movieId = movieIdOf("Heat (1995)");
         assertThat(mockMvc.put().uri(MediaSourceController.BASE_PATH + "/{id}/language", sourceId).with(csrf())
                 .contentType("application/json").content("{\"language\": \"fr-FR\"}")).hasStatusOk();
 
@@ -205,7 +209,7 @@ class AutoScrapeIntegrationTest {
         createFile("Heat (1995)/Heat (1995).mkv");
         long sourceId = createSource();
         awaitJob(post(LibraryScanController.SCAN_PATH, sourceId));
-        long movieId = movieIdOf("Heat");
+        long movieId = movieIdOf("Heat (1995)");
         assertThat(mockMvc.put().uri(MediaSourceController.BASE_PATH + "/{id}/language", sourceId).with(csrf())
                 .contentType("application/json").content("{\"language\": \"en-US\"}")).hasStatusOk();
         changeLanguage(movieId, "fr-FR", false);
@@ -221,7 +225,7 @@ class AutoScrapeIntegrationTest {
     void overwritesTheTextsOfAScrapedMovieWhenTheLanguageChanges() throws IOException {
         createFile("Heat (1995)/Heat (1995).mkv");
         awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
-        long movieId = movieIdOf("Heat");
+        long movieId = movieIdOf("Heat (1995)");
         awaitJob(post(AutoScrapeController.MOVIE_PATH, movieId));
         Path nfo = library.resolve("Heat (1995)/Heat (1995).nfo");
         assertThat(Files.readString(nfo)).contains("<title>Heat</title>");
@@ -244,10 +248,10 @@ class AutoScrapeIntegrationTest {
         createFile("Unbekannt (2001)/Unbekannt (2001).mkv");
         awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
 
-        JsonNode result = changeLanguage(movieIdOf("Unbekannt"), "fr-FR", true);
+        JsonNode result = changeLanguage(movieIdOf("Unbekannt (2001)"), "fr-FR", true);
 
         assertThat(result.get("failed").asInt()).isEqualTo(1);
-        assertThat(result.get("failures").get(0).asString()).contains("„Unbekannt“", "nicht eindeutig zugeordnet");
+        assertThat(result.get("failures").get(0).asString()).contains("„Unbekannt (2001)“", "nicht eindeutig zugeordnet");
     }
 
     private JsonNode changeLanguage(long movieId, String language, boolean refetchTexts) {

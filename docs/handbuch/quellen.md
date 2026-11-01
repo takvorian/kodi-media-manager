@@ -42,12 +42,14 @@ In der Spalte **Sprache** legst du fest, in welcher Sprache die Einträge dieser
 
 Eine NFO neben dem Film hat immer Vorrang. Ohne NFO gilt bei Filmen:
 
-- **Titel:** aus dem Dateinamen, in seiner Schreibweise. Beim Scrapen ersetzt ihn der Titel des Anbieters.
-- **Jahr und IMDb-ID:** aus dem Dateinamen. Fehlen sie dort, nimmt KMM sie aus dem Namen des Ordners, zum Beispiel `Wonka (2023) tt6166392`. Das gilt nur, wenn dieser Ordner genau einen Film enthält. Der Ordner der Quelle selbst zählt nicht.
+- **Titel:** der unveränderte Name des Ordners, zum Beispiel `Wonka (2023) tt6166392`. Beim Scrapen ersetzt ihn der Titel des Anbieters. Für die Suche beim Anbieter und fürs Umbenennen lässt KMM Jahr und IMDb-ID weg.
+- **Jahr und IMDb-ID:** aus dem Dateinamen. Fehlen sie dort, nimmt KMM sie aus dem Namen des Ordners.
+
+Der Ordner zählt nur, wenn er genau einen Film enthält, sonst gilt der Dateiname. Das gilt auch für Dateien direkt im Ordner der Quelle. **Lege also keinen einzelnen Film direkt in einen Sammelordner wie `Action`**, er hieße sonst `Action`.
 
 Bei Serien kommen alle drei aus dem Namen des Serienordners.
 
-Fehlt Jahr oder IMDb-ID bei einem bereits bekannten Eintrag, ergänzt der nächste Scan sie, solange der Eintrag noch nicht zugeordnet ist. Nach einem Scrapen oder einer Zuordnung über die Online-Suche ändert der Name nichts mehr. Der Scan schreibt dabei keine Dateien.
+Fehlt Jahr oder IMDb-ID bei einem bereits bekannten Eintrag, ergänzt der nächste Scan sie, solange der Eintrag noch nicht zugeordnet ist. Einen Titel, der noch aus dem Dateinamen stammt, ersetzt er durch den aus dem Ordner. Nach einem Scrapen oder einer Zuordnung über die Online-Suche ändert der Name nichts mehr. Der Scan schreibt dabei keine Dateien.
 
 Steht eine IMDb-ID im Namen, sucht das Scrapen genau diesen Eintrag statt nach dem Titel. Ist die ID falsch, kommt der Eintrag in den Bericht unter **Ohne eindeutigen Treffer**, oder es wird der falsche Film übernommen.
 

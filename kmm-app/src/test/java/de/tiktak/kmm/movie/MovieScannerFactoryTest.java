@@ -34,7 +34,7 @@ class MovieScannerFactoryTest {
         List<MovieCandidate> candidates = new MovieScannerFactory(settingsService, new MovieNameParser()).create()
                 .scan(library);
 
-        assertThat(candidates).extracting(MovieCandidate::title).containsExactly("Ronin");
+        assertThat(candidates).extracting(MovieCandidate::title).containsExactly("Ronin (1998)");
     }
 
     private void createFile(String relativePath) throws IOException {

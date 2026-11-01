@@ -82,7 +82,7 @@ class MovieLibraryIntegrationTest {
         assertThat(first.details().unreadableNfos()).hasSize(1);
         assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH))
                 .bodyJson().isLenientlyEqualTo("""
-                        {"totalElements": 2, "content": [{"title": "Heat", "year": 1995}, {"title": "The Matrix", "year": 1999}]}
+                        {"totalElements": 2, "content": [{"title": "Heat (1995)", "year": 1995}, {"title": "The Matrix", "year": 1999}]}
                         """);
         assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH).param("search", "matrix"))
                 .bodyJson().extractingPath("$.totalElements").isEqualTo(1);

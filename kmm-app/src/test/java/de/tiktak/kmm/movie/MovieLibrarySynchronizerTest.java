@@ -158,6 +158,49 @@ class MovieLibrarySynchronizerTest {
         assertThat(second.unchanged()).isEqualTo(1);
     }
 
+    private static ScannedMovie scannedFromDirectory(String fileName, String title, String fileTitle) {
+        return new ScannedMovie(new MovieCandidate(ROOT.resolve(fileName), title, null, null, DiscFormat.FILE, 1,
+                fileTitle), Optional.empty());
+    }
+
+    @Test
+    void replacesATitleStemmingFromTheFileNameOnce() {
+        Movie wonka = movie("wonka.mkv", "wonka");
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(wonka));
+
+        ScanResult first = synchronizer.synchronize(SOURCE_ID, List.of(scannedFromDirectory("wonka.mkv", "Wonka", "wonka")));
+        ScanResult second = synchronizer.synchronize(SOURCE_ID, List.of(scannedFromDirectory("wonka.mkv", "Wonka", "wonka")));
+
+        assertThat(wonka.getTitle()).isEqualTo("Wonka");
+        assertThat(first.updated()).isEqualTo(1);
+        assertThat(second.updated()).isZero();
+    }
+
+    @Test
+    void keepsATitleThatDoesNotStemFromTheFileName() {
+        Movie edited = movie("wonka.mkv", "Wonka und die Schokoladenfabrik");
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(edited));
+
+        ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(scannedFromDirectory("wonka.mkv", "Wonka", "wonka")));
+
+        assertThat(edited.getTitle()).isEqualTo("Wonka und die Schokoladenfabrik");
+        assertThat(result.updated()).isZero();
+    }
+
+    @Test
+    void keepsTheTitleOfAMovieWithNfo() {
+        Movie wonka = movie("wonka.mkv", "wonka");
+        wonka.markNfoSynchronized(NFO_TIME);
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(wonka));
+        MovieCandidate candidate = new MovieCandidate(ROOT.resolve("wonka.mkv"), "Wonka", null, null, DiscFormat.FILE, 1,
+                "wonka");
+
+        synchronizer.synchronize(SOURCE_ID, List.of(new ScannedMovie(candidate,
+                Optional.of(new NfoFileState(ROOT.resolve("wonka.nfo"), NFO_TIME)))));
+
+        assertThat(wonka.getTitle()).isEqualTo("wonka");
+    }
+
     @Test
     void leavesAnIdentifiedMovieAlone() {
         Movie wonka = movie("Wonka.mkv", "Wonka");

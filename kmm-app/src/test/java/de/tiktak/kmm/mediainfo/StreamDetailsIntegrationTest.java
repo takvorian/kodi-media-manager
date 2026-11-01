@@ -108,8 +108,8 @@ class StreamDetailsIntegrationTest {
 
         scan(sourceId);
 
-        await().atMost(TIMEOUT).until(() -> streamsOf("Ronin") != null);
-        assertThat(streamsOf("Ronin")).contains("\"codec\":\"truehd\"");
+        await().atMost(TIMEOUT).until(() -> streamsOf("Ronin (1998)") != null);
+        assertThat(streamsOf("Ronin (1998)")).contains("\"codec\":\"truehd\"");
         assertThat(streamsOf("Heat")).contains("\"codec\":\"dca\"");
 
         JsonNode result = runJob(mockMvc.post().uri("/api/v1/sources/{id}/stream-details?scope=ALL", sourceId)
@@ -168,8 +168,8 @@ class StreamDetailsIntegrationTest {
         JsonNode result = runJob(mockMvc.post().uri("/api/v1/sources/{id}/stream-details", sourceId)
                 .with(csrf()).exchange());
         assertThat(result.toString()).contains("\"updated\":0", "\"failed\":1",
-                "Heat: ffprobe kann nicht gestartet werden");
-        assertThat(streamsOf("Heat")).isNull();
+                "Heat (1995): ffprobe kann nicht gestartet werden");
+        assertThat(streamsOf("Heat (1995)")).isNull();
         when(probes.current()).thenReturn(probe);
         assertThat(mockMvc.post().uri("/api/v1/movies/{id}/stream-details", heat).with(csrf())).hasStatusOk();
     }

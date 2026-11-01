@@ -33,8 +33,55 @@ class MovieDirectoryScannerTest {
                 .extracting(MovieCandidate::file, MovieCandidate::title, MovieCandidate::year,
                         MovieCandidate::format, MovieCandidate::partCount)
                 .containsExactly(
-                        tuple(heat, "Heat", 1995, DiscFormat.FILE, 1),
+                        tuple(heat, "Heat (1995)", 1995, DiscFormat.FILE, 1),
                         tuple(matrix, "The Matrix", 1999, DiscFormat.FILE, 1));
+    }
+
+    @Test
+    void takesTheYearOfTheFileEvenIfTheDirectoryNameEndsInANumber() throws IOException {
+        file("Blade Runner 2049/Blade Runner 2049 (2017).mkv");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.title()).isEqualTo("Blade Runner 2049");
+            assertThat(candidate.year()).isEqualTo(2017);
+        });
+    }
+
+    @Test
+    void takesTheTitleOfADiscFromTheMovieDirectoryOnly() throws IOException {
+        file("Heat (1995)/BDMV/index.bdmv");
+
+        assertThat(scanner.scan(root)).singleElement()
+                .satisfies(candidate -> {
+                    assertThat(candidate.title()).isEqualTo("Heat (1995)");
+                    assertThat(candidate.fileTitle()).isEqualTo("Heat");
+                });
+    }
+
+    @Test
+    void keepsTheFileTitleForMoviesSharingADirectory() throws IOException {
+        file("Sammlung/Heat.mkv");
+        file("Sammlung/Ronin.mkv");
+
+        assertThat(scanner.scan(root)).extracting(MovieCandidate::title).containsExactly("Heat", "Ronin");
+    }
+
+    @Test
+    void keepsTheFileTitleForFilesInTheSourceItself() throws IOException {
+        file("wonka.mkv");
+
+        assertThat(scanner.scan(root)).singleElement()
+                .satisfies(candidate -> assertThat(candidate.title()).isEqualTo("wonka"));
+    }
+
+    @Test
+    void takesTheTitleFromTheDirectoryNameAndRemembersThatOfTheFile() throws IOException {
+        file("Der Pate (1972)/The.Godfather.mkv");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.title()).isEqualTo("Der Pate (1972)");
+            assertThat(candidate.fileTitle()).isEqualTo("The Godfather");
+        });
     }
 
     @Test
@@ -42,7 +89,7 @@ class MovieDirectoryScannerTest {
         file("Wonka (2023) tt6166392/wonka.mkv");
 
         assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
-            assertThat(candidate.title()).isEqualTo("wonka");
+            assertThat(candidate.title()).isEqualTo("Wonka (2023) tt6166392");
             assertThat(candidate.year()).isEqualTo(2023);
             assertThat(candidate.imdbId()).isEqualTo("tt6166392");
         });
@@ -63,7 +110,7 @@ class MovieDirectoryScannerTest {
         file("Wonka (2023) tt0000002/tt6166392.mkv");
 
         assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
-            assertThat(candidate.title()).isEqualTo("Wonka");
+            assertThat(candidate.title()).isEqualTo("Wonka (2023) tt0000002");
             assertThat(candidate.year()).isEqualTo(2023);
             assertThat(candidate.imdbId()).isEqualTo("tt6166392");
         });
@@ -97,7 +144,7 @@ class MovieDirectoryScannerTest {
         file("Heat (1995) tt0113277/VIDEO_TS/VIDEO_TS.IFO");
 
         assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
-            assertThat(candidate.title()).isEqualTo("Heat");
+            assertThat(candidate.title()).isEqualTo("Heat (1995) tt0113277");
             assertThat(candidate.imdbId()).isEqualTo("tt0113277");
         });
     }
@@ -179,7 +226,7 @@ class MovieDirectoryScannerTest {
         assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
             assertThat(candidate.file()).isEqualTo(marker);
             assertThat(candidate.format()).isEqualTo(DiscFormat.DVD);
-            assertThat(candidate.title()).isEqualTo("Heat");
+            assertThat(candidate.title()).isEqualTo("Heat (1995)");
             assertThat(candidate.year()).isEqualTo(1995);
         });
     }
@@ -192,7 +239,7 @@ class MovieDirectoryScannerTest {
         assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
             assertThat(candidate.file()).isEqualTo(marker);
             assertThat(candidate.format()).isEqualTo(DiscFormat.BLURAY);
-            assertThat(candidate.title()).isEqualTo("Ronin");
+            assertThat(candidate.title()).isEqualTo("Ronin (1998)");
         });
     }
 
@@ -209,7 +256,7 @@ class MovieDirectoryScannerTest {
         file("Heat (1995)/1080p.BluRay.mkv");
 
         assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
-            assertThat(candidate.title()).isEqualTo("Heat");
+            assertThat(candidate.title()).isEqualTo("Heat (1995)");
             assertThat(candidate.year()).isEqualTo(1995);
         });
     }
@@ -250,7 +297,7 @@ class MovieDirectoryScannerTest {
         var customScanner = new MovieDirectoryScanner(new ScanRules(ScanRules.DEFAULT_VIDEO_EXTENSIONS,
                 ScanRules.DEFAULT_IGNORED_DIRECTORIES, Set.of(root.resolve("Privat"))), new MovieNameParser());
 
-        assertThat(customScanner.scan(root)).extracting(MovieCandidate::title).containsExactly("Heat");
+        assertThat(customScanner.scan(root)).extracting(MovieCandidate::title).containsExactly("Heat (1995)");
     }
 
     @Test
@@ -269,7 +316,7 @@ class MovieDirectoryScannerTest {
         assertThat(scannedDirectories).containsExactlyInAnyOrder(
                 root.resolve("Heat (1995)"), root.resolve("Ronin (1998)"), root.resolve("Extras"));
         assertThat(candidates).extracting(MovieCandidate::file).containsExactly(heat, ronin, matrix);
-        assertThat(candidates).extracting(MovieCandidate::title).containsExactly("Heat", "Ronin", "The Matrix");
+        assertThat(candidates).extracting(MovieCandidate::title).containsExactly("Heat (1995)", "Ronin (1998)", "The Matrix");
     }
 
     @Test

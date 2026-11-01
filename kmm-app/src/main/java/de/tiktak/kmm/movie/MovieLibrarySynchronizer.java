@@ -66,7 +66,9 @@ class MovieLibrarySynchronizer {
                 boolean nfoApplied = nfoChanged(movie, scanned)
                         && applyNfo(movie, scanned, movie.getTitle(), movie.getReleaseYear(), outcome);
                 boolean filled = fillFromName(movie, scanned);
-                if (nfoApplied || filled) {
+                boolean retitled = scanned.nfo().isEmpty() && movie.replaceFileTitle(
+                        scanned.candidate().fileTitle(), scanned.candidate().title());
+                if (nfoApplied || filled || retitled) {
                     outcome.updated++;
                     outcome.details.updated(entry(movie, movie.getId()));
                 }
@@ -91,7 +93,8 @@ class MovieLibrarySynchronizer {
     }
 
     private static ScanEntry entry(Movie movie, Long id) {
-        String year = movie.getReleaseYear() == null ? "" : " (%d)".formatted(movie.getReleaseYear());
+        boolean yearInTitle = !MovieSearchTitle.of(movie.metadata()).equals(movie.getTitle());
+        String year = movie.getReleaseYear() == null || yearInTitle ? "" : " (%d)".formatted(movie.getReleaseYear());
         return new ScanEntry(MediaType.MOVIE, id, movie.getTitle() + year);
     }
 
