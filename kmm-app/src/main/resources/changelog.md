@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.7 - 2026-11-01
+- Abgelehnte Anfragen: eigenes CSRF-Cookie, klare Meldung und Log-Eintrag (5073512)
+
 ## v0.6 - 2026-11-01
 - Seitenleiste auf Deutsch (c74e2b8)
 - Quellen: Bericht nach dem Scan nennt jeden betroffenen Eintrag (5c9c7cd)
