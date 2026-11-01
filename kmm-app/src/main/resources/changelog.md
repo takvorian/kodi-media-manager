@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.10 - 2026-11-01
+- Filmtitel nach dem Scan ist der unveraenderte Verzeichnisname (f26962f)
+
 ## v0.9 - 2026-11-01
 - Sprache je Quelle, Film und Serie wie in Ember (e522ef9)
 - In Kodi aktualisieren auch fuer die Auswahl in Film- und Serienliste (288f1fc)
