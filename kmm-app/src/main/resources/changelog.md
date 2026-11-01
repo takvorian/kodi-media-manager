@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.12 - 2026-11-01
+- Warnung, wenn Kodi zu einem Pfad keine Quelle hat (54a575f)
+
 ## v0.11 - 2026-11-01
 - Scheduler-Test blockiert sich auf kleinen CI-Rechnern nicht mehr (f565a26)
 - Kodi-Scans und Bereinigen erst starten, wenn Kodi frei ist (c50f2b2)
