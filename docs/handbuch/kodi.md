@@ -30,6 +30,8 @@ KMM und Kodi sehen dieselben Dateien oft unter verschiedenen Pfaden. Die Zuordnu
 
 Lege für jede Quelle eine Zeile an. Den Pfad in Kodi siehst du dort unter *Videos → Dateien*.
 
+**Verbindung testen** vergleicht die Zuordnung auch mit den Quellen in Kodi und warnt, wenn Kodi zu einem Pfad keine Quelle hat. Dieselbe Warnung erscheint, wenn KMM einen Scan außerhalb der Quellen startet, denn Kodi meldet in dem Fall keinen Fehler und liest nichts ein. Probleme beim Aktualisieren bleiben als Meldung stehen, bis du sie mit **OK** schließt. Eine abweichende Groß- und Kleinschreibung erkennt die Prüfung nicht.
+
 ## Echtzeit-Sync
 
 Mit eingeschaltetem Echtzeit-Sync aktualisiert KMM Kodi nach jeder Änderung selbst:

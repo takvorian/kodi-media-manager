@@ -38,6 +38,9 @@
         }
         @if (connectionResult(host); as result) {
           <p class="connection-result" [class.ok]="result.ok" [class.error]="!result.ok">{{ result.message }}</p>
+          @if (result.warning) {
+            <p class="warning connection-warning">{{ result.warning }}</p>
+          }
         }
       </mat-card-content>
       <mat-card-actions align="end">

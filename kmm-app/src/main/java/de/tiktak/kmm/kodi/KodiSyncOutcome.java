@@ -14,6 +14,8 @@ public enum KodiSyncOutcome {
     NOT_IN_KODI,
     /** Für den Pfad gibt es keine Zuordnung zu einem Kodi-Pfad. */
     NOT_MAPPED,
+    /** Der Pfad liegt außerhalb aller Quellen des Geräts; ein Scan findet dort vermutlich nichts. */
+    NO_KODI_SOURCE,
     /** Kodi war nicht erreichbar oder meldete einen Fehler. */
     FAILED
 }

@@ -50,9 +50,10 @@ public class KodiHostController {
     /** Prüft die Verbindung und liefert die Kodi-Version, z. B. „Kodi 21.2“. */
     @PostMapping("/{hostId}/test")
     public ConnectionTest test(@PathVariable long hostId) {
-        return new ConnectionTest(hostService.testConnection(hostId).toString());
+        String version = hostService.testConnection(hostId).toString();
+        return new ConnectionTest(version, hostService.pathMappingWarning(hostId).orElse(null));
     }
 
-    public record ConnectionTest(String version) {
+    public record ConnectionTest(String version, String warning) {
     }
 }

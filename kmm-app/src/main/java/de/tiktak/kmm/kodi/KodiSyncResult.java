@@ -11,6 +11,7 @@ import java.time.Instant;
 public record KodiSyncResult(long hostId, String host, KodiSyncOutcome outcome, String message, Instant at) {
 
     boolean failed() {
-        return outcome == KodiSyncOutcome.FAILED || outcome == KodiSyncOutcome.NOT_MAPPED;
+        return outcome == KodiSyncOutcome.FAILED || outcome == KodiSyncOutcome.NOT_MAPPED
+                || outcome == KodiSyncOutcome.NO_KODI_SOURCE;
     }
 }

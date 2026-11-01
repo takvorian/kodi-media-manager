@@ -20,6 +20,7 @@ import {
   KODI_PLAYBACK_JOB_KEY_PREFIX,
   kodiPlaybackJobKey,
   kodiPlaybackSummary,
+  kodiSyncSnackBarConfig,
   kodiSyncSummary,
 } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
@@ -258,7 +259,8 @@ export class SourceList {
   /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen durchsuchen. */
   protected scanInKodi(source: MediaSource): void {
     this.kodiService.scanSource(source.id).subscribe({
-      next: (results) => this.notify(kodiSyncSummary(results)),
+      next: (results) =>
+        this.snackBar.open(kodiSyncSummary(results), 'OK', kodiSyncSnackBarConfig(results)),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }

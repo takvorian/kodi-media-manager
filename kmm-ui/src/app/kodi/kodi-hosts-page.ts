@@ -28,6 +28,7 @@ const SNACKBAR_DURATION_MS = 5000;
 export interface ConnectionResult {
   readonly ok: boolean;
   readonly message: string;
+  readonly warning?: string | null;
 }
 
 /** Bearbeitet wird ein vorhandenes Gerät oder ein neues (`'new'`). */
@@ -137,7 +138,11 @@ export class KodiHostsPage {
     this.testing.update((ids) => new Set(ids).add(host.id));
     this.kodiService.testConnection(host.id).subscribe({
       next: (result) =>
-        this.showConnectionResult(host, { ok: true, message: `Verbunden mit ${result.version}` }),
+        this.showConnectionResult(host, {
+          ok: true,
+          message: `Verbunden mit ${result.version}`,
+          warning: result.warning,
+        }),
       error: (error: unknown) =>
         this.showConnectionResult(host, { ok: false, message: problemMessage(error) }),
     });

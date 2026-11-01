@@ -263,6 +263,21 @@ describe('KodiHostsPage', () => {
       'Kodi unter kodi.local ist nicht erreichbar.',
     ]);
     expect(element().querySelectorAll('.connection-result.ok')).toHaveLength(1);
+    expect(element().querySelector('.connection-warning')).toBeNull();
+  });
+
+  it('warns about mapped paths without a source in Kodi', async () => {
+    await loadHosts([livingRoom]);
+
+    buttons('.test-button')[0].click();
+    httpTesting.expectOne(`${KODI_HOSTS_URL}/3/test`).flush({
+      version: 'Kodi 21.2',
+      warning: 'Kodi hat keine Quelle für a:\\filme.',
+    });
+    await fixture.whenStable();
+
+    expect(texts('.connection-result')).toEqual(['Verbunden mit Kodi 21.2']);
+    expect(texts('.connection-warning')).toEqual(['Kodi hat keine Quelle für a:\\filme.']);
   });
 
   it('deletes a host after confirmation', async () => {

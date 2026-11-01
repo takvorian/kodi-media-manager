@@ -196,6 +196,15 @@ public class KodiClient {
         call(endpoint, "VideoLibrary.RefreshEpisode", Map.of("episodeid", episodeId, "ignorenfo", false));
     }
 
+    /** @return die Videoquellen des Geräts */
+    public KodiSources videoSources(KodiEndpoint endpoint) {
+        List<String> files = new ArrayList<>();
+        for (JsonNode source : call(endpoint, "Files.GetSources", Map.of("media", "video")).path("sources")) {
+            files.add(source.path("file").asString());
+        }
+        return KodiSources.of(files);
+    }
+
     /** @return ob Kodi gerade seine Videobibliothek durchsucht oder bereinigt */
     public boolean isScanning(KodiEndpoint endpoint) {
         return call(endpoint, "XBMC.GetInfoBooleans", Map.of("booleans", List.of(IS_SCANNING_VIDEO)))

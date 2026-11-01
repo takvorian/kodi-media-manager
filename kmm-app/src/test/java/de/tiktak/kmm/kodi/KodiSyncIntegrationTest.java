@@ -72,6 +72,7 @@ class KodiSyncIntegrationTest {
     void keepsKodiUpToDate() throws IOException {
         Files.createDirectories(library.resolve("Heat (1995)"));
         Files.createFile(library.resolve("Heat (1995)/Heat (1995).mkv"));
+        kodi.respond("Files.GetSources", "{\"sources\": [{\"file\": \"smb://nas/filme/\"}]}");
         kodi.respond("VideoLibrary.GetMovies", "{\"movies\": [{\"movieid\": 7, \"file\": \"%s\"}]}".formatted(KODI_FILE));
         createKodiHost();
         long sourceId = create(MediaSourceController.BASE_PATH,
@@ -79,7 +80,7 @@ class KodiSyncIntegrationTest {
 
         scan(sourceId);
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.Scan"));
-        assertThat(kodi.calls().get(1).params().path("directory").asString()).isEqualTo("smb://nas/filme/");
+        assertThat(kodi.calls().get(2).params().path("directory").asString()).isEqualTo("smb://nas/filme/");
 
         long movieId = read(mockMvc.get().uri(MovieController.MOVIES_PATH).exchange())
                 .get("content").get(0).get("id").asLong();
@@ -87,7 +88,7 @@ class KodiSyncIntegrationTest {
                 .content("{\"title\": \"Heat\", \"year\": 1995, \"genres\": []}"))
                 .hasStatusOk();
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshMovie"));
-        assertThat(kodi.methods()).containsExactly("XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+        assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
                 "VideoLibrary.GetMovies", "VideoLibrary.RefreshMovie");
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/{id}/refresh", movieId).with(csrf()))
@@ -124,7 +125,7 @@ class KodiSyncIntegrationTest {
                 .contentType(JSON).content("{\"title\": \"Gestrandet\"}"))
                 .hasStatusOk();
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshEpisode"));
-        assertThat(kodi.methods()).containsExactly("XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+        assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
                 "VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow", "VideoLibrary.GetEpisodes",
                 "VideoLibrary.RefreshEpisode");
 

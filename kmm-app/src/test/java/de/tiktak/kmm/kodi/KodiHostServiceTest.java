@@ -142,6 +142,28 @@ class KodiHostServiceTest {
     }
 
     @Test
+    void warnsAboutMappedPathsWithoutASourceInKodi() {
+        try (var kodi = new FakeKodiServer()) {
+            KodiClient realClient = new KodiClient(HttpClient.newHttpClient(), Duration.ofSeconds(5));
+            long id = service.create(new KodiHostSettings("Thor", "127.0.0.1", kodi.port(), null, null, false,
+                    List.of(FILME, new KodiPathMapping("/media/serien", "a:\\medien\\serien")))).id();
+            when(kodiClient.videoSources(any())).thenAnswer(
+                    invocation -> realClient.videoSources(invocation.getArgument(0)));
+
+            kodi.respond("Files.GetSources", "{\"sources\": [{\"file\": \"smb://nas/filme/\"}]}");
+            assertThat(service.pathMappingWarning(id)).contains("Kodi hat keine Quelle für a:\\medien\\serien. "
+                    + "Prüfe die Pfad-Zuordnung. Quellen in Kodi: smb://nas/filme/.");
+
+            kodi.respond("Files.GetSources", "{\"sources\": [{\"file\": \"smb://nas/filme/\"}, "
+                    + "{\"file\": \"a:\\\\medien\\\\serien\\\\\"}]}");
+            assertThat(service.pathMappingWarning(id)).isEmpty();
+
+            kodi.fail("Files.GetSources", -32601, "Method not found.");
+            assertThat(service.pathMappingWarning(id)).as("Quellen nicht lesbar").isEmpty();
+        }
+    }
+
+    @Test
     void translatesConnectionProblems() {
         try (var kodi = new FakeKodiServer().respondWithStatus(401)) {
             KodiClient realClient = new KodiClient(HttpClient.newHttpClient(), Duration.ofSeconds(5));

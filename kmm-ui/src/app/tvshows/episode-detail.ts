@@ -9,7 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
 
-import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
+import { KodiPlaybackResult, kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { MediaInfoService } from '../media-info/media-info.service';
@@ -62,7 +62,9 @@ export class EpisodeDetail {
   });
 
   /** Eigenes Signal, damit Änderungen außerhalb der Metadaten (Gesehen-Status) das Formular nicht zurücksetzen. */
-  private readonly metadata = computed(() => (this.episode.hasValue() ? this.episode.value().metadata : null));
+  private readonly metadata = computed(() =>
+    this.episode.hasValue() ? this.episode.value().metadata : null,
+  );
 
   constructor() {
     effect(() => {
@@ -124,7 +126,7 @@ export class EpisodeDetail {
     this.kodiService.refreshEpisode(this.id()).subscribe({
       next: (results) => {
         this.refreshingKodi.set(false);
-        this.notify(kodiSyncSummary(results));
+        this.snackBar.open(kodiSyncSummary(results), 'OK', kodiSyncSnackBarConfig(results));
       },
       error: (error: unknown) => {
         this.refreshingKodi.set(false);
@@ -150,18 +152,25 @@ export class EpisodeDetail {
   }
 
   private showPlayback(result: KodiPlaybackResult): void {
-    this.episode.update((details) =>
-      details && {
-        ...details,
-        extras: { ...details.extras, playCount: result.playCount, lastPlayed: result.lastPlayedAt },
-      },
+    this.episode.update(
+      (details) =>
+        details && {
+          ...details,
+          extras: {
+            ...details.extras,
+            playCount: result.playCount,
+            lastPlayed: result.lastPlayedAt,
+          },
+        },
     );
     // Nur das Feld setzen: Neue Metadaten würden das Formular samt ungespeicherter Änderungen zurücksetzen.
     this.form.controls.userRating.setValue(result.userRating);
   }
 
   private showStreams(streams: StreamDetails): void {
-    this.episode.update((details) => details && { ...details, extras: { ...details.extras, streams } });
+    this.episode.update(
+      (details) => details && { ...details, extras: { ...details.extras, streams } },
+    );
   }
 
   private notify(message: string): void {

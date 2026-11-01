@@ -18,6 +18,7 @@ import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiException;
 import de.tiktak.kmm.kodi.rpc.KodiLibraryScheduler;
+import de.tiktak.kmm.kodi.rpc.KodiSources;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
@@ -230,9 +231,34 @@ public class KodiSyncService {
     }
 
     private Outcome scanUnknown(KodiTarget target, String title, String kodiDirectory, Duration maxWait) {
-        scheduler.scan(target.endpoint(), kodiDirectory, maxWait);
-        return new Outcome(KodiSyncOutcome.SCAN_STARTED,
+        return scanWithSourceCheck(target, kodiDirectory, maxWait,
                 "„%s“ ist in Kodi noch unbekannt; Kodi liest %s ein.".formatted(title, kodiDirectory));
+    }
+
+    /**
+     * Kodi meldet auch bei einem Verzeichnis außerhalb seiner Quellen Erfolg und liest nichts ein. Der Scan läuft
+     * trotzdem, weil Kodi ein Verzeichnis auch ohne Eintrag in der Quellenliste kennen kann.
+     */
+    private Outcome scanWithSourceCheck(KodiTarget target, String kodiDirectory, Duration maxWait, String message) {
+        Optional<String> warning = sourceWarning(target, kodiDirectory);
+        scheduler.scan(target.endpoint(), kodiDirectory, maxWait);
+        return warning.map(text -> new Outcome(KodiSyncOutcome.NO_KODI_SOURCE, text))
+                .orElseGet(() -> new Outcome(KodiSyncOutcome.SCAN_STARTED, message));
+    }
+
+    private Optional<String> sourceWarning(KodiTarget target, String kodiDirectory) {
+        KodiSources sources;
+        try {
+            sources = kodiClient.videoSources(target.endpoint());
+        } catch (KodiException e) {
+            log.debug("Could not read the sources of Kodi host '{}': {}", target.name(), e.getMessage());
+            return Optional.empty();
+        }
+        if (sources.contain(kodiDirectory)) {
+            return Optional.empty();
+        }
+        return Optional.of("Kodi hat keine Quelle für %s und findet dort vermutlich nichts. Prüfe die Pfad-Zuordnung "
+                .formatted(kodiDirectory) + "von „%s“. Quellen in Kodi: %s.".formatted(target.name(), sources));
     }
 
     private Outcome syncRenamed(KodiTarget target, String localDirectory, String localPrevious, Clean clean) {
@@ -242,10 +268,10 @@ public class KodiSyncService {
             return notMapped(localDirectory);
         }
         Duration maxWait = properties.scanWaitBackground();
-        scheduler.scan(target.endpoint(), directory.get(), maxWait);
-        clean.start(target.endpoint(), previous.get(), maxWait);
-        return new Outcome(KodiSyncOutcome.SCAN_STARTED,
+        Outcome outcome = scanWithSourceCheck(target, directory.get(), maxWait,
                 "Kodi liest %s ein und entfernt die alten Einträge aus %s.".formatted(directory.get(), previous.get()));
+        clean.start(target.endpoint(), previous.get(), maxWait);
+        return outcome;
     }
 
     private Outcome syncSet(KodiTarget target, MovieSetDetails set, String previousName, Optional<String> memberFile,
@@ -288,8 +314,7 @@ public class KodiSyncService {
         if (kodiDirectory.isEmpty()) {
             return notMapped(source.getPath());
         }
-        scheduler.scan(target.endpoint(), kodiDirectory.get(), maxWait);
-        return new Outcome(KodiSyncOutcome.SCAN_STARTED,
+        return scanWithSourceCheck(target, kodiDirectory.get(), maxWait,
                 "Kodi sucht in %s nach neuen %s.".formatted(kodiDirectory.get(),
                         source.getMediaType() == MediaType.TV_SHOW ? "Serien und Episoden" : "Filmen"));
     }

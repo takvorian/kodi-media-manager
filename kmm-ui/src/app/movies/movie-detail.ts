@@ -12,7 +12,7 @@ import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
-import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
+import { KodiPlaybackResult, kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
@@ -232,7 +232,7 @@ export class MovieDetail {
     this.kodiService.refreshMovie(this.id()).subscribe({
       next: (results) => {
         this.refreshingKodi.set(false);
-        this.notify(kodiSyncSummary(results));
+        this.snackBar.open(kodiSyncSummary(results), 'OK', kodiSyncSnackBarConfig(results));
       },
       error: (error: unknown) => {
         this.refreshingKodi.set(false);

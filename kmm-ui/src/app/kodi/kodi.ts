@@ -1,4 +1,8 @@
+import { MatSnackBarConfig } from '@angular/material/snack-bar';
+
 import { Job } from '../jobs/job';
+
+const SYNC_MESSAGE_DURATION_MS = 5000;
 
 /** Zuordnung eines Verzeichnisses aus Sicht von KMM zu demselben Verzeichnis aus Sicht von Kodi. */
 export interface KodiPathMapping {
@@ -33,6 +37,8 @@ export interface KodiHostCommand {
 
 export interface KodiConnectionTest {
   readonly version: string;
+  /** Hinweis auf Kodi-Pfade der Zuordnung, zu denen Kodi keine Quelle hat. */
+  readonly warning: string | null;
 }
 
 export type KodiSyncOutcome =
@@ -41,6 +47,7 @@ export type KodiSyncOutcome =
   | 'UPDATED'
   | 'NOT_IN_KODI'
   | 'NOT_MAPPED'
+  | 'NO_KODI_SOURCE'
   | 'FAILED';
 
 /** Ergebnis eines Abgleichs mit einem Kodi-Gerät. */
@@ -53,7 +60,16 @@ export interface KodiSyncResult {
 }
 
 export function syncFailed(result: KodiSyncResult): boolean {
-  return result.outcome === 'FAILED' || result.outcome === 'NOT_MAPPED';
+  return (
+    result.outcome === 'FAILED' ||
+    result.outcome === 'NOT_MAPPED' ||
+    result.outcome === 'NO_KODI_SOURCE'
+  );
+}
+
+/** Probleme bleiben stehen, bis man sie schließt, damit man sie lesen und kopieren kann. */
+export function kodiSyncSnackBarConfig(results: readonly KodiSyncResult[]): MatSnackBarConfig {
+  return results.some(syncFailed) ? {} : { duration: SYNC_MESSAGE_DURATION_MS };
 }
 
 /** Fasst die Ergebnisse aller Geräte für eine Snackbar-Meldung zusammen. */

@@ -104,6 +104,16 @@ class KodiClientTest {
     }
 
     @Test
+    void readsTheVideoSources() {
+        kodi.respond("Files.GetSources", """
+                {"sources": [{"file": "smb://nas/filme/", "label": "filme"},
+                             {"file": "addons://sources/video/", "label": "Video-Addons"}]}""");
+
+        assertThat(client.videoSources(kodi.endpoint())).hasToString("smb://nas/filme/");
+        assertThat(kodi.calls().getFirst().params()).isEqualTo(json("{\"media\": \"video\"}"));
+    }
+
+    @Test
     void asksKodiWhetherItIsScanning() {
         assertThat(client.isScanning(kodi.endpoint())).as("ohne Angabe").isFalse();
         assertThat(kodi.calls().getFirst().params())

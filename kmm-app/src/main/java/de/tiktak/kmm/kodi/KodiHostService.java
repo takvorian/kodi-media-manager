@@ -1,14 +1,17 @@
 package de.tiktak.kmm.kodi;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.kodi.path.KodiPathMapping;
 import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiException;
+import de.tiktak.kmm.kodi.rpc.KodiSources;
 import de.tiktak.kmm.kodi.rpc.KodiVersion;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -92,6 +95,32 @@ public class KodiHostService {
         } catch (KodiException e) {
             throw KodiProblemException.unavailable(e);
         }
+    }
+
+    /**
+     * Prüft die Pfad-Zuordnung gegen die Quellen des Geräts. Kann KMM die Quellen nicht lesen, gibt es keine Warnung:
+     * Der Verbindungstest selbst meldet dann, ob Kodi erreichbar ist.
+     *
+     * @return Warnung, wenn Kodi-Pfade der Zuordnung außerhalb aller Quellen liegen
+     */
+    public Optional<String> pathMappingWarning(long hostId) {
+        KodiHost host = require(hostId);
+        KodiSources sources;
+        try {
+            sources = kodiClient.videoSources(host.endpoint());
+        } catch (KodiException e) {
+            log.debug("Could not read the sources of Kodi host '{}': {}", host.getName(), e.getMessage());
+            return Optional.empty();
+        }
+        List<String> unknown = host.pathMappings().stream()
+                .map(KodiPathMapping::kodiPath)
+                .filter(path -> !sources.overlap(path))
+                .toList();
+        if (unknown.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of("Kodi hat keine Quelle für %s. Prüfe die Pfad-Zuordnung. Quellen in Kodi: %s."
+                .formatted(String.join(", ", unknown), sources));
     }
 
     private KodiHostResponse toResponse(KodiHost host) {

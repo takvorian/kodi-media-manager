@@ -14,7 +14,7 @@ import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { KodiService } from '../kodi/kodi.service';
-import { kodiSyncSummary } from '../kodi/kodi';
+import { kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
 import { ArtworkSource } from '../movies/artwork';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { Attribution, ScraperInfo } from '../movies/scraper';
@@ -224,7 +224,7 @@ export class TvShowDetail {
     this.kodiService.refreshTvShow(this.id()).subscribe({
       next: (results) => {
         this.refreshingKodi.set(false);
-        this.notify(kodiSyncSummary(results));
+        this.snackBar.open(kodiSyncSummary(results), 'OK', kodiSyncSnackBarConfig(results));
       },
       error: (error: unknown) => {
         this.refreshingKodi.set(false);

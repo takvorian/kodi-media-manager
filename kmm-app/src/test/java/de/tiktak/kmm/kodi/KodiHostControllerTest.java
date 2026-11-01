@@ -9,6 +9,7 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.util.List;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -100,6 +101,15 @@ class KodiHostControllerTest {
         when(hostService.testConnection(3)).thenReturn(new KodiVersion("Kodi", 21, 2));
 
         assertThat(mockMvc.post().uri(KodiHostController.BASE_PATH + "/3/test").with(csrf()))
-                .hasStatusOk().bodyJson().isLenientlyEqualTo("{\"version\": \"Kodi 21.2\"}");
+                .hasStatusOk().bodyJson().isLenientlyEqualTo("{\"version\": \"Kodi 21.2\", \"warning\": null}");
+    }
+
+    @Test
+    void reportsPathMappingProblemsOfTheConnectionTest() {
+        when(hostService.testConnection(3)).thenReturn(new KodiVersion("Kodi", 21, 2));
+        when(hostService.pathMappingWarning(3)).thenReturn(Optional.of("Keine Quelle."));
+
+        assertThat(mockMvc.post().uri(KodiHostController.BASE_PATH + "/3/test").with(csrf()))
+                .hasStatusOk().bodyJson().isLenientlyEqualTo("{\"version\": \"Kodi 21.2\", \"warning\": \"Keine Quelle.\"}");
     }
 }

@@ -98,6 +98,36 @@ class KodiSyncServiceTest {
         service = new KodiSyncService(hostService, metadataService, movieSetService, movieSetArtwork, tvShowService,
                 sourceService, client, new KodiLibraryScheduler(client, properties.scanPollInterval()), properties,
                 syncLog, Clock.fixed(NOW, ZoneOffset.UTC));
+        kodi.respond("Files.GetSources", """
+                {"sources": [{"file": "smb://nas/filme/"}, {"file": "smb://nas/serien/"}]}""");
+    }
+
+    @Test
+    void warnsWhenKodiHasNoSourceForTheDirectoryItShouldScan() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), new KodiPathMapper(
+                List.of(new KodiPathMapping(LIBRARY.toString(), "a:\\medien\\filme"))), true));
+        givenMovie("Sliver/Sliver.mkv", DiscFormat.FILE);
+        kodi.respond("VideoLibrary.GetMovies", "{\"limits\": {\"total\": 0}}");
+
+        assertThat(service.refreshMovie(MOVIE_ID)).singleElement().satisfies(result -> {
+            assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NO_KODI_SOURCE);
+            assertThat(result.failed()).isTrue();
+            assertThat(result.message()).isEqualTo("Kodi hat keine Quelle für a:\\medien\\filme\\Sliver\\ und findet "
+                    + "dort vermutlich nichts. Prüfe die Pfad-Zuordnung von „Wohnzimmer“. "
+                    + "Quellen in Kodi: smb://nas/filme/, smb://nas/serien/.");
+        });
+        assertThat(kodi.methods()).as("Kodi kann das Verzeichnis trotzdem kennen").contains("VideoLibrary.Scan");
+    }
+
+    @Test
+    void scansWithoutWarningWhenTheSourcesCannotBeRead() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true));
+        givenMovie("Heat.mkv", DiscFormat.FILE);
+        kodi.respond("VideoLibrary.GetMovies", "{\"limits\": {\"total\": 0}}");
+        kodi.fail("Files.GetSources", -32601, "Method not found.");
+
+        assertThat(service.refreshMovie(MOVIE_ID)).singleElement().satisfies(
+                result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.SCAN_STARTED));
     }
 
     @AfterEach
@@ -217,11 +247,11 @@ class KodiSyncServiceTest {
         service.syncRenamedMovieOnRealtimeHosts(new MovieRenamedEvent(MOVIE_ID, 3,
                 LIBRARY.resolve("heat").toString(), LIBRARY.resolve("H").resolve("Heat (1995)").toString()));
 
-        assertThat(kodi.methods()).containsExactly("XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+        assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
                 "XBMC.GetInfoBooleans", "VideoLibrary.Clean");
-        assertThat(kodi.calls().get(1).params().path("directory").asString())
+        assertThat(kodi.calls().get(2).params().path("directory").asString())
                 .isEqualTo("smb://nas/filme/H/Heat (1995)/");
-        assertThat(kodi.calls().get(3).params().path("directory").asString()).isEqualTo("smb://nas/filme/heat/");
+        assertThat(kodi.calls().get(4).params().path("directory").asString()).isEqualTo("smb://nas/filme/heat/");
         assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> assertThat(result.message())
                 .isEqualTo("Kodi liest smb://nas/filme/H/Heat (1995)/ ein und entfernt die alten Einträge aus "
                         + "smb://nas/filme/heat/."));
@@ -237,10 +267,10 @@ class KodiSyncServiceTest {
         service.syncRenamedTvShowOnRealtimeHosts(new TvShowRenamedEvent(SHOW_ID, 2,
                 SERIES_LIBRARY.resolve("lost").toString(), SERIES_LIBRARY.resolve("Lost (2004)").toString()));
 
-        assertThat(kodi.methods()).containsExactly("XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+        assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
                 "XBMC.GetInfoBooleans", "VideoLibrary.Clean");
-        assertThat(kodi.calls().get(3).params().path("content").asString()).isEqualTo("tvshows");
-        assertThat(kodi.calls().get(3).params().path("directory").asString()).endsWith("/lost/");
+        assertThat(kodi.calls().get(4).params().path("content").asString()).isEqualTo("tvshows");
+        assertThat(kodi.calls().get(4).params().path("directory").asString()).endsWith("/lost/");
         service.syncRenamedTvShowOnRealtimeHosts(new TvShowRenamedEvent(SHOW_ID, 2, "/a", "/b"));
         assertThat(syncLog.lastResult(1)).hasValueSatisfying(
                 result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
@@ -319,7 +349,7 @@ class KodiSyncServiceTest {
         });
         assertThat(syncLog.lastResult(2)).hasValueSatisfying(
                 result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
-        assertThat(kodi.methods()).containsExactly("XBMC.GetInfoBooleans", "VideoLibrary.Scan");
+        assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan");
         assertThat(service.scanSource(3)).hasSize(2);
     }
 
