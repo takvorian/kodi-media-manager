@@ -3,7 +3,13 @@ import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
 import { Job } from '../jobs/job';
-import { KodiConnectionTest, KodiHost, KodiHostCommand, KodiPlaybackResult, KodiSyncResult } from './kodi';
+import {
+  KodiConnectionTest,
+  KodiHost,
+  KodiHostCommand,
+  KodiPlaybackResult,
+  KodiSyncResult,
+} from './kodi';
 
 export const KODI_URL = '/api/v1/kodi';
 export const KODI_HOSTS_URL = `${KODI_URL}/hosts`;
@@ -35,6 +41,16 @@ export class KodiService {
   /** Aktualisiert den Film auf allen Kodi-Geräten. */
   refreshMovie(movieId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/movies/${movieId}/refresh`, null);
+  }
+
+  /** Aktualisiert die Auswahl auf allen Kodi-Geräten; läuft als Job. */
+  refreshMovies(movieIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/movies/refresh`, { movieIds });
+  }
+
+  /** Aktualisiert die Auswahl (ohne Episoden) auf allen Kodi-Geräten; läuft als Job. */
+  refreshTvShows(showIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/tvshows/refresh`, { showIds });
   }
 
   /** Aktualisiert die Serie (ohne Episoden) auf allen Kodi-Geräten. */

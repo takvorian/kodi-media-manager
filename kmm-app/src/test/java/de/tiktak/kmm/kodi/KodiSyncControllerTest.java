@@ -6,6 +6,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import java.time.Instant;
 import java.util.List;
+import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,6 +16,8 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 
 @WebMvcTest(controllers = KodiSyncController.class, properties = "kmm.security.enabled=true")
@@ -23,12 +26,17 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 class KodiSyncControllerTest {
 
     private static final Instant NOW = Instant.parse("2026-10-25T20:00:00Z");
+    private static final String JOB_1 = "00000000-0000-0000-0000-000000000001";
+    private static final String JOB_2 = "00000000-0000-0000-0000-000000000002";
 
     @Autowired
     private MockMvcTester mockMvc;
 
     @MockitoBean
     private KodiSyncService syncService;
+
+    @MockitoBean
+    private KodiBatchRefreshService batchRefreshService;
 
     @Test
     void refreshesAMovie() {
@@ -39,6 +47,34 @@ class KodiSyncControllerTest {
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
                         [{"host": "Wohnzimmer", "outcome": "REFRESHED", "message": "„Heat“ aktualisiert."}]
                         """);
+    }
+
+    @Test
+    void refreshesTheChosenMoviesAsAJob() {
+        when(batchRefreshService.startMovies(List.of(5L, 6L))).thenReturn(job(JOB_1));
+
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/refresh").with(csrf())
+                .contentType("application/json").content("{\"movieIds\": [5, 6]}"))
+                .hasStatus(202).bodyJson().extractingPath("$.id").isEqualTo(JOB_1);
+    }
+
+    @Test
+    void refreshesTheChosenTvShowsAsAJob() {
+        when(batchRefreshService.startTvShows(List.of(7L))).thenReturn(job(JOB_2));
+
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/refresh").with(csrf())
+                .contentType("application/json").content("{\"showIds\": [7]}"))
+                .hasStatus(202).bodyJson().extractingPath("$.id").isEqualTo(JOB_2);
+    }
+
+    @Test
+    void rejectsAnEmptySelection() {
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/refresh").with(csrf())
+                .contentType("application/json").content("{\"movieIds\": []}")).hasStatus(400);
+    }
+
+    private static JobSnapshot job(String id) {
+        return new JobSnapshot(UUID.fromString(id), "movies-batch", "Kodi", JobStatus.RUNNING, 0, 0, null, null, NOW, null);
     }
 
     @Test

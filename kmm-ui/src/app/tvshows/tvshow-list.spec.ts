@@ -357,6 +357,26 @@ describe('TvShowList', () => {
     });
   });
 
+  it('refreshes the chosen shows in Kodi as a job', async () => {
+    await respond(page([alf]));
+    element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+    httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1, 4]);
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.refresh-kodi-button')!.click();
+    const refresh = httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/refresh' });
+    expect(refresh.request.body).toEqual({ showIds: [1, 4] });
+    const job = {
+      id: 'k',
+      key: 'tvshows-batch',
+      title: '2 Serien in Kodi aktualisieren',
+      status: 'RUNNING',
+    } as Job;
+    refresh.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('fetches the missing trailers of the chosen shows as a job', async () => {
     await respond(page([alf]));
     element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();

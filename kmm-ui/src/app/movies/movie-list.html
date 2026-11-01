@@ -110,6 +110,15 @@
     >
       Bewertungen aktualisieren
     </button>
+    <button
+      matButton
+      type="button"
+      class="refresh-kodi-button"
+      [disabled]="!!batchJob()"
+      (click)="refreshChosenInKodi()"
+    >
+      In Kodi aktualisieren
+    </button>
   }
 </div>
 

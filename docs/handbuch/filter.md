@@ -56,5 +56,6 @@ Die NFOs werden geschrieben, und Kodi liest die Einträge neu ein. Umbenannt wir
 - **Fehlende Trailer holen**
 - **Fehlende Titelmusik holen**
 - **Bewertungen aktualisieren**
+- **In Kodi aktualisieren**, siehe [Kodi](kodi.md#von-hand-aktualisieren)
 
 Mehr dazu unter [Scrapen](scrapen.md).

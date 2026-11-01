@@ -45,6 +45,7 @@ Aus KMM entfernte Filme bleiben in Kodi, bis dort die Bibliothek bereinigt wird.
 ## Von Hand aktualisieren
 
 - **In Kodi aktualisieren** in Film-, Serien- und Episodenansicht wirkt auf alle Geräte.
+- **In Kodi aktualisieren** in der Film- und Serienliste macht dasselbe für die Auswahl. Bei Serien liest Kodi nur die Serie neu ein, nicht ihre Episoden. Antwortet ein Gerät nicht, überspringt KMM es für den Rest des Laufs.
 - **Kodi-Scan** bei einer [Quelle](quellen.md) lässt alle Geräte die Quelle durchsuchen.
 
 Beides funktioniert auch ohne Echtzeit-Sync.

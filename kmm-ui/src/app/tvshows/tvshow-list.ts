@@ -31,6 +31,7 @@ import { CONFIRM } from '../shared/confirm';
 import { localDateTime } from '../shared/date-time';
 import { ExportMenu } from '../shared/export-menu';
 import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
+import { KodiService } from '../kodi/kodi.service';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
@@ -72,6 +73,7 @@ const SAVED = 'saved:';
 })
 export class TvShowList {
   private readonly tvShowService = inject(TvShowService);
+  private readonly kodiService = inject(KodiService);
   private readonly savedFilterService = inject(SavedFilterService);
   private readonly sourceService = inject(MediaSourceService);
   private readonly snackBar = inject(MatSnackBar);
@@ -297,6 +299,22 @@ export class TvShowList {
   }
 
   /** Trägt für die ausgewählten Serien ohne Trailer den besten Vorschlag ein; vorhandene bleiben. */
+  protected refreshChosenInKodi(): void {
+    const ids = [...this.chosen()];
+    const count = ids.length === 1 ? '1 Serie' : `${ids.length} Serien`;
+    if (
+      !this.confirm(
+        `${count} auf allen Kodi-Geräten aktualisieren? Ihre Episoden bleiben dabei unberührt.`,
+      )
+    ) {
+      return;
+    }
+    this.kodiService.refreshTvShows(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   protected fillMissingTrailers(): void {
     const showIds = [...this.chosen()];
     if (

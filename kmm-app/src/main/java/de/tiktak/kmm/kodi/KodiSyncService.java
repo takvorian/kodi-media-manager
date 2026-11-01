@@ -148,12 +148,12 @@ public class KodiSyncService {
         }
     }
 
-    private List<KodiSyncResult> refreshMovie(long movieId, List<KodiTarget> targets) {
+    List<KodiSyncResult> refreshMovie(long movieId, List<KodiTarget> targets) {
         MovieDetails movie = metadataService.findDetails(movieId);
         return syncAll(targets, target -> refresh(target, movie));
     }
 
-    private List<KodiSyncResult> refreshTvShow(long showId, List<KodiTarget> targets) {
+    List<KodiSyncResult> refreshTvShow(long showId, List<KodiTarget> targets) {
         TvShowDetails show = tvShowService.findShow(showId);
         return syncAll(targets, target -> refresh(target, show));
     }

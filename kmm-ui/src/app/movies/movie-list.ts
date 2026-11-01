@@ -30,6 +30,7 @@ import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { localDateTime } from '../shared/date-time';
 import { ExportMenu } from '../shared/export-menu';
+import { KodiService } from '../kodi/kodi.service';
 import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
@@ -78,6 +79,7 @@ const SAVED = 'saved:';
 })
 export class MovieList {
   private readonly movieService = inject(MovieService);
+  private readonly kodiService = inject(KodiService);
   private readonly savedFilterService = inject(SavedFilterService);
   private readonly sourceService = inject(MediaSourceService);
   private readonly snackBar = inject(MatSnackBar);
@@ -311,6 +313,19 @@ export class MovieList {
       return;
     }
     this.movieService.fillMissingTrailers(movieIds).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  /** Lässt Kodi NFO und Bilder der Auswahl neu einlesen, unabhängig vom Echtzeit-Sync. */
+  protected refreshChosenInKodi(): void {
+    const ids = this.chosenIds();
+    const count = ids.length === 1 ? '1 Film' : `${ids.length} Filme`;
+    if (!this.confirm(`${count} auf allen Kodi-Geräten aktualisieren?`)) {
+      return;
+    }
+    this.kodiService.refreshMovies(ids).subscribe({
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });

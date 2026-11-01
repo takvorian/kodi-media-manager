@@ -31,6 +31,20 @@ public class KodiProblemException extends ErrorResponseException {
                 "Kein Kodi-Gerät hat eine Pfad-Zuordnung für %s.".formatted(path), null);
     }
 
+    static KodiProblemException noHosts() {
+        return new KodiProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Kodi-Gerät",
+                "Es ist kein Kodi-Gerät eingerichtet.", null);
+    }
+
+    static KodiProblemException noHostLeft() {
+        return new KodiProblemException(HttpStatus.BAD_GATEWAY, "Kodi nicht erreichbar",
+                "Übersprungen, weil kein Kodi-Gerät mehr antwortet.", null);
+    }
+
+    static KodiProblemException refreshFailed(String problems) {
+        return new KodiProblemException(HttpStatus.BAD_GATEWAY, "Nicht aktualisiert", problems, null);
+    }
+
     static KodiProblemException unavailable(KodiException cause) {
         return new KodiProblemException(HttpStatus.BAD_GATEWAY, "Kodi nicht erreichbar", cause.getMessage(), cause);
     }

@@ -449,6 +449,25 @@ describe('MovieList', () => {
     expect(updated).toEqual([job]);
   });
 
+  it('refreshes the chosen movies in Kodi as a job', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.refresh-kodi-button')!.click();
+    const refresh = httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/refresh' });
+    expect(refresh.request.body).toEqual({ movieIds: [heat.id] });
+    const job = {
+      id: 'k',
+      key: 'movies-batch',
+      title: '1 Film in Kodi aktualisieren',
+      status: 'RUNNING',
+    } as Job;
+    refresh.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('refreshes the ratings of the chosen movies as a job', async () => {
     await respond(page([heat, ronin]));
     element().querySelector<HTMLInputElement>('.choose input')!.click();
