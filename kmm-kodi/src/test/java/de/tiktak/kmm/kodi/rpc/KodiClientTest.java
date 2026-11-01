@@ -104,6 +104,16 @@ class KodiClientTest {
     }
 
     @Test
+    void asksKodiWhetherItIsScanning() {
+        assertThat(client.isScanning(kodi.endpoint())).as("ohne Angabe").isFalse();
+        assertThat(kodi.calls().getFirst().params())
+                .isEqualTo(json("{\"booleans\": [\"Library.IsScanningVideo\"]}"));
+
+        kodi.respond("XBMC.GetInfoBooleans", "{\"Library.IsScanningVideo\": true}");
+        assertThat(client.isScanning(kodi.endpoint())).isTrue();
+    }
+
+    @Test
     void findsAndUpdatesMovieSets() {
         kodi.respond("VideoLibrary.GetMovieSets", """
                 {"sets": [{"setid": 3, "title": "Alien Collection"}, {"setid": 7, "title": "Matrix Filmreihe"}]}""");

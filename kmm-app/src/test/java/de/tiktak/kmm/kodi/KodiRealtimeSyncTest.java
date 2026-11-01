@@ -36,7 +36,8 @@ class KodiRealtimeSyncTest {
     @BeforeEach
     void setUp() {
         realtimeSync = new KodiRealtimeSync(syncService,
-                new KodiProperties(Duration.ofSeconds(1), Duration.ofSeconds(1), Duration.ofMillis(100)));
+                new KodiProperties(Duration.ofSeconds(1), Duration.ofSeconds(1), Duration.ofMillis(100),
+                        Duration.ZERO, Duration.ZERO, Duration.ofMillis(1)));
     }
 
     @AfterEach

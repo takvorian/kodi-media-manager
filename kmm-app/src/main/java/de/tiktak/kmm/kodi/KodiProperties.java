@@ -10,10 +10,16 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
  * @param requestTimeout Wartezeit auf eine Antwort von Kodi
  * @param syncDelay      Wartezeit nach einer Änderung, bevor KMM Kodi aktualisiert; weitere
  *                       Änderungen am selben Film in dieser Zeit lösen nur eine Aktualisierung aus
+ * @param scanWaitInteractive so lange wartet ein Knopf der Oberfläche höchstens, bis Kodi einen laufenden Scan beendet
+ * @param scanWaitBackground  so lange warten Jobs und Echtzeit-Sync höchstens darauf
+ * @param scanPollInterval    Abstand, in dem KMM dabei nachfragt
  */
 @ConfigurationProperties("kmm.kodi")
 public record KodiProperties(
         @DefaultValue("5s") Duration connectTimeout,
         @DefaultValue("15s") Duration requestTimeout,
-        @DefaultValue("5s") Duration syncDelay) {
+        @DefaultValue("5s") Duration syncDelay,
+        @DefaultValue("10s") Duration scanWaitInteractive,
+        @DefaultValue("30m") Duration scanWaitBackground,
+        @DefaultValue("1s") Duration scanPollInterval) {
 }

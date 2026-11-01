@@ -6,6 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import de.tiktak.kmm.kodi.rpc.KodiClient;
+import de.tiktak.kmm.kodi.rpc.KodiLibraryScheduler;
 
 /**
  * Verdrahtet den frameworkfreien Kodi-Client ({@code kmm-kodi}). Kodi läuft im lokalen Netz und
@@ -22,5 +23,10 @@ class KodiConfiguration {
                 .followRedirects(HttpClient.Redirect.NEVER)
                 .build();
         return new KodiClient(httpClient, properties.requestTimeout());
+    }
+
+    @Bean
+    KodiLibraryScheduler kodiLibraryScheduler(KodiClient kodiClient, KodiProperties properties) {
+        return new KodiLibraryScheduler(kodiClient, properties.scanPollInterval());
     }
 }

@@ -79,7 +79,7 @@ class KodiSyncIntegrationTest {
 
         scan(sourceId);
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.Scan"));
-        assertThat(kodi.calls().getFirst().params().path("directory").asString()).isEqualTo("smb://nas/filme/");
+        assertThat(kodi.calls().get(1).params().path("directory").asString()).isEqualTo("smb://nas/filme/");
 
         long movieId = read(mockMvc.get().uri(MovieController.MOVIES_PATH).exchange())
                 .get("content").get(0).get("id").asLong();
@@ -87,8 +87,8 @@ class KodiSyncIntegrationTest {
                 .content("{\"title\": \"Heat\", \"year\": 1995, \"genres\": []}"))
                 .hasStatusOk();
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshMovie"));
-        assertThat(kodi.methods()).containsExactly("VideoLibrary.Scan", "VideoLibrary.GetMovies",
-                "VideoLibrary.RefreshMovie");
+        assertThat(kodi.methods()).containsExactly("XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+                "VideoLibrary.GetMovies", "VideoLibrary.RefreshMovie");
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/{id}/refresh", movieId).with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
@@ -124,8 +124,9 @@ class KodiSyncIntegrationTest {
                 .contentType(JSON).content("{\"title\": \"Gestrandet\"}"))
                 .hasStatusOk();
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshEpisode"));
-        assertThat(kodi.methods()).containsExactly("VideoLibrary.Scan", "VideoLibrary.GetTVShows",
-                "VideoLibrary.RefreshTVShow", "VideoLibrary.GetEpisodes", "VideoLibrary.RefreshEpisode");
+        assertThat(kodi.methods()).containsExactly("XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+                "VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow", "VideoLibrary.GetEpisodes",
+                "VideoLibrary.RefreshEpisode");
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/{id}/refresh", episodeId)
                 .with(csrf())).hasStatusOk().bodyJson().isLenientlyEqualTo("""

@@ -38,6 +38,7 @@ public class KodiClient {
     private static final int OK = 200;
     private static final int UNAUTHORIZED = 401;
     private static final String DEFAULT_NAME = "Kodi";
+    private static final String IS_SCANNING_VIDEO = "Library.IsScanningVideo";
     /** Einträge je Anfrage beim Lesen ganzer Quellen; hält Antworten über langsame Verbindungen klein. */
     static final int PAGE_SIZE = 500;
     private static final DateTimeFormatter KODI_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -195,22 +196,29 @@ public class KodiClient {
         call(endpoint, "VideoLibrary.RefreshEpisode", Map.of("episodeid", episodeId, "ignorenfo", false));
     }
 
+    /** @return ob Kodi gerade seine Videobibliothek durchsucht oder bereinigt */
+    public boolean isScanning(KodiEndpoint endpoint) {
+        return call(endpoint, "XBMC.GetInfoBooleans", Map.of("booleans", List.of(IS_SCANNING_VIDEO)))
+                .path(IS_SCANNING_VIDEO).asBoolean(false);
+    }
+
     /**
-     * Kodi durchsucht das Verzeichnis nach neuen Medien. Bekannte Einträge aktualisiert Kodi dabei nicht.
+     * Kodi durchsucht das Verzeichnis nach neuen Medien. Bekannte Einträge aktualisiert Kodi dabei nicht. Läuft schon
+     * ein Scan, bricht Kodi ihn stattdessen ab; deshalb nur über den {@link KodiLibraryScheduler} aufrufen.
      *
      * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
      */
-    public void scan(KodiEndpoint endpoint, String directory) {
+    void scan(KodiEndpoint endpoint, String directory) {
         call(endpoint, "VideoLibrary.Scan", Map.of("directory", directory, "showdialogs", false));
     }
 
     /**
-     * Kodi entfernt Filme in oder unterhalb des Verzeichnisses, deren Dateien es nicht mehr gibt. Kodi arbeitet
-     * Scan und Bereinigen nacheinander ab, ein vorher gestarteter Scan ist also fertig.
+     * Kodi entfernt Filme in oder unterhalb des Verzeichnisses, deren Dateien es nicht mehr gibt. Während eines Scans
+     * verwirft Kodi den Aufruf; deshalb nur über den {@link KodiLibraryScheduler} aufrufen.
      *
      * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
      */
-    public void cleanMovies(KodiEndpoint endpoint, String directory) {
+    void cleanMovies(KodiEndpoint endpoint, String directory) {
         clean(endpoint, "movies", directory);
     }
 
@@ -219,7 +227,7 @@ public class KodiClient {
      *
      * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
      */
-    public void cleanTvShows(KodiEndpoint endpoint, String directory) {
+    void cleanTvShows(KodiEndpoint endpoint, String directory) {
         clean(endpoint, "tvshows", directory);
     }
 

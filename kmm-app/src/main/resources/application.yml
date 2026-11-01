@@ -102,6 +102,10 @@ kmm:
     sync-delay: 5s
     connect-timeout: 5s
     request-timeout: 15s
+    # Kodi führt nur einen Scan gleichzeitig aus; so lange wartet KMM höchstens auf dessen Ende
+    scan-wait-interactive: 10s
+    scan-wait-background: 30m
+    scan-poll-interval: 1s
   security:
     enabled: true
   jobs:

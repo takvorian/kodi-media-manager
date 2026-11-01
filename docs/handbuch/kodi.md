@@ -50,6 +50,13 @@ Aus KMM entfernte Filme bleiben in Kodi, bis dort die Bibliothek bereinigt wird.
 
 Beides funktioniert auch ohne Echtzeit-Sync.
 
+## Wenn Kodi gerade einliest
+
+Kodi kann nur einen Scan oder eine Bereinigung gleichzeitig ausführen. KMM startet deshalb erst, wenn Kodi fertig ist:
+
+- **Knöpfe** warten höchstens 10 Sekunden. Ist Kodi dann noch beschäftigt, meldet KMM das, und du versuchst es danach noch einmal.
+- **Stapel-Bearbeitung und Echtzeit-Sync** warten bis zu 30 Minuten. Während dieser Zeit stehen weitere Abgleiche an.
+
 ## Gesehen-Status holen
 
 **Gesehen-Status** bei einer Quelle und **Gesehen-Status aus Kodi** in den Ansichten holen Wiedergaben, letzte Wiedergabe und eigene Bewertung. KMM schreibt sie in Datenbank und NFO, damit Kodi sie beim Neueinlesen nicht verliert.
