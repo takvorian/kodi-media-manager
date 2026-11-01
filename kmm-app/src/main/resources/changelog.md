@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.11 - 2026-11-01
+- Scheduler-Test blockiert sich auf kleinen CI-Rechnern nicht mehr (f565a26)
+- Kodi-Scans und Bereinigen erst starten, wenn Kodi frei ist (c50f2b2)
+
 ## v0.10 - 2026-11-01
 - Filmtitel nach dem Scan ist der unveraenderte Verzeichnisname (f26962f)
 
