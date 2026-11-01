@@ -22,6 +22,7 @@ import de.tiktak.kmm.system.ReleaseInfoService;
 import de.tiktak.kmm.system.SystemInfo;
 import de.tiktak.kmm.system.SystemInfoController;
 import de.tiktak.kmm.system.SystemInfoService;
+import jakarta.servlet.http.Cookie;
 
 class SecurityConfigurationTest {
 
@@ -77,7 +78,30 @@ class SecurityConfigurationTest {
 
         @Test
         void rejectsStateChangingRequestWithoutCsrfToken() {
-            assertThat(mockMvc.post().uri(ENABLE_PATH).with(httpBasic(USER, PASSWORD))).hasStatus(403);
+            assertThat(mockMvc.post().uri(ENABLE_PATH).with(httpBasic(USER, PASSWORD))).hasStatus(403)
+                    .bodyJson().isLenientlyEqualTo("{\"status\": 403, \"detail\": \"%s\"}"
+                            .formatted(ProblemAccessDeniedHandler.CSRF_DETAIL));
+        }
+
+        @Test
+        void issuesItsOwnCsrfCookie() {
+            assertThat(mockMvc.get().uri("/movies")).cookies().containsCookie(SecurityConfiguration.CSRF_COOKIE);
+        }
+
+        @Test
+        void ignoresTheCsrfCookieOfAnotherAppOnTheSameHost() {
+            when(pluginService.enable(PLUGIN_ID)).thenReturn(PLUGIN);
+
+            assertThat(mockMvc.post().uri(ENABLE_PATH).with(httpBasic(USER, PASSWORD))
+                    .cookie(new Cookie("XSRF-TOKEN", "fremd"), new Cookie(SecurityConfiguration.CSRF_COOKIE, "eigen"))
+                    .header(SecurityConfiguration.CSRF_HEADER, "eigen")).hasStatusOk();
+        }
+
+        @Test
+        void rejectsATokenThatDoesNotMatchItsCookie() {
+            assertThat(mockMvc.post().uri(ENABLE_PATH).with(httpBasic(USER, PASSWORD))
+                    .cookie(new Cookie(SecurityConfiguration.CSRF_COOKIE, "eigen"))
+                    .header(SecurityConfiguration.CSRF_HEADER, "fremd")).hasStatus(403);
         }
 
         @Test

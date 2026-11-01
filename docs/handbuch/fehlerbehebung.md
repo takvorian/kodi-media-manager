@@ -13,6 +13,10 @@
 
 **KMM ist nach einem Neustart des Rechners weg.** KMM hat unter Windows keinen Autostart. Starte es wieder über die Verknüpfung.
 
+## Aktionen scheitern
+
+**„Der Server hat die Anfrage abgelehnt, weil das Sicherheits-Cookie fehlt oder nicht passt“.** Lade die Seite neu. Hilft das nicht, lösche die Cookies der Adresse von KMM im Browser. Im Log steht dazu eine Zeile mit `Rejected`.
+
 ## Scan
 
 **Die Quelle findet nichts.** Prüfe, ob das Verzeichnis aus Sicht von KMM stimmt, unter Docker also der Pfad im Container. Prüfe auch die [Dateiendungen und ausgeschlossenen Ordner](einstellungen.md#scan).

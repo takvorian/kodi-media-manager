@@ -21,6 +21,12 @@ describe('problemMessage', () => {
     expect(problemMessage(error)).toBe('Server Error');
   });
 
+  it('names the status when the answer has neither a problem nor a status text', () => {
+    expect(problemMessage(new HttpErrorResponse({ status: 403, error: { error: 'Forbidden' } }))).toBe(
+      'Der Server hat mit dem Fehler 403 geantwortet.',
+    );
+  });
+
   it('reports an unreachable backend', () => {
     expect(problemMessage(new HttpErrorResponse({ status: 0 }))).toBe('Das Backend ist nicht erreichbar.');
   });

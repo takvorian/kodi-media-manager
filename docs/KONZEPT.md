@@ -74,7 +74,7 @@ Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die
   - Scanner: `java.nio.file`
   - Jobs: eigene Job-Verwaltung auf virtuellen Threads, Fortschritt und Ergebnis per REST (`/api/v1/jobs`) und SSE (`/api/v1/jobs/events`), gedrosselt auf höchstens eine Meldung je 250 ms und Job, ein Job je fachlichem Schlüssel (z. B. ein Scan pro Quelle). Laufende und die letzten 50 beendeten Jobs werden im Speicher gehalten.
 - **Kodi:** JSON-RPC über HTTP (`kmm-kodi`, ohne Proxy): `VideoLibrary.GetMovies` (Suche über Verzeichnis und Datei, auch Stapel), `RefreshMovie`, `Scan`; Pfad-Zuordnung je Gerät (Container/KMM ↔ Kodi). Echtzeit-Sync über Ereignisse (`MovieFilesChangedEvent`, `MovieSourceScannedEvent`) nach dem Commit, verzögert und je Film entprellt auf einem eigenen virtuellen Thread.
-- **Security:** Spring Security, CSRF für die SPA (Cookie `XSRF-TOKEN`).
+- **Security:** Spring Security, CSRF für die SPA (Cookie `KMM-XSRF-TOKEN`, eigener Name, weil Cookies über alle Ports einer Adresse gelten).
 - **Betrieb:** Actuator (Health/Probes), OpenAPI (springdoc, `/swagger-ui.html`).
 
 ### Deployment

@@ -1,4 +1,4 @@
-import { provideHttpClient, withFetch } from '@angular/common/http';
+import { provideHttpClient, withFetch, withXsrfConfiguration } from '@angular/common/http';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { MatPaginatorIntl } from '@angular/material/paginator';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
@@ -10,7 +10,11 @@ export const appConfig: ApplicationConfig = {
   providers: [
     provideBrowserGlobalErrorListeners(),
     provideRouter(routes, withComponentInputBinding()),
-    provideHttpClient(withFetch()),
+    // Eigene Namen, muss zu SecurityConfiguration passen: Cookies gelten über alle Ports einer Adresse hinweg.
+    provideHttpClient(
+      withFetch(),
+      withXsrfConfiguration({ cookieName: 'KMM-XSRF-TOKEN', headerName: 'X-KMM-XSRF-TOKEN' }),
+    ),
     { provide: MatPaginatorIntl, useClass: GermanPaginatorIntl },
   ],
 };
