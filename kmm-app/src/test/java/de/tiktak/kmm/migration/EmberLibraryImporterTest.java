@@ -115,13 +115,13 @@ class EmberLibraryImporterTest {
 
         assertThat(report.skippedSources()).singleElement().asString().contains("keine gültige Pfad-Zuordnung");
         assertThat(report.moviesSkipped()).isEqualTo(1);
-        verify(sourceService, never()).importSource(anyString(), anyString(), any());
+        verify(sourceService, never()).importSource(anyString(), anyString(), any(), any());
     }
 
     @Test
     void reportsConflictingSources() {
         MediaSourceConflictException conflict = conflict("überschneidet sich");
-        when(sourceService.importSource(anyString(), anyString(), eq(MediaType.MOVIE))).thenThrow(conflict);
+        when(sourceService.importSource(anyString(), anyString(), eq(MediaType.MOVIE), any())).thenThrow(conflict);
         when(movieImportService.startSession(anyCollection())).thenReturn(session);
 
         EmberImportReport report = run(library(source("D:\\Filme"), movie(1, "D:\\Filme\\Heat.mkv")), mapped());
@@ -224,7 +224,7 @@ class EmberLibraryImporterTest {
     private void givenSource(String path, long id, boolean created) {
         MediaSource source = new MediaSource("Filme", path, MediaType.MOVIE);
         ReflectionTestUtils.setField(source, "id", id);
-        when(sourceService.importSource(anyString(), anyString(), eq(MediaType.MOVIE)))
+        when(sourceService.importSource(anyString(), anyString(), eq(MediaType.MOVIE), any()))
                 .thenReturn(new ImportedSource(source, created));
     }
 

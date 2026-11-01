@@ -7,6 +7,8 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.inOrder;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -30,6 +32,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoActor;
 import de.tiktak.kmm.nfo.NfoException;
@@ -55,12 +58,83 @@ class MovieMetadataServiceTest {
     @Mock
     private MovieNfoSync nfoSync;
 
+    @Mock
+    private MediaSourceService sourceService;
+
     private MovieMetadataService service;
 
     @BeforeEach
     void setUp() {
         service = new MovieMetadataService(movieRepository, nfoFiles, nfoSync, Clock.fixed(NFO_TIME, ZoneOffset.UTC),
-                events);
+                events, sourceService);
+    }
+
+    @Test
+    void prefersTheLanguageOfTheMovieOverThatOfItsSource() {
+        Movie movie = new Movie(3L, "/filme/Heat.mkv", "Heat", 1995, DiscFormat.FILE, 1);
+        when(movieRepository.findById(5L)).thenReturn(Optional.of(movie));
+        when(sourceService.languageOf(3L)).thenReturn("en-US");
+
+        assertThat(service.scrapeLanguage(5L)).isEqualTo("en-US");
+
+        movie.changeMetadataLanguage("fr-FR");
+        assertThat(service.scrapeLanguage(5L)).isEqualTo("fr-FR");
+    }
+
+    @Test
+    void writesAChangedLanguageIntoAnExistingNfo() {
+        Movie movie = new Movie(3L, "/filme/Heat.mkv", "Heat", 1995, DiscFormat.FILE, 1);
+        NfoFileState nfo = new NfoFileState(Path.of("/filme/Heat.nfo"), NFO_TIME);
+        Instant written = NFO_TIME.plusSeconds(60);
+        when(movieRepository.findById(5L)).thenReturn(Optional.of(movie));
+        when(nfoFiles.find(any())).thenReturn(Optional.of(nfo));
+        when(nfoFiles.writeLanguage(nfo, "fr-FR")).thenReturn(new NfoFileState(nfo.file(), written));
+
+        assertThat(service.changeLanguage(5L, "fr-FR")).isTrue();
+
+        assertThat(movie.getMetadataLanguage()).isEqualTo("fr-FR");
+        assertThat(movie.getNfoModifiedAt()).isEqualTo(written);
+        assertThat(service.changeLanguage(5L, "fr-FR")).as("unverändert").isFalse();
+        verify(nfoSync, times(2)).refreshIfChangedOutside(movie);
+        verify(nfoFiles).writeLanguage(nfo, "fr-FR");
+    }
+
+    @Test
+    void changesTheLanguageOfAMovieWithoutNfo() {
+        Movie movie = new Movie(3L, "/filme/Heat.mkv", "Heat", 1995, DiscFormat.FILE, 1);
+        when(movieRepository.findById(5L)).thenReturn(Optional.of(movie));
+        when(nfoFiles.find(any())).thenReturn(Optional.empty());
+
+        assertThat(service.changeLanguage(5L, "fr-FR")).isTrue();
+
+        verify(nfoFiles, never()).writeLanguage(any(), any());
+    }
+
+    @Test
+    void reportsANfoItCannotWriteTheLanguageInto() {
+        Movie movie = new Movie(3L, "/filme/Heat.mkv", "Heat", 1995, DiscFormat.FILE, 1);
+        NfoFileState nfo = new NfoFileState(Path.of("/filme/Heat.nfo"), NFO_TIME);
+        when(movieRepository.findById(5L)).thenReturn(Optional.of(movie));
+        when(nfoFiles.find(any())).thenReturn(Optional.of(nfo));
+        when(nfoFiles.writeLanguage(nfo, "fr-FR")).thenThrow(mock(NfoException.class));
+
+        assertThatThrownBy(() -> service.changeLanguage(5L, "fr-FR")).isInstanceOf(NfoNotWritableException.class);
+    }
+
+    @Test
+    void storesTheLanguageInANewNfoOnlyIfTheMovieHasItsOwn() {
+        Movie movie = new Movie(3L, "/filme/Heat.mkv", "Heat", 1995, DiscFormat.FILE, 1);
+        NfoFileState nfo = new NfoFileState(Path.of("/filme/Heat.nfo"), NFO_TIME);
+        when(movieRepository.findById(5L)).thenReturn(Optional.of(movie));
+
+        service.storeLanguageInNfo(5L);
+        verify(nfoFiles, never()).writeLanguage(any(), any());
+
+        movie.changeMetadataLanguage("fr-FR");
+        when(nfoFiles.find(any())).thenReturn(Optional.of(nfo));
+        when(nfoFiles.writeLanguage(nfo, "fr-FR")).thenReturn(nfo);
+        service.storeLanguageInNfo(5L);
+        verify(nfoFiles).writeLanguage(nfo, "fr-FR");
     }
 
     @Test

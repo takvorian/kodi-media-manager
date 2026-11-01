@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -65,6 +67,7 @@ describe('MovieDetail', () => {
     },
     nfo: { path: '/media/filme/Heat.nfo', exists: true, modifiedAt: '2026-10-25T11:00:00Z' },
     trailer: null,
+    language: null,
   };
 
   let fixture: ComponentFixture<MovieDetail>;
@@ -728,6 +731,86 @@ describe('MovieDetail', () => {
         .flush({ detail: 'Läuft schon.' }, { status: 409, statusText: 'Conflict' });
 
       expect(snackBarMessages).toEqual(['Läuft schon.']);
+    });
+  });
+
+  describe('language', () => {
+    function languageSelect(): LanguageSelect {
+      return fixture.debugElement.query(By.directive(LanguageSelect)).componentInstance;
+    }
+
+    function request(): TestRequest {
+      return httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/language` });
+    }
+
+    it('overwrites the texts when confirmed and reloads after the job', async () => {
+      await load(heat);
+      expect(languageSelect().value()).toBeNull();
+
+      languageSelect().chosen.emit('fr-FR');
+
+      expect(confirmMessages.at(-1)).toContain('auf fr-FR');
+      const change = request();
+      expect(change.request.body).toEqual({ movieIds: [5], language: 'fr-FR', refetchTexts: true });
+      const running = job({ id: 'lang', key: 'movies-batch', status: 'RUNNING' });
+      change.flush(running);
+      events.emit(running);
+      fixture.detectChanges();
+      expect(element().querySelector('.language-running')).not.toBeNull();
+      expect(languageSelect().disabled()).toBe(true);
+
+      events.emit(
+        job({
+          id: 'lang',
+          key: 'movies-batch',
+          status: 'SUCCEEDED',
+          result: { changed: 1, unchanged: 0, failed: 0, failures: [] },
+        }),
+      );
+      await flushWhenRequested(fixture, httpTesting, `${MOVIES_URL}/5`, {
+        ...heat,
+        language: 'fr-FR',
+      });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(languageSelect().value()).toBe('fr-FR');
+      expect(element().querySelector('.language-running')).toBeNull();
+    });
+
+    it('changes only the language when not confirmed', async () => {
+      await load(heat);
+      confirmAnswer = false;
+
+      languageSelect().chosen.emit(null);
+
+      expect(request().request.body).toEqual({
+        movieIds: [5],
+        language: null,
+        refetchTexts: false,
+      });
+    });
+
+    it('asks to save unsaved changes first', async () => {
+      await load(heat);
+      const title = element().querySelector<HTMLInputElement>('[name="title"]')!;
+      title.value = 'Geändert';
+      title.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      languageSelect().chosen.emit('fr-FR');
+
+      httpTesting.expectNone({ method: 'POST', url: `${MOVIES_URL}/language` });
+    });
+
+    it('unlocks again when the change is rejected', async () => {
+      await load(heat);
+
+      languageSelect().chosen.emit('fr-FR');
+      request().flush({ detail: 'Läuft schon' }, { status: 409, statusText: 'Conflict' });
+      fixture.detectChanges();
+
+      expect(languageSelect().disabled()).toBe(false);
     });
   });
 });

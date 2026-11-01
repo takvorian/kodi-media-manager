@@ -125,6 +125,13 @@
     >
       In Kodi aktualisieren
     </button>
+    <app-language-select
+      class="language-chosen"
+      label="Sprache ändern"
+      defaultLabel="Standard (Quelle oder Einstellungen)"
+      [disabled]="!!batchJob()"
+      (chosen)="changeChosenLanguage($event)"
+    />
   }
 </div>
 

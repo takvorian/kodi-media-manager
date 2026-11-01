@@ -6,7 +6,7 @@ Steht bei einem Feld „Durch die Konfiguration festgelegt“, hat jemand den We
 
 ## Sprache
 
-Gilt für Filme.
+Gilt für Filme, wenn weder der Film noch seine Quelle eine eigene Sprache haben, siehe [Sprache je Eintrag](scrapen.md#sprache-je-quelle-und-eintrag).
 
 - **Metadaten:** zum Beispiel `de-DE` oder `en-US`.
 - **Bevorzugte Bildsprache:** zweistellig, zum Beispiel `de`. Solche Bilder erscheinen in der Auswahl zuerst.

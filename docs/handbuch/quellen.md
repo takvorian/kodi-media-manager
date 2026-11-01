@@ -34,6 +34,10 @@ Klicke dann auf **Hinzufügen**.
 
 Während eine Aufgabe läuft, zeigt die Zeile den Fortschritt und einen Knopf **Abbrechen**.
 
+## Sprache einer Quelle
+
+In der Spalte **Sprache** legst du fest, in welcher Sprache die Einträge dieser Quelle gescrapt werden, wenn sie selbst keine eigene haben. Vorhandene Texte ändern sich dadurch nicht. Mehr dazu unter [Scrapen](scrapen.md#sprache-je-quelle-und-eintrag).
+
 ## Woher Titel, Jahr und IMDb-ID kommen
 
 Eine NFO neben dem Film hat immer Vorrang. Ohne NFO gilt bei Filmen:

@@ -36,7 +36,7 @@ public record KmmSettings(
         @Valid RenameSettings rename,
         @Valid MovieSetSettings movieSets) {
 
-    static final String METADATA_LANGUAGE_PATTERN = "[a-z]{2}(-[A-Z]{2})?";
+    public static final String METADATA_LANGUAGE_PATTERN = "[a-z]{2}(-[A-Z]{2})?";
     static final String ARTWORK_LANGUAGE_PATTERN = "[a-z]{2}";
     static final String EXTENSION_PATTERN = "[a-z0-9]{1,10}";
     static final int MAX_EXTENSIONS = 100;
@@ -87,6 +87,11 @@ public record KmmSettings(
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy) {
         this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, null, null, null, null);
+    }
+
+    /** Ob der Wert eine Sprache wie {@code de-DE} ist; Werte aus Fremddaten müssen das nicht sein. */
+    public static boolean isMetadataLanguage(String value) {
+        return value != null && value.matches(METADATA_LANGUAGE_PATTERN);
     }
 
     KmmSettings withMetadataLanguage(String newMetadataLanguage) {

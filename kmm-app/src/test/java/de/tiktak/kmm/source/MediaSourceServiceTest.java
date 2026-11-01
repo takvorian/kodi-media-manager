@@ -163,11 +163,12 @@ class MediaSourceServiceTest {
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
         String unreachable = directory.resolve("netzlaufwerk").toString();
 
-        ImportedSource imported = service.importSource(" Filme ", unreachable, MediaType.MOVIE);
+        ImportedSource imported = service.importSource(" Filme ", unreachable, MediaType.MOVIE, "de-DE");
 
         assertThat(imported.created()).isTrue();
         assertThat(imported.source().getName()).isEqualTo("Filme");
         assertThat(imported.source().getPath()).isEqualTo(unreachable);
+        assertThat(imported.source().getMetadataLanguage()).isEqualTo("de-DE");
     }
 
     @Test
@@ -175,11 +176,52 @@ class MediaSourceServiceTest {
         MediaSource existing = new MediaSource("Meine Filme", directory.toString(), MediaType.MOVIE);
         when(repository.findAll()).thenReturn(List.of(existing));
 
-        ImportedSource imported = service.importSource("filme", directory.resolve(".").toString(), MediaType.MOVIE);
+        ImportedSource imported = service.importSource("filme", directory.resolve(".").toString(), MediaType.MOVIE, "de-DE");
 
         assertThat(imported.created()).isFalse();
         assertThat(imported.source()).isSameAs(existing);
+        assertThat(existing.getMetadataLanguage()).as("bisher ohne eigene Sprache").isEqualTo("de-DE");
         verify(repository, never()).save(any());
+    }
+
+    @Test
+    void keepsTheOwnLanguageOfAReusedSource() {
+        MediaSource existing = new MediaSource("Meine Filme", directory.toString(), MediaType.MOVIE);
+        existing.changeMetadataLanguage("fr-FR");
+        when(repository.findAll()).thenReturn(List.of(existing));
+
+        service.importSource("filme", directory.toString(), MediaType.MOVIE, "de-DE");
+
+        assertThat(existing.getMetadataLanguage()).isEqualTo("fr-FR");
+    }
+
+    @Test
+    void createsASourceWithItsLanguage() {
+        when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
+
+        MediaSource source = service.create(new CreateMediaSourceCommand("Filme", directory.toString(),
+                MediaType.MOVIE, "en-US"));
+
+        assertThat(source.getMetadataLanguage()).isEqualTo("en-US");
+    }
+
+    @Test
+    void changesAndClearsTheLanguageOfASource() {
+        MediaSource source = new MediaSource("Filme", directory.toString(), MediaType.MOVIE);
+        when(repository.findById(7L)).thenReturn(Optional.of(source));
+
+        service.changeLanguage(7, "fr-FR");
+        assertThat(service.languageOf(7)).isEqualTo("fr-FR");
+
+        service.changeLanguage(7, null);
+        assertThat(service.languageOf(7)).isNull();
+    }
+
+    @Test
+    void knowsNoLanguageOfAnUnknownSource() {
+        when(repository.findById(7L)).thenReturn(Optional.empty());
+
+        assertThat(service.languageOf(7)).isNull();
     }
 
     @Test
@@ -190,7 +232,7 @@ class MediaSourceServiceTest {
         when(repository.existsByNameIgnoreCase("Filme (3)")).thenReturn(false);
         when(repository.save(any())).thenAnswer(invocation -> invocation.getArgument(0));
 
-        assertThat(service.importSource("Filme", directory.toString(), MediaType.MOVIE).source().getName())
+        assertThat(service.importSource("Filme", directory.toString(), MediaType.MOVIE, null).source().getName())
                 .isEqualTo("Filme (3)");
     }
 
@@ -199,7 +241,7 @@ class MediaSourceServiceTest {
         when(repository.findAll()).thenReturn(List.of(new MediaSource("Alle", directory.toString(), MediaType.MOVIE)));
         String nested = directory.resolve("Filme").toString();
 
-        assertThatThrownBy(() -> service.importSource("Filme", nested, MediaType.MOVIE))
+        assertThatThrownBy(() -> service.importSource("Filme", nested, MediaType.MOVIE, null))
                 .isInstanceOf(MediaSourceConflictException.class);
     }
 }

@@ -52,6 +52,32 @@ class MediaSourceControllerTest {
     }
 
     @Test
+    void changesTheLanguageOfASource() {
+        MediaSource source = source(7L, "Filme", "/media/filme");
+        when(source.getMetadataLanguage()).thenReturn("fr-FR");
+        when(sourceService.changeLanguage(7, "fr-FR")).thenReturn(source);
+
+        assertThat(mockMvc.put().uri(MediaSourceController.BASE_PATH + "/7/language").with(csrf())
+                .contentType(JSON).content("{\"language\": \"fr-FR\"}"))
+                .hasStatusOk().bodyJson().extractingPath("$.metadataLanguage").isEqualTo("fr-FR");
+    }
+
+    @Test
+    void clearsTheLanguageOfASource() {
+        MediaSource source = source(7L, "Filme", "/media/filme");
+        when(sourceService.changeLanguage(7, null)).thenReturn(source);
+
+        assertThat(mockMvc.put().uri(MediaSourceController.BASE_PATH + "/7/language").with(csrf())
+                .contentType(JSON).content("{\"language\": null}")).hasStatusOk();
+    }
+
+    @Test
+    void rejectsAnInvalidLanguage() {
+        assertThat(mockMvc.put().uri(MediaSourceController.BASE_PATH + "/7/language").with(csrf())
+                .contentType(JSON).content("{\"language\": \"Deutsch\"}")).hasStatus(400);
+    }
+
+    @Test
     void createsSourceAndReturnsLocation() {
         var command = new CreateMediaSourceCommand("Filme", "/media/filme", MediaType.MOVIE);
         MediaSource source = source(7L, "Filme", "/media/filme");

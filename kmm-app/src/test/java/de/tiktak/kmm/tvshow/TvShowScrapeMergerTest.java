@@ -23,6 +23,44 @@ class TvShowScrapeMergerTest {
             null, "Eigene Handlung", 40, "FSK 12", null, List.of("Abenteuer"), List.of(), List.of("Insel"), null,
             "4607", null, 9);
 
+    private static final EpisodeMetadata EPISODE = new EpisodeMetadata("Eigener Titel", "Pilot", "Eigene Handlung",
+            null, null, null, null, null, 7, "bluray");
+
+    @Test
+    void replacesEpisodeTextsOfTheProvider() {
+        EpisodeResult scraped = EpisodeResult.builder().season(1).episode(1).title("Le vol").plot("Le crash.")
+                .aired(LocalDate.of(2004, 9, 22)).build();
+
+        var refreshed = TvShowScrapeMerger.refreshEpisode(EPISODE, EpisodeExtras.EMPTY, scraped).orElseThrow();
+
+        assertThat(refreshed.metadata().title()).isEqualTo("Le vol");
+        assertThat(refreshed.metadata().plot()).isEqualTo("Le crash.");
+        assertThat(refreshed.metadata().originalTitle()).isEqualTo("Pilot");
+        assertThat(refreshed.metadata().aired()).as("Leeres wird wie sonst gefüllt").isEqualTo(LocalDate.of(2004, 9, 22));
+        assertThat(refreshed.metadata().userRating()).isEqualTo(7);
+        assertThat(refreshed.metadata().videoSource()).isEqualTo("bluray");
+    }
+
+    @Test
+    void keepsEpisodeTextsTheProviderDoesNotHave() {
+        EpisodeResult scraped = EpisodeResult.builder().season(1).episode(1).build();
+
+        assertThat(TvShowScrapeMerger.refreshEpisode(EPISODE, EpisodeExtras.EMPTY, scraped)).isEmpty();
+    }
+
+    @Test
+    void replacesSeasonTitlesOnlyWhenRefreshing() {
+        TreeMap<Integer, String> names = new TreeMap<>(Map.of(1, "Erste Staffel", 2, "Zweite Staffel"));
+        TvShowExtras current = new TvShowExtras(List.of(), List.of(), names);
+        TvShowResult scraped = TvShowResult.builder().title("Lost")
+                .seasons(List.of(new SeasonResult(1, "Saison 1", null, null), new SeasonResult(3, null, null, null)))
+                .build();
+
+        assertThat(TvShowScrapeMerger.fillShowExtras(current, scraped).seasonNames()).containsEntry(1, "Erste Staffel");
+        assertThat(TvShowScrapeMerger.refreshShowExtras(current, scraped).seasonNames())
+                .containsEntry(1, "Saison 1").containsEntry(2, "Zweite Staffel").doesNotContainKey(3);
+    }
+
     @Test
     void overlaysTheShowWithScrapedValuesButKeepsOwnFields() {
         TvShowResult scraped = TvShowResult.builder().title("Lost").premiered(LocalDate.of(2004, 9, 22)).year(2004)

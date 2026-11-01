@@ -76,6 +76,14 @@ export class TvShowService {
   }
 
   /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle, als Job. */
+  changeLanguage(
+    showIds: readonly number[],
+    language: string | null,
+    refetchTexts: boolean,
+  ): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/language`, { showIds, language, refetchTexts });
+  }
+
   autoScrapeAll(showIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/auto-scrape`, { showIds });
   }

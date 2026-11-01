@@ -121,6 +121,14 @@ export class MovieService {
   }
 
   /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle, als Job. */
+  changeLanguage(
+    movieIds: readonly number[],
+    language: string | null,
+    refetchTexts: boolean,
+  ): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/language`, { movieIds, language, refetchTexts });
+  }
+
   autoScrapeAll(movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${MOVIES_URL}/auto-scrape`, { movieIds });
   }

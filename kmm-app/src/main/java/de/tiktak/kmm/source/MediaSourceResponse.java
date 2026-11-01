@@ -13,10 +13,11 @@ public record MediaSourceResponse(
         String path,
         MediaType mediaType,
         Instant createdAt,
-        Instant lastScannedAt) {
+        Instant lastScannedAt,
+        String metadataLanguage) {
 
     static MediaSourceResponse from(MediaSource source) {
         return new MediaSourceResponse(source.getId(), source.getName(), source.getPath(), source.getMediaType(),
-                source.getCreatedAt(), source.getLastScannedAt());
+                source.getCreatedAt(), source.getLastScannedAt(), source.getMetadataLanguage());
     }
 }

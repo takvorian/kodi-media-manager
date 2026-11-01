@@ -36,7 +36,13 @@ describe('KodiHostsPage', () => {
     passwordSet: false,
     realtimeSync: false,
     pathMappings: [],
-    lastSync: { hostId: 4, host: 'Schlafzimmer', outcome: 'FAILED', message: 'nicht erreichbar.', at: '2026-10-25T20:00:00Z' },
+    lastSync: {
+      hostId: 4,
+      host: 'Schlafzimmer',
+      outcome: 'FAILED',
+      message: 'nicht erreichbar.',
+      at: '2026-10-25T20:00:00Z',
+    },
   };
   const films: MediaSource = {
     id: 1,
@@ -45,6 +51,7 @@ describe('KodiHostsPage', () => {
     mediaType: 'MOVIE',
     createdAt: '2026-10-25T10:00:00Z',
     lastScannedAt: null,
+    metadataLanguage: null,
   };
 
   let fixture: ComponentFixture<KodiHostsPage>;
@@ -60,7 +67,10 @@ describe('KodiHostsPage', () => {
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
         { provide: CONFIRM, useValue: () => confirmAnswer },
       ],
     });
@@ -135,7 +145,9 @@ describe('KodiHostsPage', () => {
       .expectOne(KODI_HOSTS_URL)
       .flush({ detail: 'kaputt' }, { status: 500, statusText: 'Server Error' });
     await fixture.whenStable();
-    expect(element().querySelector('.error')?.textContent).toContain('konnten nicht geladen werden');
+    expect(element().querySelector('.error')?.textContent).toContain(
+      'konnten nicht geladen werden',
+    );
   });
 
   it('creates a host with the source directories as suggestions', async () => {
@@ -209,7 +221,9 @@ describe('KodiHostsPage', () => {
     const request = httpTesting.expectOne({ method: 'PUT', url: `${KODI_HOSTS_URL}/3` });
     expect(request.request.body.password).toBeNull();
     expect(request.request.body.realtimeSync).toBe(false);
-    expect(request.request.body.pathMappings).toEqual([{ localPath: '/media/kinder', kodiPath: 'nfs://nas/kinder/' }]);
+    expect(request.request.body.pathMappings).toEqual([
+      { localPath: '/media/kinder', kodiPath: 'nfs://nas/kinder/' },
+    ]);
     request.flush({ detail: 'Name bereits vergeben' }, { status: 409, statusText: 'Conflict' });
     await fixture.whenStable();
 
@@ -238,7 +252,10 @@ describe('KodiHostsPage', () => {
     httpTesting.expectOne(`${KODI_HOSTS_URL}/3/test`).flush({ version: 'Kodi 21.2' });
     httpTesting
       .expectOne(`${KODI_HOSTS_URL}/4/test`)
-      .flush({ detail: 'Kodi unter kodi.local ist nicht erreichbar.' }, { status: 502, statusText: 'Bad Gateway' });
+      .flush(
+        { detail: 'Kodi unter kodi.local ist nicht erreichbar.' },
+        { status: 502, statusText: 'Bad Gateway' },
+      );
     await fixture.whenStable();
 
     expect(texts('.connection-result')).toEqual([

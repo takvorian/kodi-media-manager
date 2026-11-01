@@ -32,6 +32,7 @@ import { localDateTime } from '../shared/date-time';
 import { ExportMenu } from '../shared/export-menu';
 import { KodiService } from '../kodi/kodi.service';
 import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
+import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
@@ -57,6 +58,7 @@ const SAVED = 'saved:';
 @Component({
   selector: 'app-movie-list',
   imports: [
+    LanguageSelect,
     MatButtonModule,
     MatFormFieldModule,
     MatInputModule,
@@ -313,6 +315,15 @@ export class MovieList {
       return;
     }
     this.movieService.fillMissingTrailers(movieIds).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  /** Fragt, ob die Texte in der neuen Sprache neu geholt werden; die Sprache ändert sich in jedem Fall. */
+  protected changeChosenLanguage(language: string | null): void {
+    const refetchTexts = this.confirm(languageChangeQuestion(language, 'Titel und Inhaltsangaben'));
+    this.movieService.changeLanguage(this.chosenIds(), language, refetchTexts).subscribe({
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });

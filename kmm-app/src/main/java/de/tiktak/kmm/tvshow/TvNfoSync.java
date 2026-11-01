@@ -14,6 +14,7 @@ import org.springframework.stereotype.Component;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.TvShowNfo;
+import de.tiktak.kmm.settings.KmmSettings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -97,6 +98,9 @@ class TvNfoSync {
             extras = extras.withActors(withMissingActors(extras.actors(), show.extras().actors()));
         }
         show.applyMetadata(TvNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
+        if (KmmSettings.isMetadataLanguage(nfo.language())) {
+            show.changeMetadataLanguage(nfo.language());
+        }
         show.applyExtras(extras);
         if (nfo.trailer() != null) {
             show.changeTrailer(nfo.trailer());

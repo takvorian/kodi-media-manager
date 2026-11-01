@@ -19,6 +19,11 @@ export class MediaSourceService {
     return this.http.post<MediaSource>(SOURCES_URL, source);
   }
 
+  /** @param language Sprache oder {@code null}, dann gelten die Einstellungen. */
+  changeLanguage(sourceId: number, language: string | null): Observable<MediaSource> {
+    return this.http.put<MediaSource>(`${SOURCES_URL}/${sourceId}/language`, { language });
+  }
+
   delete(sourceId: number): Observable<void> {
     return this.http.delete<void>(`${SOURCES_URL}/${sourceId}`);
   }

@@ -51,11 +51,12 @@ class PluginManagerConfiguration {
                 () -> sharedSettings(settingsService.current()), apiKeyService::overlay));
     }
 
-    /** Sprachen und Episodenreihenfolge aus dem Einstellungsspeicher, für alle Plugins gleich. */
+    /** Sprachen und Episodenreihenfolge aus dem Einstellungsspeicher; {@link ScrapeLanguage} hat Vorrang. */
     static Map<String, String> sharedSettings(KmmSettings settings) {
+        String language = ScrapeLanguage.current();
         return Map.of(
-                LANGUAGE_SETTING, settings.metadataLanguage(),
-                TvShowScraper.TV_LANGUAGE_SETTING, settings.tv().metadataLanguage(),
+                LANGUAGE_SETTING, language != null ? language : settings.metadataLanguage(),
+                TvShowScraper.TV_LANGUAGE_SETTING, language != null ? language : settings.tv().metadataLanguage(),
                 TvShowScraper.EPISODE_ORDERING_SETTING, settings.tv().episodeOrdering().name());
     }
 

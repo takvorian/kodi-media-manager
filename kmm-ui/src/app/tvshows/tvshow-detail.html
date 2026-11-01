@@ -67,6 +67,16 @@
         <dt>Hinzugefügt</dt>
         <dd>{{ details.addedAt | date: 'short' }}</dd>
       </dl>
+      <app-language-select
+        class="language-select"
+        [value]="details.language"
+        defaultLabel="Standard (Quelle oder Einstellungen)"
+        [disabled]="!!scrapeJob() || !!languageJob()"
+        (chosen)="changeLanguage($event)"
+      />
+      @if (languageJob()) {
+        <p class="hint language-running">Die Sprache wird geändert …</p>
+      }
     </mat-card-content>
   </mat-card>
 

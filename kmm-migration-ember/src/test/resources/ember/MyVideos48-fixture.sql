@@ -158,6 +158,11 @@ INSERT INTO TVAStreams VALUES (1, 0, 'deu', 'AAC', '2', '128');
 INSERT INTO TVSubs VALUES (1, 0, 'eng', 'Embedded', '', 0);
 INSERT INTO TVVStreams VALUES (3, 0, '720', '576', 'mpeg4', '2580', 'interlaced', '1.333', '', '', '', '', '', '');
 
+ALTER TABLE movie ADD COLUMN Language TEXT;
+UPDATE movie SET Language = 'de-DE';
+UPDATE movie SET Language = 'en-US' WHERE idMovie = 2;
+ALTER TABLE tvshow ADD COLUMN Language TEXT;
+UPDATE tvshow SET Language = 'fr-FR';
 ALTER TABLE movie ADD COLUMN VideoSource TEXT;
 ALTER TABLE movie ADD COLUMN edition TEXT;
 ALTER TABLE movie ADD COLUMN Trailer TEXT;

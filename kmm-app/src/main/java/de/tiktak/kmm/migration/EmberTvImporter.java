@@ -76,7 +76,7 @@ class EmberTvImporter {
         Map<Long, Long> sourceIds = new HashMap<>();
         for (EmberTvShowSource source : sources) {
             String name = source.name() == null ? DEFAULT_SOURCE_NAME : source.name();
-            sourceImporter.importSource(name, source.path(), MediaType.TV_SHOW, paths, progress)
+            sourceImporter.importSource(name, source.path(), source.language(), MediaType.TV_SHOW, paths, progress)
                     .ifPresent(id -> sourceIds.put(source.id(), id));
         }
         return sourceIds;

@@ -1,12 +1,15 @@
 package de.tiktak.kmm.movie;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -27,6 +30,7 @@ import lombok.RequiredArgsConstructor;
 public class MovieScrapeService {
 
     private static final String IMDB = "imdb";
+    private static final String TMDB = "tmdb";
 
     private final ScraperRegistry scraperRegistry;
     private final MovieMetadataService metadataService;
@@ -43,9 +47,9 @@ public class MovieScrapeService {
         boolean customTitle = title != null && !title.isBlank();
         SearchQuery query = new SearchQuery(MediaType.MOVIE, customTitle ? title : current.title(),
                 customTitle ? year : current.year());
-        return call(scraper(scraperId), scraper -> scraper.search(query)).stream()
+        return inLanguageOf(movieId, () -> call(scraper(scraperId), scraper -> scraper.search(query)).stream()
                 .map(ScrapeCandidate::from)
-                .toList();
+                .toList());
     }
 
     /**
@@ -53,10 +57,12 @@ public class MovieScrapeService {
      */
     public MovieScrapeProposal proposal(long movieId, String scraperId, String providerId) {
         MovieMetadata current = metadataService.findDetails(movieId).metadata();
-        MetadataScraper scraper = scraper(scraperId);
-        MetadataResult scraped = call(scraper, s -> s.fetch(providerId))
-                .orElseThrow(() -> ScraperProblemException.notFoundAtProvider(scraper, providerId));
-        return new MovieScrapeProposal(ScrapedMetadataMerger.merge(current, scraped), scraped.collection());
+        return inLanguageOf(movieId, () -> {
+            MetadataScraper scraper = scraper(scraperId);
+            MetadataResult scraped = call(scraper, s -> s.fetch(providerId))
+                    .orElseThrow(() -> ScraperProblemException.notFoundAtProvider(scraper, providerId));
+            return new MovieScrapeProposal(ScrapedMetadataMerger.merge(current, scraped), scraped.collection());
+        });
     }
 
     /**
@@ -81,21 +87,56 @@ public class MovieScrapeService {
         if (current.tmdbId() != null) {
             return MetadataScrapeOutcome.ALREADY_IDENTIFIED;
         }
-        Optional<MetadataScraper> scraper = preferredReadyScraper();
-        if (scraper.isEmpty()) {
-            return MetadataScrapeOutcome.NO_SCRAPER;
-        }
-        Map<String, String> knownIds = current.imdbId() == null ? Map.of() : Map.of(IMDB, current.imdbId());
-        ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, current.title(), current.year(), knownIds);
-        Optional<MetadataResult> scraped = call(scraper.get(), s -> s.scrape(request));
-        if (scraped.isEmpty()) {
-            return MetadataScrapeOutcome.NO_MATCH;
-        }
-        metadataService.update(movieId, ScrapedMetadataMerger.merge(current, scraped.get()));
-        if (scraped.get().collection() != null) {
-            assignCollection(movieId, scraped.get().collection());
-        }
-        return MetadataScrapeOutcome.SCRAPED;
+        return inLanguageOf(movieId, () -> {
+            Optional<MetadataScraper> scraper = preferredReadyScraper();
+            if (scraper.isEmpty()) {
+                return MetadataScrapeOutcome.NO_SCRAPER;
+            }
+            Map<String, String> knownIds = current.imdbId() == null ? Map.of() : Map.of(IMDB, current.imdbId());
+            ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, current.title(), current.year(), knownIds);
+            Optional<MetadataResult> scraped = call(scraper.get(), s -> s.scrape(request));
+            if (scraped.isEmpty()) {
+                return MetadataScrapeOutcome.NO_MATCH;
+            }
+            metadataService.update(movieId, ScrapedMetadataMerger.merge(current, scraped.get()));
+            metadataService.storeLanguageInNfo(movieId);
+            if (scraped.get().collection() != null) {
+                assignCollection(movieId, scraped.get().collection());
+            }
+            return MetadataScrapeOutcome.SCRAPED;
+        });
+    }
+
+    /**
+     * Holt Titel und Texte des Films neu in seiner Sprache und überschreibt die vorhandenen, auch von Hand geänderte.
+     * Was der Anbieter in dieser Sprache nicht hat, bleibt.
+     *
+     * @return ob sich etwas geändert hat
+     * @throws ScraperProblemException wenn kein Anbieter eingerichtet ist, er einen Fehler meldet oder den Film nicht
+     *                                 eindeutig findet
+     */
+    public boolean refetchTexts(long movieId) {
+        MovieMetadata current = metadataService.findDetails(movieId).metadata();
+        return inLanguageOf(movieId, () -> {
+            MetadataScraper scraper = preferredReadyScraper().orElseThrow(ScraperProblemException::noMetadataScraper);
+            Map<String, String> knownIds = new HashMap<>();
+            Optional.ofNullable(current.imdbId()).ifPresent(id -> knownIds.put(IMDB, id));
+            Optional.ofNullable(current.tmdbId()).ifPresent(id -> knownIds.put(TMDB, id));
+            ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, current.title(), current.year(), knownIds);
+            MetadataResult scraped = call(scraper, s -> s.scrape(request))
+                    .orElseThrow(() -> ScraperProblemException.notIdentified(scraper, current.title()));
+            MovieMetadata merged = ScrapedMetadataMerger.merge(current, scraped);
+            if (merged.equals(current)) {
+                return false;
+            }
+            metadataService.update(movieId, merged);
+            metadataService.storeLanguageInNfo(movieId);
+            return true;
+        });
+    }
+
+    private <T> T inLanguageOf(long movieId, Supplier<T> body) {
+        return ScrapeLanguage.with(metadataService.scrapeLanguage(movieId), body);
     }
 
     /** Der konfigurierte Scraper, sonst der erste eingerichtete. */

@@ -24,17 +24,19 @@ class EmberSourceImporter {
 
     /**
      * @param emberPath Verzeichnis, wie Ember es gespeichert hat, oder {@code null}
+     * @param language  Sprache der Quelle in Ember oder {@code null}
      * @return ID der Quelle in KMM; leer, wenn die Quelle nicht übernommen werden konnte
      */
-    Optional<Long> importSource(String name, String emberPath, MediaType mediaType, EmberPathTranslator paths,
-            EmberImportProgress progress) {
+    Optional<Long> importSource(String name, String emberPath, String language, MediaType mediaType,
+            EmberPathTranslator paths, EmberImportProgress progress) {
         Optional<String> directory = emberPath == null ? Optional.empty() : paths.translate(emberPath);
         if (directory.isEmpty()) {
             progress.sourceSkipped("%s (%s): keine gültige Pfad-Zuordnung auf diesem System".formatted(name, emberPath));
             return Optional.empty();
         }
         try {
-            ImportedSource imported = sourceService.importSource(name, directory.get(), mediaType);
+            ImportedSource imported = sourceService.importSource(name, directory.get(), mediaType,
+                    EmberMappings.language(language));
             progress.sourceImported(imported.created());
             if (!Files.isDirectory(Path.of(directory.get()))) {
                 progress.warn("Das Verzeichnis %s der Quelle „%s“ ist derzeit nicht erreichbar."

@@ -19,6 +19,7 @@ import lombok.Builder;
  * @param status       z. B. {@code Continuing} oder {@code Ended}
  * @param seasonTitles Staffeltitel nach Staffelnummer
  * @param userRating   eigene Bewertung oder {@code null}, wenn keine vergeben ist
+ * @param language     Sprache der Serie, z. B. {@code de-DE}, oder {@code null}
  */
 @Builder
 public record EmberTvShow(
@@ -40,7 +41,8 @@ public record EmberTvShow(
         List<EmberActor> actors,
         List<EmberRating> ratings,
         SortedMap<Integer, String> seasonTitles,
-        Integer userRating) {
+        Integer userRating,
+        String language) {
 
     public EmberTvShow {
         uniqueIds = uniqueIds == null ? Map.of() : Map.copyOf(uniqueIds);

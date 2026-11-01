@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieMetadata;
@@ -65,7 +66,8 @@ public class ArtworkService {
         if (uniqueIds.isEmpty()) {
             throw ArtworkProblemException.missingIds();
         }
-        return candidateFinder.find(type, metadata.title(), metadata.year(), uniqueIds);
+        return ScrapeLanguage.with(metadataService.scrapeLanguage(movieId),
+                () -> candidateFinder.find(type, metadata.title(), metadata.year(), uniqueIds));
     }
 
     /**
@@ -97,8 +99,9 @@ public class ArtworkService {
         if (missing.isEmpty() || uniqueIds.isEmpty()) {
             return new ArtworkFillResult(0, List.of());
         }
-        ArtworkSearch search = candidateFinder.findAll(MediaType.MOVIE, movie.metadata().title(),
-                movie.metadata().year(), uniqueIds);
+        ArtworkSearch search = ScrapeLanguage.with(metadataService.scrapeLanguage(movieId),
+                () -> candidateFinder.findAll(MediaType.MOVIE, movie.metadata().title(), movie.metadata().year(),
+                        uniqueIds));
         List<String> warnings = new ArrayList<>(search.warnings());
         int saved = 0;
         for (ImageType type : missing) {

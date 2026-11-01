@@ -24,6 +24,8 @@ import { SettingsService } from '../settings/settings.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
 import { ScrapeReport } from '../sources/scrape-report';
 import { CONFIRM } from '../shared/confirm';
+import { batchSummary } from '../filters/batch';
+import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
 import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
@@ -49,7 +51,7 @@ import {
   toTvShowMetadata,
 } from './tvshow-forms';
 import { TvShowArtworkService } from './tvshow-artwork.service';
-import { tvShowScrapeJobKey } from './tvshow-batch';
+import { TVSHOW_BATCH_JOB_KEY, tvShowScrapeJobKey } from './tvshow-batch';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 
@@ -65,6 +67,7 @@ export interface SeasonWithEpisodes {
   selector: 'app-tvshow-detail',
   imports: [
     DatePipe,
+    LanguageSelect,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -132,6 +135,11 @@ export class TvShowDetail {
   protected readonly scrapeReport = signal<Job | null>(null);
   /** Zählt beendete Läufe; Titelmusik und Bilder laden selbst und werden damit neu aufgebaut. */
   protected readonly scrapeRuns = signal(0);
+  private readonly changingLanguage = signal(false);
+  /** Der Sprachwechsel dieser Ansicht; das Formular wird danach neu geladen. */
+  protected readonly languageJob = computed(() =>
+    this.changingLanguage() ? this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY) : undefined,
+  );
   /** Übernommener Treffer, dessen Episodendaten beim nächsten Speichern ergänzt werden. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
@@ -147,12 +155,22 @@ export class TvShowDetail {
     });
     // Am Ende wird das Formular neu geladen; Eingaben während des Laufs gingen dabei verloren.
     effect(() => {
-      if (this.scrapeJob()) {
+      if (this.scrapeJob() || this.languageJob()) {
         this.form.disable();
       } else {
         this.form.enable();
       }
     });
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key === TVSHOW_BATCH_JOB_KEY && this.changingLanguage()),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.changingLanguage.set(false);
+        this.notify(batchSummary(job));
+        this.show.reload();
+      });
     this.jobStore.completed
       .pipe(
         filter((job) => job.key === tvShowScrapeJobKey(this.id())),
@@ -247,6 +265,25 @@ export class TvShowDetail {
       },
       error: (error: unknown) => {
         this.loadingMissing.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
+  /** Fragt, ob die Texte in der neuen Sprache neu geholt werden; die Sprache ändert sich in jedem Fall. */
+  protected changeLanguage(language: string | null): void {
+    if (this.form.dirty) {
+      this.notify('Bitte die Änderungen zuerst speichern.');
+      return;
+    }
+    const refetchTexts = this.confirm(
+      languageChangeQuestion(language, 'Titel, Inhaltsangaben und Episodennamen'),
+    );
+    this.changingLanguage.set(true);
+    this.tvShowService.changeLanguage([this.id()], language, refetchTexts).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => {
+        this.changingLanguage.set(false);
         this.notify(problemMessage(error));
       },
     });

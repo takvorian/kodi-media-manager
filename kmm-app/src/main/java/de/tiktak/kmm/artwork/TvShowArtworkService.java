@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.TvShowFiles;
@@ -78,7 +79,8 @@ public class TvShowArtworkService {
         if (uniqueIds.isEmpty()) {
             throw ArtworkProblemException.missingTvIds();
         }
-        ArtworkSearch search = candidateFinder.findAll(MediaType.TV_SHOW, metadata.title(), metadata.year(), uniqueIds);
+        ArtworkSearch search = ScrapeLanguage.with(metadataService.scrapeLanguage(showId),
+                () -> candidateFinder.findAll(MediaType.TV_SHOW, metadata.title(), metadata.year(), uniqueIds));
         return new ArtworkCandidates(search.candidatesOf(type, season), search.warnings());
     }
 
@@ -124,8 +126,9 @@ public class TvShowArtworkService {
                     continue;
                 }
                 if (search == null) {
-                    search = candidateFinder.findAll(MediaType.TV_SHOW, show.metadata().title(),
-                            show.metadata().year(), uniqueIds);
+                    search = ScrapeLanguage.with(metadataService.scrapeLanguage(showId),
+                            () -> candidateFinder.findAll(MediaType.TV_SHOW, show.metadata().title(),
+                                    show.metadata().year(), uniqueIds));
                     warnings.addAll(search.warnings());
                 }
                 if (ArtworkDownloads.saveFirstLoadable(downloader, type, search.candidatesOf(type, season),

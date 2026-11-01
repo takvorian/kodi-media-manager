@@ -70,7 +70,8 @@ public class NfoReader {
                 NfoDocuments.text(movie, NfoElements.VIDEO_SOURCE),
                 NfoDocuments.texts(movie, NfoElements.GENRE),
                 uniqueIds,
-                NfoSupplementReader.read(movie));
+                NfoSupplementReader.read(movie),
+                NfoDocuments.text(movie, NfoElements.LANGUAGE));
     }
 
     static Map<String, String> uniqueIds(Element movie) {

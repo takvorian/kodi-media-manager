@@ -14,13 +14,16 @@ describe('MediaSourceService', () => {
     mediaType: 'MOVIE',
     createdAt: '2026-10-25T10:00:00Z',
     lastScannedAt: null,
+    metadataLanguage: null,
   };
 
   let service: MediaSourceService;
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(MediaSourceService);
     httpTesting = TestBed.inject(HttpTestingController);
   });
@@ -37,7 +40,12 @@ describe('MediaSourceService', () => {
   });
 
   it('creates a source', () => {
-    const command = { name: 'Filme', path: '/media/filme', mediaType: 'MOVIE' as const };
+    const command = {
+      name: 'Filme',
+      path: '/media/filme',
+      mediaType: 'MOVIE' as const,
+      metadataLanguage: 'de-DE',
+    };
 
     service.create(command).subscribe();
     const request = httpTesting.expectOne({ method: 'POST', url: SOURCES_URL });
@@ -46,10 +54,20 @@ describe('MediaSourceService', () => {
     expect(request.request.body).toEqual(command);
   });
 
+  it('changes the language of a source', () => {
+    service.changeLanguage(7, null).subscribe();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: `${SOURCES_URL}/7/language` });
+    expect(request.request.body).toEqual({ language: null });
+    request.flush(source);
+  });
+
   it('deletes a source', () => {
     service.delete(7).subscribe();
 
-    httpTesting.expectOne({ method: 'DELETE', url: `${SOURCES_URL}/7` }).flush(null, { status: 204, statusText: 'No Content' });
+    httpTesting
+      .expectOne({ method: 'DELETE', url: `${SOURCES_URL}/7` })
+      .flush(null, { status: 204, statusText: 'No Content' });
   });
 
   it('starts a scan job', () => {

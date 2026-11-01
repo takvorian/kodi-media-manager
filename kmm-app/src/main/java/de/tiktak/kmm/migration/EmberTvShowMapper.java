@@ -52,7 +52,7 @@ final class EmberTvShowMapper {
                 show.uniqueIds().get(IMDB),
                 EmberMappings.userRating(show.userRating())).withinLimits();
         TvShowExtras extras = new TvShowExtras(actors(show.actors()), ratings(show.ratings()), show.seasonTitles());
-        return new TvShowImport(sourceId, directoryPath, metadata, extras);
+        return new TvShowImport(sourceId, directoryPath, metadata, extras, EmberMappings.language(show.language()));
     }
 
     /**

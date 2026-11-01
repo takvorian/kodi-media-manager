@@ -116,6 +116,10 @@ public class Movie {
     @Column(name = "imdb_id", length = 16)
     private String imdbId;
 
+    /** Sprache beim Scrapen; ohne Angabe gilt die der Quelle, sonst die der Einstellungen. */
+    @Column(name = "metadata_language", length = 16)
+    private String metadataLanguage;
+
     @Column(name = "tmdb_id", length = 16)
     private String tmdbId;
 
@@ -263,6 +267,13 @@ public class Movie {
             imdbId = nameImdbId;
         }
         return fillYear || fillImdbId;
+    }
+
+    /** @return ob sich die Sprache geändert hat */
+    boolean changeMetadataLanguage(String language) {
+        boolean changed = !Objects.equals(metadataLanguage, language);
+        metadataLanguage = language;
+        return changed;
     }
 
     public MovieSupplement supplement() {

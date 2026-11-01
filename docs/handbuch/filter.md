@@ -57,5 +57,6 @@ Die NFOs werden geschrieben, und Kodi liest die Einträge neu ein. Umbenannt wir
 - **Fehlende Titelmusik holen**
 - **Bewertungen aktualisieren**
 - **In Kodi aktualisieren**, siehe [Kodi](kodi.md#von-hand-aktualisieren)
+- **Sprache ändern**, siehe [Sprache je Eintrag](scrapen.md#sprache-je-quelle-und-eintrag)
 
 Mehr dazu unter [Scrapen](scrapen.md).

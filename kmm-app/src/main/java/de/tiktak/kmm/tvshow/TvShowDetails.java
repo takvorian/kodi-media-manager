@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
  * @param seasons  Staffeln mit Titel und Anzahl der Episoden, aufsteigend
  * @param episodes Episoden nach Staffel und Nummer
  * @param trailer  Trailer-Link oder {@code null}
+ * @param language eigene Sprache oder {@code null}, dann gilt die der Quelle bzw. der Einstellungen
  */
 public record TvShowDetails(
         long id,
@@ -23,7 +24,8 @@ public record TvShowDetails(
         List<Season> seasons,
         List<EpisodeSummary> episodes,
         TvNfoInfo nfo,
-        String trailer) {
+        String trailer,
+        String language) {
 
     static TvShowDetails from(TvShow show, List<Episode> episodes, TvNfoInfo nfo) {
         TvShowExtras extras = show.extras();
@@ -36,7 +38,7 @@ public record TvShowDetails(
                 .toList();
         return new TvShowDetails(show.getId(), show.getSourceId(), show.getDirectoryPath(), show.getAddedAt(),
                 show.metadata(), extras, seasons, episodes.stream().map(EpisodeSummary::from).toList(), nfo,
-                show.getTrailer());
+                show.getTrailer(), show.getMetadataLanguage());
     }
 
     /**

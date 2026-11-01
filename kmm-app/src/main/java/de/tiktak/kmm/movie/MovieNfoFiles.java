@@ -9,6 +9,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.nfo.LanguageNfoWriter;
 import de.tiktak.kmm.nfo.MovieNfo;
 import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
@@ -37,6 +38,7 @@ class MovieNfoFiles {
     private final PlaybackNfoWriter playbackWriter = new PlaybackNfoWriter();
     private final StreamDetailsNfoWriter streamDetailsWriter = new StreamDetailsNfoWriter();
     private final TrailerNfoWriter trailerWriter = new TrailerNfoWriter();
+    private final LanguageNfoWriter languageWriter = new LanguageNfoWriter();
 
     Optional<NfoFileState> find(CompanionFiles companionFiles) {
         return companionFiles.nfoCandidates().stream()
@@ -97,6 +99,19 @@ class MovieNfoFiles {
      */
     NfoFileState writeTrailer(NfoFileState nfoFile, String trailer) {
         trailerWriter.writeMovie(nfoFile.file(), trailer);
+        return state(nfoFile.file())
+                .orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + nfoFile.file()));
+    }
+
+    /**
+     * Ändert nur die Sprache in der vorhandenen NFO; alles andere bleibt Zeichen für Zeichen.
+     *
+     * @param language Sprache oder {@code null}, um sie zu entfernen
+     * @return Zustand der geschriebenen Datei
+     * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
+     */
+    NfoFileState writeLanguage(NfoFileState nfoFile, String language) {
+        languageWriter.writeMovie(nfoFile.file(), language);
         return state(nfoFile.file())
                 .orElseThrow(() -> new IllegalStateException("Written NFO is missing: " + nfoFile.file()));
     }

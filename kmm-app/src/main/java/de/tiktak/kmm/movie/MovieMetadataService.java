@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -29,6 +30,7 @@ public class MovieMetadataService {
     private final MovieNfoSync nfoSync;
     private final Clock clock;
     private final ApplicationEventPublisher events;
+    private final MediaSourceService sourceService;
 
     public MovieDetails findDetails(long movieId) {
         Movie movie = require(movieId);
@@ -76,6 +78,51 @@ public class MovieMetadataService {
         movie.markNfoSynchronized(written.modifiedAt());
         events.publishEvent(new MovieFilesChangedEvent(movieId));
         return true;
+    }
+
+    /** Die Sprache für das Scrapen dieses Films; {@code null} heißt: die der Einstellungen. */
+    public String scrapeLanguage(long movieId) {
+        Movie movie = require(movieId);
+        return movie.getMetadataLanguage() != null ? movie.getMetadataLanguage()
+                : sourceService.languageOf(movie.getSourceId());
+    }
+
+    /**
+     * Ändert die eigene Sprache des Films in Datenbank und NFO. Eine außerhalb von KMM geänderte NFO wird vorher
+     * eingelesen.
+     *
+     * @param language Sprache oder {@code null}, dann gilt die der Quelle bzw. der Einstellungen
+     * @return ob sich etwas geändert hat
+     */
+    @Transactional
+    public boolean changeLanguage(long movieId, String language) {
+        Movie movie = require(movieId);
+        nfoSync.refreshIfChangedOutside(movie);
+        if (!movie.changeMetadataLanguage(language)) {
+            return false;
+        }
+        writeLanguage(movie);
+        log.info("Language of movie {} set to {}", movieId, language);
+        return true;
+    }
+
+    /** Trägt eine eigene Sprache in eine eben erst angelegte NFO ein. */
+    @Transactional
+    public void storeLanguageInNfo(long movieId) {
+        Movie movie = require(movieId);
+        if (movie.getMetadataLanguage() != null) {
+            writeLanguage(movie);
+        }
+    }
+
+    private void writeLanguage(Movie movie) {
+        nfoFiles.find(movie.companionFiles()).ifPresent(nfo -> {
+            try {
+                movie.markNfoSynchronized(nfoFiles.writeLanguage(nfo, movie.getMetadataLanguage()).modifiedAt());
+            } catch (NfoException e) {
+                throw new NfoNotWritableException(e);
+            }
+        });
     }
 
     private NfoFileState writeNfo(Movie movie, MovieMetadata metadata) {

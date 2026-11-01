@@ -37,6 +37,15 @@ class EmberMovieMapperTest {
     Path library;
 
     @Test
+    void takesAValidLanguageAndIgnoresOthers() {
+        assertThat(EmberMovieMapper.toImport(heat().language("fr-FR").build(), 7, file("Heat.mkv"), SETS, BERLIN)
+                .language()).isEqualTo("fr-FR");
+        assertThat(EmberMovieMapper.toImport(heat().language("German").build(), 7, file("Heat.mkv"), SETS, BERLIN)
+                .language()).isNull();
+        assertThat(EmberMovieMapper.toImport(heat().build(), 7, file("Heat.mkv"), SETS, BERLIN).language()).isNull();
+    }
+
+    @Test
     void mapsMetadataAndConvertsGermanCertification() {
         EmberMovie heat = heat().build();
 

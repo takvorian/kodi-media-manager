@@ -21,4 +21,14 @@ class PluginManagerConfigurationTest {
                 "tv-language", "en-US",
                 "episode-ordering", "DVD"));
     }
+
+    @Test
+    void givesTheLanguageOfTheProcessPrecedence() {
+        KmmSettings settings = KmmSettings.DEFAULTS.withTv(new TvSettings("en-US", "en", EpisodeOrdering.DVD));
+
+        Map<String, String> shared = ScrapeLanguage.with("fr-FR", () -> PluginManagerConfiguration.sharedSettings(settings));
+
+        assertThat(shared).containsEntry("language", "fr-FR").containsEntry("tv-language", "fr-FR")
+                .containsEntry("episode-ordering", "DVD");
+    }
 }

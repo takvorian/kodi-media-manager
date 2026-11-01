@@ -20,7 +20,7 @@ public class TrailerNfoWriter {
      * @throws NfoException wenn die NFO fehlt, keinen Film enthält oder nicht geschrieben werden kann
      */
     public void writeMovie(Path nfoFile, String trailer) {
-        write(nfoFile, NfoElements.MOVIE, trailer);
+        writeElement(nfoFile, NfoElements.MOVIE, NfoElements.TRAILER, trailer);
     }
 
     /**
@@ -28,35 +28,40 @@ public class TrailerNfoWriter {
      * @throws NfoException wenn die NFO fehlt, keine Serie enthält oder nicht geschrieben werden kann
      */
     public void writeTvShow(Path nfoFile, String trailer) {
-        write(nfoFile, NfoElements.TV_SHOW, trailer);
+        writeElement(nfoFile, NfoElements.TV_SHOW, NfoElements.TRAILER, trailer);
     }
 
-    private static void write(Path nfoFile, String rootName, String trailer) {
+    /**
+     * Setzt oder entfernt ein einzelnes Element direkt unter der Wurzel.
+     *
+     * @param newValue neuer Text oder {@code null} bzw. leer, um das Element zu entfernen
+     */
+    static void writeElement(Path nfoFile, String rootName, String elementName, String newValue) {
         Element container = NfoFileWriter.existingRoots(nfoFile, rootName)
                 .orElseThrow(() -> NfoException.missingEntry(nfoFile));
-        String value = trailer == null || trailer.isBlank() ? null : trailer.strip();
+        String value = newValue == null || newValue.isBlank() ? null : newValue.strip();
         Optional<NfoTextEditor> editor = NfoTextEditor.open(nfoFile);
-        if (editor.isPresent() && editor.get().setChildText(rootName, 0, NfoElements.TRAILER, value)
-                && carries(editor.get().text(), rootName, value)) {
+        if (editor.isPresent() && editor.get().setChildText(rootName, 0, elementName, value)
+                && carries(editor.get().text(), rootName, elementName, value)) {
             editor.get().write(nfoFile);
             return;
         }
         Element root = NfoDocuments.children(container, rootName).getFirst();
-        NfoDomEditor.setText(container.getOwnerDocument(), root, NfoElements.TRAILER, value);
+        NfoDomEditor.setText(container.getOwnerDocument(), root, elementName, value);
         NfoFileWriter.write(nfoFile, List.of(root));
     }
 
-    /** Ob der bearbeitete Text gültig ist und genau den neuen Trailer trägt. */
-    private static boolean carries(String text, String rootName, String value) {
+    /** Ob der bearbeitete Text gültig ist und genau den neuen Wert trägt. */
+    private static boolean carries(String text, String rootName, String elementName, String value) {
         try {
             List<Element> roots = NfoFileWriter.parseRoots(text, rootName)
                     .map(container -> NfoDocuments.children(container, rootName)).orElse(List.of());
             if (roots.isEmpty()) {
                 return false;
             }
-            List<Element> trailers = NfoDocuments.children(roots.getFirst(), NfoElements.TRAILER);
-            return value == null ? trailers.isEmpty()
-                    : trailers.size() == 1 && value.equals(trailers.getFirst().getTextContent());
+            List<Element> elements = NfoDocuments.children(roots.getFirst(), elementName);
+            return value == null ? elements.isEmpty()
+                    : elements.size() == 1 && value.equals(elements.getFirst().getTextContent());
         } catch (IOException | SAXException e) {
             return false;
         }

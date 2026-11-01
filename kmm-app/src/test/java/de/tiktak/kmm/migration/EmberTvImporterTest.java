@@ -91,7 +91,8 @@ class EmberTvImporterTest {
         verify(session, times(2)).importEpisode(eq(IMPORTED), episodeImport.capture());
         assertThat(episodeImport.getAllValues()).extracting(EpisodeImport::filePath)
                 .containsOnly(series.resolve("Lost").resolve("Lost S01.mkv").toString());
-        verify(sourceService).importSource("Serien", series.toString(), MediaType.TV_SHOW);
+        verify(sourceService).importSource("Serien", series.toString(), MediaType.TV_SHOW, "de-DE");
+        assertThat(showImport.getValue().language()).isEqualTo("fr-FR");
     }
 
     @Test
@@ -103,7 +104,7 @@ class EmberTvImporterTest {
 
         assertThat(report.showsSkipped()).isEqualTo(1);
         assertThat(report.episodesSkipped()).as("auch Episoden einer unbekannten Serie").isEqualTo(2);
-        verify(sourceService, never()).importSource(anyString(), anyString(), any());
+        verify(sourceService, never()).importSource(anyString(), anyString(), any(), any());
         verify(session, never()).importShow(any());
     }
 
@@ -176,7 +177,7 @@ class EmberTvImporterTest {
     private void givenSource() {
         MediaSource source = new MediaSource("Serien", series.toString(), MediaType.TV_SHOW);
         ReflectionTestUtils.setField(source, "id", 11L);
-        when(sourceService.importSource(anyString(), anyString(), eq(MediaType.TV_SHOW)))
+        when(sourceService.importSource(anyString(), anyString(), eq(MediaType.TV_SHOW), any()))
                 .thenReturn(new ImportedSource(source, true));
     }
 
@@ -189,7 +190,8 @@ class EmberTvImporterTest {
     }
 
     private static EmberTvShow show(long id, long sourceId) {
-        return EmberTvShow.builder().id(id).sourceId(sourceId).path(EMBER_ROOT + "\\Lost").title("Lost").build();
+        return EmberTvShow.builder().id(id).sourceId(sourceId).path(EMBER_ROOT + "\\Lost").title("Lost")
+                .language("fr-FR").build();
     }
 
     private static EmberEpisode episode(long showId, int number) {

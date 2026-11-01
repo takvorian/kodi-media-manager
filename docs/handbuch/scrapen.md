@@ -11,6 +11,23 @@
 
 Bei Serien gehst du genauso vor. Mehrere neue Einträge bearbeitest du am schnellsten in der Liste: Filter **Neu (letzte 30 Tage)** wählen, **Alle gefilterten auswählen**, **Scrapen**.
 
+## Sprache je Quelle und Eintrag
+
+In welcher Sprache Texte und Episodennamen kommen, legst du an drei Stellen fest. Es gilt die erste, die etwas angibt:
+
+1. **Film oder Serie:** In der Film- oder Serienansicht unter **Sprache**, für mehrere in der Liste über die Auswahl mit **Sprache ändern**. Episoden folgen ihrer Serie.
+2. **Quelle:** in der Spalte **Sprache** auf der Seite [Quellen](quellen.md).
+3. **[Einstellungen](einstellungen.md#sprache)**.
+
+Wechselst du die Sprache bei einem Film oder einer Serie, fragt KMM, ob die Texte sofort in dieser Sprache neu geholt werden sollen:
+
+- **OK** überschreibt Titel, Inhaltsangabe und Genres, bei Serien auch Staffeltitel und Episodennamen. **Auch von Hand geänderte Texte gehen dabei verloren.** Hat der Anbieter einen Text in dieser Sprache nicht, bleibt der alte oder es kommt der Text in der Originalsprache. Die Kurzfassung und der Sortiertitel bleiben unverändert. Ein noch nicht zugeordneter Eintrag wird nur bei eindeutigem Treffer übernommen, sonst steht er am Ende als Fehler im Hinweis.
+- **Abbrechen** ändert nur die Sprache. Vorhandene Texte bleiben, die neue Sprache gilt ab dem nächsten Scrapen für leere Felder.
+
+Umbenannt wird dabei nichts, auch wenn sich der Titel ändert. Die Sprache einer Quelle zu ändern, ändert keine vorhandenen Texte.
+
+Die Sprache steht auch in der NFO als `<language>`, wie bei Ember. Sie bestimmt außerdem, welche Bilder und Trailer zuerst vorgeschlagen werden. Moviepilot, OFDb und OMDb liefern immer in ihrer eigenen Sprache und füllen leere Felder ohne Rücksicht auf diese Einstellung.
+
 ## Die Anbieter
 
 | Anbieter | Liefert | Key nötig |

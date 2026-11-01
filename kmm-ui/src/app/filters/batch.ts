@@ -38,7 +38,9 @@ export function batchSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as BatchResult;
     const failed =
-      result.failed > 0 ? `, ${result.failed} Fehler: ${result.failures.join('; ')}` : '';
+      result.failed > 0
+        ? `, ${result.failed} Fehler: ${result.failures.join('; ').replace(/\.$/, '')}`
+        : '';
     return `${job.title}: ${result.changed} geändert, ${result.unchanged} unverändert${failed}.`;
   }
   return job.status === 'CANCELLED'

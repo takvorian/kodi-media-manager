@@ -97,6 +97,10 @@ public class TvShow {
     @Column(name = "imdb_id", length = 16)
     private String imdbId;
 
+    /** Sprache beim Scrapen, auch für die Episoden; ohne Angabe gilt die der Quelle, sonst die der Einstellungen. */
+    @Column(name = "metadata_language", length = 16)
+    private String metadataLanguage;
+
     @Column(name = "user_rating")
     private Integer userRating;
 
@@ -186,6 +190,13 @@ public class TvShow {
         if (imdbId == null) {
             imdbId = nameImdbId;
         }
+    }
+
+    /** @return ob sich die Sprache geändert hat */
+    boolean changeMetadataLanguage(String language) {
+        boolean changed = !Objects.equals(metadataLanguage, language);
+        metadataLanguage = language;
+        return changed;
     }
 
     void applyMetadata(TvShowMetadata metadata) {

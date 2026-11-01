@@ -17,6 +17,7 @@ import lombok.Builder;
  * @param sets       Zugehörigkeit zu Filmsets
  * @param streams    Video-, Ton- und Untertitelspuren
  * @param userRating eigene Bewertung oder {@code null}, wenn keine vergeben ist
+ * @param language   Sprache des Films, z. B. {@code de-DE}, oder {@code null}
  * @param trailer    Trailer-Link, z. B. {@code plugin://plugin.video.youtube/…}, oder {@code null}
  */
 @Builder
@@ -51,7 +52,8 @@ public record EmberMovie(
         Integer userRating,
         String edition,
         String videoSource,
-        String trailer) {
+        String trailer,
+        String language) {
 
     public EmberMovie {
         uniqueIds = uniqueIds == null ? Map.of() : Map.copyOf(uniqueIds);

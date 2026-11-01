@@ -7,6 +7,7 @@ import java.util.Optional;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.settings.SettingsService;
@@ -38,8 +39,9 @@ public class TvShowTrailerService {
         if (ids.isEmpty()) {
             throw TvShowProblemException.missingIdsForTrailers();
         }
-        return trailerFinder.find(new ScrapeRequest(MediaType.TV_SHOW, show.getTitle(), show.getReleaseYear(), ids),
-                settingsService.current().tv().artworkLanguage());
+        return ScrapeLanguage.with(metadataService.scrapeLanguage(showId), () -> trailerFinder.find(
+                new ScrapeRequest(MediaType.TV_SHOW, show.getTitle(), show.getReleaseYear(), ids),
+                ScrapeLanguage.preferredImageLanguage(settingsService.current().tv().artworkLanguage())));
     }
 
     /**

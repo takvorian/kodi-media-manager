@@ -19,6 +19,7 @@ Hier trägst du ein, wo Embers Quellen aus Sicht von KMM liegen. Läuft KMM auf 
 Darunter wählst du, was du übernehmen willst:
 
 - **Serien und Episoden:** Episoden ohne Datei bleiben außen vor.
+- **Sprachen:** die jeder Quelle, jedes Films und jeder Serie, siehe [Sprache je Eintrag](scrapen.md#sprache-je-quelle-und-eintrag). Eine vorhandene Quelle behält eine eigene Sprache. Bereits importierte Einträge bekommen sie durch einen neuen Import.
 - **Einstellungen:** Sprache, Dateiendungen, ausgeschlossene Ordner und Proxy. Das Proxy-Passwort wird nicht übernommen.
 - **Kodi-Geräte** mit Zugangsdaten. Ihre Pfade laufen über die Zuordnung oben.
 

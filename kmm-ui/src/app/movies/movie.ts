@@ -117,4 +117,6 @@ export interface MovieDetails {
   readonly nfo: NfoInfo;
   /** Trailer-Link der NFO, den Kodi abspielt. */
   readonly trailer: string | null;
+  /** Eigene Sprache; ohne Angabe gilt die der Quelle bzw. der Einstellungen. */
+  readonly language: string | null;
 }

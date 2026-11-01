@@ -32,6 +32,7 @@ import { localDateTime } from '../shared/date-time';
 import { ExportMenu } from '../shared/export-menu';
 import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { KodiService } from '../kodi/kodi.service';
+import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
@@ -51,6 +52,7 @@ const SAVED = 'saved:';
 @Component({
   selector: 'app-tvshow-list',
   imports: [
+    LanguageSelect,
     BatchEditor,
     ExportMenu,
     FilterEditor,
@@ -299,6 +301,17 @@ export class TvShowList {
   }
 
   /** Trägt für die ausgewählten Serien ohne Trailer den besten Vorschlag ein; vorhandene bleiben. */
+  /** Fragt, ob die Texte in der neuen Sprache neu geholt werden; die Sprache ändert sich in jedem Fall. */
+  protected changeChosenLanguage(language: string | null): void {
+    const refetchTexts = this.confirm(
+      languageChangeQuestion(language, 'Titel, Inhaltsangaben und Episodennamen'),
+    );
+    this.tvShowService.changeLanguage([...this.chosen()], language, refetchTexts).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   protected refreshChosenInKodi(): void {
     const ids = [...this.chosen()];
     const count = ids.length === 1 ? '1 Serie' : `${ids.length} Serien`;

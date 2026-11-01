@@ -1,3 +1,6 @@
+import { flushWhenRequested } from '../shared/testing';
+import { By } from '@angular/platform-browser';
+import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -23,6 +26,7 @@ describe('SourceList', () => {
     mediaType: 'MOVIE',
     createdAt: '2026-10-25T10:00:00Z',
     lastScannedAt: null,
+    metadataLanguage: null,
   };
   const series: MediaSource = {
     ...films,
@@ -264,6 +268,7 @@ describe('SourceList', () => {
       name: 'Filme',
       path: '/media/filme',
       mediaType: 'MOVIE',
+      metadataLanguage: null,
     });
     request.flush(films);
     await answerReload([films]);
@@ -277,6 +282,59 @@ describe('SourceList', () => {
     await fillForm('Filme', '');
 
     expect(button('.create-button').disabled).toBe(true);
+  });
+
+  it('creates a source with its language and forgets the choice afterwards', async () => {
+    await loadSources([]);
+    await fillForm('Filme', '/media/filme');
+    const select = () => fixture.debugElement.query(By.directive(LanguageSelect)).componentInstance;
+
+    select().chosen.emit('en-US');
+    fixture.detectChanges();
+    expect(select().value()).toBe('en-US');
+    button('.create-button').click();
+
+    const request = httpTesting.expectOne({ method: 'POST', url: SOURCES_URL });
+    expect(request.request.body.metadataLanguage).toBe('en-US');
+    request.flush(films);
+    await flushWhenRequested(fixture, httpTesting, SOURCES_URL, []);
+    fixture.detectChanges();
+    expect(select().value()).toBeNull();
+  });
+
+  it('changes the language of a source and reloads the list', async () => {
+    await loadSources([films]);
+    const selects = fixture.debugElement.queryAll(By.directive(LanguageSelect));
+
+    selects.at(-1)!.componentInstance.chosen.emit('fr-FR');
+
+    const request = httpTesting.expectOne({
+      method: 'PUT',
+      url: `${SOURCES_URL}/${films.id}/language`,
+    });
+    expect(request.request.body).toEqual({ language: 'fr-FR' });
+    request.flush({ ...films, metadataLanguage: 'fr-FR' });
+    await flushWhenRequested(fixture, httpTesting, SOURCES_URL, [
+      { ...films, metadataLanguage: 'fr-FR' },
+    ]);
+    fixture.detectChanges();
+
+    const reloaded = fixture.debugElement.queryAll(By.directive(LanguageSelect));
+    expect(reloaded.at(-1)!.componentInstance.value()).toBe('fr-FR');
+  });
+
+  it('shows the problem detail when changing the language fails', async () => {
+    await loadSources([films]);
+
+    fixture.debugElement
+      .queryAll(By.directive(LanguageSelect))
+      .at(-1)!
+      .componentInstance.chosen.emit('fr-FR');
+    httpTesting
+      .expectOne({ method: 'PUT', url: `${SOURCES_URL}/${films.id}/language` })
+      .flush({ detail: 'Nein' }, { status: 400, statusText: 'Bad Request' });
+
+    expect(snackBarMessages).toContain('Nein');
   });
 
   it('shows the problem detail when creating fails', async () => {
@@ -321,7 +379,9 @@ describe('SourceList', () => {
         result: { sourceId: 1, added: 3, updated: 2, removed: 1, unchanged: 7, nfoErrors: 1 },
       }),
     );
-    await answerReload([{ ...films, lastScannedAt: '2026-10-25T12:00:00Z' }]);
+    await answerReload([
+      { ...films, lastScannedAt: '2026-10-25T12:00:00Z', metadataLanguage: null },
+    ]);
 
     expect(snackBarMessages).toEqual([
       'Scan „Filme“ abgeschlossen: 3 neu, 2 aktualisiert, 1 entfernt, 7 unverändert, 1 NFO-Fehler.',

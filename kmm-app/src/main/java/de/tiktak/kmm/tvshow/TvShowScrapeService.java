@@ -11,6 +11,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import org.springframework.context.ApplicationEventPublisher;
@@ -19,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -62,14 +64,16 @@ public class TvShowScrapeService {
         boolean customTitle = title != null && !title.isBlank();
         SearchQuery query = new SearchQuery(MediaType.TV_SHOW, customTitle ? title : show.getTitle(),
                 customTitle ? year : show.getReleaseYear());
-        TvShowScraper scraper = scraper(scraperId);
-        return call(scraper, s -> s.search(query)).stream().map(TvShowScrapeCandidate::from).toList();
+        return inLanguageOf(showId, () -> {
+            TvShowScraper scraper = scraper(scraperId);
+            return call(scraper, s -> s.search(query)).stream().map(TvShowScrapeCandidate::from).toList();
+        });
     }
 
     @Transactional(readOnly = true)
     public TvShowProposal proposal(long showId, String scraperId, String providerId) {
         TvShow show = requireShow(showId);
-        TvShowResult scraped = fetch(scraper(scraperId), providerId);
+        TvShowResult scraped = inLanguageOf(showId, () -> fetch(scraper(scraperId), providerId));
         Set<EpisodeKey> known = scraped.episodes().stream().map(EpisodeKey::of).collect(Collectors.toSet());
         int matched = (int) episodes(show).stream().filter(episode -> known.contains(EpisodeKey.of(episode))).count();
         return new TvShowProposal(TvShowScrapeMerger.mergeShow(show.metadata(), scraped), matched,
@@ -83,13 +87,55 @@ public class TvShowScrapeService {
      */
     @Transactional
     public EpisodeFillResult fillFromProvider(long showId, String scraperId, String providerId) {
-        return fill(requireShow(showId), scraper(scraperId), providerId);
+        return inLanguageOf(showId, () -> fill(requireShow(showId), scraper(scraperId), providerId, false));
     }
 
-    private EpisodeFillResult fill(TvShow show, TvShowScraper scraper, String providerId) {
+    /**
+     * Holt Titel, Texte, Staffeltitel und Episodennamen neu in der Sprache der Serie und überschreibt die vorhandenen,
+     * auch von Hand geänderte. Was der Anbieter in dieser Sprache nicht hat, bleibt. Eine NFO, die nicht geschrieben
+     * werden kann, lässt die Episoden dieser Datei unverändert.
+     *
+     * @throws TvShowProblemException wenn kein Anbieter eingerichtet ist, er einen Fehler meldet oder die Serie nicht
+     *                                eindeutig findet
+     */
+    @Transactional
+    public TextRefetch refetchTexts(long showId) {
+        return inLanguageOf(showId, () -> {
+            TvShowMetadata current = metadataService.currentMetadata(showId);
+            TvShow show = requireShow(showId);
+            TvShowScraper scraper = preferredReadyScraper().orElseThrow(TvShowProblemException::noScraper);
+            TvShowResult scraped = identify(scraper, show);
+            String providerId = scraped.uniqueIds().get(scraper.id());
+            if (providerId == null) {
+                throw TvShowProblemException.notIdentified(scraper, show.getTitle());
+            }
+            TvShowMetadata merged = TvShowScrapeMerger.mergeShow(current, scraped);
+            boolean showChanged = !merged.equals(current);
+            if (showChanged) {
+                metadataService.updateShow(showId, merged);
+                metadataService.storeLanguageInNfo(showId);
+            }
+            EpisodeFillResult filled = fill(show, scraper, providerId, true);
+            return new TextRefetch(showChanged || filled.updated() > 0, filled.failedFiles());
+        });
+    }
+
+    /**
+     * @param changed     ob sich an der Serie oder ihren Episoden etwas geändert hat
+     * @param failedFiles NFOs, die nicht geschrieben werden konnten
+     */
+    public record TextRefetch(boolean changed, List<String> failedFiles) {
+    }
+
+    private <T> T inLanguageOf(long showId, Supplier<T> body) {
+        return ScrapeLanguage.with(metadataService.scrapeLanguage(showId), body);
+    }
+
+    /** @param overwrite ob vorhandene Titel und Texte ersetzt werden; sonst bekommen nur leere Felder Werte */
+    private EpisodeFillResult fill(TvShow show, TvShowScraper scraper, String providerId, boolean overwrite) {
         TvShowResult scraped = fetch(scraper, providerId);
         List<String> failedFiles = new ArrayList<>();
-        fillShowExtras(show, scraped, failedFiles);
+        fillShowExtras(show, scraped, failedFiles, overwrite);
         Map<EpisodeKey, EpisodeResult> byNumber = scraped.episodes().stream()
                 .collect(Collectors.toMap(EpisodeKey::of, Function.identity(), (first, second) -> first));
         Map<String, List<Episode>> byFile = episodes(show).stream()
@@ -109,8 +155,9 @@ public class TvShowScrapeService {
                     continue;
                 }
                 match = withDetailsIfMissing(scraper, episode, match);
-                TvShowScrapeMerger.fillEpisode(episode.metadata(), episode.extras(), match,
-                        episode.getNfoModifiedAt() == null).ifPresent(fill -> fills.put(episode, fill));
+                (overwrite ? TvShowScrapeMerger.refreshEpisode(episode.metadata(), episode.extras(), match)
+                        : TvShowScrapeMerger.fillEpisode(episode.metadata(), episode.extras(), match,
+                                episode.getNfoModifiedAt() == null)).ifPresent(fill -> fills.put(episode, fill));
             }
             int matchedInFile = (int) sameFile.stream().filter(e -> byNumber.containsKey(EpisodeKey.of(e))).count();
             if (fills.isEmpty()) {
@@ -134,6 +181,10 @@ public class TvShowScrapeService {
      */
     @Transactional
     public TvShowAutoScrapeOutcome scrapeMissing(long showId) {
+        return inLanguageOf(showId, () -> scrapeMissingInLanguage(showId));
+    }
+
+    private TvShowAutoScrapeOutcome scrapeMissingInLanguage(long showId) {
         TvShowMetadata current = metadataService.currentMetadata(showId);
         TvShow show = requireShow(showId);
         Optional<TvShowScraper> preferred = preferredReadyScraper();
@@ -153,9 +204,10 @@ public class TvShowScrapeService {
             }
             cache.put(scraper.id(), providerId, scraped.get());
             metadataService.updateShow(showId, TvShowScrapeMerger.mergeShow(current, scraped.get()));
+            metadataService.storeLanguageInNfo(showId);
             status = TvShowAutoScrapeOutcome.Status.SCRAPED;
         }
-        EpisodeFillResult filled = fill(show, scraper, providerId);
+        EpisodeFillResult filled = fill(show, scraper, providerId, false);
         return new TvShowAutoScrapeOutcome(status, filled.updated(), filled.failedFiles());
     }
 
@@ -178,8 +230,7 @@ public class TvShowScrapeService {
     @Transactional(readOnly = true)
     public List<MissingEpisode> missingEpisodes(long showId, String scraperId) {
         TvShow show = requireShow(showId);
-        TvShowScraper scraper = scraper(scraperId);
-        TvShowResult scraped = identify(scraper, show);
+        TvShowResult scraped = inLanguageOf(showId, () -> identify(scraper(scraperId), show));
         Set<EpisodeKey> present = episodes(show).stream().map(EpisodeKey::of).collect(Collectors.toSet());
         return scraped.episodes().stream()
                 .filter(episode -> !present.contains(EpisodeKey.of(episode)))
@@ -198,6 +249,10 @@ public class TvShowScrapeService {
         Episode episode = episodeRepository.findById(episodeId)
                 .orElseThrow(() -> TvShowProblemException.episodeNotFound(episodeId));
         TvShow show = requireShow(episode.getTvShowId());
+        return inLanguageOf(show.getId(), () -> episodeThumbs(episode, show));
+    }
+
+    private EpisodeThumbs episodeThumbs(Episode episode, TvShow show) {
         List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
@@ -232,7 +287,7 @@ public class TvShowScrapeService {
         }
     }
 
-    private void fillShowExtras(TvShow show, TvShowResult scraped, List<String> failedFiles) {
+    private void fillShowExtras(TvShow show, TvShowResult scraped, List<String> failedFiles, boolean overwrite) {
         try {
             nfoSync.refreshShowIfChangedOutside(show);
         } catch (TvShowProblemException e) {
@@ -240,7 +295,8 @@ public class TvShowScrapeService {
             failedFiles.add(TvShowFiles.tvShowNfo(show.directory()).toString());
             return;
         }
-        TvShowExtras extras = TvShowScrapeMerger.fillShowExtras(show.extras(), scraped);
+        TvShowExtras extras = overwrite ? TvShowScrapeMerger.refreshShowExtras(show.extras(), scraped)
+                : TvShowScrapeMerger.fillShowExtras(show.extras(), scraped);
         if (extras.equals(show.extras())) {
             return;
         }

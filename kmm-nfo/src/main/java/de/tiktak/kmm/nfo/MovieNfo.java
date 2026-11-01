@@ -15,6 +15,8 @@ import java.util.Optional;
  * @param uniqueIds IDs je Anbieter in Reihenfolge, Schlüssel klein geschrieben (z. B. {@code imdb}, {@code tmdb})
  * @param supplement weitere Angaben; {@code null} heißt „unbekannt“: Beim Schreiben bleiben die
  *                   entsprechenden Elemente einer vorhandenen NFO dann unverändert
+ * @param language   Sprache ({@code <language>}, von Ember geschrieben) oder {@code null}; Schreiben übernimmt der
+ *                   {@link LanguageNfoWriter}, sonst bleibt ein vorhandener Eintrag unverändert
  */
 public record MovieNfo(
         String title,
@@ -31,7 +33,8 @@ public record MovieNfo(
         String videoSource,
         List<String> genres,
         Map<String, String> uniqueIds,
-        MovieNfoSupplement supplement) {
+        MovieNfoSupplement supplement,
+        String language) {
 
     public static final String IMDB = "imdb";
     public static final String TMDB = "tmdb";
@@ -39,6 +42,14 @@ public record MovieNfo(
     public MovieNfo {
         genres = NfoCollections.list(genres);
         uniqueIds = NfoCollections.orderedIds(uniqueIds);
+    }
+
+    /** NFO-Inhalt ohne Angabe der Sprache. */
+    public MovieNfo(String title, String originalTitle, String sortTitle, Integer year, LocalDate premiered,
+            String plot, String outline, String tagline, Integer runtime, String mpaa, String edition,
+            String videoSource, List<String> genres, Map<String, String> uniqueIds, MovieNfoSupplement supplement) {
+        this(title, originalTitle, sortTitle, year, premiered, plot, outline, tagline, runtime, mpaa, edition,
+                videoSource, genres, uniqueIds, supplement, null);
     }
 
     /** NFO-Inhalt ohne bekannte weitere Angaben. */

@@ -1,3 +1,6 @@
+import { TestRequest } from '@angular/common/http/testing';
+import { By } from '@angular/platform-browser';
+import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -85,6 +88,7 @@ describe('TvShowDetail', () => {
       modifiedAt: '2026-10-26T09:00:00Z',
     },
     trailer: null,
+    language: null,
   };
 
   const scrapers: ScraperInfo[] = [
@@ -689,6 +693,82 @@ describe('TvShowDetail', () => {
         .flush({ detail: 'Läuft schon.' }, { status: 409, statusText: 'Conflict' });
 
       expect(snackBarMessages).toEqual(['Läuft schon.']);
+    });
+  });
+
+  describe('language', () => {
+    function languageSelect(): LanguageSelect {
+      return fixture.debugElement.query(By.directive(LanguageSelect)).componentInstance;
+    }
+
+    function request(): TestRequest {
+      return httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/language` });
+    }
+
+    it('overwrites the texts when confirmed and reloads after the job', async () => {
+      await load(alf);
+      expect(languageSelect().value()).toBeNull();
+
+      languageSelect().chosen.emit('fr-FR');
+
+      expect(confirmMessages.at(-1)).toContain('auf fr-FR');
+      const change = request();
+      expect(change.request.body).toEqual({ showIds: [3], language: 'fr-FR', refetchTexts: true });
+      const running = job({ id: 'lang', key: 'tvshows-batch', status: 'RUNNING' });
+      change.flush(running);
+      events.emit(running);
+      fixture.detectChanges();
+      expect(element().querySelector('.language-running')).not.toBeNull();
+      expect(languageSelect().disabled()).toBe(true);
+
+      events.emit(
+        job({
+          id: 'lang',
+          key: 'tvshows-batch',
+          status: 'SUCCEEDED',
+          result: { changed: 1, unchanged: 0, failed: 0, failures: [] },
+        }),
+      );
+      await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, {
+        ...alf,
+        language: 'fr-FR',
+      });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(languageSelect().value()).toBe('fr-FR');
+      expect(element().querySelector('.language-running')).toBeNull();
+    });
+
+    it('changes only the language when not confirmed', async () => {
+      await load(alf);
+      confirmAnswer = false;
+
+      languageSelect().chosen.emit(null);
+
+      expect(request().request.body).toEqual({ showIds: [3], language: null, refetchTexts: false });
+    });
+
+    it('asks to save unsaved changes first', async () => {
+      await load(alf);
+      const title = element().querySelector<HTMLInputElement>('[name="title"]')!;
+      title.value = 'Geändert';
+      title.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      languageSelect().chosen.emit('fr-FR');
+
+      httpTesting.expectNone({ method: 'POST', url: `${TVSHOWS_URL}/language` });
+    });
+
+    it('unlocks again when the change is rejected', async () => {
+      await load(alf);
+
+      languageSelect().chosen.emit('fr-FR');
+      request().flush({ detail: 'Läuft schon' }, { status: 409, statusText: 'Conflict' });
+      fixture.detectChanges();
+
+      expect(languageSelect().disabled()).toBe(false);
     });
   });
 });

@@ -16,6 +16,8 @@ import java.util.SortedMap;
  * @param userRating  eigene Bewertung 1–10 oder {@code null}
  * @param trailer     Trailer-Link ({@code <trailer>}); {@link #NO_TRAILER}, wenn die NFO keinen hat, und {@code null},
  *                    wenn er unbekannt ist – dann bleibt ein vorhandener Eintrag beim Schreiben unverändert
+ * @param language    Sprache ({@code <language>}, von Ember geschrieben) oder {@code null}; Schreiben übernimmt der
+ *                    {@link LanguageNfoWriter}, sonst bleibt ein vorhandener Eintrag unverändert
  */
 public record TvShowNfo(
         String title,
@@ -34,7 +36,8 @@ public record TvShowNfo(
         List<NfoActor> actors,
         SortedMap<Integer, String> seasonNames,
         Integer userRating,
-        String trailer) {
+        String trailer,
+        String language) {
 
     public static final String TVDB = "tvdb";
     /** Kein Trailer; beim Schreiben wird ein vorhandener Eintrag entfernt. */
@@ -51,6 +54,15 @@ public record TvShowNfo(
         trailer = trailer == null ? null : trailer.strip();
     }
 
+    /** Angaben ohne Angabe der Sprache. */
+    public TvShowNfo(String title, String originalTitle, String sortTitle, LocalDate premiered, String plot,
+            Integer runtime, String mpaa, String status, List<String> genres, List<String> studios, List<String> tags,
+            Map<String, String> uniqueIds, List<NfoRating> ratings, List<NfoActor> actors,
+            SortedMap<Integer, String> seasonNames, Integer userRating, String trailer) {
+        this(title, originalTitle, sortTitle, premiered, plot, runtime, mpaa, status, genres, studios, tags, uniqueIds,
+                ratings, actors, seasonNames, userRating, trailer, null);
+    }
+
     /** Angaben mit unbekanntem Trailer; ein vorhandener Eintrag bleibt beim Schreiben unverändert. */
     public TvShowNfo(String title, String originalTitle, String sortTitle, LocalDate premiered, String plot,
             Integer runtime, String mpaa, String status, List<String> genres, List<String> studios, List<String> tags,
@@ -63,6 +75,6 @@ public record TvShowNfo(
     /** Kopie mit anderem Trailer-Link; {@link #NO_TRAILER} oder {@code null} wie beim Konstruktor. */
     public TvShowNfo withTrailer(String newTrailer) {
         return new TvShowNfo(title, originalTitle, sortTitle, premiered, plot, runtime, mpaa, status, genres, studios,
-                tags, uniqueIds, ratings, actors, seasonNames, userRating, newTrailer);
+                tags, uniqueIds, ratings, actors, seasonNames, userRating, newTrailer, language);
     }
 }

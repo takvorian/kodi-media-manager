@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
+import de.tiktak.kmm.settings.KmmSettings;
 
 /**
  * Umrechnungen, die Filme und Serien aus Ember gleichermaßen brauchen.
@@ -24,6 +25,11 @@ final class EmberMappings {
             return KMM_GERMAN_CERTIFICATION + mpaa.substring(EMBER_GERMAN_CERTIFICATION.length());
         }
         return mpaa;
+    }
+
+    /** Die Sprache, wenn KMM sie versteht; sonst gilt sie als nicht angegeben. */
+    static String language(String emberLanguage) {
+        return KmmSettings.isMetadataLanguage(emberLanguage) ? emberLanguage : null;
     }
 
     /** Ember legt für unbekannte Bewertungen Einträge mit 0 und ohne Stimmen an. */

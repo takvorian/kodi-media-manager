@@ -37,6 +37,7 @@ import { tvRenameJobKey } from '../tvshows/tv-rename';
 import { CONFIRM } from '../shared/confirm';
 import { localDateTime } from '../shared/date-time';
 import { ListSort, listSortOf, sortedBy } from '../shared/list-sort';
+import { LanguageSelect } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
 import {
   AUTO_SCRAPE_JOB_KEY_PREFIX,
@@ -60,6 +61,7 @@ const SNACKBAR_DURATION_MS = 5000;
   selector: 'app-source-list',
   imports: [
     HelpLink,
+    LanguageSelect,
     ReactiveFormsModule,
     RouterLink,
     ScrapeReport,
@@ -85,7 +87,14 @@ export class SourceList {
   private readonly confirm = inject(CONFIRM);
 
   protected readonly mediaTypes = SOURCE_MEDIA_TYPES;
-  protected readonly columns = ['name', 'path', 'mediaType', 'lastScannedAt', 'actions'];
+  protected readonly columns = [
+    'name',
+    'path',
+    'mediaType',
+    'language',
+    'lastScannedAt',
+    'actions',
+  ];
   protected readonly sources = rxResource({ stream: () => this.sourceService.findAll() });
   protected readonly sort = signal<ListSort>({ active: 'name', direction: 'asc' });
   protected readonly sortedSources = computed(() =>
@@ -96,6 +105,7 @@ export class SourceList {
       : [],
   );
   protected readonly saving = signal(false);
+  protected readonly newLanguage = signal<string | null>(null);
   /** Letzter Scrape-Lauf, solange er Titel ohne Treffer, Fehler oder Hinweise enthält. */
   protected readonly scrapeReport = signal<Job | null>(null);
   private readonly reportedScanId = signal<string | null>(null);
@@ -213,10 +223,12 @@ export class SourceList {
       return;
     }
     this.saving.set(true);
-    this.sourceService.create(this.form.getRawValue()).subscribe({
+    const source = { ...this.form.getRawValue(), metadataLanguage: this.newLanguage() };
+    this.sourceService.create(source).subscribe({
       next: (source) => {
         this.saving.set(false);
         this.form.reset();
+        this.newLanguage.set(null);
         this.notify(`Quelle „${source.name}“ angelegt.`);
         this.sources.reload();
       },
@@ -224,6 +236,14 @@ export class SourceList {
         this.saving.set(false);
         this.notify(problemMessage(error));
       },
+    });
+  }
+
+  /** Gilt für künftiges Scrapen; vorhandene Texte bleiben. */
+  protected changeLanguage(source: MediaSource, language: string | null): void {
+    this.sourceService.changeLanguage(source.id, language).subscribe({
+      next: () => this.sources.reload(),
+      error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }
 

@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -355,6 +357,23 @@ describe('TvShowList', () => {
       expect(report()).not.toBeNull();
       expect(element().querySelector('.show-scrape-report-button')).toBeNull();
     });
+  });
+
+  it('changes the language of the chosen shows as a job', async () => {
+    await respond(page([alf]));
+    element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+    httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1, 4]);
+    fixture.detectChanges();
+
+    const select = fixture.debugElement.query(By.directive(LanguageSelect)).componentInstance;
+    select.chosen.emit(null);
+
+    const change = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/language` });
+    expect(change.request.body).toEqual({ showIds: [1, 4], language: null, refetchTexts: true });
+    const job = { id: 'l', key: 'tvshows-batch', title: 'Sprache', status: 'RUNNING' } as Job;
+    change.flush(job);
+
+    expect(updated).toEqual([job]);
   });
 
   it('refreshes the chosen shows in Kodi as a job', async () => {

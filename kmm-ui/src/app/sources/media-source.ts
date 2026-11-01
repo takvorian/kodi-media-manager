@@ -15,12 +15,15 @@ export interface MediaSource {
   readonly mediaType: MediaType;
   readonly createdAt: string;
   readonly lastScannedAt: string | null;
+  /** Sprache der Einträge beim Scrapen; ohne Angabe gelten die Einstellungen. */
+  readonly metadataLanguage: string | null;
 }
 
 export interface CreateMediaSource {
   readonly name: string;
   readonly path: string;
   readonly mediaType: MediaType;
+  readonly metadataLanguage: string | null;
 }
 
 /** Präfix des Job-Schlüssels eines Scans; muss zu MediaSourceService.SCAN_JOB_KEY_PREFIX passen. */

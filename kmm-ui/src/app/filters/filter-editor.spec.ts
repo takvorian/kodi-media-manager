@@ -32,8 +32,24 @@ describe('FilterEditor', () => {
     subtitleLanguages: [],
   };
   const sources: MediaSource[] = [
-    { id: 1, name: 'Filme', path: '/f', mediaType: 'MOVIE', createdAt: '', lastScannedAt: null },
-    { id: 2, name: 'Serien', path: '/s', mediaType: 'TV_SHOW', createdAt: '', lastScannedAt: null },
+    {
+      id: 1,
+      name: 'Filme',
+      path: '/f',
+      mediaType: 'MOVIE',
+      createdAt: '',
+      lastScannedAt: null,
+      metadataLanguage: null,
+    },
+    {
+      id: 2,
+      name: 'Serien',
+      path: '/s',
+      mediaType: 'TV_SHOW',
+      createdAt: '',
+      lastScannedAt: null,
+      metadataLanguage: null,
+    },
   ];
   const genre: MovieFilter = {
     matchAll: true,

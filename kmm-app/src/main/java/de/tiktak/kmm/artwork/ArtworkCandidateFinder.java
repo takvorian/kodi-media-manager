@@ -14,6 +14,7 @@ import java.util.concurrent.Future;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.ImageType;
@@ -119,7 +120,8 @@ class ArtworkCandidateFinder {
         if (candidate.language() == null) {
             return textlessFirst ? FIRST : SECOND;
         }
-        if (candidate.language().equalsIgnoreCase(settingsService.current().artworkLanguage())) {
+        if (candidate.language().equalsIgnoreCase(
+                ScrapeLanguage.preferredImageLanguage(settingsService.current().artworkLanguage()))) {
             return textlessFirst ? SECOND : FIRST;
         }
         return candidate.language().equalsIgnoreCase(ENGLISH_LANGUAGE) ? ENGLISH : OTHER_LANGUAGE;

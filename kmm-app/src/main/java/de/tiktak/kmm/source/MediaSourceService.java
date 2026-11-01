@@ -46,6 +46,7 @@ public class MediaSourceService {
         requireUniqueName(name);
         requireNoOverlap(directory);
         MediaSource source = repository.save(new MediaSource(name, directory.toString(), command.mediaType()));
+        source.changeMetadataLanguage(command.metadataLanguage());
         log.info("Media source '{}' created for {}", source.getName(), source.getPath());
         return source;
     }
@@ -55,20 +56,25 @@ public class MediaSourceService {
      * wird diese verwendet. Anders als beim Anlegen muss das Verzeichnis nicht erreichbar sein (z. B.
      * ein gerade nicht verbundenes Netzlaufwerk); ist der Name vergeben, erhält er einen Zusatz.
      *
-     * @param path absoluter Pfad des Verzeichnisses
+     * @param path     absoluter Pfad des Verzeichnisses
+     * @param language Sprache der Quelle oder {@code null}; eine vorhandene Quelle behält eine eigene Sprache
      * @throws MediaSourceConflictException wenn sich das Verzeichnis mit einer anderen Quelle überschneidet
      */
     @Transactional
-    public ImportedSource importSource(String name, String path, MediaType mediaType) {
+    public ImportedSource importSource(String name, String path, MediaType mediaType, String language) {
         Path directory = Path.of(path.strip()).toAbsolutePath().normalize();
         var existing = repository.findAll().stream()
                 .filter(source -> Path.of(source.getPath()).equals(directory))
                 .findFirst();
         if (existing.isPresent()) {
+            if (existing.get().getMetadataLanguage() == null) {
+                existing.get().changeMetadataLanguage(language);
+            }
             return new ImportedSource(existing.get(), false);
         }
         requireNoOverlap(directory);
         MediaSource source = repository.save(new MediaSource(freeName(name.strip()), directory.toString(), mediaType));
+        source.changeMetadataLanguage(language);
         log.info("Media source '{}' imported for {}", source.getName(), source.getPath());
         return new ImportedSource(source, true);
     }
@@ -79,6 +85,23 @@ public class MediaSourceService {
         // Die Filme der Quelle löscht die Datenbank per ON DELETE CASCADE.
         repository.delete(source);
         log.info("Media source '{}' deleted", source.getName());
+    }
+
+    /**
+     * @param language Sprache wie {@code de-DE} oder {@code null}, dann gelten die allgemeinen Einstellungen
+     */
+    @Transactional
+    public MediaSource changeLanguage(long sourceId, String language) {
+        MediaSource source = require(sourceId);
+        source.changeMetadataLanguage(language);
+        log.info("Language of media source '{}' set to {}", source.getName(), language);
+        return source;
+    }
+
+    /** Die Sprache der Quelle oder {@code null}, wenn die allgemeinen Einstellungen gelten. */
+    @Transactional(readOnly = true)
+    public String languageOf(long sourceId) {
+        return repository.findById(sourceId).map(MediaSource::getMetadataLanguage).orElse(null);
     }
 
     @Transactional

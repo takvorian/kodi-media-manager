@@ -33,6 +33,17 @@ public class ScraperProblemException extends ErrorResponseException {
                 "%s meldet einen Fehler".formatted(scraper.displayName()), cause.getMessage(), cause);
     }
 
+    static ScraperProblemException noMetadataScraper() {
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Scraper eingerichtet",
+                "Es ist kein Metadaten-Scraper eingerichtet, etwa TMDB mit API-Key.", null);
+    }
+
+    static ScraperProblemException notIdentified(Scraper scraper, String title) {
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Film nicht zugeordnet",
+                "„%s“ ist bei %s nicht eindeutig zugeordnet. Bitte zuerst über die Online-Suche übernehmen."
+                        .formatted(title, scraper.displayName()), null);
+    }
+
     static ScraperProblemException noMovieSetScraper() {
         return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Scraper für Filmsets",
                 "Es ist kein Scraper für Filmsets installiert und aktiv, etwa das TMDB-Plugin.", null);

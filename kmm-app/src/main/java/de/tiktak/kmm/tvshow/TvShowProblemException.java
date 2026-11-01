@@ -1,6 +1,7 @@
 package de.tiktak.kmm.tvshow;
 
 import java.nio.file.Path;
+import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.web.ErrorResponseException;
@@ -51,6 +52,16 @@ public class TvShowProblemException extends ErrorResponseException {
     static TvShowProblemException nfoNotWritable(NfoException cause) {
         return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "NFO konnte nicht geschrieben werden",
                 cause.getMessage() + " Bitte Schreibrechte im Serienordner prüfen.", cause);
+    }
+
+    static TvShowProblemException nfosNotWritten(List<String> files) {
+        return new TvShowProblemException(HttpStatus.INTERNAL_SERVER_ERROR, "NFO nicht geschrieben",
+                "NFO nicht geschrieben: " + String.join(", ", files), null);
+    }
+
+    static TvShowProblemException noScraper() {
+        return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Scraper eingerichtet",
+                "Es ist kein Serien-Scraper eingerichtet, etwa TVDB oder TMDB mit API-Key.", null);
     }
 
     static TvShowProblemException missingIdsForTrailers() {

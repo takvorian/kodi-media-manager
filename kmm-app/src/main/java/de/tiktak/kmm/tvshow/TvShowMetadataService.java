@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.scanner.TvShowFiles;
+import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -31,6 +32,7 @@ public class TvShowMetadataService {
     private final TvNfoSync nfoSync;
     private final ApplicationEventPublisher events;
     private final Clock clock;
+    private final MediaSourceService sourceService;
 
     /**
      * Die Metadaten einer Serie, nachdem eine außerhalb von KMM geänderte NFO eingelesen wurde; für Änderungen, die
@@ -57,6 +59,48 @@ public class TvShowMetadataService {
         TvShow show = requireShow(showId);
         nfoSync.readShowIfOutdated(show);
         return details(show);
+    }
+
+    /** Die Sprache für das Scrapen dieser Serie und ihrer Episoden; {@code null} heißt: die der Einstellungen. */
+    @Transactional(readOnly = true)
+    public String scrapeLanguage(long showId) {
+        TvShow show = requireShow(showId);
+        return show.getMetadataLanguage() != null ? show.getMetadataLanguage()
+                : sourceService.languageOf(show.getSourceId());
+    }
+
+    /**
+     * Ändert die eigene Sprache der Serie in Datenbank und NFO. Eine außerhalb von KMM geänderte NFO wird vorher
+     * eingelesen.
+     *
+     * @param language Sprache oder {@code null}, dann gilt die der Quelle bzw. der Einstellungen
+     * @return ob sich etwas geändert hat
+     * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
+     */
+    @Transactional
+    public boolean changeLanguage(long showId, String language) {
+        TvShow show = requireShow(showId);
+        nfoSync.refreshShowIfChangedOutside(show);
+        if (!show.changeMetadataLanguage(language)) {
+            return false;
+        }
+        writeLanguage(show);
+        log.info("Language of TV show {} set to {}", showId, language);
+        return true;
+    }
+
+    /** Trägt eine eigene Sprache in eine eben erst angelegte NFO ein. */
+    @Transactional
+    public void storeLanguageInNfo(long showId) {
+        TvShow show = requireShow(showId);
+        if (show.getMetadataLanguage() != null) {
+            writeLanguage(show);
+        }
+    }
+
+    private void writeLanguage(TvShow show) {
+        nfoFiles.findShowNfo(show.directory()).ifPresent(nfo -> show.markNfoSynchronized(
+                write(() -> nfoFiles.writeShowLanguage(nfo, show.getMetadataLanguage())).modifiedAt()));
     }
 
     @Transactional

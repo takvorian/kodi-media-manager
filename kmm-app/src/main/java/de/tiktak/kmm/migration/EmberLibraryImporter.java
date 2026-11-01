@@ -73,7 +73,7 @@ class EmberLibraryImporter {
         Map<Long, Long> sourceIds = new HashMap<>();
         for (EmberMovieSource source : sources) {
             String name = source.name() == null ? DEFAULT_SOURCE_NAME : source.name();
-            sourceImporter.importSource(name, source.path(), MediaType.MOVIE, paths, progress)
+            sourceImporter.importSource(name, source.path(), source.language(), MediaType.MOVIE, paths, progress)
                     .ifPresent(id -> sourceIds.put(source.id(), id));
         }
         return sourceIds;

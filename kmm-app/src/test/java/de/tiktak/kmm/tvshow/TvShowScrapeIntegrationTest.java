@@ -230,6 +230,59 @@ class TvShowScrapeIntegrationTest {
                 .param("providerId", id).exchange();
     }
 
+    @Test
+    void overwritesTextsAndEpisodeNamesWhenTheLanguageChanges() throws IOException {
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(scraper));
+        when(scraper.missingConfiguration()).thenReturn(Optional.empty());
+        when(scraper.scrape(any())).thenReturn(Optional.of(TvShowResult.builder()
+                .title("Perdus").plot("Des survivants.").uniqueIds(Map.of(SCRAPER, providerId, "tvdb", "73739"))
+                .seasons(List.of(new SeasonResult(1, "L'île", null, null)))
+                .episodes(List.of(EpisodeResult.builder().season(1).episode(3).title("Table rase").plot("Kate.").build()))
+                .build()));
+        Path ownNfo = library.resolve("Lost/Staffel 1/Lost - S01E03.nfo");
+
+        JsonNode withoutRefetch = changeLanguage("fr-FR", false);
+
+        assertThat(withoutRefetch.get("changed").asInt()).isEqualTo(1);
+        assertThat(Files.readString(ownNfo)).contains("<title>Tabula Rasa (NFO)</title>");
+        assertThat(jdbcClient.sql("SELECT metadata_language FROM tv_show").query(String.class).single())
+                .isEqualTo("fr-FR");
+
+        JsonNode refetched = changeLanguage("fr-FR", true);
+
+        assertThat(refetched.get("changed").asInt()).isEqualTo(1);
+        assertThat(Files.readString(ownNfo)).contains("<title>Table rase</title>", "<plot>Kate.</plot>");
+        assertThat(Files.readString(library.resolve("Lost/tvshow.nfo"))).contains("<title>Perdus</title>",
+                "<plot>Des survivants.</plot>", "<namedseason number=\"1\">L'île</namedseason>",
+                "<language>fr-FR</language>");
+    }
+
+    @Test
+    void reportsAShowWithoutUniqueMatchWhenItsTextsCannotBeFetched() {
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(scraper));
+        when(scraper.missingConfiguration()).thenReturn(Optional.empty());
+        when(scraper.scrape(any())).thenReturn(Optional.empty());
+
+        JsonNode result = changeLanguage("fr-FR", true);
+
+        assertThat(result.get("failed").asInt()).isEqualTo(1);
+        assertThat(result.get("failures").get(0).asString()).contains("nicht eindeutig zugeordnet");
+    }
+
+    private JsonNode changeLanguage(String language, boolean refetchTexts) {
+        MvcTestResult started = mockMvc.post().uri(TvShowLanguageController.LANGUAGE_PATH).with(csrf()).contentType(JSON)
+                .content(objectMapper.writeValueAsString(Map.of("showIds", List.of(showId), "language", language,
+                        "refetchTexts", refetchTexts)))
+                .exchange();
+        assertThat(started).hasStatus(HttpStatus.ACCEPTED);
+        String jobId = read(started).get("id").asString();
+        JsonNode job = await().atMost(JOB_TIMEOUT).pollInSameThread().until(() -> read(mockMvc.get()
+                .uri(JobController.BASE_PATH + "/" + jobId).exchange()),
+                node -> !"RUNNING".equals(node.get("status").asString()));
+        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job.get("result");
+    }
+
     private JsonNode fill() {
         MvcTestResult result = mockMvc.post().uri(TvShowScrapeController.EPISODES_PATH, showId).with(csrf())
                 .param("scraper", SCRAPER).param("providerId", providerId).exchange();

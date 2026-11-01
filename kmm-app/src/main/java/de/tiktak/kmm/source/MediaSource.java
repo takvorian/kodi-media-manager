@@ -46,10 +46,18 @@ public class MediaSource {
     @Column(name = "last_scanned_at")
     private Instant lastScannedAt;
 
+    /** Sprache der Einträge dieser Quelle beim Scrapen; ohne Angabe gelten die allgemeinen Einstellungen. */
+    @Column(name = "metadata_language", length = 16)
+    private String metadataLanguage;
+
     public MediaSource(String name, String path, MediaType mediaType) {
         this.name = Objects.requireNonNull(name, "name must not be null");
         this.path = Objects.requireNonNull(path, "path must not be null");
         this.mediaType = Objects.requireNonNull(mediaType, "mediaType must not be null");
+    }
+
+    void changeMetadataLanguage(String language) {
+        this.metadataLanguage = language;
     }
 
     void markScanned(Instant scannedAt) {

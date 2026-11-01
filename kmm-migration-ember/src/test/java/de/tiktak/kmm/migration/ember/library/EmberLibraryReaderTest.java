@@ -55,6 +55,8 @@ class EmberLibraryReaderTest {
         EmberMovie heat = movie(1);
 
         assertThat(heat.sourceId()).isEqualTo(1);
+        assertThat(heat.language()).isEqualTo("de-DE");
+        assertThat(movie(2).language()).isEqualTo("en-US");
         assertThat(heat.path()).isEqualTo("D:\\Filme\\Heat (1995)\\Heat.mkv");
         assertThat(heat.title()).isEqualTo("Heat");
         assertThat(heat.sortTitle()).isNull();

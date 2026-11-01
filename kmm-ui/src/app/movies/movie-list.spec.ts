@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -445,6 +447,26 @@ describe('MovieList', () => {
       status: 'RUNNING',
     } as Job;
     fill.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
+  it('changes the language of the chosen movies as a job', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+
+    const select = fixture.debugElement.query(By.directive(LanguageSelect)).componentInstance;
+    select.chosen.emit('fr-FR');
+
+    const change = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/language` });
+    expect(change.request.body).toEqual({
+      movieIds: [heat.id],
+      language: 'fr-FR',
+      refetchTexts: true,
+    });
+    const job = { id: 'l', key: 'movies-batch', title: 'Sprache', status: 'RUNNING' } as Job;
+    change.flush(job);
 
     expect(updated).toEqual([job]);
   });

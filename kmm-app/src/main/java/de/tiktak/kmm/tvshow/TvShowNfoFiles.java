@@ -17,6 +17,7 @@ import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.NfoPlayback;
 import de.tiktak.kmm.nfo.PlaybackNfoWriter;
 import de.tiktak.kmm.nfo.StreamDetailsNfoWriter;
+import de.tiktak.kmm.nfo.LanguageNfoWriter;
 import de.tiktak.kmm.nfo.TrailerNfoWriter;
 import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.nfo.TvShowNfoReader;
@@ -38,6 +39,7 @@ class TvShowNfoFiles {
     private final PlaybackNfoWriter playbackWriter = new PlaybackNfoWriter();
     private final StreamDetailsNfoWriter streamDetailsWriter = new StreamDetailsNfoWriter();
     private final TrailerNfoWriter trailerWriter = new TrailerNfoWriter();
+    private final LanguageNfoWriter languageWriter = new LanguageNfoWriter();
 
     Optional<TvNfoState> findShowNfo(Path showDirectory) {
         return state(TvShowFiles.tvShowNfo(showDirectory));
@@ -107,6 +109,17 @@ class TvShowNfoFiles {
      */
     TvNfoState writeStreamDetails(TvNfoState nfo, List<EpisodeStreamDetails> episodes) {
         streamDetailsWriter.writeEpisodes(nfo.file(), episodes);
+        return written(nfo.file());
+    }
+
+    /**
+     * Ändert nur die Sprache in der vorhandenen {@code tvshow.nfo}; alles andere bleibt Zeichen für Zeichen.
+     *
+     * @param language Sprache oder {@code null}, um sie zu entfernen
+     * @throws NfoException wenn die NFO keine Serie enthält oder nicht geschrieben werden kann
+     */
+    TvNfoState writeShowLanguage(TvNfoState nfo, String language) {
+        languageWriter.writeTvShow(nfo.file(), language);
         return written(nfo.file());
     }
 

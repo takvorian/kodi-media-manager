@@ -14,6 +14,7 @@ import de.tiktak.kmm.nfo.MovieNfo;
 import de.tiktak.kmm.nfo.MovieNfoSupplement;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.nfo.StreamDetails;
+import de.tiktak.kmm.settings.KmmSettings;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -95,6 +96,9 @@ class MovieNfoSync {
         Known known = movie.isNfoRead() ? null : new Known(movie.supplement().actors(), movie.streamDetails(),
                 movie.getTrailer());
         movie.applyMetadata(MovieNfoMapper.toMetadata(nfo, fallbackTitle, fallbackYear));
+        if (KmmSettings.isMetadataLanguage(nfo.language())) {
+            movie.changeMetadataLanguage(nfo.language());
+        }
         applySupplement(movie, nfo.supplement(), known);
         movie.markNfoSynchronized(nfoFile.modifiedAt());
         movie.markNfoRead();

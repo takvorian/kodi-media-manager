@@ -81,6 +81,9 @@ public class TvShowImportService {
             TvShow show = showsByHash.computeIfAbsent(hash, key -> newShow(showImport));
             show.applyMetadata(showImport.metadata());
             show.applyExtras(showImport.extras());
+            if (showImport.language() != null) {
+                show.changeMetadataLanguage(showImport.language());
+            }
             show.markNfoNotRead();
             Optional<TvNfoState> nfo = nfoFiles.findShowNfo(show.directory());
             nfo.ifPresent(state -> show.markNfoSynchronized(state.modifiedAt()));

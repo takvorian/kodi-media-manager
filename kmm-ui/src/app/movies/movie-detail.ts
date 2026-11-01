@@ -19,13 +19,15 @@ import { SettingsService } from '../settings/settings.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
 import { ScrapeReport } from '../sources/scrape-report';
 import { CONFIRM } from '../shared/confirm';
+import { batchSummary } from '../filters/batch';
+import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
 import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
-import { movieScrapeJobKey } from './movie-batch';
+import { MOVIE_BATCH_JOB_KEY, movieScrapeJobKey } from './movie-batch';
 import {
   MAX_YEAR,
   MIN_YEAR,
@@ -47,6 +49,7 @@ const SNACKBAR_DURATION_MS = 5000;
   selector: 'app-movie-detail',
   imports: [
     HelpLink,
+    LanguageSelect,
     DatePipe,
     ReactiveFormsModule,
     RouterLink,
@@ -95,6 +98,11 @@ export class MovieDetail {
   protected readonly scrapeReport = signal<Job | null>(null);
   /** Zählt beendete Läufe; Titelmusik und Bilder laden selbst und werden damit neu aufgebaut. */
   protected readonly scrapeRuns = signal(0);
+  private readonly changingLanguage = signal(false);
+  /** Der Sprachwechsel dieser Ansicht; das Formular wird danach neu geladen. */
+  protected readonly languageJob = computed(() =>
+    this.changingLanguage() ? this.jobStore.runningJob(MOVIE_BATCH_JOB_KEY) : undefined,
+  );
   /** Ob das Formular einen Treffer der Online-Suche enthält; nach dem Speichern werden die Angaben ausgelesen. */
   private readonly adoptedProposal = signal(false);
   /** Sammlung des übernommenen Treffers; nach dem Speichern wird der Film ihrem Set zugeordnet, wenn eingestellt. */
@@ -121,12 +129,22 @@ export class MovieDetail {
     });
     // Am Ende wird das Formular neu geladen; Eingaben während des Laufs gingen dabei verloren.
     effect(() => {
-      if (this.scrapeJob()) {
+      if (this.scrapeJob() || this.languageJob()) {
         this.form.disable();
       } else {
         this.form.enable();
       }
     });
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key === MOVIE_BATCH_JOB_KEY && this.changingLanguage()),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.changingLanguage.set(false);
+        this.notify(batchSummary(job));
+        this.movie.reload();
+      });
     this.jobStore.completed
       .pipe(
         filter((job) => job.key === movieScrapeJobKey(this.id())),
@@ -150,6 +168,23 @@ export class MovieDetail {
     this.movieService.autoScrape(this.id()).subscribe({
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  /** Fragt, ob die Texte in der neuen Sprache neu geholt werden; die Sprache ändert sich in jedem Fall. */
+  protected changeLanguage(language: string | null): void {
+    if (this.form.dirty) {
+      this.notify('Bitte die Änderungen zuerst speichern.');
+      return;
+    }
+    const refetchTexts = this.confirm(languageChangeQuestion(language, 'Titel und Inhaltsangabe'));
+    this.changingLanguage.set(true);
+    this.movieService.changeLanguage([this.id()], language, refetchTexts).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => {
+        this.changingLanguage.set(false);
+        this.notify(problemMessage(error));
+      },
     });
   }
 

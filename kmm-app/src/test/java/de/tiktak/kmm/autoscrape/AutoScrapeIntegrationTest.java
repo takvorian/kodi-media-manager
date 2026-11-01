@@ -35,6 +35,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 import de.tiktak.kmm.job.JobController;
+import de.tiktak.kmm.movie.MovieLanguageController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.movie.MovieController;
@@ -184,6 +185,82 @@ class AutoScrapeIntegrationTest {
     }
 
     @Test
+    void scrapesAMovieInTheLanguageOfItsSource() throws IOException {
+        createFile("Heat (1995)/Heat (1995).mkv");
+        long sourceId = createSource();
+        awaitJob(post(LibraryScanController.SCAN_PATH, sourceId));
+        long movieId = movieIdOf("Heat");
+        assertThat(mockMvc.put().uri(MediaSourceController.BASE_PATH + "/{id}/language", sourceId).with(csrf())
+                .contentType("application/json").content("{\"language\": \"fr-FR\"}")).hasStatusOk();
+
+        awaitJob(post(AutoScrapeController.MOVIE_PATH, movieId));
+
+        assertThat(movieIdOf("Chaleur")).isEqualTo(movieId);
+        assertThat(Files.readString(library.resolve("Heat (1995)/Heat (1995).nfo")))
+                .contains("<title>Chaleur</title>").doesNotContain("<language>");
+    }
+
+    @Test
+    void prefersTheLanguageOfTheMovieOverThatOfItsSource() throws IOException {
+        createFile("Heat (1995)/Heat (1995).mkv");
+        long sourceId = createSource();
+        awaitJob(post(LibraryScanController.SCAN_PATH, sourceId));
+        long movieId = movieIdOf("Heat");
+        assertThat(mockMvc.put().uri(MediaSourceController.BASE_PATH + "/{id}/language", sourceId).with(csrf())
+                .contentType("application/json").content("{\"language\": \"en-US\"}")).hasStatusOk();
+        changeLanguage(movieId, "fr-FR", false);
+
+        awaitJob(post(AutoScrapeController.MOVIE_PATH, movieId));
+
+        assertThat(movieIdOf("Chaleur")).isEqualTo(movieId);
+        assertThat(Files.readString(library.resolve("Heat (1995)/Heat (1995).nfo")))
+                .as("die NFO entsteht erst beim Scrapen").contains("<language>fr-FR</language>");
+    }
+
+    @Test
+    void overwritesTheTextsOfAScrapedMovieWhenTheLanguageChanges() throws IOException {
+        createFile("Heat (1995)/Heat (1995).mkv");
+        awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
+        long movieId = movieIdOf("Heat");
+        awaitJob(post(AutoScrapeController.MOVIE_PATH, movieId));
+        Path nfo = library.resolve("Heat (1995)/Heat (1995).nfo");
+        assertThat(Files.readString(nfo)).contains("<title>Heat</title>");
+
+        JsonNode unchanged = changeLanguage(movieId, "fr-FR", false);
+
+        assertThat(unchanged.get("changed").asInt()).isEqualTo(1);
+        assertThat(movieIdOf("Heat")).as("ohne Neu-Holen bleiben die Texte").isEqualTo(movieId);
+        assertThat(Files.readString(nfo)).contains("<title>Heat</title>", "<language>fr-FR</language>");
+
+        changeLanguage(movieId, "fr-FR", true);
+
+        assertThat(movieIdOf("Chaleur")).isEqualTo(movieId);
+        assertThat(Files.readString(nfo)).contains("<title>Chaleur</title>", "<plot>Un braqueur et un policier.</plot>",
+                "<language>fr-FR</language>");
+    }
+
+    @Test
+    void reportsAMovieWithoutUniqueMatchWhenItsTextsCannotBeFetched() throws IOException {
+        createFile("Unbekannt (2001)/Unbekannt (2001).mkv");
+        awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
+
+        JsonNode result = changeLanguage(movieIdOf("Unbekannt"), "fr-FR", true);
+
+        assertThat(result.get("failed").asInt()).isEqualTo(1);
+        assertThat(result.get("failures").get(0).asString()).contains("„Unbekannt“", "nicht eindeutig zugeordnet");
+    }
+
+    private JsonNode changeLanguage(long movieId, String language, boolean refetchTexts) {
+        MvcTestResult started = mockMvc.post().uri(MovieLanguageController.LANGUAGE_PATH).with(csrf())
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(Map.of("movieIds", List.of(movieId), "language", language,
+                        "refetchTexts", refetchTexts)))
+                .exchange();
+        assertThat(started).hasStatus(202);
+        return awaitJob(objectMapper.readTree(started.getResponse().getContentAsByteArray()).get("id").asString());
+    }
+
+    @Test
     void rejectsUnknownMovie() {
         assertThat(mockMvc.post().uri(AutoScrapeController.MOVIE_PATH, 999L).with(csrf())).hasStatus(404);
     }
@@ -248,10 +325,19 @@ class AutoScrapeIntegrationTest {
         json(httpServer, "/3/find/tt0113277", """
                 {"movie_results": [{"id": 949}]}
                 """);
-        json(httpServer, "/3/movie/949", """
-                {"id": 949, "imdb_id": "tt0113277", "title": "Heat", "original_title": "Heat",
-                 "release_date": "1995-12-15", "runtime": 170, "genres": [{"name": "Krimi"}]}
-                """);
+        httpServer.createContext("/3/movie/949", exchange -> {
+            boolean french = exchange.getRequestURI().getRawQuery().contains("language=fr-FR");
+            respond(exchange, "application/json", (french
+                    ? """
+                    {"id": 949, "imdb_id": "tt0113277", "title": "Chaleur", "original_title": "Heat",
+                     "overview": "Un braqueur et un policier.", "release_date": "1995-12-15", "runtime": 170,
+                     "genres": [{"name": "Policier"}]}
+                    """
+                    : """
+                    {"id": 949, "imdb_id": "tt0113277", "title": "Heat", "original_title": "Heat",
+                     "release_date": "1995-12-15", "runtime": 170, "genres": [{"name": "Krimi"}]}
+                    """).getBytes(StandardCharsets.UTF_8));
+        });
         String tmdbImages = """
                 {"posters": [{"file_path": "/poster.jpg", "iso_639_1": "de", "vote_average": 5}],
                  "backdrops": [{"file_path": "/backdrop.jpg", "iso_639_1": null, "vote_average": 5}],

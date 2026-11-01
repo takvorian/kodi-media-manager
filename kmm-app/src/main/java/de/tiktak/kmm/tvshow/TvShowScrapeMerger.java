@@ -59,6 +59,39 @@ final class TvShowScrapeMerger {
                 seasonNames);
     }
 
+    /** Wie {@link #fillShowExtras}, ersetzt aber vorhandene Staffeltitel durch die des Anbieters. */
+    static TvShowExtras refreshShowExtras(TvShowExtras current, TvShowResult scraped) {
+        TvShowExtras filled = fillShowExtras(current, scraped);
+        TreeMap<Integer, String> seasonNames = new TreeMap<>(filled.seasonNames());
+        scraped.seasons().stream()
+                .filter(season -> season.title() != null)
+                .forEach(season -> seasonNames.put(season.number(), season.title()));
+        return new TvShowExtras(filled.actors(), filled.ratings(), seasonNames);
+    }
+
+    /**
+     * Wie {@link #fillEpisode}, ersetzt aber vorhandene Titel und Inhaltsangaben, wenn der Anbieter welche hat.
+     *
+     * @return die neuen Angaben oder leer, wenn sich nichts ändert
+     */
+    static Optional<EpisodeFill> refreshEpisode(EpisodeMetadata metadata, EpisodeExtras extras, EpisodeResult scraped) {
+        EpisodeFill filled = fillEpisode(metadata, extras, scraped, true)
+                .orElseGet(() -> new EpisodeFill(metadata, extras));
+        EpisodeMetadata base = filled.metadata();
+        EpisodeMetadata refreshed = new EpisodeMetadata(
+                prefer(scraped.title(), base.title()),
+                base.originalTitle(),
+                prefer(scraped.plot(), base.plot()),
+                base.aired(),
+                base.runtime(),
+                base.tvdbId(),
+                base.tmdbId(),
+                base.imdbId(),
+                base.userRating(), base.videoSource()).withinLimits();
+        boolean changed = !refreshed.equals(metadata) || !filled.extras().equals(extras);
+        return changed ? Optional.of(new EpisodeFill(refreshed, filled.extras())) : Optional.empty();
+    }
+
     /**
      * @param titleReplaceable ob der Titel nur aus dem Dateinamen stammt (keine NFO) und ersetzt werden darf
      * @return die ergänzten Angaben oder leer, wenn sich nichts ändert

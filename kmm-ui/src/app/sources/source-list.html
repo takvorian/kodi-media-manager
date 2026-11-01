@@ -23,6 +23,12 @@
           }
         </mat-select>
       </mat-form-field>
+      <app-language-select
+        class="create-language"
+        [value]="newLanguage()"
+        defaultLabel="Wie in den Einstellungen"
+        (chosen)="newLanguage.set($event)"
+      />
       <button matButton="filled" type="submit" class="create-button" [disabled]="form.invalid || saving()">
         Hinzufügen
       </button>
@@ -52,6 +58,17 @@
     <ng-container matColumnDef="path">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Verzeichnis</th>
       <td mat-cell *matCellDef="let source" class="path">{{ source.path }}</td>
+    </ng-container>
+    <ng-container matColumnDef="language">
+      <th mat-header-cell *matHeaderCellDef>Sprache</th>
+      <td mat-cell *matCellDef="let source">
+        <app-language-select
+          class="source-language"
+          [value]="source.metadataLanguage"
+          defaultLabel="Wie in den Einstellungen"
+          (chosen)="changeLanguage(source, $event)"
+        />
+      </td>
     </ng-container>
     <ng-container matColumnDef="mediaType">
       <th mat-header-cell *matHeaderCellDef mat-sort-header>Inhalt</th>

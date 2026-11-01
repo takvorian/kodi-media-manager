@@ -11,6 +11,7 @@ import de.tiktak.kmm.scanner.DiscFormat;
  *
  * @param nfo     Zustand der NFO-Datei
  * @param trailer Trailer-Link oder {@code null}
+ * @param language eigene Sprache oder {@code null}, dann gilt die der Quelle bzw. der Einstellungen
  */
 public record MovieDetails(
         long id,
@@ -23,7 +24,14 @@ public record MovieDetails(
         MovieSupplement supplement,
         StreamDetails streams,
         NfoInfo nfo,
-        String trailer) {
+        String trailer,
+        String language) {
+
+    /** Angaben ohne eigene Sprache. */
+    public MovieDetails(long id, long sourceId, String filePath, DiscFormat discFormat, int partCount, Instant addedAt,
+            MovieMetadata metadata, MovieSupplement supplement, StreamDetails streams, NfoInfo nfo, String trailer) {
+        this(id, sourceId, filePath, discFormat, partCount, addedAt, metadata, supplement, streams, nfo, trailer, null);
+    }
 
     /** Angaben ohne Trailer. */
     public MovieDetails(long id, long sourceId, String filePath, DiscFormat discFormat, int partCount, Instant addedAt,
@@ -37,7 +45,7 @@ public record MovieDetails(
                 .orElseGet(() -> new NfoInfo(movie.companionFiles().nfoFile().toString(), false, null));
         return new MovieDetails(movie.getId(), movie.getSourceId(), movie.getFilePath(), movie.getDiscFormat(),
                 movie.getPartCount(), movie.getAddedAt(), movie.metadata(), movie.supplement(), movie.streamDetails(),
-                nfo, movie.getTrailer());
+                nfo, movie.getTrailer(), movie.getMetadataLanguage());
     }
 
     /**

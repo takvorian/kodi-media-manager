@@ -10,6 +10,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.api.TvShowResult;
 import lombok.RequiredArgsConstructor;
 
@@ -42,8 +43,9 @@ class TvShowResultCache {
         entries.put(key(scraperId, providerId), new Entry(result, clock.instant()));
     }
 
+    /** Nach einem Sprachwechsel muss die Serie neu geholt werden. */
     private static String key(String scraperId, String providerId) {
-        return scraperId + ":" + providerId;
+        return scraperId + ":" + providerId + ":" + ScrapeLanguage.cacheKey();
     }
 
     private record Entry(TvShowResult result, Instant storedAt) {

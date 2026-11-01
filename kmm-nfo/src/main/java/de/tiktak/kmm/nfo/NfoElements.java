@@ -33,6 +33,7 @@ final class NfoElements {
     static final String COUNTRY = "country";
     static final String TAG = "tag";
     static final String TRAILER = "trailer";
+    static final String LANGUAGE = "language";
     static final String RATINGS = "ratings";
     static final String RATING = "rating";
     static final String VALUE = "value";

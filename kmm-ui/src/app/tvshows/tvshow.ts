@@ -100,6 +100,8 @@ export interface TvShowDetails {
   readonly nfo: NfoInfo;
   /** Trailer-Link der tvshow.nfo, den Kodi abspielt. */
   readonly trailer: string | null;
+  /** Eigene Sprache, auch für die Episoden; ohne Angabe gilt die der Quelle bzw. der Einstellungen. */
+  readonly language: string | null;
 }
 
 /** Bearbeitbare Metadaten einer Episode; Staffel und Episode stehen im Dateinamen. */
