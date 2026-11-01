@@ -606,7 +606,7 @@ describe('SourceList', () => {
       trailersSaved: 2,
       themesSaved: 3,
       enriched: 4,
-      unmatchedTitles: ['Unbekannt'],
+      unmatchedEntries: [{ type: 'MOVIE', id: 8, label: 'Unbekannt' }],
       failures: ['Kaputt: TMDB ist nicht erreichbar'],
       warnings: ['fanart.tv: Key fehlt'],
     };
@@ -637,7 +637,7 @@ describe('SourceList', () => {
             unmatched: 1,
             episodesUpdated: 40,
             imagesSaved: 12,
-            unmatchedTitles: ['Unbekannt'],
+            unmatchedEntries: [{ type: 'TV_SHOW', id: 8, label: 'Unbekannt' }],
             failures: [],
             warnings: [],
           },
@@ -689,7 +689,10 @@ describe('SourceList', () => {
         'Scrapen „Filme“ abgeschlossen: 4 Filme, 1 neu zugeordnet, 1 ohne Treffer, 9 Bilder gespeichert, ' +
           '2 Trailer eingetragen, 3 Titelmusik gespeichert, 4 ergänzt (Bewertungen, Angaben), 1 Fehler.',
       ]);
-      expect(texts('.unmatched-titles li')).toEqual(['Unbekannt']);
+      expect(texts('.unmatched-entries li')).toEqual(['Unbekannt']);
+      expect(element().querySelector('.unmatched-entries a')?.getAttribute('href')).toBe(
+        '/movies/8',
+      );
       expect(texts('.failures li')).toEqual(['Kaputt: TMDB ist nicht erreichbar']);
       expect(texts('.warnings li')).toEqual(['fanart.tv: Key fehlt']);
     });
@@ -719,7 +722,7 @@ describe('SourceList', () => {
             trailersSaved: 0,
             themesSaved: 0,
             enriched: 0,
-            unmatchedTitles: [],
+            unmatchedEntries: [],
             failures: [],
             warnings: [],
           },

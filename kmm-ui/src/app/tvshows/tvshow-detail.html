@@ -13,11 +13,28 @@
       <button matButton type="button" class="rename-button" [disabled]="renaming()" (click)="renameShow()">
         Umbenennen
       </button>
-      <button matButton="tonal" type="button" class="online-search-button" (click)="toggleOnlineSearch()">
+      <button matButton="tonal" type="button" class="scrape-button" [disabled]="!!scrapeJob()" (click)="scrape()">
+        Scrapen
+      </button>
+      <button
+        matButton="tonal"
+        type="button"
+        class="online-search-button"
+        [disabled]="!!scrapeJob()"
+        (click)="toggleOnlineSearch()"
+      >
         {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
       </button>
     </div>
   </div>
+
+  @if (scrapeJob(); as running) {
+    <app-scrape-progress [job]="running" />
+  }
+
+  @if (scrapeReport(); as report) {
+    <app-scrape-report [job]="report" (closed)="scrapeReport.set(null)" />
+  }
 
   @if (searchingOnline()) {
     <mat-card appearance="outlined" class="online-search-card">
@@ -67,7 +84,9 @@
       <mat-card-title>Titelmusik</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <app-theme-editor [endpoint]="themeEndpoint()" />
+      @for (version of [scrapeRuns()]; track version) {
+        <app-theme-editor [endpoint]="themeEndpoint()" />
+      }
     </mat-card-content>
   </mat-card>
 
@@ -76,7 +95,9 @@
       <mat-card-title>Bilder der Serie</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <app-artwork-gallery [source]="showArtwork()" />
+      @for (version of [scrapeRuns()]; track version) {
+        <app-artwork-gallery [source]="showArtwork()" />
+      }
     </mat-card-content>
   </mat-card>
 
@@ -89,7 +110,7 @@
         <p class="hint empty-seasons">Keine Episoden gefunden.</p>
       }
       <mat-accordion multi>
-        @for (group of seasons(); track group.season.number) {
+        @for (group of seasons(); track scrapeRuns() + ':' + group.season.number) {
           <mat-expansion-panel class="season">
             <mat-expansion-panel-header>
               <mat-panel-title class="season-title">{{ label(group.season) }}</mat-panel-title>

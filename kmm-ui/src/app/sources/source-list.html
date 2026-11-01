@@ -153,38 +153,5 @@
 }
 
 @if (scrapeReport(); as report) {
-  <mat-card appearance="outlined" class="scrape-report">
-    <mat-card-header>
-      <mat-card-title>{{ report.title }}: nicht alles erledigt</mat-card-title>
-    </mat-card-header>
-    <mat-card-content>
-      @if (report.result.unmatchedTitles.length > 0) {
-        <h3>Ohne eindeutigen Treffer – bitte einzeln suchen</h3>
-        <ul class="unmatched-titles">
-          @for (title of report.result.unmatchedTitles; track $index) {
-            <li>{{ title }}</li>
-          }
-        </ul>
-      }
-      @if (report.result.failures.length > 0) {
-        <h3>Fehler</h3>
-        <ul class="failures">
-          @for (failure of report.result.failures; track $index) {
-            <li>{{ failure }}</li>
-          }
-        </ul>
-      }
-      @if (report.result.warnings.length > 0) {
-        <h3>Hinweise</h3>
-        <ul class="warnings">
-          @for (warning of report.result.warnings; track $index) {
-            <li>{{ warning }}</li>
-          }
-        </ul>
-      }
-    </mat-card-content>
-    <mat-card-actions align="end">
-      <button matButton class="close-report-button" (click)="closeScrapeReport()">Schließen</button>
-    </mat-card-actions>
-  </mat-card>
+  <app-scrape-report [job]="report" (closed)="closeScrapeReport()" />
 }

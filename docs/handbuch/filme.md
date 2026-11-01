@@ -40,6 +40,7 @@ Einige Felder im Detail:
 | **Gesehen-Status aus Kodi** | Holt Wiedergaben und eigene Bewertung aus Kodi. |
 | **Technische Angaben auslesen** | Liest die Datei mit ffprobe aus. |
 | **Umbenennen** | Benennt nur diesen Film nach den Mustern der Einstellungen um. |
+| **Scrapen** | Ergänzt alles Fehlende nur für diesen Film, siehe [Scrapen](scrapen.md#automatisches-scrapen). |
 | **Online suchen** | Sucht den Film bei einem Anbieter, siehe [Scrapen](scrapen.md#online-suche). |
 
 ## Technische Angaben

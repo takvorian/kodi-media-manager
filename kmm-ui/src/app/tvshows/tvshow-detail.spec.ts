@@ -5,6 +5,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 
+import { FakeJobEvents, job } from '../jobs/fake-job-events';
+
 import { ScraperInfo } from '../movies/scraper';
 import { NO_THEME, flushWhenRequested } from '../shared/testing';
 import { ThemeService } from '../shared/theme';
@@ -117,8 +119,10 @@ describe('TvShowDetail', () => {
   let snackBarMessages: string[];
   let confirmMessages: string[];
   let confirmAnswer: boolean;
+  let events: FakeJobEvents;
 
   beforeEach(() => {
+    events = new FakeJobEvents();
     snackBarMessages = [];
     confirmMessages = [];
     confirmAnswer = true;
@@ -126,6 +130,7 @@ describe('TvShowDetail', () => {
       imports: [TvShowDetail],
       providers: [
         { provide: ThemeService, useValue: { info: () => of(NO_THEME) } },
+        events.provider(),
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
@@ -566,6 +571,124 @@ describe('TvShowDetail', () => {
       click('.rename-button');
 
       expect(snackBarMessages).toEqual(['kaputt', 'Bitte die Änderungen zuerst speichern.']);
+    });
+  });
+  describe('scraping', () => {
+    const running = job({
+      id: 's',
+      key: 'tvshow-scrape:3',
+      title: 'Scrapen „ALF“',
+      done: 0,
+      total: 1,
+    });
+    const finished = {
+      ...running,
+      status: 'SUCCEEDED' as const,
+      result: {
+        shows: 1,
+        episodesUpdated: 0,
+        scraped: 1,
+        unmatched: 0,
+        imagesSaved: 4,
+        unmatchedEntries: [],
+        failures: [],
+        warnings: ['fanart.tv: Key fehlt'],
+      },
+    };
+
+    function scrapeButton(): HTMLButtonElement {
+      return element().querySelector<HTMLButtonElement>('.scrape-button')!;
+    }
+
+    function titleInput(): HTMLInputElement {
+      return element().querySelector<HTMLInputElement>('[name="title"]')!;
+    }
+
+    async function finish(): Promise<void> {
+      events.emit(running);
+      fixture.detectChanges();
+      await fixture.whenStable();
+      events.emit(finished);
+      await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, alf);
+      for (let pass = 0; pass < 3; pass++) {
+        fixture.detectChanges();
+        await Promise.resolve();
+        httpTesting.match(`${TVSHOWS_URL}/3/artwork`).forEach((request) => request.flush([]));
+      }
+      await fixture.whenStable();
+      fixture.detectChanges();
+    }
+
+    it('starts the job for this entry only', async () => {
+      await load(alf);
+
+      scrapeButton().click();
+
+      httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/auto-scrape` }).flush(running);
+    });
+
+    it('asks to save unsaved changes first', async () => {
+      await load(alf);
+      titleInput().value = 'Geändert';
+      titleInput().dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      scrapeButton().click();
+
+      expect(snackBarMessages).toEqual(['Bitte die Änderungen zuerst speichern.']);
+    });
+
+    it('locks the form and the button while running', async () => {
+      await load(alf);
+
+      events.emit(running);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(scrapeButton().disabled).toBe(true);
+      expect(titleInput().disabled).toBe(true);
+      expect(element().querySelector('.scrape-message')?.textContent).toContain('0 von 1');
+    });
+
+    it('reloads and keeps the report open when done', async () => {
+      await load(alf);
+
+      await finish();
+
+      expect(titleInput().disabled).toBe(false);
+      expect(scrapeButton().disabled).toBe(false);
+      expect(element().querySelector('.scrape-summary')?.textContent).toContain(
+        'Scrapen „ALF“ abgeschlossen',
+      );
+      expect(element().querySelector('.warnings li')?.textContent).toContain(
+        'fanart.tv: Key fehlt',
+      );
+
+      element().querySelector<HTMLButtonElement>('.close-report-button')!.click();
+      fixture.detectChanges();
+      expect(element().querySelector('.scrape-report')).toBeNull();
+    });
+
+    it('ignores the scrape of other entries', async () => {
+      await load(alf);
+
+      events.emit({ ...running, id: 'x', key: 'tvshow-scrape:99' });
+      events.emit({ ...finished, id: 'x', key: 'tvshow-scrape:99' });
+      fixture.detectChanges();
+
+      expect(scrapeButton().disabled).toBe(false);
+      expect(element().querySelector('.scrape-report')).toBeNull();
+    });
+
+    it('reports a scrape that cannot be started', async () => {
+      await load(alf);
+
+      scrapeButton().click();
+      httpTesting
+        .expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/auto-scrape` })
+        .flush({ detail: 'Läuft schon.' }, { status: 409, statusText: 'Conflict' });
+
+      expect(snackBarMessages).toEqual(['Läuft schon.']);
     });
   });
 });

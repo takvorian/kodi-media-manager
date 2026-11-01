@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -8,12 +8,16 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
-import { EMPTY, finalize, map, of, switchMap } from 'rxjs';
+import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
 
+import { Job } from '../jobs/job';
+import { JobStore } from '../jobs/job-store';
 import { KodiPlaybackResult, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
+import { ScrapeProgress } from '../sources/scrape-progress';
+import { ScrapeReport } from '../sources/scrape-report';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
@@ -21,6 +25,7 @@ import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
+import { movieScrapeJobKey } from './movie-batch';
 import {
   MAX_YEAR,
   MIN_YEAR,
@@ -52,6 +57,8 @@ const SNACKBAR_DURATION_MS = 5000;
     MovieArtwork,
     MovieOnlineSearch,
     MovieSupplementView,
+    ScrapeProgress,
+    ScrapeReport,
     StreamDetailsView,
     ThemeEditor,
     TrailerEditor,
@@ -67,6 +74,7 @@ export class MovieDetail {
   private readonly renameService = inject(MovieRenameService);
   private readonly settingsService = inject(SettingsService);
   private readonly confirm = inject(CONFIRM);
+  private readonly jobStore = inject(JobStore);
 
   /** Film-ID aus der Route {@code /movies/:id}. */
   readonly id = input.required({ transform: numberAttribute });
@@ -80,6 +88,13 @@ export class MovieDetail {
   protected readonly importingPlayback = signal(false);
   protected readonly probingStreams = signal(false);
   protected readonly renaming = signal(false);
+  /** Läuft auch weiter, wenn man die Seite verlässt und zurückkehrt. */
+  protected readonly scrapeJob = computed(() =>
+    this.jobStore.runningJob(movieScrapeJobKey(this.id())),
+  );
+  protected readonly scrapeReport = signal<Job | null>(null);
+  /** Zählt beendete Läufe; Titelmusik und Bilder laden selbst und werden damit neu aufgebaut. */
+  protected readonly scrapeRuns = signal(0);
   /** Ob das Formular einen Treffer der Online-Suche enthält; nach dem Speichern werden die Angaben ausgelesen. */
   private readonly adoptedProposal = signal(false);
   /** Sammlung des übernommenen Treffers; nach dem Speichern wird der Film ihrem Set zugeordnet, wenn eingestellt. */
@@ -97,11 +112,44 @@ export class MovieDetail {
   );
 
   constructor() {
+    this.jobStore.connect();
     effect(() => {
       const metadata = this.metadata();
       if (metadata) {
         this.form.reset(toFormValue(metadata));
       }
+    });
+    // Am Ende wird das Formular neu geladen; Eingaben während des Laufs gingen dabei verloren.
+    effect(() => {
+      if (this.scrapeJob()) {
+        this.form.disable();
+      } else {
+        this.form.enable();
+      }
+    });
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key === movieScrapeJobKey(this.id())),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.scrapeReport.set(job);
+        this.scrapeRuns.update((runs) => runs + 1);
+        this.movie.reload();
+      });
+  }
+
+  /** Ergänzt alles Fehlende wie das Scrapen einer Quelle, nur für diesen Film. */
+  protected scrape(): void {
+    if (this.form.dirty) {
+      this.notify('Bitte die Änderungen zuerst speichern.');
+      return;
+    }
+    this.searchingOnline.set(false);
+    this.scrapeReport.set(null);
+    this.movieService.autoScrape(this.id()).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }
 

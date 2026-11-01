@@ -2,8 +2,10 @@ package de.tiktak.kmm.autoscrape;
 
 import java.util.List;
 
+import de.tiktak.kmm.source.ScanEntry;
+
 /**
- * Ergebnis des automatischen Scrapens einer Serienquelle.
+ * Ergebnis des automatischen Scrapens einer Serienquelle oder einer Auswahl von Serien.
  *
  * @param shows           bearbeitete Serien
  * @param scraped         Serien, die neu zugeordnet wurden
@@ -13,7 +15,7 @@ import java.util.List;
  * @param trailersSaved   neu eingetragene Trailer-Links
  * @param themesSaved     neu gespeicherte Titelmusik ({@code theme.mp3})
  * @param enriched        Serien mit ergänzten Bewertungen oder Feldern (etwa Trakt, OMDb)
- * @param unmatchedTitles Titel der Serien ohne eindeutigen Treffer (gekürzt)
+ * @param unmatchedEntries Serien ohne eindeutigen Treffer (gekürzt)
  * @param failures        Fehler je Serie als „Titel: Meldung“ (gekürzt)
  * @param warnings        einmalige Hinweise, z. B. zu nicht eingerichteten Anbietern (gekürzt)
  */
@@ -26,12 +28,12 @@ public record TvAutoScrapeResult(
         int trailersSaved,
         int themesSaved,
         int enriched,
-        List<String> unmatchedTitles,
+        List<ScanEntry> unmatchedEntries,
         List<String> failures,
         List<String> warnings) {
 
     public TvAutoScrapeResult {
-        unmatchedTitles = List.copyOf(unmatchedTitles);
+        unmatchedEntries = List.copyOf(unmatchedEntries);
         failures = List.copyOf(failures);
         warnings = List.copyOf(warnings);
     }

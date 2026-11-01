@@ -72,14 +72,13 @@ export function autoScrapeJobKey(sourceId: number): string {
   return `${AUTO_SCRAPE_JOB_KEY_PREFIX}${sourceId}`;
 }
 
-/** Ergebnis eines erfolgreichen Scrape-Jobs; die Listen sind serverseitig gekürzt. */
-/** Ergebnis des automatischen Scrapens einer Film- oder Serienquelle. */
+/** Ergebnis des automatischen Scrapens von Filmen oder Serien; die Listen sind serverseitig gekürzt. */
 export interface AutoScrapeResult {
-  /** Bearbeitete Filme (nur bei Filmquellen). */
+  /** Bearbeitete Filme (nur bei Filmen). */
   readonly movies?: number;
-  /** Bearbeitete Serien (nur bei Serienquellen). */
+  /** Bearbeitete Serien (nur bei Serien). */
   readonly shows?: number;
-  /** Episoden mit ergänzten Angaben (nur bei Serienquellen). */
+  /** Episoden mit ergänzten Angaben (nur bei Serien). */
   readonly episodesUpdated?: number;
   readonly scraped: number;
   readonly unmatched: number;
@@ -90,7 +89,8 @@ export interface AutoScrapeResult {
   readonly themesSaved?: number;
   /** Einträge mit ergänzten Bewertungen oder Feldern (etwa Trakt, OMDb). */
   readonly enriched?: number;
-  readonly unmatchedTitles: readonly string[];
+  /** Einträge ohne eindeutigen Treffer; kann kürzer sein als {@link unmatched}. */
+  readonly unmatchedEntries: readonly ScanEntry[];
   readonly failures: readonly string[];
   readonly warnings: readonly string[];
 }

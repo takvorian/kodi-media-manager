@@ -1,6 +1,15 @@
 # Scrapen: Daten, Bilder, Trailer, Titelmusik
 
-„Scrapen“ heißt, Angaben aus dem Internet zu holen. KMM kann das einzeln mit deiner Kontrolle oder automatisch für eine ganze Quelle.
+„Scrapen“ heißt, Angaben aus dem Internet zu holen. KMM kann das automatisch für einen einzelnen Eintrag, eine Auswahl oder eine ganze Quelle. Mit der Online-Suche ordnest du einen Eintrag selbst zu.
+
+## Einen neuen Film scrapen
+
+1. Lege die Datei in den Ordner der Quelle.
+2. Klicke auf der Seite **Quellen** auf **Scannen**. Der Bericht nennt den neuen Film, mit einem Klick öffnest du ihn.
+3. Klicke in der Filmansicht auf **Scrapen**. KMM holt Metadaten, Bilder, Trailer, Titelmusik und Bewertungen.
+4. Steht der Film danach unter **Ohne eindeutigen Treffer**, ordne ihn über die [Online-Suche](#online-suche) zu und klicke danach noch einmal auf **Scrapen**.
+
+Bei Serien gehst du genauso vor. Mehrere neue Einträge bearbeitest du am schnellsten in der Liste: Filter **Neu (letzte 30 Tage)** wählen, **Alle gefilterten auswählen**, **Scrapen**.
 
 ## Die Anbieter
 
@@ -28,19 +37,34 @@ Mit der Online-Suche ordnest du einen einzelnen Film oder eine Serie selbst zu. 
 4. Klicke beim passenden Treffer auf **Übernehmen**. Die Angaben stehen jetzt im Formular, gespeichert ist noch nichts.
 5. Prüfe das Formular und klicke auf **Speichern**.
 
+Das speichert nur die Metadaten. Bilder, Trailer, Titelmusik und Bewertungen holt danach **Scrapen**.
+
 ![Die Online-Suche](bilder/online-suche.png)
 
 Das ist auch der Weg für Titel, die beim automatischen Scrapen keinen eindeutigen Treffer hatten.
 
 ## Automatisches Scrapen
 
-**Scrapen** bei einer [Quelle](quellen.md) bearbeitet alle Einträge dieser Quelle:
+**Scrapen** gibt es an drei Stellen, die Wirkung ist überall dieselbe:
+
+| Wo | Was bearbeitet wird |
+|---|---|
+| Film- oder Serienansicht | dieser Eintrag |
+| Film- oder Serienliste, wenn du Einträge ausgewählt hast | die Auswahl |
+| [Quelle](quellen.md) | alle Einträge der Quelle |
+
+Das passiert dabei:
 
 - Es füllt nur **fehlende** Metadaten und Bilder. Vorhandenes bleibt.
 - Noch nicht zugeordnete Einträge übernimmt es nur bei einem **eindeutigen Treffer**. Die anderen nennt der Bericht.
 - Bei Serien ergänzt es zusätzlich leere Episodenfelder, fehlende Bilder von Staffeln und Standbilder.
 - Fehlende Trailer und sichere Treffer für die Titelmusik kommen ebenfalls dazu.
 - Ergänzungs-Anbieter füllen leere Felder und holen fehlende Bewertungen. Deutsche Anbieter kommen dabei vor OMDb.
+- Ist [Umbenennen nach dem Scrapen](einstellungen.md) eingeschaltet, benennt KMM die Einträge auch um.
+
+Danach erscheint ein Bericht, in der Ansicht und in der Liste bleibt er stehen, bis du ihn schließt. Einträge ohne eindeutigen Treffer sind dort verlinkt. Endet das Scrapen einer Auswahl, während du auf einer anderen Seite bist, findest du den Bericht in der Liste unter **Ergebnis des letzten Scrapens**. KMM behält ihn, bis der Server neu startet oder er aus den letzten 50 Aufgaben herausfällt.
+
+Ein laufendes Scrapen kannst du dort, wo du es gestartet hast, mit **Abbrechen** beenden. Während es in der Ansicht läuft, ist das Formular gesperrt, damit nichts überschrieben wird. Ungespeicherte Änderungen musst du vorher speichern.
 
 Moviepilot und OFDb suchen nicht über den Titel allein: Eine Seite wird nur übernommen, wenn ihre IMDb-ID zum Film passt. Falsche Treffer sind damit ausgeschlossen, dafür findet nicht jeder Film einen Eintrag. Wegen einer Pause von einer Sekunde zwischen den Abrufen dauert das bei vielen Filmen länger. Der erste Abruf bei OFDb lädt außerdem das Verzeichnis der Seite und dauert entsprechend.
 

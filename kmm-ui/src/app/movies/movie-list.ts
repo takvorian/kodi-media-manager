@@ -25,6 +25,7 @@ import { BatchEditor, KEEP_FIELD } from '../filters/batch-editor';
 import { ListFilter, completeConditions } from '../filters/filter';
 import { FilterEditor } from '../filters/filter-editor';
 import { SavedFilter, SavedFilterService } from '../filters/saved-filter.service';
+import { Job, isRunning } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { localDateTime } from '../shared/date-time';
@@ -32,8 +33,10 @@ import { ExportMenu } from '../shared/export-menu';
 import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
+import { ScrapeProgress } from '../sources/scrape-progress';
+import { ScrapeReport } from '../sources/scrape-report';
 import { DiscFormat } from './movie';
-import { MOVIE_BATCH_FIELDS, MOVIE_BATCH_JOB_KEY } from './movie-batch';
+import { MOVIES_SCRAPE_JOB_KEY, MOVIE_BATCH_FIELDS, MOVIE_BATCH_JOB_KEY } from './movie-batch';
 import { MOVIES_URL, MovieService } from './movie.service';
 
 export const SEARCH_DEBOUNCE_MS = 300;
@@ -67,6 +70,8 @@ const SAVED = 'saved:';
     ExportMenu,
     FilterEditor,
     RouterLink,
+    ScrapeProgress,
+    ScrapeReport,
   ],
   templateUrl: './movie-list.html',
   styleUrl: './movie-list.scss',
@@ -98,6 +103,14 @@ export class MovieList {
   protected readonly chosen = signal<ReadonlySet<number>>(new Set());
   protected readonly batchEditing = signal(false);
   protected readonly batchJob = computed(() => this.jobStore.runningJob(MOVIE_BATCH_JOB_KEY));
+  protected readonly scrapeJob = computed(() => this.jobStore.runningJob(MOVIES_SCRAPE_JOB_KEY));
+  protected readonly scrapeReport = signal<Job | null>(null);
+  /** Beendeter Lauf, solange sein Bericht nicht offen ist: Er kann enden, während man auf einer anderen Seite ist. */
+  protected readonly lastScrape = computed(() =>
+    this.scrapeReport()
+      ? undefined
+      : this.jobStore.jobs().find((job) => job.key === MOVIES_SCRAPE_JOB_KEY && !isRunning(job)),
+  );
 
   protected readonly savedFilters = rxResource({
     stream: () => this.savedFilterService.findAll('MOVIE'),
@@ -170,6 +183,15 @@ export class MovieList {
         this.notify(batchSummary(job));
         this.movies.reload();
       });
+    this.jobStore.completed
+      .pipe(
+        where((job) => job.key === MOVIES_SCRAPE_JOB_KEY),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.scrapeReport.set(job);
+        this.movies.reload();
+      });
   }
 
   protected isChosen(movieId: number): boolean {
@@ -225,6 +247,23 @@ export class MovieList {
         this.jobStore.update(job);
         this.batchEditing.set(false);
       },
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle; Vorhandenes bleibt. */
+  protected scrapeChosen(): void {
+    const ids = this.chosenIds();
+    if (
+      !this.confirm(
+        `${ids.length === 1 ? '1 Film' : `${ids.length} Filme`} scrapen? KMM ergänzt fehlende Metadaten, Bilder, Trailer, Titelmusik und Bewertungen und schreibt sie in die Medienordner. Vorhandenes bleibt. Ist „Filme nach dem Scrapen umbenennen“ eingeschaltet, werden sie auch umbenannt.`,
+      )
+    ) {
+      return;
+    }
+    this.scrapeReport.set(null);
+    this.movieService.autoScrapeAll(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }

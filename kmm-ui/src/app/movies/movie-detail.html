@@ -19,11 +19,28 @@
       <button matButton type="button" class="rename-button" [disabled]="renaming()" (click)="renameMovie()">
         Umbenennen
       </button>
-      <button matButton="tonal" type="button" class="online-search-button" (click)="toggleOnlineSearch()">
+      <button matButton="tonal" type="button" class="scrape-button" [disabled]="!!scrapeJob()" (click)="scrape()">
+        Scrapen
+      </button>
+      <button
+        matButton="tonal"
+        type="button"
+        class="online-search-button"
+        [disabled]="!!scrapeJob()"
+        (click)="toggleOnlineSearch()"
+      >
         {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
       </button>
     </div>
   </div>
+
+  @if (scrapeJob(); as running) {
+    <app-scrape-progress [job]="running" />
+  }
+
+  @if (scrapeReport(); as report) {
+    <app-scrape-report [job]="report" (closed)="scrapeReport.set(null)" />
+  }
 
   @if (searchingOnline()) {
     <mat-card appearance="outlined" class="online-search-card">
@@ -93,7 +110,9 @@
       <mat-card-title>Titelmusik</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <app-theme-editor [endpoint]="themeEndpoint()" />
+      @for (version of [scrapeRuns()]; track version) {
+        <app-theme-editor [endpoint]="themeEndpoint()" />
+      }
     </mat-card-content>
   </mat-card>
 
@@ -102,7 +121,9 @@
       <mat-card-title>Bilder</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <app-movie-artwork [movieId]="details.id" />
+      @for (version of [scrapeRuns()]; track version) {
+        <app-movie-artwork [movieId]="details.id" />
+      }
     </mat-card-content>
   </mat-card>
 
@@ -197,10 +218,10 @@
     </mat-form-field>
 
     <div class="actions">
-      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
+      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving() || !!scrapeJob()">
         Verwerfen
       </button>
-      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving()">
+      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving() || !!scrapeJob()">
         {{ saving() ? 'Speichere …' : 'Speichern' }}
       </button>
     </div>

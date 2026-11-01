@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,8 +9,10 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
-import { EMPTY, finalize, map, of, switchMap } from 'rxjs';
+import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
 
+import { Job } from '../jobs/job';
+import { JobStore } from '../jobs/job-store';
 import { KodiService } from '../kodi/kodi.service';
 import { kodiSyncSummary } from '../kodi/kodi';
 import { ArtworkSource } from '../movies/artwork';
@@ -19,6 +21,8 @@ import { Attribution, ScraperInfo } from '../movies/scraper';
 import { showStreamDetailsSummary } from '../media-info/media-info';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
+import { ScrapeProgress } from '../sources/scrape-progress';
+import { ScrapeReport } from '../sources/scrape-report';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { ThemeEditor } from '../shared/theme-editor';
@@ -45,6 +49,7 @@ import {
   toTvShowMetadata,
 } from './tvshow-forms';
 import { TvShowArtworkService } from './tvshow-artwork.service';
+import { tvShowScrapeJobKey } from './tvshow-batch';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 
@@ -70,6 +75,8 @@ export interface SeasonWithEpisodes {
     TvPeople,
     TvShowOnlineSearch,
     ArtworkGallery,
+    ScrapeProgress,
+    ScrapeReport,
     ThemeEditor,
     TrailerEditor,
   ],
@@ -85,6 +92,7 @@ export class TvShowDetail {
   private readonly renameService = inject(TvRenameService);
   private readonly settingsService = inject(SettingsService);
   private readonly confirm = inject(CONFIRM);
+  private readonly jobStore = inject(JobStore);
 
   /** Serien-ID aus der Route `/tvshows/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -117,17 +125,57 @@ export class TvShowDetail {
   protected readonly searchingOnline = signal(false);
   protected readonly refreshingKodi = signal(false);
   protected readonly renaming = signal(false);
+  /** Läuft auch weiter, wenn man die Seite verlässt und zurückkehrt. */
+  protected readonly scrapeJob = computed(() =>
+    this.jobStore.runningJob(tvShowScrapeJobKey(this.id())),
+  );
+  protected readonly scrapeReport = signal<Job | null>(null);
+  /** Zählt beendete Läufe; Titelmusik und Bilder laden selbst und werden damit neu aufgebaut. */
+  protected readonly scrapeRuns = signal(0);
   /** Übernommener Treffer, dessen Episodendaten beim nächsten Speichern ergänzt werden. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
   protected readonly loadingMissing = signal(false);
 
   constructor() {
+    this.jobStore.connect();
     effect(() => {
       const metadata = this.metadata();
       if (metadata) {
         this.form.reset(toTvShowFormValue(metadata));
       }
+    });
+    // Am Ende wird das Formular neu geladen; Eingaben während des Laufs gingen dabei verloren.
+    effect(() => {
+      if (this.scrapeJob()) {
+        this.form.disable();
+      } else {
+        this.form.enable();
+      }
+    });
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key === tvShowScrapeJobKey(this.id())),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.scrapeReport.set(job);
+        this.scrapeRuns.update((runs) => runs + 1);
+        this.show.reload();
+      });
+  }
+
+  /** Ergänzt alles Fehlende wie das Scrapen einer Quelle, nur für diese Serie. */
+  protected scrape(): void {
+    if (this.form.dirty) {
+      this.notify('Bitte die Änderungen zuerst speichern.');
+      return;
+    }
+    this.searchingOnline.set(false);
+    this.scrapeReport.set(null);
+    this.tvShowService.autoScrape(this.id()).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }
 

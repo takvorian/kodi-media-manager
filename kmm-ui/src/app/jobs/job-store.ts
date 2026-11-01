@@ -24,7 +24,9 @@ export class JobStore {
   /** Laufende Jobs zuerst, danach die neuesten. */
   readonly jobs = computed(() =>
     [...this.jobsById().values()].sort(
-      (left, right) => Number(isRunning(right)) - Number(isRunning(left)) || right.startedAt.localeCompare(left.startedAt),
+      (left, right) =>
+        Number(isRunning(right)) - Number(isRunning(left)) ||
+        right.startedAt.localeCompare(left.startedAt),
     ),
   );
   readonly runningJobs = computed(() => this.jobs().filter(isRunning));
@@ -45,12 +47,18 @@ export class JobStore {
       return;
     }
     this.eventSource = this.createEventSource(JOB_EVENTS_URL);
-    this.eventSource.addEventListener(JOB_EVENT, (event) => this.update(JSON.parse(event.data) as Job));
+    this.eventSource.addEventListener(JOB_EVENT, (event) =>
+      this.update(JSON.parse(event.data) as Job),
+    );
   }
 
   /** Übernimmt einen Job, der z. B. als Antwort auf einen Start-Aufruf kam. */
   update(job: Job): void {
     const previous = this.jobsById().get(job.id);
+    // Die Antwort auf den Start kann nach dem Ende eintreffen, wenn der Job sehr kurz war.
+    if (previous && !isRunning(previous) && isRunning(job)) {
+      return;
+    }
     this.jobsById.update((jobs) => new Map(jobs).set(job.id, job));
     if (previous && isRunning(previous) && !isRunning(job)) {
       this.completedJobs.next(job);

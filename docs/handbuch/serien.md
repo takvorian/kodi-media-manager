@@ -22,6 +22,10 @@ Das Formular speicherst du wie bei Filmen mit **Speichern**. Zusätzlich gibt es
 
 **Fehlende Episoden anzeigen** fragt den Anbieter, welche Episoden es gibt, für die du keine Datei hast. Das ist nur eine Anzeige, KMM legt dafür nichts an.
 
+## Eine Serie scrapen
+
+**Scrapen** in der Serienansicht ergänzt alles Fehlende nur für diese Serie, auch leere Episodenfelder, siehe [Scrapen](scrapen.md#automatisches-scrapen).
+
 ## Online-Suche für Serien
 
 **Online suchen** arbeitet wie bei [Filmen](scrapen.md#online-suche). Die Vorgabe ist TVDB. Die übernommenen Angaben landen zuerst im Formular. Beim Speichern ergänzt KMM zusätzlich die Episoden, und zwar nur deren leere Felder. Ein Hinweis über den Knöpfen sagt dir vorher, wie viele Episoden betroffen sind.

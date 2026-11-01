@@ -1,0 +1,47 @@
+<mat-card appearance="outlined" class="scrape-report">
+  <mat-card-header>
+    <mat-card-title>Ergebnis des Scrapens</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="scrape-summary">{{ summary() }}</p>
+    @if (result(); as details) {
+      @if (details.unmatched > 0) {
+        <h3>Ohne eindeutigen Treffer ({{ details.unmatched }})</h3>
+        <p class="report-hint">Für sie wurden keine Metadaten übernommen. Öffne den Eintrag und ordne ihn mit „Online suchen“ selbst zu.</p>
+        <ul class="unmatched-entries">
+          @for (entry of details.unmatchedEntries; track $index) {
+            <li>
+              @if (link(entry); as target) {
+                <a [routerLink]="target">{{ entry.label }}</a>
+              } @else {
+                {{ entry.label }}
+              }
+            </li>
+          }
+          @if (details.unmatched > details.unmatchedEntries.length) {
+            <li class="more-entries">… und {{ details.unmatched - details.unmatchedEntries.length }} weitere</li>
+          }
+        </ul>
+      }
+      @if (details.failures.length > 0) {
+        <h3>Fehler</h3>
+        <ul class="failures">
+          @for (failure of details.failures; track $index) {
+            <li>{{ failure }}</li>
+          }
+        </ul>
+      }
+      @if (details.warnings.length > 0) {
+        <h3>Hinweise</h3>
+        <ul class="warnings">
+          @for (warning of details.warnings; track $index) {
+            <li>{{ warning }}</li>
+          }
+        </ul>
+      }
+    }
+  </mat-card-content>
+  <mat-card-actions align="end">
+    <button matButton type="button" class="close-report-button" (click)="closed.emit()">Schließen</button>
+  </mat-card-actions>
+</mat-card>

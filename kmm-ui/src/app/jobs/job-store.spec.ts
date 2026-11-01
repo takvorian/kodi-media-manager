@@ -82,4 +82,16 @@ describe('JobStore', () => {
 
     expect(events.closed).toBe(true);
   });
+
+  it('keeps a finished job when the answer to its start arrives late', () => {
+    const store = TestBed.inject(JobStore);
+    const finished = job({ status: 'SUCCEEDED' });
+
+    store.update(job());
+    store.update(finished);
+    store.update(job());
+
+    expect(store.jobs()).toEqual([finished]);
+    expect(store.runningJobs()).toEqual([]);
+  });
 });

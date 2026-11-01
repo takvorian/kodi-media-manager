@@ -25,7 +25,7 @@ Klicke dann auf **Hinzufügen**.
 | Knopf | Was passiert |
 |---|---|
 | **Scannen** | Sucht neue und geänderte Dateien und liest NFOs ein. Bei neuen Dateien liest er auch die technischen Angaben aus, wenn das [eingeschaltet](einstellungen.md#technische-angaben) ist. |
-| **Scrapen** | Ergänzt fehlende Metadaten und Bilder aller Einträge, siehe [Scrapen](scrapen.md). |
+| **Scrapen** | Ergänzt fehlende Metadaten und Bilder aller Einträge der Quelle, auch der alten. Für einzelne Einträge siehe [Scrapen](scrapen.md#automatisches-scrapen). |
 | **Kodi-Scan** | Lässt alle Kodi-Geräte diese Quelle durchsuchen, siehe [Kodi](kodi.md). |
 | **Gesehen-Status** | Holt Wiedergaben und eigene Bewertungen aus Kodi. |
 | **Technische Angaben** | Liest mit ffprobe die fehlenden oder alle Angaben neu aus. |

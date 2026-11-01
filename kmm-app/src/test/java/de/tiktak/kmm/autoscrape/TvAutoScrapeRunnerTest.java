@@ -25,6 +25,8 @@ import de.tiktak.kmm.artwork.TvShowArtworkService;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
+import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.source.ScanEntry;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome.Status;
 import de.tiktak.kmm.tvshow.TvShowDetails;
@@ -76,6 +78,21 @@ class TvAutoScrapeRunnerTest {
 
     @InjectMocks
     private TvAutoScrapeRunner runner;
+
+    @Test
+    void scrapesOnlyTheChosenShowsAndReportsOneThatIsGone() {
+        when(metadataService.findShow(1L)).thenThrow(new ErrorResponseException(HttpStatus.NOT_FOUND));
+        givenShow(2L, "Lost");
+        when(scrapeService.scrapeMissing(2L)).thenReturn(new TvShowAutoScrapeOutcome(Status.NO_MATCH, 0, List.of()));
+        when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(0, List.of()));
+
+        TvAutoScrapeResult result = runner.run(List.of(1L, 2L), context);
+
+        assertThat(result.shows()).isEqualTo(2);
+        assertThat(result.unmatchedEntries()).containsExactly(new ScanEntry(MediaType.TV_SHOW, 2L, "Lost"));
+        assertThat(result.failures()).hasSize(1).first().asString().startsWith("Serie 1: ");
+        verify(queryService, never()).findShowIds(anyLong());
+    }
 
     @Test
     void summarizesEveryOutcomeAndKeepsGoingAfterErrors() {

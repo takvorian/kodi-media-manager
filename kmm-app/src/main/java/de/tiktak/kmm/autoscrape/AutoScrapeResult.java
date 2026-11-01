@@ -2,8 +2,10 @@ package de.tiktak.kmm.autoscrape;
 
 import java.util.List;
 
+import de.tiktak.kmm.source.ScanEntry;
+
 /**
- * Ergebnis des automatischen Scrapens einer Quelle.
+ * Ergebnis des automatischen Scrapens einer Filmquelle oder einer Auswahl von Filmen.
  *
  * @param movies          bearbeitete Filme
  * @param scraped         Filme, deren Metadaten neu geholt wurden
@@ -12,7 +14,7 @@ import java.util.List;
  * @param trailersSaved   neu eingetragene Trailer-Links
  * @param themesSaved     neu gespeicherte Titelmusik ({@code theme.mp3})
  * @param enriched        Filme mit ergänzten Bewertungen oder Feldern (etwa Trakt, OMDb)
- * @param unmatchedTitles Titel der Filme ohne eindeutigen Treffer (gekürzt)
+ * @param unmatchedEntries Filme ohne eindeutigen Treffer (gekürzt)
  * @param failures        Fehler je Film als „Titel: Meldung“ (gekürzt)
  * @param warnings        einmalige Hinweise, z. B. zu nicht eingerichteten Anbietern (gekürzt)
  */
@@ -24,12 +26,12 @@ public record AutoScrapeResult(
         int trailersSaved,
         int themesSaved,
         int enriched,
-        List<String> unmatchedTitles,
+        List<ScanEntry> unmatchedEntries,
         List<String> failures,
         List<String> warnings) {
 
     public AutoScrapeResult {
-        unmatchedTitles = List.copyOf(unmatchedTitles);
+        unmatchedEntries = List.copyOf(unmatchedEntries);
         failures = List.copyOf(failures);
         warnings = List.copyOf(warnings);
     }

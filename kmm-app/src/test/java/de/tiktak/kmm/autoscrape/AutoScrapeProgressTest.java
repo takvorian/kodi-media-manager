@@ -10,7 +10,7 @@ class AutoScrapeProgressTest {
     void limitsListedEntriesButKeepsCounting() {
         var progress = new AutoScrapeProgress(500);
         for (int index = 0; index < 150; index++) {
-            progress.unmatched("Film " + index);
+            progress.unmatched(index, "Film " + index);
             progress.failed("Film " + index, "Fehler");
             progress.warn("Hinweis " + index);
         }
@@ -18,7 +18,7 @@ class AutoScrapeProgressTest {
         AutoScrapeResult result = progress.toResult();
 
         assertThat(result.unmatched()).isEqualTo(150);
-        assertThat(result.unmatchedTitles()).hasSize(AutoScrapeProgress.MAX_LISTED_ENTRIES);
+        assertThat(result.unmatchedEntries()).hasSize(AutoScrapeProgress.MAX_LISTED_ENTRIES);
         assertThat(result.failures()).hasSize(AutoScrapeProgress.MAX_LISTED_ENTRIES);
         assertThat(result.warnings()).hasSize(AutoScrapeProgress.MAX_LISTED_ENTRIES);
         assertThat(result.movies()).isEqualTo(500);

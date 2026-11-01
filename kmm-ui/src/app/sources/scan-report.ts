@@ -68,14 +68,15 @@ function section(
 }
 
 function entries(list: readonly ScanEntry[] | undefined): readonly ScanReportRow[] {
-  return (list ?? []).map((entry) => ({ label: entry.label, link: linkTo(entry) }));
+  return (list ?? []).map((entry) => ({ label: entry.label, link: scanEntryLink(entry) }));
 }
 
 function plain(list: readonly string[] | undefined): readonly ScanReportRow[] {
   return (list ?? []).map((label) => ({ label, link: null }));
 }
 
-function linkTo(entry: ScanEntry): readonly (string | number)[] | null {
+/** Ziel eines Eintrags in der Bibliothek; {@code null}, wenn er nicht mehr dort steht. */
+export function scanEntryLink(entry: ScanEntry): readonly (string | number)[] | null {
   const route = ROUTES[entry.type];
   return route !== undefined && entry.id !== null ? [route, entry.id] : null;
 }

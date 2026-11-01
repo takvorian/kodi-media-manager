@@ -53,6 +53,7 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.source.ScanEntry;
 import de.tiktak.kmm.theme.ThemeService;
 
 @ExtendWith(MockitoExtension.class)
@@ -130,6 +131,78 @@ class AutoScrapeServiceTest {
     }
 
     @Test
+    void scrapesASingleMovieUnderItsOwnKey() {
+        givenMovie(1L, "Heat");
+        when(scrapeService.scrapeMissingMetadata(1L)).thenReturn(MetadataScrapeOutcome.NO_MATCH);
+        when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(2, List.of()));
+
+        service.startMovie(1L);
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("movie-scrape:1"), eq("Scrapen „Heat“"), task.capture());
+        assertThat(task.getValue().run(new RecordingContext(false))).isEqualTo(new AutoScrapeResult(1, 0, 1, 2, 0, 0, 0,
+                List.of(new ScanEntry(MediaType.MOVIE, 1L, "Heat")), List.of(), List.of()));
+    }
+
+    @Test
+    void scrapesEachChosenMovieOnceAndNothingElse() {
+        givenMovie(1L, "Heat");
+        givenMovie(2L, "Ronin");
+        when(scrapeService.scrapeMissingMetadata(anyLong())).thenReturn(MetadataScrapeOutcome.ALREADY_IDENTIFIED);
+        when(artworkService.fillMissing(anyLong())).thenReturn(new ArtworkFillResult(0, List.of()));
+
+        service.startMovies(List.of(1L, 2L, 1L));
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("movies-scrape"), eq("2 Filme scrapen"), task.capture());
+        assertThat(task.getValue().run(new RecordingContext(false)))
+                .isEqualTo(new AutoScrapeResult(2, 0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of()));
+        verify(queryService, never()).findMovieIds(anyLong());
+    }
+
+    @Test
+    void reportsAChosenMovieThatIsGoneAndScrapesTheOthers() {
+        when(metadataService.findDetails(1L)).thenThrow(problem("Film 1 gibt es nicht"));
+        givenMovie(2L, "Ronin");
+        when(scrapeService.scrapeMissingMetadata(2L)).thenReturn(MetadataScrapeOutcome.ALREADY_IDENTIFIED);
+        when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(1, List.of()));
+
+        service.startMovies(List.of(1L, 2L));
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(anyString(), anyString(), task.capture());
+        assertThat(task.getValue().run(new RecordingContext(false))).isEqualTo(new AutoScrapeResult(2, 0, 0, 1, 0, 0, 0,
+                List.of(), List.of("Film 1: Film 1 gibt es nicht"), List.of()));
+    }
+
+    @Test
+    void scrapesASingleTvShowUnderItsOwnKey() {
+        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 1, 0, 3, 2, 1, 1, 1, List.of(), List.of(), List.of());
+        RecordingContext context = new RecordingContext(false);
+        when(tvRunner.title(7L)).thenReturn("Lost");
+        when(tvRunner.run(List.of(7L), context)).thenReturn(result);
+
+        service.startTvShow(7L);
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq("Scrapen „Lost“"), task.capture());
+        assertThat(task.getValue().run(context)).isEqualTo(result);
+    }
+
+    @Test
+    void scrapesEachChosenTvShowOnce() {
+        TvAutoScrapeResult result = new TvAutoScrapeResult(2, 0, 0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of());
+        RecordingContext context = new RecordingContext(false);
+        when(tvRunner.run(List.of(7L, 8L), context)).thenReturn(result);
+
+        service.startTvShows(List.of(7L, 8L, 7L));
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("tvshows-scrape"), eq("2 Serien scrapen"), task.capture());
+        assertThat(task.getValue().run(context)).isEqualTo(result);
+    }
+
+    @Test
     void rejectsSourcesWithoutMoviesOrTvShows() {
         givenSource(MediaType.MOVIE_SET);
 
@@ -168,7 +241,7 @@ class AutoScrapeServiceTest {
 
         AutoScrapeResult result = service.run(SOURCE_ID, context);
 
-        assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, 1, 1, 1, List.of("Unbekannt"),
+        assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, 1, 1, 1, List.of(new ScanEntry(MediaType.MOVIE, 2L, "Unbekannt")),
                 List.of("Heat: Technische Angaben: ffprobe fehlt", "Unbekannt: Ergänzen: NFO gesperrt",
                         "Ronin: Titelmusik: TelevisionTunes ist nicht erreichbar", "Kaputt: TMDB ist nicht erreichbar"),
                 List.of("fanart.tv: Key fehlt", "„Ronin“ nicht umbenannt: Der Ordner existiert bereits.")));

@@ -75,6 +75,15 @@
       {{ batchEditing() ? 'Bearbeitung schließen' : 'Auswahl bearbeiten' }}
     </button>
     <button
+      matButton="tonal"
+      type="button"
+      class="scrape-chosen-button"
+      [disabled]="!!scrapeJob()"
+      (click)="scrapeChosen()"
+    >
+      Scrapen
+    </button>
+    <button
       matButton
       type="button"
       class="fill-trailers-button"
@@ -103,6 +112,20 @@
     </button>
   }
 </div>
+
+@if (lastScrape(); as last) {
+  <button matButton type="button" class="show-scrape-report-button" (click)="scrapeReport.set(last)">
+    Ergebnis des letzten Scrapens
+  </button>
+}
+
+@if (scrapeJob(); as running) {
+  <app-scrape-progress [job]="running" />
+}
+
+@if (scrapeReport(); as report) {
+  <app-scrape-report [job]="report" (closed)="scrapeReport.set(null)" />
+}
 
 @let job = batchJob();
 @if (job) {

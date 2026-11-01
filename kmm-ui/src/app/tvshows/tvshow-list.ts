@@ -25,6 +25,7 @@ import {
   TVSHOW_FILTER_FIELDS,
   TvShowFilter,
 } from '../filters/tvshow-filter';
+import { Job, isRunning } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
 import { localDateTime } from '../shared/date-time';
@@ -32,7 +33,9 @@ import { ExportMenu } from '../shared/export-menu';
 import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
-import { TVSHOW_BATCH_FIELDS, TVSHOW_BATCH_JOB_KEY } from './tvshow-batch';
+import { ScrapeProgress } from '../sources/scrape-progress';
+import { ScrapeReport } from '../sources/scrape-report';
+import { TVSHOWS_SCRAPE_JOB_KEY, TVSHOW_BATCH_FIELDS, TVSHOW_BATCH_JOB_KEY } from './tvshow-batch';
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 
 export const SEARCH_DEBOUNCE_MS = 300;
@@ -61,6 +64,8 @@ const SAVED = 'saved:';
     MatTableModule,
     NgTemplateOutlet,
     RouterLink,
+    ScrapeProgress,
+    ScrapeReport,
   ],
   templateUrl: './tvshow-list.html',
   styleUrl: './tvshow-list.scss',
@@ -99,6 +104,14 @@ export class TvShowList {
   protected readonly chosen = signal<ReadonlySet<number>>(new Set());
   protected readonly batchEditing = signal(false);
   protected readonly batchJob = computed(() => this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY));
+  protected readonly scrapeJob = computed(() => this.jobStore.runningJob(TVSHOWS_SCRAPE_JOB_KEY));
+  protected readonly scrapeReport = signal<Job | null>(null);
+  /** Beendeter Lauf, solange sein Bericht nicht offen ist: Er kann enden, während man auf einer anderen Seite ist. */
+  protected readonly lastScrape = computed(() =>
+    this.scrapeReport()
+      ? undefined
+      : this.jobStore.jobs().find((job) => job.key === TVSHOWS_SCRAPE_JOB_KEY && !isRunning(job)),
+  );
 
   protected readonly savedFilters = rxResource({
     stream: () => this.savedFilterService.findAll('TV_SHOW'),
@@ -171,6 +184,15 @@ export class TvShowList {
         this.notify(batchSummary(job));
         this.shows.reload();
       });
+    this.jobStore.completed
+      .pipe(
+        where((job) => job.key === TVSHOWS_SCRAPE_JOB_KEY),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.scrapeReport.set(job);
+        this.shows.reload();
+      });
   }
 
   protected isChosen(showId: number): boolean {
@@ -221,6 +243,23 @@ export class TvShowList {
         this.jobStore.update(job);
         this.batchEditing.set(false);
       },
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle; Vorhandenes bleibt. */
+  protected scrapeChosen(): void {
+    const ids = [...this.chosen()];
+    if (
+      !this.confirm(
+        `${ids.length === 1 ? '1 Serie' : `${ids.length} Serien`} scrapen? KMM ergänzt fehlende Metadaten, Episodenangaben, Bilder, Trailer, Titelmusik und Bewertungen und schreibt sie in die Medienordner. Vorhandenes bleibt. Ist „Serien nach dem Scrapen umbenennen“ eingeschaltet, werden sie auch umbenannt.`,
+      )
+    ) {
+      return;
+    }
+    this.scrapeReport.set(null);
+    this.tvShowService.autoScrapeAll(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }

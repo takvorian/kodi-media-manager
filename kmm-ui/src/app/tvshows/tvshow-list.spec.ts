@@ -4,10 +4,11 @@ import {
   TestRequest,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
 
 import { FILTERS_URL } from '../filters/saved-filter.service';
 import { Job } from '../jobs/job';
@@ -38,8 +39,35 @@ describe('TvShowList', () => {
   let snackBarMessages: string[];
   const completed = new Subject<Job>();
   const updated: Job[] = [];
+  const running = signal<Job | undefined>(undefined);
+  const history = signal<Job[]>([]);
+  const scrapeJob = {
+    id: 's',
+    key: 'tvshows-scrape',
+    title: '2 Serien scrapen',
+    status: 'RUNNING',
+    done: 1,
+    total: 2,
+    message: 'Heat',
+  } as Job;
+  const finishedScrape = {
+    ...scrapeJob,
+    status: 'SUCCEEDED',
+    result: {
+      shows: 2,
+      episodesUpdated: 1,
+      scraped: 1,
+      unmatched: 1,
+      imagesSaved: 3,
+      unmatchedEntries: [{ type: 'TV_SHOW', id: 2, label: 'Unklar' }],
+      failures: [],
+      warnings: [],
+    },
+  } as Job;
 
   beforeEach(() => {
+    running.set(undefined);
+    history.set([]);
     snackBarMessages = [];
     updated.length = 0;
     TestBed.configureTestingModule({
@@ -58,7 +86,9 @@ describe('TvShowList', () => {
           useValue: {
             connect: () => undefined,
             completed,
-            runningJob: () => undefined,
+            jobs: () => history(),
+            runningJob: () => running(),
+            cancel: () => of({ ...scrapeJob, status: 'CANCELLED' }),
             update: (job: Job) => updated.push(job),
           },
         },
@@ -259,6 +289,72 @@ describe('TvShowList', () => {
     expect(snackBarMessages).toContain(
       '2 Serien bearbeiten: 1 geändert, 1 unverändert, 1 Fehler: Serie 4: gesperrt.',
     );
+  });
+
+  describe('scraping the selection', () => {
+    function report(): HTMLElement | null {
+      return element().querySelector<HTMLElement>('.scrape-report');
+    }
+
+    it('starts a job for exactly the chosen entries', async () => {
+      await respond(page([alf]));
+      element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+      httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1, 2]);
+      fixture.detectChanges();
+
+      element().querySelector<HTMLButtonElement>('.scrape-chosen-button')!.click();
+
+      const start = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/auto-scrape` });
+      expect(start.request.body).toEqual({ showIds: [1, 2] });
+      start.flush(scrapeJob);
+      expect(updated).toEqual([scrapeJob]);
+    });
+
+    it('offers no scraping without a selection', async () => {
+      await respond(page([alf]));
+
+      expect(element().querySelector('.scrape-chosen-button')).toBeNull();
+    });
+
+    it('shows progress and can cancel', async () => {
+      running.set(scrapeJob);
+      await respond(page([alf]));
+
+      expect(element().querySelector('.scrape-message')?.textContent).toContain('1 von 2');
+      element().querySelector<HTMLButtonElement>('.cancel-scrape-button')!.click();
+      expect(updated.map((job) => job.status)).toEqual(['CANCELLED']);
+    });
+
+    it('keeps the report open and links what it could not match', async () => {
+      await respond(page([alf]));
+
+      completed.next(finishedScrape);
+      await respond(page([alf]));
+      fixture.detectChanges();
+
+      expect(report()?.textContent).toContain(
+        '2 Serien scrapen abgeschlossen: 2 Serien, 1 Episode ergänzt, 1 neu zugeordnet, 1 ohne Treffer, 3 Bilder gespeichert.',
+      );
+      expect(report()?.querySelector('.unmatched-entries a')?.getAttribute('href')).toBe(
+        '/tvshows/2',
+      );
+
+      report()!.querySelector<HTMLButtonElement>('.close-report-button')!.click();
+      fixture.detectChanges();
+      expect(report()).toBeNull();
+    });
+
+    it('offers the report of a run that ended while on another page', async () => {
+      history.set([finishedScrape]);
+      await respond(page([alf]));
+      expect(report()).toBeNull();
+
+      element().querySelector<HTMLButtonElement>('.show-scrape-report-button')!.click();
+      fixture.detectChanges();
+
+      expect(report()).not.toBeNull();
+      expect(element().querySelector('.show-scrape-report-button')).toBeNull();
+    });
   });
 
   it('fetches the missing trailers of the chosen shows as a job', async () => {

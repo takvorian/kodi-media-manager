@@ -1,0 +1,23 @@
+.scrape-report {
+  margin: 16px 0;
+
+  h3 {
+    margin: 16px 0 4px;
+    font: var(--mat-sys-title-small);
+  }
+
+  ul {
+    margin: 0;
+    max-height: 240px;
+    overflow-y: auto;
+  }
+}
+
+.scrape-summary,
+.report-hint {
+  margin: 8px 0 4px;
+}
+
+.more-entries {
+  color: var(--mat-sys-on-surface-variant);
+}

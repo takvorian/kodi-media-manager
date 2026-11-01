@@ -71,6 +71,15 @@ export class TvShowService {
     return this.http.post<Job>(`${TVSHOWS_URL}/themes/fill`, { showIds });
   }
 
+  autoScrape(showId: number): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/auto-scrape`, null);
+  }
+
+  /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle, als Job. */
+  autoScrapeAll(showIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/auto-scrape`, { showIds });
+  }
+
   fillMissingTrailers(showIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/trailers/fill`, { showIds });
   }

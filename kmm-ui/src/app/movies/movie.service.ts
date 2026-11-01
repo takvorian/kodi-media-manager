@@ -116,6 +116,15 @@ export class MovieService {
     return this.http.post<Job>(`${MOVIES_URL}/themes/fill`, { movieIds });
   }
 
+  autoScrape(movieId: number): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/${movieId}/auto-scrape`, null);
+  }
+
+  /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle, als Job. */
+  autoScrapeAll(movieIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/auto-scrape`, { movieIds });
+  }
+
   fillMissingTrailers(movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${MOVIES_URL}/trailers/fill`, { movieIds });
   }

@@ -5,12 +5,14 @@ import static org.mockito.Mockito.when;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
@@ -42,6 +44,51 @@ class AutoScrapeControllerTest {
                 .hasHeader("Location", "/api/v1/jobs/" + JOB_ID)
                 .bodyJson()
                 .extractingPath("$.key").isEqualTo("auto-scrape:3");
+    }
+
+    @Test
+    void startsTheScrapeOfASingleMovie() {
+        when(autoScrapeService.startMovie(5L)).thenReturn(job("movie-scrape:5"));
+
+        assertThat(mockMvc.post().uri(AutoScrapeController.MOVIE_PATH, 5L).with(csrf()))
+                .hasStatus(202).bodyJson().extractingPath("$.key").isEqualTo("movie-scrape:5");
+    }
+
+    @Test
+    void startsTheScrapeOfChosenMovies() {
+        when(autoScrapeService.startMovies(List.of(5L, 6L))).thenReturn(job("movies-scrape"));
+
+        assertThat(mockMvc.post().uri(AutoScrapeController.MOVIES_PATH).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"movieIds\": [5, 6]}"))
+                .hasStatus(202).bodyJson().extractingPath("$.key").isEqualTo("movies-scrape");
+    }
+
+    @Test
+    void startsTheScrapeOfASingleTvShow() {
+        when(autoScrapeService.startTvShow(7L)).thenReturn(job("tvshow-scrape:7"));
+
+        assertThat(mockMvc.post().uri(AutoScrapeController.TV_SHOW_PATH, 7L).with(csrf()))
+                .hasStatus(202).bodyJson().extractingPath("$.key").isEqualTo("tvshow-scrape:7");
+    }
+
+    @Test
+    void startsTheScrapeOfChosenTvShows() {
+        when(autoScrapeService.startTvShows(List.of(7L))).thenReturn(job("tvshows-scrape"));
+
+        assertThat(mockMvc.post().uri(AutoScrapeController.TV_SHOWS_PATH).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"showIds\": [7]}"))
+                .hasStatus(202).bodyJson().extractingPath("$.key").isEqualTo("tvshows-scrape");
+    }
+
+    @Test
+    void rejectsAnEmptySelection() {
+        assertThat(mockMvc.post().uri(AutoScrapeController.MOVIES_PATH).with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"movieIds\": []}")).hasStatus(400);
+    }
+
+    private static JobSnapshot job(String key) {
+        return new JobSnapshot(JOB_ID, key, "Scrapen", JobStatus.RUNNING, 0, 0, null, null,
+                Instant.parse("2026-10-25T12:00:00Z"), null);
     }
 
     @Test

@@ -24,7 +24,7 @@ Klicke bei der Quelle auf **Scannen**. KMM findet die Videos und liest vorhanden
 
 ## 5. Daten holen
 
-Klicke bei der Quelle auf **Scrapen**. KMM ergänzt für alle Einträge fehlende Metadaten und Bilder. Filme oder Serien ohne eindeutigen Treffer nennt dir ein Bericht, die suchst du dann einzeln, siehe [Scrapen](scrapen.md).
+Klicke bei der Quelle auf **Scrapen**. KMM ergänzt für alle Einträge fehlende Metadaten und Bilder. Filme oder Serien ohne eindeutigen Treffer nennt dir ein Bericht, die suchst du dann einzeln, siehe [Scrapen](scrapen.md). Kommt später ein einzelner neuer Film dazu, reicht **Scrapen** in seiner Ansicht.
 
 ## 6. Kontrollieren und korrigieren
 

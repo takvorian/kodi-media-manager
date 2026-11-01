@@ -4,9 +4,10 @@ import {
   TestRequest,
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, of } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 
@@ -57,8 +58,34 @@ describe('MovieList', () => {
   let snackBarMessages: string[];
   const completed = new Subject<Job>();
   const updated: Job[] = [];
+  const running = signal<Job | undefined>(undefined);
+  const history = signal<Job[]>([]);
+  const scrapeJob = {
+    id: 's',
+    key: 'movies-scrape',
+    title: '2 Filme scrapen',
+    status: 'RUNNING',
+    done: 1,
+    total: 2,
+    message: 'Heat',
+  } as Job;
+  const finishedScrape = {
+    ...scrapeJob,
+    status: 'SUCCEEDED',
+    result: {
+      movies: 2,
+      scraped: 1,
+      unmatched: 1,
+      imagesSaved: 3,
+      unmatchedEntries: [{ type: 'MOVIE', id: 2, label: 'Unklar' }],
+      failures: [],
+      warnings: [],
+    },
+  } as Job;
 
   beforeEach(() => {
+    running.set(undefined);
+    history.set([]);
     snackBarMessages = [];
     updated.length = 0;
     TestBed.configureTestingModule({
@@ -77,7 +104,9 @@ describe('MovieList', () => {
           useValue: {
             connect: () => undefined,
             completed,
-            runningJob: () => undefined,
+            jobs: () => history(),
+            runningJob: () => running(),
+            cancel: () => of({ ...scrapeJob, status: 'CANCELLED' }),
             update: (job: Job) => updated.push(job),
           },
         },
@@ -333,6 +362,72 @@ describe('MovieList', () => {
     });
     await respond(page([heat, ronin]));
     expect(snackBarMessages).toContain('3 Filme bearbeiten: 3 geändert, 0 unverändert.');
+  });
+
+  describe('scraping the selection', () => {
+    function report(): HTMLElement | null {
+      return element().querySelector<HTMLElement>('.scrape-report');
+    }
+
+    it('starts a job for exactly the chosen entries', async () => {
+      await respond(page([heat, ronin]));
+      element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+      httpTesting.expectOne(`${MOVIES_URL}/query/ids`).flush([1, 2]);
+      fixture.detectChanges();
+
+      element().querySelector<HTMLButtonElement>('.scrape-chosen-button')!.click();
+
+      const start = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/auto-scrape` });
+      expect(start.request.body).toEqual({ movieIds: [1, 2] });
+      start.flush(scrapeJob);
+      expect(updated).toEqual([scrapeJob]);
+    });
+
+    it('offers no scraping without a selection', async () => {
+      await respond(page([heat, ronin]));
+
+      expect(element().querySelector('.scrape-chosen-button')).toBeNull();
+    });
+
+    it('shows progress and can cancel', async () => {
+      running.set(scrapeJob);
+      await respond(page([heat, ronin]));
+
+      expect(element().querySelector('.scrape-message')?.textContent).toContain('1 von 2');
+      element().querySelector<HTMLButtonElement>('.cancel-scrape-button')!.click();
+      expect(updated.map((job) => job.status)).toEqual(['CANCELLED']);
+    });
+
+    it('keeps the report open and links what it could not match', async () => {
+      await respond(page([heat, ronin]));
+
+      completed.next(finishedScrape);
+      await respond(page([heat, ronin]));
+      fixture.detectChanges();
+
+      expect(report()?.textContent).toContain(
+        '2 Filme scrapen abgeschlossen: 2 Filme, 1 neu zugeordnet, 1 ohne Treffer, 3 Bilder gespeichert.',
+      );
+      expect(report()?.querySelector('.unmatched-entries a')?.getAttribute('href')).toBe(
+        '/movies/2',
+      );
+
+      report()!.querySelector<HTMLButtonElement>('.close-report-button')!.click();
+      fixture.detectChanges();
+      expect(report()).toBeNull();
+    });
+
+    it('offers the report of a run that ended while on another page', async () => {
+      history.set([finishedScrape]);
+      await respond(page([heat, ronin]));
+      expect(report()).toBeNull();
+
+      element().querySelector<HTMLButtonElement>('.show-scrape-report-button')!.click();
+      fixture.detectChanges();
+
+      expect(report()).not.toBeNull();
+      expect(element().querySelector('.show-scrape-report-button')).toBeNull();
+    });
   });
 
   it('fetches the missing trailers of the chosen movies as a job', async () => {

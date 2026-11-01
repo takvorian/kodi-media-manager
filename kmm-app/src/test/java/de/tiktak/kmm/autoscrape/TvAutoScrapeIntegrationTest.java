@@ -159,12 +159,22 @@ class TvAutoScrapeIntegrationTest {
     }
 
     @Test
+    void scrapesOnlyTheShowItWasAskedFor() {
+        JsonNode result = await(post(AutoScrapeController.TV_SHOW_PATH.replace("{showId}",
+                String.valueOf(showIdOf("Lost")))));
+
+        assertThat(result.get("shows").asInt()).isEqualTo(1);
+        assertThat(library.resolve("Lost (2004)/poster.jpg")).exists();
+        assertThat(library.resolve("Unbekannt/poster.jpg")).doesNotExist();
+    }
+
+    @Test
     void identifiesShowsFillsEpisodesAndFetchesMissingImages() throws IOException {
         JsonNode result = await(post(AutoScrapeController.AUTO_SCRAPE_PATH.replace("{sourceId}",
                 String.valueOf(sourceId))));
 
         assertThat(result.toString()).isEqualTo("{\"shows\":2,\"scraped\":1,\"unmatched\":1,\"episodesUpdated\":1,"
-                + "\"imagesSaved\":3,\"trailersSaved\":1,\"themesSaved\":0,\"enriched\":0,\"unmatchedTitles\":[\"Unbekannt\"],\"failures\":[],"
+                + "\"imagesSaved\":3,\"trailersSaved\":1,\"themesSaved\":0,\"enriched\":0,\"unmatchedEntries\":[{\"type\":\"TV_SHOW\",\"id\":" + showIdOf("Unbekannt") + ",\"label\":\"Unbekannt\"}],\"failures\":[],"
                 + "\"warnings\":[]}");
         assertThat(jdbcClient.sql("SELECT tvdb_id FROM tv_show WHERE title = 'Lost'").query(String.class).single())
                 .isEqualTo("73739");
@@ -180,6 +190,10 @@ class TvAutoScrapeIntegrationTest {
                 String.valueOf(sourceId))));
         assertThat(repeated.get("scraped").asInt()).as("schon zugeordnet").isZero();
         assertThat(repeated.get("imagesSaved").asInt()).as("vorhandene Bilder bleiben").isZero();
+    }
+
+    private long showIdOf(String title) {
+        return jdbcClient.sql("SELECT id FROM tv_show WHERE title = ?").param(title).query(Long.class).single();
     }
 
     private static URI url(String path) {

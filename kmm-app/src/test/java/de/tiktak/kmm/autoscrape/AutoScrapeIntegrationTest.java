@@ -38,6 +38,8 @@ import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.movie.MovieController;
+import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.source.ScanEntry;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -119,7 +121,7 @@ class AutoScrapeIntegrationTest {
         JsonNode result = awaitJob(post(AutoScrapeController.AUTO_SCRAPE_PATH, sourceId));
 
         assertThat(objectMapper.treeToValue(result, AutoScrapeResult.class)).isEqualTo(new AutoScrapeResult(3, 1, 1, 5, 0,
-                0, 0, List.of("Unbekannt"), List.of(), List.of()));
+                0, 0, List.of(new ScanEntry(MediaType.MOVIE, movieIdOf("Unbekannt"), "Unbekannt")), List.of(), List.of()));
         assertThat(Files.readString(library.resolve("Heat (1995)/Heat (1995).nfo")))
                 .contains("<title>Heat</title>", "<runtime>170</runtime>", ">949</uniqueid>");
         assertThat(library.resolve("Heat (1995)/Heat (1995)-poster.jpg")).hasBinaryContent(JPEG);
@@ -132,8 +134,50 @@ class AutoScrapeIntegrationTest {
     }
 
     @Test
+    void scrapesOnlyTheMovieItWasAskedFor() throws IOException {
+        createFile("Heat (1995)/Heat (1995).mkv");
+        createFile("Ronin (1998)/Ronin (1998).mkv");
+        awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
+
+        JsonNode result = awaitJob(post(AutoScrapeController.MOVIE_PATH, movieIdOf("Heat")));
+
+        assertThat(result.get("movies").asInt()).isEqualTo(1);
+        assertThat(library.resolve("Heat (1995)/Heat (1995).nfo")).exists();
+        assertThat(library.resolve("Ronin (1998)/Ronin (1998).nfo")).doesNotExist();
+        assertThat(library.resolve("Ronin (1998)/Ronin (1998)-poster.jpg")).doesNotExist();
+    }
+
+    @Test
+    void scrapesOnlyTheChosenMovies() throws IOException {
+        createFile("Heat (1995)/Heat (1995).mkv");
+        createFile("Ronin (1998)/Ronin (1998).mkv");
+        awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
+        MvcTestResult started = mockMvc.post().uri(AutoScrapeController.MOVIES_PATH).with(csrf())
+                .contentType("application/json")
+                .content(objectMapper.writeValueAsString(Map.of("movieIds", List.of(movieIdOf("Heat")))))
+                .exchange();
+        assertThat(started).hasStatus(202);
+
+        JsonNode result = awaitJob(objectMapper.readTree(started.getResponse().getContentAsByteArray()).get("id")
+                .asString());
+
+        assertThat(result.get("movies").asInt()).isEqualTo(1);
+        assertThat(library.resolve("Heat (1995)/Heat (1995).nfo")).exists();
+        assertThat(library.resolve("Ronin (1998)/Ronin (1998).nfo")).doesNotExist();
+    }
+
+    @Test
+    void rejectsUnknownMovie() {
+        assertThat(mockMvc.post().uri(AutoScrapeController.MOVIE_PATH, 999L).with(csrf())).hasStatus(404);
+    }
+
+    @Test
     void rejectsUnknownSource() {
         assertThat(mockMvc.post().uri(AutoScrapeController.AUTO_SCRAPE_PATH, 999L).with(csrf())).hasStatus(404);
+    }
+
+    private long movieIdOf(String title) {
+        return jdbcClient.sql("SELECT id FROM movie WHERE title = ?").param(title).query(Long.class).single();
     }
 
     private long createSource() {

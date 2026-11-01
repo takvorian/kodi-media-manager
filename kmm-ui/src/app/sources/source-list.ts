@@ -51,15 +51,10 @@ import {
 } from './media-source';
 import { MediaSourceService } from './media-source.service';
 import { scanReportSections } from './scan-report';
+import { ScrapeReport, autoScrapeSummary, hasScrapeDetails } from './scrape-report';
 import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
-
-/** Bericht des letzten Scrape-Laufs, solange er Titel ohne Treffer, Fehler oder Hinweise enthält. */
-export interface ScrapeReport {
-  readonly title: string;
-  readonly result: AutoScrapeResult;
-}
 
 @Component({
   selector: 'app-source-list',
@@ -67,6 +62,7 @@ export interface ScrapeReport {
     HelpLink,
     ReactiveFormsModule,
     RouterLink,
+    ScrapeReport,
     MatButtonModule,
     MatCardModule,
     MatFormFieldModule,
@@ -100,7 +96,8 @@ export class SourceList {
       : [],
   );
   protected readonly saving = signal(false);
-  protected readonly scrapeReport = signal<ScrapeReport | null>(null);
+  /** Letzter Scrape-Lauf, solange er Titel ohne Treffer, Fehler oder Hinweise enthält. */
+  protected readonly scrapeReport = signal<Job | null>(null);
   private readonly reportedScanId = signal<string | null>(null);
   /** Geöffneter Bericht eines Scans; er kommt aus dem Job-Verlauf des Servers. */
   protected readonly scanReport = computed(() => {
@@ -309,7 +306,7 @@ export class SourceList {
   private onAutoScrapeFinished(job: Job): void {
     this.notify(autoScrapeSummary(job));
     const result = job.status === 'SUCCEEDED' ? (job.result as AutoScrapeResult) : null;
-    this.scrapeReport.set(result && hasDetails(result) ? { title: job.title, result } : null);
+    this.scrapeReport.set(result && hasScrapeDetails(result) ? job : null);
   }
 
   private onScanFinished(job: Job): void {
@@ -341,29 +338,6 @@ function scanCounts(job: Job): string {
     `${result.added} neu, ${result.updated} aktualisiert, ` +
     `${result.removed} entfernt, ${result.unchanged} unverändert${newShows}${errors}${unrecognized}`
   );
-}
-
-function autoScrapeSummary(job: Job): string {
-  if (job.status === 'SUCCEEDED') {
-    const result = job.result as AutoScrapeResult;
-    const errors = result.failures.length > 0 ? `, ${result.failures.length} Fehler` : '';
-    const trailers = result.trailersSaved ? `, ${result.trailersSaved} Trailer eingetragen` : '';
-    const themes = result.themesSaved ? `, ${result.themesSaved} Titelmusik gespeichert` : '';
-    const enriched = result.enriched ? `, ${result.enriched} ergänzt (Bewertungen, Angaben)` : '';
-    const items =
-      result.shows === undefined
-        ? `${result.movies} Filme`
-        : `${result.shows} Serien, ${result.episodesUpdated} Episoden ergänzt`;
-    return (
-      `${job.title} abgeschlossen: ${items}, ${result.scraped} neu zugeordnet, ` +
-      `${result.unmatched} ohne Treffer, ${result.imagesSaved} Bilder gespeichert${trailers}${themes}${enriched}${errors}.`
-    );
-  }
-  return unsuccessfulSummary(job);
-}
-
-function hasDetails(result: AutoScrapeResult): boolean {
-  return result.unmatchedTitles.length + result.failures.length + result.warnings.length > 0;
 }
 
 function unsuccessfulSummary(job: Job): string {
