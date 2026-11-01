@@ -115,7 +115,7 @@ class TvShowScanServiceTest {
                     .toList();
             EpisodeCandidate episode = new EpisodeCandidate(folder.resolve("S01E01.avi"),
                     new EpisodeNumber(1, List.of(1)), null);
-            return Optional.of(new ScannedTvShow(new TvShowCandidate(folder, "x", null, List.of(episode),
+            return Optional.of(new ScannedTvShow(new TvShowCandidate(folder, "x", null, null, List.of(episode),
                     unrecognized), Optional.empty(), Map.of(), Optional.empty(), Map.of()));
         });
         TvShowScanResult expected = new TvShowScanResult(3, 19, 0, 19, 0, 0, 0, 0, List.of());

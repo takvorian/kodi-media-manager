@@ -47,6 +47,17 @@ class TvShowDirectoryScannerTest {
     }
 
     @Test
+    void readsYearAndImdbIdFromTheFolderName() throws IOException {
+        create("ALF (1986) tt0090390/ALF - S01E02.avi");
+
+        assertThat(scanner(ScanRules.defaults()).scan(root)).singleElement().satisfies(show -> {
+            assertThat(show.title()).isEqualTo("ALF");
+            assertThat(show.year()).isEqualTo(1986);
+            assertThat(show.imdbId()).isEqualTo("tt0090390");
+        });
+    }
+
+    @Test
     void reportsVideoFilesWithoutEpisodeNumber() throws IOException {
         create("Garfield und seine Freunde (1988)/Staffel 4/So4E46E47E48.avi");
         create("Garfield und seine Freunde (1988)/Staffel 4/Garfield - S04E45.avi");

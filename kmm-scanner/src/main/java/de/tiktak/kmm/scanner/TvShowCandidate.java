@@ -10,11 +10,12 @@ import java.util.Objects;
  * @param directory           Serienordner
  * @param title               Titel laut Ordnername
  * @param year                Jahr laut Ordnername oder {@code null}
+ * @param imdbId              IMDb-ID laut Ordnername oder {@code null}
  * @param episodes            erkannte Episoden, nach Staffel und Episode sortiert
  * @param unrecognizedFiles   Videodateien ohne erkennbare Staffel und Episode
  */
-public record TvShowCandidate(Path directory, String title, Integer year, List<EpisodeCandidate> episodes,
-        List<Path> unrecognizedFiles) {
+public record TvShowCandidate(Path directory, String title, Integer year, String imdbId,
+        List<EpisodeCandidate> episodes, List<Path> unrecognizedFiles) {
 
     public TvShowCandidate {
         Objects.requireNonNull(directory, "directory must not be null");

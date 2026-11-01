@@ -219,7 +219,7 @@ class MovieScanServiceTest {
     }
 
     private MovieCandidate candidate(String fileName) {
-        return new MovieCandidate(directory.resolve(fileName), fileName, null, DiscFormat.FILE, 1);
+        return new MovieCandidate(directory.resolve(fileName), fileName, null, null, DiscFormat.FILE, 1);
     }
 
     private MediaSource givenSource(MediaType mediaType, Path path) {

@@ -78,7 +78,7 @@ class TvShowFolderReaderTest {
     private Path givenShow(String nfo) throws IOException {
         Path show = Files.createDirectories(directory.resolve("ALF"));
         Files.writeString(show.resolve("tvshow.nfo"), nfo);
-        when(scanner.scanShow(show)).thenAnswer(invocation -> Optional.of(new TvShowCandidate(show, "ALF", null,
+        when(scanner.scanShow(show)).thenAnswer(invocation -> Optional.of(new TvShowCandidate(show, "ALF", null, null,
                 episodesIn(show), List.of())));
         return show;
     }

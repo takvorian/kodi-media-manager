@@ -172,6 +172,22 @@ public class TvShow {
                 userRating);
     }
 
+    /**
+     * Ergänzt fehlendes Jahr und fehlende IMDb-ID aus dem Ordnernamen, damit das Scrapen die Serie sicher findet. Eine
+     * bereits zugeordnete Serie bleibt unverändert.
+     */
+    void fillMissingFromName(Integer nameYear, String nameImdbId) {
+        if (tvdbId != null || tmdbId != null) {
+            return;
+        }
+        if (releaseYear == null) {
+            releaseYear = nameYear;
+        }
+        if (imdbId == null) {
+            imdbId = nameImdbId;
+        }
+    }
+
     void applyMetadata(TvShowMetadata metadata) {
         this.title = Objects.requireNonNull(metadata.title(), "title must not be null");
         this.originalTitle = metadata.originalTitle();

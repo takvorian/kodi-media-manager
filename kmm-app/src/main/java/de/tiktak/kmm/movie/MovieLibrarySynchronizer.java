@@ -62,10 +62,14 @@ class MovieLibrarySynchronizer {
             Movie movie = known.get(scanned.path());
             if (movie == null) {
                 outcome.added.add(newMovie(sourceId, scanned, outcome));
-            } else if (nfoChanged(movie, scanned)
-                    && applyNfo(movie, scanned, movie.getTitle(), movie.getReleaseYear(), outcome)) {
-                outcome.updated++;
-                outcome.details.updated(entry(movie, movie.getId()));
+            } else {
+                boolean nfoApplied = nfoChanged(movie, scanned)
+                        && applyNfo(movie, scanned, movie.getTitle(), movie.getReleaseYear(), outcome);
+                boolean filled = fillFromName(movie, scanned);
+                if (nfoApplied || filled) {
+                    outcome.updated++;
+                    outcome.details.updated(entry(movie, movie.getId()));
+                }
             }
         }
         List<Movie> removed = known.values().stream()
@@ -98,7 +102,12 @@ class MovieLibrarySynchronizer {
         if (!applyNfo(movie, scanned, candidate.title(), candidate.year(), outcome) && scanned.nfo().isEmpty()) {
             movie.applySupplement(MovieSupplement.EMPTY, null);
         }
+        fillFromName(movie, scanned);
         return movie;
+    }
+
+    private static boolean fillFromName(Movie movie, ScannedMovie scanned) {
+        return movie.fillMissingFromName(scanned.candidate().year(), scanned.candidate().imdbId());
     }
 
     private static boolean nfoChanged(Movie movie, ScannedMovie scanned) {

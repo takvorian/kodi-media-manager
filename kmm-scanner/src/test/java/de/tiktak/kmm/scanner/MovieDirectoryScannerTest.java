@@ -38,6 +38,82 @@ class MovieDirectoryScannerTest {
     }
 
     @Test
+    void takesMissingYearAndImdbIdFromTheDirectoryName() throws IOException {
+        file("Wonka (2023) tt6166392/wonka.mkv");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.title()).isEqualTo("wonka");
+            assertThat(candidate.year()).isEqualTo(2023);
+            assertThat(candidate.imdbId()).isEqualTo("tt6166392");
+        });
+    }
+
+    @Test
+    void prefersYearAndImdbIdOfTheFileName() throws IOException {
+        file("Heat (1995) tt0113277/Heat.1996.tt0000001.mkv");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.year()).isEqualTo(1996);
+            assertThat(candidate.imdbId()).isEqualTo("tt0000001");
+        });
+    }
+
+    @Test
+    void keepsTheImdbIdOfAFileNameWithoutTitle() throws IOException {
+        file("Wonka (2023) tt0000002/tt6166392.mkv");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.title()).isEqualTo("Wonka");
+            assertThat(candidate.year()).isEqualTo(2023);
+            assertThat(candidate.imdbId()).isEqualTo("tt6166392");
+        });
+    }
+
+    @Test
+    void doesNotApplyADirectoryNameToSeveralMovies() throws IOException {
+        file("Sammlung 2023 tt6166392/Heat.mkv");
+        file("Sammlung 2023 tt6166392/Ronin.mkv");
+
+        assertThat(scanner.scan(root)).hasSize(2).allSatisfy(candidate -> {
+            assertThat(candidate.year()).isNull();
+            assertThat(candidate.imdbId()).isNull();
+        });
+    }
+
+    @Test
+    void appliesADirectoryNameToAllPartsOfOneMovie() throws IOException {
+        file("Heat (1995) tt0113277/heat-cd1.avi");
+        file("Heat (1995) tt0113277/heat-cd2.avi");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.partCount()).isEqualTo(2);
+            assertThat(candidate.year()).isEqualTo(1995);
+            assertThat(candidate.imdbId()).isEqualTo("tt0113277");
+        });
+    }
+
+    @Test
+    void readsTheImdbIdOfADiscFromTheMovieDirectory() throws IOException {
+        file("Heat (1995) tt0113277/VIDEO_TS/VIDEO_TS.IFO");
+
+        assertThat(scanner.scan(root)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.title()).isEqualTo("Heat");
+            assertThat(candidate.imdbId()).isEqualTo("tt0113277");
+        });
+    }
+
+    @Test
+    void ignoresTheNameOfTheSourceItself() throws IOException {
+        Path source = Files.createDirectories(root.resolve("Filme 2023 tt6166392"));
+        Files.createFile(source.resolve("Heat.mkv"));
+
+        assertThat(scanner.scan(source)).singleElement().satisfies(candidate -> {
+            assertThat(candidate.year()).isNull();
+            assertThat(candidate.imdbId()).isNull();
+        });
+    }
+
+    @Test
     void matchesVideoExtensionsCaseInsensitively() throws IOException {
         file("Heat.MKV");
 

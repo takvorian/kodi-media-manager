@@ -34,6 +34,19 @@ Klicke dann auf **Hinzufügen**.
 
 Während eine Aufgabe läuft, zeigt die Zeile den Fortschritt und einen Knopf **Abbrechen**.
 
+## Woher Titel, Jahr und IMDb-ID kommen
+
+Eine NFO neben dem Film hat immer Vorrang. Ohne NFO gilt bei Filmen:
+
+- **Titel:** aus dem Dateinamen, in seiner Schreibweise. Beim Scrapen ersetzt ihn der Titel des Anbieters.
+- **Jahr und IMDb-ID:** aus dem Dateinamen. Fehlen sie dort, nimmt KMM sie aus dem Namen des Ordners, zum Beispiel `Wonka (2023) tt6166392`. Das gilt nur, wenn dieser Ordner genau einen Film enthält. Der Ordner der Quelle selbst zählt nicht.
+
+Bei Serien kommen alle drei aus dem Namen des Serienordners.
+
+Fehlt Jahr oder IMDb-ID bei einem bereits bekannten Eintrag, ergänzt der nächste Scan sie, solange der Eintrag noch nicht zugeordnet ist. Nach einem Scrapen oder einer Zuordnung über die Online-Suche ändert der Name nichts mehr. Der Scan schreibt dabei keine Dateien.
+
+Steht eine IMDb-ID im Namen, sucht das Scrapen genau diesen Eintrag statt nach dem Titel. Ist die ID falsch, kommt der Eintrag in den Bericht unter **Ohne eindeutigen Treffer**, oder es wird der falsche Film übernommen.
+
 ## Der Bericht nach dem Scan
 
 Das Ergebnis des letzten Scans steht in der Spalte **Letzter Scan**, auch wenn du die Seite zwischendurch verlassen hast. Hat der Scan etwas gefunden, öffnet sich unten ein Bericht, den du über **Details** jederzeit wieder aufrufst. Er nennt

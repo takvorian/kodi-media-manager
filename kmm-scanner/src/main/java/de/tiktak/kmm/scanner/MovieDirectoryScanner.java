@@ -18,6 +18,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -171,7 +172,19 @@ public class MovieDirectoryScanner {
             List<MovieCandidate> candidates = new ArrayList<>(discs);
             candidates.addAll(singleFiles);
             stacks.values().forEach(parts -> candidates.add(stackCandidate(parts)));
-            return candidates;
+            Map<Path, Long> perDirectory = candidates.stream()
+                    .collect(Collectors.groupingBy(candidate -> candidate.file().getParent(), Collectors.counting()));
+            return candidates.stream()
+                    .map(candidate -> perDirectory.get(candidate.file().getParent()) == 1
+                            ? withDirectoryName(candidate) : candidate)
+                    .toList();
+        }
+
+        /** Nur für den einzigen Film eines Ordners: Bei mehreren wäre unklar, zu welchem Jahr und ID gehören. */
+        private MovieCandidate withDirectoryName(MovieCandidate candidate) {
+            Path directory = candidate.file().getParent();
+            return directory.equals(root) ? candidate
+                    : candidate.withMissing(nameParser.parse(directory.getFileName().toString()));
         }
 
         private MovieCandidate stackCandidate(List<StackPart> parts) {
@@ -182,10 +195,11 @@ public class MovieDirectoryScanner {
         private MovieCandidate candidateFor(Path file, String name, DiscFormat format, int partCount) {
             ParsedMovieName parsed = nameParser.parse(name);
             if (!parsed.hasTitle() && file.getParent() != null && !file.getParent().equals(root)) {
-                parsed = nameParser.parse(file.getParent().getFileName().toString());
+                parsed = nameParser.parse(file.getParent().getFileName().toString())
+                        .withPreferredImdbId(parsed.imdbId());
             }
             String title = parsed.hasTitle() ? parsed.title() : name;
-            return new MovieCandidate(file, title, parsed.year(), format, partCount);
+            return new MovieCandidate(file, title, parsed.year(), parsed.imdbId(), format, partCount);
         }
     }
 

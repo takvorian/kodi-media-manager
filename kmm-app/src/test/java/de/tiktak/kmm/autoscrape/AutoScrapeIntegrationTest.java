@@ -167,6 +167,23 @@ class AutoScrapeIntegrationTest {
     }
 
     @Test
+    void findsAMovieByTheImdbIdInItsDirectoryName() throws IOException {
+        createFile("Heat (1995) tt0113277/gibtsnicht.mkv");
+        awaitJob(post(LibraryScanController.SCAN_PATH, createSource()));
+        long movieId = movieIdOf("gibtsnicht");
+        assertThat(jdbcClient.sql("SELECT imdb_id FROM movie WHERE id = ?").param(movieId).query(String.class).single())
+                .isEqualTo("tt0113277");
+
+        JsonNode result = awaitJob(post(AutoScrapeController.MOVIE_PATH, movieId));
+
+        assertThat(result.get("unmatchedEntries")).isEmpty();
+        assertThat(movieIdOf("Heat")).isEqualTo(movieId);
+        assertThat(jdbcClient.sql("SELECT release_year FROM movie WHERE id = ?").param(movieId).query(Integer.class)
+                .single()).isEqualTo(1995);
+        assertThat(library.resolve("Heat (1995) tt0113277/gibtsnicht.nfo")).exists();
+    }
+
+    @Test
     void rejectsUnknownMovie() {
         assertThat(mockMvc.post().uri(AutoScrapeController.MOVIE_PATH, 999L).with(csrf())).hasStatus(404);
     }
@@ -228,6 +245,9 @@ class AutoScrapeIntegrationTest {
                             + " \"release_date\": \"1995-12-15\"}]}"
                     : "{\"results\": []}").getBytes(StandardCharsets.UTF_8));
         });
+        json(httpServer, "/3/find/tt0113277", """
+                {"movie_results": [{"id": 949}]}
+                """);
         json(httpServer, "/3/movie/949", """
                 {"id": 949, "imdb_id": "tt0113277", "title": "Heat", "original_title": "Heat",
                  "release_date": "1995-12-15", "runtime": 170, "genres": [{"name": "Krimi"}]}

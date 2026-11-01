@@ -244,6 +244,27 @@ public class Movie {
         this.genres.addAll(metadata.genres());
     }
 
+    /**
+     * Ergänzt fehlendes Jahr und fehlende IMDb-ID aus dem Datei- oder Ordnernamen, damit das Scrapen den Film sicher
+     * findet. Ein bereits zugeordneter Film bleibt unverändert.
+     *
+     * @return ob sich etwas geändert hat
+     */
+    boolean fillMissingFromName(Integer nameYear, String nameImdbId) {
+        if (tmdbId != null) {
+            return false;
+        }
+        boolean fillYear = releaseYear == null && nameYear != null;
+        boolean fillImdbId = imdbId == null && nameImdbId != null;
+        if (fillYear) {
+            releaseYear = nameYear;
+        }
+        if (fillImdbId) {
+            imdbId = nameImdbId;
+        }
+        return fillYear || fillImdbId;
+    }
+
     public MovieSupplement supplement() {
         return new MovieSupplement(
                 creditsOf(CreditType.ACTOR).map(MovieCredit::toActor).toList(),

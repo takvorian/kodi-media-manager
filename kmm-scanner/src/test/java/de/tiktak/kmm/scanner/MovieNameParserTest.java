@@ -35,8 +35,32 @@ class MovieNameParserTest {
         assertThat(parsed.hasTitle()).isTrue();
     }
 
+    @ParameterizedTest(name = "{0} -> {1} ({2}) {3}")
+    @CsvSource(delimiter = '|', nullValues = "null", value = {
+            "Wonka (2023) tt6166392                 | Wonka       | 2023 | tt6166392",
+            "Wonka tt6166392 (2023)                 | Wonka       | 2023 | tt6166392",
+            "tt6166392 Wonka (2023)                 | Wonka       | 2023 | tt6166392",
+            "Wonka tt6166392                        | Wonka       | null | tt6166392",
+            "Wonka - TT6166392                      | Wonka       | null | tt6166392",
+            "Wonka.2023.tt6166392.1080p             | Wonka       | 2023 | tt6166392",
+            "Wonka (2023) [tt6166392]               | Wonka       | 2023 | tt6166392",
+            "Wonka (2023) {imdb-tt6166392}          | Wonka       | 2023 | tt6166392",
+            "Wonka [imdbid-tt6166392]               | Wonka       | null | tt6166392",
+            "Show tt20231234                        | Show        | null | tt20231234",
+            "Wonka (2023) tt123                     | Wonka       | 2023 | null",
+            "Mutt1234567 (2023)                     | Mutt1234567 | 2023 | null"
+    })
+    void readsTheImdbIdAndKeepsItOutOfTheTitle(String name, String expectedTitle, Integer expectedYear,
+            String expectedImdbId) {
+        ParsedMovieName parsed = parser.parse(name);
+
+        assertThat(parsed.title()).isEqualTo(expectedTitle);
+        assertThat(parsed.year()).isEqualTo(expectedYear);
+        assertThat(parsed.imdbId()).isEqualTo(expectedImdbId);
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = {"(2010)", "1080p.BluRay", ""})
+    @ValueSource(strings = {"(2010)", "1080p.BluRay", "", "tt6166392"})
     void reportsMissingTitle(String name) {
         assertThat(parser.parse(name).hasTitle()).isFalse();
     }

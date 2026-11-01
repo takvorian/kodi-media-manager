@@ -59,6 +59,7 @@ class TvShowLibrarySynchronizer {
                 outcome.showsAdded++;
             }
             synchronizeShowNfo(show, scanned, outcome);
+            show.fillMissingFromName(scanned.candidate().year(), scanned.candidate().imdbId());
             if (isNew) {
                 outcome.details.addedShow(showEntry(show, show.getId()));
             }

@@ -85,7 +85,8 @@ public class TvShowDirectoryScanner {
                 .thenComparingInt(episode -> episode.number().firstEpisode())
                 .thenComparing(episode -> episode.file().toString()));
         visitor.unrecognized.sort(Comparator.naturalOrder());
-        return Optional.of(new TvShowCandidate(directory, title, name.year(), visitor.episodes, visitor.unrecognized));
+        return Optional.of(new TvShowCandidate(directory, title, name.year(), name.imdbId(), visitor.episodes,
+                visitor.unrecognized));
     }
 
     private final class EpisodeVisitor extends SimpleFileVisitor<Path> {

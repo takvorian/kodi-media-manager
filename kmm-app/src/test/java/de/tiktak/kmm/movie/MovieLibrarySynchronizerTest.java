@@ -75,7 +75,7 @@ class MovieLibrarySynchronizerTest {
         when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(heat, vanished));
 
         ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(
-                scanned("Heat.mkv", "Heat", 1995),
+                scanned("Heat.mkv", "Heat", null),
                 scanned("The Matrix.mkv", "The Matrix", 1999)));
 
         assertThat(result).usingRecursiveComparison().ignoringFields("details").isEqualTo(new ScanResult(SOURCE_ID, 1, 0, 1, 1, 0));
@@ -96,6 +96,81 @@ class MovieLibrarySynchronizerTest {
         verify(movieRepository).deleteAll(moviesCaptor.capture());
         assertThat(moviesCaptor.getValue()).containsExactly(vanished);
         assertThat(heat.getTitle()).isEqualTo("Heat (bearbeitet)");
+    }
+
+    @Test
+    void takesImdbIdOfNewMovieFromItsName() {
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of());
+
+        synchronizer.synchronize(SOURCE_ID, List.of(new ScannedMovie(
+                candidateWithId("Wonka.mkv", 2023, "tt6166392"), Optional.empty())));
+
+        verify(movieRepository).saveAll(moviesCaptor.capture());
+        assertThat(moviesCaptor.getValue()).singleElement().satisfies(movie -> {
+            assertThat(movie.getReleaseYear()).isEqualTo(2023);
+            assertThat(movie.metadata().imdbId()).isEqualTo("tt6166392");
+        });
+    }
+
+    @Test
+    void fillsImdbIdThatTheNfoOfANewMovieLacks() {
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of());
+        ScannedMovie scanned = new ScannedMovie(candidateWithId("Wonka.mkv", 2023, "tt6166392"),
+                Optional.of(new NfoFileState(ROOT.resolve("Wonka.nfo"), NFO_TIME)));
+        when(nfoFiles.read(scanned.nfo().orElseThrow())).thenReturn(nfo("Wonka", null, null));
+
+        synchronizer.synchronize(SOURCE_ID, List.of(scanned));
+
+        verify(movieRepository).saveAll(moviesCaptor.capture());
+        assertThat(moviesCaptor.getValue().getFirst().metadata().imdbId()).isEqualTo("tt6166392");
+    }
+
+    @Test
+    void keepsTheImdbIdOfTheNfoOverTheName() {
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of());
+        ScannedMovie scanned = new ScannedMovie(candidateWithId("Wonka.mkv", 2023, "tt6166392"),
+                Optional.of(new NfoFileState(ROOT.resolve("Wonka.nfo"), NFO_TIME)));
+        when(nfoFiles.read(scanned.nfo().orElseThrow())).thenReturn(nfo("Wonka", 2022, "tt0000001"));
+
+        synchronizer.synchronize(SOURCE_ID, List.of(scanned));
+
+        verify(movieRepository).saveAll(moviesCaptor.capture());
+        assertThat(moviesCaptor.getValue().getFirst().metadata().imdbId()).isEqualTo("tt0000001");
+        assertThat(moviesCaptor.getValue().getFirst().getReleaseYear()).isEqualTo(2022);
+    }
+
+    @Test
+    void fillsYearAndImdbIdOfAKnownMovieAndReportsIt() {
+        Movie wonka = movie("Wonka.mkv", "wonka");
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(wonka));
+
+        ScanResult first = synchronizer.synchronize(SOURCE_ID, List.of(new ScannedMovie(
+                candidateWithId("Wonka.mkv", 2023, "tt6166392"), Optional.empty())));
+        ScanResult second = synchronizer.synchronize(SOURCE_ID, List.of(new ScannedMovie(
+                candidateWithId("Wonka.mkv", 2023, "tt6166392"), Optional.empty())));
+
+        assertThat(wonka.getReleaseYear()).isEqualTo(2023);
+        assertThat(wonka.metadata().imdbId()).isEqualTo("tt6166392");
+        assertThat(wonka.getTitle()).isEqualTo("wonka");
+        assertThat(first.updated()).isEqualTo(1);
+        assertThat(first.details().updated()).hasSize(1);
+        assertThat(second.updated()).isZero();
+        assertThat(second.unchanged()).isEqualTo(1);
+    }
+
+    @Test
+    void leavesAnIdentifiedMovieAlone() {
+        Movie wonka = movie("Wonka.mkv", "Wonka");
+        wonka.applyMetadata(new MovieMetadata("Wonka", null, null, null, null, null, null, null, null, null, List.of(),
+                null, "856289", null, null));
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(wonka));
+
+        ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(new ScannedMovie(
+                candidateWithId("Wonka.mkv", 2023, "tt6166392"), Optional.empty())));
+
+        assertThat(wonka.metadata().imdbId()).isNull();
+        assertThat(wonka.getReleaseYear()).isNull();
+        assertThat(result.updated()).isZero();
     }
 
     @Test
@@ -274,7 +349,11 @@ class MovieLibrarySynchronizerTest {
     }
 
     private static MovieCandidate candidate(String fileName, String title, Integer year) {
-        return new MovieCandidate(ROOT.resolve(fileName), title, year, DiscFormat.FILE, 1);
+        return new MovieCandidate(ROOT.resolve(fileName), title, year, null, DiscFormat.FILE, 1);
+    }
+
+    private static MovieCandidate candidateWithId(String fileName, Integer year, String imdbId) {
+        return new MovieCandidate(ROOT.resolve(fileName), fileName, year, imdbId, DiscFormat.FILE, 1);
     }
 
     private static MovieNfo nfo(String title, Integer year, String imdbId) {

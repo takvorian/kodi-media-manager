@@ -1,10 +1,11 @@
 package de.tiktak.kmm.scanner;
 
+import java.util.Locale;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Leitet Titel und Jahr aus typischen Namen ab, z. B. {@code Heat (1995)} oder
+ * Leitet Titel, Jahr und IMDb-ID aus typischen Namen ab, z. B. {@code Heat (1995) tt0113277} oder
  * {@code The.Matrix.1999.1080p.BluRay.x264}. Eine Jahreszahl am Anfang gehört zum Titel
  * ({@code 1917 (2019)}, {@code 2001 A Space Odyssey}).
  */
@@ -13,6 +14,9 @@ public class MovieNameParser {
     private static final Pattern WORD_SEPARATORS = Pattern.compile("[._]+");
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     private static final Pattern YEAR = Pattern.compile("(?<![0-9])(?:19|20)[0-9]{2}(?![0-9])");
+    /** Auch in den Schreibweisen {@code [tt0113277]} und {@code {imdb-tt0113277}} anderer Programme. */
+    private static final Pattern IMDB_ID = Pattern.compile(
+            "(?i)[\\[({]?(?:imdb(?:id)?[- =]*)?(?<![\\p{L}0-9])(tt[0-9]{7,10})(?![\\p{L}0-9])[\\])}]?");
     private static final Pattern RELEASE_TAG = Pattern.compile(
             "(?i)(?<![\\p{L}0-9])(?:2160p|1080p|1080i|720p|576p|480p|4k|uhd|blu-?ray|bdrip|brrip|bd25|bd50"
                     + "|dvdrip|dvd5|dvd9|webrip|web-?dl|hdtv|hdrip|x264|x265|h\\.?264|h\\.?265|hevc|avc|xvid|divx"
@@ -24,13 +28,20 @@ public class MovieNameParser {
 
     public ParsedMovieName parse(String name) {
         String normalized = normalize(name);
-        int yearStart = lastYearStartAfterBeginning(normalized);
+        String imdbId = imdbIdIn(normalized);
+        String withoutId = normalize(IMDB_ID.matcher(normalized).replaceAll(" "));
+        int yearStart = lastYearStartAfterBeginning(withoutId);
         if (yearStart != NOT_FOUND) {
-            Matcher year = YEAR.matcher(normalized);
+            Matcher year = YEAR.matcher(withoutId);
             year.find(yearStart);
-            return new ParsedMovieName(clean(normalized.substring(0, yearStart)), Integer.valueOf(year.group()));
+            return new ParsedMovieName(clean(withoutId.substring(0, yearStart)), Integer.valueOf(year.group()), imdbId);
         }
-        return new ParsedMovieName(clean(cutAtFirstReleaseTag(normalized)), null);
+        return new ParsedMovieName(clean(cutAtFirstReleaseTag(withoutId)), null, imdbId);
+    }
+
+    private static String imdbIdIn(String name) {
+        Matcher id = IMDB_ID.matcher(name);
+        return id.find() ? id.group(1).toLowerCase(Locale.ROOT) : null;
     }
 
     private static String normalize(String name) {
