@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.9 - 2026-11-01
+- Sprache je Quelle, Film und Serie wie in Ember (e522ef9)
+- In Kodi aktualisieren auch fuer die Auswahl in Film- und Serienliste (288f1fc)
+- Scan liest Jahr und IMDb-ID auch aus dem Ordnernamen (a31950c)
+
 ## v0.8 - 2026-11-01
 - Handbuch: Link zur Online-Suche in der vom PDF-Bau erwarteten Form (ca1577a)
 - Scrapen fuer einzelne Filme und Serien und fuer eine Auswahl (0cfb848)
