@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.8 - 2026-11-01
+- Handbuch: Link zur Online-Suche in der vom PDF-Bau erwarteten Form (ca1577a)
+- Scrapen fuer einzelne Filme und Serien und fuer eine Auswahl (0cfb848)
+
 ## v0.7 - 2026-11-01
 - Abgelehnte Anfragen: eigenes CSRF-Cookie, klare Meldung und Log-Eintrag (5073512)
 
