@@ -4,6 +4,8 @@ on:
   push:
     branches: [main]
   pull_request:
+  # Start von Hand unter Actions, etwa wenn ein Push keinen Lauf ausgelöst hat.
+  workflow_dispatch:
 
 permissions:
   contents: read
