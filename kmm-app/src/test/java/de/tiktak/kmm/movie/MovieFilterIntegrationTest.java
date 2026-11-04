@@ -62,6 +62,8 @@ class MovieFilterIntegrationTest {
 
     @BeforeEach
     void givenLibrary() throws IOException {
+        // Andere Tests im selben Spring-Kontext können Filmsets hinterlassen; die Auswahlwerte enthalten alle.
+        jdbcClient.sql("DELETE FROM movie_set").update();
         Path filme = Files.createDirectories(library.resolve("filme"));
         givenMovie(filme, "Heat", 1995, "<genre>Krimi</genre><genre>Drama</genre><tag>Favorit</tag>"
                 + "<playcount>2</playcount><userrating>9</userrating><mpaa>FSK 16</mpaa>"

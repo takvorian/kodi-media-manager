@@ -65,6 +65,7 @@ class MovieLibraryIntegrationTest {
     void deleteLibrary() {
         // Filme und Genres folgen per ON DELETE CASCADE.
         jdbcClient.sql("DELETE FROM media_source").update();
+        jdbcClient.sql("DELETE FROM movie_set").update();
     }
 
     @Test
