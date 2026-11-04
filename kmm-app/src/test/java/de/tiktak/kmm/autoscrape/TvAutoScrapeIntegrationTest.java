@@ -53,6 +53,8 @@ import de.tiktak.kmm.plugin.api.TrailerCandidate;
 import de.tiktak.kmm.plugin.api.TrailerScraper;
 import de.tiktak.kmm.plugin.api.TvShowResult;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
+import de.tiktak.kmm.settings.RenameSettings;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -81,6 +83,9 @@ class TvAutoScrapeIntegrationTest {
 
     @Autowired
     private JdbcClient jdbcClient;
+
+    @Autowired
+    private SettingsService settingsService;
 
     @MockitoBean
     private ScraperRegistry scraperRegistry;
@@ -128,7 +133,9 @@ class TvAutoScrapeIntegrationTest {
         TvShowResult lost = TvShowResult.builder().title("Lost").premiered(LocalDate.of(2004, 9, 22))
                 .uniqueIds(Map.of("tvdb", "73739"))
                 .episodes(List.of(EpisodeResult.builder().season(1).episode(1).title("Gestrandet")
-                        .thumb(url("/thumb.jpg")).build()))
+                                .thumb(url("/thumb.jpg")).build(),
+                        EpisodeResult.builder().season(2).episode(1).title("Die Luke").plot("Locke öffnet die Luke.")
+                                .thumb(url("/thumb2.jpg")).build()))
                 .build();
         when(tvdb.scrape(any())).thenAnswer(invocation -> {
             ScrapeRequest request = invocation.getArgument(0);
@@ -143,7 +150,8 @@ class TvAutoScrapeIntegrationTest {
         when(images.displayName()).thenReturn("TheTVDB");
         when(images.findImages(any())).thenReturn(List.of(
                 ImageCandidate.builder().type(ImageType.POSTER).url(url("/poster.jpg")).build(),
-                ImageCandidate.builder().type(ImageType.POSTER).url(url("/season.jpg")).season(1).build()));
+                ImageCandidate.builder().type(ImageType.POSTER).url(url("/season.jpg")).season(1).build(),
+                ImageCandidate.builder().type(ImageType.POSTER).url(url("/season2.jpg")).season(2).build()));
         when(scraperRegistry.imageScrapersFor(de.tiktak.kmm.plugin.api.MediaType.TV_SHOW)).thenReturn(List.of(images));
         TrailerScraper trailers = mock(TrailerScraper.class);
         when(trailers.displayName()).thenReturn("TMDB");
@@ -156,6 +164,76 @@ class TvAutoScrapeIntegrationTest {
     @AfterEach
     void deleteLibrary() {
         jdbcClient.sql("DELETE FROM media_source").update();
+        settingsService.update(settingsService.current().withRename(RenameSettings.DEFAULTS));
+    }
+
+    @Test
+    void scrapesOnlyTheChosenSeasonAndRenamesOnlyItsEpisodes() throws IOException {
+        givenSecondSeason();
+        RenameSettings defaults = RenameSettings.DEFAULTS;
+        settingsService.update(settingsService.current().withRename(new RenameSettings(defaults.movieFolder(),
+                defaults.movieFile(), "Serie {show}", "Staffel {season}", "{show} S{season:2}E{episode:2}",
+                false, false, false, true, false)));
+
+        JsonNode result = await(post(seasonPath(showIdOf("Lost"), 2, false)));
+
+        assertThat(result.get("scraped").asInt()).as("noch nicht zugeordnete Serie").isEqualTo(1);
+        assertThat(result.get("episodesUpdated").asInt()).isEqualTo(1);
+        assertThat(result.get("trailersSaved").asInt()).isZero();
+        assertThat(result.get("failures")).isEmpty();
+        Path show = library.resolve("Lost (2004)");
+        assertThat(Files.readString(show.resolve("Staffel 2/Lost S02E01.nfo"))).contains("<title>Die Luke</title>");
+        assertThat(show.resolve("Staffel 2/Lost S02E01-thumb.jpg")).exists();
+        assertThat(show.resolve("season02-poster.jpg")).exists();
+        assertThat(show.resolve("season01-poster.jpg")).as("andere Staffel").doesNotExist();
+        assertThat(show.resolve("poster.jpg")).as("Bild der Serie").doesNotExist();
+        assertThat(show.resolve("Staffel 1/Lost - S01E01.mkv")).as("andere Staffel").exists();
+        assertThat(show.resolve("Staffel 1/Lost - S01E01.nfo")).doesNotExist();
+        assertThat(library.resolve("Serie Lost")).as("Serienordner bleibt").doesNotExist();
+        assertThat(Files.readString(show.resolve("tvshow.nfo"))).doesNotContain("<trailer>");
+    }
+
+    @Test
+    void refetchesASeasonAndReplacesHandEditedTexts() throws IOException {
+        long showId = showIdOf("Lost");
+        await(post(AutoScrapeController.TV_SHOW_PATH.replace("{showId}", String.valueOf(showId))));
+        Path nfo = library.resolve("Lost (2004)/Staffel 1/Lost - S01E01.nfo");
+        Files.writeString(nfo, Files.readString(nfo).replace("<title>Gestrandet</title>", "<title>Von Hand</title>"));
+
+        assertThat(await(post(seasonPath(showId, 1, false))).get("episodesUpdated").asInt())
+                .as("Lücken füllen behält den Titel").isZero();
+        assertThat(Files.readString(nfo)).contains("<title>Von Hand</title>");
+
+        JsonNode result = await(post(seasonPath(showId, 1, true)));
+
+        assertThat(result.get("episodesUpdated").asInt()).isEqualTo(1);
+        assertThat(Files.readString(nfo)).contains("<title>Gestrandet</title>");
+    }
+
+    @Test
+    void rejectsSeasonsWithoutEpisodesAndRefetchingUnidentifiedShows() {
+        long showId = showIdOf("Lost");
+        assertThat(mockMvc.post().uri(seasonPath(showId, 7, false)).with(csrf()).exchange())
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson().extractingPath("$.detail")
+                .isEqualTo("„Lost“ hat keine Episoden in Staffel 7.");
+        assertThat(mockMvc.post().uri(seasonPath(showId, -1, false)).with(csrf()).exchange())
+                .hasStatus(HttpStatus.BAD_REQUEST);
+
+        JsonNode result = await(post(seasonPath(showId, 1, true)));
+
+        assertThat(result.get("failures").get(0).asString()).startsWith("Lost: „Lost“ ist bei TheTVDB nicht");
+    }
+
+    private void givenSecondSeason() throws IOException {
+        Path episode = library.resolve("Lost (2004)/Staffel 2/Lost - S02E01.mkv");
+        Files.createDirectories(episode.getParent());
+        Files.createFile(episode);
+        await(post(LibraryScanController.SCAN_PATH.replace("{sourceId}", String.valueOf(sourceId))));
+    }
+
+    private static String seasonPath(long showId, int season, boolean overwrite) {
+        return AutoScrapeController.TV_SEASON_PATH.replace("{showId}", String.valueOf(showId))
+                .replace("{season}", String.valueOf(season)) + "?overwrite=" + overwrite;
     }
 
     @Test

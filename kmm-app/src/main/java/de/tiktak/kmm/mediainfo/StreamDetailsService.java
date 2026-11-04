@@ -124,12 +124,16 @@ public class StreamDetailsService {
      * @return leer, wenn das Auslesen nach dem Scrapen abgeschaltet ist
      */
     public Optional<ShowStreamDetailsResult> probeShowIfEnabled(long showId) {
+        return probeEpisodesIfEnabled(episodes.findByShow(showId));
+    }
+
+    private Optional<ShowStreamDetailsResult> probeEpisodesIfEnabled(List<EpisodeMedia> candidates) {
         if (!probes.probeOnScrape()) {
             return Optional.empty();
         }
         int updated = 0;
         List<String> failures = new ArrayList<>();
-        for (EpisodeMedia media : perFile(episodes.findByShow(showId), EpisodeMedia::file)) {
+        for (EpisodeMedia media : perFile(candidates, EpisodeMedia::file)) {
             if (!media.hasStreamDetails()) {
                 Optional<String> failure = failureOf(() -> probeEpisode(media.episodeId()));
                 failure.ifPresent(failures::add);
@@ -147,6 +151,18 @@ public class StreamDetailsService {
      */
     public List<String> probeEpisodesAfterScrape(long showId) {
         return probeShowIfEnabled(showId).map(ShowStreamDetailsResult::failures).orElse(List.of());
+    }
+
+    /**
+     * Wie {@link #probeEpisodesAfterScrape(long)}, aber nur für die Episoden einer Staffel.
+     *
+     * @return die Fehlermeldungen der Dateien, die nicht gelesen werden konnten
+     */
+    public List<String> probeSeasonAfterScrape(long showId, int season) {
+        return probeEpisodesIfEnabled(episodes.findByShow(showId).stream()
+                .filter(media -> media.season() == season)
+                .toList())
+                .map(ShowStreamDetailsResult::failures).orElse(List.of());
     }
 
     StreamDetailsJobResult run(long sourceId, List<Entry> entries, JobContext context) {

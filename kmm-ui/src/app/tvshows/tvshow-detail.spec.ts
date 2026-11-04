@@ -684,6 +684,68 @@ describe('TvShowDetail', () => {
       expect(element().querySelector('.scrape-report')).toBeNull();
     });
 
+    it('scrapes only one season', async () => {
+      await load(alf);
+
+      element().querySelectorAll<HTMLButtonElement>('.season-scrape-button')[1].click();
+
+      httpTesting
+        .expectOne({
+          method: 'POST',
+          url: `${TVSHOWS_URL}/3/seasons/1/auto-scrape?overwrite=false`,
+        })
+        .flush(running);
+      expect(confirmMessages).toEqual([]);
+    });
+
+    it('refetches a season only after confirmation', async () => {
+      await load(alf);
+      const refetch = () =>
+        element().querySelectorAll<HTMLButtonElement>('.season-refetch-button')[1].click();
+
+      confirmAnswer = false;
+      refetch();
+      confirmAnswer = true;
+      refetch();
+
+      httpTesting
+        .expectOne({
+          method: 'POST',
+          url: `${TVSHOWS_URL}/3/seasons/1/auto-scrape?overwrite=true`,
+        })
+        .flush(running);
+      expect(confirmMessages.length).toBe(2);
+      expect(confirmMessages[0]).toMatch(
+        /^Titel und Texte der \d+ Episoden von „Staffel 1 – Ankunft“ werden durch die des Anbieters ersetzt/,
+      );
+    });
+
+    it('locks the season buttons while the show is scraped', async () => {
+      await load(alf);
+
+      events.emit(running);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      const buttons = element().querySelectorAll<HTMLButtonElement>(
+        '.season-scrape-button, .season-refetch-button',
+      );
+      expect(buttons.length).toBe(4);
+      buttons.forEach((button) => expect(button.disabled).toBe(true));
+    });
+
+    it('asks to save unsaved changes before scraping a season', async () => {
+      await load(alf);
+      titleInput().value = 'Geändert';
+      titleInput().dispatchEvent(new Event('input'));
+      fixture.detectChanges();
+
+      element().querySelectorAll<HTMLButtonElement>('.season-refetch-button')[0].click();
+
+      expect(snackBarMessages).toEqual(['Bitte die Änderungen zuerst speichern.']);
+      expect(confirmMessages).toEqual([]);
+    });
+
     it('reports a scrape that cannot be started', async () => {
       await load(alf);
 

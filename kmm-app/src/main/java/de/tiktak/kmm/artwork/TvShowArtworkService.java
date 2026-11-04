@@ -107,19 +107,35 @@ public class TvShowArtworkService {
      */
     public ArtworkFillResult fillMissing(long showId) {
         TvShowDetails show = metadataService.findShow(showId);
+        List<Integer> seasons = show.seasons().stream()
+                .filter(season -> season.episodeCount() > 0)
+                .map(TvShowDetails.Season::number)
+                .toList();
+        return fillMissing(show, withShow(seasons), show.episodes());
+    }
+
+    /**
+     * Wie {@link #fillMissing(long)}, aber nur für die Bilder einer Staffel und die Standbilder ihrer Episoden. Die
+     * Bilder der Serie bleiben, wie sie sind.
+     */
+    public ArtworkFillResult fillMissingSeason(long showId, int season) {
+        TvShowDetails show = metadataService.findShow(showId);
+        return fillMissing(show, List.of(season),
+                show.episodes().stream().filter(episode -> episode.season() == season).toList());
+    }
+
+    /** @param targets die Serie ({@code null}) und Staffelnummern, deren Bilder ergänzt werden */
+    private ArtworkFillResult fillMissing(TvShowDetails show, List<Integer> targets, List<EpisodeSummary> episodes) {
+        long showId = show.id();
         Path directory = directory(show);
         Map<String, String> uniqueIds = uniqueIds(show.metadata());
         if (uniqueIds.isEmpty()) {
             return new ArtworkFillResult(0, List.of());
         }
-        List<Integer> seasons = show.seasons().stream()
-                .filter(season -> season.episodeCount() > 0)
-                .map(TvShowDetails.Season::number)
-                .toList();
         List<String> warnings = new ArrayList<>();
         int saved = 0;
         ArtworkSearch search = null;
-        for (Integer season : withShow(seasons)) {
+        for (Integer season : targets) {
             for (ImageType type : types(season)) {
                 ArtworkSlot slot = slot(directory, type, season);
                 if (artworkFiles.find(slot).isPresent()) {
@@ -140,13 +156,13 @@ public class TvShowArtworkService {
         if (saved > 0) {
             events.publishEvent(new TvShowFilesChangedEvent(showId));
         }
-        saved += fillMissingThumbs(show, warnings);
+        saved += fillMissingThumbs(episodes, warnings);
         return new ArtworkFillResult(saved, warnings);
     }
 
-    private int fillMissingThumbs(TvShowDetails show, List<String> warnings) {
+    private int fillMissingThumbs(List<EpisodeSummary> episodes, List<String> warnings) {
         int saved = 0;
-        for (EpisodeSummary episode : show.episodes()) {
+        for (EpisodeSummary episode : episodes) {
             ArtworkSlot slot = episodeSlot(Path.of(episode.filePath()), ImageType.THUMB);
             if (artworkFiles.find(slot).isPresent()) {
                 continue;

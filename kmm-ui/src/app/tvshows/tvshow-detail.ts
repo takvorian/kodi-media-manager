@@ -9,7 +9,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
-import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
+import { EMPTY, Observable, filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
@@ -185,13 +185,35 @@ export class TvShowDetail {
 
   /** Ergänzt alles Fehlende wie das Scrapen einer Quelle, nur für diese Serie. */
   protected scrape(): void {
+    this.startScrape(() => this.tvShowService.autoScrape(this.id()));
+  }
+
+  /**
+   * Scrapt nur eine Staffel: leere Felder und fehlende Bilder, mit `overwrite` nach Rückfrage auch neue Titel und
+   * Texte für ihre Episoden.
+   */
+  protected scrapeSeason(group: SeasonWithEpisodes, overwrite: boolean): void {
+    const season = group.season;
+    this.startScrape(
+      () => this.tvShowService.autoScrapeSeason(this.id(), season.number, overwrite),
+      overwrite
+        ? `Titel und Texte der ${group.episodes.length} Episoden von „${this.label(season)}“ werden ` +
+            'durch die des Anbieters ersetzt, auch von Hand geänderte. Fortfahren?'
+        : null,
+    );
+  }
+
+  private startScrape(start: () => Observable<Job>, confirmation: string | null = null): void {
     if (this.form.dirty) {
       this.notify('Bitte die Änderungen zuerst speichern.');
       return;
     }
+    if (confirmation && !this.confirm(confirmation)) {
+      return;
+    }
     this.searchingOnline.set(false);
     this.scrapeReport.set(null);
-    this.tvShowService.autoScrape(this.id()).subscribe({
+    start().subscribe({
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });

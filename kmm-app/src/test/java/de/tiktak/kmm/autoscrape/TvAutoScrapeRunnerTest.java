@@ -2,6 +2,8 @@ package de.tiktak.kmm.autoscrape;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -150,11 +152,78 @@ class TvAutoScrapeRunnerTest {
         verify(scrapeService, never()).scrapeMissing(anyLong());
     }
 
-    private void givenShow(long showId, String title) {
+    @Test
+    void scrapesASeasonWithoutTheStepsForTheWholeShow() {
+        givenShow(2L, "Lost");
+        when(scrapeService.refetchSeason(2L, 3))
+                .thenReturn(new TvShowAutoScrapeOutcome(Status.ALREADY_IDENTIFIED, 2, List.of("/lost/x.nfo")));
+        when(streamDetails.probeSeasonAfterScrape(2L, 3)).thenReturn(List.of("ffprobe fehlt"));
+        when(artworkService.fillMissingSeason(2L, 3)).thenReturn(new ArtworkFillResult(1, List.of("POSTER: 404")));
+        when(renameService.renameSeasonIfEnabled(2L, 3, TvRenameTrigger.SCRAPE)).thenReturn(Optional.of(
+                new TvShowRenamePlan(2, "Lost", "/lost", "/lost", List.of(), TvShowRenamePlan.Status.FAILED, "gesperrt")));
+
+        TvAutoScrapeResult result = runner.runSeason(2L, 3, true, context);
+
+        assertThat(result.shows()).isEqualTo(1);
+        assertThat(result.episodesUpdated()).isEqualTo(2);
+        assertThat(result.imagesSaved()).isEqualTo(1);
+        assertThat(result.failures()).containsExactly("Lost: NFO nicht geschrieben: /lost/x.nfo",
+                "Lost: Technische Angaben: ffprobe fehlt");
+        assertThat(result.warnings()).containsExactly("POSTER: 404", "„Lost“ nicht umbenannt: gesperrt");
+        verify(context).reportProgress(0, 4, "Staffel 3 von „Lost“");
+        verify(context).reportProgress(4, 4, null);
+        verify(trailerService, never()).fillMissing(anyLong());
+        verify(themeService, never()).fillShow(anyLong());
+        verify(enrichmentService, never()).fillMissing(anyLong());
+        verify(renameService, never()).renameIfEnabled(anyLong(), any());
+    }
+
+    @Test
+    void reportsSeasonFailuresAndSkipsProbingWhenNothingChanged() {
+        givenShow(2L, "Lost");
+        when(scrapeService.scrapeSeasonMissing(2L, 1))
+                .thenReturn(new TvShowAutoScrapeOutcome(Status.NO_MATCH, 0, List.of()));
+        when(artworkService.fillMissingSeason(2L, 1)).thenThrow(new ErrorResponseException(HttpStatus.BAD_GATEWAY));
+
+        TvAutoScrapeResult result = runner.runSeason(2L, 1, false, context);
+
+        assertThat(result.unmatched()).isEqualTo(1);
+        assertThat(result.failures()).containsExactly("Lost: null");
+        verify(streamDetails, never()).probeSeasonAfterScrape(anyLong(), anyInt());
+
+        when(scrapeService.scrapeSeasonMissing(2L, 1)).thenThrow(new IllegalStateException("kaputt"));
+        assertThat(runner.runSeason(2L, 1, false, context).failures()).containsExactly("Lost: unerwarteter Fehler");
+    }
+
+    @Test
+    void stopsASeasonWhenCancelled() {
+        givenShow(2L, "Lost");
+        when(scrapeService.scrapeSeasonMissing(2L, 1))
+                .thenReturn(new TvShowAutoScrapeOutcome(Status.ALREADY_IDENTIFIED, 0, List.of()));
+        doThrow(new JobCancelledException()).when(context).throwIfCancellationRequested();
+
+        assertThatExceptionOfType(JobCancelledException.class)
+                .isThrownBy(() -> runner.runSeason(2L, 1, false, context));
+        verify(artworkService, never()).fillMissingSeason(anyLong(), anyInt());
+    }
+
+    @Test
+    void acceptsOnlySeasonsWithEpisodes() {
+        TvShowDetails details = givenShow(2L, "Lost");
+        when(details.seasons()).thenReturn(List.of(new TvShowDetails.Season(1, null, 3),
+                new TvShowDetails.Season(2, "Titel ohne Dateien", 0)));
+
+        assertThat(runner.requireSeason(2L, 1)).isEqualTo("Lost");
+        assertThatExceptionOfType(AutoScrapeNotPossibleException.class).isThrownBy(() -> runner.requireSeason(2L, 2))
+                .satisfies(e -> assertThat(e.getBody().getDetail()).isEqualTo("„Lost“ hat keine Episoden in Staffel 2."));
+    }
+
+    private TvShowDetails givenShow(long showId, String title) {
         TvShowDetails details = mock(TvShowDetails.class);
         TvShowMetadata metadata = new TvShowMetadata(title, null, null, null, null, null, null, null, null, List.of(),
                 List.of(), List.of(), null, null, null, null);
         when(details.metadata()).thenReturn(metadata);
         when(metadataService.findShow(showId)).thenReturn(details);
+        return details;
     }
 }

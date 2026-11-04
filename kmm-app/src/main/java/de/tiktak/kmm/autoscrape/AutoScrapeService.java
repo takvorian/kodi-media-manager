@@ -53,6 +53,8 @@ public class AutoScrapeService {
     static final String MOVIES_TITLE = "%d Filme scrapen";
     static final String ONE_TV_SHOW_TITLE = "1 Serie scrapen";
     static final String TV_SHOWS_TITLE = "%d Serien scrapen";
+    static final String SEASON_TITLE = "Staffel %d von „%s“ scrapen";
+    static final String SEASON_REFETCH_TITLE = "Staffel %d von „%s“ neu holen";
     static final String UNKNOWN_MOVIE = "Film %d";
     static final String NO_METADATA_SCRAPER = "Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.";
     static final String NOT_RENAMED = "„%s“ nicht umbenannt: %s";
@@ -115,6 +117,20 @@ public class AutoScrapeService {
     public JobSnapshot startTvShow(long showId) {
         return jobService.submit(TV_SHOW_JOB_KEY_PREFIX + showId, SINGLE_TITLE.formatted(tvRunner.title(showId)),
                 context -> tvRunner.run(List.of(showId), context));
+    }
+
+    /**
+     * Scrapt eine Staffel einer Serie. Sie teilt sich den Job-Schlüssel mit der Serie, damit beide nicht gleichzeitig
+     * laufen.
+     *
+     * @param overwrite ob Titel und Texte der Episoden durch die des Anbieters ersetzt werden
+     * @throws AutoScrapeNotPossibleException wenn die Staffel keine Episoden hat
+     */
+    public JobSnapshot startTvSeason(long showId, int season, boolean overwrite) {
+        String title = tvRunner.requireSeason(showId, season);
+        return jobService.submit(TV_SHOW_JOB_KEY_PREFIX + showId,
+                (overwrite ? SEASON_REFETCH_TITLE : SEASON_TITLE).formatted(season, title),
+                context -> tvRunner.runSeason(showId, season, overwrite, context));
     }
 
     /** Scrapt die ausgewählten Serien nacheinander. */

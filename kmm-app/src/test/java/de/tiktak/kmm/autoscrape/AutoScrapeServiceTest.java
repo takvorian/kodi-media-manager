@@ -190,6 +190,22 @@ class AutoScrapeServiceTest {
     }
 
     @Test
+    void scrapesASeasonUnderTheKeyOfItsShow() {
+        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 0, 0, 2, 1, 0, 0, 0, List.of(), List.of(), List.of());
+        RecordingContext context = new RecordingContext(false);
+        when(tvRunner.requireSeason(7L, 2)).thenReturn("Lost");
+        when(tvRunner.runSeason(7L, 2, true, context)).thenReturn(result);
+
+        service.startTvSeason(7L, 2, true);
+        service.startTvSeason(7L, 2, false);
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq("Staffel 2 von „Lost“ neu holen"), task.capture());
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq("Staffel 2 von „Lost“ scrapen"), any());
+        assertThat(task.getValue().run(context)).isEqualTo(result);
+    }
+
+    @Test
     void scrapesEachChosenTvShowOnce() {
         TvAutoScrapeResult result = new TvAutoScrapeResult(2, 0, 0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of());
         RecordingContext context = new RecordingContext(false);

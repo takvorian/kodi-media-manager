@@ -7,13 +7,31 @@
   <div class="title-row">
     <h2 class="page-title">{{ details.metadata.title }}</h2>
     <div class="title-actions">
-      <button matButton type="button" class="kodi-refresh-button" [disabled]="refreshingKodi()" (click)="refreshInKodi()">
+      <button
+        matButton
+        type="button"
+        class="kodi-refresh-button"
+        [disabled]="refreshingKodi()"
+        (click)="refreshInKodi()"
+      >
         In Kodi aktualisieren
       </button>
-      <button matButton type="button" class="rename-button" [disabled]="renaming()" (click)="renameShow()">
+      <button
+        matButton
+        type="button"
+        class="rename-button"
+        [disabled]="renaming()"
+        (click)="renameShow()"
+      >
         Umbenennen
       </button>
-      <button matButton="tonal" type="button" class="scrape-button" [disabled]="!!scrapeJob()" (click)="scrape()">
+      <button
+        matButton="tonal"
+        type="button"
+        class="scrape-button"
+        [disabled]="!!scrapeJob()"
+        (click)="scrape()"
+      >
         Scrapen
       </button>
       <button
@@ -85,7 +103,11 @@
       <mat-card-title>Trailer</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <app-trailer-editor [endpoint]="trailerEndpoint()" [trailer]="details.trailer" (changed)="showTrailer($event)" />
+      <app-trailer-editor
+        [endpoint]="trailerEndpoint()"
+        [trailer]="details.trailer"
+        (changed)="showTrailer($event)"
+      />
     </mat-card-content>
   </mat-card>
 
@@ -124,8 +146,30 @@
           <mat-expansion-panel class="season">
             <mat-expansion-panel-header>
               <mat-panel-title class="season-title">{{ label(group.season) }}</mat-panel-title>
-              <mat-panel-description>{{ group.season.episodeCount }} Episoden</mat-panel-description>
+              <mat-panel-description
+                >{{ group.season.episodeCount }} Episoden</mat-panel-description
+              >
             </mat-expansion-panel-header>
+            <div class="season-actions">
+              <button
+                matButton="tonal"
+                type="button"
+                class="season-scrape-button"
+                [disabled]="!!scrapeJob()"
+                (click)="scrapeSeason(group, false)"
+              >
+                Staffel scrapen
+              </button>
+              <button
+                matButton
+                type="button"
+                class="season-refetch-button"
+                [disabled]="!!scrapeJob()"
+                (click)="scrapeSeason(group, true)"
+              >
+                Staffel neu holen
+              </button>
+            </div>
             <ul class="episodes">
               @for (episode of group.episodes; track episode.id) {
                 <li class="episode">
@@ -210,7 +254,14 @@
     <div class="row">
       <mat-form-field class="narrow">
         <mat-label>Jahr</mat-label>
-        <input matInput type="number" formControlName="year" name="year" [min]="minYear" [max]="maxYear" />
+        <input
+          matInput
+          type="number"
+          formControlName="year"
+          name="year"
+          [min]="minYear"
+          [max]="maxYear"
+        />
         <mat-error>Zwischen {{ minYear }} und {{ maxYear }}.</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
@@ -227,7 +278,12 @@
       </mat-form-field>
       <mat-form-field class="narrow">
         <mat-label>Status</mat-label>
-        <input matInput formControlName="status" name="status" placeholder="Continuing oder Ended" />
+        <input
+          matInput
+          formControlName="status"
+          name="status"
+          placeholder="Continuing oder Ended"
+        />
         <mat-hint>Continuing: läuft, Ended: beendet</mat-hint>
       </mat-form-field>
     </div>
@@ -268,7 +324,14 @@
       </mat-form-field>
       <mat-form-field class="narrow">
         <mat-label>Eigene Bewertung</mat-label>
-        <input matInput type="number" formControlName="userRating" name="userRating" min="1" max="10" />
+        <input
+          matInput
+          type="number"
+          formControlName="userRating"
+          name="userRating"
+          min="1"
+          max="10"
+        />
         <mat-error>1 bis 10</mat-error>
       </mat-form-field>
     </div>
@@ -280,16 +343,28 @@
 
     @if (pendingFill(); as pending) {
       <p class="hint pending-fill">
-        Beim Speichern werden {{ pending.proposal.matchedEpisodes }} Episoden mit Daten von {{ pending.scraperName }}
+        Beim Speichern werden {{ pending.proposal.matchedEpisodes }} Episoden mit Daten von
+        {{ pending.scraperName }}
         ergänzt (nur leere Felder).
       </p>
     }
 
     <div class="actions">
-      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
+      <button
+        matButton
+        type="button"
+        class="reset-button"
+        (click)="reset()"
+        [disabled]="form.pristine || saving()"
+      >
         Verwerfen
       </button>
-      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving()">
+      <button
+        matButton="filled"
+        type="submit"
+        class="save-button"
+        [disabled]="form.pristine || saving()"
+      >
         {{ saving() ? 'Speichere …' : 'Speichern' }}
       </button>
     </div>

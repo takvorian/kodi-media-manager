@@ -69,6 +69,22 @@ final class TvShowScrapeMerger {
         return new TvShowExtras(filled.actors(), filled.ratings(), seasonNames);
     }
 
+    /** Ändert nur den Titel einer Staffel: ergänzt ihn oder ersetzt ihn mit {@code overwrite} durch den des Anbieters. */
+    static TvShowExtras withSeasonTitle(TvShowExtras current, TvShowResult scraped, int season, boolean overwrite) {
+        TreeMap<Integer, String> seasonNames = new TreeMap<>(current.seasonNames());
+        scraped.seasons().stream()
+                .filter(candidate -> candidate.number() == season && candidate.title() != null)
+                .findFirst()
+                .ifPresent(candidate -> {
+                    if (overwrite) {
+                        seasonNames.put(season, candidate.title());
+                    } else {
+                        seasonNames.putIfAbsent(season, candidate.title());
+                    }
+                });
+        return new TvShowExtras(current.actors(), current.ratings(), seasonNames);
+    }
+
     /**
      * Wie {@link #fillEpisode}, ersetzt aber vorhandene Titel und Inhaltsangaben, wenn der Anbieter welche hat.
      *

@@ -87,7 +87,8 @@ public class TvShowScrapeService {
      */
     @Transactional
     public EpisodeFillResult fillFromProvider(long showId, String scraperId, String providerId) {
-        return inLanguageOf(showId, () -> fill(requireShow(showId), scraper(scraperId), providerId, false));
+        return inLanguageOf(showId, () -> fill(requireShow(showId), scraper(scraperId), providerId, false,
+                null));
     }
 
     /**
@@ -115,7 +116,7 @@ public class TvShowScrapeService {
                 metadataService.updateShow(showId, merged);
                 metadataService.storeLanguageInNfo(showId);
             }
-            EpisodeFillResult filled = fill(show, scraper, providerId, true);
+            EpisodeFillResult filled = fill(show, scraper, providerId, true, null);
             return new TextRefetch(showChanged || filled.updated() > 0, filled.failedFiles());
         });
     }
@@ -131,14 +132,44 @@ public class TvShowScrapeService {
         return ScrapeLanguage.with(metadataService.scrapeLanguage(showId), body);
     }
 
-    /** @param overwrite ob vorhandene Titel und Texte ersetzt werden; sonst bekommen nur leere Felder Werte */
-    private EpisodeFillResult fill(TvShow show, TvShowScraper scraper, String providerId, boolean overwrite) {
+    /**
+     * Holt Titel und Texte der Episoden einer Staffel neu und ersetzt die vorhandenen, auch von Hand geänderte. Von
+     * der Serie ändert sich nur der Titel dieser Staffel. Was der Anbieter nicht hat, bleibt.
+     *
+     * @throws TvShowProblemException wenn kein Anbieter eingerichtet ist, er einen Fehler meldet oder die Serie noch
+     *                                nicht zugeordnet ist
+     */
+    @Transactional
+    public TvShowAutoScrapeOutcome refetchSeason(long showId, int season) {
+        return inLanguageOf(showId, () -> {
+            TvShow show = requireShow(showId);
+            TvShowScraper scraper = preferredReadyScraper().orElseThrow(TvShowProblemException::noScraper);
+            if (knownIds(show.metadata()).isEmpty()) {
+                throw TvShowProblemException.notIdentified(scraper, show.getTitle());
+            }
+            String providerId = identify(scraper, show).uniqueIds().get(scraper.id());
+            if (providerId == null) {
+                throw TvShowProblemException.notIdentified(scraper, show.getTitle());
+            }
+            EpisodeFillResult filled = fill(show, scraper, providerId, true, season);
+            return new TvShowAutoScrapeOutcome(TvShowAutoScrapeOutcome.Status.ALREADY_IDENTIFIED, filled.updated(),
+                    filled.failedFiles());
+        });
+    }
+
+    /**
+     * @param overwrite ob vorhandene Titel und Texte ersetzt werden; sonst bekommen nur leere Felder Werte
+     * @param season    nur die Episoden dieser Staffel und von der Serie nur ihr Titel; {@code null} für alle
+     */
+    private EpisodeFillResult fill(TvShow show, TvShowScraper scraper, String providerId, boolean overwrite,
+            Integer season) {
         TvShowResult scraped = fetch(scraper, providerId);
         List<String> failedFiles = new ArrayList<>();
-        fillShowExtras(show, scraped, failedFiles, overwrite);
+        fillShowExtras(show, scraped, failedFiles, overwrite, season);
         Map<EpisodeKey, EpisodeResult> byNumber = scraped.episodes().stream()
                 .collect(Collectors.toMap(EpisodeKey::of, Function.identity(), (first, second) -> first));
         Map<String, List<Episode>> byFile = episodes(show).stream()
+                .filter(episode -> season == null || episode.getSeason() == season)
                 .collect(Collectors.groupingBy(Episode::getFilePath, LinkedHashMap::new, Collectors.toList()));
         int updated = 0;
         int unchanged = 0;
@@ -181,10 +212,21 @@ public class TvShowScrapeService {
      */
     @Transactional
     public TvShowAutoScrapeOutcome scrapeMissing(long showId) {
-        return inLanguageOf(showId, () -> scrapeMissingInLanguage(showId));
+        return inLanguageOf(showId, () -> scrapeMissingInLanguage(showId, null));
     }
 
-    private TvShowAutoScrapeOutcome scrapeMissingInLanguage(long showId) {
+    /**
+     * Wie {@link #scrapeMissing}, ergänzt aber nur die Episoden einer Staffel und von der Serie nur den Titel dieser
+     * Staffel. Eine noch nicht zugeordnete Serie wird wie dort nur bei eindeutigem Treffer übernommen.
+     *
+     * @throws TvShowProblemException wenn der Anbieter einen Fehler meldet
+     */
+    @Transactional
+    public TvShowAutoScrapeOutcome scrapeSeasonMissing(long showId, int season) {
+        return inLanguageOf(showId, () -> scrapeMissingInLanguage(showId, season));
+    }
+
+    private TvShowAutoScrapeOutcome scrapeMissingInLanguage(long showId, Integer season) {
         TvShowMetadata current = metadataService.currentMetadata(showId);
         TvShow show = requireShow(showId);
         Optional<TvShowScraper> preferred = preferredReadyScraper();
@@ -207,7 +249,7 @@ public class TvShowScrapeService {
             metadataService.storeLanguageInNfo(showId);
             status = TvShowAutoScrapeOutcome.Status.SCRAPED;
         }
-        EpisodeFillResult filled = fill(show, scraper, providerId, false);
+        EpisodeFillResult filled = fill(show, scraper, providerId, false, season);
         return new TvShowAutoScrapeOutcome(status, filled.updated(), filled.failedFiles());
     }
 
@@ -287,7 +329,8 @@ public class TvShowScrapeService {
         }
     }
 
-    private void fillShowExtras(TvShow show, TvShowResult scraped, List<String> failedFiles, boolean overwrite) {
+    private void fillShowExtras(TvShow show, TvShowResult scraped, List<String> failedFiles, boolean overwrite,
+            Integer season) {
         try {
             nfoSync.refreshShowIfChangedOutside(show);
         } catch (TvShowProblemException e) {
@@ -295,8 +338,13 @@ public class TvShowScrapeService {
             failedFiles.add(TvShowFiles.tvShowNfo(show.directory()).toString());
             return;
         }
-        TvShowExtras extras = overwrite ? TvShowScrapeMerger.refreshShowExtras(show.extras(), scraped)
-                : TvShowScrapeMerger.fillShowExtras(show.extras(), scraped);
+        TvShowExtras extras;
+        if (season != null) {
+            extras = TvShowScrapeMerger.withSeasonTitle(show.extras(), scraped, season, overwrite);
+        } else {
+            extras = overwrite ? TvShowScrapeMerger.refreshShowExtras(show.extras(), scraped)
+                    : TvShowScrapeMerger.fillShowExtras(show.extras(), scraped);
+        }
         if (extras.equals(show.extras())) {
             return;
         }

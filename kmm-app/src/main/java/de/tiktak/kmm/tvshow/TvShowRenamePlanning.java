@@ -59,6 +59,24 @@ class TvShowRenamePlanning {
         return new Planned(root, List.of(TvShowRenamePlanner.plan(candidate(show, episodes, root), patterns)));
     }
 
+    /**
+     * Plant nur die Episoden einer Staffel; der Serienordner bleibt, wie er ist.
+     *
+     * @throws TvShowProblemException wenn es die Serie nicht gibt
+     */
+    Planned planSeason(long showId, int season, TvShowRenamePlanner.Patterns patterns) {
+        TvShow show = showRepository.findById(showId).orElseThrow(() -> TvShowProblemException.showNotFound(showId));
+        MediaSource source = tvSource(show.getSourceId());
+        Path root = Path.of(source.getPath()).toAbsolutePath().normalize();
+        List<Episode> episodes = episodeRepository.findByTvShowIdOrderBySeasonAscEpisodeAsc(showId).stream()
+                .filter(episode -> episode.getSeason() == season)
+                .toList();
+        TvShowRenamePlanner.Candidate candidate = candidate(show, episodes, root);
+        TvShowRenamePlanner.Candidate keepFolder = new TvShowRenamePlanner.Candidate(candidate.showId(),
+                candidate.title(), candidate.showDirectory(), root, false, candidate.values(), candidate.files());
+        return new Planned(root, List.of(TvShowRenamePlanner.plan(keepFolder, patterns)));
+    }
+
     private MediaSource tvSource(long sourceId) {
         MediaSource source = sourceService.require(sourceId);
         if (source.getMediaType() != MediaType.TV_SHOW) {

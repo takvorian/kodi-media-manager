@@ -75,6 +75,13 @@ export class TvShowService {
     return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/auto-scrape`, null);
   }
 
+  /** Scrapt eine Staffel; mit `overwrite` werden Titel und Texte ihrer Episoden ersetzt. */
+  autoScrapeSeason(showId: number, season: number, overwrite: boolean): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/seasons/${season}/auto-scrape`, null, {
+      params: { overwrite },
+    });
+  }
+
   /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle, als Job. */
   changeLanguage(
     showIds: readonly number[],

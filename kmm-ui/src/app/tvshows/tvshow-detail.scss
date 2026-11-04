@@ -26,6 +26,13 @@
   }
 }
 
+.season-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
 .episodes {
   margin: 0;
   padding: 0;

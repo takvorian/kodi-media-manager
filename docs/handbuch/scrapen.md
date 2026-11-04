@@ -62,11 +62,12 @@ Das ist auch der Weg für Titel, die beim automatischen Scrapen keinen eindeutig
 
 ## Automatisches Scrapen
 
-**Scrapen** gibt es an drei Stellen, die Wirkung ist überall dieselbe:
+**Scrapen** gibt es an diesen Stellen, die Wirkung ist überall dieselbe:
 
 | Wo | Was bearbeitet wird |
 |---|---|
 | Film- oder Serienansicht | dieser Eintrag |
+| Staffel in der Serienansicht | nur diese Staffel, siehe [Eine Staffel scrapen](serien.md#eine-staffel-scrapen) |
 | Film- oder Serienliste, wenn du Einträge ausgewählt hast | die Auswahl |
 | [Quelle](quellen.md) | alle Einträge der Quelle |
 

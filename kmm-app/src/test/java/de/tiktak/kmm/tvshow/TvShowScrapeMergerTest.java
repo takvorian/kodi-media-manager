@@ -49,6 +49,24 @@ class TvShowScrapeMergerTest {
     }
 
     @Test
+    void changesOnlyTheTitleOfTheChosenSeason() {
+        TreeMap<Integer, String> names = new TreeMap<>(Map.of(1, "Erste Staffel"));
+        TvShowExtras current = new TvShowExtras(List.of(), List.of(), names);
+        TvShowResult scraped = TvShowResult.builder().title("Lost")
+                .actors(List.of(new CastMember("Evangeline Lilly", null, null)))
+                .seasons(List.of(new SeasonResult(1, "Saison 1", null, null), new SeasonResult(2, "Saison 2", null, null)))
+                .build();
+
+        assertThat(TvShowScrapeMerger.withSeasonTitle(current, scraped, 1, false)).isEqualTo(current);
+        assertThat(TvShowScrapeMerger.withSeasonTitle(current, scraped, 1, true).seasonNames())
+                .containsExactlyEntriesOf(Map.of(1, "Saison 1"));
+        TvShowExtras second = TvShowScrapeMerger.withSeasonTitle(current, scraped, 2, false);
+        assertThat(second.seasonNames()).containsEntry(1, "Erste Staffel").containsEntry(2, "Saison 2");
+        assertThat(second.actors()).as("Darsteller der Serie bleiben").isEmpty();
+        assertThat(TvShowScrapeMerger.withSeasonTitle(current, scraped, 5, true)).isEqualTo(current);
+    }
+
+    @Test
     void replacesSeasonTitlesOnlyWhenRefreshing() {
         TreeMap<Integer, String> names = new TreeMap<>(Map.of(1, "Erste Staffel", 2, "Zweite Staffel"));
         TvShowExtras current = new TvShowExtras(List.of(), List.of(), names);

@@ -85,6 +85,28 @@ public class TvShowRenameService {
     }
 
     /**
+     * Benennt die Staffel-Ordner und Episodendateien einer Staffel mit den Mustern aus den Einstellungen um, wenn der
+     * Auslöser dort eingeschaltet ist. Der Serienordner bleibt, wie er ist.
+     *
+     * @return der ausgeführte Plan oder leer, wenn der Auslöser ausgeschaltet ist
+     */
+    public Optional<TvShowRenamePlan> renameSeasonIfEnabled(long showId, int season, TvRenameTrigger trigger) {
+        RenameSettings settings = settingsService.current().rename();
+        if (!trigger.isEnabled(settings)) {
+            return Optional.empty();
+        }
+        TvRenamePatterns patterns = new TvRenamePatterns(settings.tvShowFolder(), settings.seasonFolder(),
+                settings.episodeFile());
+        TvShowRenamePlanning.Planned planned = planning.planSeason(showId, season, patterns.parse());
+        TvShowRenamePlan plan = planned.plans().getFirst();
+        TvShowRenamePlan result = plan.status() == Status.RENAME ? apply(plan, planned) : plan;
+        if (result.status() == Status.CONFLICT || result.status() == Status.FAILED) {
+            log.warn("Season {} of TV show {} not renamed automatically: {}", season, showId, result.message());
+        }
+        return Optional.of(result);
+    }
+
+    /**
      * Benennt die Serien einer Quelle im Hintergrund um.
      *
      * @throws TvRenameProblemException wenn ein Muster ungültig ist

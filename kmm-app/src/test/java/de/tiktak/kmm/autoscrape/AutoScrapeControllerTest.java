@@ -72,6 +72,16 @@ class AutoScrapeControllerTest {
     }
 
     @Test
+    void startsTheScrapeOfASeason() {
+        when(autoScrapeService.startTvSeason(7L, 2, true)).thenReturn(job("tvshow-scrape:7"));
+        when(autoScrapeService.startTvSeason(7L, 0, false)).thenReturn(job("tvshow-scrape:7"));
+
+        assertThat(mockMvc.post().uri(AutoScrapeController.TV_SEASON_PATH + "?overwrite=true", 7L, 2).with(csrf()))
+                .hasStatus(202).bodyJson().extractingPath("$.key").isEqualTo("tvshow-scrape:7");
+        assertThat(mockMvc.post().uri(AutoScrapeController.TV_SEASON_PATH, 7L, 0).with(csrf())).hasStatus(202);
+    }
+
+    @Test
     void startsTheScrapeOfChosenTvShows() {
         when(autoScrapeService.startTvShows(List.of(7L))).thenReturn(job("tvshows-scrape"));
 
