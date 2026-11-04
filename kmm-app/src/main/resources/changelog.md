@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.13 - 2026-11-04
+- Filter-Test haengt nicht mehr von der Testreihenfolge ab (fc937ff)
+- CI-Pruefung auch von Hand startbar (9fa7c58)
+- Eine Staffel scrapen oder neu holen (fd21218)
+
 ## v0.12 - 2026-11-01
 - Warnung, wenn Kodi zu einem Pfad keine Quelle hat (54a575f)
 
