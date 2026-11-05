@@ -3,6 +3,7 @@ package de.tiktak.kmm.mediainfo;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -43,6 +44,8 @@ public class StreamDetailsService {
 
     static final String JOB_KEY_PREFIX = "stream-details:";
     static final String NEW_FILES_JOB_KEY_PREFIX = "stream-details-new:";
+    /** Präfix je Serie; es liest höchstens eine Staffel der Serie zugleich. */
+    static final String SEASON_JOB_KEY_PREFIX = "stream-details-season:";
     static final int MAX_LISTED_FAILURES = 20;
     /** Gleichzeitige ffprobe-Aufrufe; jeder liest nur den Anfang der Datei, mehr belastet das NAS. */
     static final int PARALLEL_PROBES = 4;
@@ -76,6 +79,27 @@ public class StreamDetailsService {
         String title = "Technische Angaben „%s“".formatted(source.getName());
         return jobService.submit(JOB_KEY_PREFIX + sourceId, title,
                 context -> run(sourceId, entries(source, scope == StreamDetailsScope.ALL, id -> true), context));
+    }
+
+    /**
+     * Liest alle Episoden einer Staffel als Hintergrund-Job neu aus, auch solche mit vorhandenen Angaben.
+     *
+     * @throws MediaInfoProblemException wenn die Staffel keine Episoden hat
+     */
+    public JobSnapshot startSeason(long showId, int season) {
+        List<EpisodeMedia> media = episodes.findByShow(showId).stream()
+                .filter(candidate -> candidate.season() == season)
+                .sorted(Comparator.comparingInt(EpisodeMedia::episode))
+                .toList();
+        if (media.isEmpty()) {
+            throw MediaInfoProblemException.seasonWithoutEpisodes(episodes.showTitleOf(showId), season);
+        }
+        long sourceId = episodes.sourceIdOf(showId);
+        List<Entry> entries = perFile(media, EpisodeMedia::file).stream()
+                .map(episode -> episodeEntry(episode, true))
+                .toList();
+        String title = "Technische Angaben Staffel %d von „%s“".formatted(season, media.getFirst().showTitle());
+        return jobService.submit(SEASON_JOB_KEY_PREFIX + showId, title, context -> run(sourceId, entries, context));
     }
 
     /**
@@ -202,9 +226,7 @@ public class StreamDetailsService {
             List<EpisodeMedia> included = episodes.findBySource(source.getId()).stream()
                     .filter(media -> include.test(media.episodeId())).toList();
             return perFile(included, EpisodeMedia::file).stream()
-                    .map(media -> new Entry(media.episodeId(), false,
-                            EPISODE_LABEL.formatted(media.showTitle(), media.season(), media.episode()), media.file(),
-                            DiscFormat.FILE, all || !media.hasStreamDetails()))
+                    .map(media -> episodeEntry(media, all))
                     .toList();
         }
         return movies.findBySource(source.getId()).stream()
@@ -212,6 +234,12 @@ public class StreamDetailsService {
                 .map(media -> new Entry(media.movieId(), true, media.title(), media.file(), media.format(),
                         all || !media.hasStreamDetails()))
                 .toList();
+    }
+
+    private static Entry episodeEntry(EpisodeMedia media, boolean all) {
+        return new Entry(media.episodeId(), false,
+                EPISODE_LABEL.formatted(media.showTitle(), media.season(), media.episode()), media.file(),
+                DiscFormat.FILE, all || !media.hasStreamDetails());
     }
 
     /** Je Datei der erste Eintrag; die übrigen Episoden der Datei bekommen die Angaben mit. */

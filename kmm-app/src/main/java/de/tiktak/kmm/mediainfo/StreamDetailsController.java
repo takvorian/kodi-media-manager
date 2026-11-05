@@ -34,6 +34,13 @@ public class StreamDetailsController {
         return ResponseEntity.accepted().location(URI.create(JobController.BASE_PATH + "/" + job.id())).body(job);
     }
 
+    /** Liest alle Episoden einer Staffel im Hintergrund neu aus. Fortschritt und Ergebnis liefert die Job-API. */
+    @PostMapping("/tvshows/{showId}/seasons/{season}/stream-details")
+    public ResponseEntity<JobSnapshot> probeSeason(@PathVariable long showId, @PathVariable int season) {
+        JobSnapshot job = service.startSeason(showId, season);
+        return ResponseEntity.accepted().location(URI.create(JobController.BASE_PATH + "/" + job.id())).body(job);
+    }
+
     @PostMapping("/movies/{movieId}/stream-details")
     public StreamDetails probeMovie(@PathVariable long movieId) {
         return service.probeMovie(movieId);

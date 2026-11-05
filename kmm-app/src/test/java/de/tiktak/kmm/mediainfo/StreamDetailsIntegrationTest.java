@@ -151,6 +151,28 @@ class StreamDetailsIntegrationTest {
     }
 
     @Test
+    void rereadsEveryEpisodeOfOneSeason() throws IOException {
+        Path serien = Files.createDirectories(library.resolve("serien"));
+        givenFile(serien.resolve("Lost/Staffel 1/Lost - S01E01E02.mkv"), "");
+        givenFile(serien.resolve("Lost/Staffel 1/Lost - S01E03.mkv"), "");
+        givenFile(serien.resolve("Lost/Staffel 2/Lost - S02E01.mkv"), "");
+        when(probes.probeNewFiles()).thenReturn(false);
+        scan(createSource("Serien", serien, "TV_SHOW"));
+        long lost = jdbcClient.sql("SELECT id FROM tv_show").query(Long.class).single();
+
+        JsonNode result = runJob(mockMvc.post().uri("/api/v1/tvshows/{id}/seasons/1/stream-details", lost)
+                .with(csrf()).exchange());
+
+        assertThat(result.toString()).contains("\"updated\":2", "\"skipped\":0", "\"failed\":0");
+        assertThat(jdbcClient.sql("SELECT season_number, stream_details FROM episode ORDER BY season_number, "
+                + "episode_number").query((row, index) -> row.getInt(1) + ":" + (row.getString(2) != null)).list())
+                .containsExactly("1:true", "1:true", "1:true", "2:false");
+        assertThat(mockMvc.post().uri("/api/v1/tvshows/{id}/seasons/5/stream-details", lost).with(csrf()))
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson().extractingPath("$.detail")
+                .isEqualTo("„Lost“ hat keine Episoden in Staffel 5.");
+    }
+
+    @Test
     void reportsFilesFfprobeCannotRead() throws IOException {
         Path filme = Files.createDirectories(library.resolve("filme"));
         givenFile(filme.resolve("Heat (1995)/Heat (1995).mkv"), "");

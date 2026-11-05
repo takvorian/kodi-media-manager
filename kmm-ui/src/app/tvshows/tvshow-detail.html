@@ -29,7 +29,7 @@
         matButton="tonal"
         type="button"
         class="scrape-button"
-        [disabled]="!!scrapeJob()"
+        [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
         (click)="scrape()"
       >
         Scrapen
@@ -141,6 +141,11 @@
       @if (seasons().length === 0) {
         <p class="hint empty-seasons">Keine Episoden gefunden.</p>
       }
+      @if (seasonStreamsJob(); as job) {
+        <p class="hint season-streams-progress">
+          {{ job.title }}: {{ job.done }} von {{ job.total }} Dateien …
+        </p>
+      }
       <mat-accordion multi>
         @for (group of seasons(); track scrapeRuns() + ':' + group.season.number) {
           <mat-expansion-panel class="season">
@@ -155,7 +160,7 @@
                 matButton="tonal"
                 type="button"
                 class="season-scrape-button"
-                [disabled]="!!scrapeJob()"
+                [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
                 (click)="scrapeSeason(group, false)"
               >
                 Staffel scrapen
@@ -164,10 +169,19 @@
                 matButton
                 type="button"
                 class="season-refetch-button"
-                [disabled]="!!scrapeJob()"
+                [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
                 (click)="scrapeSeason(group, true)"
               >
                 Staffel neu holen
+              </button>
+              <button
+                matButton
+                type="button"
+                class="season-streams-button"
+                [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
+                (click)="probeSeason(group)"
+              >
+                Technische Angaben auslesen
               </button>
             </div>
             <ul class="episodes">

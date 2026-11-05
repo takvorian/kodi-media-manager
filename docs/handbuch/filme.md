@@ -49,6 +49,7 @@ Die Karte **Technik** zeigt Codec, Auflösung, Seitenverhältnis, Laufzeit, HDR,
 
 - einzeln mit **Technische Angaben auslesen**,
 - für eine ganze Quelle unter [Quellen](quellen.md),
+- für alle Episoden einer Staffel in der Serienansicht, siehe [Eine Staffel scrapen](serien.md#eine-staffel-scrapen),
 - und automatisch nach dem Scrapen und nach dem Scan neuer Dateien, siehe [Einstellungen](einstellungen.md#technische-angaben).
 
 Beim Schreiben ersetzt KMM in der NFO nur diesen technischen Teil, der Rest der Datei bleibt unverändert.

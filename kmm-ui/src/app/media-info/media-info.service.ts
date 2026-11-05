@@ -21,16 +21,33 @@ export class MediaInfoService {
   }
 
   probeMovie(movieId: number): Observable<StreamDetails> {
-    return this.http.post<StreamDetails>(`${MEDIA_INFO_URL}/movies/${movieId}/stream-details`, null);
+    return this.http.post<StreamDetails>(
+      `${MEDIA_INFO_URL}/movies/${movieId}/stream-details`,
+      null,
+    );
   }
 
   probeEpisode(episodeId: number): Observable<StreamDetails> {
-    return this.http.post<StreamDetails>(`${MEDIA_INFO_URL}/episodes/${episodeId}/stream-details`, null);
+    return this.http.post<StreamDetails>(
+      `${MEDIA_INFO_URL}/episodes/${episodeId}/stream-details`,
+      null,
+    );
   }
 
   /** Liest den Film nach der Online-Suche aus; {@code null}, wenn das in den Einstellungen abgeschaltet ist. */
   probeMovieAfterScrape(movieId: number): Observable<StreamDetails | null> {
-    return this.http.post<StreamDetails | null>(`${MEDIA_INFO_URL}/movies/${movieId}/stream-details/after-scrape`, null);
+    return this.http.post<StreamDetails | null>(
+      `${MEDIA_INFO_URL}/movies/${movieId}/stream-details/after-scrape`,
+      null,
+    );
+  }
+
+  /** Liest alle Episoden einer Staffel neu aus, auch solche mit vorhandenen Angaben, als Job. */
+  probeSeason(showId: number, season: number): Observable<Job> {
+    return this.http.post<Job>(
+      `${MEDIA_INFO_URL}/tvshows/${showId}/seasons/${season}/stream-details`,
+      null,
+    );
   }
 
   /** Liest die Episoden ohne Angaben nach der Online-Suche aus; {@code null}, wenn das abgeschaltet ist. */

@@ -1,6 +1,7 @@
 package de.tiktak.kmm.mediainfo;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatExceptionOfType;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -155,6 +156,37 @@ class StreamDetailsServiceTest {
         when(movies.changeStreamDetails(1L, PROBED)).thenReturn(PROBED);
 
         assertThat(service.probeMovieIfEnabled(1L)).contains(PROBED);
+    }
+
+    @Test
+    void rereadsEveryFileOfTheSeasonOnce() {
+        EpisodeMedia otherSeason = new EpisodeMedia(5L, "Lost", 2, 1, Path.of("/serien/Lost/Lost - S02E01.mkv"), false);
+        when(episodes.findByShow(SHOW_ID)).thenReturn(List.of(episode(3, 3, LOST_3, true), otherSeason,
+                episode(1, 1, LOST, true), episode(2, 2, LOST, true)));
+        when(episodes.sourceIdOf(SHOW_ID)).thenReturn(SOURCE_ID);
+        JobContext context = mock(JobContext.class);
+
+        service.startSeason(SHOW_ID, 1);
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("stream-details-season:3"), eq("Technische Angaben Staffel 1 von „Lost“"),
+                task.capture());
+        assertThat(task.getValue().run(context)).isEqualTo(new StreamDetailsJobResult(SOURCE_ID, 2, 0, 0, List.of()));
+        verify(episodes).changeStreamDetails(1L, PROBED);
+        verify(episodes).changeStreamDetails(3L, PROBED);
+        verify(episodes, never()).changeStreamDetails(2L, PROBED);
+        verify(episodes, never()).changeStreamDetails(5L, PROBED);
+        verify(context).reportProgress(eq(2), eq(2), anyString());
+    }
+
+    @Test
+    void rejectsASeasonWithoutEpisodes() {
+        when(episodes.findByShow(SHOW_ID)).thenReturn(List.of(episode(1, 1, LOST, false)));
+        when(episodes.showTitleOf(SHOW_ID)).thenReturn("Lost");
+
+        assertThatExceptionOfType(MediaInfoProblemException.class).isThrownBy(() -> service.startSeason(SHOW_ID, 4))
+                .satisfies(e -> assertThat(e.getBody().getDetail()).isEqualTo("„Lost“ hat keine Episoden in Staffel 4."));
+        verify(jobService, never()).submit(anyString(), anyString(), any());
     }
 
     private EpisodeMedia episode(long id, int number, Path file, boolean hasStreams) {

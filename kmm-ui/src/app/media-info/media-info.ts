@@ -6,6 +6,12 @@ export type StreamDetailsScope = 'MISSING' | 'ALL';
 /** Präfixe der Job-Schlüssel; müssen zu StreamDetailsService passen. */
 export const STREAM_DETAILS_JOB_KEY_PREFIX = 'stream-details:';
 export const NEW_FILES_STREAM_DETAILS_JOB_KEY_PREFIX = 'stream-details-new:';
+export const SEASON_STREAM_DETAILS_JOB_KEY_PREFIX = 'stream-details-season:';
+
+/** Je Serie liest höchstens eine Staffel zugleich. */
+export function seasonStreamDetailsJobKey(showId: number): string {
+  return `${SEASON_STREAM_DETAILS_JOB_KEY_PREFIX}${showId}`;
+}
 
 export function streamDetailsJobKey(sourceId: number): string {
   return `${STREAM_DETAILS_JOB_KEY_PREFIX}${sourceId}`;
@@ -35,7 +41,10 @@ export function showStreamDetailsSummary(result: ShowStreamDetailsResult | null)
   if (!result || (result.updated === 0 && result.failures.length === 0)) {
     return null;
   }
-  const failed = result.failures.length > 0 ? ` ${result.failures.length} Fehler (z. B. ${result.failures[0]}).` : '';
+  const failed =
+    result.failures.length > 0
+      ? ` ${result.failures.length} Fehler (z. B. ${result.failures[0]}).`
+      : '';
   return `Technische Angaben von ${result.updated} Episodendateien ausgelesen.${failed}`;
 }
 
@@ -44,7 +53,8 @@ export function streamDetailsSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as StreamDetailsJobResult;
     const skipped = result.skipped > 0 ? `, ${result.skipped} hatten schon Angaben` : '';
-    const failed = result.failed > 0 ? `, ${result.failed} Fehler (z. B. ${result.failures[0]})` : '';
+    const failed =
+      result.failed > 0 ? `, ${result.failed} Fehler (z. B. ${result.failures[0]})` : '';
     return `${job.title} abgeschlossen: ${result.updated} ausgelesen${skipped}${failed}.`;
   }
   return job.status === 'CANCELLED'

@@ -11,8 +11,17 @@ import de.tiktak.kmm.media.MediaProbeException;
 public class MediaInfoProblemException extends ErrorResponseException {
 
     MediaInfoProblemException(MediaProbeException cause) {
+        this("Technische Angaben nicht lesbar", cause.getMessage(), cause);
+    }
+
+    private MediaInfoProblemException(String title, String detail, Throwable cause) {
         super(HttpStatus.UNPROCESSABLE_CONTENT, cause);
-        getBody().setTitle("Technische Angaben nicht lesbar");
-        getBody().setDetail(cause.getMessage());
+        getBody().setTitle(title);
+        getBody().setDetail(detail);
+    }
+
+    static MediaInfoProblemException seasonWithoutEpisodes(String showTitle, int season) {
+        return new MediaInfoProblemException("Keine Episoden",
+                "„%s“ hat keine Episoden in Staffel %d.".formatted(showTitle, season), null);
     }
 }

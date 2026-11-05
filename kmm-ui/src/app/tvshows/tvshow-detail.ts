@@ -18,7 +18,11 @@ import { kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
 import { ArtworkSource } from '../movies/artwork';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { Attribution, ScraperInfo } from '../movies/scraper';
-import { showStreamDetailsSummary } from '../media-info/media-info';
+import {
+  seasonStreamDetailsJobKey,
+  showStreamDetailsSummary,
+  streamDetailsSummary,
+} from '../media-info/media-info';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
@@ -133,6 +137,10 @@ export class TvShowDetail {
     this.jobStore.runningJob(tvShowScrapeJobKey(this.id())),
   );
   protected readonly scrapeReport = signal<Job | null>(null);
+  /** Neues Auslesen der technischen Angaben einer Staffel; schreibt Episoden-NFOs wie das Scrapen. */
+  protected readonly seasonStreamsJob = computed(() =>
+    this.jobStore.runningJob(seasonStreamDetailsJobKey(this.id())),
+  );
   /** Zählt beendete Läufe; Titelmusik und Bilder laden selbst und werden damit neu aufgebaut. */
   protected readonly scrapeRuns = signal(0);
   private readonly changingLanguage = signal(false);
@@ -173,6 +181,12 @@ export class TvShowDetail {
       });
     this.jobStore.completed
       .pipe(
+        filter((job) => job.key === seasonStreamDetailsJobKey(this.id())),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => this.notify(streamDetailsSummary(job)));
+    this.jobStore.completed
+      .pipe(
         filter((job) => job.key === tvShowScrapeJobKey(this.id())),
         takeUntilDestroyed(),
       )
@@ -201,6 +215,14 @@ export class TvShowDetail {
             'durch die des Anbieters ersetzt, auch von Hand geänderte. Fortfahren?'
         : null,
     );
+  }
+
+  /** Liest Codecs, Auflösung und Spuren aller Episoden der Staffel neu aus, als Job. */
+  protected probeSeason(group: SeasonWithEpisodes): void {
+    this.mediaInfoService.probeSeason(this.id(), group.season.number).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
   }
 
   private startScrape(start: () => Observable<Job>, confirmation: string | null = null): void {

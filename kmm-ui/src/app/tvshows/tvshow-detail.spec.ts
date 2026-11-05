@@ -746,6 +746,58 @@ describe('TvShowDetail', () => {
       expect(confirmMessages).toEqual([]);
     });
 
+    it('rereads the technical details of one season and reports the result', async () => {
+      await load(alf);
+      const probing = job({
+        id: 'p',
+        key: 'stream-details-season:3',
+        title: 'Technische Angaben Staffel 1 von „ALF“',
+        done: 1,
+        total: 2,
+      });
+
+      element().querySelectorAll<HTMLButtonElement>('.season-streams-button')[1].click();
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/tvshows/3/seasons/1/stream-details' })
+        .flush(probing);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element().querySelector('.season-streams-progress')?.textContent).toContain(
+        'Technische Angaben Staffel 1 von „ALF“: 1 von 2 Dateien',
+      );
+      expect(scrapeButton().disabled).toBe(true);
+      element()
+        .querySelectorAll<HTMLButtonElement>('.season-streams-button')
+        .forEach((button) => expect(button.disabled).toBe(true));
+
+      events.emit({
+        ...probing,
+        status: 'SUCCEEDED',
+        done: 2,
+        result: { sourceId: 1, updated: 2, skipped: 0, failed: 0, failures: [] },
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(snackBarMessages).toEqual([
+        'Technische Angaben Staffel 1 von „ALF“ abgeschlossen: 2 ausgelesen.',
+      ]);
+      expect(scrapeButton().disabled).toBe(false);
+      expect(element().querySelector('.season-streams-progress')).toBeNull();
+    });
+
+    it('reports a season that cannot be read', async () => {
+      await load(alf);
+
+      element().querySelectorAll<HTMLButtonElement>('.season-streams-button')[0].click();
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/tvshows/3/seasons/0/stream-details' })
+        .flush({ detail: 'Läuft schon.' }, { status: 409, statusText: 'Conflict' });
+
+      expect(snackBarMessages).toEqual(['Läuft schon.']);
+    });
+
     it('reports a scrape that cannot be started', async () => {
       await load(alf);
 

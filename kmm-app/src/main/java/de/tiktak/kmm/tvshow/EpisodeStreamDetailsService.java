@@ -48,6 +48,18 @@ public class EpisodeStreamDetailsService {
                 .toList();
     }
 
+    /** @throws TvShowProblemException wenn es die Serie nicht gibt */
+    public String showTitleOf(long showId) {
+        return showRepository.findById(showId).map(TvShow::getTitle)
+                .orElseThrow(() -> TvShowProblemException.showNotFound(showId));
+    }
+
+    /** @throws TvShowProblemException wenn es die Serie nicht gibt */
+    public long sourceIdOf(long showId) {
+        return showRepository.findById(showId).map(TvShow::getSourceId)
+                .orElseThrow(() -> TvShowProblemException.showNotFound(showId));
+    }
+
     public EpisodeMedia find(long episodeId) {
         Episode episode = require(episodeId);
         String showTitle = showRepository.findById(episode.getTvShowId()).map(TvShow::getTitle)
