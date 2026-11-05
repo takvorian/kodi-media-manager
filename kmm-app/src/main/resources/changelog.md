@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.14 - 2026-11-05
+- Technische Angaben einer Staffel neu auslesen (afb4085)
+
 ## v0.13 - 2026-11-04
 - Filter-Test haengt nicht mehr von der Testreihenfolge ab (fc937ff)
 - CI-Pruefung auch von Hand startbar (9fa7c58)
