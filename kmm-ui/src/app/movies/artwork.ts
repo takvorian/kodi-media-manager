@@ -12,20 +12,21 @@ export type ArtworkType =
   | 'KEYART'
   | 'THUMB';
 
-export const ARTWORK_LABELS: Record<ArtworkType, string> = {
-  POSTER: 'Poster',
-  FANART: 'Fanart',
-  CLEARLOGO: 'Clearlogo',
-  CLEARART: 'Clearart',
-  DISCART: 'Disc',
-  BANNER: 'Banner',
-  LANDSCAPE: 'Landscape',
-  CHARACTERART: 'Characterart',
-  KEYART: 'Keyart',
-  THUMB: 'Standbild',
+/** Translation key of the label of each artwork type. */
+export const ARTWORK_LABEL_KEYS: Record<ArtworkType, string> = {
+  POSTER: 'movies.artwork.type.POSTER',
+  FANART: 'movies.artwork.type.FANART',
+  CLEARLOGO: 'movies.artwork.type.CLEARLOGO',
+  CLEARART: 'movies.artwork.type.CLEARART',
+  DISCART: 'movies.artwork.type.DISCART',
+  BANNER: 'movies.artwork.type.BANNER',
+  LANDSCAPE: 'movies.artwork.type.LANDSCAPE',
+  CHARACTERART: 'movies.artwork.type.CHARACTERART',
+  KEYART: 'movies.artwork.type.KEYART',
+  THUMB: 'movies.artwork.type.THUMB',
 };
 
-/** Antwort von GET /api/v1/movies/{id}/artwork. */
+/** Response of GET /api/v1/movies/{id}/artwork. */
 export interface ArtworkInfo {
   readonly type: ArtworkType;
   readonly exists: boolean;
@@ -43,7 +44,7 @@ export interface ArtworkCandidate {
   readonly height: number | null;
   readonly language: string | null;
   readonly rating: number | null;
-  /** Staffel des Bildes oder `null` für das ganze Medium. */
+  /** Season of the image, or `null` for the whole medium. */
   readonly season?: number | null;
 }
 
@@ -52,18 +53,18 @@ export interface ArtworkCandidates {
   readonly warnings: readonly string[];
 }
 
-/** Woher eine Bildergalerie ihre Bilder bezieht: ein Film, ein Filmset, eine Serie, eine Staffel oder eine Episode. */
+/** Where an artwork gallery gets its images from: a movie, a movie set, a TV show, a season or an episode. */
 export interface ArtworkSource {
   findAll(): Observable<ArtworkInfo[]>;
-  /** URL des Bildes; die Änderungszeit sorgt dafür, dass der Browser ein ersetztes Bild neu lädt. */
+  /** URL of the image; the modification time makes the browser reload a replaced image. */
   imageUrl(artwork: ArtworkInfo): string;
   candidates(type: ArtworkType): Observable<ArtworkCandidates>;
-  /** Lädt das Bild und speichert es nach Kodi-Konvention. */
+  /** Downloads the image and saves it following the Kodi convention. */
   apply(type: ArtworkType, url: string): Observable<ArtworkInfo>;
   remove(type: ArtworkType): Observable<void>;
 }
 
-/** Hängt die Änderungszeit als Versionsparameter an die Bild-URL. */
+/** Appends the modification time to the image URL as a version parameter. */
 export function versioned(url: string, artwork: ArtworkInfo): string {
   if (!artwork.modifiedAt) {
     return url;

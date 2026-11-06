@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 
 import { problemMessage } from '../shared/problem-message';
@@ -12,7 +13,7 @@ import { MovieMetadata } from './movie';
 import { MovieService } from './movie.service';
 import { CollectionReference, ScrapeCandidate, ScraperInfo } from './scraper';
 
-/** Übernommene Daten samt Sammlung und Herkunft. */
+/** Adopted data including the collection and where it comes from. */
 export interface ScrapedProposal {
   readonly metadata: MovieMetadata;
   readonly collection: CollectionReference | null;
@@ -20,8 +21,8 @@ export interface ScrapedProposal {
 }
 
 /**
- * Sucht einen Film bei einem Metadaten-Scraper und liefert die Daten des gewählten Treffers. Es
- * wird nichts gespeichert; der Vorschlag landet im Formular der Detailseite.
+ * Searches a movie with a metadata scraper and delivers the data of the chosen result. Nothing is
+ * saved; the proposal goes into the form of the detail page.
  */
 @Component({
   selector: 'app-movie-online-search',
@@ -31,6 +32,7 @@ export interface ScrapedProposal {
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
+    TranslocoPipe,
   ],
   templateUrl: './movie-online-search.html',
   styleUrl: './movie-online-search.scss',
@@ -57,7 +59,7 @@ export class MovieOnlineSearch {
     initialValue: '',
   });
 
-  /** Gewählter Scraper, sonst der erste verfügbare. */
+  /** The chosen scraper, otherwise the first one available. */
   protected readonly selectedScraper = computed<ScraperInfo | undefined>(() => {
     const scrapers = this.scrapers.hasValue() ? this.scrapers.value() : [];
     return scrapers.find((scraper) => scraper.id === this.chosenScraperId()) ?? scrapers[0];

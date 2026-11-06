@@ -1,20 +1,18 @@
-<a matButton routerLink="/sources" class="back-link">← Quellen</a>
+<a matButton routerLink="/sources" class="back-link">{{ 'movies.rename.back' | transloco }}</a>
 
 <mat-card appearance="outlined">
   <mat-card-header>
-    <mat-card-title>Filme umbenennen</mat-card-title>
-    <mat-card-subtitle
-      >Erst die Vorschau prüfen; geändert wird nur, was ausgewählt ist.</mat-card-subtitle
-    >
+    <mat-card-title>{{ 'pageTitle.movieRename' | transloco }}</mat-card-title>
+    <mat-card-subtitle>{{ 'movies.rename.subtitle' | transloco }}</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content>
     <form [formGroup]="form" (ngSubmit)="preview()" class="patterns">
       <mat-form-field class="pattern">
-        <mat-label>Ordner</mat-label>
+        <mat-label>{{ 'common.folder' | transloco }}</mat-label>
         <input matInput formControlName="folder" name="folder" />
       </mat-form-field>
       <mat-form-field class="pattern">
-        <mat-label>Dateien</mat-label>
+        <mat-label>{{ 'movies.rename.files' | transloco }}</mat-label>
         <input matInput formControlName="file" name="file" />
       </mat-form-field>
       <button
@@ -23,13 +21,14 @@
         type="submit"
         [disabled]="form.invalid || loading() || !!runningJob()"
       >
-        Vorschau
+        {{ 'movies.rename.preview' | transloco }}
       </button>
     </form>
     <p class="hint">
-      Die Vorgaben stammen aus den Einstellungen. Hier geänderte Muster gelten nur für diesen
-      Durchlauf.
-      <app-help-link chapter="umbenennen" anchor="so-sind-muster-aufgebaut">Muster und Platzhalter</app-help-link>
+      {{ 'movies.rename.patternsOrigin' | transloco }}
+      <app-help-link chapter="umbenennen" anchor="so-sind-muster-aufgebaut">{{
+        'movies.rename.patternsHelp' | transloco
+      }}</app-help-link>
     </p>
     @if (loading()) {
       <mat-progress-bar mode="indeterminate" />
@@ -51,10 +50,18 @@
   <mat-card appearance="outlined">
     <mat-card-content>
       <div class="summary">
-        <span class="count-rename">{{ counts().rename }} umzubenennen</span>
-        <span class="count-unchanged">{{ counts().unchanged }} unverändert</span>
-        <span class="count-conflict">{{ counts().conflict }} Konflikte</span>
-        <span class="count-failed">{{ counts().failed }} nicht möglich</span>
+        <span class="count-rename">{{
+          'movies.rename.toRename' | transloco: { count: counts().rename }
+        }}</span>
+        <span class="count-unchanged">{{
+          'movies.rename.unchanged' | transloco: { count: counts().unchanged }
+        }}</span>
+        <span class="count-conflict">{{
+          'movies.rename.conflicts' | transloco: { count: counts().conflict }
+        }}</span>
+        <span class="count-failed">{{
+          'movies.rename.failed' | transloco: { count: counts().failed }
+        }}</span>
       </div>
       <div class="toolbar">
         <mat-checkbox
@@ -62,17 +69,21 @@
           [checked]="onlyChanges()"
           (change)="onlyChanges.set($event.checked)"
         >
-          Unveränderte ausblenden
+          {{ 'movies.rename.hideUnchanged' | transloco }}
         </mat-checkbox>
-        <button matButton class="select-all" (click)="selectAll(true)">Alle auswählen</button>
-        <button matButton class="select-none" (click)="selectAll(false)">Keine</button>
+        <button matButton class="select-all" (click)="selectAll(true)">
+          {{ 'movies.rename.selectAll' | transloco }}
+        </button>
+        <button matButton class="select-none" (click)="selectAll(false)">
+          {{ 'movies.rename.selectNone' | transloco }}
+        </button>
         <button
           matButton="filled"
           class="rename-button"
           (click)="rename()"
           [disabled]="selected().size === 0 || !!runningJob()"
         >
-          {{ selected().size }} umbenennen
+          {{ 'movies.rename.renameCount' | transloco: { count: selected().size } }}
         </button>
       </div>
       <table
@@ -86,10 +97,10 @@
         <thead>
           <tr>
             <th></th>
-            <th mat-sort-header="title">Film</th>
-            <th mat-sort-header="folder">Ordner</th>
-            <th>Dateien</th>
-            <th mat-sort-header="status">Status</th>
+            <th mat-sort-header="title">{{ 'common.movie' | transloco }}</th>
+            <th mat-sort-header="folder">{{ 'common.folder' | transloco }}</th>
+            <th>{{ 'movies.rename.files' | transloco }}</th>
+            <th mat-sort-header="status">{{ 'common.status' | transloco }}</th>
           </tr>
         </thead>
         <tbody>
@@ -121,7 +132,7 @@
                 }
               </td>
               <td class="status">
-                {{ statusLabels[plan.status] }}
+                {{ statusKeys[plan.status] | transloco }}
                 @if (plan.message) {
                   <div class="message">{{ plan.message }}</div>
                 }
@@ -129,7 +140,9 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="5" class="empty">Alle {{ all.length }} Filme heißen schon so.</td>
+              <td colspan="5" class="empty">
+                {{ 'movies.rename.allNamed' | transloco: { count: all.length } }}
+              </td>
             </tr>
           }
         </tbody>

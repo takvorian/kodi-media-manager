@@ -1,7 +1,9 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { Job } from '../jobs/job';
 import {
   MovieRenamePlan,
@@ -22,11 +24,37 @@ describe('movie rename', () => {
     message: null,
   };
 
+  let transloco: TranslocoService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideI18nTesting()],
+    });
+    transloco = TestBed.inject(TranslocoService);
+  });
+
   it('describes the new names for confirmation', () => {
     expect(renameConfirmation(plan)).toBe('„Heat“ umbenennen?\n\nDateien:\nheat.mkv → Heat.mkv');
     expect(renameConfirmation({ ...plan, targetDirectory: '/filme/Heat', renames: [] })).toBe(
       '„Heat“ umbenennen?\n\nOrdner: /filme/heat\n→ /filme/Heat',
     );
+  });
+
+  it('describes the new names in the active language', () => {
+    transloco.setActiveLang('en');
+
+    expect(
+      renameConfirmation({ ...plan, targetDirectory: '/filme/Heat', renames: plan.renames }),
+    ).toBe('Rename “Heat”?\n\nFolder: /filme/heat\n→ /filme/Heat\n\nFiles:\nheat.mkv → Heat.mkv');
+    expect(
+      movieRenameSummary({
+        id: 'j',
+        key: movieRenameJobKey(3),
+        title: 'Rename movies',
+        status: 'FAILED',
+        message: null,
+      } as Job),
+    ).toBe('Rename movies failed: Unknown error');
   });
 
   it('summarizes finished jobs', () => {
@@ -58,9 +86,6 @@ describe('movie rename', () => {
   });
 
   it('calls the rename endpoints', () => {
-    TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
-    });
     const service = TestBed.inject(MovieRenameService);
     const httpTesting = TestBed.inject(HttpTestingController);
     const patterns = { folder: '{title}', file: '{title}' };

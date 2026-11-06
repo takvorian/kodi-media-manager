@@ -1,13 +1,15 @@
+import { translate } from '@jsverse/transloco';
+
 import { Job } from '../jobs/job';
 
-/** Präfix des Job-Schlüssels beim Umbenennen; muss zu MovieRenameService.JOB_KEY_PREFIX passen. */
+/** Prefix of the job key for renaming; must match MovieRenameService.JOB_KEY_PREFIX. */
 export const MOVIE_RENAME_JOB_KEY_PREFIX = 'movie-rename:';
 
 export function movieRenameJobKey(sourceId: number): string {
   return `${MOVIE_RENAME_JOB_KEY_PREFIX}${sourceId}`;
 }
 
-/** Muster für Ordner und Dateien eines Films. */
+/** Patterns for the folder and the files of a movie. */
 export interface MovieRenamePatterns {
   readonly folder: string;
   readonly file: string;
@@ -20,7 +22,7 @@ export interface FileRename {
   readonly targetName: string;
 }
 
-/** Was das Umbenennen eines Films ändern würde bzw. geändert hat. */
+/** What renaming a movie would change or has changed. */
 export interface MovieRenamePlan {
   readonly movieId: number;
   readonly title: string;
@@ -40,45 +42,59 @@ export interface MovieRenameResult {
   readonly problems: readonly string[];
 }
 
-export const RENAME_STATUS_LABELS: Record<MovieRenameStatus, string> = {
-  UNCHANGED: 'unverändert',
-  RENAME: 'wird umbenannt',
-  CONFLICT: 'Konflikt',
-  FAILED: 'nicht möglich',
+/** Translation key of the label of each rename status. */
+export const RENAME_STATUS_KEYS: Record<MovieRenameStatus, string> = {
+  UNCHANGED: 'movies.rename.status.UNCHANGED',
+  RENAME: 'movies.rename.status.RENAME',
+  CONFLICT: 'movies.rename.status.CONFLICT',
+  FAILED: 'movies.rename.status.FAILED',
 };
 
-/** Ob sich der Ordner des Films ändert. */
+/** Whether the folder of the movie changes. */
 export function movesFolder(plan: MovieRenamePlan): boolean {
   return plan.currentDirectory !== plan.targetDirectory;
 }
 
-/** Text für die Bestätigung, bevor ein einzelner Film umbenannt wird. */
+/** Text for the confirmation before a single movie is renamed. */
 export function renameConfirmation(plan: MovieRenamePlan): string {
-  const lines = [`„${plan.title}“ umbenennen?`];
+  const lines = [translate('movies.rename.confirmQuestion', { title: plan.title })];
   if (movesFolder(plan)) {
-    lines.push('', `Ordner: ${plan.currentDirectory}`, `→ ${plan.targetDirectory}`);
+    lines.push(
+      '',
+      translate('movies.rename.confirmFolder', { path: plan.currentDirectory }),
+      `→ ${plan.targetDirectory}`,
+    );
   }
   if (plan.renames.length > 0) {
     lines.push(
       '',
-      'Dateien:',
+      translate('movies.rename.confirmFiles'),
       ...plan.renames.map((rename) => `${rename.currentName} → ${rename.targetName}`),
     );
   }
   return lines.join('\n');
 }
 
-/** Fasst einen beendeten Job „Filme umbenennen“ für eine Snackbar-Meldung zusammen. */
+/** Summarizes a finished “Rename movies” job for a snackbar message. */
 export function movieRenameSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as MovieRenameResult;
-    const failed = result.failed > 0 ? `, ${result.failed} fehlgeschlagen` : '';
-    return (
-      `${job.title} abgeschlossen: ${result.renamed} umbenannt, ${result.unchanged} unverändert, ` +
-      `${result.skipped} übersprungen${failed}.`
-    );
+    const key =
+      result.failed > 0
+        ? 'movies.rename.summary.succeededWithFailures'
+        : 'movies.rename.summary.succeeded';
+    return translate(key, {
+      title: job.title,
+      renamed: result.renamed,
+      unchanged: result.unchanged,
+      skipped: result.skipped,
+      failed: result.failed,
+    });
   }
   return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+    ? translate('movies.rename.summary.cancelled', { title: job.title })
+    : translate('movies.rename.summary.failed', {
+        title: job.title,
+        reason: job.message ?? translate('movies.rename.summary.unknownError'),
+      });
 }

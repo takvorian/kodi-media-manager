@@ -1,8 +1,14 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  TestRequest,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { CONFIRM } from '../shared/confirm';
 import { ArtworkCandidate, ArtworkInfo } from './artwork';
 import { MovieArtwork } from './movie-artwork';
@@ -10,7 +16,12 @@ import { MOVIES_URL } from './movie.service';
 
 describe('MovieArtwork', () => {
   const artworkUrl = `${MOVIES_URL}/5/artwork`;
-  const poster: ArtworkInfo = { type: 'POSTER', exists: true, path: '/m/Heat-poster.jpg', modifiedAt: '2026-10-25T12:00:00Z' };
+  const poster: ArtworkInfo = {
+    type: 'POSTER',
+    exists: true,
+    path: '/m/Heat-poster.jpg',
+    modifiedAt: '2026-10-25T12:00:00Z',
+  };
   const fanart: ArtworkInfo = { type: 'FANART', exists: false, path: null, modifiedAt: null };
   const candidate: ArtworkCandidate = {
     scraperId: 'fanarttv',
@@ -36,8 +47,12 @@ describe('MovieArtwork', () => {
       imports: [MovieArtwork],
       providers: [
         provideHttpClient(),
+        provideI18nTesting(),
         provideHttpClientTesting(),
-        { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
         { provide: CONFIRM, useValue: () => confirmAnswer },
       ],
     });
@@ -83,6 +98,23 @@ describe('MovieArtwork', () => {
     expect(tile('FANART').querySelector('.remove-button')).toBeNull();
   });
 
+  it('switches to English at runtime', async () => {
+    await load([poster, fanart]);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(tile('FANART').querySelector('.missing')?.textContent).toBe('missing');
+    expect(tile('FANART').querySelector('.change-button')?.textContent).toContain('Search');
+    expect(tile('POSTER').querySelector('.change-button')?.textContent).toContain('Change');
+
+    tile('POSTER').querySelector<HTMLButtonElement>('.remove-button')!.click();
+    httpTesting.expectOne({ method: 'DELETE', url: `${artworkUrl}/POSTER` }).flush(null);
+    await reloadWith([fanart]);
+
+    expect(snackBarMessages).toEqual(['Poster deleted.']);
+  });
+
   it('lists candidates with source, language and size and applies the chosen one', async () => {
     await load([poster, fanart]);
 
@@ -99,7 +131,12 @@ describe('MovieArtwork', () => {
     option.click();
     const request = httpTesting.expectOne({ method: 'PUT', url: `${artworkUrl}/FANART` });
     expect(request.request.body).toEqual({ url: candidate.url });
-    request.flush({ ...fanart, exists: true, path: '/m/Heat-fanart.jpg', modifiedAt: '2026-10-25T13:00:00Z' });
+    request.flush({
+      ...fanart,
+      exists: true,
+      path: '/m/Heat-fanart.jpg',
+      modifiedAt: '2026-10-25T13:00:00Z',
+    });
     await reloadWith([poster, { ...fanart, exists: true, modifiedAt: '2026-10-25T13:00:00Z' }]);
 
     expect(snackBarMessages).toEqual(['Fanart von fanart.tv gespeichert.']);
@@ -111,7 +148,10 @@ describe('MovieArtwork', () => {
     await load([poster]);
 
     tile('POSTER').querySelector<HTMLButtonElement>('.change-button')!.click();
-    expectCandidates('POSTER').flush({ candidates: [], warnings: ['Für fanart.tv fehlt ein API-Key.'] });
+    expectCandidates('POSTER').flush({
+      candidates: [],
+      warnings: ['Für fanart.tv fehlt ein API-Key.'],
+    });
     await fixture.whenStable();
 
     expect(element().querySelector('.warning')?.textContent).toContain('fanart.tv');
@@ -128,7 +168,9 @@ describe('MovieArtwork', () => {
     );
     await fixture.whenStable();
 
-    expect(element().querySelector('.selection .error')?.textContent).toContain('TMDB- oder IMDb-ID');
+    expect(element().querySelector('.selection .error')?.textContent).toContain(
+      'TMDB- oder IMDb-ID',
+    );
   });
 
   it('closes the selection when the same type is chosen again or via the close button', async () => {
@@ -157,7 +199,10 @@ describe('MovieArtwork', () => {
     element().querySelector<HTMLButtonElement>('.candidate')!.click();
     httpTesting
       .expectOne({ method: 'PUT', url: `${artworkUrl}/FANART` })
-      .flush({ detail: 'Bild konnte nicht geladen werden' }, { status: 502, statusText: 'Bad Gateway' });
+      .flush(
+        { detail: 'Bild konnte nicht geladen werden' },
+        { status: 502, statusText: 'Bad Gateway' },
+      );
     await fixture.whenStable();
 
     expect(snackBarMessages).toEqual(['Bild konnte nicht geladen werden']);

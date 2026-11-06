@@ -2,7 +2,12 @@ import { TestBed } from '@angular/core/testing';
 import { NonNullableFormBuilder } from '@angular/forms';
 
 import { MovieMetadata } from './movie';
-import { MovieMetadataForm, createMovieMetadataForm, toFormValue, toMetadata } from './movie-metadata-form';
+import {
+  MovieMetadataForm,
+  createMovieMetadataForm,
+  toFormValue,
+  toMetadata,
+} from './movie-metadata-form';
 
 describe('movie metadata form', () => {
   const heat: MovieMetadata = {
@@ -38,7 +43,13 @@ describe('movie metadata form', () => {
 
   it('turns blank texts into null and splits genres', () => {
     form.reset(toFormValue(heat));
-    form.patchValue({ originalTitle: '  ', videoSource: ' ', genres: ' Action ,, Thriller ,', title: ' Heat 2 ', year: null });
+    form.patchValue({
+      originalTitle: '  ',
+      videoSource: ' ',
+      genres: ' Action ,, Thriller ,',
+      title: ' Heat 2 ',
+      year: null,
+    });
 
     const metadata = toMetadata(form);
 

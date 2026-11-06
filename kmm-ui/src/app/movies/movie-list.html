@@ -1,8 +1,8 @@
-<h2 class="page-title">Filme</h2>
+<h2 class="page-title">{{ 'common.movies' | transloco }}</h2>
 
 <div class="toolbar">
   <mat-form-field class="search-field">
-    <mat-label>Suche nach Titel</mat-label>
+    <mat-label>{{ 'movies.list.searchByTitle' | transloco }}</mat-label>
     <input
       matInput
       type="search"
@@ -12,9 +12,9 @@
     />
   </mat-form-field>
   <mat-form-field class="filter-select">
-    <mat-label>Filter</mat-label>
+    <mat-label>{{ 'movies.list.filter' | transloco }}</mat-label>
     <mat-select name="filter" [value]="selection()" (valueChange)="select($event)">
-      <mat-option value="all">Alle Filme</mat-option>
+      <mat-option value="all">{{ 'movies.list.allMovies' | transloco }}</mat-option>
       @for (entry of predefined; track entry.name; let index = $index) {
         <mat-option [value]="predefinedKey(index)">{{ entry.name }}</mat-option>
       }
@@ -26,7 +26,7 @@
     </mat-select>
   </mat-form-field>
   <button matButton type="button" class="edit-filter-button" (click)="toggleEditing()">
-    {{ editing() ? 'Filter schließen' : 'Filter bearbeiten' }}
+    {{ (editing() ? 'movies.list.closeFilter' : 'movies.list.editFilter') | transloco }}
   </button>
   <app-export-menu [endpoint]="exportEndpoint" [filter]="exportFilter()" fallbackName="kmm-filme" />
 </div>
@@ -42,7 +42,7 @@
     />
     <div class="save-filter">
       <mat-form-field>
-        <mat-label>Name des Filters</mat-label>
+        <mat-label>{{ 'movies.list.filterName' | transloco }}</mat-label>
         <input
           matInput
           name="filterName"
@@ -51,11 +51,11 @@
         />
       </mat-form-field>
       <button matButton="filled" type="button" class="save-filter-button" (click)="saveFilter()">
-        Speichern
+        {{ 'common.save' | transloco }}
       </button>
       @if (selectedSaved()) {
         <button matButton type="button" class="delete-filter-button" (click)="deleteFilter()">
-          Löschen
+          {{ 'common.delete' | transloco }}
         </button>
       }
     </div>
@@ -63,16 +63,16 @@
 }
 
 <div class="selection">
-  <span>{{ chosen().size }} ausgewählt</span>
+  <span>{{ 'movies.list.chosen' | transloco: { count: chosen().size } }}</span>
   <button matButton type="button" class="choose-all-button" (click)="chooseAllFiltered()">
-    Alle gefilterten auswählen
+    {{ 'movies.list.chooseAllFiltered' | transloco }}
   </button>
   @if (chosen().size > 0) {
     <button matButton type="button" class="clear-chosen-button" (click)="clearChosen()">
-      Auswahl aufheben
+      {{ 'movies.list.clearChosen' | transloco }}
     </button>
     <button matButton type="button" class="batch-edit-button" (click)="toggleBatchEditing()">
-      {{ batchEditing() ? 'Bearbeitung schließen' : 'Auswahl bearbeiten' }}
+      {{ (batchEditing() ? 'movies.list.closeBatchEdit' : 'movies.list.batchEdit') | transloco }}
     </button>
     <button
       matButton="tonal"
@@ -81,7 +81,7 @@
       [disabled]="!!scrapeJob()"
       (click)="scrapeChosen()"
     >
-      Scrapen
+      {{ 'movies.actions.scrape' | transloco }}
     </button>
     <button
       matButton
@@ -90,7 +90,7 @@
       [disabled]="!!batchJob()"
       (click)="fillMissingTrailers()"
     >
-      Fehlende Trailer holen
+      {{ 'movies.list.fillTrailers' | transloco }}
     </button>
     <button
       matButton
@@ -99,7 +99,7 @@
       [disabled]="!!batchJob()"
       (click)="fillMissingThemes()"
     >
-      Fehlende Titelmusik holen
+      {{ 'movies.list.fillThemes' | transloco }}
     </button>
     <button
       matButton
@@ -108,7 +108,7 @@
       [disabled]="!!batchJob()"
       (click)="refreshRatings()"
     >
-      Bewertungen aktualisieren
+      {{ 'movies.list.refreshRatings' | transloco }}
     </button>
     <button
       matButton
@@ -117,12 +117,12 @@
       [disabled]="!!batchJob()"
       (click)="refreshChosenInKodi()"
     >
-      In Kodi aktualisieren
+      {{ 'movies.actions.refreshInKodi' | transloco }}
     </button>
     <app-language-select
       class="language-chosen"
-      label="Sprache ändern"
-      defaultLabel="Standard (Quelle oder Einstellungen)"
+      [label]="'movies.language.change' | transloco"
+      [defaultLabel]="'movies.language.default' | transloco"
       [disabled]="!!batchJob()"
       (chosen)="changeChosenLanguage($event)"
     />
@@ -130,8 +130,13 @@
 </div>
 
 @if (lastScrape(); as last) {
-  <button matButton type="button" class="show-scrape-report-button" (click)="scrapeReport.set(last)">
-    Ergebnis des letzten Scrapens
+  <button
+    matButton
+    type="button"
+    class="show-scrape-report-button"
+    (click)="scrapeReport.set(last)"
+  >
+    {{ 'movies.list.lastScrapeReport' | transloco }}
   </button>
 }
 
@@ -147,7 +152,9 @@
 @if (job) {
   <div class="job-progress">
     <mat-progress-bar mode="determinate" [value]="job.total ? (100 * job.done) / job.total : 0" />
-    <span>{{ job.title }} – {{ job.done }} von {{ job.total }}</span>
+    <span>{{
+      'movies.list.jobProgress' | transloco: { title: job.title, done: job.done, total: job.total }
+    }}</span>
   </div>
 }
 
@@ -155,7 +162,7 @@
   <section class="batch-editor">
     <app-batch-editor
       [count]="chosen().size"
-      itemLabel="Filme"
+      [itemLabel]="'common.movies' | transloco"
       [singleFields]="batchFields"
       [busy]="!!job"
       (submitted)="startBatch($event)"
@@ -164,16 +171,17 @@
 }
 
 @if (movies.error()) {
-  <p class="error">Die Filme konnten nicht geladen werden.</p>
+  <p class="error">{{ 'movies.list.loadError' | transloco }}</p>
 } @else if (movies.hasValue()) {
   @let page = movies.value();
   @if (page.totalElements === 0) {
     @if (restricted()) {
-      <p class="empty">Keine Filme gefunden.</p>
+      <p class="empty">{{ 'movies.list.noneFound' | transloco }}</p>
     } @else {
       <p class="empty">
-        Die Bibliothek ist noch leer. Lege unter <a routerLink="/sources">Quellen</a> ein
-        Verzeichnis an und scanne es.
+        {{ 'movies.list.emptyBeforeLink' | transloco }}
+        <a routerLink="/sources">{{ 'nav.sources' | transloco }}</a>
+        {{ 'movies.list.emptyAfterLink' | transloco }}
       </p>
     }
   } @else {
@@ -199,32 +207,42 @@
         </td>
       </ng-container>
       <ng-container matColumnDef="title">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="title">Titel</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="title">
+          {{ 'fields.title' | transloco }}
+        </th>
         <td mat-cell *matCellDef="let movie" class="movie-title">
           <a [routerLink]="['/movies', movie.id]">{{ movie.title }}</a>
         </td>
       </ng-container>
       <ng-container matColumnDef="year">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="releaseYear">Jahr</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="releaseYear">
+          {{ 'fields.year' | transloco }}
+        </th>
         <td mat-cell *matCellDef="let movie">{{ movie.year ?? '–' }}</td>
       </ng-container>
       <ng-container matColumnDef="discFormat">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="discFormat">Format</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="discFormat">
+          {{ 'movies.list.format' | transloco }}
+        </th>
         <td mat-cell *matCellDef="let movie">
-          {{ discFormatLabel(movie.discFormat) }}
+          {{ discFormatKey(movie.discFormat) | transloco }}
           @if (movie.partCount > 1) {
-            ({{ movie.partCount }} Teile)
+            {{ 'movies.list.parts' | transloco: { count: movie.partCount } }}
           }
         </td>
       </ng-container>
       <ng-container matColumnDef="addedAt">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc">Hinzugefügt</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header start="desc">
+          {{ 'fields.added' | transloco }}
+        </th>
         <td mat-cell *matCellDef="let movie" class="added-at">
           {{ localDateTime(movie.addedAt) }}
         </td>
       </ng-container>
       <ng-container matColumnDef="filePath">
-        <th mat-header-cell *matHeaderCellDef mat-sort-header="filePath">Datei</th>
+        <th mat-header-cell *matHeaderCellDef mat-sort-header="filePath">
+          {{ 'common.file' | transloco }}
+        </th>
         <td mat-cell *matCellDef="let movie" class="path">{{ movie.filePath }}</td>
       </ng-container>
 
@@ -234,7 +252,7 @@
   }
   <ng-container *ngTemplateOutlet="paginator; context: { $implicit: page.totalElements }" />
 } @else {
-  <p class="loading">Lade Filme …</p>
+  <p class="loading">{{ 'movies.list.loading' | transloco }}</p>
 }
 
 <ng-template #paginator let-length>

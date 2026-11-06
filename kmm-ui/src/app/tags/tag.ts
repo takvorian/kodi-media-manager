@@ -1,6 +1,8 @@
+import { translate } from '@jsverse/transloco';
+
 import { Job } from '../jobs/job';
 
-/** Job-Schlüssel der Tag-Änderungen; muss zu TagService.JOB_KEY passen. */
+/** Job key of the tag changes; must match TagService.JOB_KEY. */
 export const TAG_JOB_KEY = 'tags';
 
 export interface TagSummary {
@@ -33,15 +35,23 @@ export interface TagChangeResult {
   readonly failures: readonly string[];
 }
 
-/** Fasst einen beendeten Tag-Job für eine Snackbar-Meldung zusammen. */
+/** Summarizes a finished tag job for a snackbar message. */
 export function tagJobSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as TagChangeResult;
-    const failed =
-      result.failed > 0 ? `, ${result.failed} Fehler: ${result.failures.join('; ')}` : '';
-    return `${job.title}: ${result.changed} geändert, ${result.unchanged} unverändert${failed}.`;
+    const key = result.failed > 0 ? 'tags.summary.succeededWithFailures' : 'tags.summary.succeeded';
+    return translate(key, {
+      title: job.title,
+      changed: result.changed,
+      unchanged: result.unchanged,
+      failed: result.failed,
+      failures: result.failures.join('; '),
+    });
   }
   return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+    ? translate('tags.summary.cancelled', { title: job.title })
+    : translate('tags.summary.failed', {
+        title: job.title,
+        reason: job.message ?? translate('tags.summary.unknownError'),
+      });
 }

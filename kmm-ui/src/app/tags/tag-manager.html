@@ -1,4 +1,4 @@
-<h2 class="page-title">Tags</h2>
+<h2 class="page-title">{{ 'nav.tags' | transloco }}</h2>
 
 @let job = runningJob();
 @if (job) {
@@ -13,22 +13,29 @@
     <mat-card-content>
       <form class="new-tag" (ngSubmit)="startNewTag(newTag.value); newTag.value = ''">
         <mat-form-field class="full">
-          <mat-label>Neuer Tag</mat-label>
+          <mat-label>{{ 'tags.newTag' | transloco }}</mat-label>
           <input matInput #newTag name="newTag" />
-          <mat-hint>Entsteht, sobald er etwas zugewiesen bekommt</mat-hint>
+          <mat-hint>{{ 'tags.newTagHint' | transloco }}</mat-hint>
         </mat-form-field>
       </form>
       @if (tags.hasValue()) {
         <ul class="tags">
           @for (tag of tags.value(); track tag.name) {
             <li>
-              <button matButton class="tag" [class.active]="tag.name === selected()" (click)="select(tag)">
+              <button
+                matButton
+                class="tag"
+                [class.active]="tag.name === selected()"
+                (click)="select(tag)"
+              >
                 {{ tag.name }}
-                <span class="counts">{{ tag.movies }} Filme · {{ tag.shows }} Serien</span>
+                <span class="counts">{{
+                  'tags.counts' | transloco: { movies: tag.movies, shows: tag.shows }
+                }}</span>
               </button>
             </li>
           } @empty {
-            <li class="empty">Noch keine Tags.</li>
+            <li class="empty">{{ 'tags.noTags' | transloco }}</li>
           }
         </ul>
       }
@@ -43,59 +50,98 @@
       <mat-card-content>
         <div class="rename">
           <mat-form-field>
-            <mat-label>Name</mat-label>
-            <input matInput name="newName" [ngModel]="newName()" (ngModelChange)="newName.set($event)" />
+            <mat-label>{{ 'common.name' | transloco }}</mat-label>
+            <input
+              matInput
+              name="newName"
+              [ngModel]="newName()"
+              (ngModelChange)="newName.set($event)"
+            />
           </mat-form-field>
-          <button matButton class="rename-button" (click)="rename()" [disabled]="!!job || newName().trim() === tag">
-            Umbenennen
+          <button
+            matButton
+            class="rename-button"
+            (click)="rename()"
+            [disabled]="!!job || newName().trim() === tag"
+          >
+            {{ 'common.rename' | transloco }}
           </button>
-          <button matButton class="delete-button" (click)="delete()" [disabled]="!!job">Löschen</button>
+          <button matButton class="delete-button" (click)="delete()" [disabled]="!!job">
+            {{ 'common.delete' | transloco }}
+          </button>
         </div>
 
         @if (tagged.hasValue()) {
           @let items = tagged.value();
-          <h3>Filme ({{ items.movies.length }})</h3>
+          <h3>{{ 'tags.movies' | transloco: { count: items.movies.length } }}</h3>
           <ul class="items movies">
             @for (movie of items.movies; track movie.id) {
               <li>
-                <mat-checkbox [checked]="isMarked('movie', movie)" (change)="toggleRemoval('movie', movie)" />
+                <mat-checkbox
+                  [checked]="isMarked('movie', movie)"
+                  (change)="toggleRemoval('movie', movie)"
+                />
                 <a [routerLink]="['/movies', movie.id]">{{ movie.title }}</a>
               </li>
             }
           </ul>
-          <h3>Serien ({{ items.shows.length }})</h3>
+          <h3>{{ 'tags.shows' | transloco: { count: items.shows.length } }}</h3>
           <ul class="items shows">
             @for (show of items.shows; track show.id) {
               <li>
-                <mat-checkbox [checked]="isMarked('show', show)" (change)="toggleRemoval('show', show)" />
+                <mat-checkbox
+                  [checked]="isMarked('show', show)"
+                  (change)="toggleRemoval('show', show)"
+                />
                 <a [routerLink]="['/tvshows', show.id]">{{ show.title }}</a>
               </li>
             }
           </ul>
-          <button matButton class="remove-button" (click)="removeMarked()" [disabled]="!!job || removal().size === 0">
-            {{ removal().size }} entfernen
+          <button
+            matButton
+            class="remove-button"
+            (click)="removeMarked()"
+            [disabled]="!!job || removal().size === 0"
+          >
+            {{ 'tags.removeCount' | transloco: { count: removal().size } }}
           </button>
         }
 
-        <h3>Zuweisen</h3>
+        <h3>{{ 'tags.assign' | transloco }}</h3>
         <form class="search" (ngSubmit)="find()">
           <mat-form-field class="full">
-            <mat-label>Filme und Serien suchen</mat-label>
-            <input matInput name="search" [ngModel]="search()" (ngModelChange)="search.set($event)" />
+            <mat-label>{{ 'tags.searchItems' | transloco }}</mat-label>
+            <input
+              matInput
+              name="search"
+              [ngModel]="search()"
+              (ngModelChange)="search.set($event)"
+            />
           </mat-form-field>
-          <button matButton class="search-button" type="submit">Suchen</button>
+          <button matButton class="search-button" type="submit">
+            {{ 'common.search' | transloco }}
+          </button>
         </form>
         <ul class="items candidates">
           @for (candidate of candidates(); track candidate.kind + candidate.id) {
             <li>
               <mat-checkbox [checked]="isChosen(candidate)" (change)="toggleChosen(candidate)">
-                {{ candidate.label }}
+                @if (candidate.kind === 'show') {
+                  {{ 'tags.showCandidate' | transloco: { title: candidate.label } }}
+                } @else {
+                  {{ candidate.label }}
+                }
               </mat-checkbox>
             </li>
           }
         </ul>
-        <button matButton="filled" class="assign-button" (click)="assignChosen()" [disabled]="!!job || chosen().size === 0">
-          {{ chosen().size }} zuweisen
+        <button
+          matButton="filled"
+          class="assign-button"
+          (click)="assignChosen()"
+          [disabled]="!!job || chosen().size === 0"
+        >
+          {{ 'tags.assignCount' | transloco: { count: chosen().size } }}
         </button>
       </mat-card-content>
     </mat-card>

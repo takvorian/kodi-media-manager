@@ -13,7 +13,7 @@ export interface MovieSummary {
   readonly addedAt: string;
 }
 
-/** Antwort von GET /api/v1/movies. */
+/** Response of GET /api/v1/movies. */
 export interface MoviePage {
   readonly content: readonly MovieSummary[];
   readonly page: number;
@@ -28,7 +28,7 @@ export interface MovieQuery {
   readonly size: number;
 }
 
-/** Bearbeitbare Metadaten, entspricht dem Inhalt der NFO. */
+/** Editable metadata, matching the content of the NFO. */
 export interface MovieMetadata {
   readonly title: string;
   readonly originalTitle: string | null;
@@ -43,9 +43,9 @@ export interface MovieMetadata {
   readonly genres: readonly string[];
   readonly imdbId: string | null;
   readonly tmdbId: string | null;
-  /** Fassung, z. B. „Director's Cut“. */
+  /** Edition, e.g. “Director's Cut”. */
   readonly edition: string | null;
-  /** Videoquelle, z. B. bluray. */
+  /** Video source, e.g. bluray. */
   readonly videoSource: string | null;
 }
 
@@ -68,7 +68,7 @@ export interface MovieSetReference {
   readonly overview: string | null;
 }
 
-/** Weitere Angaben neben den bearbeitbaren Metadaten (derzeit nur lesend). */
+/** Further details besides the editable metadata (currently read-only). */
 export interface MovieSupplement {
   readonly actors: readonly MovieActor[];
   readonly directors: readonly string[];
@@ -103,7 +103,7 @@ export interface NfoInfo {
   readonly modifiedAt: string | null;
 }
 
-/** Antwort von GET /api/v1/movies/{id}. */
+/** Response of GET /api/v1/movies/{id}. */
 export interface MovieDetails {
   readonly id: number;
   readonly sourceId: number;
@@ -115,8 +115,8 @@ export interface MovieDetails {
   readonly supplement: MovieSupplement;
   readonly streams: StreamDetails;
   readonly nfo: NfoInfo;
-  /** Trailer-Link der NFO, den Kodi abspielt. */
+  /** Trailer link of the NFO that Kodi plays. */
   readonly trailer: string | null;
-  /** Eigene Sprache; ohne Angabe gilt die der Quelle bzw. der Einstellungen. */
+  /** Own language; without one, the source's or the settings' language applies. */
   readonly language: string | null;
 }

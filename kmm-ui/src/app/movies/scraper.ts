@@ -1,27 +1,27 @@
-/** Antwort von GET /api/v1/scrapers/metadata. */
+/** Response of GET /api/v1/scrapers/metadata. */
 export interface ScraperInfo {
   readonly id: string;
   readonly displayName: string;
   readonly mediaTypes: readonly string[];
-  /** Hinweis, was zur Nutzung fehlt, oder {@code null}, wenn der Scraper einsatzbereit ist. */
+  /** Note on what is missing for use, or {@code null} if the scraper is ready. */
   readonly missingConfiguration: string | null;
-  /** Vom Anbieter verlangter Hinweis auf die Datenquelle. */
+  /** Attribution of the data source required by the provider. */
   readonly attribution?: Attribution | null;
 }
 
-/** Hinweis auf die Datenquelle mit Link, z. B. für TheTVDB. */
+/** Attribution of the data source with a link, e.g. for TheTVDB. */
 export interface Attribution {
   readonly text: string;
   readonly link: string;
 }
 
-/** Sammlung eines Films beim Anbieter, etwa eine TMDB-Sammlung. */
+/** Collection of a movie at the provider, such as a TMDB collection. */
 export interface CollectionReference {
   readonly providerId: string;
   readonly name: string;
 }
 
-/** Suchtreffer eines Scrapers. */
+/** Search result of a scraper. */
 export interface ScrapeCandidate {
   readonly providerId: string;
   readonly title: string;
@@ -31,7 +31,7 @@ export interface ScrapeCandidate {
   readonly posterUrl: string | null;
 }
 
-/** Antwort von GET /api/v1/movies/{id}/scraper-proposal. */
+/** Response of GET /api/v1/movies/{id}/scraper-proposal. */
 export interface MovieScrapeProposal<M> {
   readonly metadata: M;
   readonly collection: CollectionReference | null;

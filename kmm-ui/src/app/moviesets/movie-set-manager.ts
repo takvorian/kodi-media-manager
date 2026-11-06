@@ -15,6 +15,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Observable, filter } from 'rxjs';
 
 import { Job } from '../jobs/job';
@@ -29,7 +30,7 @@ import {
   MovieSetCandidate,
   MovieSetData,
   MovieSetSummary,
-  SORT_METHOD_LABELS,
+  SORT_METHOD_KEYS,
   SetSortMethod,
   movieSetJobSummary,
 } from './movie-set';
@@ -41,8 +42,8 @@ const SEARCH_SIZE = 20;
 const TMDB_ID_PATTERN = /^\s*(\d{1,10})?\s*$/;
 
 /**
- * Filmset-Manager: Sets anlegen, bearbeiten und löschen, Bilder wählen, Filme hinzufügen und entfernen. Was Film-NFOs ändert,
- * läuft als Hintergrund-Job.
+ * Movie set manager: creates, edits and deletes sets, chooses artwork, adds and removes movies. Whatever changes
+ * movie NFOs runs as a background job.
  */
 @Component({
   selector: 'app-movie-set-manager',
@@ -59,6 +60,7 @@ const TMDB_ID_PATTERN = /^\s*(\d{1,10})?\s*$/;
     MatInputModule,
     MatProgressBarModule,
     MatSelectModule,
+    TranslocoPipe,
   ],
   templateUrl: './movie-set-manager.html',
   styleUrl: './movie-set-manager.scss',
@@ -69,8 +71,9 @@ export class MovieSetManager {
   private readonly jobStore = inject(JobStore);
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
+  private readonly transloco = inject(TranslocoService);
 
-  protected readonly sortMethods = Object.entries(SORT_METHOD_LABELS) as [SetSortMethod, string][];
+  protected readonly sortMethods = Object.entries(SORT_METHOD_KEYS) as [SetSortMethod, string][];
   protected readonly sets = rxResource({ stream: () => this.setService.findAll() });
   protected readonly selectedId = signal<number | null>(null);
   protected readonly set = rxResource({
@@ -95,7 +98,7 @@ export class MovieSetManager {
   protected readonly chosen = signal<ReadonlySet<number>>(new Set());
   protected readonly collectionQuery = signal('');
   protected readonly collections = signal<readonly MovieSetCandidate[] | null>(null);
-  /** Neu bei jedem Laden des Sets, damit die Galerie nach einer Umbenennung die verschobenen Bilder zeigt. */
+  /** New each time the set is loaded, so the gallery shows the moved images after a rename. */
   protected readonly artworkSource = computed(() =>
     this.set.hasValue() ? this.setService.artwork(this.set.value().id) : null,
   );
@@ -142,7 +145,7 @@ export class MovieSetManager {
       .create({ name: trimmed, overview: null, tmdbCollectionId: null, sortMethod: 'YEAR' })
       .subscribe({
         next: (created) => {
-          this.notify(`Filmset „${created.data.name}“ angelegt.`);
+          this.notify(this.transloco.translate('moviesets.created', { name: created.data.name }));
           this.sets.reload();
           this.selectedId.set(created.id);
         },
@@ -170,7 +173,7 @@ export class MovieSetManager {
     const name = this.set.hasValue() ? this.set.value().data.name : '';
     if (
       setId !== null &&
-      this.confirm(`Filmset „${name}“ löschen? Die Filme bleiben, nur ohne Set.`)
+      this.confirm(this.transloco.translate('moviesets.confirmDelete', { name }))
     ) {
       this.track(this.setService.delete(setId), () => this.selectedId.set(null));
     }
@@ -187,7 +190,7 @@ export class MovieSetManager {
     });
   }
 
-  /** Übernimmt Titel, Beschreibung und TMDB-ID ins Formular; gespeichert wird mit „Speichern“. */
+  /** Puts title, description and TMDB ID into the form; it is saved with “Save”. */
   protected takeOver(candidate: MovieSetCandidate): void {
     const setId = this.selectedId();
     if (setId === null) {
@@ -202,7 +205,7 @@ export class MovieSetManager {
         });
         this.form.markAsDirty();
         this.collections.set(null);
-        this.notify(`„${data.name}“ übernommen – bitte speichern.`);
+        this.notify(this.transloco.translate('moviesets.adopted', { name: data.name }));
       },
       error: (error: unknown) => this.notify(problemMessage(error)),
     });

@@ -9,7 +9,7 @@ const TMDB_ID_PATTERN = /^\d{1,10}$/;
 const GENRE_SEPARATOR = ',';
 const MAX_LABEL_LENGTH = 255;
 
-/** Textfelder sind leer statt {@code null}; leere Eingaben gelten beim Speichern als „nicht gesetzt“. */
+/** Text fields are empty instead of {@code null}; empty input counts as “not set” when saving. */
 export type MovieMetadataForm = FormGroup<{
   title: FormControl<string>;
   originalTitle: FormControl<string>;
@@ -33,7 +33,10 @@ export function createMovieMetadataForm(formBuilder: NonNullableFormBuilder): Mo
     title: ['', [Validators.required, Validators.maxLength(512)]],
     originalTitle: [''],
     sortTitle: [''],
-    year: formBuilder.control<number | null>(null, [Validators.min(MIN_YEAR), Validators.max(MAX_YEAR)]),
+    year: formBuilder.control<number | null>(null, [
+      Validators.min(MIN_YEAR),
+      Validators.max(MAX_YEAR),
+    ]),
     premiered: [''],
     runtime: formBuilder.control<number | null>(null, Validators.min(0)),
     mpaa: [''],

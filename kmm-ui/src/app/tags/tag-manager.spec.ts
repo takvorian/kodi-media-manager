@@ -4,7 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
@@ -41,6 +43,7 @@ describe('TagManager', () => {
       imports: [TagManager],
       providers: [
         provideHttpClient(),
+        provideI18nTesting(),
         provideHttpClientTesting(),
         provideRouter([]),
         {
@@ -103,9 +106,24 @@ describe('TagManager', () => {
     return { id: 'j', key: 'tags', title, status: 'RUNNING' } as Job;
   }
 
+  it('switches to English at runtime', async () => {
+    await load();
+    await selectKrimi();
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(texts('.tag')).toEqual(['Krimi 1 movie · 1 TV show', 'Spencer 2 movies · 0 TV shows']);
+    expect(texts('h3')).toEqual(['Movies (1)', 'TV shows (1)', 'Assign']);
+    expect(texts('.rename-button')).toEqual(['Rename']);
+    expect(tagJobSummary({ ...job('Delete tag'), status: 'FAILED', message: null })).toBe(
+      'Delete tag failed: Unknown error',
+    );
+  });
+
   it('lists the tags and shows the items of the selected one', async () => {
     await load();
-    expect(texts('.tag')).toEqual(['Krimi 1 Filme · 1 Serien', 'Spencer 2 Filme · 0 Serien']);
+    expect(texts('.tag')).toEqual(['Krimi 1 Film · 1 Serie', 'Spencer 2 Filme · 0 Serien']);
 
     await selectKrimi();
 

@@ -29,7 +29,7 @@ export class MovieService {
     return this.http.get<MoviePage>(MOVIES_URL, { params });
   }
 
-  /** Filmliste mit Filter, standardmäßig nach Titel sortiert. */
+  /** Movie list with filter, sorted by title by default. */
   queryMovies(
     filter: MovieFilter,
     page: number,
@@ -40,17 +40,17 @@ export class MovieService {
     return this.http.post<MoviePage>(`${MOVIES_URL}/query`, filter, { params });
   }
 
-  /** IDs aller Filme, auf die der Filter passt. */
+  /** IDs of all movies matching the filter. */
   queryMovieIds(filter: MovieFilter): Observable<number[]> {
     return this.http.post<number[]>(`${MOVIES_URL}/query/ids`, filter);
   }
 
-  /** Startet die Stapel-Bearbeitung als Job. */
+  /** Starts the batch edit as a job. */
   batchEdit(edit: MovieBatchEdit): Observable<Job> {
     return this.http.post<Job>(`${MOVIES_URL}/batch`, edit);
   }
 
-  /** Vorhandene Werte je Filterfeld für Auswahllisten. */
+  /** Existing values per filter field for selection lists. */
   filterValues(): Observable<MovieFilterValues> {
     return this.http.get<MovieFilterValues>(`${MOVIES_URL}/filter-values`);
   }
@@ -63,7 +63,7 @@ export class MovieService {
     return this.http.get<ScraperInfo[]>(METADATA_SCRAPERS_URL);
   }
 
-  /** Sucht online; ohne Titel nimmt das Backend Titel und Jahr des Films. */
+  /** Searches online; without a title the backend uses the title and year of the movie. */
   searchOnline(
     movieId: number,
     scraper: string,
@@ -80,7 +80,7 @@ export class MovieService {
     return this.http.get<ScrapeCandidate[]>(`${MOVIES_URL}/${movieId}/scraper-search`, { params });
   }
 
-  /** Vorhandene Metadaten, überlagert mit den Daten des gewählten Treffers, und dessen Sammlung; speichert nichts. */
+  /** Existing metadata overlaid with the data of the chosen result, and its collection; saves nothing. */
   proposal(
     movieId: number,
     scraper: string,
@@ -93,7 +93,7 @@ export class MovieService {
     );
   }
 
-  /** Ordnet den Film dem Set seiner Sammlung zu, sofern das in den Einstellungen eingeschaltet ist. */
+  /** Assigns the movie to the set of its collection, if switched on in the settings. */
   assignCollection(
     movieId: number,
     collection: CollectionReference,
@@ -101,13 +101,13 @@ export class MovieService {
     return this.http.post<{ assigned: boolean }>(`${MOVIES_URL}/${movieId}/collection`, collection);
   }
 
-  /** Speichert die Metadaten; das Backend schreibt sie zugleich in die NFO. */
+  /** Saves the metadata; the backend writes them to the NFO at the same time. */
   updateMetadata(movieId: number, metadata: MovieMetadata): Observable<MovieDetails> {
     return this.http.put<MovieDetails>(`${MOVIES_URL}/${movieId}/metadata`, metadata);
   }
 
-  /** Holt für die Filme ohne Trailer den besten Vorschlag, als Job. */
-  /** Aktualisiert Bewertungen und füllt leere Felder über Trakt und OMDb, als Job. */
+  /** Fetches the best proposal for the movies without a trailer, as a job. */
+  /** Refreshes ratings and fills empty fields via Trakt and OMDb, as a job. */
   refreshRatings(movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${MOVIES_URL}/ratings/refresh`, { movieIds });
   }
@@ -120,7 +120,7 @@ export class MovieService {
     return this.http.post<Job>(`${MOVIES_URL}/${movieId}/auto-scrape`, null);
   }
 
-  /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle, als Job. */
+  /** Adds everything missing for the selection like scraping a source does, as a job. */
   changeLanguage(
     movieIds: readonly number[],
     language: string | null,

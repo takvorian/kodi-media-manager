@@ -5,7 +5,9 @@ import {
   provideHttpClientTesting,
 } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { MovieMetadata } from './movie';
 import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
 import { METADATA_SCRAPERS_URL, MOVIES_URL } from './movie.service';
@@ -41,7 +43,7 @@ describe('MovieOnlineSearch', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [MovieOnlineSearch],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideI18nTesting()],
     });
     httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(MovieOnlineSearch);
@@ -78,6 +80,22 @@ describe('MovieOnlineSearch', () => {
     input.dispatchEvent(new Event('input'));
     await fixture.whenStable();
   }
+
+  it('switches to English at runtime', async () => {
+    await loadScrapers([tmdb]);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(searchButton().textContent?.trim()).toBe('Search TMDB');
+    searchButton().click();
+    expectSearch().flush([]);
+    await fixture.whenStable();
+
+    expect(element().querySelector('.no-results')?.textContent).toBe(
+      'No results. Try another search term or leave out the year.',
+    );
+  });
 
   it('searches with title and year of the movie by default and lists the hits', async () => {
     await loadScrapers([tmdb]);

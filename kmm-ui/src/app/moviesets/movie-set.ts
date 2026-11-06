@@ -1,13 +1,16 @@
+import { translate } from '@jsverse/transloco';
+
 import { Job } from '../jobs/job';
 
-/** Job-Schlüssel der Set-Änderungen; muss zu MovieSetJobService.JOB_KEY passen. */
+/** Job key of the set changes; must match MovieSetJobService.JOB_KEY. */
 export const MOVIE_SET_JOB_KEY = 'moviesets';
 
 export type SetSortMethod = 'YEAR' | 'TITLE';
 
-export const SORT_METHOD_LABELS: Record<SetSortMethod, string> = {
-  YEAR: 'nach Jahr',
-  TITLE: 'nach Titel',
+/** Translation key of the label of each sort method. */
+export const SORT_METHOD_KEYS: Record<SetSortMethod, string> = {
+  YEAR: 'moviesets.sortMethod.YEAR',
+  TITLE: 'moviesets.sortMethod.TITLE',
 };
 
 export interface MovieSetData {
@@ -34,7 +37,7 @@ export interface MovieSetDetails {
   readonly movies: readonly MovieSetMember[];
 }
 
-/** Suchtreffer einer TMDB-Sammlung. */
+/** Search result of a TMDB collection. */
 export interface MovieSetCandidate {
   readonly providerId: string;
   readonly title: string;
@@ -43,7 +46,7 @@ export interface MovieSetCandidate {
   readonly posterUrl: string | null;
 }
 
-/** Ergebnis von „Alle Sets ergänzen“. */
+/** Result of “Complete all sets”. */
 export interface MovieSetCompletionResult {
   readonly overviews: number;
   readonly images: number;
@@ -58,25 +61,39 @@ export interface MovieSetChangeResult {
   readonly failures: readonly string[];
 }
 
-/** Fasst einen beendeten Set-Job für eine Snackbar-Meldung zusammen. */
+/** Summarizes a finished set job for a snackbar message. */
 export function movieSetJobSummary(job: Job): string {
   if (job.status === 'SUCCEEDED' && isCompletion(job.result)) {
-    const problems =
-      job.result.problems.length > 0 ? ` Hinweise: ${job.result.problems.join('; ')}` : '';
-    return (
-      `${job.title}: ${job.result.overviews} Beschreibungen und ${job.result.images} Bilder geholt, ` +
-      `${job.result.withoutCollection} Sets ohne TMDB-ID übersprungen.${problems}`
-    );
+    const result = job.result;
+    const key =
+      result.problems.length > 0
+        ? 'moviesets.summary.completedWithNotes'
+        : 'moviesets.summary.completed';
+    return translate(key, {
+      title: job.title,
+      overviews: result.overviews,
+      images: result.images,
+      skipped: result.withoutCollection,
+      notes: result.problems.join('; '),
+    });
   }
   if (job.status === 'SUCCEEDED') {
     const result = job.result as MovieSetChangeResult;
-    const failed =
-      result.failed > 0 ? `, ${result.failed} Fehler: ${result.failures.join('; ')}` : '';
-    return `${job.title}: ${result.changed} Filme geändert${failed}.`;
+    const key =
+      result.failed > 0 ? 'moviesets.summary.changedWithFailures' : 'moviesets.summary.changed';
+    return translate(key, {
+      title: job.title,
+      changed: result.changed,
+      failed: result.failed,
+      failures: result.failures.join('; '),
+    });
   }
   return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+    ? translate('moviesets.summary.cancelled', { title: job.title })
+    : translate('moviesets.summary.failed', {
+        title: job.title,
+        reason: job.message ?? translate('moviesets.summary.unknownError'),
+      });
 }
 
 function isCompletion(result: unknown): result is MovieSetCompletionResult {

@@ -1,7 +1,7 @@
 @let data = supplement();
 <dl class="facts">
   @if (data.set) {
-    <dt>Filmset</dt>
+    <dt>{{ 'fields.movieSet' | transloco }}</dt>
     <dd class="movie-set">
       {{ data.set.name }}
       @if (data.set.overview) {
@@ -10,14 +10,21 @@
     </dd>
   }
   @if (data.ratings.length > 0) {
-    <dt>Bewertungen</dt>
+    <dt>{{ 'movies.supplement.ratings' | transloco }}</dt>
     <dd>
       <ul class="inline-list ratings">
         @for (rating of data.ratings; track rating.source) {
           <li [class.default-rating]="rating.defaultRating">
-            {{ ratingLabel(rating) }} {{ rating.value | number: '1.1-1' }}@if (rating.max) {/{{ rating.max }}}
+            {{ isDefaultSource(rating) ? ('common.default' | transloco) : ratingLabel(rating) }}
+            {{ rating.value | translocoDecimal: oneDecimal
+            }}{{ rating.max ? '/' + rating.max : '' }}
             @if (rating.votes) {
-              <span class="hint"> ({{ rating.votes | number }} Stimmen)</span>
+              <span class="hint">
+                {{
+                  'movies.supplement.votes'
+                    | transloco: { votes: (rating.votes | translocoDecimal) }
+                }}</span
+              >
             }
           </li>
         }
@@ -25,43 +32,48 @@
     </dd>
   }
   @if (data.userRating) {
-    <dt>Eigene Bewertung</dt>
+    <dt>{{ 'fields.userRating' | transloco }}</dt>
     <dd class="user-rating">{{ data.userRating }}/10</dd>
   }
   @if (data.directors.length > 0) {
-    <dt>Regie</dt>
+    <dt>{{ 'fields.director' | transloco }}</dt>
     <dd class="directors">{{ data.directors.join(', ') }}</dd>
   }
   @if (data.writers.length > 0) {
-    <dt>Drehbuch</dt>
+    <dt>{{ 'fields.writer' | transloco }}</dt>
     <dd class="writers">{{ data.writers.join(', ') }}</dd>
   }
   @if (data.studios.length > 0) {
-    <dt>Studios</dt>
+    <dt>{{ 'fields.studios' | transloco }}</dt>
     <dd class="studios">{{ data.studios.join(', ') }}</dd>
   }
   @if (data.countries.length > 0) {
-    <dt>Länder</dt>
+    <dt>{{ 'fields.countries' | transloco }}</dt>
     <dd class="countries">{{ data.countries.join(', ') }}</dd>
   }
   @if (data.tags.length > 0) {
-    <dt>Tags</dt>
+    <dt>{{ 'fields.tags' | transloco }}</dt>
     <dd class="tags">{{ data.tags.join(', ') }}</dd>
   }
-  <dt>Hinzugefügt</dt>
-  <dd class="added-at">{{ addedAt() | date: 'mediumDate' }}</dd>
-  <dt>Gesehen</dt>
+  <dt>{{ 'fields.added' | transloco }}</dt>
+  <dd class="added-at">{{ addedAt() | translocoDate: { dateStyle: 'medium' } }}</dd>
+  <dt>{{ 'fields.watched' | transloco }}</dt>
   <dd class="play-state">
     @if (data.playCount) {
-      {{ data.playCount }}×@if (data.lastPlayed) {, zuletzt am {{ data.lastPlayed | date: 'mediumDate' }}}
+      {{ data.playCount }}×{{
+        data.lastPlayed
+          ? ('movies.supplement.lastPlayed'
+            | transloco: { date: (data.lastPlayed | translocoDate: { dateStyle: 'medium' }) })
+          : ''
+      }}
     } @else {
-      <span class="hint">noch nicht</span>
+      <span class="hint">{{ 'movies.supplement.notYet' | transloco }}</span>
     }
   </dd>
 </dl>
 
 @if (data.actors.length > 0) {
-  <h3 class="cast-title">Besetzung</h3>
+  <h3 class="cast-title">{{ 'movies.supplement.cast' | transloco }}</h3>
   <ul class="cast">
     @for (actor of visibleActors(); track $index) {
       <li>
@@ -74,7 +86,11 @@
   </ul>
   @if (data.actors.length > visibleActorLimit) {
     <button matButton type="button" class="toggle-actors" (click)="toggleActors()">
-      {{ showAllActors() ? 'Weniger anzeigen' : 'Alle anzeigen (' + hiddenActorCount() + ' weitere)' }}
+      @if (showAllActors()) {
+        {{ 'movies.supplement.showLess' | transloco }}
+      } @else {
+        {{ 'movies.supplement.showAll' | transloco: { count: hiddenActorCount() } }}
+      }
     </button>
   }
 }
