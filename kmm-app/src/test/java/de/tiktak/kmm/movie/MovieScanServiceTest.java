@@ -137,7 +137,7 @@ class MovieScanServiceTest {
                 "1/1 Searching directories",
                 "1/2 Checking NFOs",
                 "2/2 Checking NFOs",
-                "2/2 Synchronizing library");
+                "2/2 Synchronising library");
         verify(events).publishEvent(new MovieSourceScannedEvent(SOURCE_ID, 2, 0));
         verify(nfoFiles, never()).read(any());
     }
