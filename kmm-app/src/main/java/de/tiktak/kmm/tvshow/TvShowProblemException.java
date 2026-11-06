@@ -87,12 +87,12 @@ public class TvShowProblemException extends LocalizedProblemException {
     }
 
     /**
-     * @param hint what the scraper is missing, as plain string or translatable text
+     * @param hint what the scraper is missing
      */
-    static TvShowProblemException scraperNotConfigured(Scraper scraper, Object hint) {
+    static TvShowProblemException scraperNotConfigured(Scraper scraper, LocalizedText hint) {
         return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT,
                 LocalizedText.of("tvShow.scraperNotConfigured.title").with("scraper", scraper.displayName()),
-                LocalizedTexts.asText(hint), null);
+                hint, null);
     }
 
     /** The provider cannot be reached or rejects the request: from KMM's point of view a gateway error. */

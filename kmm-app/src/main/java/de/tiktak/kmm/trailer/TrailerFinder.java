@@ -9,6 +9,7 @@ import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -39,7 +40,7 @@ public class TrailerFinder {
         List<String> warnings = new ArrayList<>();
         List<TrailerOption> options = new ArrayList<>();
         for (TrailerScraper scraper : scraperRegistry.trailerScrapersFor(request.mediaType())) {
-            Optional<String> missing = scraper.missingConfiguration();
+            Optional<String> missing = scraper.missingConfiguration().map(Messages::english);
             if (missing.isPresent()) {
                 warnings.add(missing.get());
                 continue;

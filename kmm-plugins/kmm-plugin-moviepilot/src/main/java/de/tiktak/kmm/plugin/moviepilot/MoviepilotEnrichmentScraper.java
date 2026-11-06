@@ -15,16 +15,16 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 
 /**
- * Deutsche Angaben für leere Felder von Filmen aus den Filmseiten von Moviepilot.de. Die Suche der Seite ist für
- * Programme gesperrt, deshalb leitet das Plugin die Adresse aus dem Titel ab und übernimmt die Seite nur, wenn ihre
- * IMDb-ID stimmt. Nicht jeder Film wird so gefunden; falsche Treffer gibt es nicht.
+ * German details for empty fields of movies from the movie pages of Moviepilot.de. The search of the site is closed
+ * to programs, so the plugin derives the address from the title and only uses the page if its IMDb ID matches. Not
+ * every movie is found this way; there are no wrong matches.
  */
 @Extension
 public class MoviepilotEnrichmentScraper implements EnrichmentScraper {
 
     static final String ID = "moviepilot";
     static final String IMDB = "imdb";
-    /** Vor OMDb, das nur englische Angaben hat. */
+    /** Before OMDb, which only has English details. */
     static final int ORDER = 10;
     private static final Pattern IMDB_ID = Pattern.compile("tt[0-9]{7,10}");
     private static final Pattern DIACRITICS = Pattern.compile("\\p{M}+");
@@ -82,7 +82,7 @@ public class MoviepilotEnrichmentScraper implements EnrichmentScraper {
                 .map(MoviepilotPage::enrichment);
     }
 
-    /** Adressname wie auf der Seite: „2001: Odyssee im Weltraum“ wird zu {@code 2001-odyssee-im-weltraum}. */
+    /** Address name as on the site: "2001: Odyssee im Weltraum" becomes {@code 2001-odyssee-im-weltraum}. */
     static String slug(String title) {
         String german = title.toLowerCase(Locale.GERMAN).replace("ä", "ae").replace("ö", "oe").replace("ü", "ue")
                 .replace("ß", "ss");

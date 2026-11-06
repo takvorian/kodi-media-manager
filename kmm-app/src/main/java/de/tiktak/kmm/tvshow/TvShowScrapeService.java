@@ -32,7 +32,6 @@ import de.tiktak.kmm.plugin.api.TvShowResult;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 import de.tiktak.kmm.scanner.TvShowFiles;
 import de.tiktak.kmm.tvshow.TvShowScrapeMerger.EpisodeFill;
-import de.tiktak.kmm.web.LocalizedTexts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -300,9 +299,9 @@ public class TvShowScrapeService {
         List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
         List<LocalizedText> warnings = new ArrayList<>();
         for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
-            var missing = scraper.missingConfiguration();
+            Optional<LocalizedText> missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
-                warnings.add(LocalizedTexts.asText(missing.get()));
+                warnings.add(missing.get());
                 continue;
             }
             try {

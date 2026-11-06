@@ -12,14 +12,14 @@
 
     <artifactId>kmm-plugin-omdb</artifactId>
     <name>KMM Plugin OMDb</name>
-    <description>Bewertungen (IMDb, Rotten Tomatoes, Metacritic) und englische Angaben für leere Felder von OMDb. Benötigt einen OMDb-API-Key.</description>
+    <description>Ratings (IMDb, Rotten Tomatoes, Metacritic) and English details for empty fields from OMDb. Needs an OMDb API key.</description>
 
     <properties>
         <plugin.id>omdb</plugin.id>
     </properties>
 
     <dependencies>
-        <!-- provided: Jackson und SLF4J stellt die Anwendung zur Laufzeit bereit. -->
+        <!-- provided: the application supplies Jackson and SLF4J at runtime. -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

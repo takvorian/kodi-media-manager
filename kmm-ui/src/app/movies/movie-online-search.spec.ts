@@ -7,6 +7,7 @@ import {
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 
+import { literal } from '../i18n/localized-text';
 import { provideI18nTesting } from '../i18n/testing';
 import { MovieMetadata } from './movie';
 import { MovieOnlineSearch, ScrapedProposal } from './movie-online-search';
@@ -165,7 +166,7 @@ describe('MovieOnlineSearch', () => {
   });
 
   it('explains a missing configuration and blocks searching', async () => {
-    await loadScrapers([{ ...tmdb, missingConfiguration: 'Für TMDB fehlt ein API-Key.' }]);
+    await loadScrapers([{ ...tmdb, missingConfiguration: literal('Für TMDB fehlt ein API-Key.') }]);
 
     expect(element().querySelector('.missing-configuration')?.textContent).toContain('API-Key');
     expect(searchButton().disabled).toBe(true);

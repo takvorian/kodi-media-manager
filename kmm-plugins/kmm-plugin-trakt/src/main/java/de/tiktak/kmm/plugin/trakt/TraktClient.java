@@ -9,7 +9,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -17,7 +19,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * HTTP-Client für die Trakt-API v2 mit Client-ID, ohne Anmeldung. Übersetzt Fehler in verständliche
+ * HTTP client for the Trakt API v2 with a client ID, without login. Turns errors into understandable
  * {@link ScraperException}s.
  */
 @RequiredArgsConstructor
@@ -36,8 +38,8 @@ class TraktClient {
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     /**
-     * @param path Pfad samt Anfrage, z. B. {@code /movies/tt0113277/ratings}; die Bestandteile sind geprüft
-     * @return die Antwort oder leer, wenn Trakt den Eintrag nicht kennt
+     * @param path path including the query, e.g. {@code /movies/tt0113277/ratings}; its parts are checked
+     * @return the response, or empty if Trakt does not know the entry
      */
     Optional<JsonNode> get(String path) {
         HttpResponse<String> response = send(HttpRequest.newBuilder(URI.create(settings.baseUrl() + path))
@@ -52,8 +54,9 @@ class TraktClient {
             case OK -> Optional.of(parse(response.body()));
             case NOT_FOUND -> Optional.empty();
             case UNAUTHORIZED, FORBIDDEN -> throw new ScraperException(
-                    "Trakt lehnt die Client-ID ab. Bitte unter Einstellungen → API-Keys prüfen.");
-            default -> throw new ScraperException("Trakt antwortet mit Fehler %d.".formatted(response.statusCode()));
+                    LocalizedText.of("scraper.trakt.clientIdRejected"));
+            default -> throw new ScraperException(
+                    ScraperTexts.httpError(TraktEnrichmentScraper.PROVIDER, response.statusCode()));
         };
     }
 
@@ -61,10 +64,10 @@ class TraktClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ScraperException("Trakt ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(TraktEnrichmentScraper.PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an Trakt wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(TraktEnrichmentScraper.PROVIDER), e);
         }
     }
 
@@ -72,7 +75,7 @@ class TraktClient {
         try {
             return objectMapper.readTree(body);
         } catch (JacksonException e) {
-            throw new ScraperException("Trakt hat eine unerwartete Antwort geliefert.", e);
+            throw new ScraperException(ScraperTexts.unexpectedResponse(TraktEnrichmentScraper.PROVIDER), e);
         }
     }
 }

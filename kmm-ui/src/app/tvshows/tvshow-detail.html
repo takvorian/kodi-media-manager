@@ -412,7 +412,9 @@
 
   @for (attribution of attributions(); track attribution.link) {
     <p class="attribution">
-      <a [href]="attribution.link" target="_blank" rel="noopener">{{ attribution.text }}</a>
+      <a [href]="attribution.link" target="_blank" rel="noopener">{{
+        attribution.text | localized
+      }}</a>
     </p>
   }
 } @else {

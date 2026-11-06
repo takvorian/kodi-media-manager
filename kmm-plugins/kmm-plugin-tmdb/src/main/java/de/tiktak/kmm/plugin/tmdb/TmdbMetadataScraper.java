@@ -12,7 +12,7 @@ import de.tiktak.kmm.plugin.api.SearchQuery;
 import de.tiktak.kmm.plugin.api.SearchResult;
 
 /**
- * Metadaten-Scraper für Filme auf Basis von The Movie Database (TMDB).
+ * Metadata scraper for movies based on The Movie Database (TMDB).
  */
 @Extension
 public class TmdbMetadataScraper extends AbstractTmdbScraper implements MetadataScraper {
@@ -43,7 +43,7 @@ public class TmdbMetadataScraper extends AbstractTmdbScraper implements Metadata
         return tmdbId(api, request).flatMap(this::fetch);
     }
 
-    /** Über bekannte TMDB- oder IMDb-ID, sonst der eindeutig passende Suchtreffer. */
+    /** Via a known TMDB or IMDb ID, otherwise the unambiguously matching search result. */
     private Optional<String> tmdbId(TmdbApi api, ScrapeRequest request) {
         if (request.uniqueIds().containsKey(TmdbApi.TMDB) || request.uniqueIds().containsKey(TmdbApi.IMDB)) {
             return api.tmdbIdOf(request.uniqueIds());

@@ -7,20 +7,21 @@ import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.Titles;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Findet OFDb-Filme über den Titel: Die Sitemaps der Seite nennen zu jeder Film-ID den Adressnamen. Weil es mehrere
- * hunderttausend Filme sind, hält der Index nur Prüfsumme des Titels und ID als sortierte Zahlen; verwechselte Titel
- * fallen bei der Prüfung der IMDb-ID auf. Erst beim ersten Bedarf geladen und nach einer Weile neu.
+ * Finds OFDb movies by title: the sitemaps of the site name the address name for every movie ID. Because there are
+ * several hundred thousand movies, the index only keeps the checksum of the title and the ID as sorted numbers; mixed
+ * up titles are caught when the IMDb ID is checked. Loaded on first use and again after a while.
  */
 @RequiredArgsConstructor
 class OfdbFilmIndex {
 
     static final Duration MAX_AGE = Duration.ofDays(7);
-    /** Mehr gleichnamige Filme werden nicht abgerufen, um die Seite nicht zu belasten. */
+    /** More movies of the same name are not fetched so as not to burden the site. */
     static final int MAX_CANDIDATES = 5;
     private static final String INDEX_PATH = "/sitemap/sitemap_index.xml";
     private static final Pattern SITEMAP = Pattern.compile("<loc>https?://[^/<]+(/sitemap/sitemap[0-9]+\\.xml)</loc>");
@@ -33,7 +34,7 @@ class OfdbFilmIndex {
     private long[] entries;
     private long loadedAtNanos;
 
-    /** @return IDs der Filme mit diesem Titel, höchstens {@link #MAX_CANDIDATES} */
+    /** @return IDs of the movies with this title, at most {@link #MAX_CANDIDATES} */
     synchronized List<Integer> candidates(String title) {
         String normalized = Titles.normalize(title);
         if (normalized.isEmpty()) {
@@ -61,7 +62,7 @@ class OfdbFilmIndex {
         }
         long[] loaded = parts.stream().flatMapToLong(Arrays::stream).sorted().toArray();
         if (loaded.length == 0) {
-            throw new ScraperException("OFDb: Die Sitemaps enthalten keine Filme mehr.");
+            throw new ScraperException(LocalizedText.of("scraper.ofdb.noMovies"));
         }
         entries = loaded;
         loadedAtNanos = System.nanoTime();

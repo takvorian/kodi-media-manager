@@ -10,8 +10,8 @@ import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Übersetzt die Antworten von {@code /movie/{id}/images} und {@code /tv/{id}/images} in Bild-Kandidaten.
- * TMDB liefert Poster, Hintergründe (Kodi: Fanart) und Logos (Kodi: Clearlogo), für Staffeln nur Poster.
+ * Turns the responses of {@code /movie/{id}/images} and {@code /tv/{id}/images} into image candidates. TMDB supplies
+ * posters, backdrops (Kodi: fanart) and logos (Kodi: clearlogo), for seasons only posters.
  */
 @RequiredArgsConstructor
 class TmdbImageMapper {
@@ -20,7 +20,7 @@ class TmdbImageMapper {
     private static final String POSTER_PREVIEW_SIZE = "w342";
     private static final String BACKDROP_PREVIEW_SIZE = "w780";
     private static final String LOGO_PREVIEW_SIZE = "w300";
-    /** Kodi kann keine Vektorgrafiken anzeigen; TMDB liefert manche Logos als SVG. */
+    /** Kodi cannot show vector graphics; TMDB supplies some logos as SVG. */
     private static final String UNSUPPORTED_EXTENSION = ".svg";
 
     private final TmdbSettings settings;

@@ -41,11 +41,13 @@
     </form>
 
     @if (scraper.missingConfiguration) {
-      <p class="hint missing-configuration">{{ scraper.missingConfiguration }}</p>
+      <p class="hint missing-configuration">{{ scraper.missingConfiguration | localized }}</p>
     }
     @if (scraper.attribution; as attribution) {
       <p class="attribution">
-        <a [href]="attribution.link" target="_blank" rel="noopener">{{ attribution.text }}</a>
+        <a [href]="attribution.link" target="_blank" rel="noopener">{{
+          attribution.text | localized
+        }}</a>
       </p>
     }
     @if (error()) {

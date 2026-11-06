@@ -6,6 +6,7 @@ import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MovieSetResult;
 import de.tiktak.kmm.plugin.api.MovieSetScraper;
@@ -59,7 +60,7 @@ public class MovieSetScrapeService {
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())
                 .findFirst()
                 .orElseThrow(() -> ScraperProblemException.notConfigured(scrapers.getFirst(),
-                        scrapers.getFirst().missingConfiguration().orElseThrow()));
+                        scrapers.getFirst().missingConfiguration().map(Messages::english).orElseThrow()));
     }
 
     private static <T> T call(MovieSetScraper scraper, Function<MovieSetScraper, T> request) {

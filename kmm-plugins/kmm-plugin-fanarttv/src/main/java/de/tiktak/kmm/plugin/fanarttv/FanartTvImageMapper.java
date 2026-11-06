@@ -14,16 +14,16 @@ import de.tiktak.kmm.plugin.api.ImageType;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Übersetzt die Antworten von {@code /movies/{id}} und {@code /tv/{id}} in Bild-Kandidaten nach
- * Kodi-Bildarten. Staffelbilder tragen die Staffelnummer; Bilder für alle Staffeln entfallen.
+ * Turns the responses of {@code /movies/{id}} and {@code /tv/{id}} into image candidates by Kodi image type. Season
+ * images carry the season number; images for all seasons are dropped.
  */
 class FanartTvImageMapper {
 
-    /** fanart.tv-Feld → Kodi-Bildart; HD-Varianten zuerst, damit sie bei gleicher Bewertung vorne stehen. */
+    /** fanart.tv field → Kodi image type; HD variants first so they come first at equal rating. */
     private static final Map<String, ImageType> MOVIE_FIELDS = movieFields();
     private static final Map<String, ImageType> TV_FIELDS = tvFields();
     private static final Map<String, ImageType> SEASON_FIELDS = seasonFields();
-    /** fanart.tv kennzeichnet Bilder ohne Sprache mit „00“. */
+    /** fanart.tv marks images without language with "00". */
     private static final String NO_LANGUAGE = "00";
     private static final String FULL_IMAGE_PATH = "/fanart/";
     private static final String PREVIEW_PATH = "/preview/";
@@ -45,7 +45,7 @@ class FanartTvImageMapper {
                         .flatMap(Optional::stream));
     }
 
-    /** Staffelnummer eines Staffelbildes; {@code null} für „all“ oder ungültige Angaben. */
+    /** Season number of a season image; {@code null} for "all" or invalid values. */
     private static Integer season(JsonNode image) {
         try {
             int season = Integer.parseInt(image.path("season").asString());
@@ -71,7 +71,7 @@ class FanartTvImageMapper {
                 .build());
     }
 
-    /** fanart.tv liefert Dateinamen mit Leerzeichen, z. B. {@code A_78020 (0).jpg}. */
+    /** fanart.tv supplies file names with spaces, e.g. {@code A_78020 (0).jpg}. */
     private static Optional<URI> uri(String url) {
         if (url.isEmpty()) {
             return Optional.empty();

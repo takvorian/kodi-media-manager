@@ -39,6 +39,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.plugin.ScraperRegistry;
@@ -133,7 +134,8 @@ class TvShowArtworkIntegrationTest {
                 .episodes(List.of(EpisodeResult.builder().season(1).episode(1).thumb(url("/thumb.jpg")).build()))
                 .build()));
         TvShowScraper unconfigured = mock(TvShowScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Für TMDB fehlt ein API-Key."));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("Für TMDB fehlt ein API-Key.")));
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(metadata, unconfigured));
     }
 

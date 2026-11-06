@@ -4,15 +4,15 @@ import java.time.LocalDate;
 import java.util.List;
 
 /**
- * Ergänzungen eines Anbieters zu einem Film oder einer Serie: Bewertungen und Angaben, mit denen KMM leere Felder
- * füllt. Unbekannte Angaben sind {@code null} bzw. leer.
+ * Additions of a provider to a movie or TV show: ratings and details KMM uses to fill empty fields. Unknown details
+ * are {@code null} or empty.
  *
- * @param ratings       Bewertungen des Anbieters
- * @param plot          Handlung
- * @param runtime       Laufzeit in Minuten
- * @param premiered     Erstaufführung bzw. Erstausstrahlung
- * @param certification Altersfreigabe, wie der Anbieter sie angibt
- * @param actors        Namen der Darsteller ohne Rollen
+ * @param ratings       ratings of the provider
+ * @param plot          plot
+ * @param runtime       runtime in minutes
+ * @param premiered     premiere or first air date
+ * @param certification age rating as the provider states it
+ * @param actors        names of the actors without roles
  */
 public record Enrichment(
         List<ProviderRating> ratings,
@@ -35,7 +35,7 @@ public record Enrichment(
         countries = countries == null ? List.of() : List.copyOf(countries);
     }
 
-    /** Nur Bewertungen. */
+    /** Ratings only. */
     public static Enrichment ofRatings(List<ProviderRating> ratings) {
         return new Enrichment(ratings, null, null, null, null, null, null, null, null, null);
     }

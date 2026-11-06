@@ -12,7 +12,7 @@
 
     <artifactId>kmm-plugin-testdata</artifactId>
     <name>KMM Plugin Testdata</name>
-    <description>Test-Plugin mit festen Daten. Nur für Integrationstests, wird nicht ausgeliefert.</description>
+    <description>Test plugin with fixed data. Only for integration tests, not shipped.</description>
 
     <properties>
         <plugin.id>testdata</plugin.id>

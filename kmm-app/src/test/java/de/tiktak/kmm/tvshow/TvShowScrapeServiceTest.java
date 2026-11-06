@@ -111,7 +111,7 @@ class TvShowScrapeServiceTest {
         ReflectionTestUtils.setField(show, "id", 7L);
         when(showRepository.findById(7L)).thenReturn(Optional.of(show));
         TvShowScraper unconfigured = mock(TvShowScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Key fehlt"));
+        when(unconfigured.missingConfiguration()).thenReturn(Optional.of(LocalizedText.literal("Key fehlt")));
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(unconfigured, scraper));
         when(scraper.id()).thenReturn("tmdb");
         when(scraper.scrape(any())).thenReturn(Optional.empty());

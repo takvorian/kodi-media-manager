@@ -10,8 +10,8 @@ import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 
 /**
- * Bilder von TheTVDB für Serien: Poster, Fanart, Banner, Clearlogo, Clearart sowie Staffelposter,
- * -banner und -fanart.
+ * Images from TheTVDB for TV shows: poster, fanart, banner, clearlogo, clearart as well as season posters, banners
+ * and fanart.
  */
 @Extension
 public class TvdbImageScraper extends AbstractTvdbScraper implements ImageScraper {

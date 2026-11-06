@@ -107,7 +107,10 @@ describe('TvShowDetail', () => {
       displayName: 'TheTVDB',
       mediaTypes: ['TV_SHOW'],
       missingConfiguration: null,
-      attribution: { text: 'Metadata provided by TheTVDB.', link: 'https://www.thetvdb.com' },
+      attribution: {
+        text: literal('Metadata provided by TheTVDB.'),
+        link: 'https://www.thetvdb.com',
+      },
     },
   ];
   const proposal: TvShowProposal = {

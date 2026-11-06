@@ -14,6 +14,7 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -21,8 +22,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Minimaler HTTP-Client für die TMDB-API v3. Übersetzt Fehler in verständliche
- * {@link ScraperException}s für die Oberfläche.
+ * Minimal HTTP client for the TMDB API v3. Turns errors into understandable {@link ScraperException}s for the user
+ * interface.
  */
 @RequiredArgsConstructor
 class TmdbClient {
@@ -42,18 +43,19 @@ class TmdbClient {
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     /**
-     * @return die Antwort oder leer, wenn TMDB den Eintrag nicht kennt (HTTP 404)
-     * @throws ScraperException bei fehlendem/ungültigem API-Key, Anfragelimit, Server- oder Netzwerkfehlern
+     * @return the response, or empty if TMDB does not know the entry (HTTP 404)
+     * @throws ScraperException on a missing or invalid API key, the request limit, server or network errors
      */
     Optional<JsonNode> get(String path, Map<String, String> parameters) {
         HttpResponse<String> response = send(request(path, parameters));
         return switch (response.statusCode()) {
             case OK -> Optional.of(parse(response.body()));
             case NOT_FOUND -> Optional.empty();
-            case UNAUTHORIZED -> throw new ScraperException("TMDB lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.");
+            case UNAUTHORIZED -> throw new ScraperException(ScraperTexts.apiKeyRejected(AbstractTmdbScraper.PROVIDER));
             case TOO_MANY_REQUESTS -> throw new ScraperException(
-                    "Das Anfragelimit von TMDB ist erreicht. Bitte später erneut versuchen.");
-            default -> throw new ScraperException("TMDB antwortet mit Fehler %d.".formatted(response.statusCode()));
+                    ScraperTexts.rateLimitReached(AbstractTmdbScraper.PROVIDER));
+            default -> throw new ScraperException(
+                    ScraperTexts.httpError(AbstractTmdbScraper.PROVIDER, response.statusCode()));
         };
     }
 
@@ -72,7 +74,7 @@ class TmdbClient {
         return builder.uri(uri(path, query)).build();
     }
 
-    /** TMDB-v4-Lesetokens sind lange JWTs, v3-API-Keys 32 Zeichen lang. */
+    /** TMDB v4 read access tokens are long JWTs, v3 API keys are 32 characters long. */
     private boolean usesBearerToken() {
         return settings.apiKey().length() > V3_API_KEY_MAX_LENGTH;
     }
@@ -88,10 +90,10 @@ class TmdbClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ScraperException("TMDB ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(AbstractTmdbScraper.PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an TMDB wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(AbstractTmdbScraper.PROVIDER), e);
         }
     }
 
@@ -99,7 +101,7 @@ class TmdbClient {
         try {
             return objectMapper.readTree(body);
         } catch (JacksonException e) {
-            throw new ScraperException("TMDB hat eine unerwartete Antwort geliefert.", e);
+            throw new ScraperException(ScraperTexts.unexpectedResponse(AbstractTmdbScraper.PROVIDER), e);
         }
     }
 

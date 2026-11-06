@@ -7,6 +7,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 class ScraperTest {
 
     private final ImageScraper movieOnlyScraper = new ImageScraper() {
@@ -53,10 +55,23 @@ class ScraperTest {
     @Test
     void carriesUserFacingMessage() {
         var cause = new IllegalStateException("io");
+        LocalizedText unreachable = ScraperTexts.unreachable("TMDB", "io");
 
-        assertThat(new ScraperException("TMDB nicht erreichbar", cause))
-                .hasMessage("TMDB nicht erreichbar")
-                .hasCause(cause);
-        assertThat(new ScraperException("Ungültiger API-Key")).hasNoCause();
+        assertThat(new ScraperException(unreachable, cause))
+                .hasMessage("TMDB cannot be reached: io")
+                .hasCause(cause)
+                .extracting(ScraperException::localizedText).isEqualTo(unreachable);
+        assertThat(new ScraperException(ScraperTexts.apiKeyRejected("TMDB"))).hasNoCause();
+    }
+
+    @Test
+    void showsUntranslatedMessagesAsTheyAre() {
+        var cause = new IllegalStateException("io");
+
+        assertThat(new ScraperException("Invalid API key", cause))
+                .hasMessage("Invalid API key")
+                .hasCause(cause)
+                .extracting(ScraperException::localizedText).isEqualTo(LocalizedText.literal("Invalid API key"));
+        assertThat(new ScraperException("Invalid API key")).hasNoCause();
     }
 }

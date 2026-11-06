@@ -4,30 +4,30 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Liefert Metadaten (Titel, Handlung, IDs …) zu einem Medium.
+ * Supplies metadata (title, plot, IDs …) for a medium.
  */
 public interface MetadataScraper extends Scraper {
 
     /**
-     * Sucht passende Medien; der Nutzer wählt daraus einen Treffer aus.
+     * Searches for matching media; the user picks one of the results.
      *
-     * @throws ScraperException wenn der Anbieter nicht erreichbar ist oder die Anfrage ablehnt
+     * @throws ScraperException if the provider cannot be reached or rejects the request
      */
     List<SearchResult> search(SearchQuery query);
 
     /**
-     * Lädt alle Metadaten zu einem Treffer aus {@link #search(SearchQuery)}.
+     * Loads all metadata of a result from {@link #search(SearchQuery)}.
      *
-     * @return leer, wenn der Anbieter die ID nicht kennt
-     * @throws ScraperException wenn der Anbieter nicht erreichbar ist oder die Anfrage ablehnt
+     * @return empty if the provider does not know the ID
+     * @throws ScraperException if the provider cannot be reached or rejects the request
      */
     Optional<MetadataResult> fetch(String providerId);
 
     /**
-     * Ermittelt das Medium selbstständig, bevorzugt über bekannte IDs, sonst über den besten
-     * Suchtreffer. Gedacht für die automatische Übernahme ohne Rückfrage.
+     * Identifies the medium on its own, preferably via known IDs, otherwise via the best search result. Meant for
+     * applying data automatically without asking.
      *
-     * @return leer, wenn kein Treffer eindeutig genug ist
+     * @return empty if no result is unambiguous enough
      */
     Optional<MetadataResult> scrape(ScrapeRequest request);
 }

@@ -3,11 +3,11 @@ package de.tiktak.kmm.plugin.youtube;
 import de.tiktak.kmm.plugin.api.PluginContext;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.youtube.*}).
+ * Settings of the plugin ({@code kmm.plugins.settings.youtube.*}).
  *
- * @param ytDlp          Programm yt-dlp, ohne Pfad aus dem Suchpfad
- * @param ffmpegLocation Ordner oder Programm ffmpeg für das Umwandeln in MP3; leer, wenn ffmpeg im Suchpfad liegt
- * @param maxResults     Anzahl der Suchtreffer
+ * @param ytDlp          program yt-dlp, from the search path without a path
+ * @param ffmpegLocation folder or program ffmpeg for the conversion to MP3; empty if ffmpeg is on the search path
+ * @param maxResults     number of search results
  */
 record YouTubeSettings(String ytDlp, String ffmpegLocation, int maxResults) {
 

@@ -4,11 +4,11 @@ import java.net.URI;
 import java.util.Objects;
 
 /**
- * Ein Treffer einer Suche beim Anbieter, aus dem der Nutzer den richtigen Film auswählt.
+ * A result of a search at the provider, from which the user picks the right movie.
  *
- * @param providerId ID beim Anbieter; wird an {@link MetadataScraper#fetch(String)} übergeben
- * @param overview   Kurzbeschreibung oder {@code null}
- * @param posterUrl  kleines Vorschaubild oder {@code null}
+ * @param providerId ID at the provider; passed to {@link MetadataScraper#fetch(String)}
+ * @param overview   short description or {@code null}
+ * @param posterUrl  small preview image or {@code null}
  */
 public record SearchResult(
         String providerId,

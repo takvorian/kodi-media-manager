@@ -11,13 +11,16 @@ import java.util.Optional;
 
 import de.tiktak.kmm.plugin.api.RequestThrottle;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 
 /**
- * Ruft Filmseiten von Moviepilot ab, mit Abstand zwischen den Abrufen. Nur Filmseiten: Die Suche ist laut
- * {@code robots.txt} für Programme gesperrt.
+ * Fetches movie pages from Moviepilot, with a gap between the requests. Only movie pages: according to
+ * {@code robots.txt} the search is closed to programs.
  */
 class MoviepilotClient {
 
+    /** Name of the provider in messages for the user. */
+    static final String PROVIDER = "Moviepilot";
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
     private static final int OK = 200;
     private static final int NOT_FOUND = 404;
@@ -36,8 +39,8 @@ class MoviepilotClient {
     }
 
     /**
-     * @param slug Adressname des Films, z. B. {@code der-pate}
-     * @return die Seite oder leer, wenn es sie nicht gibt
+     * @param slug address name of the movie, e.g. {@code der-pate}
+     * @return the page, or empty if it does not exist
      */
     Optional<String> movie(String slug) {
         throttle.await();
@@ -49,8 +52,7 @@ class MoviepilotClient {
         return switch (response.statusCode()) {
             case OK -> Optional.of(response.body());
             case NOT_FOUND, GONE -> Optional.empty();
-            default -> throw new ScraperException("Moviepilot antwortet mit Fehler %d."
-                    .formatted(response.statusCode()));
+            default -> throw new ScraperException(ScraperTexts.httpError(PROVIDER, response.statusCode()));
         };
     }
 
@@ -58,10 +60,10 @@ class MoviepilotClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ScraperException("Moviepilot ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an Moviepilot wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(PROVIDER), e);
         }
     }
 }
