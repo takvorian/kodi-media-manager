@@ -47,7 +47,7 @@ The title search applies in addition to the filter.
 
 ## Batch edit
 
-With **Batch edit selection** (in the TV show list: **Batch edit**) you change all selected entries at once:
+With **Batch edit selection** you change all selected entries at once:
 
 - Add or remove **genres and tags**, several separated by commas.
 - **Movies:** set or clear certification, edition and video source.
@@ -57,10 +57,10 @@ The NFOs are written and Kodi reads the entries again. Nothing is renamed, even 
 
 ## More actions for the selection
 
-- **Fetch missing trailers** (TV shows: **Get missing trailers**)
-- **Fetch missing theme music** (TV shows: **Get missing theme music**)
-- **Refresh ratings** (TV shows: **Update ratings**)
+- **Fetch missing trailers**
+- **Fetch missing theme music**
+- **Refresh ratings**
 - **Refresh in Kodi**, see [Kodi](kodi.md#updating-manually)
-- **Change language** (TV shows: **Change metadata language**), see [Language per entry](scraping.md#language-per-source-and-entry)
+- **Change language**, see [Language per entry](scraping.md#language-per-source-and-entry)
 
 There is more on this in [Scraping](scraping.md).

@@ -15,7 +15,7 @@ For TV shows you do the same. Several new entries are quickest to handle in the 
 
 You set the language of texts and episode names in three places. The first one that specifies something applies:
 
-1. **Movie or TV show:** in the movie or TV show view under **Language**; for several at once, in the list via the selection with **Change language** (TV show list: **Change metadata language**). Episodes follow their TV show.
+1. **Movie or TV show:** in the movie or TV show view under **Language**; for several at once, in the list via the selection with **Change language**. Episodes follow their TV show.
 2. **Source:** in the **Language** column on the [Sources](sources.md) page.
 3. **[Settings](settings.md#language)**.
 
@@ -88,7 +88,7 @@ Moviepilot and OFDb do not search by title alone: a page is only applied if its 
 
 ## Ratings
 
-Automatic scraping only adds missing ratings. To update existing ones, select the entries in the list and click **Refresh ratings** (TV show list: **Update ratings**). The free OMDb key allows 1,000 requests per day, so plan for this with large libraries.
+Automatic scraping only adds missing ratings. To update existing ones, select the entries in the list and click **Refresh ratings**. The free OMDb key allows 1,000 requests per day, so plan for this with large libraries.
 
 ## Artwork
 
@@ -111,7 +111,7 @@ KMM does not download trailers. Instead it adds a link to the NFO, which Kodi pl
 - Under **Custom link** you enter a link by hand; `plugin://`, `http(s)://`, `smb://` and `nfs://` are allowed.
 - **Remove** deletes the entry again.
 
-In the list, **Fetch missing trailers** (TV show list: **Get missing trailers**) fetches trailers for the selection. Existing links stay.
+In the list, **Fetch missing trailers** fetches trailers for the selection. Existing links stay.
 
 ## Theme music
 
@@ -120,4 +120,4 @@ The theme music is stored as `theme.mp3` in the movie or show folder. **Kodi onl
 - **Find suggestions** shows matches from TelevisionTunes and YouTube. You can listen to them, open their page and save one with **Apply**.
 - **Delete** removes the file.
 
-**Fetch missing theme music** (TV show list: **Get missing theme music**) in the list and automatic scraping only apply reliable matches with the same title at the provider. YouTube videos never count as reliable; you choose those by hand. An existing `theme.mp3` stays untouched in both cases.
+**Fetch missing theme music** in the list and automatic scraping only apply reliable matches with the same title at the provider. YouTube videos never count as reliable; you choose those by hand. An existing `theme.mp3` stays untouched in both cases.
