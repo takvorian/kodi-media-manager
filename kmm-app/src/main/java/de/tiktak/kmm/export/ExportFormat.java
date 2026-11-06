@@ -3,13 +3,13 @@ package de.tiktak.kmm.export;
 import org.springframework.http.MediaType;
 
 /**
- * Formate des Exports.
+ * Formats of the export.
  */
 public enum ExportFormat {
-    /** Tabelle für Tabellenkalkulationen, Semikolon getrennt wie bei deutschem Excel. */
+    /** Table for spreadsheets; separated the way Excel expects it in the export language. */
     CSV("csv", MediaType.parseMediaType("text/csv; charset=UTF-8")),
     JSON("json", MediaType.APPLICATION_JSON),
-    /** HTML-Liste mit verkleinerten Postern, als ZIP, damit sie ohne KMM funktioniert. */
+    /** HTML list with downsized posters, as ZIP so it works without KMM. */
     HTML("zip", MediaType.parseMediaType("application/zip"));
 
     private final String extension;

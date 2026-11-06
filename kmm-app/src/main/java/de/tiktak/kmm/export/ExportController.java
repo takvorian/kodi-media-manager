@@ -7,6 +7,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.LocalDate;
+import java.util.Locale;
 import java.util.function.Supplier;
 
 import org.springframework.core.io.Resource;
@@ -18,6 +19,8 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.movie.MovieController;
 import de.tiktak.kmm.movie.MovieFilter;
 import de.tiktak.kmm.movie.MovieQueryService;
@@ -28,7 +31,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Export der Film- und Serienliste mit dem gewählten Filter als Download (CSV, JSON oder HTML-Liste als ZIP).
+ * Export of the movie and TV show list with the chosen filter as a download (CSV, JSON or HTML list as ZIP), in the
+ * language of the user interface ({@code lang}, English if missing or unsupported).
  */
 @RestController
 @RequiredArgsConstructor
@@ -36,6 +40,9 @@ public class ExportController {
 
     public static final String MOVIES_EXPORT_PATH = MovieController.MOVIES_PATH + "/export";
     public static final String SHOWS_EXPORT_PATH = TvShowController.SHOWS_PATH + "/export";
+    private static final String DEFAULT_LANGUAGE = "en";
+    private static final LocalizedText MOVIES_FILE = LocalizedText.of("export.fileName.movies");
+    private static final LocalizedText SHOWS_FILE = LocalizedText.of("export.fileName.tvShows");
 
     private final MovieQueryService movieQueries;
     private final TvShowQueryService showQueries;
@@ -45,23 +52,32 @@ public class ExportController {
 
     @PostMapping(MOVIES_EXPORT_PATH)
     public ResponseEntity<Resource> exportMovies(@RequestParam ExportFormat format,
-            @Valid @RequestBody MovieFilter filter) throws IOException {
+            @RequestParam(defaultValue = DEFAULT_LANGUAGE) String lang, @Valid @RequestBody MovieFilter filter)
+            throws IOException {
         var movieIds = movieQueries.findMovieIds(filter);
-        return download("kmm-filme", format,
-                () -> rows.movies(movieIds, format == ExportFormat.HTML, clock.getZone()));
+        Locale locale = locale(lang);
+        return download(Messages.render(MOVIES_FILE, locale), format,
+                () -> rows.movies(movieIds, format == ExportFormat.HTML, clock.getZone(), locale));
     }
 
     @PostMapping(SHOWS_EXPORT_PATH)
     public ResponseEntity<Resource> exportShows(@RequestParam ExportFormat format,
-            @Valid @RequestBody TvShowFilter filter) throws IOException {
+            @RequestParam(defaultValue = DEFAULT_LANGUAGE) String lang, @Valid @RequestBody TvShowFilter filter)
+            throws IOException {
         var showIds = showQueries.findShowIds(filter);
-        return download("kmm-serien", format,
-                () -> rows.shows(showIds, format == ExportFormat.HTML, clock.getZone()));
+        Locale locale = locale(lang);
+        return download(Messages.render(SHOWS_FILE, locale), format,
+                () -> rows.shows(showIds, format == ExportFormat.HTML, clock.getZone(), locale));
+    }
+
+    /** Accepts {@code de}, {@code de-DE}, {@code de_DE} and the like; anything else becomes English. */
+    private static Locale locale(String language) {
+        return Messages.supported(Locale.forLanguageTag(language.replace('_', '-')));
     }
 
     /**
-     * Schreibt den Export erst in eine temporäre Datei und liefert sie dann aus: Die HTML-Liste mit vielen Postern dauert
-     * länger als das Zeitlimit für Antworten, die im Hintergrund entstehen. Die Datei wird nach dem Senden gelöscht.
+     * Writes the export to a temporary file first and then delivers it: the HTML list with many posters takes longer
+     * than the time limit for answers produced in the background. The file is deleted after sending.
      */
     private ResponseEntity<Resource> download(String name, ExportFormat format, Supplier<ExportTable> table)
             throws IOException {

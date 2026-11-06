@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { finalize } from 'rxjs';
 
+import { LanguageService } from '../i18n/language.service';
 import { problemMessage } from './problem-message';
 import { saveDownload } from './save-download';
 
@@ -14,7 +15,7 @@ const SNACKBAR_DURATION_MS = 5000;
 /** Export formats; HTML is a list with posters as a ZIP. */
 export type ExportFormat = 'HTML' | 'CSV' | 'JSON';
 
-/** Offers the export of the filtered list as a download. */
+/** Offers the export of the filtered list as a download, labelled in the language of the user interface. */
 @Component({
   selector: 'app-export-menu',
   imports: [MatButtonModule, MatMenuModule, TranslocoPipe],
@@ -42,6 +43,7 @@ export type ExportFormat = 'HTML' | 'CSV' | 'JSON';
 export class ExportMenu {
   private readonly http = inject(HttpClient);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly languageService = inject(LanguageService);
 
   /** Export endpoint, e.g. `/api/v1/movies/export`. */
   readonly endpoint = input.required<string>();
@@ -56,7 +58,7 @@ export class ExportMenu {
     this.busy.set(true);
     this.http
       .post(this.endpoint(), this.filter(), {
-        params: { format },
+        params: { format, lang: this.languageService.current() },
         observe: 'response',
         responseType: 'blob',
       })

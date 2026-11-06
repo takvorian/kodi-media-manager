@@ -95,7 +95,7 @@ class ExportIntegrationTest {
 
     @Test
     void exportsTheFilteredMoviesAsCsvAndJson() {
-        MvcTestResult csv = export(ExportController.MOVIES_EXPORT_PATH, "CSV",
+        MvcTestResult csv = export(ExportController.MOVIES_EXPORT_PATH, "CSV&lang=de_DE",
                 "{\"matchAll\": true, \"conditions\": [{\"field\": \"GENRE\", \"operator\": \"IS\", \"value\": \"Krimi\"}]}");
 
         assertThat(csv).hasStatusOk().hasContentType("text/csv;charset=UTF-8")
@@ -110,6 +110,19 @@ class ExportIntegrationTest {
         assertThat(json.valueStream().map(movie -> movie.get("title").asString())).containsExactly("Heat", "Ronin");
         assertThat(json.get(0).get("resolution").asString()).isEqualTo("1080p");
         assertThat(json.get(1).get("watched").asBoolean()).isFalse();
+    }
+
+    @Test
+    void exportsInEnglishWithoutOrWithAnUnsupportedLanguage() {
+        for (String format : List.of("CSV", "CSV&lang=en", "CSV&lang=fr")) {
+            MvcTestResult csv = export(ExportController.MOVIES_EXPORT_PATH, format, ALL);
+
+            assertThat(csv).hasStatusOk().hasHeader("Content-Disposition",
+                    "attachment; filename=\"kmm-movies-%s.csv\"".formatted(LocalDate.now()));
+            String text = new String(csv.getResponse().getContentAsByteArray(), StandardCharsets.UTF_8);
+            assertThat(text).as(format).startsWith("\uFEFFTitle,Original title,Year,");
+            assertThat(text.lines().toList().get(1)).as(format).startsWith("Heat,,1995,Krimi,,,8.3,,yes,1080p,h264,");
+        }
     }
 
     @Test
@@ -138,7 +151,7 @@ class ExportIntegrationTest {
         }
         assertThat(names).hasSize(2).contains("index.html").anyMatch(name -> name.startsWith("posters/"));
         assertThat(index).contains("<td>Heat</td>", "<td>Ronin</td>", "src=\"posters/");
-        assertThat(exportFiles()).as("temporäre Dateien gelöscht").isEqualTo(before);
+        assertThat(exportFiles()).as("temporary files deleted").isEqualTo(before);
         assertThat(export(ExportController.MOVIES_EXPORT_PATH, "PDF", ALL)).hasStatus(HttpStatus.BAD_REQUEST);
     }
 

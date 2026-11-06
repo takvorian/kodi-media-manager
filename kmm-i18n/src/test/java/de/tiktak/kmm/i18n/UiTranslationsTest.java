@@ -21,10 +21,13 @@ import tools.jackson.databind.ObjectMapper;
 /**
  * The user interface translates the server's texts itself, under {@code server.*} in its translation files. Every
  * key of the catalog has to be there in every language, with the same English text, and no key may be left over.
+ * Keys with a German text in {@code messages_de.properties} are rendered by the server itself (exports) and are not
+ * needed in the user interface.
  */
 class UiTranslationsTest {
 
     private static final Path CATALOG = Path.of("src/main/resources/i18n/messages.properties");
+    private static final Path SERVER_RENDERED = Path.of("src/main/resources/i18n/messages_de.properties");
     private static final Path UI_TRANSLATIONS = Path.of("../kmm-ui/src/i18n");
     private static final String SERVER = "server";
 
@@ -43,14 +46,23 @@ class UiTranslationsTest {
         assertThat(english).containsExactlyInAnyOrderEntriesOf(catalog());
     }
 
+    /** The catalog without the texts the server renders itself. */
     private static Map<String, String> catalog() throws IOException {
+        Properties properties = load(CATALOG);
+        Properties serverRendered = load(SERVER_RENDERED);
+        Map<String, String> texts = new TreeMap<>();
+        properties.stringPropertyNames().stream()
+                .filter(key -> !serverRendered.containsKey(key))
+                .forEach(key -> texts.put(key, properties.getProperty(key)));
+        return texts;
+    }
+
+    private static Properties load(Path file) throws IOException {
         Properties properties = new Properties();
-        try (Reader reader = Files.newBufferedReader(CATALOG, StandardCharsets.UTF_8)) {
+        try (Reader reader = Files.newBufferedReader(file, StandardCharsets.UTF_8)) {
             properties.load(reader);
         }
-        Map<String, String> texts = new TreeMap<>();
-        properties.stringPropertyNames().forEach(key -> texts.put(key, properties.getProperty(key)));
-        return texts;
+        return properties;
     }
 
     private static Map<String, String> serverTexts(String language) throws IOException {

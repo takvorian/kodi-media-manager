@@ -65,6 +65,7 @@ describe('ExportMenu', () => {
     const request = httpTesting.expectOne((req) => req.url === endpoint);
     expect(request.request.method).toBe('POST');
     expect(request.request.params.get('format')).toBe('CSV');
+    expect(request.request.params.get('lang')).toBe('de');
     expect(request.request.body).toEqual(filter);
     request.flush(new Blob(['Titel']), {
       headers: { 'Content-Disposition': 'attachment; filename="kmm-filme-2026-10-29.csv"' },

@@ -9,7 +9,7 @@ import java.nio.file.Path;
 import org.springframework.core.io.FileSystemResource;
 
 /**
- * Eine temporäre Datei, die nach dem Lesen gelöscht wird.
+ * A temporary file that is deleted after it has been read.
  */
 public class TemporaryFileResource extends FileSystemResource {
 

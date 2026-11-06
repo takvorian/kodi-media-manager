@@ -12,25 +12,32 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Function;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Schreibt eine {@link ExportTable} als CSV, JSON oder HTML-Liste (ZIP mit {@code index.html} und Postern).
+ * Writes an {@link ExportTable} as CSV, JSON or HTML list (ZIP with {@code index.html} and posters).
  */
 @Component
 @RequiredArgsConstructor
 class ExportWriter {
 
-    static final char CSV_SEPARATOR = ';';
+    /** Excel expects a semicolon where the comma is the decimal separator, as in German. */
+    static final char GERMAN_CSV_SEPARATOR = ';';
+    static final char CSV_SEPARATOR = ',';
     private static final char BYTE_ORDER_MARK = '﻿';
     private static final String LIST_SEPARATOR = ", ";
     private static final String POSTER_FOLDER = "posters/";
+    private static final LocalizedText YES = LocalizedText.of("export.yes");
+    private static final LocalizedText NO = LocalizedText.of("export.no");
 
     private final ObjectMapper objectMapper;
     private final PosterThumbnails thumbnails;
@@ -43,25 +50,34 @@ class ExportWriter {
         }
     }
 
-    /** Mit Byte-Order-Mark und Semikolon, damit Excel Umlaute und Spalten richtig erkennt; Zahlen mit Komma. */
+    /**
+     * With byte order mark and the separator Excel expects for the language, so it recognizes umlauts and columns;
+     * numbers in the format of the language.
+     */
     private static void writeCsv(ExportTable table, OutputStream output) throws IOException {
         Writer writer = new OutputStreamWriter(output, StandardCharsets.UTF_8);
+        char separator = csvSeparator(table.locale());
+        Function<Object, String> text = value -> text(value, table.locale());
         writer.write(BYTE_ORDER_MARK);
-        writeCsvLine(writer, table.columns().stream().map(ExportTable.Column::label).toList());
+        writeCsvLine(writer, separator, table.columns().stream().map(ExportTable.Column::label).toList());
         for (ExportTable.Row row : table.rows()) {
-            writeCsvLine(writer, row.values().stream().map(ExportWriter::text).toList());
+            writeCsvLine(writer, separator, row.values().stream().map(text).toList());
         }
         writer.flush();
     }
 
-    private static void writeCsvLine(Writer writer, List<String> cells) throws IOException {
+    static char csvSeparator(Locale locale) {
+        return Locale.GERMAN.getLanguage().equals(locale.getLanguage()) ? GERMAN_CSV_SEPARATOR : CSV_SEPARATOR;
+    }
+
+    private static void writeCsvLine(Writer writer, char separator, List<String> cells) throws IOException {
         List<String> quoted = new ArrayList<>();
         for (String cell : cells) {
-            boolean needsQuotes = cell.indexOf(CSV_SEPARATOR) >= 0 || cell.indexOf('"') >= 0
+            boolean needsQuotes = cell.indexOf(separator) >= 0 || cell.indexOf('"') >= 0
                     || cell.indexOf('\n') >= 0 || cell.indexOf('\r') >= 0;
             quoted.add(needsQuotes ? '"' + cell.replace("\"", "\"\"") + '"' : cell);
         }
-        writer.write(String.join(String.valueOf(CSV_SEPARATOR), quoted));
+        writer.write(String.join(String.valueOf(separator), quoted));
         writer.write("\r\n");
     }
 
@@ -101,13 +117,13 @@ class ExportWriter {
         zip.finish();
     }
 
-    /** Text eines Werts; Listen mit Komma verbunden, {@code null} leer. */
-    static String text(Object value) {
+    /** Text of a value in the given language; lists joined with commas, {@code null} empty. */
+    static String text(Object value, Locale locale) {
         return switch (value) {
             case null -> "";
             case List<?> list -> String.join(LIST_SEPARATOR, list.stream().map(String::valueOf).toList());
-            case Boolean bool -> bool ? "ja" : "nein";
-            case Double number -> String.format(Locale.GERMANY, "%.1f", number);
+            case Boolean bool -> Messages.render(bool ? YES : NO, locale);
+            case Double number -> String.format(locale, "%.1f", number);
             default -> String.valueOf(value);
         };
     }

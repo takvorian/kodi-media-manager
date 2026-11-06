@@ -8,6 +8,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
@@ -16,6 +17,8 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Component;
 
 import de.tiktak.kmm.artwork.ArtworkService;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.artwork.TvShowArtworkService;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieMetadataService;
@@ -28,35 +31,30 @@ import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Baut die Export-Tabellen für Filme und Serien aus den Angaben der Bibliothek.
+ * Builds the export tables for movies and TV shows from the library, labelled in the requested language.
  */
 @Component
 @RequiredArgsConstructor
 class ExportRows {
 
-    static final List<ExportTable.Column> MOVIE_COLUMNS = List.of(
-            column("title", "Titel"), column("originalTitle", "Originaltitel"), column("year", "Jahr"),
-            column("genres", "Genres"), column("runtime", "Laufzeit (Min.)"), column("mpaa", "Freigabe"),
-            column("rating", "Bewertung"), column("userRating", "Eigene Bewertung"), column("watched", "Gesehen"),
-            column("resolution", "Auflösung"), column("videoCodec", "Videocodec"),
-            column("audioLanguages", "Tonspuren"), column("subtitleLanguages", "Untertitel"), column("set", "Filmset"),
-            column("tags", "Tags"), column("imdbId", "IMDb"), column("tmdbId", "TMDB"), column("file", "Datei"),
-            column("added", "Hinzugefügt"));
-    static final List<ExportTable.Column> SHOW_COLUMNS = List.of(
-            column("title", "Titel"), column("originalTitle", "Originaltitel"), column("year", "Jahr"),
-            column("status", "Status"), column("genres", "Genres"), column("studios", "Sender"),
-            column("seasons", "Staffeln"), column("episodes", "Episoden"), column("unwatched", "Ungesehen"),
-            column("rating", "Bewertung"), column("userRating", "Eigene Bewertung"), column("tags", "Tags"),
-            column("tvdbId", "TVDB"), column("tmdbId", "TMDB"), column("imdbId", "IMDb"),
-            column("directory", "Ordner"), column("added", "Hinzugefügt"));
+    /** Keys of the movie columns: name in JSON and, after {@link #COLUMN_KEY_PREFIX}, key of the heading. */
+    static final List<String> MOVIE_COLUMNS = List.of("title", "originalTitle", "year", "genres", "runtime", "mpaa",
+            "rating", "userRating", "watched", "resolution", "videoCodec", "audioLanguages", "subtitleLanguages", "set",
+            "tags", "imdbId", "tmdbId", "file", "added");
+    static final List<String> SHOW_COLUMNS = List.of("title", "originalTitle", "year", "status", "genres", "studios",
+            "seasons", "episodes", "unwatched", "rating", "userRating", "tags", "tvdbId", "tmdbId", "imdbId",
+            "directory", "added");
+    static final String COLUMN_KEY_PREFIX = "export.column.";
+    private static final LocalizedText MOVIES_TITLE = LocalizedText.of("export.table.movies");
+    private static final LocalizedText SHOWS_TITLE = LocalizedText.of("export.table.tvShows");
 
     private final MovieMetadataService movieService;
     private final TvShowMetadataService showService;
     private final ArtworkService movieArtwork;
     private final TvShowArtworkService showArtwork;
 
-    /** @param withPosters ob die Poster-Dateien gesucht werden (nur für die HTML-Liste nötig) */
-    ExportTable movies(List<Long> movieIds, boolean withPosters, ZoneId zone) {
+    /** @param withPosters whether to look up the poster files (only needed for the HTML list) */
+    ExportTable movies(List<Long> movieIds, boolean withPosters, ZoneId zone, Locale locale) {
         List<ExportTable.Row> rows = new ArrayList<>();
         for (long movieId : movieIds) {
             MovieDetails movie = movieService.findDetails(movieId);
@@ -64,10 +62,10 @@ class ExportRows {
                     withPosters ? movieArtwork.posterFile(movie).orElse(null) : null));
         }
         rows.sort(Comparator.comparing(row -> String.valueOf(row.values().getFirst()), String.CASE_INSENSITIVE_ORDER));
-        return new ExportTable("Filme", MOVIE_COLUMNS, rows);
+        return new ExportTable(Messages.render(MOVIES_TITLE, locale), locale, columns(MOVIE_COLUMNS, locale), rows);
     }
 
-    ExportTable shows(List<Long> showIds, boolean withPosters, ZoneId zone) {
+    ExportTable shows(List<Long> showIds, boolean withPosters, ZoneId zone, Locale locale) {
         List<ExportTable.Row> rows = new ArrayList<>();
         for (long showId : showIds) {
             TvShowDetails show = showService.findShow(showId);
@@ -75,7 +73,7 @@ class ExportRows {
                     withPosters ? showArtwork.posterFile(show).orElse(null) : null));
         }
         rows.sort(Comparator.comparing(row -> String.valueOf(row.values().getFirst()), String.CASE_INSENSITIVE_ORDER));
-        return new ExportTable("Serien", SHOW_COLUMNS, rows);
+        return new ExportTable(Messages.render(SHOWS_TITLE, locale), locale, columns(SHOW_COLUMNS, locale), rows);
     }
 
     static List<Object> movieValues(MovieDetails movie, ZoneId zone) {
@@ -106,7 +104,7 @@ class ExportRows {
                 show.directoryPath(), date(show.addedAt(), zone));
     }
 
-    /** Die Standard-Bewertung, sonst die erste, auf eine Nachkommastelle und bezogen auf 10. */
+    /** The default rating, otherwise the first one, with one decimal and based on 10. */
     private static Double rating(Stream<Rating> ratings) {
         List<Rating> all = ratings.toList();
         return all.stream().filter(Rating::defaultRating).findFirst().or(() -> all.stream().findFirst())
@@ -127,8 +125,11 @@ class ExportRows {
         return Arrays.asList(values);
     }
 
-    private static ExportTable.Column column(String key, String label) {
-        return new ExportTable.Column(key, label);
+    private static List<ExportTable.Column> columns(List<String> keys, Locale locale) {
+        return keys.stream()
+                .map(key -> new ExportTable.Column(key,
+                        Messages.render(LocalizedText.of(COLUMN_KEY_PREFIX + key), locale)))
+                .toList();
     }
 
     private record Rating(double value, Integer max, boolean defaultRating) {

@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
@@ -46,6 +47,22 @@ class ExportWriterTest {
     }
 
     @Test
+    void writesCsvForEnglishExcel() throws IOException {
+        String csv = new String(write(table(Locale.ENGLISH, null, null), ExportFormat.CSV), StandardCharsets.UTF_8);
+
+        assertThat(csv).startsWith("\uFEFFTitel,Bewertung,Genres,Gesehen,Hinzugefügt\r\n")
+                .contains("\"Heat; \"\"Director's Cut\"\"\",8.3,\"Krimi, Drama\",yes,2026-10-29\r\n")
+                .contains("Die <Märchen> & Co,,,no,\r\n");
+    }
+
+    @Test
+    void choosesTheSeparatorExcelExpectsForTheLanguage() {
+        assertThat(ExportWriter.csvSeparator(Locale.GERMANY)).isEqualTo(';');
+        assertThat(ExportWriter.csvSeparator(Locale.ENGLISH)).isEqualTo(',');
+        assertThat(ExportWriter.csvSeparator(Locale.FRENCH)).isEqualTo(',');
+    }
+
+    @Test
     void writesJsonWithKeysAndTypes() throws IOException {
         String json = new String(write(table(null), ExportFormat.JSON), StandardCharsets.UTF_8);
 
@@ -75,6 +92,15 @@ class ExportWriterTest {
                 "<td>8,3</td>").doesNotContain("<Märchen>");
     }
 
+    @Test
+    void writesTheHtmlListInEnglish() throws IOException {
+        Map<String, byte[]> zip = unzip(write(table(Locale.ENGLISH, null, null), ExportFormat.HTML));
+
+        String html = new String(zip.get("index.html"), StandardCharsets.UTF_8);
+        assertThat(html).contains("<html lang=\"en\">", "<span id=\"count\">2</span> of 2 entries",
+                "exported on Oct 29, 2026", "placeholder=\"Search …\"", "<td>8.3</td>", "<td>yes</td>");
+    }
+
     private byte[] write(ExportTable table, ExportFormat format) throws IOException {
         ByteArrayOutputStream output = new ByteArrayOutputStream();
         writer.write(table, format, TODAY, output);
@@ -86,7 +112,11 @@ class ExportWriterTest {
     }
 
     private static ExportTable table(Path firstPoster, Path secondPoster) {
-        return new ExportTable("Filme", COLUMNS, List.of(
+        return table(Locale.GERMAN, firstPoster, secondPoster);
+    }
+
+    private static ExportTable table(Locale locale, Path firstPoster, Path secondPoster) {
+        return new ExportTable("Filme", locale, COLUMNS, List.of(
                 new ExportTable.Row(1, List.of("Heat; \"Director's Cut\"", 8.3, List.of("Krimi", "Drama"), true,
                         TODAY), firstPoster),
                 new ExportTable.Row(2, Arrays.asList("Die <Märchen> & Co", null, List.of(), false, null),

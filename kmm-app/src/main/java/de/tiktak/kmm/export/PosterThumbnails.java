@@ -15,7 +15,7 @@ import org.springframework.stereotype.Component;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verkleinert Poster für die HTML-Liste, damit das ZIP klein bleibt.
+ * Downsizes posters for the HTML list so the ZIP stays small.
  */
 @Slf4j
 @Component
@@ -23,7 +23,7 @@ class PosterThumbnails {
 
     static final int WIDTH = 160;
 
-    /** @return das verkleinerte Poster als JPEG oder leer, wenn die Datei nicht lesbar oder kein Bild ist */
+    /** @return the downsized poster as JPEG, or empty if the file is unreadable or not an image */
     Optional<byte[]> thumbnail(Path poster) {
         try {
             BufferedImage image = ImageIO.read(poster.toFile());
