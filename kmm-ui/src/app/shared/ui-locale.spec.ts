@@ -19,8 +19,8 @@ describe('UI locale', () => {
 
     await switchLanguage('en');
 
-    expect(activeUiLocale()).toBe('en-US');
-    expect(locale()).toBe('en-US');
+    expect(activeUiLocale()).toBe('en-GB');
+    expect(locale()).toBe('en-GB');
   });
 
   it('translates a label table when it is read', async () => {
@@ -40,7 +40,7 @@ describe('UI locale', () => {
 
     await switchLanguage('en');
 
-    expect(localDateTime(timestamp)).toBe(new Date(timestamp).toLocaleString('en-US', options));
+    expect(localDateTime(timestamp)).toBe(new Date(timestamp).toLocaleString('en-GB', options));
     expect(localDateTime(null)).toBe('–');
   });
 });

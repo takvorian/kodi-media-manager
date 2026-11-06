@@ -181,7 +181,7 @@ describe('BackupPage', () => {
     expect(query('.page-title').textContent).toBe('Backup');
     expect(query('.contents').textContent).toContain('1170 Movies');
     expect(query('.created').textContent).toContain(
-      new Date(header.createdAt!).toLocaleString('en-US'),
+      new Date(header.createdAt!).toLocaleString('en-GB'),
     );
     expect(query('.replace-confirmation mat-label').textContent).toContain('Enter REPLACE');
     type('.replace-confirmation input', 'ERSETZEN');

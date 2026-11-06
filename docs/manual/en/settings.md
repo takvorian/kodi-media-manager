@@ -4,6 +4,18 @@ Changes only take effect when you click **Save** at the bottom of the page. **Di
 
 If a field says “Fixed by the configuration”, someone has set the value through an environment variable, and it is locked here.
 
+## Interface language
+
+The interface is available in German and English. You can switch at any time at the top right next to the **?** (**DE**/**EN**); the page does not reload, and the manual switches language too. KMM remembers the choice in the browser.
+
+When the page opens, this order applies:
+
+1. the `lang` parameter in the address, for example `http://nas:8080/?lang=en`; `en_GB`, `en-GB`, `de` or `de_DE` work as well,
+2. the language last chosen in this browser,
+3. otherwise English.
+
+Dates and numbers follow the interface language: British English like `25/10/2026`, German like `25.10.2026`. The metadata language KMM requests from the providers is independent of this, see the next section.
+
 ## Language
 
 Applies to movies if neither the movie nor its source has a language of its own, see [Language per entry](scraping.md#language-per-source-and-entry).

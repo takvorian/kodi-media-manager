@@ -16,9 +16,9 @@ Then click **Add**.
 
 <a id="how-to-organize-your-files"></a>
 
-## How your files should be organized
+## How your files should be organised
 
-**Movies:** KMM recognizes a movie as a single video file, also in its own folder, as a multi-part movie, and as a DVD or Blu-ray folder. Artwork and NFOs sit next to it following the Kodi scheme, for example `Film-poster.jpg`; for DVD and Blu-ray as `poster.jpg` in the movie folder.
+**Movies:** KMM recognises a movie as a single video file, also in its own folder, as a multi-part movie, and as a DVD or Blu-ray folder. Artwork and NFOs sit next to it following the Kodi scheme, for example `Film-poster.jpg`; for DVD and Blu-ray as `poster.jpg` in the movie folder.
 
 **TV shows:** every folder directly below the source is a TV show. The episodes may be nested at any depth below it. KMM reads the season and episode from the file name, for example `S01E05`. A file with several episodes, such as `S01E01E02`, becomes several episodes sharing the same file.
 
@@ -62,7 +62,7 @@ The result of the last scan is shown in the **Last scan** column, even if you le
 - new movies, TV shows and episodes, each with a link to the entry,
 - updated and removed entries,
 - NFOs that KMM could not read,
-- for TV shows, the **Files without a recognizable episode**. KMM does not add them because the name contains no season and episode such as `S01E05`. Rename them and scan again.
+- for TV shows, the **Files without a recognisable episode**. KMM does not add them because the name contains no season and episode such as `S01E05`. Rename them and scan again.
 
 For TV shows, **new**, **updated** and **removed** count the episodes. KMM cuts long lists off after 200 entries. The result and the report are lost when KMM restarts, until you scan again.
 

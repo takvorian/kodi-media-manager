@@ -21,7 +21,7 @@
 
 **The source finds nothing.** Check that the directory is correct as KMM sees it, so under Docker the path in the container. Also check the [file extensions and excluded folders](settings.md#scan).
 
-**A TV show is recognized incorrectly.** Every folder directly below the source counts as a TV show. So the source must point to the folder *above* the TV shows.
+**A TV show is recognised incorrectly.** Every folder directly below the source counts as a TV show. So the source must point to the folder *above* the TV shows.
 
 **Episodes are missing.** The season and episode must be in the file name, for example `S01E05`.
 

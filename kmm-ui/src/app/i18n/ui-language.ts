@@ -7,7 +7,7 @@ export type UiLanguage = (typeof UI_LANGUAGES)[number];
 export const FALLBACK_LANGUAGE: UiLanguage = 'en';
 
 /** Locale for dates and numbers per language. */
-export const UI_LOCALES: Record<UiLanguage, string> = { de: 'de-DE', en: 'en-US' };
+export const UI_LOCALES: Record<UiLanguage, string> = { de: 'de-DE', en: 'en-GB' };
 
 /** Each language is named in itself, so the switch can be found whatever language is active. */
 export const UI_LANGUAGE_NAMES: Record<UiLanguage, string> = { de: 'Deutsch', en: 'English' };

@@ -34,7 +34,7 @@ Open individual movies or TV shows and check the details. You apply changes with
 
 Set up your Kodi device under [Kodi](kodi.md) so that it picks up changes automatically.
 
-## 8. Organize your files (optional)
+## 8. Organise your files (optional)
 
 If you want consistent names, define the patterns in the settings and rename the files. Read the [Renaming](renaming.md) chapter first.
 

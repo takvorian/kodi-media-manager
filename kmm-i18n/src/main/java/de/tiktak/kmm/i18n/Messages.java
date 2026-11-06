@@ -16,9 +16,9 @@ import java.util.concurrent.ConcurrentMap;
  */
 public final class Messages {
 
-    public static final Locale FALLBACK = Locale.ENGLISH;
+    public static final Locale FALLBACK = Locale.UK;
     /** Languages the catalog can be rendered in. */
-    public static final List<Locale> SUPPORTED = List.of(Locale.ENGLISH, Locale.GERMAN);
+    public static final List<Locale> SUPPORTED = List.of(Locale.UK, Locale.GERMAN);
 
     private static final String BUNDLE = "i18n.messages";
     /** Without this control the JVM default locale would sneak in as a fallback before the English base file. */

@@ -482,7 +482,7 @@
       "path": "Directory",
       "pathPlaceholder": "e.g. /media/movies or D:\\Movies",
       "pathHint": "Must exist, path as KMM sees it.",
-      "pathHelp": "How should the files be organized?",
+      "pathHelp": "How should the files be organised?",
       "mediaType": "Content"
     },
     "languageDefault": "As in the settings",
@@ -512,7 +512,7 @@
       "counts": "{added} new, {updated} updated, {removed} removed, {unchanged} unchanged",
       "newShows": "{count, plural, one {# new TV show} other {# new TV shows}}",
       "nfoErrors": "{count, plural, one {# NFO error} other {# NFO errors}}",
-      "unrecognized": "{count, plural, one {# file} other {# files}} without a recognizable episode"
+      "unrecognized": "{count, plural, one {# file} other {# files}} without a recognisable episode"
     },
     "moreEntries": "… and {count} more",
     "scanReport": {
@@ -524,7 +524,7 @@
         "removedShows": "Removed TV shows",
         "removed": "{kind, select, movies {Removed movies} other {Removed episodes}}",
         "unreadable": "NFO not readable",
-        "unrecognized": "Files without a recognizable episode"
+        "unrecognized": "Files without a recognisable episode"
       },
       "hint": {
         "updated": "Their NFO was changed outside of KMM and read again.",
@@ -1180,7 +1180,7 @@
         "foreignTheme": "“{source}” is not a theme music from TelevisionTunes."
       },
       "youtube": {
-        "notInitialized": "YouTube: plugin not initialized.",
+        "notInitialized": "YouTube: plugin not initialised.",
         "ytDlpNotFound": "YouTube: yt-dlp not found ({command}). Please install yt-dlp or configure it under kmm.plugins.settings.youtube.yt-dlp.",
         "notAVideo": "“{source}” is not a YouTube video.",
         "noMp3": "yt-dlp did not create an MP3. Is ffmpeg installed?",
@@ -1405,7 +1405,7 @@
         "timedOut": "ffprobe took too long for “{input}”."
       },
       "unreadable": "“{path}” cannot be read.",
-      "noStreams": "“{input}” contains no recognizable streams."
+      "noStreams": "“{input}” contains no recognisable streams."
     },
     "nfo": {
       "unreadable": "The NFO file “{file}” cannot be read.",
@@ -1509,7 +1509,7 @@
         "jobTitle": "Scan “{source}”",
         "searching": "Searching directories",
         "checkingNfos": "Checking NFOs",
-        "synchronizing": "Synchronizing library",
+        "synchronizing": "Synchronising library",
         "notScannable": {
           "title": "Source cannot be scanned"
         },

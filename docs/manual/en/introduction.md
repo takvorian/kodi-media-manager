@@ -9,7 +9,7 @@ You use KMM in your browser. It runs on your computer or as a container on a ser
 - **Library:** read movies, TV shows, seasons and episodes from your folders.
 - **Online data:** fetch metadata, artwork, trailer links, theme music and ratings from several providers, for a single entry or a whole source.
 - **Technical details:** read resolution, codecs, audio tracks and subtitles from your files with ffprobe.
-- **Organizing:** rename files and folders using your own patterns, manage movie sets and tags.
+- **Organising:** rename files and folders using your own patterns, manage movie sets and tags.
 - **Selection:** filter lists, save filters and edit many entries at once.
 - **Kodi:** update several Kodi devices automatically and fetch the watched status from Kodi.
 - **Export:** download filtered lists as HTML, CSV or JSON.

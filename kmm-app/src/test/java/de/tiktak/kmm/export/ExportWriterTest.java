@@ -48,7 +48,7 @@ class ExportWriterTest {
 
     @Test
     void writesCsvForEnglishExcel() throws IOException {
-        String csv = new String(write(table(Locale.ENGLISH, null, null), ExportFormat.CSV), StandardCharsets.UTF_8);
+        String csv = new String(write(table(Locale.UK, null, null), ExportFormat.CSV), StandardCharsets.UTF_8);
 
         assertThat(csv).startsWith("\uFEFFTitel,Bewertung,Genres,Gesehen,Hinzugefügt\r\n")
                 .contains("\"Heat; \"\"Director's Cut\"\"\",8.3,\"Krimi, Drama\",yes,2026-10-29\r\n")
@@ -94,11 +94,11 @@ class ExportWriterTest {
 
     @Test
     void writesTheHtmlListInEnglish() throws IOException {
-        Map<String, byte[]> zip = unzip(write(table(Locale.ENGLISH, null, null), ExportFormat.HTML));
+        Map<String, byte[]> zip = unzip(write(table(Locale.UK, null, null), ExportFormat.HTML));
 
         String html = new String(zip.get("index.html"), StandardCharsets.UTF_8);
         assertThat(html).contains("<html lang=\"en\">", "<span id=\"count\">2</span> of 2 entries",
-                "exported on Oct 29, 2026", "placeholder=\"Search …\"", "<td>8.3</td>", "<td>yes</td>");
+                "exported on 29 Oct 2026", "placeholder=\"Search …\"", "<td>8.3</td>", "<td>yes</td>");
     }
 
     private byte[] write(ExportTable table, ExportFormat format) throws IOException {

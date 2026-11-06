@@ -125,8 +125,8 @@ describe('MovieSupplementView', () => {
     expect(all('.ratings li').map((item) => item.textContent?.replace(/\s+/g, ' ').trim())).toEqual(
       ['IMDb 8.3/10 (650,000 votes)', 'eigene 7.0'],
     );
-    expect(text('.added-at')).toBe('Nov 30, 2016');
-    expect(text('.play-state')).toBe('2×, last on May 1, 2024');
+    expect(text('.added-at')).toBe('30 Nov 2016');
+    expect(text('.play-state')).toBe('2×, last on 1 May 2024');
     expect(text('.cast-title')).toBe('Cast');
     expect(text('.toggle-actors')).toBe('Show all (3 more)');
   });

@@ -526,12 +526,12 @@ describe('SourceList', () => {
         'New TV shows (1)',
         'New episodes (3)',
         'Removed episodes (1)',
-        'Files without a recognizable episode (1)',
+        'Files without a recognisable episode (1)',
       ]);
       expect(element().querySelector('.scan-report')!.textContent).toContain('… and 2 more');
       expect(element().querySelector('.last-scan-result')?.textContent).toBe(
         '3 new, 0 updated, 1 removed, 5 unchanged, 1 new TV show, ' +
-          '1 file without a recognizable episode',
+          '1 file without a recognisable episode',
       );
     });
 

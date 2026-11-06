@@ -4,6 +4,18 @@
 
 Steht bei einem Feld „Durch die Konfiguration festgelegt“, hat jemand den Wert über eine Umgebungsvariable gesetzt, er ist dann hier gesperrt.
 
+## Sprache der Oberfläche
+
+Die Oberfläche gibt es auf Deutsch und Englisch. Umschalten kannst du jederzeit oben rechts neben dem **?** (**DE**/**EN**); die Seite wird dabei nicht neu geladen, und auch das Handbuch wechselt die Sprache. KMM merkt sich die Wahl im Browser.
+
+Beim Öffnen gilt in dieser Reihenfolge:
+
+1. der Parameter `lang` in der Adresse, zum Beispiel `http://nas:8080/?lang=de`; erlaubt sind auch `de_DE`, `de-DE`, `en` oder `en_GB`,
+2. die zuletzt gewählte Sprache in diesem Browser,
+3. sonst Englisch.
+
+Datum und Zahlen richten sich nach der Sprache der Oberfläche: deutsch wie `25.10.2026`, englisch britisch wie `25/10/2026`. Die Sprache der Metadaten, die KMM bei den Anbietern abfragt, ist davon unabhängig, siehe den nächsten Abschnitt.
+
 ## Sprache
 
 Gilt für Filme, wenn weder der Film noch seine Quelle eine eigene Sprache haben, siehe [Sprache je Eintrag](scraping.md#sprache-je-quelle-und-eintrag).

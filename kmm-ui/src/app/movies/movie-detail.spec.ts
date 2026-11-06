@@ -181,7 +181,7 @@ describe('MovieDetail', () => {
     expect(button('.online-search-button').textContent?.trim()).toBe('Search online');
     expect(button('.save-button').textContent?.trim()).toBe('Save');
     expect(element().querySelector('.back-link')?.textContent?.trim()).toBe('← Back to movies');
-    expect(element().querySelector('.nfo-status')?.textContent).toContain('(changed 10/25/26');
+    expect(element().querySelector('.nfo-status')?.textContent).toContain('(changed 25/10/2026');
 
     await type('title', '');
     button('.scrape-button').click();
