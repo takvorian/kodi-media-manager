@@ -1,14 +1,16 @@
-import { Job } from '../jobs/job';
+import { translate } from '@jsverse/transloco';
 
-/** Welche Einträge einer Quelle ausgelesen werden; muss zu StreamDetailsScope passen. */
+import { Job, unsuccessfulJobSummary } from '../jobs/job';
+
+/** Which entries of a source are read; must match StreamDetailsScope. */
 export type StreamDetailsScope = 'MISSING' | 'ALL';
 
-/** Präfixe der Job-Schlüssel; müssen zu StreamDetailsService passen. */
+/** Prefixes of the job keys; must match StreamDetailsService. */
 export const STREAM_DETAILS_JOB_KEY_PREFIX = 'stream-details:';
 export const NEW_FILES_STREAM_DETAILS_JOB_KEY_PREFIX = 'stream-details-new:';
 export const SEASON_STREAM_DETAILS_JOB_KEY_PREFIX = 'stream-details-season:';
 
-/** Je Serie liest höchstens eine Staffel zugleich. */
+/** Per TV show at most one season is read at a time. */
 export function seasonStreamDetailsJobKey(showId: number): string {
   return `${SEASON_STREAM_DETAILS_JOB_KEY_PREFIX}${showId}`;
 }
@@ -21,7 +23,7 @@ export function newFilesStreamDetailsJobKey(sourceId: number): string {
   return `${NEW_FILES_STREAM_DETAILS_JOB_KEY_PREFIX}${sourceId}`;
 }
 
-/** Ergebnis des Auslesens einer Quelle; die Fehlerliste ist serverseitig gekürzt. */
+/** Result of reading a source; the server shortens the list of failures. */
 export interface StreamDetailsJobResult {
   readonly sourceId: number;
   readonly updated: number;
@@ -30,34 +32,43 @@ export interface StreamDetailsJobResult {
   readonly failures: readonly string[];
 }
 
-/** Ergebnis des Auslesens der Episoden einer Serie nach der Online-Suche. */
+/** Result of reading the episodes of a TV show after the online search. */
 export interface ShowStreamDetailsResult {
   readonly updated: number;
   readonly failures: readonly string[];
 }
 
-/** Meldung nach dem Auslesen der Episoden; ohne ausgelesene Dateien und Fehler gibt es nichts zu melden. */
+/** Number of failures with the first one as an example. */
+function failuresText(count: number, failures: readonly string[]): string {
+  return translate('mediaInfo.failures', { count, example: failures[0] });
+}
+
+/**
+ * Message after reading the episodes, in the active UI language; without read files and failures there is
+ * nothing to report.
+ */
 export function showStreamDetailsSummary(result: ShowStreamDetailsResult | null): string | null {
   if (!result || (result.updated === 0 && result.failures.length === 0)) {
     return null;
   }
-  const failed =
-    result.failures.length > 0
-      ? ` ${result.failures.length} Fehler (z. B. ${result.failures[0]}).`
-      : '';
-  return `Technische Angaben von ${result.updated} Episodendateien ausgelesen.${failed}`;
+  const read = translate('mediaInfo.episodesRead', { updated: result.updated });
+  return result.failures.length > 0
+    ? `${read} ${failuresText(result.failures.length, result.failures)}.`
+    : read;
 }
 
-/** Fasst einen beendeten Job „Technische Angaben“ für eine Snackbar-Meldung zusammen. */
+/** Sums up a finished “technical details” job for a snackbar message, in the active UI language. */
 export function streamDetailsSummary(job: Job): string {
-  if (job.status === 'SUCCEEDED') {
-    const result = job.result as StreamDetailsJobResult;
-    const skipped = result.skipped > 0 ? `, ${result.skipped} hatten schon Angaben` : '';
-    const failed =
-      result.failed > 0 ? `, ${result.failed} Fehler (z. B. ${result.failures[0]})` : '';
-    return `${job.title} abgeschlossen: ${result.updated} ausgelesen${skipped}${failed}.`;
+  if (job.status !== 'SUCCEEDED') {
+    return unsuccessfulJobSummary(job);
   }
-  return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+  const result = job.result as StreamDetailsJobResult;
+  const parts = [translate('mediaInfo.jobDone', { title: job.title, updated: result.updated })];
+  if (result.skipped > 0) {
+    parts.push(translate('mediaInfo.skipped', { skipped: result.skipped }));
+  }
+  if (result.failed > 0) {
+    parts.push(failuresText(result.failed, result.failures));
+  }
+  return `${parts.join(', ')}.`;
 }

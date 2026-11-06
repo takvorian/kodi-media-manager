@@ -3,6 +3,7 @@ import { Component, inject, input, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { finalize } from 'rxjs';
 
 import { problemMessage } from './problem-message';
@@ -10,13 +11,13 @@ import { saveDownload } from './save-download';
 
 const SNACKBAR_DURATION_MS = 5000;
 
-/** Formate des Exports; HTML ist eine Liste mit Postern als ZIP. */
+/** Export formats; HTML is a list with posters as a ZIP. */
 export type ExportFormat = 'HTML' | 'CSV' | 'JSON';
 
-/** Bietet den Export der gefilterten Liste als Download an. */
+/** Offers the export of the filtered list as a download. */
 @Component({
   selector: 'app-export-menu',
-  imports: [MatButtonModule, MatMenuModule],
+  imports: [MatButtonModule, MatMenuModule, TranslocoPipe],
   template: `
     <button
       matButton
@@ -25,14 +26,14 @@ export type ExportFormat = 'HTML' | 'CSV' | 'JSON';
       [disabled]="busy()"
       [matMenuTriggerFor]="formats"
     >
-      {{ busy() ? 'Exportiere …' : 'Exportieren' }}
+      {{ (busy() ? 'shared.export.busy' : 'shared.export.button') | transloco }}
     </button>
     <mat-menu #formats="matMenu">
       <button mat-menu-item type="button" class="export-html" (click)="export('HTML')">
-        HTML-Liste mit Postern (ZIP)
+        {{ 'shared.export.html' | transloco }}
       </button>
       <button mat-menu-item type="button" class="export-csv" (click)="export('CSV')">
-        CSV für Excel
+        {{ 'shared.export.csv' | transloco }}
       </button>
       <button mat-menu-item type="button" class="export-json" (click)="export('JSON')">JSON</button>
     </mat-menu>
@@ -42,11 +43,11 @@ export class ExportMenu {
   private readonly http = inject(HttpClient);
   private readonly snackBar = inject(MatSnackBar);
 
-  /** Export-Endpunkt, z. B. `/api/v1/movies/export`. */
+  /** Export endpoint, e.g. `/api/v1/movies/export`. */
   readonly endpoint = input.required<string>();
-  /** Der gerade gewählte Filter der Liste. */
+  /** The filter currently chosen in the list. */
   readonly filter = input.required<object>();
-  /** Name der Datei, wenn der Server keinen nennt. */
+  /** Name of the file if the server names none. */
   readonly fallbackName = input('kmm-export');
 
   protected readonly busy = signal(false);

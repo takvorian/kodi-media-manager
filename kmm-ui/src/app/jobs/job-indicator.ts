@@ -1,13 +1,14 @@
 import { Component, computed, inject } from '@angular/core';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import { progressPercent } from './job';
 import { JobStore } from './job-store';
 
-/** Zeigt unter der Toolbar an, welcher Job gerade läuft und wie weit er ist. */
+/** Shows below the toolbar which job is running and how far it has got. */
 @Component({
   selector: 'app-job-indicator',
-  imports: [MatProgressBarModule],
+  imports: [MatProgressBarModule, TranslocoPipe],
   templateUrl: './job-indicator.html',
   styleUrl: './job-indicator.scss',
 })

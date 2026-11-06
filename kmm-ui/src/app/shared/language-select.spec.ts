@@ -1,6 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-import { LanguageSelect } from './language-select';
+import { provideI18nTesting } from '../i18n/testing';
+import { LanguageSelect, languageChangeQuestion, metadataLanguageName } from './language-select';
+import { switchLanguage } from './testing';
 
 describe('LanguageSelect', () => {
   let fixture: ComponentFixture<LanguageSelect>;
@@ -30,6 +32,7 @@ describe('LanguageSelect', () => {
   }
 
   beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideI18nTesting()] });
     fixture = TestBed.createComponent(LanguageSelect);
     chosen = [];
     fixture.componentInstance.chosen.subscribe((language) => chosen.push(language));
@@ -90,5 +93,41 @@ describe('LanguageSelect', () => {
 
     expect(chosen).toEqual(['es-ES']);
     expect(shown()).toBe('');
+  });
+
+  it('names the region only where the list has a language in several regions', () => {
+    expect(metadataLanguageName('de-DE', 'de-DE')).toBe('Deutsch');
+    expect(metadataLanguageName('pt-BR', 'de-DE')).toBe('Portugiesisch (Brasilien)');
+    expect(metadataLanguageName('fr-FR', 'en-US')).toBe('French');
+    expect(metadataLanguageName('not a code', 'en-US')).toBe('not a code');
+  });
+
+  it('names the languages and its labels in the UI language after a switch', async () => {
+    fixture.componentRef.setInput('value', 'fr-FR');
+    await render();
+    expect(fixture.nativeElement.querySelector('mat-label').textContent).toBe('Sprache');
+
+    await switchLanguage('en');
+    await render();
+
+    expect(shown()).toBe('French (fr-FR)');
+    expect(fixture.nativeElement.querySelector('mat-label').textContent).toBe('Language');
+    trigger().click();
+    await render();
+    expect(options()).toContain('Default');
+    expect(options()).toContain('English (United States) (en-US)');
+  });
+
+  it('asks before fetching the texts again in the new language', async () => {
+    expect(languageChangeQuestion('fr-FR', 'Titel und Inhaltsangabe')).toContain(
+      'Die Sprache wird auf Französisch (fr-FR) geändert. Sollen Titel und Inhaltsangabe jetzt',
+    );
+    expect(languageChangeQuestion(null, 'Titel')).toContain('auf den Standard geändert');
+
+    await switchLanguage('en');
+
+    expect(languageChangeQuestion('fr-FR', 'titles and plots')).toContain(
+      'The language is changed to French (fr-FR). Fetch titles and plots again',
+    );
   });
 });

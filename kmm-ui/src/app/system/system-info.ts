@@ -1,4 +1,4 @@
-/** Antwort von GET /api/v1/system/info. */
+/** Answer of GET /api/v1/system/info. */
 export interface SystemInfo {
   readonly applicationName: string;
   readonly version: string;
@@ -7,7 +7,7 @@ export interface SystemInfo {
   readonly database: string;
 }
 
-/** Eine Version aus GET /api/v1/system/changelog. */
+/** A version from GET /api/v1/system/changelog. */
 export interface ChangelogVersion {
   readonly version: string;
   readonly date: string;

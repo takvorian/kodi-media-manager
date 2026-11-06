@@ -10,8 +10,8 @@ export const JOB_EVENTS_URL = `${JOBS_URL}/events`;
 export const JOB_EVENT = 'job';
 
 /**
- * Aktueller Stand aller Jobs, laufend aktualisiert über Server-Sent Events. Die Verbindung wird
- * beim ersten Zugriff aufgebaut; bei Abbrüchen verbindet sich der Browser selbst neu.
+ * Current state of all jobs, kept up to date via server-sent events. The connection is opened on first
+ * access; after a drop the browser reconnects by itself.
  */
 @Injectable({ providedIn: 'root' })
 export class JobStore {
@@ -21,7 +21,7 @@ export class JobStore {
   private readonly completedJobs = new Subject<Job>();
   private eventSource: JobEventSource | null = null;
 
-  /** Laufende Jobs zuerst, danach die neuesten. */
+  /** Running jobs first, then the newest. */
   readonly jobs = computed(() =>
     [...this.jobsById().values()].sort(
       (left, right) =>
@@ -32,8 +32,8 @@ export class JobStore {
   readonly runningJobs = computed(() => this.jobs().filter(isRunning));
 
   /**
-   * Jobs, deren Ende dieser Client miterlebt hat. Bereits beendete Jobs aus der Historie, die beim
-   * Verbinden geliefert werden, erscheinen hier nicht.
+   * Jobs whose end this client witnessed. Jobs from the history that had already finished when they were
+   * delivered on connecting do not appear here.
    */
   readonly completed: Observable<Job> = this.completedJobs.asObservable();
 
@@ -41,7 +41,7 @@ export class JobStore {
     inject(DestroyRef).onDestroy(() => this.eventSource?.close());
   }
 
-  /** Baut die SSE-Verbindung auf, falls noch nicht geschehen. */
+  /** Opens the SSE connection unless that has happened already. */
   connect(): void {
     if (this.eventSource) {
       return;
@@ -52,10 +52,10 @@ export class JobStore {
     );
   }
 
-  /** Übernimmt einen Job, der z. B. als Antwort auf einen Start-Aufruf kam. */
+  /** Takes over a job that came e.g. as the answer to a start call. */
   update(job: Job): void {
     const previous = this.jobsById().get(job.id);
-    // Die Antwort auf den Start kann nach dem Ende eintreffen, wenn der Job sehr kurz war.
+    // The answer to the start may arrive after the end if the job was very short.
     if (previous && !isRunning(previous) && isRunning(job)) {
       return;
     }

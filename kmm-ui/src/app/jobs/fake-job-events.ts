@@ -4,7 +4,7 @@ import { Job } from './job';
 import { JOB_EVENT_SOURCE_FACTORY, JobEventSource } from './job-events';
 import { JOB_EVENT } from './job-store';
 
-/** Ersatz für {@code EventSource} in Tests: Ereignisse werden per {@link emit} ausgelöst. */
+/** Stand-in for `EventSource` in tests: events are fired with {@link emit}. */
 export class FakeJobEvents implements JobEventSource {
   readonly urls: string[] = [];
   closed = false;

@@ -3,7 +3,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { ExportMenu } from './export-menu';
+import { switchLanguage } from './testing';
 
 describe('ExportMenu', () => {
   const endpoint = '/api/v1/movies/export';
@@ -20,6 +22,7 @@ describe('ExportMenu', () => {
     TestBed.configureTestingModule({
       imports: [ExportMenu],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -83,5 +86,18 @@ describe('ExportMenu', () => {
       .flush(new Blob(['{}']), { status: 500, statusText: 'Fehler' });
     await fixture.whenStable();
     expect(snackBarMessages.length).toBe(1);
+  });
+
+  it('names the export and its formats in the UI language', async () => {
+    const button = (fixture.nativeElement as HTMLElement).querySelector('.export-button')!;
+    expect(button.textContent?.trim()).toBe('Exportieren');
+
+    await switchLanguage('en');
+    await fixture.whenStable();
+    expect(button.textContent?.trim()).toBe('Export');
+
+    (button as HTMLButtonElement).click();
+    fixture.detectChanges();
+    expect(document.querySelector('.export-csv')?.textContent?.trim()).toBe('CSV for Excel');
   });
 });

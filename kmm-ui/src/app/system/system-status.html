@@ -1,47 +1,46 @@
-<h2 class="page-title">System</h2>
+<h2 class="page-title">{{ 'system.title' | transloco }}</h2>
 
 <mat-card appearance="outlined" class="system-info">
   <mat-card-content>
     @if (systemInfo.error()) {
-      <p class="status error">Das Backend ist nicht erreichbar.</p>
+      <p class="status error">{{ 'problems.backendUnreachable' | transloco }}</p>
     } @else if (systemInfo.hasValue()) {
       @let info = systemInfo.value();
       <dl class="facts">
-        <dt>Version</dt>
+        <dt>{{ 'system.version' | transloco }}</dt>
         <dd class="version">{{ info.version }}</dd>
-        <dt>Java</dt>
+        <dt>{{ 'system.java' | transloco }}</dt>
         <dd>{{ info.javaVersion }}</dd>
-        <dt>Datenbank</dt>
+        <dt>{{ 'system.database' | transloco }}</dt>
         <dd class="database">{{ info.database }}</dd>
-        <dt>Profile</dt>
+        <dt>{{ 'system.profiles' | transloco }}</dt>
         <dd>{{ info.activeProfiles.join(', ') }}</dd>
       </dl>
     } @else {
-      <p class="status">Lade Systeminformationen …</p>
+      <p class="status">{{ 'system.loading' | transloco }}</p>
     }
   </mat-card-content>
 </mat-card>
 
 <mat-card appearance="outlined" class="clear-database">
   <mat-card-header>
-    <mat-card-title>Datenbank leeren</mat-card-title>
+    <mat-card-title>{{ 'system.clear.title' | transloco }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <p>
-      Löscht alle Quellen, Filme, Serien, Episoden, Filmsets, Filter und Kodi-Geräte aus KMM.
-      <strong>Das lässt sich nicht rückgängig machen.</strong> Deine Medien, NFOs und Bilder bleiben
-      unberührt, aber von Hand in KMM bearbeitete Angaben, die nicht in einer NFO stehen, gehen
-      verloren.
+      {{ 'system.clear.description' | transloco }}
+      <strong>{{ 'system.clear.irreversible' | transloco }}</strong>
+      {{ 'system.clear.untouched' | transloco }}
     </p>
     <mat-checkbox
       class="keep-settings"
       [checked]="keepSettings()"
       (change)="keepSettings.set($event.checked)"
     >
-      Einstellungen und API-Keys behalten
+      {{ 'system.clear.keepSettings' | transloco }}
     </mat-checkbox>
     <mat-form-field class="clear-confirmation" appearance="outline" subscriptSizing="dynamic">
-      <mat-label>Zur Bestätigung {{ clearWord }} eingeben</mat-label>
+      <mat-label>{{ 'system.clear.confirmLabel' | transloco: { word: clearWord() } }}</mat-label>
       <input
         matInput
         autocomplete="off"
@@ -56,10 +55,10 @@
       [disabled]="!canClear()"
       (click)="clearDatabase()"
     >
-      Datenbank leeren
+      {{ 'system.clear.title' | transloco }}
     </button>
     @if (cleared()) {
-      <p class="cleared" role="status">Die Datenbank wurde geleert.</p>
+      <p class="cleared" role="status">{{ 'system.clear.done' | transloco }}</p>
     }
     @if (clearError(); as message) {
       <p class="error clear-error" role="alert">{{ message }}</p>
@@ -69,11 +68,11 @@
 
 <mat-card appearance="outlined" class="changelog">
   <mat-card-header>
-    <mat-card-title>Änderungen</mat-card-title>
+    <mat-card-title>{{ 'system.changes.title' | transloco }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     @if (changelog.error()) {
-      <p class="error">Die Änderungen konnten nicht geladen werden.</p>
+      <p class="error">{{ 'system.changes.loadFailed' | transloco }}</p>
     } @else if (changelog.hasValue()) {
       @for (release of changelog.value(); track release.version) {
         <section class="release">
@@ -90,10 +89,10 @@
           </ul>
         </section>
       } @empty {
-        <p class="no-release">Noch keine Version veröffentlicht.</p>
+        <p class="no-release">{{ 'system.changes.none' | transloco }}</p>
       }
     } @else {
-      <p class="status">Lade Änderungen …</p>
+      <p class="status">{{ 'system.changes.loading' | transloco }}</p>
     }
   </mat-card-content>
 </mat-card>

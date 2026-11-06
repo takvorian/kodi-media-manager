@@ -2,7 +2,7 @@ import { HttpResponse } from '@angular/common/http';
 
 const FILE_NAME = /filename="?([^";]+)"?/;
 
-/** Speichert eine heruntergeladene Datei unter dem Namen, den der Server nennt. */
+/** Saves a downloaded file under the name the server gives. */
 export function saveDownload(response: HttpResponse<Blob>, fallbackName: string): void {
   const disposition = response.headers.get('Content-Disposition') ?? '';
   const url = URL.createObjectURL(response.body ?? new Blob());

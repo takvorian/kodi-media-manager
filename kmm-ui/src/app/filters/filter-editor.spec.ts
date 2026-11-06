@@ -1,9 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { provideI18nTesting } from '../i18n/testing';
+import { switchLanguage } from '../shared/testing';
 import { MediaSource } from '../sources/media-source';
 import { FilterCondition, ListFilter, completeConditions } from './filter';
 import { FilterEditor } from './filter-editor';
-import { MOVIE_FILTER_FIELDS, MovieFilter, MovieFilterValues } from './movie-filter';
+import {
+  MOVIE_FILTER_FIELDS,
+  MovieFilter,
+  MovieFilterValues,
+  OPERATOR_LABELS,
+  PREDEFINED_MOVIE_FILTERS,
+} from './movie-filter';
+import { TVSHOW_FILTER_FIELDS } from './tvshow-filter';
 
 type EditorApi = {
   setField(index: number, field: string): void;
@@ -61,6 +70,7 @@ describe('FilterEditor', () => {
 
   beforeEach(async () => {
     emitted = [];
+    TestBed.configureTestingModule({ providers: [provideI18nTesting()] });
     fixture = TestBed.createComponent(FilterEditor);
     fixture.componentRef.setInput('fields', MOVIE_FILTER_FIELDS);
     fixture.componentRef.setInput('filter', genre);
@@ -93,7 +103,10 @@ describe('FilterEditor', () => {
     expect(editor().options({ field: 'SOURCE', operator: 'IS', value: null })).toEqual([
       { value: '1', label: 'Filme' },
     ]);
-    expect(editor().options({ field: 'WATCHED', operator: 'IS', value: 'false' })!).toHaveLength(2);
+    expect(editor().options({ field: 'WATCHED', operator: 'IS', value: 'false' })).toEqual([
+      { value: 'true', label: 'ja' },
+      { value: 'false', label: 'nein' },
+    ]);
     expect(editor().options({ field: 'YEAR', operator: 'IS', value: null })).toBeNull();
   });
 
@@ -135,5 +148,44 @@ describe('FilterEditor', () => {
         ],
       }).conditions,
     ).toEqual([{ field: 'TMDB_ID', operator: 'EMPTY', value: null }]);
+  });
+
+  it('names fields, comparisons and predefined filters in the UI language', async () => {
+    expect(MOVIE_FILTER_FIELDS.MPAA.label).toBe('Altersfreigabe');
+    expect(TVSHOW_FILTER_FIELDS.EPISODE_RESOLUTION.label).toBe('Episode: Auflösung');
+    expect(OPERATOR_LABELS.IS_NOT).toBe('ist nicht');
+    expect(PREDEFINED_MOVIE_FILTERS[0].name).toBe('Ungesehen');
+
+    await switchLanguage('en');
+
+    expect(MOVIE_FILTER_FIELDS.MPAA.label).toBe('Certification');
+    expect(TVSHOW_FILTER_FIELDS.EPISODE_RESOLUTION.label).toBe('Episode: resolution');
+    expect(OPERATOR_LABELS.IS_NOT).toBe('is not');
+    expect(PREDEFINED_MOVIE_FILTERS[0].name).toBe('Unwatched');
+  });
+
+  it('switches its own texts to English at runtime', async () => {
+    expect(element().querySelector('.add-condition')?.textContent?.trim()).toBe(
+      'Bedingung hinzufügen',
+    );
+
+    await switchLanguage('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.add-condition')?.textContent?.trim()).toBe('Add condition');
+    expect(element().querySelector('.remove-condition')?.textContent?.trim()).toBe('Remove');
+    expect(
+      Array.from(element().querySelectorAll('mat-label')).map((label) => label.textContent),
+    ).toEqual(['Must match', 'Field', 'Comparison', 'Value']);
+    expect(element().querySelector('.condition .field .mat-mdc-select-value')?.textContent).toBe(
+      'Genre',
+    );
+    expect(element().querySelector('.condition .operator .mat-mdc-select-value')?.textContent).toBe(
+      'is',
+    );
+    expect(editor().options({ field: 'WATCHED', operator: 'IS', value: 'false' })).toEqual([
+      { value: 'true', label: 'yes' },
+      { value: 'false', label: 'no' },
+    ]);
   });
 });

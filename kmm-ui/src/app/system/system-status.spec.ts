@@ -1,8 +1,10 @@
 import { HttpErrorResponse } from '@angular/common/http';
-import { TestBed } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Observable, Subject, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 
+import { provideI18nTesting } from '../i18n/testing';
+import { switchLanguage } from '../shared/testing';
 import { ChangelogVersion, SystemInfo } from './system-info';
 import { SystemInfoService } from './system-info.service';
 import { SystemStatus } from './system-status';
@@ -16,6 +18,8 @@ describe('SystemStatus', () => {
     database: 'H2',
   };
 
+  let fixture: ComponentFixture<SystemStatus>;
+
   async function render(
     systemInfo$: Observable<SystemInfo>,
     changelog$: Observable<ChangelogVersion[]> = of([]),
@@ -23,13 +27,14 @@ describe('SystemStatus', () => {
     TestBed.configureTestingModule({
       imports: [SystemStatus],
       providers: [
+        provideI18nTesting(),
         {
           provide: SystemInfoService,
           useValue: { load: () => systemInfo$, changelog: () => changelog$ },
         },
       ],
     });
-    const fixture = TestBed.createComponent(SystemStatus);
+    fixture = TestBed.createComponent(SystemStatus);
     fixture.detectChanges();
     await Promise.resolve();
     fixture.detectChanges();
@@ -95,6 +100,7 @@ describe('SystemStatus', () => {
       TestBed.configureTestingModule({
         imports: [SystemStatus],
         providers: [
+          provideI18nTesting(),
           {
             provide: SystemInfoService,
             useValue: { load: () => of(systemInfo), changelog: () => of([]), clearDatabase },
@@ -107,6 +113,7 @@ describe('SystemStatus', () => {
       fixture.detectChanges();
       const element = fixture.nativeElement as HTMLElement;
       return {
+        fixture,
         element,
         button: element.querySelector<HTMLButtonElement>('.clear-button')!,
         type(word: string) {
@@ -157,6 +164,24 @@ describe('SystemStatus', () => {
       expect(clearDatabase).toHaveBeenCalledWith(false);
     });
 
+    it('asks for the confirmation word of the UI language', async () => {
+      const card = await renderClearCard();
+      await switchLanguage('en');
+      await card.fixture.whenStable();
+
+      expect(card.element.querySelector('.clear-confirmation mat-label')?.textContent).toBe(
+        'Type CLEAR to confirm',
+      );
+      card.type('LEEREN');
+      expect(card.button.disabled).toBe(true);
+      card.type('CLEAR');
+      expect(card.button.disabled).toBe(false);
+      card.click();
+      expect(card.element.querySelector('.cleared')?.textContent).toBe(
+        'The database has been cleared.',
+      );
+    });
+
     it('shows why the database could not be cleared', async () => {
       const problem = new HttpErrorResponse({
         status: 409,
@@ -170,5 +195,24 @@ describe('SystemStatus', () => {
       expect(card.element.querySelector('.clear-error')?.textContent).toContain('läuft bereits');
       expect(card.element.querySelector('.cleared')).toBeNull();
     });
+  });
+
+  it('switches its texts to English at runtime', async () => {
+    const element = await render(of(systemInfo));
+    expect(element.querySelector('.page-title')?.textContent).toBe('System');
+
+    await switchLanguage('en');
+    await fixture.whenStable();
+
+    expect(element.querySelector('.clear-database mat-card-title')?.textContent).toBe(
+      'Clear database',
+    );
+    expect(element.querySelector('.no-release')?.textContent).toBe('No version released yet.');
+    expect(Array.from(element.querySelectorAll('dt')).map((term) => term.textContent)).toEqual([
+      'Version',
+      'Java',
+      'Database',
+      'Profiles',
+    ]);
   });
 });

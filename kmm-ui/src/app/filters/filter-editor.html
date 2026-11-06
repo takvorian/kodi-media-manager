@@ -1,10 +1,10 @@
 @let current = filter();
 <div class="match">
   <mat-form-field class="match-field">
-    <mat-label>Es müssen gelten</mat-label>
+    <mat-label>{{ 'filters.matchLabel' | transloco }}</mat-label>
     <mat-select name="matchAll" [value]="current.matchAll" (valueChange)="setMatchAll($event)">
-      <mat-option [value]="true">alle Bedingungen</mat-option>
-      <mat-option [value]="false">eine Bedingung</mat-option>
+      <mat-option [value]="true">{{ 'filters.matchAll' | transloco }}</mat-option>
+      <mat-option [value]="false">{{ 'filters.matchAny' | transloco }}</mat-option>
     </mat-select>
   </mat-form-field>
 </div>
@@ -12,16 +12,24 @@
 @for (condition of current.conditions; track $index; let index = $index) {
   <div class="condition">
     <mat-form-field class="field">
-      <mat-label>Feld</mat-label>
-      <mat-select [attr.name]="'field-' + index" [value]="condition.field" (valueChange)="setField(index, $event)">
+      <mat-label>{{ 'filters.field' | transloco }}</mat-label>
+      <mat-select
+        [attr.name]="'field-' + index"
+        [value]="condition.field"
+        (valueChange)="setField(index, $event)"
+      >
         @for (field of fieldEntries(); track field[0]) {
           <mat-option [value]="field[0]">{{ field[1].label }}</mat-option>
         }
       </mat-select>
     </mat-form-field>
     <mat-form-field class="operator">
-      <mat-label>Vergleich</mat-label>
-      <mat-select [attr.name]="'operator-' + index" [value]="condition.operator" (valueChange)="setOperator(index, $event)">
+      <mat-label>{{ 'filters.operator' | transloco }}</mat-label>
+      <mat-select
+        [attr.name]="'operator-' + index"
+        [value]="condition.operator"
+        (valueChange)="setOperator(index, $event)"
+      >
         @for (operator of operators(condition); track operator) {
           <mat-option [value]="operator">{{ operatorLabels[operator] }}</mat-option>
         }
@@ -31,8 +39,12 @@
       @let choices = options(condition);
       @if (choices) {
         <mat-form-field class="value">
-          <mat-label>Wert</mat-label>
-          <mat-select [attr.name]="'value-' + index" [value]="condition.value" (valueChange)="setValue(index, $event)">
+          <mat-label>{{ 'common.value' | transloco }}</mat-label>
+          <mat-select
+            [attr.name]="'value-' + index"
+            [value]="condition.value"
+            (valueChange)="setValue(index, $event)"
+          >
             @for (choice of choices; track choice.value) {
               <mat-option [value]="choice.value">{{ choice.label }}</mat-option>
             }
@@ -40,7 +52,7 @@
         </mat-form-field>
       } @else {
         <mat-form-field class="value">
-          <mat-label>Wert</mat-label>
+          <mat-label>{{ 'common.value' | transloco }}</mat-label>
           <input
             matInput
             [attr.name]="'value-' + index"
@@ -51,9 +63,15 @@
         </mat-form-field>
       }
     }
-    <button matButton type="button" class="remove-condition" (click)="remove(index)">Entfernen</button>
+    <button matButton type="button" class="remove-condition" (click)="remove(index)">
+      {{ 'common.remove' | transloco }}
+    </button>
   </div>
 }
 
-<button matButton type="button" class="add-condition" (click)="add()">Bedingung hinzufügen</button>
-<app-help-link chapter="filter" anchor="eigenen-filter-bauen">Felder und Vergleiche erklärt</app-help-link>
+<button matButton type="button" class="add-condition" (click)="add()">
+  {{ 'filters.addCondition' | transloco }}
+</button>
+<app-help-link chapter="filter" anchor="eigenen-filter-bauen">{{
+  'filters.explained' | transloco
+}}</app-help-link>

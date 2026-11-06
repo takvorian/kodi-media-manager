@@ -3,16 +3,30 @@
   @if (link) {
     <span class="path trailer-link">{{ link }}</span>
     @if (watchUrl(); as watch) {
-      <a matButton class="watch-link" [href]="watch" target="_blank" rel="noopener">Ansehen</a>
+      <a matButton class="watch-link" [href]="watch" target="_blank" rel="noopener">{{
+        'shared.trailer.watch' | transloco
+      }}</a>
     }
-    <button matButton type="button" class="remove-trailer-button" [disabled]="busy()" (click)="remove()">
-      Entfernen
+    <button
+      matButton
+      type="button"
+      class="remove-trailer-button"
+      [disabled]="busy()"
+      (click)="remove()"
+    >
+      {{ 'common.remove' | transloco }}
     </button>
   } @else {
-    <span class="hint no-trailer">Kein Trailer eingetragen.</span>
+    <span class="hint no-trailer">{{ 'shared.trailer.none' | transloco }}</span>
   }
-  <button matButton="tonal" type="button" class="find-trailers-button" [disabled]="busy()" (click)="findCandidates()">
-    Vorschläge suchen
+  <button
+    matButton="tonal"
+    type="button"
+    class="find-trailers-button"
+    [disabled]="busy()"
+    (click)="findCandidates()"
+  >
+    {{ 'shared.suggestions.find' | transloco }}
   </button>
 </div>
 
@@ -22,7 +36,7 @@
     <p class="hint trailer-warning">{{ warning }}</p>
   }
   @if (found.candidates.length === 0) {
-    <p class="hint no-candidates">Keine Trailer gefunden.</p>
+    <p class="hint no-candidates">{{ 'shared.trailer.noneFound' | transloco }}</p>
   } @else {
     <ul class="candidates">
       @for (candidate of found.candidates; track candidate.url) {
@@ -33,12 +47,13 @@
           <div class="candidate-facts">
             <span class="candidate-name">{{ candidate.name }}</span>
             <span class="hint">
-              {{ candidate.type }} · {{ candidate.language ?? 'ohne Sprache' }}
+              {{ candidate.type }} ·
+              {{ candidate.language ?? ('shared.trailer.noLanguage' | transloco) }}
               @if (candidate.height) {
                 · {{ candidate.height }}p
               }
               @if (candidate.official) {
-                · offiziell
+                · {{ 'shared.trailer.official' | transloco }}
               }
               @if (candidate.published) {
                 · {{ candidate.published }}
@@ -46,7 +61,9 @@
               · {{ candidate.scraperName }}
             </span>
           </div>
-          <a matButton [href]="candidate.webUrl" target="_blank" rel="noopener">Ansehen</a>
+          <a matButton [href]="candidate.webUrl" target="_blank" rel="noopener">{{
+            'shared.trailer.watch' | transloco
+          }}</a>
           <button
             matButton="filled"
             type="button"
@@ -54,18 +71,20 @@
             [disabled]="busy() || candidate.url === link"
             (click)="apply(candidate.url)"
           >
-            {{ candidate.url === link ? 'Eingetragen' : 'Übernehmen' }}
+            {{ (candidate.url === link ? 'shared.trailer.current' : 'common.apply') | transloco }}
           </button>
         </li>
       }
     </ul>
   }
-  <button matButton type="button" class="close-candidates-button" (click)="closeCandidates()">Vorschläge schließen</button>
+  <button matButton type="button" class="close-candidates-button" (click)="closeCandidates()">
+    {{ 'shared.suggestions.close' | transloco }}
+  </button>
 }
 
 <div class="manual">
   <mat-form-field class="manual-link">
-    <mat-label>Eigener Link</mat-label>
+    <mat-label>{{ 'shared.trailer.manualLink' | transloco }}</mat-label>
     <input
       matInput
       name="trailerUrl"
@@ -73,7 +92,7 @@
       [value]="manualLink()"
       (input)="manualLink.set($any($event.target).value)"
     />
-    <mat-hint>plugin://, http(s)://, smb:// oder nfs://</mat-hint>
+    <mat-hint>{{ 'shared.trailer.manualLinkHint' | transloco }}</mat-hint>
   </mat-form-field>
   <button
     matButton
@@ -82,6 +101,6 @@
     [disabled]="busy() || !manualLink().trim()"
     (click)="applyManualLink()"
   >
-    Link übernehmen
+    {{ 'shared.trailer.applyLink' | transloco }}
   </button>
 </div>

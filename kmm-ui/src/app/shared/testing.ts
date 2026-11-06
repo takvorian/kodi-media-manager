@@ -1,13 +1,16 @@
 import { HttpTestingController } from '@angular/common/http/testing';
-import { ComponentFixture } from '@angular/core/testing';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
+import { firstValueFrom } from 'rxjs';
 
+import { UiLanguage } from '../i18n/ui-language';
 import { ThemeInfo } from './theme';
 
 const MAX_RENDER_ROUNDS = 10;
 
 /**
- * Wartet, bis eine erst nach dem Rendern gestellte Anfrage offen ist (z. B. von einer verschachtelten
- * Komponente), und beantwortet sie. `whenStable` würde hier auf genau diese Anfrage warten.
+ * Waits until a request made only after rendering is open (e.g. from a nested component) and answers it.
+ * `whenStable` would wait for exactly this request here.
  */
 export async function flushWhenRequested(
   fixture: ComponentFixture<unknown>,
@@ -27,10 +30,17 @@ export async function flushWhenRequested(
   throw new Error(`No request to ${url}`);
 }
 
-/** Antwort ohne theme.mp3 für Ansichten, deren Titelmusik-Karte beim Rendern nachfragt. */
+/** Answer without a theme.mp3 for views whose theme music card asks while rendering. */
 export const NO_THEME: ThemeInfo = {
   exists: false,
   path: 'theme.mp3',
   sizeBytes: null,
   modifiedAt: null,
 };
+
+/** Switches the UI language of a test once its translations are loaded, as LanguageService does in the app. */
+export async function switchLanguage(language: UiLanguage): Promise<void> {
+  const transloco = TestBed.inject(TranslocoService);
+  await firstValueFrom(transloco.load(language));
+  transloco.setActiveLang(language);
+}

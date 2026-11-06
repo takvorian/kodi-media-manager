@@ -1,15 +1,17 @@
 import { Component, computed, input } from '@angular/core';
+import { TranslocoPipe } from '@jsverse/transloco';
 
-/** Link auf eine Stelle im Handbuch. Öffnet einen neuen Tab, damit Eingaben im Formular erhalten bleiben. */
+/** Link to a place in the manual. Opens a new tab so input in the form is kept. */
 @Component({
   selector: 'app-help-link',
+  imports: [TranslocoPipe],
   styles: ':host { margin-inline-start: 4px; }',
   template: `<a
     class="help-link"
     [href]="href()"
     target="_blank"
     rel="noopener"
-    title="Im Handbuch nachlesen (neuer Tab)"
+    [title]="'shared.helpLink.title' | transloco"
     ><ng-content
   /></a>`,
 })

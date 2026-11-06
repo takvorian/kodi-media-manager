@@ -3,7 +3,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { CONFIRM } from './confirm';
+import { switchLanguage } from './testing';
 import { TrailerOption, WithTrailer } from './trailer';
 import { TrailerEditor } from './trailer-editor';
 
@@ -47,6 +49,7 @@ describe('TrailerEditor', () => {
     TestBed.configureTestingModule({
       imports: [TrailerEditor],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -201,5 +204,32 @@ describe('TrailerEditor', () => {
 
     expect(snackBarMessages).toEqual(['Bitte zuerst „Online suchen“ nutzen.']);
     expect(button('.find-trailers-button').disabled).toBe(false);
+  });
+
+  it('switches its texts to English at runtime', async () => {
+    show(null);
+    await switchLanguage('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.no-trailer')?.textContent).toBe('No trailer set.');
+    expect(element().querySelector('.manual-link mat-label')?.textContent).toBe('Custom link');
+
+    button('.find-trailers-button').click();
+    httpTesting
+      .expectOne({ method: 'GET', url: `${trailerUrl}/candidates` })
+      .flush({ candidates: [german, teaser], warnings: [] });
+    await fixture.whenStable();
+
+    const candidates = element().querySelectorAll('.trailer-candidate');
+    expect(candidates[0].textContent).toContain('official');
+    expect(candidates[1].textContent).toContain('no language');
+    expect(candidates[0].querySelector('.apply-candidate-button')?.textContent?.trim()).toBe(
+      'Apply',
+    );
+
+    candidates[0].querySelector<HTMLButtonElement>('.apply-candidate-button')!.click();
+    httpTesting.expectOne({ method: 'PUT', url: trailerUrl }).flush(details(youtube));
+    await fixture.whenStable();
+    expect(snackBarMessages).toEqual(['Trailer applied and written to the NFO.']);
   });
 });

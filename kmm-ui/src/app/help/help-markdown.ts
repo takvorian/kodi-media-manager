@@ -35,7 +35,7 @@ const MARKED = new Marked({
   },
 });
 
-/** Wandelt ein Kapitel in HTML um: Links auf andere Kapitel führen zur Hilfeseite, Bilder zu den Hilfedateien. */
+/** Turns a chapter into HTML: links to other chapters lead to the help page, images to the help files. */
 export function renderHelp(markdown: string): string {
   return MARKED.parse(markdown, { async: false });
 }

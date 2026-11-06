@@ -7,7 +7,9 @@ import {
   PRESENCE_OPERATORS,
   PredefinedFilter,
   TOKEN_OPERATORS,
+  fieldDefinition,
   only,
+  predefinedFilter,
 } from './filter';
 
 export type { FieldDefinition, FilterOperator, FilterOption, ListFilter } from './filter';
@@ -42,10 +44,10 @@ export type MovieFilterField =
 
 export type MovieFilterCondition = FilterCondition<MovieFilterField>;
 
-/** Inhalt von POST /api/v1/movies/query und Definition eines gespeicherten Filmfilters. */
+/** Content of POST /api/v1/movies/query and definition of a saved movie filter. */
 export type MovieFilter = ListFilter<MovieFilterField>;
 
-/** Antwort von GET /api/v1/movies/filter-values. */
+/** Answer of GET /api/v1/movies/filter-values. */
 export interface MovieFilterValues {
   readonly genres: readonly string[];
   readonly tags: readonly string[];
@@ -63,59 +65,77 @@ export interface MovieFilterValues {
   readonly subtitleLanguages: readonly string[];
 }
 
-/** Felder in der Reihenfolge der Auswahl; die Vergleiche entsprechen MovieFilterField im Backend. */
+/** Fields in the order of the selection; the comparisons match MovieFilterField in the backend. */
 export const MOVIE_FILTER_FIELDS: Readonly<Record<MovieFilterField, FieldDefinition>> = {
-  TITLE: { label: 'Titel', operators: ['CONTAINS', 'IS', 'IS_NOT'], values: 'text' },
-  YEAR: { label: 'Jahr', operators: NUMBER_OPERATORS, values: 'number' },
-  GENRE: { label: 'Genre', operators: LIST_OPERATORS, values: 'genres' },
-  TAG: { label: 'Tag', operators: LIST_OPERATORS, values: 'tags' },
-  COUNTRY: { label: 'Land', operators: LIST_OPERATORS, values: 'countries' },
-  STUDIO: { label: 'Studio', operators: LIST_OPERATORS, values: 'studios' },
-  SET: { label: 'Filmset', operators: LIST_OPERATORS, values: 'sets' },
-  WATCHED: { label: 'Gesehen', operators: ['IS'], values: 'boolean' },
-  USER_RATING: { label: 'Eigene Bewertung', operators: NUMBER_OPERATORS, values: 'number' },
-  MPAA: { label: 'Altersfreigabe', operators: LIST_OPERATORS, values: 'mpaa' },
-  EDITION: { label: 'Fassung', operators: LIST_OPERATORS, values: 'editions' },
-  VIDEO_SOURCE: { label: 'Videoquelle', operators: LIST_OPERATORS, values: 'videoSources' },
-  RESOLUTION: { label: 'Auflösung', operators: NUMBER_OPERATORS, values: 'resolutions' },
-  VIDEO_CODEC: { label: 'Video-Codec', operators: LIST_OPERATORS, values: 'videoCodecs' },
-  HDR: { label: 'HDR', operators: LIST_OPERATORS, values: 'hdrTypes' },
-  AUDIO_CODEC: { label: 'Audio-Codec', operators: TOKEN_OPERATORS, values: 'audioCodecs' },
-  AUDIO_LANGUAGE: { label: 'Audiosprache', operators: TOKEN_OPERATORS, values: 'audioLanguages' },
-  SUBTITLE_LANGUAGE: {
-    label: 'Untertitelsprache',
-    operators: TOKEN_OPERATORS,
-    values: 'subtitleLanguages',
-  },
-  STREAM_DETAILS: { label: 'Technische Angaben', operators: PRESENCE_OPERATORS, values: 'none' },
-  TMDB_ID: { label: 'TMDB-ID', operators: PRESENCE_OPERATORS, values: 'none' },
-  IMDB_ID: { label: 'IMDb-ID', operators: PRESENCE_OPERATORS, values: 'none' },
-  NFO: { label: 'NFO', operators: PRESENCE_OPERATORS, values: 'none' },
-  TRAILER: { label: 'Trailer', operators: PRESENCE_OPERATORS, values: 'none' },
-  SOURCE: { label: 'Quelle', operators: ['IS', 'IS_NOT'], values: 'sources' },
-  ADDED_DAYS_AGO: {
-    label: 'Hinzugefügt vor Tagen',
-    operators: ['AT_MOST', 'AT_LEAST'],
-    values: 'number',
-  },
+  TITLE: fieldDefinition('fields.title', ['CONTAINS', 'IS', 'IS_NOT'], 'text'),
+  YEAR: fieldDefinition('fields.year', NUMBER_OPERATORS, 'number'),
+  GENRE: fieldDefinition('fields.genre', LIST_OPERATORS, 'genres'),
+  TAG: fieldDefinition('fields.tag', LIST_OPERATORS, 'tags'),
+  COUNTRY: fieldDefinition('fields.country', LIST_OPERATORS, 'countries'),
+  STUDIO: fieldDefinition('fields.studio', LIST_OPERATORS, 'studios'),
+  SET: fieldDefinition('fields.movieSet', LIST_OPERATORS, 'sets'),
+  WATCHED: fieldDefinition('fields.watched', ['IS'], 'boolean'),
+  USER_RATING: fieldDefinition('fields.userRating', NUMBER_OPERATORS, 'number'),
+  MPAA: fieldDefinition('fields.certification', LIST_OPERATORS, 'mpaa'),
+  EDITION: fieldDefinition('fields.edition', LIST_OPERATORS, 'editions'),
+  VIDEO_SOURCE: fieldDefinition('fields.videoSource', LIST_OPERATORS, 'videoSources'),
+  RESOLUTION: fieldDefinition('fields.resolution', NUMBER_OPERATORS, 'resolutions'),
+  VIDEO_CODEC: fieldDefinition('fields.videoCodec', LIST_OPERATORS, 'videoCodecs'),
+  HDR: fieldDefinition('filters.fields.hdr', LIST_OPERATORS, 'hdrTypes'),
+  AUDIO_CODEC: fieldDefinition('fields.audioCodec', TOKEN_OPERATORS, 'audioCodecs'),
+  AUDIO_LANGUAGE: fieldDefinition(
+    'filters.fields.audioLanguage',
+    TOKEN_OPERATORS,
+    'audioLanguages',
+  ),
+  SUBTITLE_LANGUAGE: fieldDefinition(
+    'filters.fields.subtitleLanguage',
+    TOKEN_OPERATORS,
+    'subtitleLanguages',
+  ),
+  STREAM_DETAILS: fieldDefinition('filters.fields.streamDetails', PRESENCE_OPERATORS, 'none'),
+  TMDB_ID: fieldDefinition('fields.tmdbId', PRESENCE_OPERATORS, 'none'),
+  IMDB_ID: fieldDefinition('fields.imdbId', PRESENCE_OPERATORS, 'none'),
+  NFO: fieldDefinition('filters.fields.nfo', PRESENCE_OPERATORS, 'none'),
+  TRAILER: fieldDefinition('fields.trailer', PRESENCE_OPERATORS, 'none'),
+  SOURCE: fieldDefinition('common.source', ['IS', 'IS_NOT'], 'sources'),
+  ADDED_DAYS_AGO: fieldDefinition('filters.fields.addedDaysAgo', ['AT_MOST', 'AT_LEAST'], 'number'),
 };
 
 export const ALL_MOVIES: MovieFilter = { matchAll: true, conditions: [] };
 
-/** Mitgelieferte Filter; gespeicherte kommen dazu. */
+/** Filters that come with the application; saved ones are added. */
 export const PREDEFINED_MOVIE_FILTERS: readonly PredefinedFilter<MovieFilterField>[] = [
-  { name: 'Ungesehen', filter: only({ field: 'WATCHED', operator: 'IS', value: 'false' }) },
-  {
-    name: 'Neu (letzte 30 Tage)',
-    filter: only({ field: 'ADDED_DAYS_AGO', operator: 'AT_MOST', value: '30' }),
-  },
-  { name: 'Unter 720p', filter: only({ field: 'RESOLUTION', operator: 'AT_MOST', value: '576' }) },
-  { name: '4K', filter: only({ field: 'RESOLUTION', operator: 'AT_LEAST', value: '2160' }) },
-  { name: 'Ohne TMDB-ID', filter: only({ field: 'TMDB_ID', operator: 'EMPTY', value: null }) },
-  {
-    name: 'Ohne technische Angaben',
-    filter: only({ field: 'STREAM_DETAILS', operator: 'EMPTY', value: null }),
-  },
-  { name: 'Ohne NFO', filter: only({ field: 'NFO', operator: 'EMPTY', value: null }) },
-  { name: 'Ohne Trailer', filter: only({ field: 'TRAILER', operator: 'EMPTY', value: null }) },
+  predefinedFilter(
+    'filters.predefined.unwatched',
+    only({ field: 'WATCHED', operator: 'IS', value: 'false' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.newLast30Days',
+    only({ field: 'ADDED_DAYS_AGO', operator: 'AT_MOST', value: '30' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.below720p',
+    only({ field: 'RESOLUTION', operator: 'AT_MOST', value: '576' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.uhd4k',
+    only({ field: 'RESOLUTION', operator: 'AT_LEAST', value: '2160' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.withoutTmdbId',
+    only({ field: 'TMDB_ID', operator: 'EMPTY', value: null }),
+  ),
+  predefinedFilter(
+    'filters.predefined.withoutStreamDetails',
+    only({ field: 'STREAM_DETAILS', operator: 'EMPTY', value: null }),
+  ),
+  predefinedFilter(
+    'filters.predefined.withoutNfo',
+    only({ field: 'NFO', operator: 'EMPTY', value: null }),
+  ),
+  predefinedFilter(
+    'filters.predefined.withoutTrailer',
+    only({ field: 'TRAILER', operator: 'EMPTY', value: null }),
+  ),
 ];

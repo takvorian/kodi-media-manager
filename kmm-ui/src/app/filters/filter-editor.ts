@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { translate, TranslocoPipe } from '@jsverse/transloco';
 
 import { MediaSource, MediaType } from '../sources/media-source';
 import {
@@ -25,20 +26,27 @@ import {
 } from './filter';
 import { HelpLink } from '../shared/help-link';
 
-const BOOLEAN_OPTIONS: readonly FilterOption[] = [
-  { value: 'true', label: 'ja' },
-  { value: 'false', label: 'nein' },
+const BOOLEAN_OPTION_KEYS: readonly FilterOption[] = [
+  { value: 'true', label: 'common.yes' },
+  { value: 'false', label: 'common.no' },
 ];
 const NEW_CONDITION_FIELD = 'GENRE';
 
 /**
- * Bedingungen eines Filters bearbeiten: Feld, Vergleich und Wert je Zeile, dazu „alle“ oder „eine“. Welche Felder
- * es gibt, bestimmt die Liste (Filme oder Serien). Jede Änderung wird sofort gemeldet; unvollständige Zeilen filtert
- * die Liste nicht.
+ * Edits the conditions of a filter: field, comparison and value per row, plus “all” or “any”. The list (movies or
+ * TV shows) decides which fields exist. Every change is reported at once; the list does not filter by incomplete
+ * rows.
  */
 @Component({
   selector: 'app-filter-editor',
-  imports: [HelpLink, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [
+    HelpLink,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    TranslocoPipe,
+  ],
   templateUrl: './filter-editor.html',
   styleUrl: './filter-editor.scss',
 })
@@ -47,7 +55,7 @@ export class FilterEditor {
   readonly filter = input.required<ListFilter>();
   readonly values = input<FilterValues | null>(null);
   readonly sources = input<readonly MediaSource[]>([]);
-  /** Welche Quellen für das Feld „Quelle“ angeboten werden. */
+  /** Which sources are offered for the field “Source”. */
   readonly sourceMediaType = input<MediaType>('MOVIE');
   readonly filterChange = output<ListFilter>();
 
@@ -59,7 +67,7 @@ export class FilterEditor {
     return this.definition(condition.field).operators;
   }
 
-  /** Auswahl für den Wert oder `null` bei freier Eingabe bzw. ohne Wert. */
+  /** Choices for the value, or `null` for free input or without a value. */
   protected options(condition: FilterCondition): readonly FilterOption[] | null {
     const source = this.definition(condition.field).values;
     switch (source) {
@@ -68,7 +76,7 @@ export class FilterEditor {
       case NO_VALUES:
         return null;
       case BOOLEAN_VALUES:
-        return BOOLEAN_OPTIONS;
+        return BOOLEAN_OPTION_KEYS.map(({ value, label }) => ({ value, label: translate(label) }));
       case SOURCE_VALUES:
         return this.sources()
           .filter((sourceItem) => sourceItem.mediaType === this.sourceMediaType())
@@ -149,7 +157,7 @@ export class FilterEditor {
   }
 }
 
-/** Ein gespeicherter Wert bleibt wählbar, auch wenn ihn gerade kein Eintrag mehr hat. */
+/** A saved value stays selectable even if no entry has it at the moment. */
 function withCurrent(options: FilterOption[], current: string | null): readonly FilterOption[] {
   if (
     current === null ||

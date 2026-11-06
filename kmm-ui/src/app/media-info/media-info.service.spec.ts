@@ -10,7 +10,9 @@ describe('MediaInfoService', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(MediaInfoService);
     httpTesting = TestBed.inject(HttpTestingController);
   });
@@ -23,9 +25,15 @@ describe('MediaInfoService', () => {
     service.probeSource(4, 'ALL').subscribe();
     service.probeMovie(5).subscribe((details) => (movie = details));
     service.probeEpisode(6).subscribe();
-    httpTesting.expectOne({ method: 'POST', url: '/api/v1/sources/4/stream-details?scope=ALL' }).flush({});
-    httpTesting.expectOne({ method: 'POST', url: '/api/v1/movies/5/stream-details' }).flush(EMPTY_STREAMS);
-    httpTesting.expectOne({ method: 'POST', url: '/api/v1/episodes/6/stream-details' }).flush(EMPTY_STREAMS);
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/sources/4/stream-details?scope=ALL' })
+      .flush({});
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/movies/5/stream-details' })
+      .flush(EMPTY_STREAMS);
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/episodes/6/stream-details' })
+      .flush(EMPTY_STREAMS);
 
     expect(movie).toEqual(EMPTY_STREAMS);
   });

@@ -14,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { DomSanitizer } from '@angular/platform-browser';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { map, of } from 'rxjs';
 
 import { HELP_CHAPTERS } from './help';
@@ -22,13 +23,13 @@ import { HelpService } from './help.service';
 
 const MIN_QUERY_LENGTH = 2;
 
-/** Zeigt das Handbuch: Inhaltsverzeichnis mit Suche und das gewählte Kapitel. */
+/** Shows the manual: table of contents with search and the chosen chapter. */
 @Component({
   selector: 'app-help-page',
-  imports: [RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
   templateUrl: './help-page.html',
   styleUrl: './help-page.scss',
-  // Die Formatierung gilt dem HTML aus dem Handbuch, das Angular nicht mit Stil-Attributen versieht.
+  // The styles apply to the HTML from the manual, which Angular does not mark with style attributes.
   encapsulation: ViewEncapsulation.None,
 })
 export class HelpPage {
@@ -44,7 +45,7 @@ export class HelpPage {
   protected readonly query = signal('');
   protected readonly content = rxResource({
     params: () => this.chapter(),
-    // Das Handbuch wird mit der Anwendung ausgeliefert; der Sanitizer entfernte sonst die Anker der Überschriften.
+    // The manual ships with the application; otherwise the sanitizer would remove the anchors of the headings.
     stream: ({ params }) =>
       this.helpService
         .markdown(params)
@@ -71,7 +72,7 @@ export class HelpPage {
     });
   }
 
-  /** Links innerhalb des Handbuchs bleiben in der Anwendung, statt die Seite neu zu laden. */
+  /** Links within the manual stay in the application instead of reloading the page. */
   protected followLink(event: MouseEvent): void {
     const link = (event.target as HTMLElement).closest('a');
     const href = link?.getAttribute('href');

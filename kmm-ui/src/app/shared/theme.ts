@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-/** Die `theme.mp3` eines Films oder einer Serie. */
+/** The `theme.mp3` of a movie or TV show. */
 export interface ThemeInfo {
   readonly exists: boolean;
   readonly path: string;
@@ -10,7 +10,7 @@ export interface ThemeInfo {
   readonly modifiedAt: string | null;
 }
 
-/** Ein Titelmusik-Vorschlag; `previewUrl` lässt sich direkt anhören, `webUrl` ist die Seite des Anbieters. */
+/** A theme music suggestion; `previewUrl` can be played directly, `webUrl` is the provider's page. */
 export interface ThemeOption {
   readonly name: string | null;
   readonly subject: string | null;
@@ -20,17 +20,17 @@ export interface ThemeOption {
   readonly durationSeconds: number | null;
   readonly scraperId: string;
   readonly scraperName: string;
-  /** Der Anbieter führt sie unter demselben Titel; nur solche übernimmt KMM automatisch. */
+  /** The provider lists it under the same title; KMM applies only those automatically. */
   readonly sameTitle: boolean;
 }
 
-/** Vorschläge, gleicher Titel zuerst, und Hinweise zu nicht eingerichteten oder fehlerhaften Anbietern. */
+/** Suggestions, same title first, and notes on providers that are not set up or failed. */
 export interface ThemeOptions {
   readonly candidates: readonly ThemeOption[];
   readonly warnings: readonly string[];
 }
 
-/** Titelmusik-Endpunkte eines Films oder einer Serie, z. B. `/api/v1/tvshows/3/theme`. */
+/** Theme music endpoints of a movie or TV show, e.g. `/api/v1/tvshows/3/theme`. */
 @Injectable({ providedIn: 'root' })
 export class ThemeService {
   private readonly http = inject(HttpClient);
@@ -43,7 +43,7 @@ export class ThemeService {
     return this.http.get<ThemeOptions>(`${endpoint}/candidates`);
   }
 
-  /** Lädt die Musik und legt sie als `theme.mp3` in den Ordner. */
+  /** Downloads the music and puts it into the folder as `theme.mp3`. */
   apply(endpoint: string, option: ThemeOption): Observable<ThemeInfo> {
     return this.http.put<ThemeInfo>(endpoint, option);
   }
@@ -52,7 +52,7 @@ export class ThemeService {
     return this.http.delete<ThemeInfo>(endpoint);
   }
 
-  /** Adresse der Datei zum Anhören; die Änderungszeit umgeht alte Stände im Browser-Cache. */
+  /** Address of the file for playback; the modification time bypasses old versions in the browser cache. */
   fileUrl(endpoint: string, info: ThemeInfo): string {
     return `${endpoint}/file?v=${encodeURIComponent(info.modifiedAt ?? '')}`;
   }

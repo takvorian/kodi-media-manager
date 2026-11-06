@@ -3,6 +3,8 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 
+import { provideI18nTesting } from '../i18n/testing';
+import { switchLanguage } from '../shared/testing';
 import { HELP_CHAPTERS } from './help';
 import { HelpPage } from './help-page';
 
@@ -22,7 +24,12 @@ describe('HelpPage', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+      providers: [
+        provideI18nTesting(),
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+      ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(HelpPage);
@@ -150,5 +157,17 @@ describe('HelpPage', () => {
     fixture.detectChanges();
 
     expect(element.querySelector('.help-no-hits')?.textContent).toContain('Nichts gefunden');
+  });
+
+  it('switches the texts of the page to English, but not the manual', async () => {
+    await showChapter('filme', '# Filme');
+
+    await switchLanguage('en');
+    await fixture.whenStable();
+
+    expect(element.querySelector('.help-search mat-label')?.textContent).toBe('Search the manual');
+    expect(element.querySelector('.help-chapters')?.getAttribute('aria-label')).toBe('Chapters');
+    expect(element.querySelector('.help-content h1')?.textContent).toBe('Filme');
+    expect(element.querySelector('.help-next')?.textContent).toContain('Serien und Episoden');
   });
 });

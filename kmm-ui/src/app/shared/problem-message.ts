@@ -1,17 +1,20 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { translate } from '@jsverse/transloco';
 
-const FALLBACK_MESSAGE = 'Unbekannter Fehler';
 const BACKEND_UNREACHABLE = 0;
-/** Text von Angular, wenn die Antwort keinen Statustext hat; bei HTTP/1.1 mit Tomcat ist das immer so. */
+/** Text from Angular when the answer has no status text; with HTTP/1.1 on Tomcat this is always the case. */
 const NO_STATUS_TEXT = 'Unknown Error';
 
-/** Liest die Fehlermeldung aus einer RFC-9457-ProblemDetail-Antwort des Backends. */
+/**
+ * Reads the error message from an RFC 9457 ProblemDetail answer of the backend. `detail` and `title` come from
+ * the backend and are passed on unchanged; only the fallbacks are translated.
+ */
 export function problemMessage(error: unknown): string {
   if (!(error instanceof HttpErrorResponse)) {
-    return FALLBACK_MESSAGE;
+    return translate('problems.unknown');
   }
   if (error.status === BACKEND_UNREACHABLE) {
-    return 'Das Backend ist nicht erreichbar.';
+    return translate('problems.backendUnreachable');
   }
   const problem = error.error as { detail?: unknown; title?: unknown } | null;
   if (typeof problem?.detail === 'string') {
@@ -21,7 +24,7 @@ export function problemMessage(error: unknown): string {
     return problem.title;
   }
   if (!error.statusText || error.statusText === NO_STATUS_TEXT) {
-    return `Der Server hat mit dem Fehler ${error.status} geantwortet.`;
+    return translate('problems.serverStatus', { status: error.status });
   }
   return error.statusText;
 }
