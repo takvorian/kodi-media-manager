@@ -10,8 +10,8 @@ import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 /**
- * Bindung an das XML-Format von Embers Kodi-Schnittstelle ({@code Interface.Kodi.xml}). Unbekannte
- * Elemente wie die Optionen zum Gesehen-Status werden ignoriert.
+ * Binding to the XML format of Ember's Kodi interface ({@code Interface.Kodi.xml}). Unknown elements such as the
+ * options for the watched state are ignored.
  */
 @JacksonXmlRootElement(localName = "interface.kodi")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -79,7 +79,7 @@ class EmberKodiXml {
         return value == null || value.isBlank() ? null : value.strip();
     }
 
-    /** Passwörter bleiben unverändert, auch mit Leerzeichen am Rand. */
+    /** Passwords stay unchanged, even with leading or trailing spaces. */
     private static String emptyToNull(String value) {
         return value == null || value.isEmpty() ? null : value;
     }

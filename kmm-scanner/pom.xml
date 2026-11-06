@@ -12,9 +12,13 @@
 
     <artifactId>kmm-scanner</artifactId>
     <name>KMM Scanner</name>
-    <description>Findet Filme in Verzeichnissen und leitet Titel und Jahr aus Datei- und Ordnernamen ab.</description>
+    <description>Finds movies in directories and derives title and year from file and folder names.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-i18n</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

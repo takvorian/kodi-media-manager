@@ -12,8 +12,8 @@ import java.util.function.Consumer;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Führt eine Aktion je Schlüssel erst aus, wenn er eine Weile nicht mehr gemeldet wurde. So lösen
- * mehrere Änderungen kurz hintereinander (z. B. Metadaten und danach Bilder) nur eine Aktion aus.
+ * Runs an action per key only once the key has not been reported for a while. This way several changes in quick
+ * succession (e.g. metadata and then images) trigger only one action.
  */
 @Slf4j
 final class Debouncer<K> {
@@ -29,7 +29,7 @@ final class Debouncer<K> {
         this.action = action;
     }
 
-    /** Plant die Aktion für den Schlüssel (neu) ein; eine noch wartende Ausführung entfällt. */
+    /** (Re)schedules the action for the key; an execution that is still waiting is dropped. */
     void submit(K key) {
         pending.compute(key, (k, previous) -> {
             if (previous != null) {
@@ -43,7 +43,7 @@ final class Debouncer<K> {
         });
     }
 
-    /** Entfernt nur die eigene Planung; der Vergleich läuft unter derselben Sperre wie {@link #submit}. */
+    /** Removes only its own schedule; the comparison runs under the same lock as {@link #submit}. */
     private void run(K key, AtomicReference<ScheduledFuture<?>> self) {
         pending.computeIfPresent(key, (k, current) -> current == self.get() ? null : current);
         try {

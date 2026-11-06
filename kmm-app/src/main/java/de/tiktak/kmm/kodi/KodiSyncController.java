@@ -19,7 +19,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Manueller Abgleich mit allen Kodi-Geräten, unabhängig vom Echtzeit-Sync.
+ * Manual sync with all Kodi devices, independent of the realtime sync.
  */
 @RestController
 @RequestMapping(KodiSyncController.BASE_PATH)
@@ -37,13 +37,13 @@ public class KodiSyncController {
         return syncService.refreshMovie(movieId);
     }
 
-    /** Aktualisiert die ausgewählten Filme als Job. */
+    /** Updates the selected movies as a job. */
     @PostMapping("/movies/refresh")
     public ResponseEntity<JobSnapshot> refreshMovies(@Valid @RequestBody Movies movies) {
         return accepted(batchRefreshService.startMovies(movies.movieIds()));
     }
 
-    /** Aktualisiert die ausgewählten Serien ohne ihre Episoden als Job. */
+    /** Updates the selected TV shows without their episodes as a job. */
     @PostMapping("/tvshows/refresh")
     public ResponseEntity<JobSnapshot> refreshTvShows(@Valid @RequestBody TvShows shows) {
         return accepted(batchRefreshService.startTvShows(shows.showIds()));

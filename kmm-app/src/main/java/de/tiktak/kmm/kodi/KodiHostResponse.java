@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Darstellung eines Kodi-Geräts für die REST-API, ohne Passwort.
+ * Representation of a Kodi device for the REST API, without password.
  *
- * @param passwordSet ob ein Passwort gespeichert ist
- * @param lastSync    letzter Abgleich seit dem Start von KMM oder {@code null}
+ * @param passwordSet whether a password is stored
+ * @param lastSync    last sync since KMM started, or {@code null}
  */
 public record KodiHostResponse(
         long id,

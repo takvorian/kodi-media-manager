@@ -1,12 +1,13 @@
 package de.tiktak.kmm.migration.ember.settings;
 
 /**
- * Embers Einstellungen für Serien.
+ * Ember's settings for TV shows.
  *
- * @param language      Sprache der Serien-Metadaten ({@code TVGeneralLanguage}), z. B. {@code de-DE}, oder {@code null}
- * @param imageLanguage erzwungene Sprache der Serienbilder (ISO 639-1) oder {@code null}, wenn Ember keine erzwingt
- * @param ordering      Episodenreihenfolge ({@code Standard}, {@code DVD}, {@code Absolute}, {@code DayOfYear})
- *                      oder {@code null}
+ * @param language      language of the TV show metadata ({@code TVGeneralLanguage}), e.g. {@code de-DE}, or
+ *                      {@code null}
+ * @param imageLanguage forced language of the TV show images (ISO 639-1), or {@code null} if Ember forces none
+ * @param ordering      episode order ({@code Standard}, {@code DVD}, {@code Absolute}, {@code DayOfYear}) or
+ *                      {@code null}
  */
 public record EmberTvSettings(String language, String imageLanguage, String ordering) {
 

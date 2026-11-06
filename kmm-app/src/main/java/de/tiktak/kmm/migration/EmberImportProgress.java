@@ -5,9 +5,11 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Sammelt das Ergebnis eines Imports. Die Listen sind begrenzt, damit der Bericht auch bei großen
- * Bibliotheken handlich bleibt; die Zähler zählen weiter.
+ * Collects the result of an import. The lists are limited so the report stays manageable even for large
+ * libraries; the counters keep counting.
  */
 final class EmberImportProgress {
 
@@ -29,10 +31,10 @@ final class EmberImportProgress {
     private int episodesMissing;
     private int kodiHostsCreated;
     private int kodiHostsUpdated;
-    private final List<String> settingsChanges = new ArrayList<>();
-    private final List<String> skippedSources = new ArrayList<>();
+    private final List<LocalizedText> settingsChanges = new ArrayList<>();
+    private final List<LocalizedText> skippedSources = new ArrayList<>();
     private final List<String> missingFiles = new ArrayList<>();
-    private final Set<String> warnings = new LinkedHashSet<>();
+    private final Set<LocalizedText> warnings = new LinkedHashSet<>();
 
     EmberImportProgress(boolean dryRun) {
         this.dryRun = dryRun;
@@ -46,7 +48,7 @@ final class EmberImportProgress {
         }
     }
 
-    void sourceSkipped(String description) {
+    void sourceSkipped(LocalizedText description) {
         addLimited(skippedSources, description);
     }
 
@@ -103,13 +105,13 @@ final class EmberImportProgress {
         addLimited(missingFiles, movie);
     }
 
-    void warn(String warning) {
+    void warn(LocalizedText warning) {
         if (warnings.size() < MAX_LISTED_ENTRIES) {
             warnings.add(warning);
         }
     }
 
-    void settingsChanged(List<String> changes) {
+    void settingsChanged(List<LocalizedText> changes) {
         settingsChanges.addAll(changes);
     }
 
@@ -121,7 +123,7 @@ final class EmberImportProgress {
                 List.copyOf(warnings));
     }
 
-    private static void addLimited(List<String> list, String entry) {
+    private static <T> void addLimited(List<T> list, T entry) {
         if (list.size() < MAX_LISTED_ENTRIES) {
             list.add(entry);
         }

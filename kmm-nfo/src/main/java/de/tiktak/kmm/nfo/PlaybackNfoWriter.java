@@ -11,16 +11,16 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
- * Schreibt nur Wiedergabezahl, letzte Wiedergabe und eigene Bewertung in eine vorhandene NFO. Die Bewertung
- * gehört dazu, weil Kodi sie sonst beim Neueinlesen der NFO verliert. Die Datei wird dabei als
- * Text bearbeitet, damit alles andere Zeichen für Zeichen erhalten bleibt (etwa das Format von Ember);
- * nur wenn das nicht sicher geht, wird sie wie beim Speichern der Metadaten neu geschrieben. Eine
- * fehlende NFO legt KMM dafür nicht an, denn Kodi hielte eine fast leere NFO für vollständige Angaben.
+ * Writes only the play count, last playback and own rating into an existing NFO. The rating is part of it because
+ * Kodi would otherwise lose it when it reads the NFO again. The file is edited as text so everything else is kept
+ * character for character (such as Ember's format); only if that is not safe is it rewritten as when saving the
+ * metadata. KMM does not create a missing NFO for this, because Kodi would take an almost empty NFO for complete
+ * details.
  */
 public class PlaybackNfoWriter {
 
     /**
-     * @throws NfoException wenn die NFO fehlt, keinen Film enthält oder nicht geschrieben werden kann
+     * @throws NfoException if the NFO is missing, contains no movie or cannot be written
      */
     public void writeMovie(Path nfoFile, NfoPlayback playback) {
         Element container = existing(nfoFile, NfoElements.MOVIE);
@@ -33,9 +33,9 @@ public class PlaybackNfoWriter {
     }
 
     /**
-     * Ändert in einer Mehrfachepisoden-NFO nur die angegebene Episode.
+     * Changes only the given episode in a multi-episode NFO.
      *
-     * @throws NfoException wenn die NFO fehlt, die Episode nicht enthält oder nicht geschrieben werden kann
+     * @throws NfoException if the NFO is missing, does not contain the episode or cannot be written
      */
     public void writeEpisode(Path nfoFile, int season, int episode, NfoPlayback playback) {
         Element container = existing(nfoFile, NfoElements.EPISODE_DETAILS);
@@ -50,11 +50,10 @@ public class PlaybackNfoWriter {
     }
 
     /**
-     * Das Ergebnis wird vor dem Schreiben noch einmal gelesen: Nur wenn es gültig ist und das Element
-     * genau die neuen Werte trägt, wird es geschrieben (z. B. nicht bei {@code </movie>} in einem
-     * CDATA-Abschnitt).
+     * The result is read again before writing: it is only written if it is valid and the element carries exactly
+     * the new values (e.g. not for {@code </movie>} in a CDATA section).
      *
-     * @return {@code false}, wenn die Datei nicht sicher als Text bearbeitet werden kann
+     * @return {@code false} if the file cannot safely be edited as text
      */
     private static boolean writeAsText(Path nfoFile, String rootName, int index, NfoPlayback playback) {
         Expected expected = Expected.of(playback);
@@ -104,7 +103,7 @@ public class PlaybackNfoWriter {
         }
     }
 
-    /** Die Werte so, wie sie in der NFO stehen sollen. */
+    /** The values as they should appear in the NFO. */
     private record Expected(String playCount, String lastPlayed, String userRating) {
 
         static Expected of(NfoPlayback playback) {

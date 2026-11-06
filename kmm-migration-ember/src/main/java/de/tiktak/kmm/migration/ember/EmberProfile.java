@@ -5,12 +5,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Ein gefundenes Ember-Profil (Inhalt von {@code <Ember>\Profiles\Default}).
+ * A detected Ember profile (contents of {@code <Ember>\Profiles\Default}).
  *
- * @param directory     Profilverzeichnis
- * @param databaseFile  SQLite-Datenbank {@code MyVideos<version>.emm}
- * @param schemaVersion Schema-Version laut Dateiname
- * @param settingsFile  {@code Settings.xml}, sofern vorhanden
+ * @param directory     profile directory
+ * @param databaseFile  SQLite database {@code MyVideos<version>.emm}
+ * @param schemaVersion schema version according to the file name
+ * @param settingsFile  {@code Settings.xml}, if present
  */
 public record EmberProfile(Path directory, Path databaseFile, int schemaVersion, Optional<Path> settingsFile) {
 

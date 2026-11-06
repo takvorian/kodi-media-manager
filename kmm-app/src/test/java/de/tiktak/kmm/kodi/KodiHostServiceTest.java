@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
 import de.tiktak.kmm.kodi.rpc.FakeKodiServer;
 import de.tiktak.kmm.kodi.rpc.KodiClient;
@@ -151,15 +152,15 @@ class KodiHostServiceTest {
                     invocation -> realClient.videoSources(invocation.getArgument(0)));
 
             kodi.respond("Files.GetSources", "{\"sources\": [{\"file\": \"smb://nas/filme/\"}]}");
-            assertThat(service.pathMappingWarning(id)).contains("Kodi hat keine Quelle für a:\\medien\\serien. "
-                    + "Prüfe die Pfad-Zuordnung. Quellen in Kodi: smb://nas/filme/.");
+            assertThat(service.pathMappingWarning(id).map(Messages::english)).contains("Kodi has no source for "
+                    + "a:\\medien\\serien. Check the path mapping. Sources in Kodi: smb://nas/filme/.");
 
             kodi.respond("Files.GetSources", "{\"sources\": [{\"file\": \"smb://nas/filme/\"}, "
                     + "{\"file\": \"a:\\\\medien\\\\serien\\\\\"}]}");
             assertThat(service.pathMappingWarning(id)).isEmpty();
 
             kodi.fail("Files.GetSources", -32601, "Method not found.");
-            assertThat(service.pathMappingWarning(id)).as("Quellen nicht lesbar").isEmpty();
+            assertThat(service.pathMappingWarning(id)).as("sources not readable").isEmpty();
         }
     }
 
@@ -175,7 +176,8 @@ class KodiHostServiceTest {
                     .isInstanceOfSatisfying(KodiProblemException.class, e -> {
                         assertThat(e.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
                         assertThat(e.getBody().getDetail()).isEqualTo(
-                                "Kodi unter 127.0.0.1 lehnt Benutzername oder Passwort ab.");
+                                "Kodi at 127.0.0.1 rejects the user name or password.");
+                        assertThat(e.localizedText().key()).isEqualTo("kodiRpc.unauthorized");
                     });
         }
     }

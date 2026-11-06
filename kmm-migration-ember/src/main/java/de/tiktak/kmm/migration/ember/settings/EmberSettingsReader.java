@@ -10,7 +10,7 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.dataformat.xml.XmlMapper;
 
 /**
- * Liest Embers {@code Settings.xml}.
+ * Reads Ember's {@code Settings.xml}.
  */
 public class EmberSettingsReader {
 

@@ -4,13 +4,13 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Beschreibt eine Tabelle für die Sicherung.
+ * Describes a table for the backup.
  *
- * @param name       Name der Tabelle
- * @param idColumn   Spalte mit der erzeugten ID oder {@code null}
- * @param keyColumns Spalten, an denen ein Eintrag beim Zusammenführen wiedererkannt wird; leer bei abhängigen Listen,
- *                   die mit ihrem Eltern-Eintrag ersetzt werden
- * @param parents    Fremdschlüssel-Spalten mit der Tabelle, auf die sie verweisen
+ * @param name       name of the table
+ * @param idColumn   column with the generated ID, or {@code null}
+ * @param keyColumns columns by which an entry is recognized when merging; empty for dependent lists, which are
+ *                   replaced together with their parent entry
+ * @param parents    foreign key columns with the table they refer to
  */
 record BackupTable(String name, String idColumn, List<String> keyColumns, Map<String, String> parents) {
 

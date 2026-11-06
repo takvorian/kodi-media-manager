@@ -2,16 +2,18 @@ package de.tiktak.kmm.kodi;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis der Übernahme des Gesehen-Status einer ganzen Quelle.
+ * Result of taking over the watched status of a whole source.
  *
- * @param host      Name des befragten Kodi-Geräts
- * @param kept      Einträge, bei denen KMM mehr weiß als Kodi und seinen Stand behält
- * @param notInKodi Einträge, die Kodi nicht kennt
- * @param failures  Fehlermeldungen, höchstens {@link KodiPlaybackService#MAX_LISTED_FAILURES}
+ * @param host      name of the Kodi device that was asked
+ * @param kept      entries for which KMM knows more than Kodi and keeps its state
+ * @param notInKodi entries that Kodi does not know
+ * @param failures  error messages, at most {@link KodiPlaybackService#MAX_LISTED_FAILURES}
  */
 public record KodiPlaybackImportResult(long sourceId, String host, int updated, int unchanged, int kept,
-                                       int notInKodi, int failed, List<String> failures) {
+                                       int notInKodi, int failed, List<LocalizedText> failures) {
 
     public KodiPlaybackImportResult {
         failures = List.copyOf(failures);

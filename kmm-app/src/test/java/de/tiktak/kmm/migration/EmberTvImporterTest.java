@@ -103,7 +103,7 @@ class EmberTvImporterTest {
                 new EmberImportRequest.PathMapping("D:\\Andere", series.toString()));
 
         assertThat(report.showsSkipped()).isEqualTo(1);
-        assertThat(report.episodesSkipped()).as("auch Episoden einer unbekannten Serie").isEqualTo(2);
+        assertThat(report.episodesSkipped()).as("also episodes of an unknown TV show").isEqualTo(2);
         verify(sourceService, never()).importSource(anyString(), anyString(), any(), any());
         verify(session, never()).importShow(any());
     }
@@ -147,8 +147,11 @@ class EmberTvImporterTest {
 
         assertThat(report.tvShows().episodesCreated()).isEqualTo(1);
         assertThat(report.tvShows().episodesSkipped()).isEqualTo(1);
-        assertThat(report.warnings()).singleElement().asString()
-                .contains("tvr-lost-s01e02-720p.mkv").contains("S01E720").contains("S01E02");
+        assertThat(report.warnings()).singleElement().satisfies(warning -> {
+            assertThat(warning.key()).isEqualTo("migration.warning.episodeMismatch");
+            assertThat(warning.args().get("path").toString()).contains("tvr-lost-s01e02-720p.mkv");
+            assertThat(warning.args()).containsEntry("ember", "S01E720").containsEntry("file", "S01E02");
+        });
     }
 
     @Test

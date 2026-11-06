@@ -1,16 +1,18 @@
 package de.tiktak.kmm.kodi.rpc;
 
-/**
- * Kodi ist nicht erreichbar, lehnt die Anmeldung ab oder meldet einen Fehler. Die Meldung ist für
- * die Oberfläche bestimmt.
- */
-public class KodiException extends RuntimeException {
+import de.tiktak.kmm.i18n.LocalizedException;
+import de.tiktak.kmm.i18n.LocalizedText;
 
-    KodiException(String message) {
+/**
+ * Kodi cannot be reached, rejects the login or reports an error. The message is meant for the user interface.
+ */
+public class KodiException extends LocalizedException {
+
+    KodiException(LocalizedText message) {
         super(message);
     }
 
-    KodiException(String message, Throwable cause) {
+    KodiException(LocalizedText message, Throwable cause) {
         super(message, cause);
     }
 }

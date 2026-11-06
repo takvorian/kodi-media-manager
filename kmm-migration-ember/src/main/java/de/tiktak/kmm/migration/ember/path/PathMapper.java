@@ -6,9 +6,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Übersetzt in Ember gespeicherte Windows-Pfade (Laufwerk oder UNC) in Pfade des Zielsystems.
- * Der Vergleich ignoriert Groß-/Kleinschreibung und Trennzeichen, weil Ember unter Windows lief.
- * Bei mehreren passenden Regeln gewinnt die mit dem längsten Präfix.
+ * Translates Windows paths stored in Ember (drive or UNC) into paths of the target system. The comparison ignores
+ * case and separators because Ember ran on Windows. If several rules match, the one with the longest prefix wins.
  */
 public class PathMapper {
 
@@ -25,7 +24,7 @@ public class PathMapper {
     }
 
     /**
-     * @return den Zielpfad oder leer, wenn keine Regel auf den Pfad passt
+     * @return the target path, or empty if no rule matches the path
      */
     public Optional<String> map(String emberPath) {
         String normalizedPath = normalize(emberPath);

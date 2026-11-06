@@ -3,7 +3,7 @@ import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
 import { finishedJobSummary, unsuccessfulJobSummary } from '../sources/job-summary';
-import { literal, localize } from '../i18n/localized-text';
+import { LocalizedText, literal, localize } from '../i18n/localized-text';
 
 const SYNC_MESSAGE_DURATION_MS = 5000;
 const PLAYBACK = 'kodi.playback';
@@ -42,7 +42,7 @@ export interface KodiHostCommand {
 export interface KodiConnectionTest {
   readonly version: string;
   /** Hint on Kodi paths of the mapping for which Kodi has no source. */
-  readonly warning: string | null;
+  readonly warning: LocalizedText | null;
 }
 
 export type KodiSyncOutcome =
@@ -59,7 +59,7 @@ export interface KodiSyncResult {
   readonly hostId: number;
   readonly host: string;
   readonly outcome: KodiSyncOutcome;
-  readonly message: string;
+  readonly message: LocalizedText;
   readonly at: string;
 }
 
@@ -76,12 +76,12 @@ export function kodiSyncSnackBarConfig(results: readonly KodiSyncResult[]): MatS
   return results.some(syncFailed) ? {} : { duration: SYNC_MESSAGE_DURATION_MS };
 }
 
-/** Sums up the results of all devices for a snack bar message; the messages come from the server. */
+/** Sums up the results of all devices for a snack bar message in the active language. */
 export function kodiSyncSummary(results: readonly KodiSyncResult[]): string {
   if (results.length === 0) {
     return translate('kodi.syncNoHost');
   }
-  return results.map((result) => `${result.host}: ${result.message}`).join(' ');
+  return results.map((result) => `${result.host}: ${localize(result.message)}`).join(' ');
 }
 
 /** Prefix of the job key for fetching the watched status; must match KodiPlaybackService.JOB_KEY_PREFIX. */
@@ -97,7 +97,7 @@ export type KodiPlaybackOutcome = 'UPDATED' | 'UNCHANGED' | 'KEPT' | 'NOT_IN_KOD
 export interface KodiPlaybackResult {
   readonly host: string;
   readonly outcome: KodiPlaybackOutcome;
-  readonly message: string;
+  readonly message: LocalizedText;
   /** State in KMM afterwards. */
   readonly playCount: number | null;
   readonly lastPlayedAt: string | null;
@@ -114,7 +114,12 @@ export interface KodiPlaybackImportResult {
   readonly kept: number;
   readonly notInKodi: number;
   readonly failed: number;
-  readonly failures: readonly string[];
+  readonly failures: readonly LocalizedText[];
+}
+
+/** Message after taking over the watched status of a movie or an episode, in the active language. */
+export function kodiPlaybackMessage(result: KodiPlaybackResult): string {
+  return `${result.host}: ${localize(result.message)}`;
 }
 
 /** Sums up a finished job "fetch watched status" for a snack bar message in the active language. */

@@ -1,19 +1,19 @@
 package de.tiktak.kmm.migration.ember.settings;
 
 /**
- * Einstellungen von Embers Umbenenner (Addon {@code generic.EmberCore.BulkRename}) in Embers Muster-Syntax,
- * etwa {@code $T {($Y)}}. Nicht gesetzte Werte sind {@code null}.
+ * Settings of Ember's renamer (add-on {@code generic.EmberCore.BulkRename}) in Ember's pattern syntax, e.g.
+ * {@code $T {($Y)}}. Values not set are {@code null}.
  *
- * @param movieFolder    Ordner eines Films
- * @param movieFile      Dateien eines Films
- * @param tvShowFolder   Ordner einer Serie
- * @param seasonFolder   Ordner einer Staffel
- * @param episodeFile    Dateien einer Episode
- * @param movieOnEdit    Filme nach dem Bearbeiten umbenennen
- * @param movieOnScrape  Filme nach dem Scrapen umbenennen (einzeln oder mehrere)
- * @param tvOnEdit       Episoden nach dem Bearbeiten umbenennen
- * @param tvOnScrape     Serien und Episoden nach dem Scrapen umbenennen
- * @param episodesOnScan neue Episoden beim Scan umbenennen
+ * @param movieFolder    folder of a movie
+ * @param movieFile      files of a movie
+ * @param tvShowFolder   folder of a TV show
+ * @param seasonFolder   folder of a season
+ * @param episodeFile    files of an episode
+ * @param movieOnEdit    rename movies after editing
+ * @param movieOnScrape  rename movies after scraping (single or multiple)
+ * @param tvOnEdit       rename episodes after editing
+ * @param tvOnScrape     rename TV shows and episodes after scraping
+ * @param episodesOnScan rename new episodes when scanning
  */
 public record EmberRenameSettings(
         String movieFolder,

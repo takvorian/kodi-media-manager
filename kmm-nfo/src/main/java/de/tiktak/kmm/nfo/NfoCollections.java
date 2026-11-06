@@ -9,7 +9,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * Unveränderliche Kopien für die NFO-Records; {@code null} wird zur leeren Sammlung.
+ * Immutable copies for the NFO records; {@code null} becomes an empty collection.
  */
 final class NfoCollections {
 
@@ -20,7 +20,7 @@ final class NfoCollections {
         return values == null ? List.of() : List.copyOf(values);
     }
 
-    /** Die Reihenfolge bleibt erhalten: Die erste ID wird beim Schreiben zur Standard-ID ({@code default}). */
+    /** The order is kept: the first ID becomes the default ID ({@code default}) when writing. */
     static Map<String, String> orderedIds(Map<String, String> uniqueIds) {
         if (uniqueIds == null) {
             return Map.of();

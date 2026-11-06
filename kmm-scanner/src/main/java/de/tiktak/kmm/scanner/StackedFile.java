@@ -7,11 +7,11 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Teil eines mehrteiligen Films nach Kodi-Konvention, z. B. {@code Heat cd1.avi}, {@code Heat-part2.mkv}.
+ * Part of a multi-part movie according to Kodi's convention, e.g. {@code Heat cd1.avi}, {@code Heat-part2.mkv}.
  *
- * @param stackKey   gemeinsamer Schlüssel aller Teile (Ordner + Name ohne Teilangabe + Endung)
- * @param baseName   Dateiname ohne Teilangabe und Endung
- * @param partNumber Nummer des Teils
+ * @param stackKey   common key of all parts (folder + name without part suffix + extension)
+ * @param baseName   file name without part suffix and extension
+ * @param partNumber number of the part
  */
 record StackedFile(String stackKey, String baseName, int partNumber) {
 

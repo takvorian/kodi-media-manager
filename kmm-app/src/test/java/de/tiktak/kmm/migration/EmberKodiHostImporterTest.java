@@ -16,6 +16,7 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.kodi.KodiHostService;
 import de.tiktak.kmm.kodi.KodiHostSettings;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
@@ -55,9 +56,8 @@ class EmberKodiHostImporterTest {
         EmberImportReport report = progress.toReport();
         assertThat(report.kodiHostsCreated()).isEqualTo(1);
         assertThat(report.kodiHostsUpdated()).isEqualTo(1);
-        assertThat(report.warnings()).containsExactly(
-                "Kodi-Gerät „Wohnzimmer“: Für D:\\Serien gibt es keine Pfad-Zuordnung; diese Zuordnung zu "
-                        + "smb://nas/serien/ fehlt.");
+        assertThat(report.warnings()).containsExactly(LocalizedText.of("migration.warning.kodiMappingMissing")
+                .with("host", "Wohnzimmer").with("local", "D:\\Serien").with("remote", "smb://nas/serien/"));
     }
 
     @Test
@@ -73,7 +73,8 @@ class EmberKodiHostImporterTest {
         verify(hostService).importHost(imported.capture());
         assertThat(imported.getValue().name()).hasSize(KodiHostSettings.MAX_NAME_LENGTH);
         assertThat(imported.getValue().port()).isEqualTo(EmberKodiHostImporter.DEFAULT_PORT);
-        assertThat(progress.toReport().warnings()).containsExactly("Ein Kodi-Gerät ohne Adresse wurde nicht übernommen.");
+        assertThat(progress.toReport().warnings())
+                .containsExactly(LocalizedText.of("migration.warning.kodiHostWithoutAddress"));
     }
 
     @Test

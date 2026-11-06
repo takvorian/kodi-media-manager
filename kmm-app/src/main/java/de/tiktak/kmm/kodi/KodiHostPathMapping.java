@@ -8,7 +8,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 /**
- * Gespeicherte Pfad-Zuordnung eines Kodi-Geräts.
+ * Stored path mapping of a Kodi device.
  */
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

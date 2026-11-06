@@ -4,14 +4,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Was eine Sicherungsdatei enthält, gelesen ohne ihre Zeilen.
+ * What a backup file contains, read without its rows.
  *
- * @param schemaVersion      Stand der Datenbank-Migrationen beim Export
- * @param applicationVersion KMM-Version beim Export
- * @param createdAt          Zeitpunkt des Exports
- * @param credentials        ob API-Keys und Passwörter enthalten sind
- * @param counts             Anzahl der Zeilen je Tabelle
- * @param sources            Quellen der Datei, ihre Pfade sind die Vorlage für die Pfad-Zuordnung
+ * @param schemaVersion      state of the database migrations at export
+ * @param applicationVersion KMM version at export
+ * @param createdAt          time of the export
+ * @param credentials        whether API keys and passwords are included
+ * @param counts             number of rows per table
+ * @param sources            sources of the file; their paths are the template for the path mapping
  */
 public record BackupHeader(String schemaVersion, String applicationVersion, String createdAt, boolean credentials,
         Map<String, Integer> counts, List<Source> sources) {

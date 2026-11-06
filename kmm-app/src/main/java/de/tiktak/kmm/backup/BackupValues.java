@@ -12,8 +12,10 @@ import java.time.format.DateTimeParseException;
 import java.util.Calendar;
 import java.util.TimeZone;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Übergibt Werte aus der Datei passend zum Spaltentyp der Zieldatenbank.
+ * Passes values from the file according to the column type of the target database.
  */
 final class BackupValues {
 
@@ -23,7 +25,7 @@ final class BackupValues {
     }
 
     /**
-     * @throws BackupFileException wenn der Wert nicht zum Spaltentyp passt
+     * @throws BackupFileException if the value does not fit the column type
      */
     static void bind(PreparedStatement statement, int index, Object value, int type) throws SQLException {
         if (value == null) {
@@ -46,11 +48,11 @@ final class BackupValues {
                 default -> statement.setString(index, value.toString());
             }
         } catch (ClassCastException | NumberFormatException | DateTimeParseException e) {
-            throw new BackupFileException("Die Sicherung enthält einen ungültigen Wert: " + value, e);
+            throw new BackupFileException(LocalizedText.of("backup.invalidValue").with("value", value), e);
         }
     }
 
-    /** MariaDB kann {@code BOOLEAN} je nach Treiber auch als Zahl melden. */
+    /** Depending on the driver, MariaDB may also report {@code BOOLEAN} as a number. */
     private static boolean booleanOf(Object value) {
         return value instanceof Number number ? number.intValue() != 0 : (Boolean) value;
     }

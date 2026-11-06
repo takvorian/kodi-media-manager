@@ -1044,13 +1044,94 @@
     "backup": {
       "import": {
         "title": "Sicherung einspielen",
-        "dryRunTitle": "Sicherung einspielen (Probelauf)"
+        "dryRunTitle": "Sicherung einspielen (Probelauf)",
+        "progress": "Daten werden übernommen",
+        "safetyCopy": "Bisheriger Stand wird gesichert"
+      },
+      "unusable": {
+        "title": "Sicherung nicht verwendbar"
+      },
+      "uploadMissing": "Bitte zuerst eine Sicherung hochladen.",
+      "invalidFile": "Die Datei ist keine gültige KMM-Sicherung.",
+      "invalidId": "Die Sicherung enthält eine ungültige ID: {id}",
+      "invalidValue": "Die Sicherung enthält einen ungültigen Wert: {value}",
+      "newerVersion": "Die Sicherung stammt aus einer neueren KMM-Version. Bitte aktualisiere KMM zuerst.",
+      "newerVersionOf": "Die Sicherung stammt aus einer neueren KMM-Version ({version}). Bitte aktualisiere KMM zuerst.",
+      "importFailed": "Der Import ist fehlgeschlagen, es wurde nichts geändert: {reason}",
+      "pathInvalid": "„{path}“ ist auf diesem System kein gültiger Pfad.",
+      "pathNotAbsolute": "„{path}“ ist auf diesem System kein absoluter Pfad. Unter Docker beginnt er zum Beispiel mit /media.",
+      "warning": {
+        "sourceNameTaken": "Die Quelle „{name}“ ({path}) wurde mit ihrem Inhalt übersprungen: Der Name ist schon vergeben.",
+        "sourceOverlaps": "Die Quelle „{name}“ ({path}) wurde mit ihrem Inhalt übersprungen: Sie überschneidet sich mit „{other}“.",
+        "sourcePathInvalid": "Der Pfad {path} der Quelle „{name}“ ist auf diesem System ungültig.",
+        "sourceUnreachable": "Das Verzeichnis {path} der Quelle „{name}“ ist derzeit nicht erreichbar."
       }
     },
     "migration": {
       "import": {
         "title": "Ember-Import",
-        "dryRunTitle": "Ember-Import (Probelauf)"
+        "dryRunTitle": "Ember-Import (Probelauf)",
+        "reading": "Ember-Datenbank wird gelesen"
+      },
+      "invalidProfile": {
+        "title": "Ungültiges Ember-Profil"
+      },
+      "upload": {
+        "importRunning": "Gerade läuft ein Ember-Import. Bitte warte, bis er fertig ist.",
+        "noDatabase": "In den hochgeladenen Dateien ist keine Ember-Datenbank.",
+        "missing": "Bitte zuerst das Ember-Profil hochladen.",
+        "foreignFile": "„{name}“ gehört nicht zu einem Ember-Profil."
+      },
+      "warning": {
+        "kodiHostsUnreadable": "Die Kodi-Geräte konnten nicht gelesen werden: {reason}",
+        "settingsUnreadable": "Die Ember-Einstellungen konnten nicht gelesen werden: {reason}",
+        "renameSettingsUnreadable": "Die Einstellungen zum Umbenennen konnten nicht gelesen werden: {reason}",
+        "kodiHostWithoutAddress": "Ein Kodi-Gerät ohne Adresse wurde nicht übernommen.",
+        "kodiMappingMissing": "Kodi-Gerät „{host}“: Für {local} gibt es keine Pfad-Zuordnung; diese Zuordnung zu {remote} fehlt.",
+        "invalidPath": "„{title}“ wurde übersprungen, der Pfad ist auf diesem System ungültig: {path}",
+        "severalSets": "„{title}“ gehört in Ember zu mehreren Sets; übernommen wurde das erste.",
+        "movieListNotTranslated": "Die Ember-Filmliste „{name}“ wurde nicht übernommen, ihre Bedingungen lassen sich nicht übersetzen: {conditions}",
+        "sourceUnreachable": "Das Verzeichnis {directory} der Quelle „{name}“ ist derzeit nicht erreichbar.",
+        "episodeMismatch": "{path} wurde übersprungen: Ember nennt {ember}, der Dateiname aber {file}."
+      },
+      "sourceSkipped": {
+        "notMapped": "{name} ({path}): keine gültige Pfad-Zuordnung auf diesem System",
+        "conflict": "{name} ({path}): {reason}"
+      },
+      "settings": {
+        "movieList": "Filmliste „{name}“ als Filter übernommen",
+        "metadataLanguage": "Sprache der Metadaten: {value}",
+        "artworkLanguage": "Bevorzugte Bildsprache: {value}",
+        "videoExtensions": "Video-Dateiendungen: {value}",
+        "excludedPaths": "Ausgeschlossene Ordner: {value}",
+        "tvMetadataLanguage": "Sprache der Serien-Metadaten: {value}",
+        "tvArtworkLanguage": "Bevorzugte Bildsprache für Serien: {value}",
+        "episodeOrdering": "Episodenreihenfolge: {value}",
+        "proxy": "Proxy: {host}:{port}{withUser, select, true { (Passwort bitte in den Einstellungen eingeben)} other {}}",
+        "folderNotMapped": "Ordner für {label} nicht übernommen: „{ember}“ passt zu keiner Pfadzuordnung.",
+        "folder": "Ordner für {label}: {folder}",
+        "storageOff": "{label} bleibt aus, weil der Ordner fehlt.",
+        "patternNotTranslated": "Muster für {label} nicht übernommen: „{ember}“ lässt sich nicht übersetzen, es bleibt „{current}“.",
+        "pattern": "Muster für {label}: {pattern} (Ember: {ember})",
+        "flag": "{label}: {value}",
+        "yes": "ja",
+        "no": "nein",
+        "label": {
+          "movieFolder": "Filmordner",
+          "movieFile": "Filmdateien",
+          "tvShowFolder": "Serienordner",
+          "seasonFolder": "Staffelordner",
+          "episodeFile": "Episodendateien",
+          "movieOnEdit": "Filme nach dem Bearbeiten umbenennen",
+          "movieOnScrape": "Filme nach dem Scrapen umbenennen",
+          "tvOnEdit": "Episoden nach dem Bearbeiten umbenennen",
+          "tvOnScrape": "Serien nach dem Scrapen umbenennen",
+          "episodesOnScan": "Neue Episoden beim Scan umbenennen",
+          "flatImages": "Set-Bilder im flachen Schema",
+          "kodiImages": "Set-Bilder in Kodis Set-Ordnern",
+          "assignOnScrape": "Filme beim Scrapen ihrem Filmset zuordnen",
+          "metaDataScan": "Technische Angaben beim Scrapen auslesen"
+        }
       }
     },
     "job": {
@@ -1293,6 +1374,107 @@
         "fanartTvClientKey": "fanart.tv-Persönlicher-Key",
         "traktClientId": "Trakt-Client-ID",
         "omdbApiKey": "OMDb-API-Key"
+      }
+    },
+    "kodiRpc": {
+      "unauthorized": "Kodi unter {address} lehnt Benutzername oder Passwort ab.",
+      "httpStatus": "Kodi unter {address} antwortet mit HTTP-Status {status}.",
+      "error": "Kodi meldet bei {method} einen Fehler: {message} ({code}).",
+      "timeout": "Kodi unter {address} antwortet nicht rechtzeitig.",
+      "interrupted": "Die Anfrage an Kodi wurde unterbrochen.",
+      "unreachable": "Kodi unter {address}:{port} ist nicht erreichbar. Läuft Kodi, und ist „Steuerung über HTTP erlauben“ aktiviert?",
+      "invalidResponse": "Die Antwort von {address} ist keine gültige Kodi-Antwort.",
+      "libraryBusy": "Kodi liest gerade seine Bibliothek ein. Versuche es danach noch einmal.",
+      "waitInterrupted": "Das Warten auf Kodi wurde abgebrochen.",
+      "noSources": "keine"
+    },
+    "ember": {
+      "directoryNotFound": "Das Verzeichnis „{directory}“ existiert nicht.",
+      "databaseNotFound": "Im Verzeichnis „{directory}“ wurde keine Ember-Datenbank (MyVideos*.emm) gefunden.",
+      "unsupportedSchemaVersion": "Die Ember-Datenbank hat die Schema-Version {found}, unterstützt wird nur Version {supported}. Bitte das Profil einmal mit der letzten Ember-Version öffnen, damit Ember die Datenbank aktualisiert.",
+      "missingTables": "Die Datei „{file}“ ist keine gültige Ember-Datenbank, es fehlen die Tabellen: {tables}.",
+      "databaseUnreadable": "Die Ember-Datenbank „{file}“ kann nicht gelesen werden.",
+      "kodiSettingsUnreadable": "Die Ember-Einstellungen für Kodi „{file}“ können nicht gelesen werden.",
+      "settingsUnreadable": "Die Ember-Einstellungen „{file}“ können nicht gelesen werden."
+    },
+    "media": {
+      "ffprobe": {
+        "notStartable": "ffprobe kann nicht gestartet werden („{executable}“). Ist es installiert und der Pfad richtig eingestellt?",
+        "failed": "ffprobe kann „{input}“ nicht lesen: {detail}",
+        "unintelligibleOutput": "ffprobe kann „{input}“ nicht lesen: unverständliche Ausgabe",
+        "timedOut": "ffprobe hat für „{input}“ zu lange gebraucht."
+      },
+      "unreadable": "„{path}“ kann nicht gelesen werden.",
+      "noStreams": "„{input}“ enthält keine erkennbaren Spuren."
+    },
+    "nfo": {
+      "unreadable": "Die NFO-Datei „{file}“ kann nicht gelesen werden.",
+      "missingEntry": "Die NFO-Datei „{file}“ fehlt oder enthält den Eintrag nicht.",
+      "unwritable": "Die NFO-Datei „{file}“ kann nicht geschrieben werden."
+    },
+    "scanner": {
+      "pattern": {
+        "empty": "Das Muster ist leer.",
+        "invalid": "{problem} (Stelle {position}).",
+        "unmatched": "„{found}“ ohne passendes „{missing}“",
+        "nestedOptional": "Optionale Teile lassen sich nicht verschachteln",
+        "unknownPlaceholder": "Unbekannter Platzhalter „{placeholder}“",
+        "unknownFormat": "Unbekanntes Format „{format}“ bei „{placeholder}“"
+      },
+      "folderExists": "Der Ordner „{folder}“ existiert bereits."
+    },
+    "kodi": {
+      "hostNotFound": {
+        "title": "Kodi-Gerät nicht gefunden",
+        "detail": "Es gibt kein Kodi-Gerät mit der ID {id}."
+      },
+      "nameTaken": {
+        "title": "Name bereits vergeben",
+        "detail": "Es gibt bereits ein Kodi-Gerät mit dem Namen „{name}“."
+      },
+      "noHostFor": {
+        "title": "Kein passendes Kodi-Gerät",
+        "detail": "Kein Kodi-Gerät hat eine Pfad-Zuordnung für {path}."
+      },
+      "noHosts": {
+        "title": "Kein Kodi-Gerät",
+        "detail": "Es ist kein Kodi-Gerät eingerichtet."
+      },
+      "unavailable": {
+        "title": "Kodi nicht erreichbar"
+      },
+      "noHostLeft": {
+        "detail": "Übersprungen, weil kein Kodi-Gerät mehr antwortet."
+      },
+      "refreshFailed": {
+        "title": "Nicht aktualisiert"
+      },
+      "hostProblem": "{host}: {message}",
+      "problems": "{first}; {rest}",
+      "host": {
+        "noSourceWarning": "Kodi hat keine Quelle für {paths}. Prüfe die Pfad-Zuordnung. Quellen in Kodi: {sources}."
+      },
+      "sync": {
+        "refreshed": "„{title}“ aktualisiert.",
+        "scanUnknown": "„{title}“ ist in Kodi noch unbekannt; Kodi liest {directory} ein.",
+        "noSource": "Kodi hat keine Quelle für {directory} und findet dort vermutlich nichts. Prüfe die Pfad-Zuordnung von „{host}“. Quellen in Kodi: {sources}.",
+        "renamed": "Kodi liest {directory} ein und entfernt die alten Einträge aus {previous}.",
+        "setNotInKodi": "Das Filmset „{name}“ ist in Kodi noch unbekannt.",
+        "setUpdated": "Filmset „{name}“ aktualisiert.",
+        "scanSource": "{kind, select, tvShow {Kodi sucht in {directory} nach neuen Serien und Episoden.} other {Kodi sucht in {directory} nach neuen Filmen.}}",
+        "notMapped": "Keine Pfad-Zuordnung für {path}."
+      },
+      "playback": {
+        "jobTitle": "Gesehen-Status „{source}“ aus Kodi",
+        "querying": "Kodi wird abgefragt",
+        "notInKodi": "„{label}“ ist in Kodi nicht bekannt.",
+        "unchanged": "„{label}“ ist bereits auf dem Stand von Kodi.",
+        "kept": "„{label}“: KMM weiß mehr als Kodi, der Stand bleibt.",
+        "failed": "„{label}“: {reason}",
+        "updated": "„{label}“ aus Kodi übernommen: {playCount, plural, =0 {nicht gesehen} other {#× gesehen}}{rating, select, none {} other {, Bewertung {rating}}}."
+      },
+      "batch": {
+        "refreshTvShows": "{count, plural, one {# Serie} other {# Serien}} in Kodi aktualisieren"
       }
     }
   }

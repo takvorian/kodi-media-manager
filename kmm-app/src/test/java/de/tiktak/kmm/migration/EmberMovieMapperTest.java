@@ -27,7 +27,7 @@ import de.tiktak.kmm.scanner.DiscFormat;
 
 class EmberMovieMapperTest {
 
-    /** Ember speichert lokale Uhrzeiten; im November gilt in Berlin UTC+1, im August UTC+2. */
+    /** Ember stores local times; in November Berlin is UTC+1, in August UTC+2. */
     private static final ZoneId BERLIN = ZoneId.of("Europe/Berlin");
     private static final Map<Long, EmberMovieSet> SETS = Map.of(
             1L, new EmberMovieSet(1, "Matrix Collection", "Neo gegen die Maschinen.", "2344"),
@@ -102,7 +102,7 @@ class EmberMovieMapperTest {
         assertThat(movieImport.metadata().imdbId()).isNull();
         assertThat(movieImport.metadata().tmdbId()).isNull();
         assertThat(movieImport.supplement().userRating()).isNull();
-        assertThat(movieImport.setTmdbCollectionId()).as("ID aus der Filmtabelle").isEqualTo("99");
+        assertThat(movieImport.setTmdbCollectionId()).as("ID from the movie table").isEqualTo("99");
         assertThat(EmberMovieMapper.displayName(untitled)).isEqualTo("D:\\Filme\\x.mkv");
     }
 

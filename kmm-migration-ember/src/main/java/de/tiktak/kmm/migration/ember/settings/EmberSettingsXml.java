@@ -12,8 +12,8 @@ import tools.jackson.dataformat.xml.annotation.JacksonXmlProperty;
 import tools.jackson.dataformat.xml.annotation.JacksonXmlRootElement;
 
 /**
- * Bindung an das XML-Format, das Embers .NET-{@code XmlSerializer} schreibt. Unbekannte Elemente
- * werden ignoriert, damit neue oder addon-spezifische Einstellungen das Einlesen nicht verhindern.
+ * Binding to the XML format that Ember's .NET {@code XmlSerializer} writes. Unknown elements are ignored so that
+ * new or add-on specific settings do not prevent reading.
  */
 @JacksonXmlRootElement(localName = "Settings")
 @JsonIgnoreProperties(ignoreUnknown = true)
@@ -99,7 +99,7 @@ class EmberSettingsXml {
                         blankToNull(movieSetPathMatrix), movieCollectionsAuto));
     }
 
-    /** Ember schaltet das Auslesen der Mediendaten beim Scrapen für Filme und Serien getrennt. */
+    /** Ember switches reading the media information when scraping separately for movies and TV shows. */
     private Boolean metaDataScan() {
         if (movieMetaDataScan == null && tvMetaDataScan == null) {
             return null;
@@ -130,7 +130,7 @@ class EmberSettingsXml {
     }
 
     /**
-     * Serialisierte Form eines .NET-{@code String()}: {@code <Name><string>…</string></Name>}.
+     * Serialized form of a .NET {@code String()}: {@code <Name><string>…</string></Name>}.
      */
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)
@@ -149,7 +149,7 @@ class EmberSettingsXml {
     }
 
     /**
-     * Serialisierte Form von {@code System.Net.NetworkCredential}.
+     * Serialized form of {@code System.Net.NetworkCredential}.
      */
     @Getter
     @JsonIgnoreProperties(ignoreUnknown = true)

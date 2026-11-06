@@ -2,19 +2,21 @@ package de.tiktak.kmm.backup;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis eines Imports.
+ * Result of an import.
  *
- * @param dryRun          ob der Import zurückgerollt wurde
- * @param mode            Art des Imports
- * @param results         Zahlen je Tabelle, abhängige Listen zählen zu ihren Einträgen
- * @param unmappedPaths   Pfade, auf die keine Regel der Zuordnung passte; sie blieben unverändert
- * @param credentialsKept ob vorhandene Zugangsdaten erhalten blieben, weil die Datei keine enthält
- * @param safetyCopy      Datei mit dem Stand vor dem Import, bei einem Probelauf {@code null}
- * @param warnings        Hinweise für den Benutzer
+ * @param dryRun          whether the import was rolled back
+ * @param mode            kind of import
+ * @param results         numbers per table; dependent lists count towards their entries
+ * @param unmappedPaths   paths no rule of the mapping matched; they stayed unchanged
+ * @param credentialsKept whether existing credentials were kept because the file contains none
+ * @param safetyCopy      file with the state before the import, {@code null} for a dry run
+ * @param warnings        notes for the user
  */
 public record BackupImportReport(boolean dryRun, BackupImportRequest.Mode mode, List<TableResult> results,
-        int unmappedPaths, boolean credentialsKept, String safetyCopy, List<String> warnings) {
+        int unmappedPaths, boolean credentialsKept, String safetyCopy, List<LocalizedText> warnings) {
 
     public record TableResult(String table, int created, int updated, int skipped) {
     }

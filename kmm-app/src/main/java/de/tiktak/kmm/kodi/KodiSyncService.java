@@ -14,6 +14,8 @@ import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.artwork.MovieSetArtworkService;
 import de.tiktak.kmm.artwork.MovieSetImage;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiException;
@@ -38,9 +40,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Aktualisiert Filme, Serien und Episoden in Kodi: Kennt Kodi den Eintrag, liest es NFO und Bilder neu
- * ein; sonst durchsucht Kodi das Verzeichnis des Films bzw. der Serie. Fehler eines Geräts verhindern den
- * Abgleich der anderen nicht.
+ * Updates movies, TV shows and episodes in Kodi: if Kodi knows the entry, it reads NFO and images again; otherwise
+ * Kodi scans the directory of the movie or TV show. Errors of one device do not prevent the sync of the others.
  */
 @Slf4j
 @Service
@@ -61,22 +62,22 @@ public class KodiSyncService {
     private final KodiSyncLog syncLog;
     private final Clock clock;
 
-    /** Aktualisiert den Film auf allen Kodi-Geräten. */
+    /** Updates the movie on all Kodi devices. */
     public List<KodiSyncResult> refreshMovie(long movieId) {
         return refreshMovie(movieId, hostService.targets(), properties.scanWaitInteractive());
     }
 
-    /** Aktualisiert die Serie (ohne ihre Episoden) auf allen Kodi-Geräten. */
+    /** Updates the TV show (without its episodes) on all Kodi devices. */
     public List<KodiSyncResult> refreshTvShow(long showId) {
         return refreshTvShow(showId, hostService.targets(), properties.scanWaitInteractive());
     }
 
-    /** Aktualisiert die Episode auf allen Kodi-Geräten. */
+    /** Updates the episode on all Kodi devices. */
     public List<KodiSyncResult> refreshEpisode(long episodeId) {
         return refreshEpisode(episodeId, hostService.targets(), properties.scanWaitInteractive());
     }
 
-    /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen bzw. Serien durchsuchen. */
+    /** Lets all Kodi devices scan the directory of the source for new movies or TV shows. */
     public List<KodiSyncResult> scanSource(long sourceId) {
         return scanSource(sourceId, hostService.targets(), properties.scanWaitInteractive());
     }
@@ -103,8 +104,8 @@ public class KodiSyncService {
     }
 
     /**
-     * Nach dem Umbenennen eines Films: Kodi liest den neuen Ordner ein und entfernt danach die Einträge aus dem
-     * alten, deren Dateien es nicht mehr gibt. Gesehen-Status und Bewertung kommen aus der NFO zurück.
+     * After renaming a movie: Kodi scans the new folder and then removes the entries from the old one whose files no
+     * longer exist. Watched status and rating come back from the NFO.
      */
     void syncRenamedMovieOnRealtimeHosts(MovieRenamedEvent event) {
         List<KodiTarget> targets = realtimeTargets();
@@ -114,7 +115,7 @@ public class KodiSyncService {
         }
     }
 
-    /** Nach dem Umbenennen einer Serie wie bei Filmen: neuen Ordner einlesen, alten bereinigen. */
+    /** After renaming a TV show as for movies: scan the new folder, clean the old one. */
     void syncRenamedTvShowOnRealtimeHosts(TvShowRenamedEvent event) {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {
@@ -124,8 +125,8 @@ public class KodiSyncService {
     }
 
     /**
-     * Übernimmt Titel und Beschreibung eines Filmsets in Kodi, wie Ember. Kodi findet das Set über den bisherigen
-     * Titel oder über einen seiner Filme; kennt Kodi es noch nicht, kommt es mit dem Einlesen der Filme.
+     * Takes over title and overview of a movie set into Kodi, like Ember. Kodi finds the set by its previous title or
+     * by one of its movies; if Kodi does not know it yet, it arrives when the movies are scanned.
      */
     void syncMovieSetOnRealtimeHosts(MovieSetChangedEvent event) {
         List<KodiTarget> targets = realtimeTargets();
@@ -152,12 +153,12 @@ public class KodiSyncService {
         }
     }
 
-    /** Für Jobs und Echtzeit-Sync: Sie dürfen länger warten, bis Kodi einen laufenden Scan beendet hat. */
+    /** For jobs and the realtime sync: they may wait longer for Kodi to finish a running scan. */
     List<KodiSyncResult> refreshMovie(long movieId, List<KodiTarget> targets) {
         return refreshMovie(movieId, targets, properties.scanWaitBackground());
     }
 
-    /** Für Jobs und Echtzeit-Sync: Sie dürfen länger warten, bis Kodi einen laufenden Scan beendet hat. */
+    /** For jobs and the realtime sync: they may wait longer for Kodi to finish a running scan. */
     List<KodiSyncResult> refreshTvShow(long showId, List<KodiTarget> targets) {
         return refreshTvShow(showId, targets, properties.scanWaitBackground());
     }
@@ -193,7 +194,7 @@ public class KodiSyncService {
         Optional<Integer> kodiMovieId = kodiClient.findMovie(target.endpoint(), kodiFile.get());
         if (kodiMovieId.isPresent()) {
             kodiClient.refreshMovie(target.endpoint(), kodiMovieId.get());
-            return new Outcome(KodiSyncOutcome.REFRESHED, "„%s“ aktualisiert.".formatted(title));
+            return refreshed(title);
         }
         return scanUnknown(target, title, kodiDirectory.get(), maxWait);
     }
@@ -207,12 +208,12 @@ public class KodiSyncService {
         Optional<Integer> kodiShowId = kodiClient.findTvShow(target.endpoint(), kodiDirectory.get());
         if (kodiShowId.isPresent()) {
             kodiClient.refreshTvShow(target.endpoint(), kodiShowId.get());
-            return new Outcome(KodiSyncOutcome.REFRESHED, "„%s“ aktualisiert.".formatted(title));
+            return refreshed(title);
         }
         return scanUnknown(target, title, kodiDirectory.get(), maxWait);
     }
 
-    /** Eine Episode, die Kodi noch nicht kennt, findet es über einen Scan des Serienordners. */
+    /** Kodi finds an episode it does not know yet by scanning the TV show folder. */
     private Outcome refresh(KodiTarget target, TvShowDetails show, EpisodeDetails episode, Duration maxWait) {
         String title = "%s %s".formatted(show.metadata().title(),
                 EPISODE_CODE.formatted(episode.season(), episode.episode()));
@@ -225,28 +226,29 @@ public class KodiSyncService {
                 episode.episode());
         if (kodiEpisodeId.isPresent()) {
             kodiClient.refreshEpisode(target.endpoint(), kodiEpisodeId.get());
-            return new Outcome(KodiSyncOutcome.REFRESHED, "„%s“ aktualisiert.".formatted(title));
+            return refreshed(title);
         }
         return scanUnknown(target, title, kodiDirectory.get(), maxWait);
     }
 
     private Outcome scanUnknown(KodiTarget target, String title, String kodiDirectory, Duration maxWait) {
         return scanWithSourceCheck(target, kodiDirectory, maxWait,
-                "„%s“ ist in Kodi noch unbekannt; Kodi liest %s ein.".formatted(title, kodiDirectory));
+                LocalizedText.of("kodi.sync.scanUnknown").with("title", title).with("directory", kodiDirectory));
     }
 
     /**
-     * Kodi meldet auch bei einem Verzeichnis außerhalb seiner Quellen Erfolg und liest nichts ein. Der Scan läuft
-     * trotzdem, weil Kodi ein Verzeichnis auch ohne Eintrag in der Quellenliste kennen kann.
+     * Kodi reports success even for a directory outside its sources and scans nothing. The scan runs anyway because
+     * Kodi may know a directory even without an entry in the source list.
      */
-    private Outcome scanWithSourceCheck(KodiTarget target, String kodiDirectory, Duration maxWait, String message) {
-        Optional<String> warning = sourceWarning(target, kodiDirectory);
+    private Outcome scanWithSourceCheck(KodiTarget target, String kodiDirectory, Duration maxWait,
+                                        LocalizedText message) {
+        Optional<LocalizedText> warning = sourceWarning(target, kodiDirectory);
         scheduler.scan(target.endpoint(), kodiDirectory, maxWait);
         return warning.map(text -> new Outcome(KodiSyncOutcome.NO_KODI_SOURCE, text))
                 .orElseGet(() -> new Outcome(KodiSyncOutcome.SCAN_STARTED, message));
     }
 
-    private Optional<String> sourceWarning(KodiTarget target, String kodiDirectory) {
+    private Optional<LocalizedText> sourceWarning(KodiTarget target, String kodiDirectory) {
         KodiSources sources;
         try {
             sources = kodiClient.videoSources(target.endpoint());
@@ -257,8 +259,10 @@ public class KodiSyncService {
         if (sources.contain(kodiDirectory)) {
             return Optional.empty();
         }
-        return Optional.of("Kodi hat keine Quelle für %s und findet dort vermutlich nichts. Prüfe die Pfad-Zuordnung "
-                .formatted(kodiDirectory) + "von „%s“. Quellen in Kodi: %s.".formatted(target.name(), sources));
+        return Optional.of(LocalizedText.of("kodi.sync.noSource")
+                .with("directory", kodiDirectory)
+                .with("host", target.name())
+                .with("sources", sources.describe()));
     }
 
     private Outcome syncRenamed(KodiTarget target, String localDirectory, String localPrevious, Clean clean) {
@@ -269,7 +273,8 @@ public class KodiSyncService {
         }
         Duration maxWait = properties.scanWaitBackground();
         Outcome outcome = scanWithSourceCheck(target, directory.get(), maxWait,
-                "Kodi liest %s ein und entfernt die alten Einträge aus %s.".formatted(directory.get(), previous.get()));
+                LocalizedText.of("kodi.sync.renamed").with("directory", directory.get())
+                        .with("previous", previous.get()));
         clean.start(target.endpoint(), previous.get(), maxWait);
         return outcome;
     }
@@ -284,17 +289,17 @@ public class KodiSyncService {
                         .flatMap(movieId -> kodiClient.movieSetOf(target.endpoint(), movieId)));
         if (kodiSetId.isEmpty()) {
             return new Outcome(KodiSyncOutcome.NOT_IN_KODI,
-                    "Das Filmset „%s“ ist in Kodi noch unbekannt.".formatted(name));
+                    LocalizedText.of("kodi.sync.setNotInKodi").with("name", name));
         }
         Map<String, String> art = art(target, images);
         kodiClient.setMovieSetDetails(target.endpoint(), kodiSetId.get(), name, set.data().overview(), art);
         kodiClient.removeTextures(target.endpoint(), art.values().stream().filter(Objects::nonNull).toList());
-        return new Outcome(KodiSyncOutcome.UPDATED, "Filmset „%s“ aktualisiert.".formatted(name));
+        return new Outcome(KodiSyncOutcome.UPDATED, LocalizedText.of("kodi.sync.setUpdated").with("name", name));
     }
 
     /**
-     * Wie Ember: vorhandene Bilder als Pfad aus Sicht von Kodi, fehlende werden in Kodi entfernt. Ohne Ablage für
-     * Set-Bilder bleiben Kodis Bilder unverändert, ebenso Bilder außerhalb der Pfad-Zuordnung.
+     * Like Ember: existing images as path as Kodi sees it, missing ones are removed in Kodi. Without a storage for set
+     * images Kodi's images stay unchanged, as do images outside the path mapping.
      */
     private static Map<String, String> art(KodiTarget target, Optional<List<MovieSetImage>> images) {
         Map<String, String> art = new HashMap<>();
@@ -315,8 +320,8 @@ public class KodiSyncService {
             return notMapped(source.getPath());
         }
         return scanWithSourceCheck(target, kodiDirectory.get(), maxWait,
-                "Kodi sucht in %s nach neuen %s.".formatted(kodiDirectory.get(),
-                        source.getMediaType() == MediaType.TV_SHOW ? "Serien und Episoden" : "Filmen"));
+                LocalizedText.of("kodi.sync.scanSource").with("directory", kodiDirectory.get())
+                        .with("kind", source.getMediaType() == MediaType.TV_SHOW ? "tvShow" : "movie"));
     }
 
     private List<KodiSyncResult> syncAll(List<KodiTarget> targets, Function<KodiTarget, Outcome> sync) {
@@ -334,18 +339,22 @@ public class KodiSyncService {
         try {
             return sync.apply(target);
         } catch (KodiException e) {
-            return new Outcome(KodiSyncOutcome.FAILED, e.getMessage());
+            return new Outcome(KodiSyncOutcome.FAILED, e.localizedText());
         }
     }
 
-    /** Bei DVD- und Blu-ray-Ordnern liegt die Hauptdatei eine Ebene unter dem Filmordner. */
+    /** For DVD and Blu-ray folders the main file lies one level below the movie folder. */
     private static String movieDirectory(MovieDetails movie) {
         Path directory = Path.of(movie.filePath()).getParent();
         return movie.discFormat() == DiscFormat.FILE ? directory.toString() : directory.getParent().toString();
     }
 
     private static Outcome notMapped(String path) {
-        return new Outcome(KodiSyncOutcome.NOT_MAPPED, "Keine Pfad-Zuordnung für %s.".formatted(path));
+        return new Outcome(KodiSyncOutcome.NOT_MAPPED, LocalizedText.of("kodi.sync.notMapped").with("path", path));
+    }
+
+    private static Outcome refreshed(String title) {
+        return new Outcome(KodiSyncOutcome.REFRESHED, LocalizedText.of("kodi.sync.refreshed").with("title", title));
     }
 
     private List<KodiTarget> realtimeTargets() {
@@ -354,13 +363,13 @@ public class KodiSyncService {
 
     private static void log(KodiSyncResult result) {
         if (result.failed()) {
-            log.warn("Kodi sync with '{}' failed: {}", result.host(), result.message());
+            log.warn("Kodi sync with '{}' failed: {}", result.host(), Messages.english(result.message()));
         } else {
-            log.info("Kodi sync with '{}': {}", result.host(), result.message());
+            log.info("Kodi sync with '{}': {}", result.host(), Messages.english(result.message()));
         }
     }
 
-    private record Outcome(KodiSyncOutcome outcome, String message) {
+    private record Outcome(KodiSyncOutcome outcome, LocalizedText message) {
     }
 
     @FunctionalInterface

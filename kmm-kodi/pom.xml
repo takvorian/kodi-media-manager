@@ -12,9 +12,13 @@
 
     <artifactId>kmm-kodi</artifactId>
     <name>KMM Kodi</name>
-    <description>JSON-RPC-Client für Kodi und Zuordnung lokaler Pfade zu Kodi-Pfaden.</description>
+    <description>JSON-RPC client for Kodi and mapping of local paths to Kodi paths.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-i18n</artifactId>
+        </dependency>
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
@@ -37,7 +41,7 @@
 
     <build>
         <plugins>
-            <!-- Stellt den FakeKodiServer den Tests von kmm-app bereit. -->
+            <!-- Provides the FakeKodiServer to the tests of kmm-app. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

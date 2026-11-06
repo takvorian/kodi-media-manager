@@ -31,6 +31,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
@@ -91,7 +93,8 @@ class KodiPlaybackServiceTest {
 
         service.startSourceImport(3);
 
-        verify(jobService).submit(eq("kodi-playback:3"), eq("Gesehen-Status „Filme“ aus Kodi"), any());
+        verify(jobService).submit(eq("kodi-playback:3"),
+                eq(LocalizedText.of("kodi.playback.jobTitle").with("source", "Filme")), any());
     }
 
     @Test
@@ -112,7 +115,9 @@ class KodiPlaybackServiceTest {
         KodiPlaybackResult result = service.importMovie(5);
 
         assertThat(result).isEqualTo(new KodiPlaybackResult("Wohnzimmer", KodiPlaybackOutcome.UPDATED,
-                "„Heat“ aus Kodi übernommen: 2× gesehen, Bewertung 10.", 2, PLAYED, 10));
+                LocalizedText.of("kodi.playback.updated").with("label", "Heat").with("playCount", 2)
+                        .with("rating", 10), 2, PLAYED, 10));
+        assertThat(Messages.english(result.message())).isEqualTo("“Heat” taken over from Kodi: watched 2×, rating 10.");
         verify(moviePlaybacks).changePlayback(5, 2, PLAYED, 10);
         assertThat(kodi.calls()).singleElement().satisfies(call -> assertThat(
                 call.params().path("filter").path("value").asString()).isEqualTo("smb://nas/filme/Heat/"));
@@ -154,7 +159,10 @@ class KodiPlaybackServiceTest {
 
         assertThat(result).usingRecursiveComparison().ignoringFields("failures").isEqualTo(
                 new KodiPlaybackImportResult(3, "Wohnzimmer", 1, 1, 1, 1, 1, List.of()));
-        assertThat(result.failures()).singleElement().asString().startsWith("„Heat“: ");
+        assertThat(result.failures()).singleElement().satisfies(failure -> {
+            assertThat(failure.key()).isEqualTo("kodi.playback.failed");
+            assertThat(failure.args()).containsEntry("label", "Heat");
+        });
         verify(moviePlaybacks).changePlayback(11, 1, PLAYED, null);
         verify(moviePlaybacks, never()).changePlayback(eq(9L), any(), any(), any());
     }
@@ -190,7 +198,7 @@ class KodiPlaybackServiceTest {
         assertThat(service.importEpisode(4)).satisfies(result -> {
             assertThat(result.outcome()).isEqualTo(KodiPlaybackOutcome.KEPT);
             assertThat(result.message())
-                    .isEqualTo("„Lost S01E01“: KMM weiß mehr als Kodi, der Stand bleibt.");
+                    .isEqualTo(LocalizedText.of("kodi.playback.kept").with("label", "Lost S01E01"));
             assertThat(result.playCount()).isEqualTo(3);
             assertThat(result.lastPlayedAt()).isEqualTo(PLAYED);
             assertThat(result.userRating()).isEqualTo(6);

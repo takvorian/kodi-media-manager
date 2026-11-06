@@ -4,8 +4,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Alle Tabellen der Sicherung. Tabellen stehen hinter denen, auf die sie verweisen, damit der Import beim Lesen der
- * Datei die neuen IDs ihrer Eltern schon kennt. Nur diese Namen gelangen in SQL, nie Namen aus einer Datei.
+ * All tables of the backup. Tables come after the ones they refer to, so that the import already knows the new IDs of
+ * their parents while reading the file. Only these names get into SQL, never names from a file.
  */
 final class BackupTables {
 

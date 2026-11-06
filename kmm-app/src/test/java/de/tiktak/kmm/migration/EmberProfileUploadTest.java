@@ -54,7 +54,7 @@ class EmberProfileUploadTest {
         upload.store(List.of(file("MyVideos48.emm")));
 
         assertThatThrownBy(() -> upload.store(List.of(file("Settings.xml"))))
-                .isInstanceOf(EmberProfileUploadException.class).hasMessageContaining("keine Ember-Datenbank");
+                .isInstanceOf(EmberProfileUploadException.class).hasMessage("The uploaded files contain no Ember database.");
 
         assertThat(upload.directory().resolve("MyVideos48.emm")).exists();
     }
@@ -63,7 +63,7 @@ class EmberProfileUploadTest {
     void rejectsUnexpectedAndEscapingNames() {
         for (String name : List.of("poster.jpg", "../MyVideos48.emm", "..\\Settings.xml", "sub/Settings.xml")) {
             assertThatThrownBy(() -> upload.store(List.of(file("MyVideos48.emm"), file(name))))
-                    .as(name).isInstanceOf(EmberProfileUploadException.class).hasMessageContaining("gehört nicht");
+                    .as(name).isInstanceOf(EmberProfileUploadException.class).hasMessageContaining("does not belong");
         }
         assertThat(home.resolve("MyVideos48.emm")).doesNotExist();
     }
@@ -78,7 +78,7 @@ class EmberProfileUploadTest {
     @Test
     void asksForAnUploadWhenThereIsNone() {
         assertThatThrownBy(upload::directory)
-                .isInstanceOf(EmberProfileUploadException.class).hasMessageContaining("hochladen");
+                .isInstanceOf(EmberProfileUploadException.class).hasMessage("Please upload the Ember profile first.");
     }
 
     @Test

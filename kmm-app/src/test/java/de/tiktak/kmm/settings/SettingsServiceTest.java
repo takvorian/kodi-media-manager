@@ -67,7 +67,9 @@ class SettingsServiceTest {
                 e -> {
                     assertThat(e.localizedText().key()).isEqualTo("settings.rename.invalidPattern");
                     assertThat(e.localizedText().args()).containsEntry("pattern",
-                            LocalizedText.of("settings.rename.pattern.movieFolder")).containsKey("reason");
+                            LocalizedText.of("settings.rename.pattern.movieFolder"));
+                    assertThat(((LocalizedText) e.localizedText().args().get("reason")).key())
+                            .isEqualTo("scanner.pattern.invalid");
                     assertThat(e.getBody().getDetail()).startsWith("Pattern for movie folders: ").contains("{titel}");
                 });
         verify(store, never()).save(any());

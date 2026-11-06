@@ -29,8 +29,8 @@ import tools.jackson.core.JsonGenerator;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Schreibt alle Tabellen in eine Sicherungsdatei. Die Zeilen laufen über JDBC statt über die Entitäten, damit neue
- * Spalten ohne weiteres Zutun dabei sind; die Datei bleibt dabei zwischen den Datenbanken austauschbar.
+ * Writes all tables into a backup file. The rows go through JDBC instead of the entities, so that new columns are
+ * included without further effort; the file stays exchangeable between the databases.
  */
 @Component
 @RequiredArgsConstructor
@@ -43,7 +43,7 @@ class BackupWriter {
     private final Clock clock;
 
     /**
-     * @param credentials ob API-Keys und Passwörter in die Datei gelangen
+     * @param credentials whether API keys and passwords get into the file
      */
     void write(OutputStream target, boolean credentials) {
         try (JsonGenerator json = objectMapper.createGenerator(new GZIPOutputStream(target))) {
@@ -134,7 +134,7 @@ class BackupWriter {
         }
     }
 
-    /** Spalten ohne Zeitzone wie {@code DATETIME} in MariaDB enthalten UTC, so schreibt sie auch Hibernate. */
+    /** Columns without time zone such as {@code DATETIME} in MariaDB contain UTC, as Hibernate writes them too. */
     private static Calendar utc() {
         return Calendar.getInstance(TimeZone.getTimeZone("UTC"));
     }

@@ -9,32 +9,32 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
- * Schreibt nur den Trailer-Link ({@code <trailer>}) in eine vorhandene Film- oder Serien-NFO. Die Datei wird dabei als
- * Text bearbeitet, damit alles andere Zeichen für Zeichen erhalten bleibt; nur wenn das nicht sicher geht, wird sie
- * neu geschrieben, wobei sich außer dem Trailer nur die Formatierung ändert.
+ * Writes only the trailer link ({@code <trailer>}) into an existing movie or TV show NFO. The file is edited as text
+ * so everything else is kept character for character; only if that is not safe is it rewritten, in which case only
+ * the formatting changes apart from the trailer.
  */
 public class TrailerNfoWriter {
 
     /**
-     * @param trailer Link oder {@code null} bzw. leer, um den Eintrag zu entfernen
-     * @throws NfoException wenn die NFO fehlt, keinen Film enthält oder nicht geschrieben werden kann
+     * @param trailer link, or {@code null} or empty to remove the entry
+     * @throws NfoException if the NFO is missing, contains no movie or cannot be written
      */
     public void writeMovie(Path nfoFile, String trailer) {
         writeElement(nfoFile, NfoElements.MOVIE, NfoElements.TRAILER, trailer);
     }
 
     /**
-     * @param trailer Link oder {@code null} bzw. leer, um den Eintrag zu entfernen
-     * @throws NfoException wenn die NFO fehlt, keine Serie enthält oder nicht geschrieben werden kann
+     * @param trailer link, or {@code null} or empty to remove the entry
+     * @throws NfoException if the NFO is missing, contains no TV show or cannot be written
      */
     public void writeTvShow(Path nfoFile, String trailer) {
         writeElement(nfoFile, NfoElements.TV_SHOW, NfoElements.TRAILER, trailer);
     }
 
     /**
-     * Setzt oder entfernt ein einzelnes Element direkt unter der Wurzel.
+     * Sets or removes a single element directly below the root.
      *
-     * @param newValue neuer Text oder {@code null} bzw. leer, um das Element zu entfernen
+     * @param newValue new text, or {@code null} or empty to remove the element
      */
     static void writeElement(Path nfoFile, String rootName, String elementName, String newValue) {
         Element container = NfoFileWriter.existingRoots(nfoFile, rootName)
@@ -51,7 +51,7 @@ public class TrailerNfoWriter {
         NfoFileWriter.write(nfoFile, List.of(root));
     }
 
-    /** Ob der bearbeitete Text gültig ist und genau den neuen Wert trägt. */
+    /** Whether the edited text is valid and carries exactly the new value. */
     private static boolean carries(String text, String rootName, String elementName, String value) {
         try {
             List<Element> roots = NfoFileWriter.parseRoots(text, rootName)

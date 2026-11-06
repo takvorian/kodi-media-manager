@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Eine gefundene Serie: ein Ordner direkt unterhalb der Quelle mit ihren Episoden.
+ * A found TV show: a folder directly below the source with its episodes.
  *
- * @param directory           Serienordner
- * @param title               Titel laut Ordnername
- * @param year                Jahr laut Ordnername oder {@code null}
- * @param imdbId              IMDb-ID laut Ordnername oder {@code null}
- * @param episodes            erkannte Episoden, nach Staffel und Episode sortiert
- * @param unrecognizedFiles   Videodateien ohne erkennbare Staffel und Episode
+ * @param directory           TV show folder
+ * @param title               title according to the folder name
+ * @param year                year according to the folder name or {@code null}
+ * @param imdbId              IMDb ID according to the folder name or {@code null}
+ * @param episodes            recognized episodes, sorted by season and episode
+ * @param unrecognizedFiles   video files without a recognizable season and episode
  */
 public record TvShowCandidate(Path directory, String title, Integer year, String imdbId,
         List<EpisodeCandidate> episodes, List<Path> unrecognizedFiles) {

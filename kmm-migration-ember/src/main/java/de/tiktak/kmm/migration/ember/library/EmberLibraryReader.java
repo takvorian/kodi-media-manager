@@ -16,8 +16,8 @@ import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberSetLink;
 
 /**
- * Liest den Filmbestand einer Ember-Datenbank (Schema v48). Verknüpfte Angaben werden je Tabelle
- * mit einer Abfrage gelesen und den Filmen zugeordnet, damit auch große Bibliotheken schnell gehen.
+ * Reads the movies of an Ember database (schema v48). Linked data is read with one query per table and assigned
+ * to the movies, so that large libraries are fast as well.
  */
 public class EmberLibraryReader {
 
@@ -61,13 +61,13 @@ public class EmberLibraryReader {
                     LIMIT 1) AS tmdbId
             FROM sets s ORDER BY s.idSet""";
     private static final String EXCLUDED_DIRECTORIES = "SELECT Dirname FROM ExcludeDir ORDER BY Dirname";
-    /** Embers Filter-Editor legt eigene Filmlisten als Views mit diesem Präfix an. */
+    /** Ember's filter editor creates custom movie lists as views with this prefix. */
     private static final String MOVIE_LIST_PREFIX = "movie-";
     private static final String MOVIE_LISTS = "SELECT name, sql FROM sqlite_master WHERE type = 'view' "
             + "AND name LIKE '" + MOVIE_LIST_PREFIX + "%' ORDER BY name";
 
     private static final String IMDB = "imdb";
-    /** Embers {@code SortMethod_MovieSet.Title}. */
+    /** Ember's {@code SortMethod_MovieSet.Title}. */
     private static final int SORTED_BY_TITLE = 1;
     private static final String TMDB = "tmdb";
     private static final String TMDB_COLLECTION = "tmdbcol";
@@ -83,7 +83,7 @@ public class EmberLibraryReader {
         }
     }
 
-    /** Nur die Filmquellen, z. B. um Pfad-Zuordnungen vorzuschlagen. */
+    /** Only the movie sources, e.g. to suggest path mappings. */
     public List<EmberMovieSource> readSources(Path databaseFile) {
         try (Connection connection = EmberDatabases.openReadOnly(databaseFile)) {
             return sources(connection);
@@ -168,7 +168,7 @@ public class EmberLibraryReader {
                 .toList();
     }
 
-    /** Ältere Einträge haben die IDs nur in den Spalten der Filmtabelle. */
+    /** Older entries have the IDs only in the columns of the movie table. */
     private static Map<String, String> withColumnIds(Map<String, String> uniqueIds, ResultSet row) throws SQLException {
         Map<String, String> ids = new LinkedHashMap<>(uniqueIds);
         EmberQueries.putIfAbsent(ids, IMDB, EmberValues.text(row, "Imdb"));

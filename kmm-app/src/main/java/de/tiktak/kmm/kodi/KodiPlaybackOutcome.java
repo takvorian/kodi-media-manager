@@ -1,20 +1,20 @@
 package de.tiktak.kmm.kodi;
 
 /**
- * Ergebnis der Übernahme des Gesehen-Status eines Films oder einer Episode aus Kodi.
+ * Result of taking over the watched status of a movie or an episode from Kodi.
  */
 public enum KodiPlaybackOutcome {
-    /** KMM hat den Stand aus Kodi in NFO und Datenbank übernommen. */
+    /** KMM took over the state from Kodi into NFO and database. */
     UPDATED,
-    /** Der Stand in KMM entspricht bereits dem in Kodi. */
+    /** The state in KMM already matches the one in Kodi. */
     UNCHANGED,
     /**
-     * KMM kennt mehr Wiedergaben oder eine neuere letzte Wiedergabe als Kodi. KMM setzt nichts zurück,
-     * der Stand in KMM bleibt.
+     * KMM knows more plays or a more recent last play than Kodi. KMM does not reset anything, the state in KMM
+     * stays.
      */
     KEPT,
-    /** Kodi kennt den Eintrag nicht; der Stand in KMM bleibt unverändert. */
+    /** Kodi does not know the entry; the state in KMM stays unchanged. */
     NOT_IN_KODI,
-    /** Die NFO konnte nicht geschrieben werden. */
+    /** The NFO could not be written. */
     FAILED
 }

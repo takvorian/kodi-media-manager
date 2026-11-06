@@ -4,18 +4,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 /**
- * Weitere Angaben einer Film-NFO neben den Kernmetadaten: Mitwirkende, Zuordnungen, Bewertungen
- * und Nutzerdaten. Nicht gesetzte Einzelwerte sind {@code null}, fehlende Listen leer.
+ * Further details of a movie NFO besides the core metadata: cast and crew, assignments, ratings and user data.
+ * Single values that are not set are {@code null}, missing lists are empty.
  *
- * @param writers    Drehbuchautoren ({@code <credits>})
- * @param set        Filmset oder {@code null}
- * @param userRating eigene Bewertung (0–10) oder {@code null}
- * @param playCount  Anzahl der Wiedergaben oder {@code null}
- * @param lastPlayed letzte Wiedergabe (lokale Zeit) oder {@code null}
- * @param dateAdded  Aufnahme in die Bibliothek (lokale Zeit) oder {@code null}
- * @param streams    Video-, Ton- und Untertitelspuren; leer, wenn unbekannt
- * @param trailer    Trailer-Link ({@code <trailer>}); {@link #NO_TRAILER}, wenn die NFO keinen hat, und {@code null},
- *                   wenn er unbekannt ist – dann bleibt ein vorhandener Eintrag beim Schreiben unverändert
+ * @param writers    writers ({@code <credits>})
+ * @param set        movie set or {@code null}
+ * @param userRating own rating (0–10) or {@code null}
+ * @param playCount  number of playbacks or {@code null}
+ * @param lastPlayed last playback (local time) or {@code null}
+ * @param dateAdded  date added to the library (local time) or {@code null}
+ * @param streams    video, audio and subtitle streams; empty if unknown
+ * @param trailer    trailer link ({@code <trailer>}); {@link #NO_TRAILER} if the NFO has none, and {@code null} if
+ *                   it is unknown – an existing entry then stays unchanged when writing
  */
 public record MovieNfoSupplement(
         List<NfoActor> actors,
@@ -33,7 +33,7 @@ public record MovieNfoSupplement(
         StreamDetails streams,
         String trailer) {
 
-    /** Kein Trailer; beim Schreiben wird ein vorhandener Eintrag entfernt. */
+    /** No trailer; writing removes an existing entry. */
     public static final String NO_TRAILER = "";
 
     public static final MovieNfoSupplement EMPTY = new MovieNfoSupplement(List.of(), List.of(), List.of(), List.of(),
@@ -51,13 +51,13 @@ public record MovieNfoSupplement(
         trailer = trailer == null ? null : trailer.strip();
     }
 
-    /** Kopie mit anderem Trailer-Link; {@link #NO_TRAILER} oder {@code null} wie beim Konstruktor. */
+    /** Copy with a different trailer link; {@link #NO_TRAILER} or {@code null} as for the constructor. */
     public MovieNfoSupplement withTrailer(String newTrailer) {
         return new MovieNfoSupplement(actors, directors, writers, studios, countries, tags, ratings, set, userRating,
                 playCount, lastPlayed, dateAdded, streams, newTrailer);
     }
 
-    /** Angaben mit unbekanntem Trailer; ein vorhandener Eintrag bleibt beim Schreiben unverändert. */
+    /** Details with an unknown trailer; an existing entry stays unchanged when writing. */
     public MovieNfoSupplement(List<NfoActor> actors, List<String> directors, List<String> writers,
             List<String> studios, List<String> countries, List<String> tags, List<NfoRating> ratings, NfoMovieSet set,
             Integer userRating, Integer playCount, LocalDateTime lastPlayed, LocalDateTime dateAdded,

@@ -17,6 +17,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
@@ -115,7 +116,7 @@ class KodiClientTest {
 
     @Test
     void asksKodiWhetherItIsScanning() {
-        assertThat(client.isScanning(kodi.endpoint())).as("ohne Angabe").isFalse();
+        assertThat(client.isScanning(kodi.endpoint())).as("without a value").isFalse();
         assertThat(kodi.calls().getFirst().params())
                 .isEqualTo(json("{\"booleans\": [\"Library.IsScanningVideo\"]}"));
 
@@ -278,7 +279,7 @@ class KodiClientTest {
 
         assertThatThrownBy(() -> client.version(kodi.endpoint("kodi", "falsch")))
                 .isInstanceOf(KodiException.class)
-                .hasMessage("Kodi unter 127.0.0.1 lehnt Benutzername oder Passwort ab.");
+                .hasMessage("Kodi at 127.0.0.1 rejects the user name or password.");
     }
 
     @Test
@@ -286,7 +287,7 @@ class KodiClientTest {
         kodi.respondWithStatus(500);
 
         assertThatThrownBy(() -> client.version(kodi.endpoint()))
-                .hasMessage("Kodi unter 127.0.0.1 antwortet mit HTTP-Status 500.");
+                .hasMessage("Kodi at 127.0.0.1 answers with HTTP status 500.");
     }
 
     @Test
@@ -294,7 +295,10 @@ class KodiClientTest {
         kodi.fail("VideoLibrary.RefreshMovie", -32602, "Invalid params.");
 
         assertThatThrownBy(() -> client.refreshMovie(kodi.endpoint(), 99))
-                .hasMessage("Kodi meldet bei VideoLibrary.RefreshMovie einen Fehler: Invalid params. (-32602).");
+                .isInstanceOfSatisfying(KodiException.class, e -> assertThat(e.localizedText()).isEqualTo(
+                        LocalizedText.of("kodiRpc.error").with("method", "VideoLibrary.RefreshMovie")
+                                .with("message", "Invalid params.").with("code", -32602)))
+                .hasMessage("Kodi reports an error for VideoLibrary.RefreshMovie: Invalid params. (-32602).");
     }
 
     @Test
@@ -302,10 +306,10 @@ class KodiClientTest {
         kodi.respondWithBody("<html>Router-Login</html>");
 
         assertThatThrownBy(() -> client.version(kodi.endpoint()))
-                .hasMessage("Die Antwort von 127.0.0.1 ist keine gültige Kodi-Antwort.");
+                .hasMessage("The answer from 127.0.0.1 is not a valid Kodi response.");
         kodi.respondWithBody("[1, 2]");
         assertThatThrownBy(() -> client.version(kodi.endpoint()))
-                .hasMessage("Die Antwort von 127.0.0.1 ist keine gültige Kodi-Antwort.");
+                .hasMessage("The answer from 127.0.0.1 is not a valid Kodi response.");
     }
 
     @Test
@@ -317,7 +321,7 @@ class KodiClientTest {
 
         assertThatThrownBy(() -> client.version(new KodiEndpoint("127.0.0.1", freePort, null, null)))
                 .isInstanceOf(KodiException.class)
-                .hasMessageStartingWith("Kodi unter 127.0.0.1:%d ist nicht erreichbar.".formatted(freePort));
+                .hasMessageStartingWith("Kodi at 127.0.0.1:%d cannot be reached.".formatted(freePort));
     }
 
     @Test
@@ -326,7 +330,7 @@ class KodiClientTest {
             KodiClient impatient = new KodiClient(HttpClient.newHttpClient(), Duration.ofMillis(200));
 
             assertThatThrownBy(() -> impatient.version(new KodiEndpoint("127.0.0.1", silent.getLocalPort(), null, null)))
-                    .hasMessage("Kodi unter 127.0.0.1 antwortet nicht rechtzeitig.");
+                    .hasMessage("Kodi at 127.0.0.1 does not answer in time.");
         }
     }
 
@@ -337,7 +341,7 @@ class KodiClientTest {
         KodiClient unreachable = new KodiClient(silent, Duration.ofSeconds(1));
 
         assertThatThrownBy(() -> unreachable.version(new KodiEndpoint("firetv.local", 8080, null, null)))
-                .hasMessageStartingWith("Kodi unter firetv.local:8080 ist nicht erreichbar.");
+                .hasMessageStartingWith("Kodi at firetv.local:8080 cannot be reached.");
     }
 
     @Test
@@ -345,7 +349,7 @@ class KodiClientTest {
         Thread.currentThread().interrupt();
         try {
             assertThatThrownBy(() -> client.version(kodi.endpoint()))
-                    .hasMessage("Die Anfrage an Kodi wurde unterbrochen.");
+                    .hasMessage("The request to Kodi was interrupted.");
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
             Thread.interrupted();

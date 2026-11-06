@@ -19,8 +19,8 @@ import org.xml.sax.SAXException;
 import de.tiktak.kmm.migration.ember.EmberProfile;
 
 /**
- * Liest Einstellungen aus Embers {@code AdvancedSettings.xml} im Profilverzeichnis. Dort stehen die
- * Einstellungen der Addons als {@code <Setting Section="…" Content="…" Name="…">Wert</Setting>}.
+ * Reads settings from Ember's {@code AdvancedSettings.xml} in the profile directory. It holds the settings of the
+ * add-ons as {@code <Setting Section="…" Content="…" Name="…">Wert</Setting>}.
  */
 public class EmberAdvancedSettingsReader {
 
@@ -33,8 +33,8 @@ public class EmberAdvancedSettingsReader {
     private static final String NAME = "Name";
 
     /**
-     * @return die Einstellungen des Umbenenners oder leer, wenn das Profil keine {@code AdvancedSettings.xml} hat
-     * @throws EmberSettingsException wenn die Datei nicht gelesen werden kann
+     * @return the settings of the renamer, or empty if the profile has no {@code AdvancedSettings.xml}
+     * @throws EmberSettingsException if the file cannot be read
      */
     public Optional<EmberRenameSettings> readRenameSettings(EmberProfile profile) {
         Path file = profile.directory().resolve(FILE_NAME);

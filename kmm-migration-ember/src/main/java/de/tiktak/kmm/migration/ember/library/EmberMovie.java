@@ -8,17 +8,16 @@ import java.util.Map;
 import lombok.Builder;
 
 /**
- * Ein Film aus der Ember-Datenbank mit allen verknüpften Angaben. Leere Texte sind {@code null},
- * fehlende Listen leer.
+ * A movie from the Ember database with all linked data. Empty texts are {@code null}, missing lists are empty.
  *
- * @param path       Pfad der Filmdatei, wie Ember ihn gespeichert hat (Windows)
- * @param mpaa       Altersfreigabe, z. B. {@code Germany:16}
- * @param uniqueIds  IDs je Anbieter, Schlüssel klein geschrieben (z. B. {@code imdb}, {@code tmdb}, {@code tmdbcol})
- * @param sets       Zugehörigkeit zu Filmsets
- * @param streams    Video-, Ton- und Untertitelspuren
- * @param userRating eigene Bewertung oder {@code null}, wenn keine vergeben ist
- * @param language   Sprache des Films, z. B. {@code de-DE}, oder {@code null}
- * @param trailer    Trailer-Link, z. B. {@code plugin://plugin.video.youtube/…}, oder {@code null}
+ * @param path       path of the movie file as Ember stored it (Windows)
+ * @param mpaa       age rating, e.g. {@code Germany:16}
+ * @param uniqueIds  IDs per provider, keys in lower case (e.g. {@code imdb}, {@code tmdb}, {@code tmdbcol})
+ * @param sets       membership in movie sets
+ * @param streams    video, audio and subtitle streams
+ * @param userRating user rating, or {@code null} if none is given
+ * @param language   language of the movie, e.g. {@code de-DE}, or {@code null}
+ * @param trailer    trailer link, e.g. {@code plugin://plugin.video.youtube/…}, or {@code null}
  */
 @Builder
 public record EmberMovie(
@@ -74,25 +73,25 @@ public record EmberMovie(
     }
 
     /**
-     * Ein Darsteller in der Reihenfolge aus Ember.
+     * An actor in the order from Ember.
      *
-     * @param thumb URL des Bildes oder {@code null}
+     * @param thumb URL of the image or {@code null}
      */
     public record EmberActor(String name, String role, String thumb) {
     }
 
     /**
-     * Eine Bewertung.
+     * A rating.
      *
-     * @param source z. B. {@code imdb}, {@code themoviedb}, {@code trakt}
+     * @param source e.g. {@code imdb}, {@code themoviedb}, {@code trakt}
      */
     public record EmberRating(String source, double value, Integer max, Integer votes, boolean defaultRating) {
     }
 
     /**
-     * Zugehörigkeit zu einem Filmset.
+     * Membership in a movie set.
      *
-     * @param order Position im Set oder {@code null}, wenn Ember keine kennt
+     * @param order position in the set, or {@code null} if Ember knows none
      */
     public record EmberSetLink(long setId, Integer order) {
     }

@@ -7,19 +7,19 @@ import de.tiktak.kmm.migration.ember.library.EmberStreams;
 import de.tiktak.kmm.nfo.StreamDetails;
 
 /**
- * Übersetzt Embers Spuren in KMMs Stream-Details. Externe Untertitel liegen neben der Videodatei; ihr
- * Pfad wird deshalb neben die Videodatei im Zielsystem gelegt statt über die Pfadzuordnung übersetzt.
+ * Translates Ember's streams into KMM's stream details. External subtitles lie next to the video file; their path is
+ * therefore placed next to the video file on the target system instead of being translated via the path mapping.
  */
 final class EmberStreamMapper {
 
-    /** Kodi erwartet ISO-639-2-Codes; Ember speichert für unbekannte Sprachen z. B. „Unbekannt“. */
+    /** Kodi expects ISO 639-2 codes; for unknown languages Ember stores e.g. "Unbekannt". */
     private static final Pattern LANGUAGE_CODE = Pattern.compile("[a-z]{3}");
 
     private EmberStreamMapper() {
     }
 
     /**
-     * @param filePath Pfad der Videodatei im Zielsystem
+     * @param filePath path of the video file on the target system
      */
     static StreamDetails toStreamDetails(EmberStreams streams, String filePath) {
         return new StreamDetails(
@@ -40,7 +40,7 @@ final class EmberStreamMapper {
                 null, video.multiViewCount(), video.multiViewLayout(), video.fileSize());
     }
 
-    /** @return der Pfad neben der Videodatei; leer, wenn Ember keinen Dateinamen kennt */
+    /** @return the path next to the video file; empty if Ember knows no file name */
     private static String externalPath(String emberPath, String filePath) {
         if (emberPath == null || filePath == null) {
             return "";

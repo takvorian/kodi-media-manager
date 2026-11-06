@@ -17,8 +17,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Kleiner HTTP-Server, der wie Kodi JSON-RPC-Aufrufe unter {@code /jsonrpc} beantwortet und sie
- * mitschreibt. Unbekannte Methoden beantwortet er mit {@code "OK"}.
+ * Small HTTP server that answers JSON-RPC calls under {@code /jsonrpc} like Kodi and records them. It answers
+ * unknown methods with {@code "OK"}.
  */
 public final class FakeKodiServer implements AutoCloseable {
 
@@ -53,13 +53,13 @@ public final class FakeKodiServer implements AutoCloseable {
         return server.getAddress().getPort();
     }
 
-    /** Antwortet auf die Methode mit diesem JSON als {@code result}. */
+    /** Answers the method with this JSON as {@code result}. */
     public FakeKodiServer respond(String method, String resultJson) {
         results.put(method, resultJson);
         return this;
     }
 
-    /** Antwortet auf die Methode mit einem JSON-RPC-Fehler. */
+    /** Answers the method with a JSON-RPC error. */
     public FakeKodiServer fail(String method, int code, String message) {
         results.put(method, "!" + JSON.writeValueAsString(Map.of("code", code, "message", message)));
         return this;
@@ -110,7 +110,7 @@ public final class FakeKodiServer implements AutoCloseable {
         return "{\"jsonrpc\":\"2.0\",\"id\":%s,\"result\":%s}".formatted(id, result);
     }
 
-    /** Mitgeschriebener Aufruf. */
+    /** A recorded call. */
     public record Call(String method, JsonNode params, String authorization) {
     }
 }

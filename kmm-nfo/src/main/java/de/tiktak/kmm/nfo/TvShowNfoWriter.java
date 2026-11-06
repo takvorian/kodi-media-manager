@@ -8,9 +8,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Schreibt {@code tvshow.nfo}-Dateien. Nur die von KMM verwalteten Elemente werden ersetzt, alles
- * andere (Episodenführer, Bild-URLs …) bleibt erhalten. Die ältere ID-Schreibweise wird dabei durch
- * {@code <uniqueid>} ersetzt, damit keine widersprüchlichen IDs stehen bleiben.
+ * Writes {@code tvshow.nfo} files. Only the elements managed by KMM are replaced, everything else (episode guide,
+ * image URLs …) is kept. The older ID notation is replaced with {@code <uniqueid>} so no contradicting IDs remain.
  */
 public class TvShowNfoWriter {
 

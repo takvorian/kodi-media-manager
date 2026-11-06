@@ -61,7 +61,7 @@ class TvShowFileMoverTest {
         assertThatThrownBy(() -> TvShowFileMover.move(plan("lost", "Lost (2004)",
                 file("", "Staffel 1", rename("e1.mkv", "Lost - S01E01.mkv")),
                 file("", "Staffel 1", rename("e2.mkv", "Lost - S01E02.mkv"))), source))
-                .isInstanceOf(IOException.class).hasMessageContaining("existiert bereits");
+                .isInstanceOf(IOException.class).hasMessageContaining("already exists");
 
         assertThat(names("lost")).containsExactly("e1.mkv", "e2.mkv");
     }

@@ -1,13 +1,13 @@
 package de.tiktak.kmm.migration.ember.settings;
 
 /**
- * Embers Einstellungen für Filmsets. Ein Wert ist {@code null}, wenn die Datei ihn nicht enthält.
+ * Ember's settings for movie sets. A value is {@code null} if the file does not contain it.
  *
- * @param flatImages       ob Set-Bilder im flachen Schema liegen ({@code MovieSetUseExtended})
- * @param flatImagesFolder Ordner des flachen Schemas ({@code MovieSetPathExtended})
- * @param kodiImages       ob Set-Bilder in Kodis Set-Ordnern liegen ({@code MovieSetUseMatrix})
- * @param kodiImagesFolder Ordner der Kodi-Set-Ordner ({@code MovieSetPathMatrix})
- * @param assignOnScrape   ob Filme beim Scrapen ihrem Set zugeordnet werden ({@code MovieScraperCollectionsAuto})
+ * @param flatImages       whether set images use the flat scheme ({@code MovieSetUseExtended})
+ * @param flatImagesFolder folder of the flat scheme ({@code MovieSetPathExtended})
+ * @param kodiImages       whether set images lie in Kodi's set folders ({@code MovieSetUseMatrix})
+ * @param kodiImagesFolder folder of the Kodi set folders ({@code MovieSetPathMatrix})
+ * @param assignOnScrape   whether movies are assigned to their set when scraping ({@code MovieScraperCollectionsAuto})
  */
 public record EmberMovieSetSettings(Boolean flatImages, String flatImagesFolder, Boolean kodiImages,
         String kodiImagesFolder, Boolean assignOnScrape) {

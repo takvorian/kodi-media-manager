@@ -2,23 +2,25 @@ package de.tiktak.kmm.migration;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis eines Ember-Imports bzw. Probelaufs.
+ * Result of an Ember import or dry run.
  *
- * @param dryRun           ob nichts gespeichert wurde
- * @param sourcesCreated   neu angelegte Quellen
- * @param sourcesReused    vorhandene Quellen mit demselben Verzeichnis
- * @param moviesCreated    neu angelegte Filme
- * @param moviesUpdated    vorhandene Filme, deren Angaben aus Ember übernommen wurden
- * @param moviesSkipped    Filme ohne Pfad-Zuordnung oder ohne übernommene Quelle
- * @param moviesWithoutNfo Filme, deren Datei oder NFO KMM nicht gefunden hat
- * @param tvShows          Ergebnis für Serien und Episoden
- * @param kodiHostsCreated neu angelegte Kodi-Geräte
- * @param kodiHostsUpdated vorhandene Kodi-Geräte mit demselben Namen, die aktualisiert wurden
- * @param settingsChanges  übernommene Einstellungen in lesbarer Form
- * @param skippedSources   Quellen, die nicht übernommen wurden, mit Grund
- * @param missingFiles     Filme ohne gefundene NFO (gekürzt)
- * @param warnings         weitere Hinweise (gekürzt)
+ * @param dryRun           whether nothing was saved
+ * @param sourcesCreated   newly created sources
+ * @param sourcesReused    existing sources with the same directory
+ * @param moviesCreated    newly created movies
+ * @param moviesUpdated    existing movies whose details were taken over from Ember
+ * @param moviesSkipped    movies without path mapping or without an imported source
+ * @param moviesWithoutNfo movies whose file or NFO KMM did not find
+ * @param tvShows          result for TV shows and episodes
+ * @param kodiHostsCreated newly created Kodi devices
+ * @param kodiHostsUpdated existing Kodi devices with the same name that were updated
+ * @param settingsChanges  imported settings in readable form
+ * @param skippedSources   sources that were not imported, with the reason
+ * @param missingFiles     names of the movies without a found NFO (shortened)
+ * @param warnings         further notes (shortened)
  */
 public record EmberImportReport(
         boolean dryRun,
@@ -31,10 +33,10 @@ public record EmberImportReport(
         TvShows tvShows,
         int kodiHostsCreated,
         int kodiHostsUpdated,
-        List<String> settingsChanges,
-        List<String> skippedSources,
+        List<LocalizedText> settingsChanges,
+        List<LocalizedText> skippedSources,
         List<String> missingFiles,
-        List<String> warnings) {
+        List<LocalizedText> warnings) {
 
     public EmberImportReport {
         settingsChanges = List.copyOf(settingsChanges);
@@ -44,10 +46,10 @@ public record EmberImportReport(
     }
 
     /**
-     * @param showsSkipped    Serien ohne Pfad-Zuordnung oder ohne übernommene Quelle
-     * @param episodesUpdated vorhandene Episoden, deren Angaben aus Ember übernommen wurden
-     * @param episodesSkipped Episoden ohne Pfad-Zuordnung oder einer nicht übernommenen Serie
-     * @param episodesMissing Episoden, die Ember ohne Datei kennt; sie werden nicht übernommen
+     * @param showsSkipped    TV shows without path mapping or without an imported source
+     * @param episodesUpdated existing episodes whose details were taken over from Ember
+     * @param episodesSkipped episodes without path mapping or of a TV show that was not imported
+     * @param episodesMissing episodes that Ember knows without a file; they are not imported
      */
     public record TvShows(int showsCreated, int showsUpdated, int showsSkipped, int episodesCreated,
             int episodesUpdated, int episodesSkipped, int episodesMissing) {

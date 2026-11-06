@@ -3,12 +3,12 @@ package de.tiktak.kmm.nfo;
 import java.util.Objects;
 
 /**
- * Ein Darsteller ({@code <actor>}).
+ * An actor ({@code <actor>}).
  *
- * @param name  Name, Pflicht
- * @param role  Rolle oder {@code null}
- * @param order Reihenfolge laut NFO oder {@code null}
- * @param thumb URL oder Pfad des Bildes oder {@code null}
+ * @param name  name, required
+ * @param role  role or {@code null}
+ * @param order order according to the NFO or {@code null}
+ * @param thumb URL or path of the image or {@code null}
  */
 public record NfoActor(String name, String role, Integer order, String thumb) {
 

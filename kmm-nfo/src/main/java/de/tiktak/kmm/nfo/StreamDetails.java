@@ -3,8 +3,8 @@ package de.tiktak.kmm.nfo;
 import java.util.List;
 
 /**
- * Technische Angaben einer Videodatei ({@code <fileinfo><streamdetails>} in Kodi-NFOs): Video-,
- * Ton- und Untertitelspuren.
+ * Technical details of a video file ({@code <fileinfo><streamdetails>} in Kodi NFOs): video, audio and subtitle
+ * streams.
  */
 public record StreamDetails(List<Video> videos, List<Audio> audios, List<Subtitle> subtitles) {
 
@@ -21,21 +21,21 @@ public record StreamDetails(List<Video> videos, List<Audio> audios, List<Subtitl
     }
 
     /**
-     * @param aspect          Seitenverhältnis, z. B. 1.78
-     * @param durationSeconds Laufzeit in Sekunden
-     * @param bitrate         Bitrate in kbit/s
-     * @param scanType        z. B. {@code Progressive}
-     * @param stereoMode      3D-Modus, z. B. {@code left_right}
-     * @param hdrType         HDR-Art wie in Kodi 20+: {@code hdr10}, {@code dolbyvision} oder {@code hlg}
-     * @param multiViewCount  Anzahl der Ansichten bei 3D (MVC), von Ember geschrieben
-     * @param multiViewLayout Anordnung der Ansichten bei 3D (MVC), von Ember geschrieben
-     * @param fileSize        Größe der Datei(en) in Byte, von Ember geschrieben
+     * @param aspect          aspect ratio, e.g. 1.78
+     * @param durationSeconds runtime in seconds
+     * @param bitrate         bit rate in kbit/s
+     * @param scanType        e.g. {@code Progressive}
+     * @param stereoMode      3D mode, e.g. {@code left_right}
+     * @param hdrType         HDR type as in Kodi 20+: {@code hdr10}, {@code dolbyvision} or {@code hlg}
+     * @param multiViewCount  number of views for 3D (MVC), written by Ember
+     * @param multiViewLayout arrangement of the views for 3D (MVC), written by Ember
+     * @param fileSize        size of the file(s) in bytes, written by Ember
      */
     public record Video(String codec, Double aspect, Integer width, Integer height, Integer durationSeconds,
             Integer bitrate, String scanType, String stereoMode, String language, String hdrType,
             String multiViewCount, String multiViewLayout, Long fileSize) {
 
-        /** Videospur mit den Angaben, die Kodi selbst kennt, ohne HDR. */
+        /** Video stream with the details Kodi itself knows, without HDR. */
         public Video(String codec, Double aspect, Integer width, Integer height, Integer durationSeconds,
                 Integer bitrate, String scanType, String stereoMode, String language) {
             this(codec, aspect, width, height, durationSeconds, bitrate, scanType, stereoMode, language, null, null,
@@ -44,16 +44,16 @@ public record StreamDetails(List<Video> videos, List<Audio> audios, List<Subtitl
     }
 
     /**
-     * @param language Sprache als ISO-639-2-Code, z. B. {@code deu}
-     * @param channels Anzahl der Kanäle, z. B. 6 für 5.1
-     * @param bitrate  Bitrate in kbit/s
+     * @param language language as ISO 639-2 code, e.g. {@code deu}
+     * @param channels number of channels, e.g. 6 for 5.1
+     * @param bitrate  bit rate in kbit/s
      */
     public record Audio(String codec, String language, Integer channels, Integer bitrate) {
     }
 
     /**
-     * @param forced ob es sich um erzwungene Untertitel handelt
-     * @param path   Pfad einer externen Untertiteldatei; {@code null} für Untertitel in der Videodatei
+     * @param forced whether these are forced subtitles
+     * @param path   path of an external subtitle file; {@code null} for subtitles in the video file
      */
     public record Subtitle(String language, boolean forced, String path) {
 

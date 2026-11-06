@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -24,8 +25,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Sichert die KMM-Daten in eine Datei und stellt sie wieder her. Medien, NFOs und Bilder gehören nicht dazu; der Import
- * schreibt nichts in die Medienordner und spricht Kodi nicht an.
+ * Backs up the KMM data into a file and restores it. Media, NFOs and images are not included; the import writes
+ * nothing into the media folders and does not contact Kodi.
  */
 @Slf4j
 @Service
@@ -33,8 +34,10 @@ import lombok.extern.slf4j.Slf4j;
 public class BackupService {
 
     public static final String JOB_KEY = "backup-import";
+    static final String TITLE = "backup.import.title";
+    static final String DRY_RUN_TITLE = "backup.import.dryRunTitle";
 
-    private static final String SAFETY_COPY_MESSAGE = "Bisheriger Stand wird gesichert";
+    private static final LocalizedText SAFETY_COPY_MESSAGE = LocalizedText.of("backup.import.safetyCopy");
 
     private final JobService jobService;
     private final BackupWriter writer;
@@ -47,10 +50,10 @@ public class BackupService {
     private final ApiKeyService apiKeyService;
 
     /**
-     * Nimmt die Datei an und prüft sie. Eine unbrauchbare Datei bleibt nicht liegen.
+     * Accepts the file and checks it. An unusable file is not kept.
      *
-     * @throws BackupFileException wenn die Datei beschädigt ist oder aus einer neueren KMM-Version stammt
-     * @throws de.tiktak.kmm.job.JobAlreadyRunningException wenn gerade ein Job läuft
+     * @throws BackupFileException if the file is damaged or comes from a newer KMM version
+     * @throws de.tiktak.kmm.job.JobAlreadyRunningException if a job is running
      */
     public BackupHeader upload(MultipartFile file) {
         jobService.runWhileIdle(() -> files.storeUpload(file));
@@ -63,24 +66,24 @@ public class BackupService {
     }
 
     /**
-     * @throws de.tiktak.kmm.job.JobAlreadyRunningException wenn gerade ein Job läuft
+     * @throws de.tiktak.kmm.job.JobAlreadyRunningException if a job is running
      */
     public void discardUpload() {
         jobService.runWhileIdle(files::discardUpload);
     }
 
     /**
-     * Startet den Import als Job, neben dem kein anderer läuft. Vor einem echten Import entsteht eine Sicherung des
-     * bisherigen Stands, danach wird die hochgeladene Datei gelöscht. Ein Probelauf rollt am Ende zurück und behält sie.
+     * Starts the import as a job alongside which no other runs. Before a real import a backup of the previous state is
+     * written, afterwards the uploaded file is deleted. A dry run rolls back at the end and keeps it.
      *
-     * @throws BackupFileException wenn keine Datei hochgeladen ist oder die Pfad-Zuordnung nicht passt
-     * @throws de.tiktak.kmm.job.JobAlreadyRunningException wenn gerade ein Job läuft
+     * @throws BackupFileException if no file is uploaded or the path mapping does not fit
+     * @throws de.tiktak.kmm.job.JobAlreadyRunningException if a job is running
      */
     public JobSnapshot startImport(BackupImportRequest request) {
         Path file = files.upload();
         BackupHeader header = readChecked(file);
         BackupPaths.of(request.pathMappings());
-        String title = request.dryRun() ? "Sicherung einspielen (Probelauf)" : "Sicherung einspielen";
+        LocalizedText title = LocalizedText.of(request.dryRun() ? DRY_RUN_TITLE : TITLE);
         return jobService.submitExclusive(JOB_KEY, title, context -> {
             try {
                 return runImport(file, header, request, context);
@@ -96,8 +99,8 @@ public class BackupService {
         BackupHeader header = reader.readHeader(file);
         MigrationVersion current = flyway.info().current().getVersion();
         if (MigrationVersion.fromVersion(header.schemaVersion()).compareTo(current) > 0) {
-            throw new BackupFileException("Die Sicherung stammt aus einer neueren KMM-Version (%s). Bitte aktualisiere "
-                    .formatted(header.applicationVersion()) + "KMM zuerst.");
+            throw new BackupFileException(LocalizedText.of("backup.newerVersionOf")
+                    .with("version", header.applicationVersion()));
         }
         return header;
     }
@@ -119,8 +122,8 @@ public class BackupService {
             });
         } catch (DataAccessException e) {
             log.warn("Backup import failed", e);
-            throw new BackupFileException("Der Import ist fehlgeschlagen, es wurde nichts geändert: "
-                    + e.getMostSpecificCause().getMessage(), e);
+            throw new BackupFileException(LocalizedText.of("backup.importFailed")
+                    .with("reason", e.getMostSpecificCause().getMessage()), e);
         }
         if (!request.dryRun()) {
             settingsService.reload();
@@ -130,7 +133,7 @@ public class BackupService {
         return report;
     }
 
-    /** Enthält die Zugangsdaten, damit der Stand vor dem Import vollständig wiederherstellbar bleibt. */
+    /** Contains the credentials so that the state before the import stays completely restorable. */
     private String writeSafetyCopy(JobContext context) {
         context.reportProgress(0, 0, SAFETY_COPY_MESSAGE);
         Path copy = files.newSafetyCopy();
@@ -140,11 +143,11 @@ public class BackupService {
     }
 
     /**
-     * Schreibt die Sicherung in eine temporäre Datei. Solange sie entsteht, startet kein Job, damit die Datei einen
-     * einheitlichen Stand zeigt.
+     * Writes the backup into a temporary file. While it is being written no job starts, so that the file shows a
+     * consistent state.
      *
-     * @param credentials ob API-Keys und Passwörter in die Datei gelangen
-     * @throws de.tiktak.kmm.job.JobAlreadyRunningException wenn gerade ein Job läuft
+     * @param credentials whether API keys and passwords get into the file
+     * @throws de.tiktak.kmm.job.JobAlreadyRunningException if a job is running
      */
     public Path export(boolean credentials) {
         Path file = files.newExportFile();

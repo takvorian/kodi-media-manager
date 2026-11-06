@@ -10,11 +10,11 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 /**
- * Erkennt mehrteilige Filme anhand des ersten Teils, z. B. bei der Übernahme aus anderen Programmen.
+ * Recognizes multi-part movies from their first part, e.g. when importing from other programs.
  */
 public final class StackedFiles {
 
-    /** Mindestzahl der Teile, wenn die weiteren Teile nicht gezählt werden können. */
+    /** Minimum number of parts if the further parts cannot be counted. */
     static final int ASSUMED_PARTS = 2;
     private static final char EXTENSION_SEPARATOR = '.';
 
@@ -22,8 +22,8 @@ public final class StackedFiles {
     }
 
     /**
-     * @return 1 für eine normale Datei, sonst die Zahl der vorhandenen Teile; ist der Ordner nicht
-     *         lesbar, wird ein mehrteiliger Film mit {@value #ASSUMED_PARTS} Teilen angenommen
+     * @return 1 for a normal file, otherwise the number of existing parts; if the folder cannot be read, a
+     *         multi-part movie with {@value #ASSUMED_PARTS} parts is assumed
      */
     public static int partCount(Path file) {
         Optional<StackedFile> stacked = stackedFile(file);
@@ -42,8 +42,8 @@ public final class StackedFiles {
     }
 
     /**
-     * @return alle vorhandenen Teile in der Reihenfolge ihrer Nummern; für eine normale Datei nur diese
-     * @throws UncheckedIOException wenn der Ordner eines mehrteiligen Films nicht lesbar ist
+     * @return all existing parts in the order of their numbers; for a normal file only that file
+     * @throws UncheckedIOException if the folder of a multi-part movie cannot be read
      */
     public static List<Path> parts(Path file) {
         Optional<StackedFile> stacked = stackedFile(file);

@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Analysiert ein Ember-Profil, ohne etwas zu verändern: Profil erkennen, Bibliotheksumfang
- * ermitteln und Einstellungen einlesen.
+ * Analyses an Ember profile without changing anything: detects the profile, determines the library size and
+ * reads the settings.
  */
 @Slf4j
 @RequiredArgsConstructor

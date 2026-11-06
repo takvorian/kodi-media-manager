@@ -26,6 +26,7 @@ import org.springframework.transaction.support.SimpleTransactionStatus;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -49,7 +50,6 @@ import de.tiktak.kmm.migration.ember.settings.EmberAdvancedSettingsReader;
 import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
-import de.tiktak.kmm.i18n.LocalizedText;
 
 @ExtendWith(MockitoExtension.class)
 class EmberImportServiceTest {
@@ -57,6 +57,7 @@ class EmberImportServiceTest {
     private static final Path PROFILE_DIRECTORY = Path.of("ember");
     private static final EmberProfile PROFILE = new EmberProfile(PROFILE_DIRECTORY,
             PROFILE_DIRECTORY.resolve("MyVideos48.emm"), 48, Optional.of(PROFILE_DIRECTORY.resolve("Settings.xml")));
+    private static final LocalizedText BROKEN = LocalizedText.literal("kaputt");
     private static final EmberLibrary EMPTY_LIBRARY = new EmberLibrary(List.of(), List.of(), List.of(), List.of());
 
     @Mock
@@ -104,7 +105,8 @@ class EmberImportServiceTest {
 
         service().start(new EmberImportRequest(List.of(), false, false, false, true));
 
-        verify(jobService).submit(eq(EmberImportService.JOB_KEY), eq("Ember-Import (Probelauf)"), any());
+        verify(jobService).submit(eq(EmberImportService.JOB_KEY), eq(LocalizedText.of("migration.import.dryRunTitle")),
+                any());
     }
 
     @Test
@@ -125,13 +127,14 @@ class EmberImportServiceTest {
         givenTransaction();
         when(libraryReader.read(PROFILE.databaseFile())).thenReturn(EMPTY_LIBRARY);
         EmberSettingsException unreadable = mock(EmberSettingsException.class);
-        when(unreadable.getMessage()).thenReturn("kaputt");
+        when(unreadable.localizedText()).thenReturn(BROKEN);
         when(settingsReader.read(any())).thenThrow(unreadable);
 
         EmberImportReport report = service().run(PROFILE,
                 new EmberImportRequest(List.of(), true, false, false, false), mock(JobContext.class));
 
-        assertThat(report.warnings()).containsExactly("Die Ember-Einstellungen konnten nicht gelesen werden: kaputt");
+        assertThat(report.warnings()).containsExactly(
+                LocalizedText.of("migration.warning.settingsUnreadable").with("reason", BROKEN));
         assertThat(status.isRollbackOnly()).isFalse();
         verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.empty()), eq(Optional.empty()), any(), any(),
                 any());
@@ -155,13 +158,13 @@ class EmberImportServiceTest {
                 eq(Optional.of(settings.withRename(rename))), any(), any(), any());
 
         EmberSettingsException unreadable = mock(EmberSettingsException.class);
-        when(unreadable.getMessage()).thenReturn("kaputt");
+        when(unreadable.localizedText()).thenReturn(BROKEN);
         when(advancedSettingsReader.readRenameSettings(PROFILE)).thenThrow(unreadable);
 
         EmberImportReport report = service().run(PROFILE, request, mock(JobContext.class));
 
         assertThat(report.warnings())
-                .containsExactly("Die Einstellungen zum Umbenennen konnten nicht gelesen werden: kaputt");
+                .containsExactly(LocalizedText.of("migration.warning.renameSettingsUnreadable").with("reason", BROKEN));
         verify(importer).importLibrary(eq(EMPTY_LIBRARY), eq(Optional.empty()), eq(Optional.of(settings)), any(),
                 any(), any());
     }
@@ -218,8 +221,11 @@ class EmberImportServiceTest {
         EmberImportReport report = service().run(PROFILE,
                 new EmberImportRequest(List.of(), false, true, false, false), mock(JobContext.class));
 
-        assertThat(report.warnings()).singleElement().asString()
-                .startsWith("Die Kodi-Geräte konnten nicht gelesen werden: ");
+        assertThat(report.warnings()).singleElement().satisfies(warning -> {
+            assertThat(warning.key()).isEqualTo("migration.warning.kodiHostsUnreadable");
+            assertThat(warning.args().get("reason")).isEqualTo(LocalizedText.of("ember.kodiSettingsUnreadable")
+                    .with("file", PROFILE_DIRECTORY.resolve("Interface.Kodi.xml")));
+        });
         verify(kodiHostImporter).importHosts(eq(List.of()), any(), any());
     }
 
@@ -244,7 +250,7 @@ class EmberImportServiceTest {
         service.start(new EmberImportRequest(List.of(), false, false, false, false));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(anyString(), anyString(), task.capture());
+        verify(jobService).submit(anyString(), any(LocalizedText.class), task.capture());
         assertThat(task.getValue().run(mock(JobContext.class))).isInstanceOf(EmberImportReport.class);
         verify(profileUpload).discard();
     }
@@ -259,7 +265,7 @@ class EmberImportServiceTest {
         service().start(new EmberImportRequest(List.of(), false, false, false, true));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(anyString(), anyString(), task.capture());
+        verify(jobService).submit(anyString(), any(LocalizedText.class), task.capture());
         task.getValue().run(mock(JobContext.class));
         verify(profileUpload, never()).discard();
     }
@@ -273,7 +279,7 @@ class EmberImportServiceTest {
         service().start(new EmberImportRequest(List.of(), false, false, false, false));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(anyString(), anyString(), task.capture());
+        verify(jobService).submit(anyString(), any(LocalizedText.class), task.capture());
         assertThatThrownBy(() -> task.getValue().run(mock(JobContext.class))).hasMessage("kaputt");
         verify(profileUpload).discard();
     }
@@ -298,7 +304,7 @@ class EmberImportServiceTest {
     @Test
     void leavesTheFilesOfARunningImportAlone() {
         when(jobService.findAll()).thenReturn(List.of(new JobSnapshot(UUID.randomUUID(), EmberImportService.JOB_KEY,
-                LocalizedText.literal("Ember-Import"), JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null)));
+                LocalizedText.of("migration.import.title"), JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null)));
 
         assertThatThrownBy(() -> service().upload(List.of())).isInstanceOf(EmberProfileUploadException.class);
         assertThatThrownBy(() -> service().discardUpload()).isInstanceOf(EmberProfileUploadException.class);
@@ -321,7 +327,7 @@ class EmberImportServiceTest {
 
         assertThatThrownBy(() -> service().start(new EmberImportRequest(List.of(), false, false, false, false)))
                 .hasMessage("kein Profil");
-        verify(jobService, never()).submit(anyString(), anyString(), any());
+        verify(jobService, never()).submit(anyString(), any(LocalizedText.class), any());
     }
 
     private void givenTransaction() {

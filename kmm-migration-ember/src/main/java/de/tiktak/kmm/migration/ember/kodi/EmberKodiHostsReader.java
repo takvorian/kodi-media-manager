@@ -13,7 +13,7 @@ import tools.jackson.databind.DeserializationFeature;
 import tools.jackson.dataformat.xml.XmlMapper;
 
 /**
- * Liest die Kodi-Geräte aus Embers {@code Interface.Kodi.xml} im Profilverzeichnis.
+ * Reads the Kodi devices from Ember's {@code Interface.Kodi.xml} in the profile directory.
  */
 public class EmberKodiHostsReader {
 
@@ -24,8 +24,8 @@ public class EmberKodiHostsReader {
             .build();
 
     /**
-     * @return die Geräte oder eine leere Liste, wenn das Profil keine Kodi-Einstellungen enthält
-     * @throws EmberProfileException wenn die Datei nicht gelesen werden kann
+     * @return the devices, or an empty list if the profile contains no Kodi settings
+     * @throws EmberProfileException if the file cannot be read
      */
     public List<EmberKodiHost> read(EmberProfile profile) {
         Path file = profile.directory().resolve(FILE_NAME);

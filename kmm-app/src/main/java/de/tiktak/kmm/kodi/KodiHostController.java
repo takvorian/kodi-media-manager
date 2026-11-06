@@ -3,6 +3,7 @@ package de.tiktak.kmm.kodi;
 import java.net.URI;
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,13 +48,14 @@ public class KodiHostController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Prüft die Verbindung und liefert die Kodi-Version, z. B. „Kodi 21.2“. */
+    /** Checks the connection and returns the Kodi version, e.g. "Kodi 21.2". */
     @PostMapping("/{hostId}/test")
     public ConnectionTest test(@PathVariable long hostId) {
         String version = hostService.testConnection(hostId).toString();
         return new ConnectionTest(version, hostService.pathMappingWarning(hostId).orElse(null));
     }
 
-    public record ConnectionTest(String version, String warning) {
+    /** @param warning problem with the path mapping, or {@code null} */
+    public record ConnectionTest(String version, LocalizedText warning) {
     }
 }
