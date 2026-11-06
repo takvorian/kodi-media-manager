@@ -1,10 +1,12 @@
 /** Answer of GET /api/v1/system/info. */
 export interface SystemInfo {
-  readonly applicationName: string;
+  /** Null if it cannot be determined. */
+  readonly applicationName: string | null;
   readonly version: string;
   readonly javaVersion: string;
   readonly activeProfiles: readonly string[];
-  readonly database: string;
+  /** Null if it cannot be determined. */
+  readonly database: string | null;
 }
 
 /** A version from GET /api/v1/system/changelog. */

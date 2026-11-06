@@ -1,10 +1,10 @@
 package de.tiktak.kmm.tvshow;
 
 /**
- * Ein Darsteller einer Serie oder Episode (bei Episoden auch Gaststars).
+ * An actor of a TV show or episode (guest stars for episodes).
  *
- * @param role  Rolle oder {@code null}
- * @param thumb Adresse des Porträts oder {@code null}
+ * @param role  role or {@code null}
+ * @param thumb address of the portrait or {@code null}
  */
 public record TvActor(String name, String role, String thumb) {
 

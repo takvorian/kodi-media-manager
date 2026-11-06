@@ -8,15 +8,16 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.scanner.naming.FileMoves;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.EpisodeFile;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.FileRename;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.Status;
 
 /**
- * Führt einen Umbenennungsplan einer Serie im Dateisystem aus: erst die Episodendateien in ihre Staffelordner,
- * dann der Serienordner. Dateien laufen über Zwischennamen; schlägt ein Schritt fehl, werden alle zurückgenommen.
- * Leer gewordene Staffelordner und frühere Ordner bis zur Quelle werden entfernt.
+ * Carries out the rename plan of a TV show in the file system: first the episode files into their season folders,
+ * then the show folder. Files go through temporary names; if a step fails, all of them are undone. Season folders
+ * that became empty and former folders up to the source are removed.
  */
 final class TvShowFileMover {
 
@@ -24,16 +25,15 @@ final class TvShowFileMover {
     }
 
     /**
-     * @param plan       ein Plan mit Status {@link Status#RENAME}; Episodendateien mit Konflikt bleiben
-     * @param sourceRoot Wurzel der Quelle; sie und Ordner darüber werden nie entfernt
-     * @throws IOException wenn ein Schritt fehlschlägt; das Dateisystem ist dann wieder im alten Zustand,
-     *                     soweit das möglich war
+     * @param plan       a plan with status {@link Status#RENAME}; episode files with a conflict stay
+     * @param sourceRoot root of the source; it and folders above it are never removed
+     * @throws IOException if a step fails; the file system is then back in its old state as far as possible
      */
     static Relocation move(TvShowRenamePlan plan, Path sourceRoot) throws IOException {
         Path current = Path.of(plan.currentDirectory());
         Path target = Path.of(plan.targetDirectory());
         if (!Files.isDirectory(current)) {
-            throw new IOException("Der Ordner „%s“ existiert nicht mehr.".formatted(current));
+            throw new LocalizedIOException(LocalizedText.of("tvShow.rename.folderGone").with("folder", current));
         }
         FileMoves moves = new FileMoves();
         Map<Path, Path> files = new HashMap<>();
@@ -70,7 +70,7 @@ final class TvShowFileMover {
             Path from = source.resolve(rename.currentName());
             Path to = target.resolve(rename.targetName());
             if (Files.exists(to)) {
-                throw new IOException("Die Datei „%s“ existiert bereits.".formatted(to));
+                throw new LocalizedIOException(LocalizedText.of("tvShow.rename.fileExists").with("file", to));
             }
             moves.move(FileMoves.temporary(from), to);
             files.put(from, to);
@@ -78,9 +78,9 @@ final class TvShowFileMover {
     }
 
     /**
-     * Wohin Dateien der Serie gewandert sind.
+     * Where files of the TV show have moved to.
      *
-     * @param files neuer Ort je bisherigem Ort, beides im bisherigen Serienordner
+     * @param files new location per previous location, both in the previous show folder
      */
     record Relocation(Path previousDirectory, Path directory, Map<Path, Path> files) {
 
@@ -88,7 +88,7 @@ final class TvShowFileMover {
             files = Map.copyOf(files);
         }
 
-        /** @return der neue Ort einer Datei der Serie, andere Pfade unverändert */
+        /** @return the new location of a file of the TV show, other paths unchanged */
         Path relocate(Path file) {
             Path moved = files.getOrDefault(file, file);
             return moved.startsWith(previousDirectory) ? directory.resolve(previousDirectory.relativize(moved)) : moved;

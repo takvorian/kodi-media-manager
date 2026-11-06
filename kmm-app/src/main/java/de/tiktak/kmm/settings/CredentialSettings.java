@@ -1,7 +1,7 @@
 package de.tiktak.kmm.settings;
 
 /**
- * Erkennt Einträge des Einstellungsspeichers, die Zugangsdaten enthalten: API-Keys der Plugins und das Proxy-Passwort.
+ * Recognizes entries of the settings store that contain credentials: plugin API keys and the proxy password.
  */
 public final class CredentialSettings {
 

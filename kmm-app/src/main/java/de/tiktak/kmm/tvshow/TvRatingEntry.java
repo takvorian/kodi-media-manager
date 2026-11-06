@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 /**
- * Gespeicherte Bewertung einer Serie oder Episode.
+ * Stored rating of a TV show or episode.
  */
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

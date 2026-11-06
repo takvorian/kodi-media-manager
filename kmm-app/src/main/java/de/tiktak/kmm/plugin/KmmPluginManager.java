@@ -6,7 +6,7 @@ import org.pf4j.DefaultPluginManager;
 import org.pf4j.ExtensionFactory;
 
 /**
- * PF4J-Plugin-Manager, dessen Extensions beim Erzeugen ihren {@code PluginContext} erhalten.
+ * PF4J plugin manager whose extensions receive their {@code PluginContext} on creation.
  */
 class KmmPluginManager extends DefaultPluginManager {
 
@@ -15,7 +15,7 @@ class KmmPluginManager extends DefaultPluginManager {
     KmmPluginManager(Path pluginDirectory, PluginContextFactory contextFactory) {
         super(pluginDirectory);
         this.contextFactory = contextFactory;
-        // Der Konstruktor der Oberklasse ruft createExtensionFactory() auf, bevor das Feld gesetzt ist.
+        // The superclass constructor calls createExtensionFactory() before the field is set.
         this.extensionFactory = createExtensionFactory();
     }
 

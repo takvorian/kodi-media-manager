@@ -18,8 +18,8 @@ import de.tiktak.kmm.plugin.api.TvShowScraper;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Zentrale Stelle, über die der Rest der Anwendung an die Scraper der gestarteten Plugins kommt.
- * Kapselt PF4J, damit nur dieses Paket die Plugin-Bibliothek kennt.
+ * Central place through which the rest of the application reaches the scrapers of the started plugins.
+ * Encapsulates PF4J so that only this package knows the plugin library.
  */
 @Component
 @RequiredArgsConstructor

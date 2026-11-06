@@ -34,8 +34,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Serienquelle über die REST-API: anlegen, scannen, Serien und Episoden abfragen, bearbeiten (NFOs
- * werden geschrieben) und erneut scannen.
+ * TV show source via the REST API: create, scan, query shows and episodes, edit (NFOs are written)
+ * and scan again.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -167,7 +167,7 @@ class TvShowLibraryIntegrationTest {
                 .param("id", episodeId).update();
 
         JsonNode opened = read(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId).exchange());
-        assertThat(opened.get("metadata").get("userRating").asInt()).as("Wert der NFO, nicht Embers").isEqualTo(10);
+        assertThat(opened.get("metadata").get("userRating").asInt()).as("value from the NFO, not Ember's").isEqualTo(10);
         ((tools.jackson.databind.node.ObjectNode) opened.get("metadata")).put("title", "Der Fremde (neu)");
         assertThat(mockMvc.put().uri(TvShowController.EPISODE_METADATA_PATH, episodeId).with(csrf()).contentType(JSON)
                 .content(opened.get("metadata").toString())).hasStatusOk();

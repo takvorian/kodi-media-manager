@@ -4,25 +4,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Was ein Scan geändert hat, Eintrag für Eintrag. Jede Liste ist gekürzt, die vollständige Anzahl steht
- * im Ergebnis des Scans.
+ * What a scan changed, entry by entry. Each list is truncated; the full count is in
+ * the result of the scan.
  *
- * @param added          neue Filme bzw. Episoden
- * @param updated        Filme bzw. Episoden, deren NFO neu eingelesen wurde
- * @param removed        Filme bzw. Episoden, deren Datei nicht mehr existiert
- * @param addedShows     neue Serien
- * @param removedShows   verschwundene Serien
- * @param unreadableNfos Filme, Serien oder Episoden mit unlesbarer NFO
+ * @param added          new movies or episodes
+ * @param updated        movies or episodes whose NFO was re-read
+ * @param removed        movies or episodes whose file no longer exists
+ * @param addedShows     new TV shows
+ * @param removedShows   TV shows that have disappeared
+ * @param unreadableNfos movies, TV shows or episodes with an unreadable NFO
  */
 public record ScanDetails(List<ScanEntry> added, List<ScanEntry> updated, List<ScanEntry> removed,
         List<ScanEntry> addedShows, List<ScanEntry> removedShows, List<String> unreadableNfos) {
 
-    /** Einträge je Liste; begrenzt, weil die Jobs mit ihrem Ergebnis im Speicher bleiben. */
+    /** Entries per list; limited because the jobs stay in memory together with their result. */
     static final int MAX_LISTED = 200;
 
     public static final ScanDetails EMPTY = new Builder().build();
 
-    /** Sammelt die Einträge eines Scans und verwirft alles über der Grenze. */
+    /** Collects the entries of a scan and discards everything above the limit. */
     public static final class Builder {
 
         private final List<ScanEntry> added = new ArrayList<>();

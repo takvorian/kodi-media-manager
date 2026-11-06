@@ -4,7 +4,7 @@ import org.pf4j.PluginDescriptor;
 import org.pf4j.PluginWrapper;
 
 /**
- * Darstellung eines installierten Plugins für die REST-API.
+ * Representation of an installed plugin for the REST API.
  */
 public record PluginInfo(String id, String version, String description, String provider, String state) {
 

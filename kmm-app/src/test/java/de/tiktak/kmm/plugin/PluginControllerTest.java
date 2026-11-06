@@ -69,6 +69,6 @@ class PluginControllerTest {
         assertThat(mockMvc.post().uri(PluginController.BASE_PATH + "/unknown/enable").with(csrf()))
                 .hasStatus(404)
                 .bodyJson()
-                .extractingPath("$.title").isEqualTo("Plugin nicht gefunden");
+                .extractingPath("$.titleText.key").isEqualTo("plugin.notFound.title");
     }
 }

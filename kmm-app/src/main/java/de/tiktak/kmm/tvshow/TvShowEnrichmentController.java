@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Bewertungen und leere Felder über die Ergänzungs-Scraper (etwa Trakt, OMDb) für die ausgewählten Serien.
+ * Ratings and empty fields via the enrichment scrapers (such as Trakt, OMDb) for the selected TV shows.
  */
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class TvShowEnrichmentController {
 
     private final TvShowBatchService batchService;
 
-    /** Aktualisiert die Bewertungen der Auswahl und füllt leere Felder, als Job. */
+    /** Refreshes the ratings of the selection and fills empty fields, as a job. */
     @PostMapping(REFRESH_PATH)
     public ResponseEntity<JobSnapshot> refresh(@Valid @RequestBody Selection selection) {
         JobSnapshot job = batchService.startEnrichment(selection.showIds());

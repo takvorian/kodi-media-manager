@@ -4,10 +4,10 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Wirksame Einstellungen für die Oberfläche. Das Proxy-Passwort wird nie ausgegeben.
+ * Effective settings for the user interface. The proxy password is never output.
  *
- * @param overridden Einstellungen, die durch die Konfiguration festgelegt sind und in der
- *                   Oberfläche nicht geändert werden können
+ * @param overridden settings that are fixed by the configuration and cannot be changed in the
+ *                   user interface
  */
 public record SettingsView(
         String metadataLanguage,
@@ -31,7 +31,7 @@ public record SettingsView(
     }
 
     /**
-     * @param passwordSet ob ein Passwort gespeichert ist
+     * @param passwordSet whether a password is stored
      */
     public record Proxy(String host, int port, String username, boolean passwordSet) {
     }

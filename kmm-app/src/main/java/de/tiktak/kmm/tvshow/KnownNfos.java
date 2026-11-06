@@ -5,12 +5,12 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Änderungszeiten der NFOs, die beim letzten Scan einer Quelle eingelesen wurden. Eine NFO mit
- * unveränderter Zeit muss der nächste Scan nicht erneut lesen.
+ * Modification times of the NFOs that were read during the last scan of a source. An NFO with
+ * an unchanged time does not have to be read again by the next scan.
  *
- * @param shows        Zeit der {@code tvshow.nfo} je Serienordner
- * @param episodeFiles Zeiten je Episodendatei; bei Mehrfachepisoden eine je Episode, {@code null} für
- *                     Episoden ohne eingelesene NFO
+ * @param shows        time of the {@code tvshow.nfo} per TV show folder
+ * @param episodeFiles times per episode file; for multi-episodes one per episode, {@code null} for
+ *                     episodes without an NFO that was read
  */
 record KnownNfos(Map<String, Instant> shows, Map<String, Set<Instant>> episodeFiles) {
 
@@ -25,7 +25,7 @@ record KnownNfos(Map<String, Instant> shows, Map<String, Set<Instant>> episodeFi
         return nfo.modifiedAt().equals(shows.get(directory));
     }
 
-    /** Aktuell ist die NFO nur, wenn alle Episoden der Datei sie mit dieser Zeit eingelesen haben. */
+    /** The NFO is up to date only if all episodes of the file have read it with this time. */
     boolean isCurrentEpisodeNfo(String file, TvNfoState nfo) {
         Set<Instant> known = episodeFiles.get(file);
         return known != null && known.size() == 1 && known.contains(nfo.modifiedAt());

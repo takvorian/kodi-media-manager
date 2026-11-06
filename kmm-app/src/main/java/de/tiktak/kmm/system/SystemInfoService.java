@@ -13,13 +13,16 @@ import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+/**
+ * Collects basic information about the running instance. Values that cannot be determined are {@code null}; the
+ * user interface shows them as unknown in its language.
+ */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class SystemInfoService {
 
     static final String APPLICATION_NAME_PROPERTY = "spring.application.name";
-    static final String UNKNOWN = "unbekannt";
 
     private final Environment environment;
     private final ReleaseInfoService releaseInfoService;
@@ -27,7 +30,7 @@ public class SystemInfoService {
 
     public SystemInfo currentSystemInfo() {
         return new SystemInfo(
-                environment.getProperty(APPLICATION_NAME_PROPERTY, UNKNOWN),
+                environment.getProperty(APPLICATION_NAME_PROPERTY),
                 releaseInfoService.currentVersion(),
                 Runtime.version().toString(),
                 activeProfiles(),
@@ -45,7 +48,7 @@ public class SystemInfoService {
             return connection.getMetaData().getDatabaseProductName();
         } catch (SQLException e) {
             log.warn("Database product could not be determined", e);
-            return UNKNOWN;
+            return null;
         }
     }
 }

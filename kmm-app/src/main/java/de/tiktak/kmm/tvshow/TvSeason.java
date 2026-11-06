@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Angaben zu einer Staffel, die nicht aus den Episoden folgen (derzeit der Staffeltitel).
+ * Details of a season that do not follow from the episodes (currently the season title).
  */
 @Embeddable
 @Getter

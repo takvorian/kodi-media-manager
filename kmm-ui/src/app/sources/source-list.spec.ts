@@ -718,8 +718,13 @@ describe('SourceList', () => {
       themesSaved: 3,
       enriched: 4,
       unmatchedEntries: [{ type: 'MOVIE', id: 8, label: 'Unbekannt' }],
-      failures: ['Kaputt: TMDB ist nicht erreichbar'],
-      warnings: ['fanart.tv: Key fehlt'],
+      failures: [
+        {
+          key: 'autoScrape.failure',
+          args: { entry: literal('Kaputt'), message: literal('TMDB ist nicht erreichbar') },
+        },
+      ],
+      warnings: [{ key: 'autoScrape.noMetadataScraper', args: {} }],
     };
 
     function texts(selector: string): (string | undefined)[] {
@@ -809,7 +814,9 @@ describe('SourceList', () => {
         '/movies/8',
       );
       expect(texts('.failures li')).toEqual(['Kaputt: TMDB ist nicht erreichbar']);
-      expect(texts('.warnings li')).toEqual(['fanart.tv: Key fehlt']);
+      expect(texts('.warnings li')).toEqual([
+        'Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.',
+      ]);
     });
 
     it('closes the report', async () => {

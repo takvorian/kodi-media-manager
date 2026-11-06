@@ -4,20 +4,32 @@ import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
+
 /**
- * Standbilder einer Episode bei den Serien-Scrapern.
+ * Stills of an episode at the TV show scrapers.
  *
- * @param warnings Hinweise zu Scrapern, die nicht eingerichtet sind, die Serie nicht kennen oder einen Fehler melden
+ * @param localizedWarnings notes about scrapers that are not set up, do not know the TV show or report an error
  */
-public record EpisodeThumbs(List<Thumb> thumbs, List<String> warnings) {
+public record EpisodeThumbs(List<Thumb> thumbs, List<LocalizedText> localizedWarnings) {
 
     public EpisodeThumbs {
         thumbs = List.copyOf(thumbs);
-        warnings = List.copyOf(warnings);
+        localizedWarnings = List.copyOf(localizedWarnings);
     }
 
     /**
-     * Ein Standbild eines Anbieters.
+     * @return the notes in English
+     * @deprecated use {@link #localizedWarnings()}, which the user interface can translate
+     */
+    @Deprecated(forRemoval = true)
+    public List<String> warnings() {
+        return localizedWarnings.stream().map(Messages::english).toList();
+    }
+
+    /**
+     * A still of a provider.
      */
     public record Thumb(String scraperId, String scraperName, URI url) {
 

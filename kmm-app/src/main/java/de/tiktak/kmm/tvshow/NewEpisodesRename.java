@@ -6,8 +6,8 @@ import org.springframework.transaction.event.TransactionalEventListener;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Benennt nach einem Scan die Serien mit neuen Episoden um, wenn das in den Einstellungen eingeschaltet ist (wie
- * Embers „Beim Aktualisieren der Datenbank umbenennen“).
+ * After a scan, renames the TV shows with new episodes if this is enabled in the settings (like
+ * Ember's "Rename when updating the database").
  */
 @Component
 @RequiredArgsConstructor

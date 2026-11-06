@@ -11,9 +11,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest beim Start die Trailer-Links aus den NFOs der Serien, die KMM vor der Trailer-Unterstützung übernommen hat.
- * Damit zeigen Serienansicht und Filter vorhandene Trailer, und „Fehlende Trailer holen“ überschreibt keinen. Die
- * NFOs werden dabei nur gelesen.
+ * Reads the trailer links from the NFOs of the TV shows at startup that KMM took over before trailer support.
+ * This way the TV show view and filter show existing trailers, and "Fetch missing trailers" overwrites none. The
+ * NFOs are only read in the process.
  */
 @Slf4j
 @Component

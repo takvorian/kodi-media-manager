@@ -29,6 +29,8 @@ import org.springframework.web.ErrorResponseException;
 
 import de.tiktak.kmm.artwork.ArtworkFillResult;
 import de.tiktak.kmm.artwork.ArtworkService;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
@@ -55,8 +57,6 @@ import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.source.ScanEntry;
 import de.tiktak.kmm.theme.ThemeService;
-import de.tiktak.kmm.i18n.LocalizedText;
-import de.tiktak.kmm.i18n.Messages;
 
 @ExtendWith(MockitoExtension.class)
 class AutoScrapeServiceTest {
@@ -105,15 +105,15 @@ class AutoScrapeServiceTest {
     @Test
     void startsJobKeyedBySourceAndRunsTheScrape() {
         givenSource(MediaType.MOVIE);
-        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "auto-scrape:3", LocalizedText.literal("Scrapen „Filme“"), JobStatus.RUNNING,
+        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "auto-scrape:3", single("Filme"), JobStatus.RUNNING,
                 0, 0, null, null, Instant.now(), null);
-        when(jobService.submit(eq("auto-scrape:3"), eq("Scrapen „Filme“"), any())).thenReturn(started);
+        when(jobService.submit(eq("auto-scrape:3"), eq(single("Filme")), any())).thenReturn(started);
         when(queryService.findMovieIds(SOURCE_ID)).thenReturn(List.of());
 
         assertThat(service.start(SOURCE_ID)).isEqualTo(started);
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(anyString(), anyString(), task.capture());
+        verify(jobService).submit(anyString(), any(LocalizedText.class), task.capture());
         assertThat(task.getValue().run(new RecordingContext(false)))
                 .isEqualTo(new AutoScrapeResult(0, 0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of()));
     }
@@ -128,7 +128,7 @@ class AutoScrapeServiceTest {
         service.start(SOURCE_ID);
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("auto-scrape:3"), anyString(), task.capture());
+        verify(jobService).submit(eq("auto-scrape:3"), any(LocalizedText.class), task.capture());
         assertThat(task.getValue().run(context)).isEqualTo(result);
     }
 
@@ -141,7 +141,7 @@ class AutoScrapeServiceTest {
         service.startMovie(1L);
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("movie-scrape:1"), eq("Scrapen „Heat“"), task.capture());
+        verify(jobService).submit(eq("movie-scrape:1"), eq(single("Heat")), task.capture());
         assertThat(task.getValue().run(new RecordingContext(false))).isEqualTo(new AutoScrapeResult(1, 0, 1, 2, 0, 0, 0,
                 List.of(new ScanEntry(MediaType.MOVIE, 1L, "Heat")), List.of(), List.of()));
     }
@@ -156,7 +156,8 @@ class AutoScrapeServiceTest {
         service.startMovies(List.of(1L, 2L, 1L));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("movies-scrape"), eq("2 Filme scrapen"), task.capture());
+        verify(jobService).submit(eq("movies-scrape"),
+                eq(LocalizedText.of(AutoScrapeService.MOVIES_TITLE).with("count", 2)), task.capture());
         assertThat(task.getValue().run(new RecordingContext(false)))
                 .isEqualTo(new AutoScrapeResult(2, 0, 0, 0, 0, 0, 0, List.of(), List.of(), List.of()));
         verify(queryService, never()).findMovieIds(anyLong());
@@ -172,9 +173,10 @@ class AutoScrapeServiceTest {
         service.startMovies(List.of(1L, 2L));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(anyString(), anyString(), task.capture());
+        verify(jobService).submit(anyString(), any(LocalizedText.class), task.capture());
         assertThat(task.getValue().run(new RecordingContext(false))).isEqualTo(new AutoScrapeResult(2, 0, 0, 1, 0, 0, 0,
-                List.of(), List.of("Film 1: Film 1 gibt es nicht"), List.of()));
+                List.of(), List.of(AutoScrapeTexts.failure(AutoScrapeTexts.unknownMovie(1L),
+                        LocalizedText.literal("Film 1 gibt es nicht"))), List.of()));
     }
 
     @Test
@@ -187,7 +189,7 @@ class AutoScrapeServiceTest {
         service.startTvShow(7L);
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("tvshow-scrape:7"), eq("Scrapen „Lost“"), task.capture());
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq(single("Lost")), task.capture());
         assertThat(task.getValue().run(context)).isEqualTo(result);
     }
 
@@ -202,8 +204,10 @@ class AutoScrapeServiceTest {
         service.startTvSeason(7L, 2, false);
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("tvshow-scrape:7"), eq("Staffel 2 von „Lost“ neu holen"), task.capture());
-        verify(jobService).submit(eq("tvshow-scrape:7"), eq("Staffel 2 von „Lost“ scrapen"), any());
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq(LocalizedText.of(AutoScrapeService.SEASON_REFETCH_TITLE)
+                .with("season", 2).with("title", "Lost")), task.capture());
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq(LocalizedText.of(AutoScrapeService.SEASON_TITLE)
+                .with("season", 2).with("title", "Lost")), any());
         assertThat(task.getValue().run(context)).isEqualTo(result);
     }
 
@@ -216,7 +220,8 @@ class AutoScrapeServiceTest {
         service.startTvShows(List.of(7L, 8L, 7L));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("tvshows-scrape"), eq("2 Serien scrapen"), task.capture());
+        verify(jobService).submit(eq("tvshows-scrape"),
+                eq(LocalizedText.of(AutoScrapeService.TV_SHOWS_TITLE).with("count", 2)), task.capture());
         assertThat(task.getValue().run(context)).isEqualTo(result);
     }
 
@@ -227,7 +232,7 @@ class AutoScrapeServiceTest {
         assertThatThrownBy(() -> service.start(SOURCE_ID))
                 .isInstanceOfSatisfying(AutoScrapeNotPossibleException.class,
                         exception -> assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT));
-        verify(jobService, never()).submit(anyString(), anyString(), any());
+        verify(jobService, never()).submit(anyString(), any(LocalizedText.class), any());
     }
 
     @Test
@@ -259,10 +264,18 @@ class AutoScrapeServiceTest {
 
         AutoScrapeResult result = service.run(SOURCE_ID, context);
 
-        assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, 1, 1, 1, List.of(new ScanEntry(MediaType.MOVIE, 2L, "Unbekannt")),
-                List.of("Heat: Technische Angaben: ffprobe fehlt", "Unbekannt: Ergänzen: NFO gesperrt",
-                        "Ronin: Titelmusik: TelevisionTunes ist nicht erreichbar", "Kaputt: TMDB ist nicht erreichbar"),
-                List.of("fanart.tv: Key fehlt", "„Ronin“ nicht umbenannt: Der Ordner existiert bereits.")));
+        assertThat(result).isEqualTo(new AutoScrapeResult(4, 1, 1, 9, 1, 1, 1,
+                List.of(new ScanEntry(MediaType.MOVIE, 2L, "Unbekannt")),
+                List.of(failure("Heat", AutoScrapeTexts.technicalDetails("ffprobe fehlt")),
+                        failure("Unbekannt", LocalizedText.of("autoScrape.enrichment")
+                                .with("reason", LocalizedText.literal("NFO gesperrt"))),
+                        failure("Ronin", LocalizedText.of("autoScrape.theme")
+                                .with("reason", LocalizedText.literal("TelevisionTunes ist nicht erreichbar"))),
+                        failure("Kaputt", LocalizedText.literal("TMDB ist nicht erreichbar"))),
+                List.of(LocalizedText.literal("fanart.tv: Key fehlt"),
+                        AutoScrapeTexts.notRenamed("Ronin", "Der Ordner existiert bereits."))));
+        assertThat(Messages.english(result.failures().getFirst()))
+                .isEqualTo("Heat: Technical details: ffprobe fehlt");
         verify(streamDetails, never()).probeMovieAfterScrape(3L);
         verify(renameService, never()).renameIfEnabled(4L, RenameTrigger.SCRAPE);
         assertThat(context.progress).containsExactly("0/4 Heat", "1/4 Unbekannt", "2/4 Ronin", "3/4 Kaputt",
@@ -283,7 +296,7 @@ class AutoScrapeServiceTest {
 
         AutoScrapeResult result = service.run(SOURCE_ID, new RecordingContext(false));
 
-        assertThat(result.warnings()).containsExactly(AutoScrapeService.NO_METADATA_SCRAPER);
+        assertThat(result.warnings()).containsExactly(AutoScrapeTexts.NO_METADATA_SCRAPER);
         assertThat(result.imagesSaved()).isEqualTo(2);
     }
 
@@ -298,7 +311,7 @@ class AutoScrapeServiceTest {
 
         AutoScrapeResult result = service.run(SOURCE_ID, new RecordingContext(false));
 
-        assertThat(result.failures()).containsExactly("Heat: unerwarteter Fehler");
+        assertThat(result.failures()).containsExactly(failure("Heat", AutoScrapeTexts.UNEXPECTED_ERROR));
         assertThat(result.scraped()).isEqualTo(1);
     }
 
@@ -326,13 +339,21 @@ class AutoScrapeServiceTest {
                 new MovieDetails.NfoInfo("/m/x.nfo", false, null)));
     }
 
+    private static LocalizedText single(String title) {
+        return LocalizedText.of(AutoScrapeService.SINGLE_TITLE).with("title", title);
+    }
+
+    private static LocalizedText failure(String title, LocalizedText message) {
+        return AutoScrapeTexts.failure(LocalizedText.literal(title), message);
+    }
+
     private static ErrorResponseException problem(String detail) {
         var exception = new ErrorResponseException(HttpStatus.BAD_GATEWAY);
         exception.getBody().setDetail(detail);
         return exception;
     }
 
-    /** Merkt sich die Fortschrittsmeldungen als „erledigt/gesamt Nachricht“. */
+    /** Records the progress messages as "done/total message". */
     private static final class RecordingContext implements JobContext {
 
         private final boolean cancelled;

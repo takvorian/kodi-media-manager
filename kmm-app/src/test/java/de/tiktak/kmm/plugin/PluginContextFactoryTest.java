@@ -34,7 +34,7 @@ class PluginContextFactoryTest {
                 () -> Map.of("language", "en-US", "region", "US"), (id, settings) -> settings).contextFor("tmdb");
 
         assertThat(context.setting("api-key")).contains("geheim");
-        assertThat(context.setting("language")).as("eigene Einstellung hat Vorrang").contains("de-DE");
+        assertThat(context.setting("language")).as("own setting takes precedence").contains("de-DE");
         assertThat(context.setting("region")).contains("US");
         assertThat(context.setting("unbekannt")).isEmpty();
         assertThat(context.httpClient()).isSameAs(httpClient);

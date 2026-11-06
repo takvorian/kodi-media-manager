@@ -16,21 +16,21 @@ import de.tiktak.kmm.scanner.TvShowDirectoryScanner;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Liest einen Serienordner vollständig ein: Episoden, NFO-Zeitstempel und den Inhalt aller NFOs, die
- * sich seit dem letzten Scan geändert haben. Läuft außerhalb der Datenbanktransaktion und für mehrere
- * Serien gleichzeitig.
+ * Reads a TV show folder completely: episodes, NFO timestamps and the content of all NFOs that
+ * changed since the last scan. Runs outside the database transaction and for several
+ * TV shows at the same time.
  */
 @Component
 @RequiredArgsConstructor
 class TvShowFolderReader {
 
-    /** Gleichzeitig gelesene Episoden-NFOs je Serie, damit große Serien den Scan nicht aufhalten. */
+    /** Episode NFOs read concurrently per TV show, so that large shows do not hold up the scan. */
     static final int PARALLEL_EPISODES = 4;
 
     private final TvShowNfoFiles nfoFiles;
 
     /**
-     * @return die Serie oder leer, wenn der Ordner keine Videodateien enthält
+     * @return the TV show, or empty if the folder contains no video files
      */
     Optional<ScannedTvShow> read(TvShowDirectoryScanner scanner, Path showDirectory, KnownNfos known) {
         return scanner.scanShow(showDirectory).map(candidate -> withNfos(candidate, known));

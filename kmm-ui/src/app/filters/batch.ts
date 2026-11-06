@@ -1,7 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job, unsuccessfulJobSummary } from '../jobs/job';
-import { localize } from '../i18n/localized-text';
+import { localize, LocalizedText } from '../i18n/localized-text';
 
 export interface ListChange {
   readonly add: readonly string[];
@@ -33,7 +33,8 @@ export interface BatchResult {
   readonly changed: number;
   readonly unchanged: number;
   readonly failed: number;
-  readonly failures: readonly string[];
+  /** The first failures; plain strings from servers that do not translate them yet. */
+  readonly failures: readonly (LocalizedText | string)[];
 }
 
 /** Sums up a finished batch edit job for a snackbar message, in the active UI language. */
@@ -53,7 +54,10 @@ export function batchSummary(job: Job): string {
     parts.push(
       translate('filters.batch.failures', {
         failed: result.failed,
-        failures: result.failures.join('; ').replace(/\.$/, ''),
+        failures: result.failures
+          .map((failure) => (typeof failure === 'string' ? failure : localize(failure)))
+          .join('; ')
+          .replace(/\.$/, ''),
       }),
     );
   }

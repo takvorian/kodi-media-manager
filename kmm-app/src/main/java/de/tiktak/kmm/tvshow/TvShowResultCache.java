@@ -15,8 +15,8 @@ import de.tiktak.kmm.plugin.api.TvShowResult;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Hält zuletzt geladene Serien eine Weile vor. Eine Serie mit allen Episoden kostet beim Anbieter
- * mehrere Anfragen; Vorschlag, Übernahme und fehlende Episoden nutzen so dieselbe Antwort.
+ * Keeps recently loaded TV shows for a while. A TV show with all episodes costs several requests
+ * at the provider; proposal, applying and missing episodes thus use the same response.
  */
 @Component
 @RequiredArgsConstructor
@@ -43,7 +43,7 @@ class TvShowResultCache {
         entries.put(key(scraperId, providerId), new Entry(result, clock.instant()));
     }
 
-    /** Nach einem Sprachwechsel muss die Serie neu geholt werden. */
+    /** After a language change the TV show must be fetched again. */
     private static String key(String scraperId, String providerId) {
         return scraperId + ":" + providerId + ":" + ScrapeLanguage.cacheKey();
     }

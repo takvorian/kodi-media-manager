@@ -3,9 +3,9 @@ package de.tiktak.kmm.tvshow;
 import java.time.Instant;
 
 /**
- * Alle Angaben zu einer Episode für die Detailansicht.
+ * All details of an episode for the detail view.
  *
- * @param showTitle Titel der Serie
+ * @param showTitle title of the TV show
  */
 public record EpisodeDetails(
         long id,

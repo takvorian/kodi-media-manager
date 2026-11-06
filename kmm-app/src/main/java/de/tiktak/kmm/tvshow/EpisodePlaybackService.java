@@ -15,10 +15,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest Wiedergabestand und eigene Bewertung von Episoden und übernimmt neue, etwa aus Kodi. Der Stand wird in die
- * vorhandene NFO und in die Datenbank geschrieben; ohne NFO nur in die Datenbank. Es wird kein
- * {@link EpisodeFilesChangedEvent} veröffentlicht: Der Stand kommt von Kodi, Kodi muss die Episode
- * deshalb nicht neu einlesen.
+ * Reads the playback state and own rating of episodes and takes over new ones, e.g. from Kodi. The state is written to
+ * the existing NFO and to the database; without an NFO only to the database. No
+ * {@link EpisodeFilesChangedEvent} is published: the state comes from Kodi, so Kodi does not have to
+ * re-read the episode.
  */
 @Slf4j
 @Service
@@ -47,11 +47,11 @@ public class EpisodePlaybackService {
     }
 
     /**
-     * @param playCount    Anzahl der Wiedergaben oder {@code null}
-     * @param lastPlayedAt letzte Wiedergabe oder {@code null}
-     * @param userRating   eigene Bewertung 1–10 oder {@code null}
-     * @throws TvShowProblemException wenn die NFO nicht geschrieben werden kann; die Datenbank bleibt dann
-     *                                unverändert
+     * @param playCount    number of plays or {@code null}
+     * @param lastPlayedAt last play or {@code null}
+     * @param userRating   own rating 1-10 or {@code null}
+     * @throws TvShowProblemException if the NFO cannot be written; the database then stays
+     *                                unchanged
      */
     @Transactional
     public void changePlayback(long episodeId, Integer playCount, Instant lastPlayedAt, Integer userRating) {
@@ -71,8 +71,8 @@ public class EpisodePlaybackService {
     }
 
     /**
-     * Die übrigen Episoden einer Mehrfachepisoden-NFO bleiben aktuell, wenn sie vorher auf dem Stand der
-     * Datei waren; sonst liest der nächste Scan die NFO für sie neu ein.
+     * The other episodes of a multi-episode NFO stay up to date if they were in sync with the file
+     * before; otherwise the next scan re-reads the NFO for them.
      */
     private void markSynchronized(Episode changed, TvNfoState before, TvNfoState written) {
         episodeRepository.findByFilePathHash(changed.getFilePathHash()).stream()

@@ -656,7 +656,7 @@ describe('MovieDetail', () => {
         imagesSaved: 4,
         unmatchedEntries: [],
         failures: [],
-        warnings: ['fanart.tv: Key fehlt'],
+        warnings: [literal('fanart.tv: Key fehlt')],
       },
     };
 

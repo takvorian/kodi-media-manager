@@ -14,15 +14,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Leert die Datenbank. Dateien wie Medien, NFOs und Bilder bleiben unberührt. Solange ein Job läuft, wird
- * nichts gelöscht, und während des Leerens startet keiner.
+ * Clears the database. Files such as media, NFOs and images are left untouched. While a job is running,
+ * nothing is deleted, and no job starts while clearing is in progress.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DatabaseResetService {
 
-    /** Abhängige Tabellen stehen vor denen, auf die sie verweisen. */
+    /** Dependent tables come before the ones they reference. */
     static final List<String> LIBRARY_TABLES = List.of(
             "episode_credit", "episode_rating", "episode", "tv_season",
             "tv_show_genre", "tv_show_studio", "tv_show_tag", "tv_show_actor", "tv_show_rating", "tv_show",
@@ -37,8 +37,8 @@ public class DatabaseResetService {
     private final ApiKeyService apiKeyService;
 
     /**
-     * @param keepSettings ob Einstellungen und API-Keys erhalten bleiben
-     * @throws de.tiktak.kmm.job.JobAlreadyRunningException wenn gerade ein Job läuft
+     * @param keepSettings whether settings and API keys are kept
+     * @throws de.tiktak.kmm.job.JobAlreadyRunningException if a job is currently running
      */
     public void clear(boolean keepSettings) {
         jobService.runWhileIdle(() -> {

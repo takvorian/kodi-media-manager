@@ -1,7 +1,7 @@
 package de.tiktak.kmm.job;
 
 /**
- * Wird von einem Job geworfen, der auf Anforderung vorzeitig endet.
+ * Thrown by a job that ends early on request.
  */
 public class JobCancelledException extends RuntimeException {
 

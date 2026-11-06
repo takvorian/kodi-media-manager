@@ -8,7 +8,7 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Daten zum Anlegen einer Quelle.
+ * Data for creating a source.
  */
 public record CreateMediaSourceCommand(
         @NotBlank @Size(max = MAX_NAME_LENGTH) String name,
@@ -19,7 +19,7 @@ public record CreateMediaSourceCommand(
     static final int MAX_NAME_LENGTH = 255;
     static final int MAX_PATH_LENGTH = 1024;
 
-    /** Eine Quelle, für die die allgemeine Sprache gilt. */
+    /** A source for which the general language applies. */
     public CreateMediaSourceCommand(String name, String path, MediaType mediaType) {
         this(name, path, mediaType, null);
     }

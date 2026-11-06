@@ -50,7 +50,7 @@ describe('scrape report', () => {
         job({
           title: literal('Scrape'),
           status: 'SUCCEEDED',
-          result: { ...empty, imagesSaved: 1, themesSaved: 2, failures: ['x'] },
+          result: { ...empty, imagesSaved: 1, themesSaved: 2, failures: [literal('x')] },
         }),
       ),
     ).toBe(
@@ -74,7 +74,7 @@ describe('scrape report', () => {
   it('has details when entries beyond the listed ones stayed unmatched', () => {
     expect(hasScrapeDetails(empty)).toBe(false);
     expect(hasScrapeDetails({ ...empty, unmatched: 1 })).toBe(true);
-    expect(hasScrapeDetails({ ...empty, warnings: ['x'] })).toBe(true);
-    expect(hasScrapeDetails({ ...empty, failures: ['x'] })).toBe(true);
+    expect(hasScrapeDetails({ ...empty, warnings: [literal('x')] })).toBe(true);
+    expect(hasScrapeDetails({ ...empty, failures: [literal('x')] })).toBe(true);
   });
 });

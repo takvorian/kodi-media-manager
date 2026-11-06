@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Eine Mitwirkung an einer Episode (Darsteller einschließlich Gaststars, Regie oder Drehbuch).
+ * A contribution to an episode (cast including guest stars, direction or writing).
  */
 @Embeddable
 @Getter
@@ -18,7 +18,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 class EpisodeCredit {
 
-    /** Art der Mitwirkung. */
+    /** Kind of contribution. */
     enum Type {
         ACTOR, DIRECTOR, WRITER
     }

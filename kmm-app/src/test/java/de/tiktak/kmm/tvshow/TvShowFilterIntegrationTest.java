@@ -32,7 +32,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Filter der Serienliste Ende zu Ende, auch über die Episoden.
+ * Filters of the TV show list end to end, including via the episodes.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -185,7 +185,7 @@ class TvShowFilterIntegrationTest {
         assertThat(Files.readString(nfo)).isEqualTo(ember.replace("</tvshow>",
                 "  <trailer>" + LOST_TRAILER + "</trailer>\r\n</tvshow>"));
         assertThat(jdbcClient.sql("SELECT mpaa FROM tv_show WHERE id = :id").param("id", neu).query(String.class)
-                .single()).as("aus der NFO eingelesen").isEqualTo("Germany:16");
+                .single()).as("read from the NFO").isEqualTo("Germany:16");
     }
 
     @Test
@@ -196,7 +196,8 @@ class TvShowFilterIntegrationTest {
         MvcTestResult started = post(TvShowTrailerController.FILL_PATH,
                 "{\"showIds\": [%d, %d, %d]}".formatted(showId("ALF"), showId("Lost"), showId("ALF")));
         assertThat(started).hasStatus(HttpStatus.ACCEPTED);
-        assertThat(read(started).get("title").get("args").get("text").asString()).isEqualTo("Fehlende Trailer für 2 Serien holen");
+        assertThat(read(started).get("title").get("key").asString()).isEqualTo("tvShow.batch.trailerFillJobTitle");
+        assertThat(read(started).get("title").get("args").get("count").asInt()).isEqualTo(2);
         String jobId = read(started).get("id").asString();
         JsonNode job = await().atMost(TIMEOUT).pollInSameThread()
                 .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),

@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 import lombok.NoArgsConstructor;
 
 /**
- * Gespeicherter Darsteller einer Serie.
+ * Stored actor of a TV show.
  */
 @Embeddable
 @NoArgsConstructor(access = AccessLevel.PROTECTED)

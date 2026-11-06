@@ -6,7 +6,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 /**
- * Stellt die Systemuhr als Bean bereit, damit zeitabhängiger Code in Tests eine feste Uhr nutzen kann.
+ * Provides the system clock as a bean so that time-dependent code can use a fixed clock in tests.
  */
 @Configuration(proxyBeanMethods = false)
 class ClockConfiguration {

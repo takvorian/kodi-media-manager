@@ -1063,6 +1063,192 @@
         "title": "Job not found",
         "detail": "There is no job with the ID {id}."
       }
+    },
+    "security": {
+      "denied": {
+        "title": "Request rejected",
+        "csrf": "The server rejected the request because the security cookie is missing or does not match. Reload the page. If that does not help, delete the cookies of this address in the browser.",
+        "permission": "You are not allowed to do this."
+      }
+    },
+    "tvShow": {
+      "notFound": {
+        "title": "TV show not found",
+        "detail": "There is no TV show with the ID {id}."
+      },
+      "episodeNotFound": {
+        "title": "Episode not found",
+        "detail": "There is no episode with the ID {id}."
+      },
+      "scan": {
+        "title": "Source cannot be scanned",
+        "notATvSource": "The source “{source}” does not contain TV shows ({mediaType}).",
+        "unreachable": "The directory “{path}” of the source “{source}” cannot be reached.",
+        "jobTitle": "Scan “{source}”",
+        "searching": "Searching directories",
+        "synchronizing": "Updating the library"
+      },
+      "nfoChangedOutside": {
+        "title": "NFO changed outside of KMM",
+        "detail": "{file} was changed outside of KMM and cannot be read ({reason}). KMM therefore does not overwrite it; please check the file."
+      },
+      "nfoNotWritable": {
+        "title": "NFO could not be written",
+        "detail": "{reason} Please check the write permissions in the TV show folder."
+      },
+      "nfosNotWritten": {
+        "title": "NFO not written",
+        "detail": "NFO not written: {files}"
+      },
+      "noScraper": {
+        "title": "No scraper set up",
+        "detail": "No TV show scraper is set up, such as TVDB or TMDB with an API key."
+      },
+      "missingIdsForTrailers": {
+        "title": "TV show not clearly identified",
+        "detail": "Searching for trailers needs a TVDB, TMDB or IMDb ID. Please use “Search online” first."
+      },
+      "invalidTrailer": {
+        "title": "Invalid trailer",
+        "detail": "“{url}” is not a link Kodi can play (plugin://, http(s)://, smb:// or nfs://)."
+      },
+      "unknownScraper": {
+        "title": "Scraper not found",
+        "detail": "No TV show scraper with the ID “{id}” is installed and enabled."
+      },
+      "scraperNotConfigured": {
+        "title": "{scraper} is not set up"
+      },
+      "providerFailed": {
+        "title": "{scraper} reports an error"
+      },
+      "notFoundAtProvider": {
+        "title": "Match not found",
+        "detail": "{scraper} does not know the entry “{id}”."
+      },
+      "notIdentified": {
+        "title": "TV show not identified",
+        "detail": "“{title}” is not clearly identified at {scraper}. Please take it over via the online search first."
+      },
+      "invalidSort": {
+        "title": "Invalid sorting",
+        "detail": "Cannot sort by “{property}”."
+      },
+      "rename": {
+        "title": "Renaming not possible",
+        "invalidPattern": "Pattern for {pattern}: {reason}",
+        "foldersNotAllowed": "Pattern for {pattern}: folders (/) are not allowed here.",
+        "notATvSource": "The source “{source}” does not contain TV shows.",
+        "pattern": {
+          "showFolder": "TV show folders",
+          "seasonFolder": "season folders",
+          "episodeFile": "episode files"
+        },
+        "showFolderEmpty": "The pattern for TV show folders yields no name.",
+        "folderUnreadable": "A folder of the TV show cannot be read: {reason}",
+        "noEpisodeFile": "No episode file can be renamed.",
+        "episodeFileInvalid": "The pattern for episode files does not yield a valid file name.",
+        "fileExists": "The file “{file}” already exists.",
+        "sameName": "Several episode files would get the same name.",
+        "folderExists": "The folder “{folder}” already exists.",
+        "folderInside": "The new folder is inside the current one.",
+        "folderGone": "The folder “{folder}” no longer exists.",
+        "planning": "Computing new names",
+        "jobTitle": "Rename TV shows “{source}”",
+        "failed": "Renaming failed: {reason}",
+        "showProblem": "“{title}”: {message}",
+        "episodeProblem": "“{title}” {episodes}: {message}"
+      },
+      "batch": {
+        "editJobTitle": "Edit {count, plural, one {# TV show} other {# TV shows}}",
+        "trailerFillJobTitle": "Fetch missing trailers for {count, plural, one {# TV show} other {# TV shows}}",
+        "enrichmentJobTitle": "Update ratings for {count, plural, one {# TV show} other {# TV shows}}",
+        "languageJobTitle": "Change the language of {count, plural, one {# TV show} other {# TV shows}}",
+        "progress": "TV show {id}",
+        "failure": "TV show {id}: {message}"
+      },
+      "thumbs": {
+        "scraperFailed": "{scraper}: {message}"
+      }
+    },
+    "autoScrape": {
+      "sourceNotPossible": {
+        "title": "Source cannot be scraped",
+        "detail": "The source “{source}” contains neither movies nor TV shows ({mediaType})."
+      },
+      "seasonNotPossible": {
+        "title": "Season cannot be scraped",
+        "detail": "“{title}” has no episodes in season {season}."
+      },
+      "jobTitle": {
+        "single": "Scrape “{title}”",
+        "movies": "Scrape {count, plural, one {# movie} other {# movies}}",
+        "tvShows": "Scrape {count, plural, one {# TV show} other {# TV shows}}",
+        "season": "Scrape season {season} of “{title}”",
+        "seasonRefetch": "Fetch season {season} of “{title}” again"
+      },
+      "season": "Season {season} of “{title}”",
+      "unexpectedError": "unexpected error",
+      "noMetadataScraper": "No metadata scraper is set up; only images are fetched.",
+      "noTvShowScraper": "No TV show scraper is set up; only images are fetched.",
+      "failure": "{entry}: {message}",
+      "unknownMovie": "Movie {id}",
+      "unknownShow": "TV show {id}",
+      "technicalDetails": "Technical details: {reason}",
+      "theme": "Theme music: {reason}",
+      "enrichment": "Enrichment: {reason}",
+      "notRenamed": "“{title}” not renamed: {reason}",
+      "nfoNotWritten": "NFO not written: {file}"
+    },
+    "source": {
+      "notFound": {
+        "title": "Source not found",
+        "detail": "There is no source with the ID {id}."
+      },
+      "invalidPath": {
+        "title": "Invalid source path",
+        "detail": "“{path}” is not a reachable directory."
+      },
+      "conflict": {
+        "title": "Source collides with an existing source",
+        "nameTaken": "There is already a source named “{name}”.",
+        "overlaps": "The path “{path}” overlaps with the source “{source}” ({sourcePath})."
+      }
+    },
+    "plugin": {
+      "notFound": {
+        "title": "Plugin not found",
+        "detail": "No plugin with the ID “{id}” is installed."
+      }
+    },
+    "settings": {
+      "invalid": {
+        "title": "Invalid settings"
+      },
+      "rename": {
+        "pattern": {
+          "movieFolder": "movie folders",
+          "movieFile": "movie files",
+          "tvShowFolder": "TV show folders",
+          "seasonFolder": "season folders",
+          "episodeFile": "episode files"
+        },
+        "foldersNotAllowed": "Pattern for {pattern}: folders (/) are not allowed here.",
+        "invalidPattern": "Pattern for {pattern}: {reason}"
+      },
+      "movieSets": {
+        "flatFolderMissing": "The folder for set artwork in the flat scheme is missing.",
+        "kodiFolderMissing": "The folder for set artwork in Kodi's set folders is missing."
+      },
+      "apiKey": {
+        "tmdbApiKey": "TMDB API key",
+        "tvdbApiKey": "TVDB API key (v4)",
+        "tvdbPin": "TVDB subscriber PIN",
+        "fanartTvApiKey": "fanart.tv project key",
+        "fanartTvClientKey": "fanart.tv personal key",
+        "traktClientId": "Trakt client ID",
+        "omdbApiKey": "OMDb API key"
+      }
     }
   }
 }

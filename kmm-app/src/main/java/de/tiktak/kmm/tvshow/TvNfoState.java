@@ -6,8 +6,8 @@ import java.time.temporal.ChronoUnit;
 import java.util.Objects;
 
 /**
- * Eine vorhandene NFO-Datei und ihre letzte Änderungszeit. Die Zeit wird auf Mikrosekunden gekürzt,
- * weil die Datenbank nicht genauer speichert; sonst gälte jede NFO bei jedem Scan als geändert.
+ * An existing NFO file and its last modification time. The time is truncated to microseconds
+ * because the database does not store more precisely; otherwise every NFO would count as changed on every scan.
  */
 record TvNfoState(Path file, Instant modifiedAt) {
 

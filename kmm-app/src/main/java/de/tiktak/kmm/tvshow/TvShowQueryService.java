@@ -16,7 +16,7 @@ import de.tiktak.kmm.persistence.StreamIndex;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Liest die Serienliste. Öffentliche Schnittstelle des Moduls für andere Module.
+ * Reads the TV show list. Public interface of the module for other modules.
  */
 @Service
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class TvShowQueryService {
     private final Clock clock;
 
     /**
-     * @param search Teil des Titels; leer oder {@code null} liefert alle Serien
+     * @param search part of the title; empty or {@code null} returns all TV shows
      */
     public Page<TvShowSummary> findShows(String search, Pageable pageable) {
         Page<TvShow> shows = search == null || search.isBlank()
@@ -39,7 +39,7 @@ public class TvShowQueryService {
     }
 
     /**
-     * @throws de.tiktak.kmm.filter.InvalidFilterException wenn eine Bedingung nicht zu ihrem Feld passt
+     * @throws de.tiktak.kmm.filter.InvalidFilterException if a condition does not fit its field
      */
     public Page<TvShowSummary> findFiltered(TvShowFilter filter, Pageable pageable) {
         Page<TvShow> shows = showRepository.findAll(TvShowFilterSpecification.of(filter, clock), pageable);
@@ -47,7 +47,7 @@ public class TvShowQueryService {
         return shows.map(show -> TvShowSummary.from(show, episodeCounts.getOrDefault(show.getId(), 0L)));
     }
 
-    /** IDs aller Serien, auf die der Filter passt, etwa für die Stapel-Bearbeitung. */
+    /** IDs of all TV shows matching the filter, e.g. for batch editing. */
     public List<Long> findShowIds(TvShowFilter filter) {
         return showRepository.findAll(TvShowFilterSpecification.of(filter, clock)).stream().map(TvShow::getId)
                 .toList();
@@ -72,7 +72,7 @@ public class TvShowQueryService {
         return lists.stream().flatMap(list -> StreamIndex.tokensOf(list).stream()).toList();
     }
 
-    /** IDs der Serien einer Quelle, nach Titel sortiert. */
+    /** IDs of the TV shows of a source, sorted by title. */
     public List<Long> findShowIds(long sourceId) {
         return showRepository.findBySourceId(sourceId).stream()
                 .sorted(Comparator.comparing(TvShow::getTitle, String.CASE_INSENSITIVE_ORDER))

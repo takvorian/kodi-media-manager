@@ -13,7 +13,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Eine gespeicherte Einstellung als Schlüssel-Wert-Paar.
+ * A stored setting as a key-value pair.
  */
 @Entity
 @Table(name = "app_setting")

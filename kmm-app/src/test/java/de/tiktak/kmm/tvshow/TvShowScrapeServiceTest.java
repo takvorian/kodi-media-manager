@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CastMember;
@@ -97,7 +98,11 @@ class TvShowScrapeServiceTest {
         EpisodeThumbs thumbs = service.episodeThumbs(3);
 
         assertThat(thumbs.thumbs()).isEmpty();
-        assertThat(thumbs.warnings()).singleElement().asString().startsWith("TheTVDB: ").contains("nicht eindeutig");
+        assertThat(thumbs.localizedWarnings()).singleElement().satisfies(warning -> {
+            assertThat(warning.key()).isEqualTo("tvShow.thumbs.scraperFailed");
+            assertThat(warning.args()).containsEntry("scraper", "TheTVDB");
+            assertThat(((LocalizedText) warning.args().get("message")).key()).isEqualTo("tvShow.notIdentified.detail");
+        });
     }
 
     @Test

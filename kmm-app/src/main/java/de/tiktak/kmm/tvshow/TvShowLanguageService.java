@@ -1,15 +1,14 @@
 package de.tiktak.kmm.tvshow;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobSnapshot;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Ändert die Sprache von Serien als Job der Stapel-Bearbeitung und holt auf Wunsch die Texte der Serie und ihrer
- * Episoden in der neuen Sprache. Umbenannt wird dabei nicht.
+ * Changes the language of TV shows as a batch edit job and, on request, fetches the texts of the TV show and its
+ * episodes in the new language. Nothing is renamed.
  */
 @Service
 @RequiredArgsConstructor
@@ -20,12 +19,11 @@ public class TvShowLanguageService {
     private final TvShowBatchService batchService;
 
     public JobSnapshot start(TvShowLanguageChange change) {
-        List<Long> showIds = change.showIds();
-        String title = showIds.size() == 1 ? "Sprache von 1 Serie ändern" : "Sprache von %d Serien ändern";
-        return batchService.startFill(title, showIds, showId -> apply(showId, change));
+        return batchService.startFill(LocalizedText.of("tvShow.batch.languageJobTitle"), change.showIds(),
+                showId -> apply(showId, change));
     }
 
-    /** Erst nach dem Ende der Transaktion melden: Die übrigen Episoden sind dann schon gespeichert. */
+    /** Report only after the transaction has ended: the other episodes are saved by then. */
     private boolean apply(long showId, TvShowLanguageChange change) {
         boolean changed = metadataService.changeLanguage(showId, change.language());
         if (!change.refetchTexts()) {

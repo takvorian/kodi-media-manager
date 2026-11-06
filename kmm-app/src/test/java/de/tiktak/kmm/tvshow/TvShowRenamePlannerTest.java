@@ -10,6 +10,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.naming.NamePattern;
 import de.tiktak.kmm.scanner.naming.NamePlaceholders;
@@ -56,7 +57,7 @@ class TvShowRenamePlannerTest {
         assertThat(renamed.targetFolder()).isEqualTo("Season 01");
         assertThat(renamed.renames()).containsExactly(
                 new FileRename("lost.mkv", "Lost - S01E01E02 - Pilot (1) - Pilot (2).mkv"));
-        assertThat(plan.targetDirectory()).as("Serie ist die Quelle").isEqualTo(plan.currentDirectory());
+        assertThat(plan.targetDirectory()).as("the TV show is the source").isEqualTo(plan.currentDirectory());
     }
 
     @Test
@@ -90,7 +91,7 @@ class TvShowRenamePlannerTest {
         TvShowRenamePlan plan = plan(true, "{show} ({year})", "Staffel {season}", file(file, episode(1, 1, "Pilot")));
 
         assertThat(plan.status()).isEqualTo(Status.CONFLICT);
-        assertThat(plan.message()).contains("existiert bereits");
+        assertThat(plan.message().key()).isEqualTo("tvShow.rename.folderExists");
     }
 
     @Test
@@ -106,10 +107,10 @@ class TvShowRenamePlannerTest {
         assertThat(plan.files()).extracting(EpisodeFile::status)
                 .containsExactly(Status.CONFLICT, Status.CONFLICT, Status.CONFLICT);
         assertThat(plan.files()).extracting(EpisodeFile::message).containsExactly(
-                "Mehrere Episodendateien bekämen denselben Namen.", "Mehrere Episodendateien bekämen denselben Namen.",
-                "Die Datei „Lost - S01E03 - Drei.mkv“ existiert bereits.");
+                LocalizedText.of("tvShow.rename.sameName"), LocalizedText.of("tvShow.rename.sameName"),
+                LocalizedText.of("tvShow.rename.fileExists").with("file", "Lost - S01E03 - Drei.mkv"));
         assertThat(plan.status()).isEqualTo(Status.CONFLICT);
-        assertThat(plan.message()).isEqualTo("Keine Episodendatei lässt sich umbenennen.");
+        assertThat(plan.message()).isEqualTo(LocalizedText.of("tvShow.rename.noEpisodeFile"));
     }
 
     @Test
@@ -117,14 +118,14 @@ class TvShowRenamePlannerTest {
         Path file = givenFiles("Lost/x.mkv");
 
         assertThat(plan(true, "[{imdb}]", "Staffel {season}", file(file, episode(1, 1, "x"))).message())
-                .isEqualTo("Das Muster für Serienordner ergibt keinen Namen.");
+                .isEqualTo(LocalizedText.of("tvShow.rename.showFolderEmpty"));
         TvShowRenamePlan noFileName = plan(false, "{show}", "Staffel {season}", "[{imdb}]",
                 file(file, episode(1, 1, "x")));
         assertThat(noFileName.files()).singleElement().extracting(EpisodeFile::status).isEqualTo(Status.FAILED);
         TvShowRenamePlan unreadable = plan(false, "{show}", "Staffel {season}",
                 file(source.resolve("Lost/weg/x.mkv"), episode(1, 1, "x")));
         assertThat(unreadable.status()).isEqualTo(Status.FAILED);
-        assertThat(unreadable.message()).startsWith("Ein Ordner der Serie ist nicht lesbar");
+        assertThat(unreadable.message().key()).isEqualTo("tvShow.rename.folderUnreadable");
     }
 
     private TvShowRenamePlan plan(boolean ownsFolder, String showFolder, String seasonFolder,

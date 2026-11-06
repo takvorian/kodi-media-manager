@@ -16,7 +16,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Umbenennen von Serien nach Mustern.
+ * Renaming of TV shows by patterns.
  */
 @RestController
 @RequiredArgsConstructor
@@ -29,13 +29,13 @@ public class TvShowRenameController {
 
     private final TvShowRenameService renameService;
 
-    /** Zeigt, was das Umbenennen ändern würde, ohne etwas zu ändern. */
+    /** Shows what renaming would change, without changing anything. */
     @PostMapping(SOURCE_PREVIEW_PATH)
     public List<TvShowRenamePlan> preview(@PathVariable long sourceId, @Valid @RequestBody TvRenamePatterns patterns) {
         return renameService.preview(sourceId, patterns);
     }
 
-    /** Benennt die Serien der Quelle im Hintergrund um. */
+    /** Renames the TV shows of the source in the background. */
     @PostMapping(SOURCE_RENAME_PATH)
     public ResponseEntity<JobSnapshot> rename(@PathVariable long sourceId, @Valid @RequestBody TvRenameRequest request) {
         JobSnapshot job = renameService.startSourceRename(sourceId, request);
@@ -47,7 +47,7 @@ public class TvShowRenameController {
         return renameService.previewShow(showId, patterns);
     }
 
-    /** Benennt eine Serie sofort um; Konflikte und Fehler stehen im Ergebnis. */
+    /** Renames a TV show immediately; conflicts and errors are in the result. */
     @PostMapping(SHOW_RENAME_PATH)
     public TvShowRenamePlan renameShow(@PathVariable long showId, @Valid @RequestBody TvRenamePatterns patterns) {
         return renameService.renameShow(showId, patterns);

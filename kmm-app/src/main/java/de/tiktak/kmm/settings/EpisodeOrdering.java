@@ -1,13 +1,13 @@
 package de.tiktak.kmm.settings;
 
 /**
- * Reihenfolge, in der Scraper Staffeln und Episoden einer Serie zählen.
+ * Order in which scrapers count the seasons and episodes of a TV show.
  */
 public enum EpisodeOrdering {
-    /** Reihenfolge der Erstausstrahlung (Standard bei TVDB und TMDB). */
+    /** Order of first airing (default at TVDB and TMDB). */
     AIRED,
-    /** Reihenfolge der DVD-/Blu-ray-Veröffentlichung. */
+    /** Order of the DVD/Blu-ray release. */
     DVD,
-    /** Fortlaufende Nummerierung ohne Staffeln, z. B. bei Anime. */
+    /** Continuous numbering without seasons, e.g. for anime. */
     ABSOLUTE
 }

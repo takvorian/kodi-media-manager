@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.RestController;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Online-Suche für Serien. Suche und Vorschlag ändern nichts; die Serie wird über
- * {@code PUT /api/v1/tvshows/{id}/metadata} übernommen, die Episoden danach über
+ * Online search for TV shows. Search and proposal change nothing; the TV show is applied via
+ * {@code PUT /api/v1/tvshows/{id}/metadata}, the episodes afterwards via
  * {@link #EPISODES_PATH}.
  */
 @RestController
@@ -41,7 +41,7 @@ public class TvShowScrapeController {
         return scrapeService.proposal(showId, scraper, providerId);
     }
 
-    /** Ergänzt leere Angaben der Episoden und schreibt deren NFOs. */
+    /** Fills empty details of the episodes and writes their NFOs. */
     @PostMapping(EPISODES_PATH)
     public EpisodeFillResult fillEpisodes(@PathVariable long showId, @RequestParam String scraper,
             @RequestParam String providerId) {

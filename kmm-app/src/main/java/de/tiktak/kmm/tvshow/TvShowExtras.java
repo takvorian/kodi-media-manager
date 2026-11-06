@@ -6,9 +6,9 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 /**
- * Weitere Angaben zu einer Serie, die KMM aus NFO und Migration übernimmt, aber noch nicht bearbeitet.
+ * Further details of a TV show that KMM takes over from the NFO and migration but does not edit yet.
  *
- * @param seasonNames Staffeltitel nach Staffelnummer
+ * @param seasonNames season titles by season number
  */
 public record TvShowExtras(List<TvActor> actors, List<TvRating> ratings, SortedMap<Integer, String> seasonNames) {
 
@@ -34,12 +34,12 @@ public record TvShowExtras(List<TvActor> actors, List<TvRating> ratings, SortedM
         seasonNames = Collections.unmodifiableSortedMap(names);
     }
 
-    /** Dieselben Angaben mit anderen Bewertungen. */
+    /** The same details with different ratings. */
     public TvShowExtras withRatings(List<TvRating> newRatings) {
         return new TvShowExtras(actors, newRatings, seasonNames);
     }
 
-    /** Dieselben Angaben mit anderen Darstellern. */
+    /** The same details with different actors. */
     public TvShowExtras withActors(List<TvActor> newActors) {
         return new TvShowExtras(newActors, ratings, seasonNames);
     }

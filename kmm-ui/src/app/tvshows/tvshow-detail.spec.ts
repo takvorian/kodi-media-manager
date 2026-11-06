@@ -520,7 +520,7 @@ describe('TvShowDetail', () => {
           targetFolder: 'Staffel 1',
           renames: [],
           status: 'CONFLICT',
-          message: 'belegt',
+          message: literal('belegt'),
         },
       ],
       status: 'RENAME',
@@ -578,7 +578,11 @@ describe('TvShowDetail', () => {
       answerPreview({ ...plan, status: 'UNCHANGED', files: [] });
       click('.rename-button');
       answerSettings();
-      answerPreview({ ...plan, status: 'CONFLICT', message: 'Der Ordner existiert bereits.' });
+      answerPreview({
+        ...plan,
+        status: 'CONFLICT',
+        message: literal('Der Ordner existiert bereits.'),
+      });
 
       expect(snackBarMessages).toEqual([
         '„ALF“ heißt schon so.',
@@ -619,7 +623,7 @@ describe('TvShowDetail', () => {
         imagesSaved: 4,
         unmatchedEntries: [],
         failures: [],
-        warnings: ['fanart.tv: Key fehlt'],
+        warnings: [literal('fanart.tv: Key fehlt')],
       },
     };
 

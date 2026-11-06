@@ -3,10 +3,10 @@ package de.tiktak.kmm.tvshow;
 import java.util.List;
 
 /**
- * Ergebnis des automatischen Scrapens einer Serie.
+ * Result of automatically scraping a TV show.
  *
- * @param episodesUpdated Episoden, bei denen leere Angaben ergänzt wurden
- * @param failedFiles     NFOs, die nicht geschrieben werden konnten
+ * @param episodesUpdated episodes whose empty fields were filled in
+ * @param failedFiles     NFOs that could not be written
  */
 public record TvShowAutoScrapeOutcome(Status status, int episodesUpdated, List<String> failedFiles) {
 
@@ -19,16 +19,16 @@ public record TvShowAutoScrapeOutcome(Status status, int episodesUpdated, List<S
     }
 
     /**
-     * Wie die Serie zugeordnet wurde.
+     * How the TV show was identified.
      */
     public enum Status {
-        /** Die Serie wurde über einen eindeutigen Treffer neu zugeordnet. */
+        /** The TV show was newly identified via a unique match. */
         SCRAPED,
-        /** Die Serie war schon zugeordnet; nur leere Episodenfelder wurden ergänzt. */
+        /** The TV show was already identified; only empty episode fields were filled in. */
         ALREADY_IDENTIFIED,
-        /** Kein eindeutiger Treffer. */
+        /** No unique match. */
         NO_MATCH,
-        /** Kein Serien-Scraper ist eingerichtet. */
+        /** No TV show scraper is set up. */
         NO_SCRAPER
     }
 }

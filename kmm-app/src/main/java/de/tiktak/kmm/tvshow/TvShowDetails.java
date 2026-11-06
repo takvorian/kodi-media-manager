@@ -7,12 +7,12 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * Alle Angaben zu einer Serie für die Detailansicht, mit Staffeln und Episoden.
+ * All details of a TV show for the detail view, with seasons and episodes.
  *
- * @param seasons  Staffeln mit Titel und Anzahl der Episoden, aufsteigend
- * @param episodes Episoden nach Staffel und Nummer
- * @param trailer  Trailer-Link oder {@code null}
- * @param language eigene Sprache oder {@code null}, dann gilt die der Quelle bzw. der Einstellungen
+ * @param seasons  seasons with title and number of episodes, ascending
+ * @param episodes episodes by season and number
+ * @param trailer  trailer link or {@code null}
+ * @param language own language or {@code null}, in which case that of the source or the settings applies
  */
 public record TvShowDetails(
         long id,
@@ -42,9 +42,9 @@ public record TvShowDetails(
     }
 
     /**
-     * @param number       Staffelnummer, 0 für Specials
-     * @param title        Staffeltitel oder {@code null}
-     * @param episodeCount Anzahl der Episoden mit Datei
+     * @param number       season number, 0 for specials
+     * @param title        season title or {@code null}
+     * @param episodeCount number of episodes with a file
      */
     public record Season(int number, String title, long episodeCount) {
     }

@@ -46,8 +46,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Automatisches Scrapen einer Quelle über die REST-API mit den echten Plugins von TMDB und fanart.tv.
- * Beide Dienste und die Bilddateien liefert ein lokaler HTTP-Server.
+ * Automatic scraping of a source via the REST API with the real TMDB and fanart.tv plugins.
+ * A local HTTP server provides both services and the image files.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -185,7 +185,7 @@ class AutoScrapeIntegrationTest {
 
         awaitJob(post(LibraryScanController.SCAN_PATH, jdbcClient.sql("SELECT id FROM media_source")
                 .query(Long.class).single()));
-        assertThat(movieIdOf("Heat")).as("ein neuer Scan lässt den Titel des Anbieters").isEqualTo(movieId);
+        assertThat(movieIdOf("Heat")).as("a new scan keeps the provider title").isEqualTo(movieId);
     }
 
     @Test
@@ -218,7 +218,7 @@ class AutoScrapeIntegrationTest {
 
         assertThat(movieIdOf("Chaleur")).isEqualTo(movieId);
         assertThat(Files.readString(library.resolve("Heat (1995)/Heat (1995).nfo")))
-                .as("die NFO entsteht erst beim Scrapen").contains("<language>fr-FR</language>");
+                .as("the NFO is only created when scraping").contains("<language>fr-FR</language>");
     }
 
     @Test
@@ -233,7 +233,7 @@ class AutoScrapeIntegrationTest {
         JsonNode unchanged = changeLanguage(movieId, "fr-FR", false);
 
         assertThat(unchanged.get("changed").asInt()).isEqualTo(1);
-        assertThat(movieIdOf("Heat")).as("ohne Neu-Holen bleiben die Texte").isEqualTo(movieId);
+        assertThat(movieIdOf("Heat")).as("without re-fetching the texts stay").isEqualTo(movieId);
         assertThat(Files.readString(nfo)).contains("<title>Heat</title>", "<language>fr-FR</language>");
 
         changeLanguage(movieId, "fr-FR", true);

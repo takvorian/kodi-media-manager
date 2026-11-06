@@ -13,6 +13,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { problemMessage } from '../shared/problem-message';
 import { ApiKeyName, ApiKeyView } from './settings';
 import { SettingsService } from './settings.service';
@@ -22,12 +23,13 @@ const SNACKBAR_DURATION_MS = 5000;
 
 /**
  * API keys of the scrapers. Stored keys are never shown, only their last characters; an empty field leaves the key
- * unchanged, "Remove" deletes it. The labels come from the server.
+ * unchanged, "Remove" deletes it. The labels come from the server as translatable texts.
  */
 @Component({
   selector: 'app-api-keys-card',
   imports: [
     HelpLink,
+    LocalizedPipe,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,

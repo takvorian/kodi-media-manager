@@ -40,7 +40,7 @@ public class JobController {
     }
 
     /**
-     * Server-Sent Events: Ereignis {@code job} mit dem aktuellen {@link JobSnapshot} bei jeder Änderung.
+     * Server-sent events: {@code job} event with the current {@link JobSnapshot} on every change.
      */
     @GetMapping(path = "/events", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     public SseEmitter events() {

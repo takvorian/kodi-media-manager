@@ -31,8 +31,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Eine Serie der Bibliothek: ein Ordner einer Serienquelle. Die Quelle wird nur über ihre ID
- * referenziert, damit die Module {@code tvshow} und {@code source} lose gekoppelt bleiben.
+ * A TV show of the library: a folder of a TV show source. The source is referenced only by its ID
+ * so that the modules {@code tvshow} and {@code source} stay loosely coupled.
  */
 @Entity
 @Table(name = "tv_show")
@@ -49,7 +49,7 @@ public class TvShow {
     @Column(name = "source_id", nullable = false, updatable = false)
     private Long sourceId;
 
-    /** Nur zum Sortieren der Liste; beim Laden berechnet. */
+    /** Only for sorting the list; computed on load. */
     @Formula("(select count(*) from episode e where e.tv_show_id = id)")
     private long episodeCount;
 
@@ -97,20 +97,23 @@ public class TvShow {
     @Column(name = "imdb_id", length = 16)
     private String imdbId;
 
-    /** Sprache beim Scrapen, auch für die Episoden; ohne Angabe gilt die der Quelle, sonst die der Einstellungen. */
+    /**
+     * Language when scraping, also for the episodes; without a value that of the source applies, otherwise that of
+     * the settings.
+     */
     @Column(name = "metadata_language", length = 16)
     private String metadataLanguage;
 
     @Column(name = "user_rating")
     private Integer userRating;
 
-    /** Trailer-Link aus der NFO, etwa {@code plugin://plugin.video.youtube/…}, oder {@code null}. */
+    /** Trailer link from the NFO, e.g. {@code plugin://plugin.video.youtube/...}, or {@code null}. */
     @Column(name = "trailer", length = MAX_TRAILER_LENGTH)
     private String trailer;
 
     /**
-     * Ob {@link #trailer} den Stand der NFO wiedergibt. Bei Serien aus älteren Versionen ist er unbekannt; dann
-     * bleibt der Eintrag in der NFO beim Schreiben unverändert.
+     * Whether {@link #trailer} reflects the state of the NFO. For TV shows from older versions it is unknown; the
+     * entry in the NFO then stays unchanged when writing.
      */
     @Column(name = "trailer_known", nullable = false)
     private boolean trailerKnown;
@@ -151,13 +154,13 @@ public class TvShow {
     @Column(name = "added_at", nullable = false)
     private Instant addedAt;
 
-    /** Änderungszeit der {@code tvshow.nfo} beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
+    /** Modification time of the {@code tvshow.nfo} when last read or written; {@code null} without an NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
 
     /**
-     * Ob die Angaben aus der {@code tvshow.nfo} stammen. Bei Serien aus dem Ember-Import stammen sie aus Embers
-     * Datenbank und können von der NFO abweichen; dann liest KMM die NFO vor dem ersten Schreiben ein.
+     * Whether the details come from the {@code tvshow.nfo}. For TV shows from the Ember import they come from Ember's
+     * database and may differ from the NFO; KMM then reads the NFO before writing it for the first time.
      */
     @Column(name = "nfo_read", nullable = false)
     private boolean nfoRead;
@@ -177,8 +180,8 @@ public class TvShow {
     }
 
     /**
-     * Ergänzt fehlendes Jahr und fehlende IMDb-ID aus dem Ordnernamen, damit das Scrapen die Serie sicher findet. Eine
-     * bereits zugeordnete Serie bleibt unverändert.
+     * Fills in a missing year and missing IMDb ID from the folder name so that scraping reliably finds the TV show. A
+     * TV show that is already identified stays unchanged.
      */
     void fillMissingFromName(Integer nameYear, String nameImdbId) {
         if (tvdbId != null || tmdbId != null) {
@@ -192,7 +195,7 @@ public class TvShow {
         }
     }
 
-    /** @return ob sich die Sprache geändert hat */
+    /** @return whether the language has changed */
     boolean changeMetadataLanguage(String language) {
         boolean changed = !Objects.equals(metadataLanguage, language);
         metadataLanguage = language;
@@ -235,13 +238,13 @@ public class TvShow {
         extras.seasonNames().forEach((number, name) -> seasons.add(new TvSeason(number, name)));
     }
 
-    /** @param newTrailer Link oder {@code null} bzw. leer für „kein Trailer“ */
+    /** @param newTrailer link, or {@code null} or empty for "no trailer" */
     void changeTrailer(String newTrailer) {
         this.trailer = newTrailer == null || newTrailer.isBlank() ? null : newTrailer.strip();
         this.trailerKnown = true;
     }
 
-    /** Trailer für die NFO: {@code null}, wenn unbekannt, sonst Link oder „kein Trailer“. */
+    /** Trailer for the NFO: {@code null} if unknown, otherwise a link or "no trailer". */
     String nfoTrailer() {
         if (!trailerKnown) {
             return null;
@@ -257,7 +260,7 @@ public class TvShow {
         this.nfoRead = true;
     }
 
-    /** Die Angaben stammen nicht aus der NFO, etwa nach einem Import. */
+    /** The details do not come from the NFO, e.g. after an import. */
     void markNfoNotRead() {
         this.nfoRead = false;
     }
@@ -270,13 +273,13 @@ public class TvShow {
         return Path.of(directoryPath);
     }
 
-    /** Nach dem Umbenennen: der Serienordner liegt jetzt dort. */
+    /** After renaming: the TV show folder is now located there. */
     void relocate(String newDirectoryPath) {
         this.directoryPath = Objects.requireNonNull(newDirectoryPath, "newDirectoryPath must not be null");
         this.directoryPathHash = PathHash.of(newDirectoryPath);
     }
 
-    /** Ohne Jahr und Erstausstrahlung bleibt das Jahr aus dem Ordnernamen. */
+    /** Without a year and first air date, the year from the folder name is kept. */
     private Integer yearOf(TvShowMetadata metadata) {
         if (metadata.year() != null) {
             return metadata.year();

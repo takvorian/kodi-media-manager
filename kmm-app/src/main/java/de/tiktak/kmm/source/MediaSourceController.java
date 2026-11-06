@@ -50,7 +50,7 @@ public class MediaSourceController {
         return ResponseEntity.noContent().build();
     }
 
-    /** @param language Sprache wie {@code de-DE} oder {@code null}, dann gelten die allgemeinen Einstellungen */
+    /** @param language language such as {@code de-DE} or {@code null}, in which case the general settings apply */
     public record LanguageRequest(@Pattern(regexp = KmmSettings.METADATA_LANGUAGE_PATTERN) String language) {
     }
 }

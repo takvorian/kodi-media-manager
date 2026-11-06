@@ -4,11 +4,11 @@ import java.time.Instant;
 import java.util.Objects;
 
 /**
- * Eine Episode aus einer Migration.
+ * An episode from a migration.
  *
- * @param filePath absoluter Pfad der Episodendatei
- * @param extras   weitere Angaben; ohne Spuren bleiben die bekannten Spuren erhalten
- * @param addedAt  Aufnahme in die Bibliothek oder {@code null} für „jetzt“
+ * @param filePath absolute path of the episode file
+ * @param extras   further details; without tracks the known tracks are kept
+ * @param addedAt  time added to the library or {@code null} for "now"
  */
 public record EpisodeImport(String filePath, int season, int episode, EpisodeMetadata metadata, EpisodeExtras extras,
         Instant addedAt) {

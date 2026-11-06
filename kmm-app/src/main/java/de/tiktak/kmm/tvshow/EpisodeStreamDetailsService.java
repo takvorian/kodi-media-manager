@@ -17,10 +17,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Übernimmt neu ausgelesene technische Angaben einer Episodendatei in die vorhandene NFO und die
- * Datenbank; ohne NFO nur in die Datenbank. Alle Episoden einer Mehrfachepisoden-Datei bekommen die
- * Angaben, denn sie teilen sich die Datei. Sprachen und 3D-Angaben, die ffprobe nicht kennt, bleiben
- * je Episode erhalten.
+ * Takes over newly read technical details of an episode file into the existing NFO and the
+ * database; without an NFO only into the database. All episodes of a multi-episode file receive the
+ * details because they share the file. Languages and 3D details that ffprobe does not know are kept
+ * per episode.
  */
 @Slf4j
 @Service
@@ -48,13 +48,13 @@ public class EpisodeStreamDetailsService {
                 .toList();
     }
 
-    /** @throws TvShowProblemException wenn es die Serie nicht gibt */
+    /** @throws TvShowProblemException if the TV show does not exist */
     public String showTitleOf(long showId) {
         return showRepository.findById(showId).map(TvShow::getTitle)
                 .orElseThrow(() -> TvShowProblemException.showNotFound(showId));
     }
 
-    /** @throws TvShowProblemException wenn es die Serie nicht gibt */
+    /** @throws TvShowProblemException if the TV show does not exist */
     public long sourceIdOf(long showId) {
         return showRepository.findById(showId).map(TvShow::getSourceId)
                 .orElseThrow(() -> TvShowProblemException.showNotFound(showId));
@@ -68,9 +68,9 @@ public class EpisodeStreamDetailsService {
     }
 
     /**
-     * @return die übernommenen Angaben der angegebenen Episode
-     * @throws TvShowProblemException wenn die NFO nicht geschrieben werden kann; die Datenbank bleibt dann
-     *                                unverändert
+     * @return the details taken over for the given episode
+     * @throws TvShowProblemException if the NFO cannot be written; the database then stays
+     *                                unchanged
      */
     @Transactional
     public StreamDetails changeStreamDetails(long episodeId, StreamDetails probed) {
@@ -86,8 +86,8 @@ public class EpisodeStreamDetailsService {
     }
 
     /**
-     * Episoden, die vorher auf dem Stand der Datei waren, bleiben aktuell; sonst liest der nächste Scan
-     * die NFO für sie neu ein.
+     * Episodes that were in sync with the file before stay up to date; otherwise the next scan
+     * re-reads the NFO for them.
      */
     private void write(TvNfoState before, Map<Episode, StreamDetails> merged) {
         List<EpisodeStreamDetails> episodes = merged.entrySet().stream()

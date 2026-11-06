@@ -85,7 +85,8 @@ class TvShowScanServiceTest {
 
         service.startScan(3);
 
-        verify(jobService).submit(eq("scan:3"), eq("Scan „Serien“"), any());
+        verify(jobService).submit(eq("scan:3"), eq(LocalizedText.of("tvShow.scan.jobTitle").with("source", "Serien")),
+                any());
     }
 
     @Test

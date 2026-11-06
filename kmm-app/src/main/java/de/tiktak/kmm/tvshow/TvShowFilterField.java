@@ -15,8 +15,8 @@ import de.tiktak.kmm.filter.FilterField;
 import de.tiktak.kmm.filter.FilterOperator;
 
 /**
- * Wonach die Serienliste gefiltert werden kann. Felder mit {@code EPISODE_} prüfen die Episoden einer Serie: „ist“
- * heißt, mindestens eine Episode passt; „ist nicht“, keine Episode passt.
+ * What the TV show list can be filtered by. Fields with {@code EPISODE_} check the episodes of a TV show: "is"
+ * means at least one episode matches; "is not" means no episode matches.
  */
 public enum TvShowFilterField implements FilterField {
 
@@ -33,22 +33,22 @@ public enum TvShowFilterField implements FilterField {
     IMDB_ID(ValueType.NONE, EMPTY, NOT_EMPTY),
     NFO(ValueType.NONE, EMPTY, NOT_EMPTY),
     TRAILER(ValueType.NONE, EMPTY, NOT_EMPTY),
-    /** ID der Quelle. */
+    /** ID of the source. */
     SOURCE(ValueType.NUMBER, IS, IS_NOT),
-    /** Vor wie vielen Tagen die Serie hinzugefügt wurde. */
+    /** How many days ago the TV show was added. */
     ADDED_DAYS_AGO(ValueType.NUMBER, AT_LEAST, AT_MOST),
-    /** Anzahl der Episoden. */
+    /** Number of episodes. */
     EPISODES(ValueType.NUMBER, IS, AT_LEAST, AT_MOST),
-    /** {@code true}: mindestens eine Episode ohne Wiedergabe; {@code false}: alle gesehen. */
+    /** {@code true}: at least one episode without playback; {@code false}: all watched. */
     UNWATCHED_EPISODES(ValueType.BOOLEAN, IS),
-    /** Eine Episode mit mindestens bzw. höchstens dieser Auflösungsstufe. */
+    /** An episode with at least or at most this resolution level. */
     EPISODE_RESOLUTION(ValueType.NUMBER, AT_LEAST, AT_MOST),
     EPISODE_VIDEO_CODEC(ValueType.TEXT, IS, IS_NOT),
     EPISODE_AUDIO_CODEC(ValueType.TEXT, IS, IS_NOT),
     EPISODE_AUDIO_LANGUAGE(ValueType.TEXT, IS, IS_NOT),
     EPISODE_SUBTITLE_LANGUAGE(ValueType.TEXT, IS, IS_NOT),
     EPISODE_VIDEO_SOURCE(ValueType.TEXT, IS, IS_NOT),
-    /** {@code EMPTY}: mindestens einer Episode fehlen die technischen Angaben; {@code NOT_EMPTY}: keiner. */
+    /** {@code EMPTY}: at least one episode lacks the technical details; {@code NOT_EMPTY}: none. */
     EPISODE_STREAM_DETAILS(ValueType.NONE, EMPTY, NOT_EMPTY);
 
     private final ValueType valueType;

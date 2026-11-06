@@ -6,10 +6,10 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * HTTP-Proxy für Anfragen an Online-Dienste.
+ * HTTP proxy for requests to online services.
  *
- * @param username Benutzername oder {@code null} ohne Anmeldung
- * @param password Passwort; in Änderungen heißt {@code null} „unverändert lassen“
+ * @param username user name or {@code null} without authentication
+ * @param password password; in changes, {@code null} means "leave unchanged"
  */
 public record ProxySettings(
         @NotBlank @Size(max = MAX_TEXT_LENGTH) String host,

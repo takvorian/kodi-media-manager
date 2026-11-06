@@ -3,11 +3,11 @@ package de.tiktak.kmm.source;
 import de.tiktak.kmm.plugin.api.MediaType;
 
 /**
- * Ein Eintrag im Bericht eines Scans.
+ * An entry in the report of a scan.
  *
- * @param type  Art des Eintrags
- * @param id    ID in der Bibliothek; {@code null} bei entfernten Einträgen
- * @param label Bezeichnung für die Anzeige
+ * @param type  kind of entry
+ * @param id    ID in the library; {@code null} for removed entries
+ * @param label label for display
  */
 public record ScanEntry(MediaType type, Long id, String label) {
 }

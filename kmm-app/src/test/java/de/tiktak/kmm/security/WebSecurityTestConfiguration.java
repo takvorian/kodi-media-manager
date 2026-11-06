@@ -5,8 +5,8 @@ import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Import;
 
 /**
- * Bindet die produktive Security-Konfiguration in {@code @WebMvcTest}-Slices ein. Ob die Anmeldung
- * aktiv ist, steuert der Test über {@code kmm.security.enabled}.
+ * Includes the production security configuration in {@code @WebMvcTest} slices. Whether login is
+ * enabled is controlled by the test via {@code kmm.security.enabled}.
  */
 @TestConfiguration(proxyBeanMethods = false)
 @Import(SecurityConfiguration.class)

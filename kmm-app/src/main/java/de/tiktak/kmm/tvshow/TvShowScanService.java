@@ -10,6 +10,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -22,18 +23,18 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Durchsucht eine Serienquelle als Hintergrund-Job und übernimmt das Ergebnis in die Bibliothek.
- * Verzeichnisse und NFOs werden außerhalb der Datenbanktransaktion gelesen, mehrere Serien gleichzeitig.
+ * Scans a TV show source as a background job and takes the result over into the library.
+ * Directories and NFOs are read outside the database transaction, several TV shows at the same time.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class TvShowScanService {
 
-    static final String SEARCHING_MESSAGE = "Verzeichnisse werden durchsucht";
-    static final String SYNCHRONIZING_MESSAGE = "Bibliothek wird abgeglichen";
+    static final LocalizedText SEARCHING_MESSAGE = LocalizedText.of("tvShow.scan.searching");
+    static final LocalizedText SYNCHRONIZING_MESSAGE = LocalizedText.of("tvShow.scan.synchronizing");
     static final int MAX_LISTED_FILES = 100;
-    /** Gleichzeitig eingelesene Serien; mehr bringt auf Netzlaufwerken kaum etwas und belastet das NAS. */
+    /** TV shows read concurrently; more brings little on network drives and burdens the NAS. */
     static final int PARALLEL_SHOWS = 8;
     private static final int UNKNOWN_TOTAL = 0;
 
@@ -45,15 +46,16 @@ public class TvShowScanService {
     private final ApplicationEventPublisher events;
 
     /**
-     * Prüft die Quelle und startet den Scan im Hintergrund.
+     * Checks the source and starts the scan in the background.
      *
-     * @throws TvShowProblemException wenn die Quelle keine Serienquelle oder nicht erreichbar ist
+     * @throws TvShowProblemException if the source is not a TV show source or is not reachable
      */
     public JobSnapshot startScan(long sourceId) {
         MediaSource source = sourceService.require(sourceId);
         Path directory = scannableDirectory(source);
         return jobService.submit(MediaSourceService.SCAN_JOB_KEY_PREFIX + sourceId,
-                "Scan „%s“".formatted(source.getName()), context -> scan(source, directory, context));
+                LocalizedText.of("tvShow.scan.jobTitle").with("source", source.getName()),
+                context -> scan(source, directory, context));
     }
 
     TvShowScanResult scan(MediaSource source, Path directory, JobContext context) {
@@ -78,7 +80,7 @@ public class TvShowScanService {
         return result;
     }
 
-    /** Liest die Serien parallel ein; das Ergebnis behält die Reihenfolge der Ordner. */
+    /** Reads the TV shows in parallel; the result keeps the order of the folders. */
     private List<ScannedTvShow> readShows(TvShowDirectoryScanner scanner, List<Path> showDirectories,
                                           KnownNfos known, JobContext context) {
         ReadProgress progress = new ReadProgress(context, showDirectories.size());
@@ -112,7 +114,7 @@ public class TvShowScanService {
         }
     }
 
-    /** Meldet den Fortschritt je fertig eingelesener Serie; die Zähler steigen nie rückwärts. */
+    /** Reports progress per fully read TV show; the counters never go backwards. */
     private static final class ReadProgress {
 
         private final JobContext context;

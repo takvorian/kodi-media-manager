@@ -1,3 +1,5 @@
+import { LocalizedText } from '../i18n/localized-text';
+
 export type MediaType = 'MOVIE' | 'MOVIE_SET' | 'TV_SHOW' | 'TV_SEASON' | 'TV_EPISODE';
 
 /** Media types a source can be created for; the label is a translation key. */
@@ -95,6 +97,7 @@ export interface AutoScrapeResult {
   readonly enriched?: number;
   /** Entries without a unique match; may be shorter than {@link unmatched}. */
   readonly unmatchedEntries: readonly ScanEntry[];
-  readonly failures: readonly string[];
-  readonly warnings: readonly string[];
+  /** Failures per entry, e.g. "Heat: TMDB cannot be reached". */
+  readonly failures: readonly LocalizedText[];
+  readonly warnings: readonly LocalizedText[];
 }

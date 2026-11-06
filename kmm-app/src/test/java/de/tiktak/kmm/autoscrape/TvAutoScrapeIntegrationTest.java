@@ -60,8 +60,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Automatisches Scrapen einer Serienquelle über die REST-API mit Stub-Scrapern: Zuordnung, Episoden
- * und Bilder. Die Bilddateien liefert ein lokaler HTTP-Server.
+ * Automatic scraping of a TV show source via the REST API with stub scrapers: identification, episodes
+ * and artwork. A local HTTP server provides the image files.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -177,7 +177,7 @@ class TvAutoScrapeIntegrationTest {
 
         JsonNode result = await(post(seasonPath(showIdOf("Lost"), 2, false)));
 
-        assertThat(result.get("scraped").asInt()).as("noch nicht zugeordnete Serie").isEqualTo(1);
+        assertThat(result.get("scraped").asInt()).as("TV show not yet identified").isEqualTo(1);
         assertThat(result.get("episodesUpdated").asInt()).isEqualTo(1);
         assertThat(result.get("trailersSaved").asInt()).isZero();
         assertThat(result.get("failures")).isEmpty();
@@ -186,10 +186,10 @@ class TvAutoScrapeIntegrationTest {
         assertThat(show.resolve("Staffel 2/Lost S02E01-thumb.jpg")).exists();
         assertThat(show.resolve("season02-poster.jpg")).exists();
         assertThat(show.resolve("season01-poster.jpg")).as("andere Staffel").doesNotExist();
-        assertThat(show.resolve("poster.jpg")).as("Bild der Serie").doesNotExist();
+        assertThat(show.resolve("poster.jpg")).as("image of the TV show").doesNotExist();
         assertThat(show.resolve("Staffel 1/Lost - S01E01.mkv")).as("andere Staffel").exists();
         assertThat(show.resolve("Staffel 1/Lost - S01E01.nfo")).doesNotExist();
-        assertThat(library.resolve("Serie Lost")).as("Serienordner bleibt").doesNotExist();
+        assertThat(library.resolve("Serie Lost")).as("TV show folder stays").doesNotExist();
         assertThat(Files.readString(show.resolve("tvshow.nfo"))).doesNotContain("<trailer>");
     }
 
@@ -201,7 +201,7 @@ class TvAutoScrapeIntegrationTest {
         Files.writeString(nfo, Files.readString(nfo).replace("<title>Gestrandet</title>", "<title>Von Hand</title>"));
 
         assertThat(await(post(seasonPath(showId, 1, false))).get("episodesUpdated").asInt())
-                .as("Lücken füllen behält den Titel").isZero();
+                .as("filling gaps keeps the title").isZero();
         assertThat(Files.readString(nfo)).contains("<title>Von Hand</title>");
 
         JsonNode result = await(post(seasonPath(showId, 1, true)));
@@ -215,13 +215,16 @@ class TvAutoScrapeIntegrationTest {
         long showId = showIdOf("Lost");
         assertThat(mockMvc.post().uri(seasonPath(showId, 7, false)).with(csrf()).exchange())
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson().extractingPath("$.detail")
-                .isEqualTo("„Lost“ hat keine Episoden in Staffel 7.");
+                .isEqualTo("“Lost” has no episodes in season 7.");
         assertThat(mockMvc.post().uri(seasonPath(showId, -1, false)).with(csrf()).exchange())
                 .hasStatus(HttpStatus.BAD_REQUEST);
 
         JsonNode result = await(post(seasonPath(showId, 1, true)));
 
-        assertThat(result.get("failures").get(0).asString()).startsWith("Lost: „Lost“ ist bei TheTVDB nicht");
+        JsonNode failure = result.get("failures").get(0);
+        assertThat(failure.get("key").asString()).isEqualTo("autoScrape.failure");
+        assertThat(failure.get("args").get("entry").get("args").get("text").asString()).isEqualTo("Lost");
+        assertThat(failure.get("args").get("message").get("key").asString()).isEqualTo("tvShow.notIdentified.detail");
     }
 
     private void givenSecondSeason() throws IOException {
@@ -266,8 +269,8 @@ class TvAutoScrapeIntegrationTest {
 
         JsonNode repeated = await(post(AutoScrapeController.AUTO_SCRAPE_PATH.replace("{sourceId}",
                 String.valueOf(sourceId))));
-        assertThat(repeated.get("scraped").asInt()).as("schon zugeordnet").isZero();
-        assertThat(repeated.get("imagesSaved").asInt()).as("vorhandene Bilder bleiben").isZero();
+        assertThat(repeated.get("scraped").asInt()).as("already identified").isZero();
+        assertThat(repeated.get("imagesSaved").asInt()).as("existing images stay").isZero();
     }
 
     private long showIdOf(String title) {

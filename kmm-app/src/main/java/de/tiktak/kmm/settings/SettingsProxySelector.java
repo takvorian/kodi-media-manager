@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Wählt den Proxy bei jeder Verbindung anhand der aktuellen Einstellungen, damit Änderungen ohne
- * Neustart wirken.
+ * Selects the proxy on every connection based on the current settings so that changes take effect without
+ * a restart.
  */
 @Slf4j
 @RequiredArgsConstructor

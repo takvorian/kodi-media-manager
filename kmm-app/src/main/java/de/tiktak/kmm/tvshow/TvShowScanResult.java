@@ -8,16 +8,16 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.tiktak.kmm.source.ScanDetails;
 
 /**
- * Ergebnis eines Serien-Scans. {@code added} bis {@code unchanged} zählen Episoden, damit die
- * Oberfläche Film- und Serien-Scans gleich darstellen kann.
+ * Result of a TV show scan. {@code added} to {@code unchanged} count episodes, so that the
+ * user interface can display movie and TV show scans alike.
  *
- * @param showsAdded        neu gefundene Serien
- * @param showsRemoved      verschwundene Serien
- * @param nfoErrors         unlesbare NFOs
- * @param unrecognizedFiles Videodateien ohne erkennbare Staffel und Episode (gekürzt)
- * @param details           die betroffenen Serien und Episoden, gekürzt
- * @param newWithoutStreams IDs der neu gefundenen Episoden ohne technische Angaben in der NFO
- * @param showsWithNewEpisodes IDs der Serien mit neu gefundenen Episoden
+ * @param showsAdded        newly found TV shows
+ * @param showsRemoved      vanished TV shows
+ * @param nfoErrors         unreadable NFOs
+ * @param unrecognizedFiles video files without a recognizable season and episode (truncated)
+ * @param details           the affected TV shows and episodes, truncated
+ * @param newWithoutStreams IDs of newly found episodes without technical details in the NFO
+ * @param showsWithNewEpisodes IDs of the TV shows with newly found episodes
  */
 public record TvShowScanResult(
         long sourceId,

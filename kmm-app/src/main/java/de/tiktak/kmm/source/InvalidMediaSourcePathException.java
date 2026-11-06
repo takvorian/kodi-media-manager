@@ -1,16 +1,17 @@
 package de.tiktak.kmm.source;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Der Pfad einer Quelle ist kein erreichbares Verzeichnis. Wird als HTTP 422 beantwortet.
+ * The path of a source is not a reachable directory. Answered as HTTP 422.
  */
-public class InvalidMediaSourcePathException extends ErrorResponseException {
+public class InvalidMediaSourcePathException extends LocalizedProblemException {
 
     public InvalidMediaSourcePathException(String path) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT);
-        getBody().setTitle("Ungültiger Quellpfad");
-        getBody().setDetail("'%s' ist kein erreichbares Verzeichnis.".formatted(path));
+        super(HttpStatus.UNPROCESSABLE_CONTENT, LocalizedText.of("source.invalidPath.title"),
+                LocalizedText.of("source.invalidPath.detail").with("path", path), null);
     }
 }

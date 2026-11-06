@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Bereinigt Texte aus Formularen, NFOs und Fremddatenbanken, bevor sie gespeichert werden.
+ * Cleans texts from forms, NFOs and third-party databases before they are saved.
  */
 final class TvTexts {
 
@@ -21,7 +21,7 @@ final class TvTexts {
     private TvTexts() {
     }
 
-    /** Getrimmt, auf {@code maxLength} gekürzt, leer wird {@code null}. */
+    /** Trimmed, truncated to {@code maxLength}; empty becomes {@code null}. */
     static String clean(String value, int maxLength) {
         if (value == null) {
             return null;
@@ -33,7 +33,7 @@ final class TvTexts {
         return stripped.length() > maxLength ? stripped.substring(0, maxLength).strip() : stripped;
     }
 
-    /** Bereinigte, eindeutige Einträge in ihrer Reihenfolge, höchstens {@code maxEntries}. */
+    /** Cleaned, unique entries in their order, at most {@code maxEntries}. */
     static List<String> cleanAll(List<String> values, int maxLength, int maxEntries) {
         if (values == null) {
             return List.of();
@@ -46,7 +46,7 @@ final class TvTexts {
                 .toList();
     }
 
-    /** Die ID, wenn sie dem Muster entspricht, sonst {@code null}. */
+    /** The ID if it matches the pattern, otherwise {@code null}. */
     static String id(String value, String pattern) {
         String cleaned = clean(value, MAX_SHORT_LENGTH);
         return cleaned != null && cleaned.matches(pattern) ? cleaned : null;

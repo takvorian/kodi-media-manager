@@ -40,9 +40,27 @@ describe('SettingsPage', () => {
     overridden: [],
   };
   const keys: ApiKeyView[] = [
-    { key: 'TMDB_API_KEY', pluginId: 'tmdb', label: 'TMDB-API-Key', set: true, hint: '…cdef' },
-    { key: 'TVDB_API_KEY', pluginId: 'tvdb', label: 'TVDB-API-Key (v4)', set: false, hint: null },
-    { key: 'TVDB_PIN', pluginId: 'tvdb', label: 'TVDB-Abonnenten-PIN', set: true, hint: null },
+    {
+      key: 'TMDB_API_KEY',
+      pluginId: 'tmdb',
+      label: { key: 'settings.apiKey.tmdbApiKey', args: {} },
+      set: true,
+      hint: '…cdef',
+    },
+    {
+      key: 'TVDB_API_KEY',
+      pluginId: 'tvdb',
+      label: { key: 'settings.apiKey.tvdbApiKey', args: {} },
+      set: false,
+      hint: null,
+    },
+    {
+      key: 'TVDB_PIN',
+      pluginId: 'tvdb',
+      label: { key: 'settings.apiKey.tvdbPin', args: {} },
+      set: true,
+      hint: null,
+    },
   ];
 
   let fixture: ComponentFixture<SettingsPage>;

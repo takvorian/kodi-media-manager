@@ -1,7 +1,7 @@
 package de.tiktak.kmm.tvshow;
 
 /**
- * NFO oder Standbild einer Episode wurden geschrieben oder gelöscht.
+ * The NFO or still of an episode was written or deleted.
  */
 public record EpisodeFilesChangedEvent(long episodeId) {
 }

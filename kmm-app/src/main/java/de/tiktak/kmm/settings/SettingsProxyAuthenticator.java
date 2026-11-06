@@ -6,8 +6,8 @@ import java.net.PasswordAuthentication;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Meldet sich mit den Zugangsdaten aus den Einstellungen am Proxy an. Anfragen von Zielservern
- * (nicht vom Proxy) werden nicht beantwortet.
+ * Authenticates at the proxy with the credentials from the settings. Requests from target servers
+ * (not from the proxy) are not answered.
  */
 @RequiredArgsConstructor
 public class SettingsProxyAuthenticator extends Authenticator {

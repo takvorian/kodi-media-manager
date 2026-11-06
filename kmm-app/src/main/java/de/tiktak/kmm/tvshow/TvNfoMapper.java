@@ -14,8 +14,8 @@ import de.tiktak.kmm.nfo.NfoRating;
 import de.tiktak.kmm.nfo.TvShowNfo;
 
 /**
- * Übersetzt zwischen den NFO-Modellen aus {@code kmm-nfo} und den Angaben von Serien und Episoden.
- * Zeitpunkte stehen in NFOs als lokale Uhrzeit.
+ * Translates between the NFO models from {@code kmm-nfo} and the details of TV shows and episodes.
+ * Timestamps are stored in NFOs as local time.
  */
 final class TvNfoMapper {
 
@@ -51,7 +51,7 @@ final class TvNfoMapper {
     }
 
     /**
-     * @param trailer Trailer-Link, {@link TvShowNfo#NO_TRAILER} oder {@code null}, wenn unbekannt
+     * @param trailer trailer link, {@link TvShowNfo#NO_TRAILER} or {@code null} if unknown
      */
     static TvShowNfo toNfo(TvShowMetadata metadata, TvShowExtras extras, String trailer) {
         return new TvShowNfo(metadata.title(), metadata.originalTitle(), metadata.sortTitle(), metadata.premiered(),
@@ -98,7 +98,7 @@ final class TvNfoMapper {
         return instant == null ? null : LocalDateTime.ofInstant(instant, zone);
     }
 
-    /** Reihenfolge TVDB, TMDB, IMDb wie bei Kodis Serien-Scrapern; die erste ID wird Standard. */
+    /** Order TVDB, TMDB, IMDb as with Kodi's TV show scrapers; the first ID becomes the default. */
     private static Map<String, String> ids(String tvdbId, String tmdbId, String imdbId) {
         Map<String, String> ids = new LinkedHashMap<>();
         putIfPresent(ids, TVDB, tvdbId);

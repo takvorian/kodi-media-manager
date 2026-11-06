@@ -16,7 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verwaltet die Quellen. Öffentliche Schnittstelle des Moduls für andere Module.
+ * Manages the sources. Public interface of the module for other modules.
  */
 @Slf4j
 @Service
@@ -24,7 +24,7 @@ import lombok.extern.slf4j.Slf4j;
 @Transactional(readOnly = true)
 public class MediaSourceService {
 
-    /** Präfix des Job-Schlüssels für Scans; pro Quelle läuft höchstens ein Scan, egal welcher Art. */
+    /** Prefix of the job key for scans; at most one scan runs per source, regardless of type. */
     public static final String SCAN_JOB_KEY_PREFIX = "scan:";
 
     private static final Sort BY_NAME = Sort.by(Sort.Order.asc("name").ignoreCase());
@@ -52,13 +52,13 @@ public class MediaSourceService {
     }
 
     /**
-     * Übernimmt eine Quelle aus einer Migration. Gibt es bereits eine Quelle mit demselben Verzeichnis,
-     * wird diese verwendet. Anders als beim Anlegen muss das Verzeichnis nicht erreichbar sein (z. B.
-     * ein gerade nicht verbundenes Netzlaufwerk); ist der Name vergeben, erhält er einen Zusatz.
+     * Takes over a source from a migration. If a source with the same directory already exists,
+     * that one is used. Unlike when creating, the directory need not be reachable (e.g.
+     * a network drive that is currently not connected); if the name is taken, a suffix is added.
      *
-     * @param path     absoluter Pfad des Verzeichnisses
-     * @param language Sprache der Quelle oder {@code null}; eine vorhandene Quelle behält eine eigene Sprache
-     * @throws MediaSourceConflictException wenn sich das Verzeichnis mit einer anderen Quelle überschneidet
+     * @param path     absolute path of the directory
+     * @param language language of the source or {@code null}; an existing source keeps its own language
+     * @throws MediaSourceConflictException if the directory overlaps with another source
      */
     @Transactional
     public ImportedSource importSource(String name, String path, MediaType mediaType, String language) {
@@ -82,13 +82,13 @@ public class MediaSourceService {
     @Transactional
     public void delete(long sourceId) {
         MediaSource source = require(sourceId);
-        // Die Filme der Quelle löscht die Datenbank per ON DELETE CASCADE.
+        // The database deletes the movies of the source via ON DELETE CASCADE.
         repository.delete(source);
         log.info("Media source '{}' deleted", source.getName());
     }
 
     /**
-     * @param language Sprache wie {@code de-DE} oder {@code null}, dann gelten die allgemeinen Einstellungen
+     * @param language language such as {@code de-DE} or {@code null}, in which case the general settings apply
      */
     @Transactional
     public MediaSource changeLanguage(long sourceId, String language) {
@@ -98,7 +98,7 @@ public class MediaSourceService {
         return source;
     }
 
-    /** Die Sprache der Quelle oder {@code null}, wenn die allgemeinen Einstellungen gelten. */
+    /** The language of the source or {@code null} if the general settings apply. */
     @Transactional(readOnly = true)
     public String languageOf(long sourceId) {
         return repository.findById(sourceId).map(MediaSource::getMetadataLanguage).orElse(null);

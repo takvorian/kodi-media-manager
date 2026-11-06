@@ -34,8 +34,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Eine Episode einer Serie. Eine Datei mit Mehrfachepisode ({@code S01E01E02}) ergibt mehrere
- * Episoden mit derselben Datei, wie in Kodi.
+ * An episode of a TV show. A file with a multi-episode ({@code S01E01E02}) yields several
+ * episodes with the same file, as in Kodi.
  */
 @Entity
 @Table(name = "episode")
@@ -119,17 +119,17 @@ public class Episode {
     @Column(name = "stream_details", length = Length.LONG32)
     private StreamDetails streamDetails;
 
-    /** Abfragbare Kurzform der technischen Angaben für Filter; folgt {@link #streamDetails}. */
+    /** Queryable short form of the technical details for filters; follows {@link #streamDetails}. */
     @Embedded
     private StreamIndex streamIndex;
 
-    /** Änderungszeit der NFO beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
+    /** Modification time of the NFO when last read or written; {@code null} without an NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
 
     /**
-     * Ob die Angaben aus der NFO stammen. Bei Episoden aus dem Ember-Import stammen sie aus Embers Datenbank und
-     * können von der NFO abweichen; dann liest KMM die NFO vor dem ersten Neuschreiben ein.
+     * Whether the details come from the NFO. For episodes from the Ember import they come from Ember's database and
+     * may differ from the NFO; KMM then reads the NFO before rewriting it for the first time.
      */
     @Column(name = "nfo_read", nullable = false)
     private boolean nfoRead;
@@ -201,7 +201,7 @@ public class Episode {
         streamIndex = StreamIndex.of(streamDetails);
     }
 
-    /** Legt die Kurzform an und übersetzt dabei Codec-Namen, etwa für Episoden aus älteren Versionen. */
+    /** Creates the short form and translates codec names along the way, e.g. for episodes from older versions. */
     void indexStreams() {
         applyStreamDetails(streamDetails);
     }
@@ -216,7 +216,7 @@ public class Episode {
         this.nfoRead = true;
     }
 
-    /** Die Angaben stammen nicht aus der NFO, etwa nach einem Import. */
+    /** The details do not come from the NFO, e.g. after an import. */
     void markNfoNotRead() {
         this.nfoRead = false;
     }
@@ -229,7 +229,7 @@ public class Episode {
         return Path.of(filePath);
     }
 
-    /** Nach dem Umbenennen: die Datei liegt jetzt dort. */
+    /** After renaming: the file is now located there. */
     void relocate(String newFilePath) {
         this.filePath = Objects.requireNonNull(newFilePath, "newFilePath must not be null");
         this.filePathHash = PathHash.of(newFilePath);

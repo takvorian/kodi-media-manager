@@ -19,8 +19,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.job.JobSnapshot;
+import de.tiktak.kmm.web.LocalizedProblems;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -51,7 +53,7 @@ public class TvShowController {
         return TvShowPage.from(queryService.findShows(search, pageable));
     }
 
-    /** Serienliste mit Filter; ändert nichts, braucht aber einen Rumpf für die Bedingungen. */
+    /** TV show list with filter; changes nothing, but needs a body for the conditions. */
     @PostMapping(QUERY_PATH)
     public TvShowPage queryShows(
             @Valid @RequestBody TvShowFilter filter,
@@ -59,13 +61,13 @@ public class TvShowController {
         return TvShowPage.from(queryService.findFiltered(filter, pageable));
     }
 
-    /** IDs aller Serien, auf die der Filter passt. */
+    /** IDs of all TV shows matching the filter. */
     @PostMapping(QUERY_IDS_PATH)
     public List<Long> queryShowIds(@Valid @RequestBody TvShowFilter filter) {
         return queryService.findShowIds(filter);
     }
 
-    /** Stapel-Bearbeitung als Job; die NFOs der Serien werden geschrieben, umbenannt wird nicht. */
+    /** Batch edit as a job; the NFOs of the TV shows are written, but nothing is renamed. */
     @PostMapping(BATCH_PATH)
     public ResponseEntity<JobSnapshot> batchEdit(@Valid @RequestBody TvShowBatchEdit edit) {
         JobSnapshot job = batchService.start(edit);
@@ -82,7 +84,7 @@ public class TvShowController {
         return metadataService.openShow(showId);
     }
 
-    /** Speichert die Metadaten und schreibt sie in die {@code tvshow.nfo}. */
+    /** Saves the metadata and writes it to the {@code tvshow.nfo}. */
     @PutMapping(SHOW_METADATA_PATH)
     public TvShowDetails updateShow(@PathVariable long showId, @Valid @RequestBody TvShowMetadata metadata) {
         return editService.saveShow(showId, metadata);
@@ -93,7 +95,7 @@ public class TvShowController {
         return metadataService.openEpisode(episodeId);
     }
 
-    /** Speichert die Metadaten und schreibt sie in die NFO der Episode. */
+    /** Saves the metadata and writes it to the NFO of the episode. */
     @PutMapping(EPISODE_METADATA_PATH)
     public EpisodeDetails updateEpisode(@PathVariable long episodeId, @Valid @RequestBody EpisodeMetadata metadata) {
         return editService.saveEpisode(episodeId, metadata);
@@ -101,9 +103,7 @@ public class TvShowController {
 
     @ExceptionHandler(PropertyReferenceException.class)
     ProblemDetail handleUnknownSortProperty(PropertyReferenceException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "Nach '%s' kann nicht sortiert werden.".formatted(exception.getPropertyName()));
-        problem.setTitle("Ungültige Sortierung");
-        return problem;
+        return LocalizedProblems.problem(HttpStatus.BAD_REQUEST, LocalizedText.of("tvShow.invalidSort.title"),
+                LocalizedText.of("tvShow.invalidSort.detail").with("property", exception.getPropertyName()));
     }
 }

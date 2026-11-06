@@ -7,10 +7,10 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.Scraper;
 
 /**
- * Darstellung eines verfügbaren Scrapers für die REST-API.
+ * Representation of an available scraper for the REST API.
  *
- * @param missingConfiguration Hinweis, was zur Nutzung fehlt, oder {@code null}, wenn einsatzbereit
- * @param attribution          vom Anbieter verlangter Hinweis auf die Datenquelle oder {@code null}
+ * @param missingConfiguration hint about what is missing for use, or {@code null} if ready
+ * @param attribution          notice about the data source required by the provider, or {@code null}
  */
 public record ScraperInfo(String id, String displayName, Set<MediaType> mediaTypes, String missingConfiguration,
         Attribution attribution) {

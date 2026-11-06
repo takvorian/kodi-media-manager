@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
@@ -31,12 +32,13 @@ import de.tiktak.kmm.plugin.api.TvShowResult;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 import de.tiktak.kmm.scanner.TvShowFiles;
 import de.tiktak.kmm.tvshow.TvShowScrapeMerger.EpisodeFill;
+import de.tiktak.kmm.web.LocalizedTexts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Online-Suche für Serien: sucht beim Serien-Scraper, schlägt Metadaten für das Formular vor, ergänzt
- * leere Angaben der Episoden und ermittelt fehlende Episoden.
+ * Online search for TV shows: searches the TV show scraper, proposes metadata for the form, fills
+ * empty details of the episodes and determines missing episodes.
  */
 @Slf4j
 @Service
@@ -55,8 +57,8 @@ public class TvShowScrapeService {
     private final Clock clock;
 
     /**
-     * @param title Suchbegriff; ohne Angabe der Titel der Serie
-     * @param year  Jahr; ohne Angabe das Jahr der Serie, sofern der Titel nicht angegeben wurde
+     * @param title search term; if omitted, the title of the TV show
+     * @param year  year; if omitted, the year of the TV show, provided no title was given
      */
     @Transactional(readOnly = true)
     public List<TvShowScrapeCandidate> search(long showId, String scraperId, String title, Integer year) {
@@ -81,9 +83,9 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Ergänzt leere Angaben der Episoden und der Serie (Darsteller, Bewertungen, Staffeltitel) aus dem
-     * Treffer und schreibt die betroffenen NFOs. Eine NFO, die nicht geschrieben werden kann, lässt die
-     * Episoden dieser Datei unverändert.
+     * Fills empty details of the episodes and the TV show (actors, ratings, season titles) from the
+     * hit and writes the affected NFOs. An NFO that cannot be written leaves the episodes of that
+     * file unchanged.
      */
     @Transactional
     public EpisodeFillResult fillFromProvider(long showId, String scraperId, String providerId) {
@@ -92,12 +94,12 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Holt Titel, Texte, Staffeltitel und Episodennamen neu in der Sprache der Serie und überschreibt die vorhandenen,
-     * auch von Hand geänderte. Was der Anbieter in dieser Sprache nicht hat, bleibt. Eine NFO, die nicht geschrieben
-     * werden kann, lässt die Episoden dieser Datei unverändert.
+     * Fetches titles, texts, season titles and episode names again in the TV show's language and overwrites the
+     * existing ones, including manually edited ones. What the provider does not have in that language stays. An NFO
+     * that cannot be written leaves the episodes of that file unchanged.
      *
-     * @throws TvShowProblemException wenn kein Anbieter eingerichtet ist, er einen Fehler meldet oder die Serie nicht
-     *                                eindeutig findet
+     * @throws TvShowProblemException if no provider is set up, it reports an error or it does not find the TV show
+     *                                unambiguously
      */
     @Transactional
     public TextRefetch refetchTexts(long showId) {
@@ -122,8 +124,8 @@ public class TvShowScrapeService {
     }
 
     /**
-     * @param changed     ob sich an der Serie oder ihren Episoden etwas geändert hat
-     * @param failedFiles NFOs, die nicht geschrieben werden konnten
+     * @param changed     whether anything changed in the TV show or its episodes
+     * @param failedFiles NFOs that could not be written
      */
     public record TextRefetch(boolean changed, List<String> failedFiles) {
     }
@@ -133,11 +135,11 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Holt Titel und Texte der Episoden einer Staffel neu und ersetzt die vorhandenen, auch von Hand geänderte. Von
-     * der Serie ändert sich nur der Titel dieser Staffel. Was der Anbieter nicht hat, bleibt.
+     * Fetches titles and texts of the episodes of a season again and replaces the existing ones, including manually
+     * edited ones. Of the TV show only the title of this season changes. What the provider does not have stays.
      *
-     * @throws TvShowProblemException wenn kein Anbieter eingerichtet ist, er einen Fehler meldet oder die Serie noch
-     *                                nicht zugeordnet ist
+     * @throws TvShowProblemException if no provider is set up, it reports an error or the TV show is not yet
+     *                                identified
      */
     @Transactional
     public TvShowAutoScrapeOutcome refetchSeason(long showId, int season) {
@@ -158,8 +160,8 @@ public class TvShowScrapeService {
     }
 
     /**
-     * @param overwrite ob vorhandene Titel und Texte ersetzt werden; sonst bekommen nur leere Felder Werte
-     * @param season    nur die Episoden dieser Staffel und von der Serie nur ihr Titel; {@code null} für alle
+     * @param overwrite whether existing titles and texts are replaced; otherwise only empty fields get values
+     * @param season    only the episodes of this season and of the TV show only its title; {@code null} for all
      */
     private EpisodeFillResult fill(TvShow show, TvShowScraper scraper, String providerId, boolean overwrite,
             Integer season) {
@@ -204,11 +206,11 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Scrapt eine Serie automatisch mit dem bevorzugten Serien-Scraper: Eine noch nicht zugeordnete
-     * Serie wird nur bei eindeutigem Treffer übernommen (wie bei Filmen überlagert); danach bekommen die
-     * Episoden leere Felder gefüllt.
+     * Scrapes a TV show automatically with the preferred TV show scraper: A TV show that is not yet
+     * identified is only applied on an unambiguous hit (overlaid as with movies); afterwards the
+     * episodes get empty fields filled.
      *
-     * @throws TvShowProblemException wenn der Anbieter einen Fehler meldet oder die NFO nicht geschrieben werden kann
+     * @throws TvShowProblemException if the provider reports an error or the NFO cannot be written
      */
     @Transactional
     public TvShowAutoScrapeOutcome scrapeMissing(long showId) {
@@ -216,10 +218,10 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Wie {@link #scrapeMissing}, ergänzt aber nur die Episoden einer Staffel und von der Serie nur den Titel dieser
-     * Staffel. Eine noch nicht zugeordnete Serie wird wie dort nur bei eindeutigem Treffer übernommen.
+     * Like {@link #scrapeMissing}, but enriches only the episodes of a season and of the TV show only the title of
+     * this season. A TV show that is not yet identified is, as there, only applied on an unambiguous hit.
      *
-     * @throws TvShowProblemException wenn der Anbieter einen Fehler meldet
+     * @throws TvShowProblemException if the provider reports an error
      */
     @Transactional
     public TvShowAutoScrapeOutcome scrapeSeasonMissing(long showId, int season) {
@@ -253,7 +255,7 @@ public class TvShowScrapeService {
         return new TvShowAutoScrapeOutcome(status, filled.updated(), filled.failedFiles());
     }
 
-    /** Der konfigurierte Serien-Scraper, sonst der erste eingerichtete. */
+    /** The configured TV show scraper, otherwise the first one set up. */
     private Optional<TvShowScraper> preferredReadyScraper() {
         List<TvShowScraper> ready = scraperRegistry.tvShowScrapers().stream()
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())
@@ -265,9 +267,9 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Episoden, die der Anbieter kennt, für die es aber keine Datei gibt.
+     * Episodes that the provider knows but for which there is no file.
      *
-     * @throws TvShowProblemException wenn die Serie beim Anbieter nicht eindeutig zugeordnet ist
+     * @throws TvShowProblemException if the TV show is not unambiguously identified at the provider
      */
     @Transactional(readOnly = true)
     public List<MissingEpisode> missingEpisodes(long showId, String scraperId) {
@@ -283,8 +285,8 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Fragt alle eingerichteten Serien-Scraper nach dem Standbild der Episode. Ein Anbieter, der die
-     * Serie nicht kennt oder einen Fehler meldet, erscheint als Hinweis.
+     * Asks all set-up TV show scrapers for the still of the episode. A provider that does not know the
+     * TV show or reports an error appears as a notice.
      */
     @Transactional(readOnly = true)
     public EpisodeThumbs episodeThumbs(long episodeId) {
@@ -296,11 +298,11 @@ public class TvShowScrapeService {
 
     private EpisodeThumbs episodeThumbs(Episode episode, TvShow show) {
         List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
-        List<String> warnings = new ArrayList<>();
+        List<LocalizedText> warnings = new ArrayList<>();
         for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
-            Optional<String> missing = scraper.missingConfiguration();
+            var missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
-                warnings.add(missing.get());
+                warnings.add(LocalizedTexts.asText(missing.get()));
                 continue;
             }
             try {
@@ -311,13 +313,14 @@ public class TvShowScrapeService {
                         .findFirst()
                         .ifPresent(url -> thumbs.add(new EpisodeThumbs.Thumb(scraper.id(), scraper.displayName(), url)));
             } catch (TvShowProblemException e) {
-                warnings.add("%s: %s".formatted(scraper.displayName(), e.getBody().getDetail()));
+                warnings.add(LocalizedText.of("tvShow.thumbs.scraperFailed").with("scraper", scraper.displayName())
+                        .with("message", e.localizedText()));
             }
         }
         return new EpisodeThumbs(thumbs, warnings);
     }
 
-    /** Liest eine außerhalb von KMM geänderte Episoden-NFO ein; eine unlesbare bleibt unberührt. */
+    /** Reads an episode NFO changed outside KMM; an unreadable one is left untouched. */
     private boolean refreshed(List<Episode> sameFile, List<String> failedFiles) {
         try {
             nfoSync.refreshEpisodesIfChangedOutside(sameFile);
@@ -361,9 +364,9 @@ public class TvShowScrapeService {
     }
 
     /**
-     * Fragt die Einzelangaben einer Episode (z. B. Regie und Drehbuch bei TVDB) nur an, wenn sie der
-     * Episode fehlen und der Treffer sie nicht schon enthält; jede Anfrage belastet den Anbieter. Ein
-     * Fehler dabei verhindert die Übernahme der übrigen Angaben nicht.
+     * Requests the individual details of an episode (e.g. director and writer at TVDB) only if the
+     * episode lacks them and the hit does not already contain them; every request burdens the provider. An
+     * error there does not prevent applying the remaining details.
      */
     private static EpisodeResult withDetailsIfMissing(TvShowScraper scraper, Episode episode, EpisodeResult match) {
         EpisodeExtras extras = episode.extras();
@@ -381,7 +384,7 @@ public class TvShowScrapeService {
         }
     }
 
-    /** Schreibt die gemeinsame NFO einer Datei mit allen ihren Episoden; erst danach ändert sich die Datenbank. */
+    /** Writes the shared NFO of a file with all its episodes; only then does the database change. */
     private boolean writeEpisodes(List<Episode> sameFile, Map<Episode, EpisodeFill> fills, List<String> failedFiles) {
         List<EpisodeNfo> nfos = sameFile.stream()
                 .map(episode -> {
@@ -410,7 +413,7 @@ public class TvShowScrapeService {
         }
     }
 
-    /** Über die bei diesem Anbieter bekannte ID, sonst über die Zuordnung des Scrapers. */
+    /** Via the ID known at this provider, otherwise via the scraper's identification. */
     private TvShowResult identify(TvShowScraper scraper, TvShow show) {
         Map<String, String> ids = knownIds(show.metadata());
         String providerId = ids.get(scraper.id());

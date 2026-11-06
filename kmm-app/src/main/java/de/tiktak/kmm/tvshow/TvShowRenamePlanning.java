@@ -15,7 +15,7 @@ import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Plant das Umbenennen der Serien einer Quelle oder einer einzelnen Serie, ohne etwas zu ändern.
+ * Plans the renaming of the TV shows of a source or of a single TV show, without changing anything.
  */
 @Component
 @RequiredArgsConstructor
@@ -30,8 +30,8 @@ class TvShowRenamePlanning {
     private final EpisodeRepository episodeRepository;
 
     /**
-     * @return je Serie der Quelle der Plan, sortiert nach Ordner
-     * @throws TvRenameProblemException wenn die Quelle keine Serien enthält
+     * @return the plan per TV show of the source, sorted by folder
+     * @throws TvRenameProblemException if the source contains no TV shows
      */
     Planned planSource(long sourceId, TvShowRenamePlanner.Patterns patterns) {
         MediaSource source = tvSource(sourceId);
@@ -49,7 +49,7 @@ class TvShowRenamePlanning {
     }
 
     /**
-     * @throws TvShowProblemException wenn es die Serie nicht gibt
+     * @throws TvShowProblemException if the TV show does not exist
      */
     Planned planShow(long showId, TvShowRenamePlanner.Patterns patterns) {
         TvShow show = showRepository.findById(showId).orElseThrow(() -> TvShowProblemException.showNotFound(showId));
@@ -60,9 +60,9 @@ class TvShowRenamePlanning {
     }
 
     /**
-     * Plant nur die Episoden einer Staffel; der Serienordner bleibt, wie er ist.
+     * Plans only the episodes of a season; the TV show folder stays as it is.
      *
-     * @throws TvShowProblemException wenn es die Serie nicht gibt
+     * @throws TvShowProblemException if the TV show does not exist
      */
     Planned planSeason(long showId, int season, TvShowRenamePlanner.Patterns patterns) {
         TvShow show = showRepository.findById(showId).orElseThrow(() -> TvShowProblemException.showNotFound(showId));
@@ -98,7 +98,7 @@ class TvShowRenamePlanning {
                 !directory.equals(root), TvNameValues.of(show), files);
     }
 
-    /** Pläne und die Wurzel der Quelle, die beim Aufräumen leerer Ordner nicht unterschritten wird. */
+    /** Plans and the root of the source, which cleanup of empty folders does not go above. */
     record Planned(Path sourceRoot, List<TvShowRenamePlan> plans) {
 
         Planned {

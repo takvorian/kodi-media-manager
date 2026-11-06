@@ -18,9 +18,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Abfragbare Kurzform der technischen Angaben für Filter: Auflösungsstufe, Codec und HDR der ersten Videospur sowie
- * alle Audio-Codecs, Audio- und Untertitelsprachen. Listen stehen als {@code " ac3 dts "} in einer Spalte, damit
- * ein Filter mit {@code LIKE '% dts %'} genau einen Eintrag trifft.
+ * Queryable short form of the technical details for filters: resolution tier, codec and HDR of the first video track,
+ * plus all audio codecs, audio and subtitle languages. Lists are stored as {@code " ac3 dts "} in one column so that
+ * a filter with {@code LIKE '% dts %'} matches exactly one entry.
  */
 @Embeddable
 @Getter
@@ -29,7 +29,7 @@ import lombok.NoArgsConstructor;
 public class StreamIndex {
 
     public static final String SEPARATOR = " ";
-    /** Escape-Zeichen für {@code LIKE}; kein Backslash, weil MariaDB ihn auch in Zeichenketten auswertet. */
+    /** Escape character for {@code LIKE}; not a backslash because MariaDB also interprets it in strings. */
     public static final char LIKE_ESCAPE = '!';
     static final int MAX_LIST_LENGTH = 512;
     private static final int MAX_LABEL_LENGTH = 32;
@@ -43,7 +43,7 @@ public class StreamIndex {
     @Column(name = "hdr_type", length = MAX_LABEL_LENGTH)
     private String hdrType;
 
-    /** Ist nie {@code null}, sobald technische Angaben bekannt sind; so erkennt KMM noch nicht indizierte Filme. */
+    /** Never {@code null} once technical details are known; this is how KMM detects movies not yet indexed. */
     @Column(name = "audio_codecs", length = MAX_LIST_LENGTH)
     private String audioCodecs;
 
@@ -53,7 +53,7 @@ public class StreamIndex {
     @Column(name = "subtitle_languages", length = MAX_LIST_LENGTH)
     private String subtitleLanguages;
 
-    /** @return die Kurzform oder {@code null} ohne technische Angaben */
+    /** @return the short form or {@code null} without technical details */
     public static StreamIndex of(StreamDetails details) {
         if (details == null || details.isEmpty()) {
             return null;
@@ -70,18 +70,18 @@ public class StreamIndex {
         return index;
     }
 
-    /** Muster für {@code LIKE} mit {@link #LIKE_ESCAPE}, das genau einen Eintrag einer Liste trifft. */
+    /** Pattern for {@code LIKE} with {@link #LIKE_ESCAPE} that matches exactly one entry of a list. */
     public static String containsToken(String value) {
         return "%" + SEPARATOR + escapeLike(normalize(value)) + SEPARATOR + "%";
     }
 
-    /** Maskiert die Platzhalter von {@code LIKE} mit {@link #LIKE_ESCAPE}. */
+    /** Escapes the wildcards of {@code LIKE} with {@link #LIKE_ESCAPE}. */
     public static String escapeLike(String value) {
         String escape = String.valueOf(LIKE_ESCAPE);
         return value.replace(escape, escape + escape).replace("%", escape + "%").replace("_", escape + "_");
     }
 
-    /** @return die Einträge einer Liste, z. B. für Auswahllisten */
+    /** @return the entries of a list, e.g. for selection lists */
     public static Set<String> tokensOf(String list) {
         return list == null ? Set.of() : Arrays.stream(list.split(SEPARATOR))
                 .filter(token -> !token.isEmpty())

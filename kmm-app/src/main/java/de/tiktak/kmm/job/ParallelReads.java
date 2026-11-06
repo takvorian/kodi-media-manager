@@ -9,8 +9,8 @@ import java.util.concurrent.Future;
 import java.util.function.Function;
 
 /**
- * Führt Dateizugriffe mit begrenzter Parallelität auf virtuellen Threads aus. Auf Netzlaufwerken
- * bestimmt die Wartezeit je Zugriff die Dauer eines Scans, nicht die Rechenleistung.
+ * Runs file accesses with limited parallelism on virtual threads. On network drives
+ * the wait time per access determines the duration of a scan, not the computing power.
  */
 public final class ParallelReads {
 
@@ -18,8 +18,8 @@ public final class ParallelReads {
     }
 
     /**
-     * @return die Ergebnisse in der Reihenfolge der Eingaben
-     * @throws RuntimeException die erste Ausnahme einer Aufgabe, in der Reihenfolge der Eingaben
+     * @return the results in the order of the inputs
+     * @throws RuntimeException the first exception of a task, in the order of the inputs
      */
     public static <T, R> List<R> map(List<T> items, int parallelism, String threadName, Function<T, R> task) {
         try (ExecutorService executor = Executors.newFixedThreadPool(parallelism,

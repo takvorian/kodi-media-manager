@@ -6,8 +6,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * @param historySize      Anzahl beendeter Jobs, die zur Anzeige aufbewahrt werden
- * @param progressInterval Mindestabstand zwischen zwei Fortschrittsmeldungen eines Jobs an die Oberfläche
+ * @param historySize      number of finished jobs kept for display
+ * @param progressInterval minimum interval between two progress reports of a job to the user interface
  */
 @ConfigurationProperties("kmm.jobs")
 public record JobProperties(

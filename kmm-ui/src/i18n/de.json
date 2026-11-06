@@ -1063,6 +1063,192 @@
         "title": "Job nicht gefunden",
         "detail": "Es gibt keinen Job mit der ID {id}."
       }
+    },
+    "security": {
+      "denied": {
+        "title": "Anfrage abgelehnt",
+        "csrf": "Der Server hat die Anfrage abgelehnt, weil das Sicherheits-Cookie fehlt oder nicht passt. Lade die Seite neu. Hilft das nicht, lösche die Cookies dieser Adresse im Browser.",
+        "permission": "Für diese Aktion fehlt die Berechtigung."
+      }
+    },
+    "tvShow": {
+      "notFound": {
+        "title": "Serie nicht gefunden",
+        "detail": "Es gibt keine Serie mit der ID {id}."
+      },
+      "episodeNotFound": {
+        "title": "Episode nicht gefunden",
+        "detail": "Es gibt keine Episode mit der ID {id}."
+      },
+      "scan": {
+        "title": "Quelle kann nicht gescannt werden",
+        "notATvSource": "Die Quelle „{source}“ enthält keine Serien ({mediaType}).",
+        "unreachable": "Das Verzeichnis „{path}“ der Quelle „{source}“ ist nicht erreichbar.",
+        "jobTitle": "Scan „{source}“",
+        "searching": "Verzeichnisse werden durchsucht",
+        "synchronizing": "Bibliothek wird abgeglichen"
+      },
+      "nfoChangedOutside": {
+        "title": "NFO außerhalb von KMM geändert",
+        "detail": "{file} wurde außerhalb von KMM geändert und lässt sich nicht lesen ({reason}). KMM überschreibt sie deshalb nicht; bitte die Datei prüfen."
+      },
+      "nfoNotWritable": {
+        "title": "NFO konnte nicht geschrieben werden",
+        "detail": "{reason} Bitte Schreibrechte im Serienordner prüfen."
+      },
+      "nfosNotWritten": {
+        "title": "NFO nicht geschrieben",
+        "detail": "NFO nicht geschrieben: {files}"
+      },
+      "noScraper": {
+        "title": "Kein Scraper eingerichtet",
+        "detail": "Es ist kein Serien-Scraper eingerichtet, etwa TVDB oder TMDB mit API-Key."
+      },
+      "missingIdsForTrailers": {
+        "title": "Serie nicht eindeutig zugeordnet",
+        "detail": "Für die Trailersuche wird eine TVDB-, TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+      },
+      "invalidTrailer": {
+        "title": "Ungültiger Trailer",
+        "detail": "„{url}“ ist kein Link, den Kodi abspielen kann (plugin://, http(s)://, smb:// oder nfs://)."
+      },
+      "unknownScraper": {
+        "title": "Scraper nicht gefunden",
+        "detail": "Es ist kein Serien-Scraper mit der ID „{id}“ installiert und aktiv."
+      },
+      "scraperNotConfigured": {
+        "title": "{scraper} ist nicht eingerichtet"
+      },
+      "providerFailed": {
+        "title": "{scraper} meldet einen Fehler"
+      },
+      "notFoundAtProvider": {
+        "title": "Treffer nicht gefunden",
+        "detail": "{scraper} kennt den Eintrag „{id}“ nicht."
+      },
+      "notIdentified": {
+        "title": "Serie nicht zugeordnet",
+        "detail": "„{title}“ ist bei {scraper} nicht eindeutig zugeordnet. Bitte zuerst über die Online-Suche übernehmen."
+      },
+      "invalidSort": {
+        "title": "Ungültige Sortierung",
+        "detail": "Nach „{property}“ kann nicht sortiert werden."
+      },
+      "rename": {
+        "title": "Umbenennen nicht möglich",
+        "invalidPattern": "Muster für {pattern}: {reason}",
+        "foldersNotAllowed": "Muster für {pattern}: Ordner (/) sind hier nicht erlaubt.",
+        "notATvSource": "Die Quelle „{source}“ enthält keine Serien.",
+        "pattern": {
+          "showFolder": "Serienordner",
+          "seasonFolder": "Staffelordner",
+          "episodeFile": "Episodendateien"
+        },
+        "showFolderEmpty": "Das Muster für Serienordner ergibt keinen Namen.",
+        "folderUnreadable": "Ein Ordner der Serie ist nicht lesbar: {reason}",
+        "noEpisodeFile": "Keine Episodendatei lässt sich umbenennen.",
+        "episodeFileInvalid": "Das Muster für Episodendateien ergibt keinen gültigen Dateinamen.",
+        "fileExists": "Die Datei „{file}“ existiert bereits.",
+        "sameName": "Mehrere Episodendateien bekämen denselben Namen.",
+        "folderExists": "Der Ordner „{folder}“ existiert bereits.",
+        "folderInside": "Der neue Ordner liegt im bisherigen.",
+        "folderGone": "Der Ordner „{folder}“ existiert nicht mehr.",
+        "planning": "Neue Namen werden berechnet",
+        "jobTitle": "Serien umbenennen „{source}“",
+        "failed": "Umbenennen fehlgeschlagen: {reason}",
+        "showProblem": "„{title}“: {message}",
+        "episodeProblem": "„{title}“ {episodes}: {message}"
+      },
+      "batch": {
+        "editJobTitle": "{count, plural, one {# Serie} other {# Serien}} bearbeiten",
+        "trailerFillJobTitle": "Fehlende Trailer für {count, plural, one {# Serie} other {# Serien}} holen",
+        "enrichmentJobTitle": "Bewertungen für {count, plural, one {# Serie} other {# Serien}} aktualisieren",
+        "languageJobTitle": "Sprache von {count, plural, one {# Serie} other {# Serien}} ändern",
+        "progress": "Serie {id}",
+        "failure": "Serie {id}: {message}"
+      },
+      "thumbs": {
+        "scraperFailed": "{scraper}: {message}"
+      }
+    },
+    "autoScrape": {
+      "sourceNotPossible": {
+        "title": "Quelle kann nicht gescrapt werden",
+        "detail": "Die Quelle „{source}“ enthält weder Filme noch Serien ({mediaType})."
+      },
+      "seasonNotPossible": {
+        "title": "Staffel kann nicht gescrapt werden",
+        "detail": "„{title}“ hat keine Episoden in Staffel {season}."
+      },
+      "jobTitle": {
+        "single": "Scrapen „{title}“",
+        "movies": "{count, plural, one {# Film} other {# Filme}} scrapen",
+        "tvShows": "{count, plural, one {# Serie} other {# Serien}} scrapen",
+        "season": "Staffel {season} von „{title}“ scrapen",
+        "seasonRefetch": "Staffel {season} von „{title}“ neu holen"
+      },
+      "season": "Staffel {season} von „{title}“",
+      "unexpectedError": "unerwarteter Fehler",
+      "noMetadataScraper": "Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.",
+      "noTvShowScraper": "Kein Serien-Scraper ist eingerichtet; es werden nur Bilder geholt.",
+      "failure": "{entry}: {message}",
+      "unknownMovie": "Film {id}",
+      "unknownShow": "Serie {id}",
+      "technicalDetails": "Technische Angaben: {reason}",
+      "theme": "Titelmusik: {reason}",
+      "enrichment": "Ergänzen: {reason}",
+      "notRenamed": "„{title}“ nicht umbenannt: {reason}",
+      "nfoNotWritten": "NFO nicht geschrieben: {file}"
+    },
+    "source": {
+      "notFound": {
+        "title": "Quelle nicht gefunden",
+        "detail": "Es gibt keine Quelle mit der ID {id}."
+      },
+      "invalidPath": {
+        "title": "Ungültiger Quellpfad",
+        "detail": "„{path}“ ist kein erreichbares Verzeichnis."
+      },
+      "conflict": {
+        "title": "Quelle kollidiert mit vorhandener Quelle",
+        "nameTaken": "Es gibt bereits eine Quelle mit dem Namen „{name}“.",
+        "overlaps": "Der Pfad „{path}“ überschneidet sich mit der Quelle „{source}“ ({sourcePath})."
+      }
+    },
+    "plugin": {
+      "notFound": {
+        "title": "Plugin nicht gefunden",
+        "detail": "Es ist kein Plugin mit der ID „{id}“ installiert."
+      }
+    },
+    "settings": {
+      "invalid": {
+        "title": "Ungültige Einstellungen"
+      },
+      "rename": {
+        "pattern": {
+          "movieFolder": "Filmordner",
+          "movieFile": "Filmdateien",
+          "tvShowFolder": "Serienordner",
+          "seasonFolder": "Staffelordner",
+          "episodeFile": "Episodendateien"
+        },
+        "foldersNotAllowed": "Muster für {pattern}: Ordner (/) sind hier nicht erlaubt.",
+        "invalidPattern": "Muster für {pattern}: {reason}"
+      },
+      "movieSets": {
+        "flatFolderMissing": "Für Set-Bilder im flachen Schema fehlt der Ordner.",
+        "kodiFolderMissing": "Für Set-Bilder in Kodis Set-Ordnern fehlt der Ordner."
+      },
+      "apiKey": {
+        "tmdbApiKey": "TMDB-API-Key",
+        "tvdbApiKey": "TVDB-API-Key (v4)",
+        "tvdbPin": "TVDB-Abonnenten-PIN",
+        "fanartTvApiKey": "fanart.tv-Projekt-Key",
+        "fanartTvClientKey": "fanart.tv-Persönlicher-Key",
+        "traktClientId": "Trakt-Client-ID",
+        "omdbApiKey": "OMDb-API-Key"
+      }
     }
   }
 }

@@ -5,7 +5,7 @@ import java.time.Instant;
 import de.tiktak.kmm.plugin.api.MediaType;
 
 /**
- * Darstellung einer Quelle für die REST-API.
+ * Representation of a source for the REST API.
  */
 public record MediaSourceResponse(
         long id,

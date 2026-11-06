@@ -26,7 +26,7 @@ import de.tiktak.kmm.scanner.TvShowFiles;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Zugriff auf die NFOs von Serien ({@code tvshow.nfo}) und Episoden: finden, lesen und schreiben.
+ * Access to the NFOs of TV shows ({@code tvshow.nfo}) and episodes: find, read and write.
  */
 @Slf4j
 @Component
@@ -50,31 +50,31 @@ class TvShowNfoFiles {
     }
 
     /**
-     * @throws de.tiktak.kmm.nfo.NfoException wenn die Datei nicht gelesen werden kann
+     * @throws de.tiktak.kmm.nfo.NfoException if the file cannot be read
      */
     TvShowNfo readShow(TvNfoState nfo) {
         return showReader.read(nfo.file());
     }
 
     /**
-     * @throws de.tiktak.kmm.nfo.NfoException wenn die Datei nicht gelesen werden kann
+     * @throws de.tiktak.kmm.nfo.NfoException if the file cannot be read
      */
     List<EpisodeNfo> readEpisodes(TvNfoState nfo) {
         return episodeReader.read(nfo.file());
     }
 
-    /** Liest die {@code tvshow.nfo}; eine unlesbare Datei wird protokolliert. */
+    /** Reads the {@code tvshow.nfo}; an unreadable file is logged. */
     LoadedNfo<TvShowNfo> loadShow(TvNfoState nfo) {
         return load(nfo, () -> readShow(nfo));
     }
 
-    /** Liest die NFO einer Episodendatei; eine unlesbare Datei wird protokolliert. */
+    /** Reads the NFO of an episode file; an unreadable file is logged. */
     LoadedNfo<List<EpisodeNfo>> loadEpisodes(TvNfoState nfo) {
         return load(nfo, () -> readEpisodes(nfo));
     }
 
     /**
-     * @throws de.tiktak.kmm.nfo.NfoException wenn die Datei nicht geschrieben werden kann
+     * @throws de.tiktak.kmm.nfo.NfoException if the file cannot be written
      */
     TvNfoState writeShow(Path showDirectory, TvShowNfo nfo) {
         Path file = TvShowFiles.tvShowNfo(showDirectory);
@@ -83,7 +83,7 @@ class TvShowNfoFiles {
     }
 
     /**
-     * @throws de.tiktak.kmm.nfo.NfoException wenn die Datei nicht geschrieben werden kann
+     * @throws de.tiktak.kmm.nfo.NfoException if the file cannot be written
      */
     TvNfoState writeEpisodes(Path episodeFile, List<EpisodeNfo> episodes) {
         Path file = TvShowFiles.episodeNfo(episodeFile);
@@ -92,10 +92,10 @@ class TvShowNfoFiles {
     }
 
     /**
-     * Schreibt nur Wiedergabestand und eigene Bewertung der Episode in ihre vorhandene NFO.
+     * Writes only the playback state and own rating of the episode into its existing NFO.
      *
-     * @throws de.tiktak.kmm.nfo.NfoException wenn die NFO die Episode nicht enthält oder nicht geschrieben
-     *                                        werden kann
+     * @throws de.tiktak.kmm.nfo.NfoException if the NFO does not contain the episode or cannot be
+     *                                        written
      */
     TvNfoState writePlayback(TvNfoState nfo, int season, int episode, NfoPlayback playback) {
         playbackWriter.writeEpisode(nfo.file(), season, episode, playback);
@@ -103,9 +103,9 @@ class TvShowNfoFiles {
     }
 
     /**
-     * Ersetzt nur die technischen Angaben einer Episode in der vorhandenen NFO.
+     * Replaces only the technical details of an episode in the existing NFO.
      *
-     * @throws NfoException wenn die NFO die Episode nicht enthält oder nicht geschrieben werden kann
+     * @throws NfoException if the NFO does not contain the episode or cannot be written
      */
     TvNfoState writeStreamDetails(TvNfoState nfo, List<EpisodeStreamDetails> episodes) {
         streamDetailsWriter.writeEpisodes(nfo.file(), episodes);
@@ -113,10 +113,10 @@ class TvShowNfoFiles {
     }
 
     /**
-     * Ändert nur die Sprache in der vorhandenen {@code tvshow.nfo}; alles andere bleibt Zeichen für Zeichen.
+     * Changes only the language in the existing {@code tvshow.nfo}; everything else stays character for character.
      *
-     * @param language Sprache oder {@code null}, um sie zu entfernen
-     * @throws NfoException wenn die NFO keine Serie enthält oder nicht geschrieben werden kann
+     * @param language language, or {@code null} to remove it
+     * @throws NfoException if the NFO does not contain a TV show or cannot be written
      */
     TvNfoState writeShowLanguage(TvNfoState nfo, String language) {
         languageWriter.writeTvShow(nfo.file(), language);
@@ -124,10 +124,10 @@ class TvShowNfoFiles {
     }
 
     /**
-     * Ändert nur den Trailer-Link in der vorhandenen {@code tvshow.nfo}; alles andere bleibt Zeichen für Zeichen.
+     * Changes only the trailer link in the existing {@code tvshow.nfo}; everything else stays character for character.
      *
-     * @param trailer Link oder {@code null}, um ihn zu entfernen
-     * @throws NfoException wenn die NFO keine Serie enthält oder nicht geschrieben werden kann
+     * @param trailer link, or {@code null} to remove it
+     * @throws NfoException if the NFO does not contain a TV show or cannot be written
      */
     TvNfoState writeShowTrailer(TvNfoState nfo, String trailer) {
         trailerWriter.writeTvShow(nfo.file(), trailer);

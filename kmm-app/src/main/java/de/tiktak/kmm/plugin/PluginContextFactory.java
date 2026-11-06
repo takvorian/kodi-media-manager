@@ -13,9 +13,9 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Erzeugt den {@link PluginContext} für ein Plugin aus der Konfiguration der Anwendung. Gemeinsame
- * Einstellungen (z. B. die Sprache) gelten für alle Plugins, eigene Einstellungen eines Plugins haben
- * Vorrang. Da PF4J Extensions bei jeder Abfrage neu erzeugt, wirken Änderungen sofort.
+ * Creates the {@link PluginContext} for a plugin from the application configuration. Shared
+ * settings (e.g. the language) apply to all plugins, a plugin's own settings take
+ * precedence. Since PF4J creates extensions anew on every lookup, changes take effect immediately.
  */
 @RequiredArgsConstructor
 class PluginContextFactory {
@@ -29,7 +29,7 @@ class PluginContextFactory {
     private final Supplier<Map<String, String>> sharedSettings;
     private final BiFunction<String, Map<String, String>, Map<String, String>> storedKeys;
 
-    /** Gemeinsame Einstellungen, dann die des Plugins aus der Konfiguration, zuletzt gespeicherte API-Keys. */
+    /** Shared settings, then the plugin's settings from the configuration, finally stored API keys. */
     PluginContext contextFor(String pluginId) {
         Map<String, String> settings = new HashMap<>(sharedSettings.get());
         settings.putAll(properties.settingsOf(pluginId));

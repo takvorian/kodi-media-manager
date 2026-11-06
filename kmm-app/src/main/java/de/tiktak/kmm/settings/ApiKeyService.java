@@ -14,9 +14,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verwaltet die API-Keys der Scraper-Plugins im Einstellungsspeicher. Ein gespeicherter Key hat
- * Vorrang vor der Konfiguration; ein in der Oberfläche gelöschter Key wird als leerer Wert gespeichert,
- * damit ihn die Konfiguration nicht beim nächsten Start wieder einträgt.
+ * Manages the API keys of the scraper plugins in the settings store. A stored key takes
+ * precedence over the configuration; a key deleted in the user interface is stored as an empty value
+ * so that the configuration does not enter it again on the next start.
  */
 @Slf4j
 @Service
@@ -31,9 +31,9 @@ public class ApiKeyService {
     private final AtomicReference<Map<ApiKey, String>> stored = new AtomicReference<>();
 
     /**
-     * Überlagert die Einstellungen eines Plugins mit seinen gespeicherten Keys.
+     * Overlays a plugin's settings with its stored keys.
      *
-     * @return neue Einstellungen; ein gelöschter Key fehlt darin
+     * @return new settings; a deleted key is absent from them
      */
     public Map<String, String> overlay(String pluginId, Map<String, String> settings) {
         Map<String, String> result = new HashMap<>(settings);
@@ -58,8 +58,8 @@ public class ApiKeyService {
     }
 
     /**
-     * Speichert geänderte Keys: ein Wert ersetzt den Key, ein leerer Wert löscht ihn, fehlende Keys
-     * bleiben unverändert.
+     * Stores changed keys: a value replaces the key, an empty value deletes it, missing keys
+     * remain unchanged.
      */
     @Transactional
     public List<ApiKeyView> update(Map<ApiKey, String> changes) {
@@ -74,9 +74,9 @@ public class ApiKeyService {
     }
 
     /**
-     * Speichert einen Key aus der Konfiguration, sofern noch keiner gespeichert (oder gelöscht) ist.
+     * Stores a key from the configuration if none has been stored (or deleted) yet.
      *
-     * @return ob der Key übernommen wurde
+     * @return whether the key was taken over
      */
     @Transactional
     public boolean seedIfMissing(ApiKey key, String value) {
@@ -89,7 +89,7 @@ public class ApiKeyService {
         return true;
     }
 
-    /** Vergisst die zwischengespeicherten Keys, nachdem der Einstellungsspeicher von außen geändert wurde. */
+    /** Forgets the cached keys after the settings store was changed from outside. */
     public void reload() {
         stored.set(null);
     }

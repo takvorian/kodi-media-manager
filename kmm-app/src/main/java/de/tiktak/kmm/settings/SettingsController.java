@@ -35,13 +35,13 @@ public class SettingsController {
         return settingsService.update(settings);
     }
 
-    /** Zustand der API-Keys, ohne die Keys selbst. */
+    /** State of the API keys, without the keys themselves. */
     @GetMapping(API_KEYS_PATH)
     public List<ApiKeyView> apiKeys() {
         return apiKeyService.view();
     }
 
-    /** Ein Wert ersetzt den Key, ein leerer Wert löscht ihn; nicht genannte Keys bleiben. */
+    /** A value replaces the key, an empty value deletes it; keys not mentioned remain. */
     @PutMapping(API_KEYS_PATH)
     public List<ApiKeyView> updateApiKeys(@RequestBody Map<ApiKey, @Size(max = MAX_KEY_LENGTH) String> changes) {
         return apiKeyService.update(changes);

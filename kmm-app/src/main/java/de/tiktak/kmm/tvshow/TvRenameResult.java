@@ -2,18 +2,20 @@ package de.tiktak.kmm.tvshow;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis des Umbenennens mehrerer Serien.
+ * Result of renaming several TV shows.
  *
- * @param renamed   umbenannte Serien
- * @param unchanged Serien, die schon so hießen
- * @param skipped   Serien mit Konflikt oder ohne gültigen Namen
- * @param failed    Serien, bei denen das Dateisystem das Umbenennen ablehnte
- * @param problems  Meldungen zu übersprungenen Serien und Episodendateien, höchstens
+ * @param renamed   renamed TV shows
+ * @param unchanged TV shows that already had these names
+ * @param skipped   TV shows with a conflict or without a valid name
+ * @param failed    TV shows the file system refused to rename
+ * @param problems  messages about skipped TV shows and episode files, at most
  *                  {@link TvShowRenameService#MAX_LISTED_PROBLEMS}
  */
 public record TvRenameResult(long sourceId, int renamed, int unchanged, int skipped, int failed,
-                             List<String> problems) {
+                             List<LocalizedText> problems) {
 
     public TvRenameResult {
         problems = List.copyOf(problems);

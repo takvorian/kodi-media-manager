@@ -19,9 +19,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Übernimmt den Inhalt von Serien- und Episoden-NFOs. Bevor KMM eine NFO neu schreibt, liest es sie ein, wenn sie
- * seit dem letzten Einlesen außerhalb von KMM geändert wurde; sonst gingen diese Änderungen verloren. Eine
- * {@code tvshow.nfo} liest es auch ein, wenn die Angaben der Serie nicht aus ihr stammen (Ember-Import).
+ * Takes over the content of TV show and episode NFOs. Before KMM rewrites an NFO, it reads it if it
+ * was changed outside KMM since it was last read; otherwise these changes would be lost. It also reads a
+ * {@code tvshow.nfo} if the details of the TV show do not come from it (Ember import).
  */
 @Slf4j
 @Component
@@ -32,7 +32,7 @@ class TvNfoSync {
     private final Clock clock;
 
     /**
-     * @throws TvShowProblemException wenn die geänderte NFO nicht lesbar ist; dann darf sie nicht überschrieben werden
+     * @throws TvShowProblemException if the changed NFO is unreadable; it must then not be overwritten
      */
     void refreshShowIfChangedOutside(TvShow show) {
         Optional<TvNfoState> nfo = nfoFiles.findShowNfo(show.directory());
@@ -47,9 +47,9 @@ class TvNfoSync {
     }
 
     /**
-     * Für alle Episoden einer Datei, die sich eine NFO teilen.
+     * For all episodes of a file that share an NFO.
      *
-     * @throws TvShowProblemException wenn die geänderte NFO nicht lesbar ist
+     * @throws TvShowProblemException if the changed NFO is unreadable
      */
     void refreshEpisodesIfChangedOutside(List<Episode> sameFile) {
         Optional<TvNfoState> nfo = nfoFiles.findEpisodeNfo(sameFile.getFirst().file());
@@ -67,13 +67,13 @@ class TvNfoSync {
     }
 
     /**
-     * Übernimmt die {@code tvshow.nfo}. Stammen die Angaben bisher nicht aus der NFO (Ember-Import), bleiben
-     * Darsteller erhalten, die nur in Embers Daten stehen.
+     * Takes over the {@code tvshow.nfo}. If the details so far do not come from the NFO (Ember import), actors
+     * that exist only in Ember's data are kept.
      */
     /**
-     * Liest die {@code tvshow.nfo} ein, wenn sie außerhalb von KMM geändert wurde oder die Angaben noch nicht aus ihr
-     * stammen (Ember-Import), damit die Serienansicht die Werte der NFO zeigt und beim Speichern nicht ältere
-     * zurückschreibt. Eine unlesbare NFO bleibt hier unberücksichtigt.
+     * Reads the {@code tvshow.nfo} if it was changed outside KMM or the details do not come from it yet
+     * (Ember import), so that the TV show view shows the values of the NFO and does not write older ones
+     * back when saving. An unreadable NFO is ignored here.
      */
     void readShowIfOutdated(TvShow show) {
         try {
@@ -83,7 +83,7 @@ class TvNfoSync {
         }
     }
 
-    /** Wie {@link #readShowIfOutdated}, für alle Episoden einer Datei. */
+    /** Like {@link #readShowIfOutdated}, for all episodes of a file. */
     void readEpisodesIfOutdated(List<Episode> sameFile) {
         try {
             refreshEpisodesIfChangedOutside(sameFile);
@@ -109,10 +109,10 @@ class TvNfoSync {
     }
 
     /**
-     * Liest den Trailer aus der NFO nach, wenn KMM ihn noch nicht kennt, etwa bei Serien aus einer Version ohne
-     * Trailer. Ohne NFO gibt es keinen Trailer.
+     * Reads the trailer from the NFO afterwards if KMM does not know it yet, e.g. for TV shows from a version without
+     * trailers. Without an NFO there is no trailer.
      *
-     * @return ob der Trailer danach bekannt ist; {@code false}, wenn die NFO nicht lesbar ist
+     * @return whether the trailer is known afterwards; {@code false} if the NFO is unreadable
      */
     boolean readTrailerIfUnknown(TvShow show) {
         if (show.isTrailerKnown()) {
@@ -132,7 +132,7 @@ class TvNfoSync {
         }
     }
 
-    /** Die Episode in der NFO; eine Datei mit nur einer Episode darf auch eine anders nummerierte enthalten. */
+    /** The episode in the NFO; a file with only one episode may also contain one numbered differently. */
     static Optional<EpisodeNfo> matching(Episode episode, List<EpisodeNfo> episodes, boolean singleEpisodeFile) {
         return episodes.stream()
                 .filter(nfo -> nfo.describes(episode.getSeason(), episode.getEpisode()))
@@ -142,8 +142,8 @@ class TvNfoSync {
     }
 
     /**
-     * Übernimmt die NFO. Stammen die Angaben bisher nicht aus der NFO (Ember-Import), bleiben Darsteller erhalten, die
-     * nur in Embers Daten stehen (etwa Gaststars), und ohne technische Angaben in der NFO die bekannten.
+     * Takes over the NFO. If the details so far do not come from the NFO (Ember import), actors that exist only in
+     * Ember's data (e.g. guest stars) are kept, and so are the known technical details if the NFO has none.
      */
     void applyEpisode(Episode episode, EpisodeNfo nfo) {
         EpisodeExtras extras = TvNfoMapper.toExtras(nfo, clock.getZone());
@@ -163,7 +163,7 @@ class TvNfoSync {
         }
     }
 
-    /** Die Darsteller der NFO, dahinter die bekannten, die in der NFO fehlen. */
+    /** The actors of the NFO, followed by the known ones that are missing from the NFO. */
     static List<TvActor> withMissingActors(List<TvActor> fromNfo, List<TvActor> known) {
         Set<String> names = fromNfo.stream().map(TvActor::name).collect(Collectors.toSet());
         return Stream.concat(fromNfo.stream(), known.stream().filter(actor -> !names.contains(actor.name())))

@@ -7,10 +7,10 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * Einstellungen aus der Konfiguration ({@code kmm.settings.*} bzw. Umgebungsvariablen). Gesetzte
- * Werte haben Vorrang vor den in der Oberfläche gespeicherten; leere Werte gelten als nicht gesetzt.
+ * Settings from the configuration ({@code kmm.settings.*} or environment variables). Values that are
+ * set take precedence over those stored in the user interface; empty values count as not set.
  *
- * @param proxyPort Port des Proxys, wenn {@code proxyHost} gesetzt ist
+ * @param proxyPort port of the proxy if {@code proxyHost} is set
  */
 @ConfigurationProperties("kmm.settings")
 public record SettingsOverrides(
@@ -23,7 +23,7 @@ public record SettingsOverrides(
 
     static final SettingsOverrides NONE = new SettingsOverrides(null, null, null, 0, null, null);
 
-    /** Wendet die gesetzten Werte auf die gespeicherten Einstellungen an. */
+    /** Applies the set values to the stored settings. */
     KmmSettings applyTo(KmmSettings stored) {
         KmmSettings effective = stored;
         if (isSet(metadataLanguage)) {

@@ -36,7 +36,7 @@ class TvShowScrapeMergerTest {
         assertThat(refreshed.metadata().title()).isEqualTo("Le vol");
         assertThat(refreshed.metadata().plot()).isEqualTo("Le crash.");
         assertThat(refreshed.metadata().originalTitle()).isEqualTo("Pilot");
-        assertThat(refreshed.metadata().aired()).as("Leeres wird wie sonst gefüllt").isEqualTo(LocalDate.of(2004, 9, 22));
+        assertThat(refreshed.metadata().aired()).as("empty values are filled as usual").isEqualTo(LocalDate.of(2004, 9, 22));
         assertThat(refreshed.metadata().userRating()).isEqualTo(7);
         assertThat(refreshed.metadata().videoSource()).isEqualTo("bluray");
     }
@@ -62,7 +62,7 @@ class TvShowScrapeMergerTest {
                 .containsExactlyEntriesOf(Map.of(1, "Saison 1"));
         TvShowExtras second = TvShowScrapeMerger.withSeasonTitle(current, scraped, 2, false);
         assertThat(second.seasonNames()).containsEntry(1, "Erste Staffel").containsEntry(2, "Saison 2");
-        assertThat(second.actors()).as("Darsteller der Serie bleiben").isEmpty();
+        assertThat(second.actors()).as("the show's actors stay").isEmpty();
         assertThat(TvShowScrapeMerger.withSeasonTitle(current, scraped, 5, true)).isEqualTo(current);
     }
 
@@ -98,7 +98,7 @@ class TvShowScrapeMergerTest {
         assertThat(merged.tags()).containsExactly("Insel");
         assertThat(merged.tvdbId()).isEqualTo("73739");
         assertThat(merged.tmdbId()).isEqualTo("4607");
-        assertThat(merged.imdbId()).as("ungültige ID entfällt").isNull();
+        assertThat(merged.imdbId()).as("invalid ID is dropped").isNull();
         assertThat(merged.userRating()).isEqualTo(9);
     }
 
@@ -123,7 +123,7 @@ class TvShowScrapeMergerTest {
         assertThat(fromScratch.actors())
                 .containsExactly(new TvActor("Max Wright", "Willie", "https://example.org/max.jpg"));
         assertThat(fromScratch.ratings().getFirst().defaultRating())
-                .as("die erste Bewertung ohne vorhandene ist die Standardbewertung").isTrue();
+                .as("the first rating without existing ones is the default rating").isTrue();
         assertThat(fromScratch.ratings().get(1).defaultRating()).isFalse();
     }
 
@@ -150,7 +150,7 @@ class TvShowScrapeMergerTest {
         assertThat(fill.extras().writers()).containsExactly("Damon Lindelof");
         assertThat(fill.extras().playCount()).isEqualTo(2);
         assertThat(TvShowScrapeMerger.fillEpisode(metadata, extras, scraped, true).orElseThrow().metadata().title())
-                .as("Titel aus dem Dateinamen wird ersetzt").isEqualTo("Pilot");
+                .as("title from the file name is replaced").isEqualTo("Pilot");
     }
 
     @Test

@@ -23,7 +23,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Trailer einer Serie als Link in der {@code tvshow.nfo}.
+ * Trailer of a TV show as a link in the {@code tvshow.nfo}.
  */
 @RestController
 @RequiredArgsConstructor
@@ -52,7 +52,7 @@ public class TvShowTrailerController {
         return trailerService.remove(showId);
     }
 
-    /** Holt für die Serien ohne Trailer den besten Vorschlag, als Job. */
+    /** Fetches the best proposal for the TV shows without a trailer, as a job. */
     @PostMapping(FILL_PATH)
     public ResponseEntity<JobSnapshot> fillMissing(@Valid @RequestBody Shows shows) {
         JobSnapshot job = batchService.startTrailerFill(shows.showIds());

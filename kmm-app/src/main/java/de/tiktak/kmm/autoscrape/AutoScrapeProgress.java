@@ -5,12 +5,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.ScanEntry;
 
 /**
- * Sammelt das Ergebnis während des Laufs. Listen werden gekürzt, damit das Ergebnis im Job-Zustand
- * auch bei großen Bibliotheken klein bleibt.
+ * Collects the result during the run. Lists are truncated so the result in the job state stays small even for large
+ * libraries.
  */
 final class AutoScrapeProgress {
 
@@ -24,8 +25,8 @@ final class AutoScrapeProgress {
     private int themesSaved;
     private int enriched;
     private final List<ScanEntry> unmatchedEntries = new ArrayList<>();
-    private final List<String> failures = new ArrayList<>();
-    private final Set<String> warnings = new LinkedHashSet<>();
+    private final List<LocalizedText> failures = new ArrayList<>();
+    private final Set<LocalizedText> warnings = new LinkedHashSet<>();
 
     AutoScrapeProgress(int movies) {
         this.movies = movies;
@@ -56,11 +57,18 @@ final class AutoScrapeProgress {
         enriched++;
     }
 
-    void failed(String title, String message) {
-        addLimited(failures, "%s: %s".formatted(title, message));
+    void failed(String title, LocalizedText message) {
+        failed(LocalizedText.literal(title), message);
     }
 
-    void warn(String warning) {
+    /**
+     * @param entry the entry, e.g. "Movie 42" if its title is unknown
+     */
+    void failed(LocalizedText entry, LocalizedText message) {
+        addLimited(failures, AutoScrapeTexts.failure(entry, message));
+    }
+
+    void warn(LocalizedText warning) {
         if (warnings.size() < MAX_LISTED_ENTRIES) {
             warnings.add(warning);
         }

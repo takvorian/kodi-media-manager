@@ -18,8 +18,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
 /**
- * Übersetzt einen {@link TvShowFilter} in eine Datenbankabfrage; Bedingungen an Episoden werden als Unterabfragen
- * gestellt.
+ * Translates a {@link TvShowFilter} into a database query; conditions on episodes are issued as subqueries.
  */
 final class TvShowFilterSpecification {
 
@@ -27,8 +26,8 @@ final class TvShowFilterSpecification {
     }
 
     /**
-     * @throws InvalidFilterException wenn eine Bedingung den Vergleich nicht erlaubt oder der Wert fehlt oder
-     *                                nicht passt
+     * @throws InvalidFilterException if a condition does not allow the comparison or the value is missing or
+     *                                does not fit
      */
     static Specification<TvShow> of(TvShowFilter filter, Clock clock) {
         filter.conditions().forEach(condition ->
@@ -41,7 +40,7 @@ final class TvShowFilterSpecification {
         };
     }
 
-    /** Baut die Bedingung einer Zeile der Abfrage. */
+    /** Builds the condition for one row of the query. */
     private record Builder(Root<TvShow> root, CriteriaQuery<?> query, FilterPredicates predicates) {
 
         Predicate predicate(TvShowFilter.Condition condition) {
@@ -84,7 +83,7 @@ final class TvShowFilterSpecification {
             return predicates.number(path, condition.field(), condition.operator(), condition.value());
         }
 
-        /** Listen wie Genres: „ist“ heißt, ein Eintrag passt; „ist nicht“, keiner passt. */
+        /** Lists such as genres: "is" means one entry matches; "is not" means none matches. */
         private Predicate collection(String attribute, TvShowFilter.Condition condition) {
             CriteriaBuilder cb = predicates.cb();
             return switch (condition.operator()) {
@@ -105,7 +104,7 @@ final class TvShowFilterSpecification {
                     .where(cb.equal(cb.lower(entry), predicates.lower(condition.value())));
         }
 
-        /** „ist“: eine Episode hat den Wert; „ist nicht“: keine Episode hat ihn. */
+        /** "is": an episode has the value; "is not": no episode has it. */
         private Predicate episodeText(TvShowFilter.Condition condition, String attribute, boolean inIndex) {
             Predicate any = anyEpisode(episode -> {
                 Path<String> path = inIndex ? index(episode).get(attribute) : episode.get(attribute);
