@@ -1,15 +1,16 @@
 <mat-card appearance="outlined" class="api-keys">
   <mat-card-header>
-    <mat-card-title>API-Keys</mat-card-title>
+    <mat-card-title>{{ 'settings.apiKeys.title' | transloco }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <p class="hint">
-      Keys der Online-Dienste. Ein leeres Feld lässt den gespeicherten Key unverändert. Umgebungsvariablen wie
-      <code>KMM_TMDB_API_KEY</code> füllen nur einen noch nicht gespeicherten Key beim Start.
-      <app-help-link chapter="einstellungen" anchor="api-keys">Wo bekomme ich die Keys?</app-help-link>
+      <span [innerHTML]="'settings.apiKeys.hint' | transloco"></span>
+      <app-help-link chapter="einstellungen" anchor="api-keys">{{
+        'settings.apiKeys.help' | transloco
+      }}</app-help-link>
     </p>
     @if (keys.error()) {
-      <p class="error">Die API-Keys konnten nicht geladen werden.</p>
+      <p class="error">{{ 'settings.apiKeys.loadError' | transloco }}</p>
     } @else if (keys.hasValue()) {
       @for (key of keys.value(); track key.key) {
         <div class="row api-key">
@@ -25,15 +26,23 @@
             />
           </mat-form-field>
           @if (key.set && !deletions().has(key.key)) {
-            <button matButton type="button" class="remove-key-button" (click)="remove(key)">Entfernen</button>
+            <button matButton type="button" class="remove-key-button" (click)="remove(key)">
+              {{ 'common.remove' | transloco }}
+            </button>
           }
         </div>
       }
     }
   </mat-card-content>
   <mat-card-actions align="end">
-    <button matButton="filled" type="button" class="save-keys-button" [disabled]="!hasChanges() || saving()" (click)="save()">
-      {{ saving() ? 'Speichere …' : 'Keys speichern' }}
+    <button
+      matButton="filled"
+      type="button"
+      class="save-keys-button"
+      [disabled]="!hasChanges() || saving()"
+      (click)="save()"
+    >
+      {{ (saving() ? 'settings.saving' : 'settings.apiKeys.save') | transloco }}
     </button>
   </mat-card-actions>
 </mat-card>

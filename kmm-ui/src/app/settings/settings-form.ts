@@ -114,7 +114,7 @@ export function toFormValue(view: SettingsView): SettingsForm['value'] {
   };
 }
 
-/** Ein leeres Passwortfeld lässt das gespeicherte Passwort unverändert. */
+/** An empty password field leaves the stored password unchanged. */
 export function toSettings(form: SettingsForm): KmmSettings {
   const value = form.getRawValue();
   return {

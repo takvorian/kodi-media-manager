@@ -11,6 +11,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 
+import { LanguageService } from '../i18n/language.service';
+import { provideI18nTesting } from '../i18n/testing';
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
 import { Job } from '../jobs/job';
 import { CONFIRM } from '../shared/confirm';
@@ -49,6 +51,7 @@ describe('SourceList', () => {
     TestBed.configureTestingModule({
       imports: [SourceList],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
@@ -71,7 +74,7 @@ describe('SourceList', () => {
     await answerReload(sources);
   }
 
-  /** Beantwortet das (Neu-)Laden der Liste, das ein Resource-Reload beim nächsten Rendern auslöst. */
+  /** Answers the (re)load of the list that a resource reload triggers on the next rendering. */
   async function answerReload(sources: MediaSource[]): Promise<void> {
     fixture.detectChanges();
     expectList().flush(sources);
@@ -88,6 +91,16 @@ describe('SourceList', () => {
 
   function button(selector: string, row = 0): HTMLButtonElement {
     return element().querySelectorAll<HTMLButtonElement>(selector)[row];
+  }
+
+  /**
+   * Switches like the language menu does. Without `init()` the service still holds its fallback language, so it is
+   * first set to the German of the test setup; otherwise the switch to English would not be a change.
+   */
+  async function switchToEnglish(): Promise<void> {
+    const language = TestBed.inject(LanguageService);
+    await language.use('de');
+    await language.use('en');
   }
 
   async function fillForm(name: string, path: string): Promise<void> {
@@ -108,6 +121,21 @@ describe('SourceList', () => {
     expect(
       Array.from(element().querySelectorAll('.source-name')).map((cell) => cell.textContent),
     ).toEqual(['Filme', 'Serien']);
+  });
+
+  it('switches the texts to English at runtime', async () => {
+    await loadSources([films, series]);
+
+    await switchToEnglish();
+    await fixture.whenStable();
+
+    expect(element().querySelector('.page-title')?.textContent).toBe('Sources');
+    expect(element().querySelector('.scan-button')?.textContent?.trim()).toBe('Scan');
+    expect(
+      Array.from(element().querySelectorAll('td.mat-column-mediaType')).map((cell) =>
+        cell.textContent?.trim(),
+      ),
+    ).toEqual(['Movies', 'TV shows']);
   });
 
   it('offers scanning for movie and TV sources but scraping only for movies', async () => {
@@ -482,6 +510,28 @@ describe('SourceList', () => {
       button('.close-scan-report-button').click();
       await fixture.whenStable();
       expect(element().querySelector('.scan-report')).toBeNull();
+    });
+
+    it('follows a switch of the UI language', async () => {
+      await loadSources([series]);
+      events.emit({ ...scanJob, status: 'RUNNING', result: null });
+      events.emit(scanJob);
+      await answerReload([series]);
+
+      await switchToEnglish();
+      await fixture.whenStable();
+
+      expect(headings()).toEqual([
+        'New TV shows (1)',
+        'New episodes (3)',
+        'Removed episodes (1)',
+        'Files without a recognizable episode (1)',
+      ]);
+      expect(element().querySelector('.scan-report')!.textContent).toContain('… and 2 more');
+      expect(element().querySelector('.last-scan-result')?.textContent).toBe(
+        '3 new, 0 updated, 1 removed, 5 unchanged, 1 new TV show, ' +
+          '1 file without a recognizable episode',
+      );
     });
 
     it('offers no details when nothing happened', async () => {

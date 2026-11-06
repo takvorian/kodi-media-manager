@@ -11,6 +11,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { problemMessage } from '../shared/problem-message';
 import { ApiKeyName, ApiKeyView } from './settings';
@@ -20,8 +21,8 @@ import { HelpLink } from '../shared/help-link';
 const SNACKBAR_DURATION_MS = 5000;
 
 /**
- * API-Keys der Scraper. Gespeicherte Keys werden nie angezeigt, nur ihre letzten Zeichen; ein leeres
- * Feld lässt den Key unverändert, „Entfernen“ löscht ihn.
+ * API keys of the scrapers. Stored keys are never shown, only their last characters; an empty field leaves the key
+ * unchanged, "Remove" deletes it. The labels come from the server.
  */
 @Component({
   selector: 'app-api-keys-card',
@@ -32,6 +33,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    TranslocoPipe,
   ],
   templateUrl: './api-keys-card.html',
   styleUrl: './settings-page.scss',
@@ -39,6 +41,7 @@ const SNACKBAR_DURATION_MS = 5000;
 export class ApiKeysCard {
   private readonly settingsService = inject(SettingsService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly transloco = inject(TranslocoService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
 
   protected readonly keys = rxResource({ stream: () => this.settingsService.apiKeys() });
@@ -55,9 +58,11 @@ export class ApiKeysCard {
 
   protected placeholder(key: ApiKeyView): string {
     if (this.deletions().has(key.key)) {
-      return 'wird entfernt';
+      return this.transloco.translate('settings.apiKeys.removing');
     }
-    return key.set ? `gespeichert ${key.hint ?? ''}`.trim() : 'nicht gesetzt';
+    return key.set
+      ? this.transloco.translate('settings.apiKeys.stored', { hint: key.hint ?? '' }).trim()
+      : this.transloco.translate('settings.apiKeys.notSet');
   }
 
   protected remove(key: ApiKeyView): void {
@@ -89,7 +94,7 @@ export class ApiKeysCard {
         this.keys.set(keys);
         this.form.reset();
         this.deletions.set(new Set());
-        this.notify('API-Keys gespeichert.');
+        this.notify(this.transloco.translate('settings.apiKeys.saved'));
       },
       error: (error: unknown) => {
         this.saving.set(false);

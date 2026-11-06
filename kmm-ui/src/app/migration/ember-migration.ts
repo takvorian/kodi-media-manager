@@ -2,7 +2,7 @@ const DATABASE_FILE = /^MyVideos(\d+)\.emm$/i;
 const SETTINGS_FILES = new Set(['Settings.xml', 'AdvancedSettings.xml', 'Interface.Kodi.xml']);
 const DEFAULT_PROFILE = /(^|\/)Profiles\/Default$/;
 
-/** Ein Ordner mit Ember-Datenbank aus dem gewählten Verzeichnis, samt der neuesten Datenbank. */
+/** A folder with an Ember database from the chosen directory, with its newest database. */
 interface ProfileFolder {
   readonly path: string;
   readonly database: File;
@@ -10,9 +10,9 @@ interface ProfileFolder {
 }
 
 /**
- * Wählt aus einem Ember-Ordner die Dateien aus, die der Import braucht; alles andere bleibt auf diesem Rechner. Der
- * Ordner darf die Installation oder das Profil sein. Unter mehreren Profilen gewinnt {@code Profiles/Default}.
- * Liefert eine leere Liste, wenn keine Ember-Datenbank dabei ist.
+ * Picks the files the import needs from an Ember folder; everything else stays on this computer. The folder may be
+ * the installation or the profile. Among several profiles {@code Profiles/Default} wins.
+ * Returns an empty list if there is no Ember database.
  */
 export function emberProfileFiles(files: readonly File[]): File[] {
   const folders = new Map<string, ProfileFolder>();
@@ -40,7 +40,7 @@ function parentFolder(file: File): string {
   return file.webkitRelativePath.split('/').slice(0, -1).join('/');
 }
 
-/** Job-Schlüssel des Imports; muss zu EmberImportService.JOB_KEY passen. */
+/** Job key of the import; must match EmberImportService.JOB_KEY. */
 export const EMBER_IMPORT_JOB_KEY = 'ember-import';
 
 export interface EmberLibraryStatistics {
@@ -57,7 +57,7 @@ export interface EmberSource {
   readonly path: string | null;
 }
 
-/** Kodi-Gerät aus Ember, ohne Zugangsdaten. */
+/** Kodi device from Ember, without credentials. */
 export interface EmberKodiHost {
   readonly name: string | null;
   readonly address: string;
@@ -71,7 +71,7 @@ export interface EmberSettingsSummary {
   readonly videoExtensions: readonly string[];
 }
 
-/** Antwort von POST /api/v1/migrations/ember/upload. */
+/** Response of POST /api/v1/migrations/ember/upload. */
 export interface EmberInspection {
   readonly profileDirectory: string;
   readonly schemaVersion: number;
@@ -87,7 +87,7 @@ export interface PathMapping {
   readonly kmmPath: string;
 }
 
-/** Inhalt von POST /api/v1/migrations/ember/import. */
+/** Body of POST /api/v1/migrations/ember/import. */
 export interface EmberImportRequest {
   readonly pathMappings: readonly PathMapping[];
   readonly importSettings: boolean;
@@ -96,7 +96,7 @@ export interface EmberImportRequest {
   readonly dryRun: boolean;
 }
 
-/** Ergebnis des Imports für Serien und Episoden. */
+/** Result of the import for TV shows and episodes. */
 export interface EmberTvShowsReport {
   readonly showsCreated: number;
   readonly showsUpdated: number;
@@ -104,11 +104,11 @@ export interface EmberTvShowsReport {
   readonly episodesCreated: number;
   readonly episodesUpdated: number;
   readonly episodesSkipped: number;
-  /** Episoden, die Ember ohne Datei kennt; sie werden nicht übernommen. */
+  /** Episodes Ember knows without a file; they are not imported. */
   readonly episodesMissing: number;
 }
 
-/** Ergebnis eines erfolgreichen Import-Jobs. */
+/** Result of a successful import job. */
 export interface EmberImportReport {
   readonly dryRun: boolean;
   readonly sourcesCreated: number;

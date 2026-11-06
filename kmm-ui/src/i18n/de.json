@@ -133,5 +133,339 @@
     "lastPage": "Letzte Seite",
     "range": "{first} – {last} von {length}",
     "emptyRange": "0 von 0"
+  },
+  "sources": {
+    "title": "Quellen",
+    "mediaType": {
+      "MOVIE": "Filme",
+      "TV_SHOW": "Serien"
+    },
+    "form": {
+      "path": "Verzeichnis",
+      "pathPlaceholder": "z. B. /media/filme oder D:\\Filme",
+      "pathHint": "Muss existieren, Pfad aus Sicht von KMM.",
+      "pathHelp": "Wie sollen die Dateien liegen?",
+      "mediaType": "Inhalt"
+    },
+    "languageDefault": "Wie in den Einstellungen",
+    "loadError": "Die Quellen konnten nicht geladen werden.",
+    "empty": "Noch keine Quellen angelegt.",
+    "loading": "Lade Quellen …",
+    "lastScan": "Letzter Scan",
+    "action": {
+      "scan": "Scannen",
+      "scrape": "Scrapen",
+      "kodiScan": "Kodi-Scan",
+      "playback": "Gesehen-Status",
+      "streamDetails": "Technische Angaben",
+      "streamDetailsMissing": "Fehlende auslesen",
+      "streamDetailsAll": "Alle neu auslesen"
+    },
+    "created": "Quelle „{name}“ angelegt.",
+    "deleteConfirm": "Quelle „{name}“ und alle ihre Filme aus der Bibliothek entfernen?",
+    "deleted": "Quelle „{name}“ entfernt.",
+    "job": {
+      "finished": "{title} abgeschlossen: {result}.",
+      "cancelled": "{title} abgebrochen.",
+      "failed": "{title} fehlgeschlagen: {message}",
+      "unknownError": "Unbekannter Fehler"
+    },
+    "scanCounts": {
+      "counts": "{added} neu, {updated} aktualisiert, {removed} entfernt, {unchanged} unverändert",
+      "newShows": "{count, plural, one {# neue Serie} other {# neue Serien}}",
+      "nfoErrors": "{count} NFO-Fehler",
+      "unrecognized": "{count, plural, one {# Datei} other {# Dateien}} ohne erkennbare Episode"
+    },
+    "moreEntries": "… und {count} weitere",
+    "scanReport": {
+      "title": "{title}: Details",
+      "section": {
+        "newShows": "Neue Serien",
+        "added": "{kind, select, movies {Neue Filme} other {Neue Episoden}}",
+        "updated": "{kind, select, movies {Aktualisierte Filme} other {Aktualisierte Episoden}}",
+        "removedShows": "Entfernte Serien",
+        "removed": "{kind, select, movies {Entfernte Filme} other {Entfernte Episoden}}",
+        "unreadable": "NFO nicht lesbar",
+        "unrecognized": "Dateien ohne erkennbare Episode"
+      },
+      "hint": {
+        "updated": "Ihre NFO wurde außerhalb von KMM geändert und neu eingelesen.",
+        "removed": "Die Datei ist nicht mehr da. Entfernt wurde nur der Eintrag in KMM.",
+        "unreadable": "Der Eintrag bleibt erhalten, die Angaben aus der NFO fehlen aber.",
+        "unrecognized": "KMM hat diese Dateien nicht aufgenommen, weil der Name keine Staffel und Episode wie S01E05 enthält. Benenne sie um und scanne erneut. Die Pfade gelten ab dem Ordner der Quelle."
+      }
+    },
+    "scrapeProgress": "{title} – {done} von {total}",
+    "scrapeReport": {
+      "title": "Ergebnis des Scrapens",
+      "unmatched": "Ohne eindeutigen Treffer ({count})",
+      "unmatchedHint": "Für sie wurden keine Metadaten übernommen. Öffne den Eintrag und ordne ihn mit „Online suchen“ selbst zu.",
+      "failures": "Fehler"
+    },
+    "scrapeSummary": {
+      "movies": "{count, plural, one {# Film} other {# Filme}}",
+      "shows": "{count, plural, one {# Serie} other {# Serien}}",
+      "episodes": "{count, plural, one {# Episode} other {# Episoden}} ergänzt",
+      "scraped": "{count} neu zugeordnet",
+      "unmatched": "{count} ohne Treffer",
+      "images": "{count, plural, one {# Bild} other {# Bilder}} gespeichert",
+      "trailers": "{count} Trailer eingetragen",
+      "themes": "{count} Titelmusik gespeichert",
+      "enriched": "{count} ergänzt (Bewertungen, Angaben)",
+      "failures": "{count} Fehler"
+    }
+  },
+  "kodi": {
+    "title": "Kodi",
+    "intro": "KMM aktualisiert Kodi nach Änderungen an Filmen über die JSON-RPC-Schnittstelle. In Kodi dafür unter <em>Einstellungen → Dienste → Steuerung</em> „Steuerung über HTTP erlauben“ aktivieren und Port, Benutzer und Passwort hier eintragen. Über die Pfad-Zuordnung findet KMM die Filme unter Kodis eigenen Pfaden, z. B. <code>smb://nas/filme/</code>.",
+    "loadError": "Die Kodi-Geräte konnten nicht geladen werden.",
+    "loading": "Lade Kodi-Geräte …",
+    "empty": "Noch kein Kodi-Gerät eingerichtet.",
+    "user": "Benutzer {name}",
+    "realtimeOn": "Echtzeit-Sync: Kodi wird nach jeder Änderung aktualisiert.",
+    "realtimeOff": "Kein Echtzeit-Sync.",
+    "noMappings": "Ohne Pfad-Zuordnung kann KMM keine Filme in Kodi aktualisieren.",
+    "lastSync": "Letzter Abgleich",
+    "connected": "Verbunden mit {version}",
+    "test": "Verbindung testen",
+    "testing": "Teste …",
+    "add": "Kodi-Gerät hinzufügen",
+    "saved": "Kodi-Gerät „{name}“ gespeichert.",
+    "deleteConfirm": "Kodi-Gerät „{name}“ entfernen?",
+    "deleted": "Kodi-Gerät „{name}“ entfernt.",
+    "syncNoHost": "Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.",
+    "form": {
+      "editTitle": "Kodi-Gerät bearbeiten",
+      "newTitle": "Neues Kodi-Gerät",
+      "namePlaceholder": "z. B. Wohnzimmer",
+      "nameRequired": "Bitte einen Namen angeben.",
+      "address": "Adresse",
+      "addressPlaceholder": "z. B. kodi.fritz.box",
+      "addressInvalid": "Rechnername oder IP-Adresse ohne http://",
+      "port": "Port",
+      "portRange": "1 bis 65535",
+      "username": "Benutzer",
+      "password": "Passwort",
+      "passwordKeep": "Leer lassen, um das gespeicherte Passwort zu behalten",
+      "realtimeSync": "Echtzeit-Sync: Kodi nach jeder Änderung automatisch aktualisieren",
+      "realtimeHelp": "Was passiert dabei?",
+      "mappingTitle": "Pfad-Zuordnung",
+      "mappingHint": "Verzeichnisse der KMM-Quellen und wie Kodi sie erreicht. Den Pfad in Kodi zeigt Kodi unter „Videos → Dateien“.",
+      "localPath": "Pfad in KMM",
+      "kodiPath": "Pfad in Kodi",
+      "pathRequired": "Bitte einen Pfad angeben.",
+      "addMapping": "Zuordnung hinzufügen"
+    },
+    "playback": {
+      "updated": "{count} übernommen",
+      "unchanged": "{count} unverändert",
+      "notInKodi": "{count} in Kodi unbekannt",
+      "kept": "{count} abweichend (KMM-Stand behalten)",
+      "failed": "{count} Fehler"
+    }
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "loadError": "Die Einstellungen konnten nicht geladen werden.",
+    "loading": "Lade Einstellungen …",
+    "saved": "Einstellungen gespeichert.",
+    "saving": "Speichere …",
+    "discard": "Verwerfen",
+    "overridden": "Durch die Konfiguration festgelegt",
+    "language": {
+      "title": "Sprache",
+      "metadata": "Metadaten",
+      "metadataHint": "z. B. de-DE oder en-US",
+      "metadataInvalid": "Format: de oder de-DE",
+      "artwork": "Bevorzugte Bildsprache",
+      "artworkHint": "Zweistelliger Sprachcode, z. B. de",
+      "artworkInvalid": "Format: zwei Kleinbuchstaben, z. B. de"
+    },
+    "tv": {
+      "ordering": {
+        "label": "Episodenreihenfolge",
+        "hint": "Für das Scrapen von Serien, wirkt nur bei TVDB",
+        "AIRED": "Ausstrahlung",
+        "DVD": "DVD/Blu-ray",
+        "ABSOLUTE": "Absolut (ohne Staffeln)"
+      }
+    },
+    "mediaInfo": {
+      "title": "Technische Angaben",
+      "ffprobeHint": "Pfad zu ffprobe (Teil von FFmpeg) oder nur „ffprobe“, wenn es auf dem PATH liegt",
+      "ffprobeRequired": "Bitte einen Pfad angeben",
+      "probeOnScrape": "Nach dem automatischen Scrapen auslesen",
+      "probeNewFiles": "Neue Dateien ohne Angaben in der NFO nach dem Scan auslesen"
+    },
+    "rename": {
+      "title": "Umbenennen",
+      "hint": "Platzhalter in <code>'{ }'</code>, z. B. <code>'{title}'</code>, <code>'{year}'</code>, <code>'{source}'</code>; Format nach Doppelpunkt: <code>'{season:2}'</code> (zweistellig), <code>:first</code>, <code>:sort</code>, <code>:lower</code>, <code>:upper</code>. Teile in <code>[ ]</code> entfallen, wenn ein Platzhalter darin leer ist; <code>/</code> legt Unterordner an (nur beim Filmordner, relativ zur Quelle).",
+      "help": "Alle Platzhalter",
+      "movieFolder": "Filmordner",
+      "movieFolderExample": "z. B. '{title}'[ ('{year}')]",
+      "movieFile": "Filmdateien",
+      "movieFileExample": "z. B. '{title}'[.'{source}']",
+      "tvShowFolder": "Serienordner",
+      "seasonFolder": "Staffelordner",
+      "episodeFile": "Episodendateien",
+      "patternRequired": "Bitte ein Muster angeben",
+      "triggersHint": "Die folgenden Auslöser benennen ohne Vorschau um; schalte sie erst ein, wenn deine Muster bewährt sind.",
+      "movieOnEdit": "Filme nach dem Speichern umbenennen",
+      "movieOnScrape": "Filme nach dem Scrapen umbenennen",
+      "tvOnEdit": "Serien nach dem Speichern umbenennen (Serie oder Episode)",
+      "tvOnScrape": "Serien nach dem Scrapen umbenennen",
+      "episodesOnScan": "Neue Episoden beim Scan umbenennen"
+    },
+    "movieSets": {
+      "title": "Filmsets",
+      "assignOnScrape": "Filme beim Scrapen ihrem Filmset zuordnen (TMDB-Sammlung; ersetzt ein anderes Set)",
+      "flatImages": "Set-Bilder im flachen Schema ablegen (wie Ember)",
+      "flatImagesFolder": "Ordner für das flache Schema",
+      "flatImagesHint": "Bilder als <Ordner>/<Settitel>-poster.jpg",
+      "kodiImages": "Set-Bilder in Kodis Set-Ordnern ablegen",
+      "kodiImagesFolder": "Ordner für Filmset-Informationen",
+      "kodiImagesHint": "Bilder als <Ordner>/<Settitel>/poster.jpg, wie in Kodi eingestellt",
+      "folderRequired": "Bitte einen Ordner angeben"
+    },
+    "scan": {
+      "title": "Scan",
+      "videoExtensions": "Video-Dateiendungen",
+      "videoExtensionsHint": "Durch Komma getrennt, z. B. mkv, mp4, avi",
+      "videoExtensionsInvalid": "Mindestens eine Endung aus Buchstaben oder Ziffern",
+      "excludedPaths": "Ausgeschlossene Ordner",
+      "excludedPathsHint": "Ein vollständiger Pfad pro Zeile; der Scan überspringt diese Ordner samt Inhalt"
+    },
+    "proxy": {
+      "title": "Proxy",
+      "overridden": "Der Proxy ist durch die Konfiguration festgelegt.",
+      "enabled": "Proxy für Online-Dienste verwenden",
+      "host": "Host",
+      "hostRequired": "Der Host ist erforderlich.",
+      "port": "Port",
+      "portRange": "1 bis 65535",
+      "username": "Benutzer",
+      "password": "Passwort",
+      "passwordUnchanged": "unverändert"
+    },
+    "apiKeys": {
+      "title": "API-Keys",
+      "hint": "Keys der Online-Dienste. Ein leeres Feld lässt den gespeicherten Key unverändert. Umgebungsvariablen wie <code>KMM_TMDB_API_KEY</code> füllen nur einen noch nicht gespeicherten Key beim Start.",
+      "help": "Wo bekomme ich die Keys?",
+      "loadError": "Die API-Keys konnten nicht geladen werden.",
+      "removing": "wird entfernt",
+      "stored": "gespeichert {hint}",
+      "notSet": "nicht gesetzt",
+      "save": "Keys speichern",
+      "saved": "API-Keys gespeichert."
+    }
+  },
+  "migration": {
+    "title": "Ember-Import",
+    "noProfile": "In diesem Ordner ist keine Ember-Datenbank (MyVideos48.emm). Bitte den Ember-Ordner oder den Ordner Profiles\\Default wählen.",
+    "confirm": "{movies} Filme{tvShows, plural, =0 {} other { und # Serien}} aus Ember in die Bibliothek übernehmen?",
+    "summary": "{title}: {dryRun, select, true {würde übernehmen} other {hat übernommen}} {created} neue und {updated} vorhandene Filme{episodes, plural, =0 {} other { sowie # Episoden}}.",
+    "cancelled": "{title} abgebrochen – es wurde nichts übernommen.",
+    "failed": "{title} fehlgeschlagen: {message}",
+    "unknownError": "Unbekannter Fehler",
+    "kodiHosts": "Kodi-Geräte",
+    "settings": "Einstellungen",
+    "profile": {
+      "title": "1. Ember-Profil",
+      "hint": "Wähle den Ember-Ordner auf diesem Rechner. KMM lädt daraus nur die Datenbank <code>MyVideos48.emm</code> und die Einstellungen hoch; der Browser fragt dabei womöglich, ob alle Dateien hochgeladen werden sollen. Ember wird nicht verändert, und nach dem Import löscht KMM die hochgeladenen Dateien.",
+      "choose": "Ember-Ordner wählen",
+      "uploading": "Lade hoch …",
+      "discard": "Hochgeladenes Profil verwerfen",
+      "database": "Datenbank",
+      "schema": "Version {version}",
+      "library": "Bestand",
+      "libraryCounts": "{movies} Filme, {movieSets} Filmsets, {tvShows} Serien mit {episodes} Episoden",
+      "settingsSummary": "Sprache {language}, Bilder {artwork}, {extensions} Dateiendungen"
+    },
+    "mapping": {
+      "title": "2. Pfade zuordnen",
+      "hint": "Wo liegen Embers Film- und Serienquellen aus Sicht von KMM? Läuft KMM auf demselben Rechner, bleiben die Pfade gleich; unter Docker z. B. <code>/media/filme</code> eintragen. Der Probelauf ändert nichts.",
+      "emberPath": "Pfad in Ember",
+      "kmmPath": "Pfad in KMM",
+      "pathRequired": "Bitte einen Pfad angeben.",
+      "noSources": "Das Profil enthält keine Quellen.",
+      "importTvShows": "Serien und Episoden übernehmen (Episoden ohne Datei bleiben außen vor)",
+      "importSettings": "Einstellungen übernehmen (Sprache, Dateiendungen, ausgeschlossene Ordner, Proxy)",
+      "importKodiHosts": "Kodi-Geräte mit Zugangsdaten übernehmen (Pfade über die Zuordnung oben)",
+      "import": "Importieren"
+    },
+    "report": {
+      "title": "Ergebnis des Imports",
+      "dryRunTitle": "Ergebnis des Probelaufs (nichts gespeichert)",
+      "sources": "{created} neu, {reused} vorhanden",
+      "counts": "{created} neu, {updated} aktualisiert, {skipped} übersprungen",
+      "episodeCounts": "{created} neu, {updated} aktualisiert, {skipped} übersprungen, {missing} ohne Datei",
+      "kodiHostCounts": "{created} neu, {updated} aktualisiert",
+      "moviesWithoutNfo": "Filme ohne NFO",
+      "skippedSources": "Nicht übernommene Quellen",
+      "missingFiles": "Filme ohne gefundene NFO",
+      "missingFilesHint": "Meist ist das Verzeichnis gerade nicht erreichbar oder die Pfad-Zuordnung stimmt nicht. Die Angaben aus Ember sind trotzdem übernommen."
+    }
+  },
+  "backup": {
+    "title": "Sicherung",
+    "credentials": "Zugangsdaten",
+    "table": {
+      "mediaSource": "Quellen",
+      "movieSet": "Filmsets",
+      "movie": "Filme",
+      "tvShow": "Serien",
+      "episode": "Episoden",
+      "kodiHost": "Kodi-Geräte",
+      "savedFilter": "Filter",
+      "appSetting": "Einstellungen"
+    },
+    "export": {
+      "title": "Exportieren",
+      "hint": "Lädt alle KMM-Daten als Datei herunter: Quellen, Filme, Serien, Filmsets, Filter, Kodi-Geräte und Einstellungen. Medien, NFOs und Bilder gehören nicht dazu.",
+      "includeCredentials": "API-Keys und Passwörter einschließen",
+      "credentialsWarning": "Sie stehen dann im Klartext in der Datei. Bewahre sie sicher auf und gib sie nicht weiter.",
+      "download": "Sicherung herunterladen",
+      "exporting": "Exportiere …"
+    },
+    "upload": {
+      "title": "Importieren",
+      "hint": "Wähle eine Sicherung aus. Du siehst zuerst, was sie enthält; noch wird nichts geändert.",
+      "choose": "Sicherung wählen",
+      "uploading": "Lade hoch …",
+      "discard": "Datei verwerfen",
+      "created": "Erstellt",
+      "createdWith": "{date} mit KMM {version}",
+      "contents": "Inhalt",
+      "credentialsIncluded": "enthalten, sie ersetzen die vorhandenen",
+      "credentialsMissing": "nicht enthalten, die vorhandenen bleiben"
+    },
+    "import": {
+      "title": "Pfade und Art des Imports",
+      "mappingHint": "Wo liegen die Quellen aus Sicht von KMM? Bleibt der Pfad gleich, lass ihn stehen. Unter Docker ist es der Pfad im Container, zum Beispiel <code>/media/filme</code>.",
+      "fromPath": "Pfad in der Sicherung",
+      "toPath": "Pfad für KMM",
+      "pathRequired": "Bitte einen Pfad angeben.",
+      "modeReplace": "<strong>Ersetzen:</strong> KMM hat danach genau den Stand der Datei. Alles andere wird gelöscht.",
+      "modeMerge": "<strong>Zusammenführen:</strong> Vorhandenes bleibt. Stimmt ein Eintrag überein, gewinnt die Datei.",
+      "replaceWord": "ERSETZEN",
+      "replaceConfirmation": "Zum Einspielen {word} eingeben",
+      "mergeQuestion": "Sicherung einspielen? Gleiche Einträge werden mit den Angaben aus der Datei überschrieben, alles andere bleibt.",
+      "start": "Einspielen"
+    },
+    "report": {
+      "title": "Ergebnis des Imports",
+      "dryRunTitle": "Ergebnis des Probelaufs",
+      "counts": "{created} neu, {updated} aktualisiert, {skipped} übersprungen",
+      "paths": "Pfade",
+      "unmapped": "{count} ohne passende Zuordnung, sie blieben unverändert",
+      "credentialsKept": "Die Datei enthält keine, die vorhandenen bleiben erhalten.",
+      "safetyCopy": "Bisheriger Stand"
+    },
+    "job": {
+      "finished": "{title}: fertig.",
+      "cancelled": "{title} abgebrochen – es wurde nichts geändert.",
+      "failed": "{title} fehlgeschlagen: {message}",
+      "unknownError": "Unbekannter Fehler"
+    }
   }
 }

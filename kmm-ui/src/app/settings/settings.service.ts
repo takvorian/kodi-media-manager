@@ -22,7 +22,7 @@ export class SettingsService {
     return this.http.get<ApiKeyView[]>(`${SETTINGS_URL}/api-keys`);
   }
 
-  /** Ein Wert ersetzt den Key, ein leerer Wert löscht ihn, fehlende Keys bleiben unverändert. */
+  /** A value replaces the key, an empty value deletes it, missing keys stay unchanged. */
   saveApiKeys(changes: Partial<Record<ApiKeyName, string>>): Observable<ApiKeyView[]> {
     return this.http.put<ApiKeyView[]>(`${SETTINGS_URL}/api-keys`, changes);
   }

@@ -1,13 +1,15 @@
+import { translate } from '@jsverse/transloco';
+
 import { Job } from '../jobs/job';
 import { ScanEntry, ScanResult } from './media-source';
 
-/** Eine Zeile des Berichts; ohne Ziel, wenn der Eintrag nicht mehr in der Bibliothek steht. */
+/** A line of the report; without a target if the entry is no longer in the library. */
 export interface ScanReportRow {
   readonly label: string;
   readonly link: readonly (string | number)[] | null;
 }
 
-/** Ein Abschnitt des Berichts. Die Liste kann kürzer sein als die Gesamtzahl. */
+/** A section of the report. The list may be shorter than the total. */
 export interface ScanReportSection {
   readonly title: string;
   readonly hint: string | null;
@@ -15,45 +17,43 @@ export interface ScanReportSection {
   readonly rows: readonly ScanReportRow[];
 }
 
+/** Kind of the counted items, the ICU `select` argument of the section titles. */
+type ScanItems = 'movies' | 'episodes';
+
 const ROUTES: Partial<Record<ScanEntry['type'], string>> = {
   MOVIE: '/movies',
   TV_SHOW: '/tvshows',
   TV_EPISODE: '/episodes',
 };
-const UPDATED_HINT = 'Ihre NFO wurde außerhalb von KMM geändert und neu eingelesen.';
-const REMOVED_HINT = 'Die Datei ist nicht mehr da. Entfernt wurde nur der Eintrag in KMM.';
-const UNREADABLE_HINT = 'Der Eintrag bleibt erhalten, die Angaben aus der NFO fehlen aber.';
-const UNRECOGNIZED_HINT =
-  'KMM hat diese Dateien nicht aufgenommen, weil der Name keine Staffel und Episode wie S01E05 enthält. ' +
-  'Benenne sie um und scanne erneut. Die Pfade gelten ab dem Ordner der Quelle.';
+const SECTION = 'sources.scanReport.section';
+const HINT = 'sources.scanReport.hint';
 
-/** Abschnitte des Berichts zu einem erfolgreichen Scan; nur solche, in denen etwas passiert ist. */
+/**
+ * Sections of the report on a successful scan, translated into the active language; only those in which something
+ * happened.
+ */
 export function scanReportSections(job: Job): readonly ScanReportSection[] {
   if (job.status !== 'SUCCEEDED') {
     return [];
   }
   const result = job.result as ScanResult;
   const details = result.details;
-  const items = result.showsAdded === undefined ? 'Filme' : 'Episoden';
+  const kind: ScanItems = result.showsAdded === undefined ? 'movies' : 'episodes';
   const unrecognized = result.unrecognizedFiles ?? [];
   const sections: ScanReportSection[] = [
-    section('Neue Serien', null, result.showsAdded ?? 0, entries(details?.addedShows)),
-    section(`Neue ${items}`, null, result.added, entries(details?.added)),
-    section(`Aktualisierte ${items}`, UPDATED_HINT, result.updated, entries(details?.updated)),
+    section('newShows', null, result.showsAdded ?? 0, entries(details?.addedShows), kind),
+    section('added', null, result.added, entries(details?.added), kind),
+    section('updated', 'updated', result.updated, entries(details?.updated), kind),
     section(
-      'Entfernte Serien',
-      REMOVED_HINT,
+      'removedShows',
+      'removed',
       result.showsRemoved ?? 0,
       entries(details?.removedShows),
+      kind,
     ),
-    section(`Entfernte ${items}`, REMOVED_HINT, result.removed, entries(details?.removed)),
-    section('NFO nicht lesbar', UNREADABLE_HINT, result.nfoErrors, plain(details?.unreadableNfos)),
-    section(
-      'Dateien ohne erkennbare Episode',
-      UNRECOGNIZED_HINT,
-      unrecognized.length,
-      plain(unrecognized),
-    ),
+    section('removed', 'removed', result.removed, entries(details?.removed), kind),
+    section('unreadable', 'unreadable', result.nfoErrors, plain(details?.unreadableNfos), kind),
+    section('unrecognized', 'unrecognized', unrecognized.length, plain(unrecognized), kind),
   ];
   return sections.filter((candidate) => candidate.total > 0);
 }
@@ -63,8 +63,14 @@ function section(
   hint: string | null,
   total: number,
   rows: readonly ScanReportRow[],
+  kind: ScanItems,
 ): ScanReportSection {
-  return { title, hint, total, rows };
+  return {
+    title: translate(`${SECTION}.${title}`, { kind }),
+    hint: hint === null ? null : translate(`${HINT}.${hint}`),
+    total,
+    rows,
+  };
 }
 
 function entries(list: readonly ScanEntry[] | undefined): readonly ScanReportRow[] {
@@ -75,7 +81,7 @@ function plain(list: readonly string[] | undefined): readonly ScanReportRow[] {
   return (list ?? []).map((label) => ({ label, link: null }));
 }
 
-/** Ziel eines Eintrags in der Bibliothek; {@code null}, wenn er nicht mehr dort steht. */
+/** Target of an entry in the library; {@code null} if it is no longer there. */
 export function scanEntryLink(entry: ScanEntry): readonly (string | number)[] | null {
   const route = ROUTES[entry.type];
   return route !== undefined && entry.id !== null ? [route, entry.id] : null;

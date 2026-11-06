@@ -38,47 +38,47 @@ export class KodiService {
     return this.http.post<KodiConnectionTest>(`${KODI_HOSTS_URL}/${hostId}/test`, null);
   }
 
-  /** Aktualisiert den Film auf allen Kodi-Geräten. */
+  /** Refreshes the movie on all Kodi devices. */
   refreshMovie(movieId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/movies/${movieId}/refresh`, null);
   }
 
-  /** Aktualisiert die Auswahl auf allen Kodi-Geräten; läuft als Job. */
+  /** Refreshes the selection on all Kodi devices; runs as a job. */
   refreshMovies(movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${KODI_URL}/movies/refresh`, { movieIds });
   }
 
-  /** Aktualisiert die Auswahl (ohne Episoden) auf allen Kodi-Geräten; läuft als Job. */
+  /** Refreshes the selection (without episodes) on all Kodi devices; runs as a job. */
   refreshTvShows(showIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${KODI_URL}/tvshows/refresh`, { showIds });
   }
 
-  /** Aktualisiert die Serie (ohne Episoden) auf allen Kodi-Geräten. */
+  /** Refreshes the TV show (without episodes) on all Kodi devices. */
   refreshTvShow(showId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/tvshows/${showId}/refresh`, null);
   }
 
-  /** Aktualisiert die Episode auf allen Kodi-Geräten. */
+  /** Refreshes the episode on all Kodi devices. */
   refreshEpisode(episodeId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/episodes/${episodeId}/refresh`, null);
   }
 
-  /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen bzw. Serien durchsuchen. */
+  /** Lets all Kodi devices scan the directory of the source for new movies or TV shows. */
   scanSource(sourceId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/sources/${sourceId}/scan`, null);
   }
 
-  /** Holt den Gesehen-Status aller Filme bzw. Episoden der Quelle aus Kodi; läuft als Job. */
+  /** Fetches the watched status of all movies or episodes of the source from Kodi; runs as a job. */
   importSourcePlayback(sourceId: number): Observable<Job> {
     return this.http.post<Job>(`${KODI_URL}/sources/${sourceId}/playback`, null);
   }
 
-  /** Holt den Gesehen-Status des Films aus Kodi. */
+  /** Fetches the watched status of the movie from Kodi. */
   importMoviePlayback(movieId: number): Observable<KodiPlaybackResult> {
     return this.http.post<KodiPlaybackResult>(`${KODI_URL}/movies/${movieId}/playback`, null);
   }
 
-  /** Holt den Gesehen-Status der Episode aus Kodi. */
+  /** Fetches the watched status of the episode from Kodi. */
   importEpisodePlayback(episodeId: number): Observable<KodiPlaybackResult> {
     return this.http.post<KodiPlaybackResult>(`${KODI_URL}/episodes/${episodeId}/playback`, null);
   }

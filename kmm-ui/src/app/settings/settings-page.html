@@ -1,83 +1,105 @@
-<h2 class="page-title">Einstellungen</h2>
+<h2 class="page-title">{{ 'settings.title' | transloco }}</h2>
 
 @if (settings.error()) {
-  <p class="error">Die Einstellungen konnten nicht geladen werden.</p>
+  <p class="error">{{ 'settings.loadError' | transloco }}</p>
 } @else if (settings.hasValue()) {
   <form [formGroup]="form" (ngSubmit)="save()" class="settings-form">
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>Sprache</mat-card-title>
+        <mat-card-title>{{ 'settings.language.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content class="row">
         <mat-form-field>
-          <mat-label>Metadaten</mat-label>
-          <input matInput formControlName="metadataLanguage" name="metadataLanguage" placeholder="de-DE" />
+          <mat-label>{{ 'settings.language.metadata' | transloco }}</mat-label>
+          <input
+            matInput
+            formControlName="metadataLanguage"
+            name="metadataLanguage"
+            placeholder="de-DE"
+          />
           @if (isOverridden('METADATA_LANGUAGE')) {
-            <mat-hint class="overridden-hint">Durch die Konfiguration festgelegt</mat-hint>
+            <mat-hint class="overridden-hint">{{ 'settings.overridden' | transloco }}</mat-hint>
           } @else {
-            <mat-hint>z. B. de-DE oder en-US</mat-hint>
+            <mat-hint>{{ 'settings.language.metadataHint' | transloco }}</mat-hint>
           }
-          <mat-error>Format: de oder de-DE</mat-error>
+          <mat-error>{{ 'settings.language.metadataInvalid' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>Bevorzugte Bildsprache</mat-label>
-          <input matInput formControlName="artworkLanguage" name="artworkLanguage" placeholder="de" />
+          <mat-label>{{ 'settings.language.artwork' | transloco }}</mat-label>
+          <input
+            matInput
+            formControlName="artworkLanguage"
+            name="artworkLanguage"
+            placeholder="de"
+          />
           @if (isOverridden('ARTWORK_LANGUAGE')) {
-            <mat-hint class="overridden-hint">Durch die Konfiguration festgelegt</mat-hint>
+            <mat-hint class="overridden-hint">{{ 'settings.overridden' | transloco }}</mat-hint>
           } @else {
-            <mat-hint>Zweistelliger Sprachcode, z. B. de</mat-hint>
+            <mat-hint>{{ 'settings.language.artworkHint' | transloco }}</mat-hint>
           }
-          <mat-error>Format: zwei Kleinbuchstaben, z. B. de</mat-error>
+          <mat-error>{{ 'settings.language.artworkInvalid' | transloco }}</mat-error>
         </mat-form-field>
       </mat-card-content>
     </mat-card>
 
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>Serien</mat-card-title>
+        <mat-card-title>{{ 'common.tvshows' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content class="row">
         <mat-form-field>
-          <mat-label>Metadaten</mat-label>
-          <input matInput formControlName="tvMetadataLanguage" name="tvMetadataLanguage" placeholder="de-DE" />
-          <mat-hint>z. B. de-DE oder en-US</mat-hint>
-          <mat-error>Format: de oder de-DE</mat-error>
+          <mat-label>{{ 'settings.language.metadata' | transloco }}</mat-label>
+          <input
+            matInput
+            formControlName="tvMetadataLanguage"
+            name="tvMetadataLanguage"
+            placeholder="de-DE"
+          />
+          <mat-hint>{{ 'settings.language.metadataHint' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.language.metadataInvalid' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>Bevorzugte Bildsprache</mat-label>
-          <input matInput formControlName="tvArtworkLanguage" name="tvArtworkLanguage" placeholder="de" />
-          <mat-hint>Zweistelliger Sprachcode, z. B. de</mat-hint>
-          <mat-error>Format: zwei Kleinbuchstaben, z. B. de</mat-error>
+          <mat-label>{{ 'settings.language.artwork' | transloco }}</mat-label>
+          <input
+            matInput
+            formControlName="tvArtworkLanguage"
+            name="tvArtworkLanguage"
+            placeholder="de"
+          />
+          <mat-hint>{{ 'settings.language.artworkHint' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.language.artworkInvalid' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field>
-          <mat-label>Episodenreihenfolge</mat-label>
+          <mat-label>{{ 'settings.tv.ordering.label' | transloco }}</mat-label>
           <mat-select formControlName="tvEpisodeOrdering" name="tvEpisodeOrdering">
             @for (ordering of orderings; track ordering.value) {
-              <mat-option [value]="ordering.value">{{ ordering.label }}</mat-option>
+              <mat-option [value]="ordering.value">{{ ordering.labelKey | transloco }}</mat-option>
             }
           </mat-select>
-          <mat-hint>Für das Scrapen von Serien, wirkt nur bei TVDB</mat-hint>
+          <mat-hint>{{ 'settings.tv.ordering.hint' | transloco }}</mat-hint>
         </mat-form-field>
       </mat-card-content>
     </mat-card>
 
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>Technische Angaben</mat-card-title>
+        <mat-card-title>{{ 'settings.mediaInfo.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <mat-form-field class="full">
           <mat-label>ffprobe</mat-label>
           <input matInput formControlName="ffprobePath" name="ffprobePath" />
-          <mat-hint>Pfad zu ffprobe (Teil von FFmpeg) oder nur „ffprobe“, wenn es auf dem PATH liegt</mat-hint>
-          <mat-error>Bitte einen Pfad angeben</mat-error>
+          <mat-hint>{{ 'settings.mediaInfo.ffprobeHint' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.mediaInfo.ffprobeRequired' | transloco }}</mat-error>
         </mat-form-field>
         <div>
-          <mat-checkbox formControlName="probeOnScrape" name="probeOnScrape">Nach dem automatischen Scrapen auslesen</mat-checkbox>
+          <mat-checkbox formControlName="probeOnScrape" name="probeOnScrape">
+            {{ 'settings.mediaInfo.probeOnScrape' | transloco }}
+          </mat-checkbox>
         </div>
         <div>
           <mat-checkbox formControlName="probeNewFiles" name="probeNewFiles">
-            Neue Dateien ohne Angaben in der NFO nach dem Scan auslesen
+            {{ 'settings.mediaInfo.probeNewFiles' | transloco }}
           </mat-checkbox>
         </div>
       </mat-card-content>
@@ -85,138 +107,190 @@
 
     <mat-card appearance="outlined" formGroupName="rename">
       <mat-card-header>
-        <mat-card-title>Umbenennen</mat-card-title>
+        <mat-card-title>{{ 'settings.rename.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <p class="hint">
-          Platzhalter in <code>{{ '{' }} {{ '}' }}</code>, z. B. <code>{{ '{' }}title{{ '}' }}</code>,
-          <code>{{ '{' }}year{{ '}' }}</code>, <code>{{ '{' }}source{{ '}' }}</code>; Format nach Doppelpunkt:
-          <code>{{ '{' }}season:2{{ '}' }}</code> (zweistellig), <code>:first</code>, <code>:sort</code>,
-          <code>:lower</code>, <code>:upper</code>. Teile in <code>[ ]</code> entfallen, wenn ein Platzhalter darin
-          leer ist; <code>/</code> legt Unterordner an (nur beim Filmordner, relativ zur Quelle).
-          <app-help-link chapter="umbenennen" anchor="platzhalter">Alle Platzhalter</app-help-link>
+          <span [innerHTML]="'settings.rename.hint' | transloco"></span>
+          <app-help-link chapter="umbenennen" anchor="platzhalter">{{
+            'settings.rename.help' | transloco
+          }}</app-help-link>
         </p>
         <mat-form-field class="full">
-          <mat-label>Filmordner</mat-label>
+          <mat-label>{{ 'settings.rename.movieFolder' | transloco }}</mat-label>
           <input matInput formControlName="movieFolder" name="movieFolder" />
-          <mat-hint>z. B. {{ '{' }}title{{ '}' }}[ ({{ '{' }}year{{ '}' }})]</mat-hint>
-          <mat-error>Bitte ein Muster angeben</mat-error>
+          <mat-hint>{{ 'settings.rename.movieFolderExample' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.rename.patternRequired' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field class="full">
-          <mat-label>Filmdateien</mat-label>
+          <mat-label>{{ 'settings.rename.movieFile' | transloco }}</mat-label>
           <input matInput formControlName="movieFile" name="movieFile" />
-          <mat-hint>z. B. {{ '{' }}title{{ '}' }}[.{{ '{' }}source{{ '}' }}]</mat-hint>
-          <mat-error>Bitte ein Muster angeben</mat-error>
+          <mat-hint>{{ 'settings.rename.movieFileExample' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.rename.patternRequired' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field class="full">
-          <mat-label>Serienordner</mat-label>
+          <mat-label>{{ 'settings.rename.tvShowFolder' | transloco }}</mat-label>
           <input matInput formControlName="tvShowFolder" name="tvShowFolder" />
-          <mat-error>Bitte ein Muster angeben</mat-error>
+          <mat-error>{{ 'settings.rename.patternRequired' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field class="full">
-          <mat-label>Staffelordner</mat-label>
+          <mat-label>{{ 'settings.rename.seasonFolder' | transloco }}</mat-label>
           <input matInput formControlName="seasonFolder" name="seasonFolder" />
-          <mat-error>Bitte ein Muster angeben</mat-error>
+          <mat-error>{{ 'settings.rename.patternRequired' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field class="full">
-          <mat-label>Episodendateien</mat-label>
+          <mat-label>{{ 'settings.rename.episodeFile' | transloco }}</mat-label>
           <input matInput formControlName="episodeFile" name="episodeFile" />
-          <mat-error>Bitte ein Muster angeben</mat-error>
+          <mat-error>{{ 'settings.rename.patternRequired' | transloco }}</mat-error>
         </mat-form-field>
-        <p class="hint">Die folgenden Auslöser benennen ohne Vorschau um; schalte sie erst ein, wenn deine Muster bewährt sind.</p>
-        <div><mat-checkbox formControlName="movieOnEdit" name="movieOnEdit">Filme nach dem Speichern umbenennen</mat-checkbox></div>
-        <div><mat-checkbox formControlName="movieOnScrape" name="movieOnScrape">Filme nach dem Scrapen umbenennen</mat-checkbox></div>
-        <div><mat-checkbox formControlName="tvOnEdit" name="tvOnEdit">Serien nach dem Speichern umbenennen (Serie oder Episode)</mat-checkbox></div>
-        <div><mat-checkbox formControlName="tvOnScrape" name="tvOnScrape">Serien nach dem Scrapen umbenennen</mat-checkbox></div>
-        <div><mat-checkbox formControlName="episodesOnScan" name="episodesOnScan">Neue Episoden beim Scan umbenennen</mat-checkbox></div>
+        <p class="hint">{{ 'settings.rename.triggersHint' | transloco }}</p>
+        <div>
+          <mat-checkbox formControlName="movieOnEdit" name="movieOnEdit">
+            {{ 'settings.rename.movieOnEdit' | transloco }}
+          </mat-checkbox>
+        </div>
+        <div>
+          <mat-checkbox formControlName="movieOnScrape" name="movieOnScrape">
+            {{ 'settings.rename.movieOnScrape' | transloco }}
+          </mat-checkbox>
+        </div>
+        <div>
+          <mat-checkbox formControlName="tvOnEdit" name="tvOnEdit">{{
+            'settings.rename.tvOnEdit' | transloco
+          }}</mat-checkbox>
+        </div>
+        <div>
+          <mat-checkbox formControlName="tvOnScrape" name="tvOnScrape">
+            {{ 'settings.rename.tvOnScrape' | transloco }}
+          </mat-checkbox>
+        </div>
+        <div>
+          <mat-checkbox formControlName="episodesOnScan" name="episodesOnScan">
+            {{ 'settings.rename.episodesOnScan' | transloco }}
+          </mat-checkbox>
+        </div>
       </mat-card-content>
     </mat-card>
 
     <mat-card appearance="outlined" formGroupName="movieSets">
       <mat-card-header>
-        <mat-card-title>Filmsets</mat-card-title>
+        <mat-card-title>{{ 'settings.movieSets.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <div>
           <mat-checkbox formControlName="assignOnScrape" name="assignOnScrape">
-            Filme beim Scrapen ihrem Filmset zuordnen (TMDB-Sammlung; ersetzt ein anderes Set)
+            {{ 'settings.movieSets.assignOnScrape' | transloco }}
           </mat-checkbox>
-          <app-help-link chapter="filmsets" anchor="filme-automatisch-zuordnen">Mehr dazu</app-help-link>
+          <app-help-link chapter="filmsets" anchor="filme-automatisch-zuordnen">{{
+            'common.learnMore' | transloco
+          }}</app-help-link>
         </div>
         <div>
-          <mat-checkbox formControlName="flatImages" name="flatImages">Set-Bilder im flachen Schema ablegen (wie Ember)</mat-checkbox>
+          <mat-checkbox formControlName="flatImages" name="flatImages">
+            {{ 'settings.movieSets.flatImages' | transloco }}
+          </mat-checkbox>
         </div>
         <mat-form-field class="full">
-          <mat-label>Ordner für das flache Schema</mat-label>
+          <mat-label>{{ 'settings.movieSets.flatImagesFolder' | transloco }}</mat-label>
           <input matInput formControlName="flatImagesFolder" name="flatImagesFolder" />
-          <mat-hint>Bilder als &lt;Ordner&gt;/&lt;Settitel&gt;-poster.jpg</mat-hint>
-          <mat-error>Bitte einen Ordner angeben</mat-error>
+          <mat-hint>{{ 'settings.movieSets.flatImagesHint' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.movieSets.folderRequired' | transloco }}</mat-error>
         </mat-form-field>
         <div>
-          <mat-checkbox formControlName="kodiImages" name="kodiImages">Set-Bilder in Kodis Set-Ordnern ablegen</mat-checkbox>
+          <mat-checkbox formControlName="kodiImages" name="kodiImages">
+            {{ 'settings.movieSets.kodiImages' | transloco }}
+          </mat-checkbox>
         </div>
         <mat-form-field class="full">
-          <mat-label>Ordner für Filmset-Informationen</mat-label>
+          <mat-label>{{ 'settings.movieSets.kodiImagesFolder' | transloco }}</mat-label>
           <input matInput formControlName="kodiImagesFolder" name="kodiImagesFolder" />
-          <mat-hint>Bilder als &lt;Ordner&gt;/&lt;Settitel&gt;/poster.jpg, wie in Kodi eingestellt</mat-hint>
-          <mat-error>Bitte einen Ordner angeben</mat-error>
+          <mat-hint>{{ 'settings.movieSets.kodiImagesHint' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.movieSets.folderRequired' | transloco }}</mat-error>
         </mat-form-field>
       </mat-card-content>
     </mat-card>
 
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>Scan</mat-card-title>
+        <mat-card-title>{{ 'settings.scan.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <mat-form-field class="full">
-          <mat-label>Video-Dateiendungen</mat-label>
+          <mat-label>{{ 'settings.scan.videoExtensions' | transloco }}</mat-label>
           <input matInput formControlName="videoExtensions" name="videoExtensions" />
-          <mat-hint>Durch Komma getrennt, z. B. mkv, mp4, avi</mat-hint>
-          <mat-error>Mindestens eine Endung aus Buchstaben oder Ziffern</mat-error>
+          <mat-hint>{{ 'settings.scan.videoExtensionsHint' | transloco }}</mat-hint>
+          <mat-error>{{ 'settings.scan.videoExtensionsInvalid' | transloco }}</mat-error>
         </mat-form-field>
         <mat-form-field class="full">
-          <mat-label>Ausgeschlossene Ordner</mat-label>
-          <textarea matInput formControlName="excludedPaths" name="excludedPaths" rows="4"></textarea>
-          <mat-hint>Ein vollständiger Pfad pro Zeile; der Scan überspringt diese Ordner samt Inhalt</mat-hint>
+          <mat-label>{{ 'settings.scan.excludedPaths' | transloco }}</mat-label>
+          <textarea
+            matInput
+            formControlName="excludedPaths"
+            name="excludedPaths"
+            rows="4"
+          ></textarea>
+          <mat-hint>{{ 'settings.scan.excludedPathsHint' | transloco }}</mat-hint>
         </mat-form-field>
       </mat-card-content>
     </mat-card>
 
     <mat-card appearance="outlined">
       <mat-card-header>
-        <mat-card-title>Proxy</mat-card-title>
+        <mat-card-title>{{ 'settings.proxy.title' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         @if (isOverridden('PROXY')) {
-          <p class="overridden-hint proxy-overridden">Der Proxy ist durch die Konfiguration festgelegt.</p>
+          <p class="overridden-hint proxy-overridden">
+            {{ 'settings.proxy.overridden' | transloco }}
+          </p>
         }
-        <mat-checkbox formControlName="proxyEnabled" name="proxyEnabled">Proxy für Online-Dienste verwenden</mat-checkbox>
+        <mat-checkbox formControlName="proxyEnabled" name="proxyEnabled">
+          {{ 'settings.proxy.enabled' | transloco }}
+        </mat-checkbox>
         @if (form.controls.proxyEnabled.value) {
           <div class="row">
             <mat-form-field class="wide">
-              <mat-label>Host</mat-label>
-              <input matInput formControlName="proxyHost" name="proxyHost" placeholder="proxy.local" />
-              <mat-error>Der Host ist erforderlich.</mat-error>
+              <mat-label>{{ 'settings.proxy.host' | transloco }}</mat-label>
+              <input
+                matInput
+                formControlName="proxyHost"
+                name="proxyHost"
+                placeholder="proxy.local"
+              />
+              <mat-error>{{ 'settings.proxy.hostRequired' | transloco }}</mat-error>
             </mat-form-field>
             <mat-form-field class="narrow">
-              <mat-label>Port</mat-label>
-              <input matInput type="number" formControlName="proxyPort" name="proxyPort" min="1" max="65535" />
-              <mat-error>1 bis 65535</mat-error>
+              <mat-label>{{ 'settings.proxy.port' | transloco }}</mat-label>
+              <input
+                matInput
+                type="number"
+                formControlName="proxyPort"
+                name="proxyPort"
+                min="1"
+                max="65535"
+              />
+              <mat-error>{{ 'settings.proxy.portRange' | transloco }}</mat-error>
             </mat-form-field>
             <mat-form-field>
-              <mat-label>Benutzer</mat-label>
-              <input matInput formControlName="proxyUsername" name="proxyUsername" autocomplete="off" />
+              <mat-label>{{ 'settings.proxy.username' | transloco }}</mat-label>
+              <input
+                matInput
+                formControlName="proxyUsername"
+                name="proxyUsername"
+                autocomplete="off"
+              />
             </mat-form-field>
             <mat-form-field>
-              <mat-label>Passwort</mat-label>
+              <mat-label>{{ 'settings.proxy.password' | transloco }}</mat-label>
               <input
                 matInput
                 type="password"
                 formControlName="proxyPassword"
                 name="proxyPassword"
                 autocomplete="new-password"
-                [placeholder]="passwordSet() ? 'unverändert' : ''"
+                [placeholder]="
+                  passwordSet() ? ('settings.proxy.passwordUnchanged' | transloco) : ''
+                "
               />
             </mat-form-field>
           </div>
@@ -225,16 +299,27 @@
     </mat-card>
 
     <div class="actions">
-      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
-        Verwerfen
+      <button
+        matButton
+        type="button"
+        class="reset-button"
+        (click)="reset()"
+        [disabled]="form.pristine || saving()"
+      >
+        {{ 'settings.discard' | transloco }}
       </button>
-      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving()">
-        {{ saving() ? 'Speichere …' : 'Speichern' }}
+      <button
+        matButton="filled"
+        type="submit"
+        class="save-button"
+        [disabled]="form.pristine || saving()"
+      >
+        {{ (saving() ? 'settings.saving' : 'common.save') | transloco }}
       </button>
     </div>
   </form>
 
   <app-api-keys-card />
 } @else {
-  <p class="loading">Lade Einstellungen …</p>
+  <p class="loading">{{ 'settings.loading' | transloco }}</p>
 }

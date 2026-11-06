@@ -14,6 +14,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { translate, TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
@@ -31,13 +32,12 @@ import { EmberMigrationService } from './ember-migration.service';
 import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 8000;
+/** Part of the job title the server gives a dry run; it is German until the server delivers keys. */
 const DRY_RUN_TITLE = 'Probelauf';
-const NO_PROFILE_MESSAGE =
-  'In diesem Ordner ist keine Ember-Datenbank (MyVideos48.emm). Bitte den Ember-Ordner oder den Ordner Profiles\\Default wählen.';
 
 type MappingForm = FormGroup<{ emberPath: FormControl<string>; kmmPath: FormControl<string> }>;
 
-/** Assistent für die Übernahme eines Ember-Profils: hochladen, Pfade zuordnen, Probelauf, Import. */
+/** Wizard for taking over an Ember profile: upload, map paths, dry run, import. */
 @Component({
   selector: 'app-ember-import-page',
   imports: [
@@ -49,6 +49,7 @@ type MappingForm = FormGroup<{ emberPath: FormControl<string>; kmmPath: FormCont
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
+    TranslocoPipe,
   ],
   templateUrl: './ember-import-page.html',
   styleUrl: './ember-import-page.scss',
@@ -86,14 +87,20 @@ export class EmberImportPage {
     return progressPercent(job);
   }
 
-  /** Lädt aus dem gewählten Ordner nur die Dateien hoch, die der Import braucht. */
+  /** Progress appended to the job message, e.g. " (25 %)"; empty without a known total. */
+  protected percentSuffix(job: Job): string {
+    const percent = progressPercent(job);
+    return percent === null ? '' : ` (${percent} %)`;
+  }
+
+  /** Uploads only the files from the chosen folder that the import needs. */
   protected upload(event: Event): void {
     const input = event.target as HTMLInputElement;
     const files = emberProfileFiles(Array.from(input.files ?? []));
-    // Sonst löst dieselbe Auswahl beim nächsten Mal kein Ereignis aus.
+    // Otherwise the same selection triggers no event next time.
     input.value = '';
     if (files.length === 0) {
-      this.notify(NO_PROFILE_MESSAGE);
+      this.notify(translate('migration.noProfile'));
       return;
     }
     this.uploading.set(true);
@@ -155,7 +162,7 @@ export class EmberImportPage {
     });
   }
 
-  /** Vorschlag: jede Film- und Serienquelle mit unverändertem Pfad; unter Docker z. B. /media/filme. */
+  /** Suggestion: every movie and TV show source with an unchanged path; under Docker e.g. /media/filme. */
   private showMappings(inspection: EmberInspection): void {
     this.mappings.clear();
     const paths = new Set<string>();
@@ -181,7 +188,7 @@ export class EmberImportPage {
 
   private onImportFinished(job: Job): void {
     if (!job.title.includes(DRY_RUN_TITLE)) {
-      // Nach dem echten Import löscht der Server das hochgeladene Profil.
+      // After the real import the server deletes the uploaded profile.
       this.forgetProfile();
     }
     if (job.status === 'SUCCEEDED') {
@@ -189,9 +196,14 @@ export class EmberImportPage {
       this.report.set(report);
       this.notify(summary(job.title, report));
     } else if (job.status === 'CANCELLED') {
-      this.notify(`${job.title} abgebrochen – es wurde nichts übernommen.`);
+      this.notify(translate('migration.cancelled', { title: job.title }));
     } else {
-      this.notify(`${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`);
+      this.notify(
+        translate('migration.failed', {
+          title: job.title,
+          message: job.message ?? translate('migration.unknownError'),
+        }),
+      );
     }
   }
 
@@ -205,16 +217,16 @@ function trimmed(mapping: PathMapping): PathMapping {
 }
 
 function confirmation(inspection: EmberInspection, withTvShows: boolean): string {
-  const tvShows =
-    withTvShows && inspection.library.tvShows > 0
-      ? ` und ${inspection.library.tvShows} Serien`
-      : '';
-  return `${inspection.library.movies} Filme${tvShows} aus Ember in die Bibliothek übernehmen?`;
+  const tvShows = withTvShows ? inspection.library.tvShows : 0;
+  return translate('migration.confirm', { movies: inspection.library.movies, tvShows });
 }
 
 function summary(title: string, report: EmberImportReport): string {
-  const verb = report.dryRun ? 'würde übernehmen' : 'hat übernommen';
-  const episodes = report.tvShows.episodesCreated + report.tvShows.episodesUpdated;
-  const tvShows = episodes > 0 ? ` sowie ${episodes} Episoden` : '';
-  return `${title}: ${verb} ${report.moviesCreated} neue und ${report.moviesUpdated} vorhandene Filme${tvShows}.`;
+  return translate('migration.summary', {
+    title,
+    dryRun: String(report.dryRun),
+    created: report.moviesCreated,
+    updated: report.moviesUpdated,
+    episodes: report.tvShows.episodesCreated + report.tvShows.episodesUpdated,
+  });
 }

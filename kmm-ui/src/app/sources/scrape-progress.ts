@@ -2,6 +2,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
@@ -9,22 +10,25 @@ import { problemMessage } from '../shared/problem-message';
 
 const SNACKBAR_DURATION_MS = 5000;
 
-/** Fortschritt eines laufenden Scrape-Jobs mit Abbrechen; bei einer großen Auswahl kann er lange dauern. */
+/** Progress of a running scrape job with cancel; with a large selection it can take a long time. */
 @Component({
   selector: 'app-scrape-progress',
-  imports: [MatButtonModule, MatProgressBarModule],
+  imports: [MatButtonModule, MatProgressBarModule, TranslocoPipe],
   template: `
     <div class="scrape-progress">
       <mat-progress-bar mode="determinate" [value]="percent()" />
       <div class="scrape-progress-row">
         <span class="scrape-message">
-          {{ job().title }} – {{ job().done }} von {{ job().total }}
+          {{
+            'sources.scrapeProgress'
+              | transloco: { title: job().title, done: job().done, total: job().total }
+          }}
           @if (job().message) {
             ({{ job().message }})
           }
         </span>
         <button matButton type="button" class="cancel-scrape-button" (click)="cancel()">
-          Abbrechen
+          {{ 'common.stop' | transloco }}
         </button>
       </div>
     </div>

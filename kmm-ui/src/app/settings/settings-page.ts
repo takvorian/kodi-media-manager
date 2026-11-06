@@ -8,6 +8,7 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { problemMessage } from '../shared/problem-message';
 import { ApiKeysCard } from './api-keys-card';
@@ -30,6 +31,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatInputModule,
     MatSelectModule,
     ApiKeysCard,
+    TranslocoPipe,
   ],
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.scss',
@@ -37,14 +39,16 @@ const SNACKBAR_DURATION_MS = 5000;
 export class SettingsPage {
   private readonly settingsService = inject(SettingsService);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly form = createSettingsForm(inject(NonNullableFormBuilder));
   protected readonly settings = rxResource({ stream: () => this.settingsService.load() });
   protected readonly saving = signal(false);
-  protected readonly orderings: readonly { value: EpisodeOrdering; label: string }[] = [
-    { value: 'AIRED', label: 'Ausstrahlung' },
-    { value: 'DVD', label: 'DVD/Blu-ray' },
-    { value: 'ABSOLUTE', label: 'Absolut (ohne Staffeln)' },
+  /** Episode orderings with the translation keys of their labels. */
+  protected readonly orderings: readonly { value: EpisodeOrdering; labelKey: string }[] = [
+    { value: 'AIRED', labelKey: 'settings.tv.ordering.AIRED' },
+    { value: 'DVD', labelKey: 'settings.tv.ordering.DVD' },
+    { value: 'ABSOLUTE', labelKey: 'settings.tv.ordering.ABSOLUTE' },
   ];
 
   constructor() {
@@ -79,7 +83,7 @@ export class SettingsPage {
       next: (view) => {
         this.saving.set(false);
         this.settings.set(view);
-        this.notify('Einstellungen gespeichert.');
+        this.notify(this.transloco.translate('settings.saved'));
       },
       error: (error: unknown) => {
         this.saving.set(false);
@@ -126,7 +130,7 @@ export class SettingsPage {
     host.updateValueAndValidity({ emitEvent: false });
   }
 
-  /** Eine eingeschaltete Ablage braucht einen Ordner. */
+  /** A storage that is switched on needs a folder. */
   private updateMovieSetValidators(): void {
     const movieSets = this.form.controls.movieSets.controls;
     for (const [enabled, folder] of [

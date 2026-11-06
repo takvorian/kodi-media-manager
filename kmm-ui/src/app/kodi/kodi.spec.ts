@@ -1,3 +1,7 @@
+import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
+
+import { provideI18nTesting } from '../i18n/testing';
 import { job } from '../jobs/fake-job-events';
 import {
   KodiSyncResult,
@@ -9,6 +13,11 @@ import {
 } from './kodi';
 
 describe('kodi', () => {
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideI18nTesting()] });
+    TestBed.inject(TranslocoService);
+  });
+
   const result = (outcome: KodiSyncResult['outcome'], host = 'Wohnzimmer'): KodiSyncResult => ({
     hostId: 1,
     host,
@@ -67,6 +76,29 @@ describe('kodi', () => {
     ).toBe(`${title} fehlgeschlagen: Kodi nicht erreichbar`);
     expect(kodiPlaybackSummary(job({ title, status: 'FAILED', message: null }))).toContain(
       'Unbekannter Fehler',
+    );
+  });
+
+  it('summarizes in the active UI language', () => {
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    const result = {
+      sourceId: 1,
+      host: 'Living room',
+      updated: 3,
+      unchanged: 10,
+      kept: 2,
+      notInKodi: 0,
+      failed: 1,
+      failures: ['x'],
+    };
+
+    expect(kodiSyncSummary([])).toBe('No Kodi device set up – add one under “Kodi”.');
+    expect(kodiPlaybackSummary(job({ title: 'Watched status', status: 'SUCCEEDED', result }))).toBe(
+      'Watched status (Living room) finished: 3 taken over, 10 unchanged, 0 unknown in Kodi, ' +
+        '2 different (KMM state kept), 1 error.',
+    );
+    expect(kodiPlaybackSummary(job({ title: 'X', status: 'FAILED', message: null }))).toBe(
+      'X failed: Unknown error',
     );
   });
 });

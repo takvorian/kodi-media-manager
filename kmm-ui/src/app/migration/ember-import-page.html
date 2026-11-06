@@ -1,15 +1,15 @@
-<h2 class="page-title">Ember-Import</h2>
+<h2 class="page-title">{{ 'migration.title' | transloco }}</h2>
 
 <mat-card appearance="outlined">
   <mat-card-header>
-    <mat-card-title>1. Ember-Profil</mat-card-title>
+    <mat-card-title>{{ 'migration.profile.title' | transloco }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <p class="hint">
-      Wähle den Ember-Ordner auf diesem Rechner. KMM lädt daraus nur die Datenbank <code>MyVideos48.emm</code> und die
-      Einstellungen hoch; der Browser fragt dabei womöglich, ob alle Dateien hochgeladen werden sollen. Ember wird nicht
-      verändert, und nach dem Import löscht KMM die hochgeladenen Dateien.
-      <app-help-link chapter="ember-import" anchor="1-profil-hochladen">Mehr dazu</app-help-link>
+      <span [innerHTML]="'migration.profile.hint' | transloco"></span>
+      <app-help-link chapter="ember-import" anchor="1-profil-hochladen">{{
+        'common.learnMore' | transloco
+      }}</app-help-link>
     </p>
     <input
       #picker
@@ -29,11 +29,11 @@
         [disabled]="uploading() || !!runningJob()"
         (click)="picker.click()"
       >
-        {{ uploading() ? 'Lade hoch …' : 'Ember-Ordner wählen' }}
+        {{ (uploading() ? 'migration.profile.uploading' : 'migration.profile.choose') | transloco }}
       </button>
       @if (inspection() && !uploading() && !runningJob()) {
         <button matButton type="button" class="discard-button" (click)="discard()">
-          Hochgeladenes Profil verwerfen
+          {{ 'migration.profile.discard' | transloco }}
         </button>
       }
     </div>
@@ -43,26 +43,45 @@
 
     @if (inspection(); as found) {
       <dl class="facts inspection">
-        <dt>Datenbank</dt>
-        <dd class="schema">Version {{ found.schemaVersion }}</dd>
-        <dt>Bestand</dt>
+        <dt>{{ 'migration.profile.database' | transloco }}</dt>
+        <dd class="schema">
+          {{ 'migration.profile.schema' | transloco: { version: found.schemaVersion } }}
+        </dd>
+        <dt>{{ 'migration.profile.library' | transloco }}</dt>
         <dd class="library">
-          {{ found.library.movies }} Filme, {{ found.library.movieSets }} Filmsets, {{ found.library.tvShows }} Serien
-          mit {{ found.library.episodes }} Episoden
+          {{
+            'migration.profile.libraryCounts'
+              | transloco
+                : {
+                    movies: found.library.movies,
+                    movieSets: found.library.movieSets,
+                    tvShows: found.library.tvShows,
+                    episodes: found.library.episodes,
+                  }
+          }}
         </dd>
         @if (found.kodiHosts.length > 0) {
-          <dt>Kodi-Geräte</dt>
+          <dt>{{ 'migration.kodiHosts' | transloco }}</dt>
           <dd class="kodi-hosts">
             @for (host of found.kodiHosts; track $index) {
-              <div>{{ host.name ?? host.address }} ({{ host.address }}:{{ host.port || 8080 }})</div>
+              <div>
+                {{ host.name ?? host.address }} ({{ host.address }}:{{ host.port || 8080 }})
+              </div>
             }
           </dd>
         }
         @if (found.settings; as settings) {
-          <dt>Einstellungen</dt>
+          <dt>{{ 'migration.settings' | transloco }}</dt>
           <dd class="settings">
-            Sprache {{ settings.movieLanguage ?? '–' }}, Bilder {{ settings.movieImageLanguage ?? '–' }},
-            {{ settings.videoExtensions.length }} Dateiendungen
+            {{
+              'migration.profile.settingsSummary'
+                | transloco
+                  : {
+                      language: settings.movieLanguage ?? '–',
+                      artwork: settings.movieImageLanguage ?? '–',
+                      extensions: settings.videoExtensions.length,
+                    }
+            }}
           </dd>
         }
       </dl>
@@ -73,40 +92,41 @@
 @if (inspection(); as found) {
   <mat-card appearance="outlined">
     <mat-card-header>
-      <mat-card-title>2. Pfade zuordnen</mat-card-title>
+      <mat-card-title>{{ 'migration.mapping.title' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <p class="hint">
-        Wo liegen Embers Film- und Serienquellen aus Sicht von KMM? Läuft KMM auf demselben Rechner, bleiben die
-        Pfade gleich; unter Docker z. B. <code>/media/filme</code> eintragen. Der Probelauf ändert nichts.
-      </p>
+      <p class="hint" [innerHTML]="'migration.mapping.hint' | transloco"></p>
       @for (mapping of mappings.controls; track $index) {
         <div class="row mapping" [formGroup]="mapping">
           <mat-form-field class="wide">
-            <mat-label>Pfad in Ember</mat-label>
+            <mat-label>{{ 'migration.mapping.emberPath' | transloco }}</mat-label>
             <input matInput formControlName="emberPath" [name]="'emberPath' + $index" />
           </mat-form-field>
           <span class="arrow">→</span>
           <mat-form-field class="wide">
-            <mat-label>Pfad in KMM</mat-label>
+            <mat-label>{{ 'migration.mapping.kmmPath' | transloco }}</mat-label>
             <input matInput formControlName="kmmPath" [name]="'kmmPath' + $index" />
-            <mat-error>Bitte einen Pfad angeben.</mat-error>
+            <mat-error>{{ 'migration.mapping.pathRequired' | transloco }}</mat-error>
           </mat-form-field>
         </div>
       } @empty {
-        <p class="hint">Das Profil enthält keine Quellen.</p>
+        <p class="hint">{{ 'migration.mapping.noSources' | transloco }}</p>
       }
       @if (found.library.tvShows > 0) {
         <mat-checkbox [formControl]="importTvShows" name="importTvShows" class="tv-shows-checkbox">
-          Serien und Episoden übernehmen (Episoden ohne Datei bleiben außen vor)
+          {{ 'migration.mapping.importTvShows' | transloco }}
         </mat-checkbox>
       }
       <mat-checkbox [formControl]="importSettings" name="importSettings" class="settings-checkbox">
-        Einstellungen übernehmen (Sprache, Dateiendungen, ausgeschlossene Ordner, Proxy)
+        {{ 'migration.mapping.importSettings' | transloco }}
       </mat-checkbox>
       @if (found.kodiHosts.length > 0) {
-        <mat-checkbox [formControl]="importKodiHosts" name="importKodiHosts" class="kodi-hosts-checkbox">
-          Kodi-Geräte mit Zugangsdaten übernehmen (Pfade über die Zuordnung oben)
+        <mat-checkbox
+          [formControl]="importKodiHosts"
+          name="importKodiHosts"
+          class="kodi-hosts-checkbox"
+        >
+          {{ 'migration.mapping.importKodiHosts' | transloco }}
         </mat-checkbox>
       }
     </mat-card-content>
@@ -117,12 +137,20 @@
             [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
             [value]="percent(job) ?? 0"
           />
-          <span class="job-message">{{ job.title }}: {{ job.message }}@if (percent(job) !== null) { ({{ percent(job) }} %)}</span>
+          <span class="job-message"
+            >{{ job.title }}: {{ job.message }}{{ percentSuffix(job) }}</span
+          >
         </div>
-        <button matButton class="cancel-button" (click)="cancel(job)">Abbrechen</button>
+        <button matButton class="cancel-button" (click)="cancel(job)">
+          {{ 'common.stop' | transloco }}
+        </button>
       } @else {
-        <button matButton="tonal" class="dry-run-button" (click)="start(true)">Probelauf</button>
-        <button matButton="filled" class="import-button" (click)="start(false)">Importieren</button>
+        <button matButton="tonal" class="dry-run-button" (click)="start(true)">
+          {{ 'common.dryRun' | transloco }}
+        </button>
+        <button matButton="filled" class="import-button" (click)="start(false)">
+          {{ 'migration.mapping.import' | transloco }}
+        </button>
       }
     </mat-card-actions>
   </mat-card>
@@ -131,37 +159,72 @@
 @if (report(); as result) {
   <mat-card appearance="outlined" class="report">
     <mat-card-header>
-      <mat-card-title>{{ result.dryRun ? 'Ergebnis des Probelaufs (nichts gespeichert)' : 'Ergebnis des Imports' }}</mat-card-title>
+      <mat-card-title>{{
+        (result.dryRun ? 'migration.report.dryRunTitle' : 'migration.report.title') | transloco
+      }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <dl class="facts">
-        <dt>Quellen</dt>
-        <dd class="report-sources">{{ result.sourcesCreated }} neu, {{ result.sourcesReused }} vorhanden</dd>
-        <dt>Filme</dt>
+        <dt>{{ 'common.sources' | transloco }}</dt>
+        <dd class="report-sources">
+          {{
+            'migration.report.sources'
+              | transloco: { created: result.sourcesCreated, reused: result.sourcesReused }
+          }}
+        </dd>
+        <dt>{{ 'common.movies' | transloco }}</dt>
         <dd class="report-movies">
-          {{ result.moviesCreated }} neu, {{ result.moviesUpdated }} aktualisiert, {{ result.moviesSkipped }} übersprungen
+          {{
+            'migration.report.counts'
+              | transloco
+                : {
+                    created: result.moviesCreated,
+                    updated: result.moviesUpdated,
+                    skipped: result.moviesSkipped,
+                  }
+          }}
         </dd>
         @if (hasTvShows(result)) {
-          <dt>Serien</dt>
+          <dt>{{ 'common.tvshows' | transloco }}</dt>
           <dd class="report-tv-shows">
-            {{ result.tvShows.showsCreated }} neu, {{ result.tvShows.showsUpdated }} aktualisiert,
-            {{ result.tvShows.showsSkipped }} übersprungen
+            {{
+              'migration.report.counts'
+                | transloco
+                  : {
+                      created: result.tvShows.showsCreated,
+                      updated: result.tvShows.showsUpdated,
+                      skipped: result.tvShows.showsSkipped,
+                    }
+            }}
           </dd>
-          <dt>Episoden</dt>
+          <dt>{{ 'common.episodes' | transloco }}</dt>
           <dd class="report-episodes">
-            {{ result.tvShows.episodesCreated }} neu, {{ result.tvShows.episodesUpdated }} aktualisiert,
-            {{ result.tvShows.episodesSkipped }} übersprungen, {{ result.tvShows.episodesMissing }} ohne Datei
+            {{
+              'migration.report.episodeCounts'
+                | transloco
+                  : {
+                      created: result.tvShows.episodesCreated,
+                      updated: result.tvShows.episodesUpdated,
+                      skipped: result.tvShows.episodesSkipped,
+                      missing: result.tvShows.episodesMissing,
+                    }
+            }}
           </dd>
         }
         @if (result.kodiHostsCreated + result.kodiHostsUpdated > 0) {
-          <dt>Kodi-Geräte</dt>
-          <dd class="report-kodi-hosts">{{ result.kodiHostsCreated }} neu, {{ result.kodiHostsUpdated }} aktualisiert</dd>
+          <dt>{{ 'migration.kodiHosts' | transloco }}</dt>
+          <dd class="report-kodi-hosts">
+            {{
+              'migration.report.kodiHostCounts'
+                | transloco: { created: result.kodiHostsCreated, updated: result.kodiHostsUpdated }
+            }}
+          </dd>
         }
-        <dt>Filme ohne NFO</dt>
+        <dt>{{ 'migration.report.moviesWithoutNfo' | transloco }}</dt>
         <dd class="report-missing">{{ result.moviesWithoutNfo }}</dd>
       </dl>
       @if (result.settingsChanges.length > 0) {
-        <h3>Einstellungen</h3>
+        <h3>{{ 'migration.settings' | transloco }}</h3>
         <ul class="settings-changes">
           @for (change of result.settingsChanges; track $index) {
             <li>{{ change }}</li>
@@ -169,7 +232,7 @@
         </ul>
       }
       @if (result.skippedSources.length > 0) {
-        <h3>Nicht übernommene Quellen</h3>
+        <h3>{{ 'migration.report.skippedSources' | transloco }}</h3>
         <ul class="skipped-sources">
           @for (source of result.skippedSources; track $index) {
             <li>{{ source }}</li>
@@ -177,7 +240,7 @@
         </ul>
       }
       @if (result.warnings.length > 0) {
-        <h3>Hinweise</h3>
+        <h3>{{ 'common.notes' | transloco }}</h3>
         <ul class="warnings">
           @for (warning of result.warnings; track $index) {
             <li>{{ warning }}</li>
@@ -185,11 +248,8 @@
         </ul>
       }
       @if (result.missingFiles.length > 0) {
-        <h3>Filme ohne gefundene NFO</h3>
-        <p class="hint">
-          Meist ist das Verzeichnis gerade nicht erreichbar oder die Pfad-Zuordnung stimmt nicht. Die Angaben aus Ember
-          sind trotzdem übernommen.
-        </p>
+        <h3>{{ 'migration.report.missingFiles' | transloco }}</h3>
+        <p class="hint">{{ 'migration.report.missingFilesHint' | transloco }}</p>
         <ul class="missing-files">
           @for (movie of result.missingFiles; track $index) {
             <li>{{ movie }}</li>

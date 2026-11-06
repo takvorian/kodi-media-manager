@@ -1,16 +1,19 @@
 import { MatSnackBarConfig } from '@angular/material/snack-bar';
+import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
+import { finishedJobSummary, unsuccessfulJobSummary } from '../sources/job-summary';
 
 const SYNC_MESSAGE_DURATION_MS = 5000;
+const PLAYBACK = 'kodi.playback';
 
-/** Zuordnung eines Verzeichnisses aus Sicht von KMM zu demselben Verzeichnis aus Sicht von Kodi. */
+/** Maps a directory as KMM sees it to the same directory as Kodi sees it. */
 export interface KodiPathMapping {
   readonly localPath: string;
   readonly kodiPath: string;
 }
 
-/** Ein Kodi-Gerät, wie das Backend es liefert (ohne Passwort). */
+/** A Kodi device as the backend returns it (without password). */
 export interface KodiHost {
   readonly id: number;
   readonly name: string;
@@ -20,11 +23,11 @@ export interface KodiHost {
   readonly passwordSet: boolean;
   readonly realtimeSync: boolean;
   readonly pathMappings: readonly KodiPathMapping[];
-  /** Letzter Abgleich seit dem Start von KMM. */
+  /** Last sync since KMM started. */
   readonly lastSync: KodiSyncResult | null;
 }
 
-/** Anlegen oder Ändern; ein fehlendes Passwort (`null`) behält das gespeicherte. */
+/** Create or change; a missing password (`null`) keeps the stored one. */
 export interface KodiHostCommand {
   readonly name: string;
   readonly address: string;
@@ -37,7 +40,7 @@ export interface KodiHostCommand {
 
 export interface KodiConnectionTest {
   readonly version: string;
-  /** Hinweis auf Kodi-Pfade der Zuordnung, zu denen Kodi keine Quelle hat. */
+  /** Hint on Kodi paths of the mapping for which Kodi has no source. */
   readonly warning: string | null;
 }
 
@@ -50,7 +53,7 @@ export type KodiSyncOutcome =
   | 'NO_KODI_SOURCE'
   | 'FAILED';
 
-/** Ergebnis eines Abgleichs mit einem Kodi-Gerät. */
+/** Result of a sync with a Kodi device. */
 export interface KodiSyncResult {
   readonly hostId: number;
   readonly host: string;
@@ -67,20 +70,20 @@ export function syncFailed(result: KodiSyncResult): boolean {
   );
 }
 
-/** Probleme bleiben stehen, bis man sie schließt, damit man sie lesen und kopieren kann. */
+/** Problems stay on screen until they are closed, so they can be read and copied. */
 export function kodiSyncSnackBarConfig(results: readonly KodiSyncResult[]): MatSnackBarConfig {
   return results.some(syncFailed) ? {} : { duration: SYNC_MESSAGE_DURATION_MS };
 }
 
-/** Fasst die Ergebnisse aller Geräte für eine Snackbar-Meldung zusammen. */
+/** Sums up the results of all devices for a snack bar message; the messages come from the server. */
 export function kodiSyncSummary(results: readonly KodiSyncResult[]): string {
   if (results.length === 0) {
-    return 'Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.';
+    return translate('kodi.syncNoHost');
   }
   return results.map((result) => `${result.host}: ${result.message}`).join(' ');
 }
 
-/** Präfix des Job-Schlüssels beim Holen des Gesehen-Status; muss zu KodiPlaybackService.JOB_KEY_PREFIX passen. */
+/** Prefix of the job key for fetching the watched status; must match KodiPlaybackService.JOB_KEY_PREFIX. */
 export const KODI_PLAYBACK_JOB_KEY_PREFIX = 'kodi-playback:';
 
 export function kodiPlaybackJobKey(sourceId: number): string {
@@ -89,42 +92,41 @@ export function kodiPlaybackJobKey(sourceId: number): string {
 
 export type KodiPlaybackOutcome = 'UPDATED' | 'UNCHANGED' | 'KEPT' | 'NOT_IN_KODI' | 'FAILED';
 
-/** Ergebnis der Übernahme von Gesehen-Status und eigener Bewertung eines Films oder einer Episode aus Kodi. */
+/** Result of taking over the watched status and user rating of a movie or an episode from Kodi. */
 export interface KodiPlaybackResult {
   readonly host: string;
   readonly outcome: KodiPlaybackOutcome;
   readonly message: string;
-  /** Stand in KMM danach. */
+  /** State in KMM afterwards. */
   readonly playCount: number | null;
   readonly lastPlayedAt: string | null;
   readonly userRating: number | null;
 }
 
-/** Ergebnis der Übernahme des Gesehen-Status einer ganzen Quelle; die Fehlerliste ist serverseitig gekürzt. */
+/** Result of taking over the watched status of a whole source; the failure list is truncated by the server. */
 export interface KodiPlaybackImportResult {
   readonly sourceId: number;
   readonly host: string;
   readonly updated: number;
   readonly unchanged: number;
-  /** KMM weiß mehr als Kodi und behält seinen Stand. */
+  /** KMM knows more than Kodi and keeps its state. */
   readonly kept: number;
   readonly notInKodi: number;
   readonly failed: number;
   readonly failures: readonly string[];
 }
 
-/** Fasst einen beendeten Job „Gesehen-Status holen“ für eine Snackbar-Meldung zusammen. */
+/** Sums up a finished job "fetch watched status" for a snack bar message in the active language. */
 export function kodiPlaybackSummary(job: Job): string {
-  if (job.status === 'SUCCEEDED') {
-    const result = job.result as KodiPlaybackImportResult;
-    const kept = result.kept > 0 ? `, ${result.kept} abweichend (KMM-Stand behalten)` : '';
-    const failed = result.failed > 0 ? `, ${result.failed} Fehler` : '';
-    return (
-      `${job.title} (${result.host}) abgeschlossen: ${result.updated} übernommen, ` +
-      `${result.unchanged} unverändert, ${result.notInKodi} in Kodi unbekannt${kept}${failed}.`
-    );
+  if (job.status !== 'SUCCEEDED') {
+    return unsuccessfulJobSummary(job);
   }
-  return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+  const result = job.result as KodiPlaybackImportResult;
+  return finishedJobSummary({ ...job, title: `${job.title} (${result.host})` }, [
+    translate(`${PLAYBACK}.updated`, { count: result.updated }),
+    translate(`${PLAYBACK}.unchanged`, { count: result.unchanged }),
+    translate(`${PLAYBACK}.notInKodi`, { count: result.notInKodi }),
+    ...(result.kept > 0 ? [translate(`${PLAYBACK}.kept`, { count: result.kept })] : []),
+    ...(result.failed > 0 ? [translate(`${PLAYBACK}.failed`, { count: result.failed })] : []),
+  ]);
 }

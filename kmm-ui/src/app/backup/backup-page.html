@@ -1,21 +1,20 @@
-<h2 class="page-title">Sicherung</h2>
+<h2 class="page-title">{{ 'backup.title' | transloco }}</h2>
 
 <mat-card appearance="outlined">
   <mat-card-header>
-    <mat-card-title>Exportieren</mat-card-title>
+    <mat-card-title>{{ 'backup.export.title' | transloco }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
     <p class="hint">
-      Lädt alle KMM-Daten als Datei herunter: Quellen, Filme, Serien, Filmsets, Filter, Kodi-Geräte
-      und Einstellungen. Medien, NFOs und Bilder gehören nicht dazu.
-      <app-help-link chapter="sicherung">Mehr dazu</app-help-link>
+      {{ 'backup.export.hint' | transloco }}
+      <app-help-link chapter="sicherung">{{ 'common.learnMore' | transloco }}</app-help-link>
     </p>
     <mat-checkbox class="credentials-checkbox" [formControl]="includeCredentials">
-      API-Keys und Passwörter einschließen
+      {{ 'backup.export.includeCredentials' | transloco }}
     </mat-checkbox>
     @if (credentialsChosen()) {
       <p class="warning credentials-warning" role="alert">
-        Sie stehen dann im Klartext in der Datei. Bewahre sie sicher auf und gib sie nicht weiter.
+        {{ 'backup.export.credentialsWarning' | transloco }}
       </p>
     }
     <div class="row">
@@ -26,7 +25,7 @@
         [disabled]="exporting()"
         (click)="export()"
       >
-        {{ exporting() ? 'Exportiere …' : 'Sicherung herunterladen' }}
+        {{ (exporting() ? 'backup.export.exporting' : 'backup.export.download') | transloco }}
       </button>
     </div>
   </mat-card-content>
@@ -34,12 +33,10 @@
 
 <mat-card appearance="outlined">
   <mat-card-header>
-    <mat-card-title>Importieren</mat-card-title>
+    <mat-card-title>{{ 'backup.upload.title' | transloco }}</mat-card-title>
   </mat-card-header>
   <mat-card-content>
-    <p class="hint">
-      Wähle eine Sicherung aus. Du siehst zuerst, was sie enthält; noch wird nichts geändert.
-    </p>
+    <p class="hint">{{ 'backup.upload.hint' | transloco }}</p>
     <input #picker class="file-picker" type="file" accept=".gz" hidden (change)="upload($event)" />
     <div class="row">
       <button
@@ -49,11 +46,11 @@
         [disabled]="uploading() || !!runningJob()"
         (click)="picker.click()"
       >
-        {{ uploading() ? 'Lade hoch …' : 'Sicherung wählen' }}
+        {{ (uploading() ? 'backup.upload.uploading' : 'backup.upload.choose') | transloco }}
       </button>
       @if (header() && !uploading() && !runningJob()) {
         <button matButton type="button" class="discard-button" (click)="discard()">
-          Datei verwerfen
+          {{ 'backup.upload.discard' | transloco }}
         </button>
       }
     </div>
@@ -63,18 +60,26 @@
 
     @if (header(); as found) {
       <dl class="facts inspection">
-        <dt>Erstellt</dt>
+        <dt>{{ 'backup.upload.created' | transloco }}</dt>
         <dd class="created">
-          {{ formatted(found.createdAt) }} mit KMM {{ found.applicationVersion ?? 'unbekannt' }}
+          {{
+            'backup.upload.createdWith'
+              | transloco
+                : {
+                    date: formatted(found.createdAt),
+                    version: found.applicationVersion ?? ('common.unknown' | transloco),
+                  }
+          }}
         </dd>
-        <dt>Inhalt</dt>
+        <dt>{{ 'backup.upload.contents' | transloco }}</dt>
         <dd class="contents">{{ contents() }}</dd>
-        <dt>Zugangsdaten</dt>
+        <dt>{{ 'backup.credentials' | transloco }}</dt>
         <dd class="credentials">
           {{
-            found.credentials
-              ? 'enthalten, sie ersetzen die vorhandenen'
-              : 'nicht enthalten, die vorhandenen bleiben'
+            (found.credentials
+              ? 'backup.upload.credentialsIncluded'
+              : 'backup.upload.credentialsMissing'
+            ) | transloco
           }}
         </dd>
       </dl>
@@ -85,25 +90,22 @@
 @if (header()) {
   <mat-card appearance="outlined">
     <mat-card-header>
-      <mat-card-title>Pfade und Art des Imports</mat-card-title>
+      <mat-card-title>{{ 'backup.import.title' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       @if (mappings.length > 0) {
-        <p class="hint">
-          Wo liegen die Quellen aus Sicht von KMM? Bleibt der Pfad gleich, lass ihn stehen. Unter
-          Docker ist es der Pfad im Container, zum Beispiel <code>/media/filme</code>.
-        </p>
+        <p class="hint" [innerHTML]="'backup.import.mappingHint' | transloco"></p>
         @for (mapping of mappings.controls; track $index) {
           <div class="row mapping" [formGroup]="mapping">
             <mat-form-field class="wide" appearance="outline">
-              <mat-label>Pfad in der Sicherung</mat-label>
+              <mat-label>{{ 'backup.import.fromPath' | transloco }}</mat-label>
               <input matInput formControlName="from" readonly />
             </mat-form-field>
             <span class="arrow" aria-hidden="true">→</span>
             <mat-form-field class="wide" appearance="outline">
-              <mat-label>Pfad für KMM</mat-label>
+              <mat-label>{{ 'backup.import.toPath' | transloco }}</mat-label>
               <input matInput formControlName="to" autocomplete="off" />
-              <mat-error>Bitte einen Pfad angeben.</mat-error>
+              <mat-error>{{ 'backup.import.pathRequired' | transloco }}</mat-error>
             </mat-form-field>
           </div>
         }
@@ -111,18 +113,18 @@
 
       <mat-radio-group class="modes" [formControl]="mode">
         <mat-radio-button class="mode-replace" value="REPLACE">
-          <strong>Ersetzen:</strong> KMM hat danach genau den Stand der Datei. Alles andere wird
-          gelöscht.
+          <span [innerHTML]="'backup.import.modeReplace' | transloco"></span>
         </mat-radio-button>
         <mat-radio-button class="mode-merge" value="MERGE">
-          <strong>Zusammenführen:</strong> Vorhandenes bleibt. Stimmt ein Eintrag überein, gewinnt
-          die Datei.
+          <span [innerHTML]="'backup.import.modeMerge' | transloco"></span>
         </mat-radio-button>
       </mat-radio-group>
 
       @if (chosenMode() === 'REPLACE') {
         <mat-form-field class="replace-confirmation" appearance="outline" subscriptSizing="dynamic">
-          <mat-label>Zum Einspielen {{ replaceWord }} eingeben</mat-label>
+          <mat-label>{{
+            'backup.import.replaceConfirmation' | transloco: { word: replaceWord() }
+          }}</mat-label>
           <input
             matInput
             autocomplete="off"
@@ -140,11 +142,13 @@
           />
           <span class="hint">{{ job.message }}</span>
         </div>
-        <button matButton class="cancel-button" (click)="cancel(job)">Abbrechen</button>
+        <button matButton class="cancel-button" (click)="cancel(job)">
+          {{ 'common.stop' | transloco }}
+        </button>
       } @else {
         <div class="row actions">
           <button matButton="tonal" type="button" class="dry-run-button" (click)="start(true)">
-            Probelauf
+            {{ 'common.dryRun' | transloco }}
           </button>
           <button
             matButton="filled"
@@ -153,7 +157,7 @@
             [disabled]="!canImport()"
             (click)="start(false)"
           >
-            Einspielen
+            {{ 'backup.import.start' | transloco }}
           </button>
         </div>
       }
@@ -165,7 +169,7 @@
   <mat-card appearance="outlined" class="report">
     <mat-card-header>
       <mat-card-title>{{
-        result.dryRun ? 'Ergebnis des Probelaufs' : 'Ergebnis des Imports'
+        (result.dryRun ? 'backup.report.dryRunTitle' : 'backup.report.title') | transloco
       }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
@@ -173,31 +177,32 @@
         @for (entry of result.results; track entry.table) {
           <dt>{{ tableLabel(entry.table) }}</dt>
           <dd class="result">
-            {{ entry.created }} neu, {{ entry.updated }} aktualisiert,
-            {{ entry.skipped }} übersprungen
+            {{
+              'backup.report.counts'
+                | transloco
+                  : { created: entry.created, updated: entry.updated, skipped: entry.skipped }
+            }}
           </dd>
         }
         @if (result.unmappedPaths > 0) {
-          <dt>Pfade</dt>
+          <dt>{{ 'backup.report.paths' | transloco }}</dt>
           <dd class="unmapped">
-            {{ result.unmappedPaths }} ohne passende Zuordnung, sie blieben unverändert
+            {{ 'backup.report.unmapped' | transloco: { count: result.unmappedPaths } }}
           </dd>
         }
         @if (result.credentialsKept) {
-          <dt>Zugangsdaten</dt>
-          <dd class="credentials-kept">
-            Die Datei enthält keine, die vorhandenen bleiben erhalten.
-          </dd>
+          <dt>{{ 'backup.credentials' | transloco }}</dt>
+          <dd class="credentials-kept">{{ 'backup.report.credentialsKept' | transloco }}</dd>
         }
         @if (result.safetyCopy) {
-          <dt>Bisheriger Stand</dt>
+          <dt>{{ 'backup.report.safetyCopy' | transloco }}</dt>
           <dd class="safety-copy">
             <code>{{ result.safetyCopy }}</code>
           </dd>
         }
       </dl>
       @if (result.warnings.length > 0) {
-        <h3>Hinweise</h3>
+        <h3>{{ 'common.notes' | transloco }}</h3>
         <ul class="warnings">
           @for (warning of result.warnings; track $index) {
             <li>{{ warning }}</li>

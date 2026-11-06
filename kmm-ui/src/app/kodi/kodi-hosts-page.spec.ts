@@ -3,6 +3,9 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
+import { TranslocoService } from '@jsverse/transloco';
+
+import { provideI18nTesting } from '../i18n/testing';
 import { CONFIRM } from '../shared/confirm';
 import { MediaSource } from '../sources/media-source';
 import { SOURCES_URL } from '../sources/media-source.service';
@@ -65,6 +68,7 @@ describe('KodiHostsPage', () => {
     TestBed.configureTestingModule({
       imports: [KodiHostsPage],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -133,6 +137,25 @@ describe('KodiHostsPage', () => {
     expect(element().querySelectorAll('.no-mappings')).toHaveLength(1);
     expect(texts('.last-sync')[0]).toMatch(/^Letzter Abgleich .+: „Heat“ aktualisiert\.$/);
     expect(element().querySelectorAll('.last-sync.error')).toHaveLength(1);
+  });
+
+  it('switches the texts to English at runtime', async () => {
+    await loadHosts([livingRoom, bedroom]);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+    buttons('.test-button')[0].click();
+    httpTesting.expectOne(`${KODI_HOSTS_URL}/3/test`).flush({ version: 'Kodi 21.2' });
+    await fixture.whenStable();
+
+    expect(texts('.host-address')[0]).toBe('kodi.local:8080 · User kodi');
+    expect(texts('.realtime')).toEqual([
+      'Real-time sync: Kodi is updated after every change.',
+      'No real-time sync.',
+    ]);
+    expect(texts('.last-sync')[0]).toMatch(/^Last sync .+: „Heat“ aktualisiert\.$/);
+    expect(texts('.connection-result')).toEqual(['Connected to Kodi 21.2']);
+    expect(texts('.add-button')).toEqual(['Add Kodi device']);
   });
 
   it('shows an empty list and a load error', async () => {

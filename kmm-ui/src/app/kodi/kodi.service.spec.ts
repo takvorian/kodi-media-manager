@@ -21,7 +21,9 @@ describe('KodiService', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(KodiService);
     httpTesting = TestBed.inject(HttpTestingController);
   });
@@ -78,7 +80,9 @@ describe('KodiService', () => {
     let received: KodiConnectionTest | undefined;
 
     service.testConnection(3).subscribe((result) => (received = result));
-    httpTesting.expectOne({ method: 'POST', url: `${KODI_HOSTS_URL}/3/test` }).flush({ version: 'Kodi 21.2' });
+    httpTesting
+      .expectOne({ method: 'POST', url: `${KODI_HOSTS_URL}/3/test` })
+      .flush({ version: 'Kodi 21.2' });
 
     expect(received?.version).toBe('Kodi 21.2');
   });

@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -8,6 +7,8 @@ import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
@@ -24,21 +25,20 @@ import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
 
-/** Ergebnis des letzten Verbindungstests eines Geräts. */
-export interface ConnectionResult {
-  readonly ok: boolean;
-  readonly message: string;
-  readonly warning?: string | null;
-}
+/** Result of the last connection test of a device; the message and warning come from the server. */
+export type ConnectionResult =
+  | { readonly ok: true; readonly version: string; readonly warning: string | null }
+  | { readonly ok: false; readonly message: string };
 
-/** Bearbeitet wird ein vorhandenes Gerät oder ein neues (`'new'`). */
+/** Either an existing device or a new one (`'new'`) is being edited. */
 type Editing = KodiHost | 'new' | null;
 
 @Component({
   selector: 'app-kodi-hosts-page',
   imports: [
     HelpLink,
-    DatePipe,
+    TranslocoDatePipe,
+    TranslocoPipe,
     ReactiveFormsModule,
     MatButtonModule,
     MatCardModule,
@@ -55,6 +55,7 @@ export class KodiHostsPage {
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
   private readonly formBuilder = inject(NonNullableFormBuilder);
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly hosts = rxResource({ stream: () => this.kodiService.hosts() });
   protected readonly editing = signal<Editing>(null);
@@ -68,7 +69,7 @@ export class KodiHostsPage {
     return editing === 'new' ? null : editing;
   }
 
-  /** Schlägt für ein neues Gerät die Verzeichnisse der Quellen als Pfade in KMM vor. */
+  /** Suggests the directories of the sources as paths in KMM for a new device. */
   protected add(): void {
     this.sourceService.findAll().subscribe({
       next: (sources) =>
@@ -111,7 +112,7 @@ export class KodiHostsPage {
       next: (saved) => {
         this.saving.set(false);
         this.editing.set(null);
-        this.notify(`Kodi-Gerät „${saved.name}“ gespeichert.`);
+        this.notify(this.transloco.translate('kodi.saved', { name: saved.name }));
         this.hosts.reload();
       },
       error: (error: unknown) => {
@@ -122,12 +123,12 @@ export class KodiHostsPage {
   }
 
   protected delete(host: KodiHost): void {
-    if (!this.confirm(`Kodi-Gerät „${host.name}“ entfernen?`)) {
+    if (!this.confirm(this.transloco.translate('kodi.deleteConfirm', { name: host.name }))) {
       return;
     }
     this.kodiService.delete(host.id).subscribe({
       next: () => {
-        this.notify(`Kodi-Gerät „${host.name}“ entfernt.`);
+        this.notify(this.transloco.translate('kodi.deleted', { name: host.name }));
         this.hosts.reload();
       },
       error: (error: unknown) => this.notify(problemMessage(error)),
@@ -140,7 +141,7 @@ export class KodiHostsPage {
       next: (result) =>
         this.showConnectionResult(host, {
           ok: true,
-          message: `Verbunden mit ${result.version}`,
+          version: result.version,
           warning: result.warning,
         }),
       error: (error: unknown) =>

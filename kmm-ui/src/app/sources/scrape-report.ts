@@ -1,25 +1,35 @@
-import { Component, computed, input, output } from '@angular/core';
+import { Component, computed, inject, input, output } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { RouterLink } from '@angular/router';
+import { translate, TranslocoPipe } from '@jsverse/transloco';
 
+import { LanguageService } from '../i18n/language.service';
 import { Job } from '../jobs/job';
+import { finishedJobSummary, unsuccessfulJobSummary } from './job-summary';
 import { AutoScrapeResult } from './media-source';
 import { scanEntryLink } from './scan-report';
 
-/** Bleibt stehen, bis man ihn schließt, denn Titel ohne Treffer muss man danach einzeln bearbeiten. */
+const SUMMARY = 'sources.scrapeSummary';
+
+/** Stays until it is closed, because titles without a match have to be edited one by one afterwards. */
 @Component({
   selector: 'app-scrape-report',
-  imports: [MatButtonModule, MatCardModule, RouterLink],
+  imports: [MatButtonModule, MatCardModule, RouterLink, TranslocoPipe],
   templateUrl: './scrape-report.html',
   styleUrl: './scrape-report.scss',
 })
 export class ScrapeReport {
-  /** Der beendete Scrape-Job. */
+  private readonly language = inject(LanguageService);
+
+  /** The finished scrape job. */
   readonly job = input.required<Job>();
   readonly closed = output<void>();
 
-  protected readonly summary = computed(() => autoScrapeSummary(this.job()));
+  protected readonly summary = computed(() => {
+    this.language.current();
+    return autoScrapeSummary(this.job());
+  });
   protected readonly result = computed(() => {
     const job = this.job();
     return job.status === 'SUCCEEDED' ? (job.result as AutoScrapeResult) : null;
@@ -27,38 +37,40 @@ export class ScrapeReport {
   protected readonly link = scanEntryLink;
 }
 
-/** Zusammenfassung eines beendeten Scrape-Jobs. */
+/** Summary of a finished scrape job in the active language. */
 export function autoScrapeSummary(job: Job): string {
-  if (job.status === 'CANCELLED') {
-    return `${job.title} abgebrochen.`;
-  }
   if (job.status !== 'SUCCEEDED') {
-    return `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+    return unsuccessfulJobSummary(job);
   }
   const result = job.result as AutoScrapeResult;
-  const errors = result.failures.length > 0 ? `, ${result.failures.length} Fehler` : '';
-  const trailers = result.trailersSaved ? `, ${result.trailersSaved} Trailer eingetragen` : '';
-  const themes = result.themesSaved ? `, ${result.themesSaved} Titelmusik gespeichert` : '';
-  const enriched = result.enriched ? `, ${result.enriched} ergänzt (Bewertungen, Angaben)` : '';
-  return (
-    `${job.title} abgeschlossen: ${items(result)}, ${result.scraped} neu zugeordnet, ` +
-    `${result.unmatched} ohne Treffer, ${result.imagesSaved} Bilder gespeichert${trailers}${themes}${enriched}${errors}.`
-  );
+  return finishedJobSummary(job, [
+    ...items(result),
+    translate(`${SUMMARY}.scraped`, { count: result.scraped }),
+    translate(`${SUMMARY}.unmatched`, { count: result.unmatched }),
+    translate(`${SUMMARY}.images`, { count: result.imagesSaved }),
+    ...optional('trailers', result.trailersSaved),
+    ...optional('themes', result.themesSaved),
+    ...optional('enriched', result.enriched),
+    ...optional('failures', result.failures.length),
+  ]);
 }
 
-/** Ob etwas offen geblieben ist, um das man sich kümmern muss. */
+/** Whether something is left that needs attention. */
 export function hasScrapeDetails(result: AutoScrapeResult): boolean {
   return result.unmatched + result.failures.length + result.warnings.length > 0;
 }
 
-function items(result: AutoScrapeResult): string {
+function items(result: AutoScrapeResult): string[] {
   if (result.shows === undefined) {
-    return counted(result.movies ?? 0, 'Film', 'Filme');
+    return [translate(`${SUMMARY}.movies`, { count: result.movies ?? 0 })];
   }
-  const shows = counted(result.shows, 'Serie', 'Serien');
-  return `${shows}, ${counted(result.episodesUpdated ?? 0, 'Episode', 'Episoden')} ergänzt`;
+  return [
+    translate(`${SUMMARY}.shows`, { count: result.shows }),
+    translate(`${SUMMARY}.episodes`, { count: result.episodesUpdated ?? 0 }),
+  ];
 }
 
-function counted(count: number, one: string, many: string): string {
-  return `${count} ${count === 1 ? one : many}`;
+/** A count that is only mentioned if it is not zero. */
+function optional(key: string, count: number | undefined): string[] {
+  return count ? [translate(`${SUMMARY}.${key}`, { count })] : [];
 }
