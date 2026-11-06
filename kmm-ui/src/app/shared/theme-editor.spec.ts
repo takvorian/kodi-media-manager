@@ -4,7 +4,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { CONFIRM } from './confirm';
-import { NO_THEME } from './testing';
+import { provideI18nTesting } from '../i18n/testing';
+import { NO_THEME, switchLanguage } from './testing';
 import { ThemeInfo, ThemeOption } from './theme';
 import { ThemeEditor } from './theme-editor';
 
@@ -50,6 +51,7 @@ describe('ThemeEditor', () => {
     TestBed.configureTestingModule({
       imports: [ThemeEditor],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -86,7 +88,7 @@ describe('ThemeEditor', () => {
     expect(element().querySelector('audio.theme-player')?.getAttribute('src')).toBe(
       `${endpoint}/file?v=2026-10-29T12%3A00%3A00Z`,
     );
-    expect(element().querySelector('.theme-size')?.textContent).toContain('1,078 KB');
+    expect(element().querySelector('.theme-size')?.textContent).toContain('1.078 KB');
 
     fixture.componentRef.setInput('endpoint', '/api/v1/movies/5/theme');
     fixture.detectChanges();
@@ -188,5 +190,28 @@ describe('ThemeEditor', () => {
     await fixture.whenStable();
 
     expect(element().querySelector('.theme-error')).not.toBeNull();
+  });
+
+  it('switches its texts and number format to English at runtime', async () => {
+    await show(saved);
+    expect(element().querySelector('.kodi-hint')?.textContent).toContain('Add-on wie TvTunes');
+
+    await switchLanguage('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.theme-size')?.textContent).toContain('1,078 KB');
+    expect(button('.remove-theme-button').textContent?.trim()).toBe('Delete');
+    expect(button('.find-themes-button').textContent?.trim()).toBe('Find suggestions');
+    expect(element().querySelector('.kodi-hint')?.textContent).toBe(
+      'Kodi plays theme music only with an add-on such as TvTunes.',
+    );
+
+    button('.remove-theme-button').click();
+    httpTesting.expectOne({ method: 'DELETE', url: endpoint }).flush(NO_THEME);
+    await fixture.whenStable();
+    expect(snackBarMessages).toEqual(['Theme music deleted.']);
+    expect(element().querySelector('.no-theme')?.textContent).toBe(
+      'No theme music (theme.mp3) yet.',
+    );
   });
 });

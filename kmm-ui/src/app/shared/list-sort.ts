@@ -1,14 +1,14 @@
 import { HttpParams } from '@angular/common/http';
 import { Sort } from '@angular/material/sort';
 
-/** Sortierung einer Liste: Spalte und Richtung. */
+/** Sorting of a list: column and direction. */
 export interface ListSort {
   readonly active: string;
   readonly direction: 'asc' | 'desc';
 }
 
 const TITLE = 'title';
-/** Serverseitig ohne Rücksicht auf Groß- und Kleinschreibung sortierte Spalten. */
+/** Columns the server sorts ignoring case. */
 const TEXT_COLUMNS: ReadonlySet<string> = new Set([TITLE, 'filePath', 'directoryPath']);
 
 export const SORT_BY_TITLE: ListSort = { active: TITLE, direction: 'asc' };
@@ -17,13 +17,13 @@ export function listSortOf(sort: Sort): ListSort {
   return { active: sort.active, direction: sort.direction === 'desc' ? 'desc' : 'asc' };
 }
 
-/** Ergänzt den Sortier-Parameter. Bei gleichen Werten entscheidet der Titel, sonst springen Einträge zwischen den Seiten. */
+/** Adds the sort parameter. Equal values are ordered by title, otherwise entries jump between pages. */
 export function withSort(params: HttpParams, sort: ListSort): HttpParams {
   const sorted = params.append('sort', sortParam(sort));
   return sort.active === TITLE ? sorted : sorted.append('sort', sortParam(SORT_BY_TITLE));
 }
 
-/** Sortiert eine vollständig geladene Liste; fehlende Werte stehen immer am Ende. */
+/** Sorts a fully loaded list; missing values always come last. */
 export function sortedBy<T>(
   items: readonly T[],
   sort: ListSort,

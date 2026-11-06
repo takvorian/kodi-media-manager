@@ -7,7 +7,9 @@ import {
   PRESENCE_OPERATORS,
   PredefinedFilter,
   TOKEN_OPERATORS,
+  fieldDefinition,
   only,
+  predefinedFilter,
 } from './filter';
 
 export type TvShowFilterField =
@@ -38,10 +40,10 @@ export type TvShowFilterField =
 
 export type TvShowFilterCondition = FilterCondition<TvShowFilterField>;
 
-/** Inhalt von POST /api/v1/tvshows/query und Definition eines gespeicherten Serienfilters. */
+/** Content of POST /api/v1/tvshows/query and definition of a saved TV show filter. */
 export type TvShowFilter = ListFilter<TvShowFilterField>;
 
-/** Antwort von GET /api/v1/tvshows/filter-values; Codecs und Sprachen stammen aus den Episoden. */
+/** Answer of GET /api/v1/tvshows/filter-values; codecs and languages come from the episodes. */
 export interface TvShowFilterValues {
   readonly genres: readonly string[];
   readonly tags: readonly string[];
@@ -57,97 +59,98 @@ export interface TvShowFilterValues {
 }
 
 /**
- * Felder in der Reihenfolge der Auswahl; die Vergleiche entsprechen TvShowFilterField im Backend. „Episode …“
- * heißt: mindestens eine Episode („ist“) bzw. keine Episode („ist nicht“).
+ * Fields in the order of the selection; the comparisons match TvShowFilterField in the backend. “Episode: …”
+ * means at least one episode (“is”) or no episode (“is not”).
  */
 export const TVSHOW_FILTER_FIELDS: Readonly<Record<TvShowFilterField, FieldDefinition>> = {
-  TITLE: { label: 'Titel', operators: ['CONTAINS', 'IS', 'IS_NOT'], values: 'text' },
-  YEAR: { label: 'Jahr', operators: NUMBER_OPERATORS, values: 'number' },
-  GENRE: { label: 'Genre', operators: LIST_OPERATORS, values: 'genres' },
-  TAG: { label: 'Tag', operators: LIST_OPERATORS, values: 'tags' },
-  STUDIO: { label: 'Studio/Sender', operators: LIST_OPERATORS, values: 'studios' },
-  STATUS: { label: 'Status', operators: LIST_OPERATORS, values: 'statuses' },
-  MPAA: { label: 'Altersfreigabe', operators: LIST_OPERATORS, values: 'mpaa' },
-  USER_RATING: { label: 'Eigene Bewertung', operators: NUMBER_OPERATORS, values: 'number' },
-  TVDB_ID: { label: 'TVDB-ID', operators: PRESENCE_OPERATORS, values: 'none' },
-  TMDB_ID: { label: 'TMDB-ID', operators: PRESENCE_OPERATORS, values: 'none' },
-  IMDB_ID: { label: 'IMDb-ID', operators: PRESENCE_OPERATORS, values: 'none' },
-  NFO: { label: 'NFO', operators: PRESENCE_OPERATORS, values: 'none' },
-  TRAILER: { label: 'Trailer', operators: PRESENCE_OPERATORS, values: 'none' },
-  SOURCE: { label: 'Quelle', operators: ['IS', 'IS_NOT'], values: 'sources' },
-  ADDED_DAYS_AGO: {
-    label: 'Hinzugefügt vor Tagen',
-    operators: ['AT_MOST', 'AT_LEAST'],
-    values: 'number',
-  },
-  EPISODES: {
-    label: 'Anzahl Episoden',
-    operators: ['IS', 'AT_LEAST', 'AT_MOST'],
-    values: 'number',
-  },
-  UNWATCHED_EPISODES: { label: 'Ungesehene Episoden', operators: ['IS'], values: 'boolean' },
-  EPISODE_RESOLUTION: {
-    label: 'Episode: Auflösung',
-    operators: ['AT_MOST', 'AT_LEAST'],
-    values: 'resolutions',
-  },
-  EPISODE_VIDEO_CODEC: {
-    label: 'Episode: Video-Codec',
-    operators: TOKEN_OPERATORS,
-    values: 'videoCodecs',
-  },
-  EPISODE_AUDIO_CODEC: {
-    label: 'Episode: Audio-Codec',
-    operators: TOKEN_OPERATORS,
-    values: 'audioCodecs',
-  },
-  EPISODE_AUDIO_LANGUAGE: {
-    label: 'Episode: Audiosprache',
-    operators: TOKEN_OPERATORS,
-    values: 'audioLanguages',
-  },
-  EPISODE_SUBTITLE_LANGUAGE: {
-    label: 'Episode: Untertitelsprache',
-    operators: TOKEN_OPERATORS,
-    values: 'subtitleLanguages',
-  },
-  EPISODE_VIDEO_SOURCE: {
-    label: 'Episode: Videoquelle',
-    operators: TOKEN_OPERATORS,
-    values: 'videoSources',
-  },
-  EPISODE_STREAM_DETAILS: {
-    label: 'Episode: technische Angaben',
-    operators: PRESENCE_OPERATORS,
-    values: 'none',
-  },
+  TITLE: fieldDefinition('fields.title', ['CONTAINS', 'IS', 'IS_NOT'], 'text'),
+  YEAR: fieldDefinition('fields.year', NUMBER_OPERATORS, 'number'),
+  GENRE: fieldDefinition('fields.genre', LIST_OPERATORS, 'genres'),
+  TAG: fieldDefinition('fields.tag', LIST_OPERATORS, 'tags'),
+  STUDIO: fieldDefinition('filters.fields.studioNetwork', LIST_OPERATORS, 'studios'),
+  STATUS: fieldDefinition('common.status', LIST_OPERATORS, 'statuses'),
+  MPAA: fieldDefinition('fields.certification', LIST_OPERATORS, 'mpaa'),
+  USER_RATING: fieldDefinition('fields.userRating', NUMBER_OPERATORS, 'number'),
+  TVDB_ID: fieldDefinition('fields.tvdbId', PRESENCE_OPERATORS, 'none'),
+  TMDB_ID: fieldDefinition('fields.tmdbId', PRESENCE_OPERATORS, 'none'),
+  IMDB_ID: fieldDefinition('fields.imdbId', PRESENCE_OPERATORS, 'none'),
+  NFO: fieldDefinition('filters.fields.nfo', PRESENCE_OPERATORS, 'none'),
+  TRAILER: fieldDefinition('fields.trailer', PRESENCE_OPERATORS, 'none'),
+  SOURCE: fieldDefinition('common.source', ['IS', 'IS_NOT'], 'sources'),
+  ADDED_DAYS_AGO: fieldDefinition('filters.fields.addedDaysAgo', ['AT_MOST', 'AT_LEAST'], 'number'),
+  EPISODES: fieldDefinition('filters.fields.episodes', ['IS', 'AT_LEAST', 'AT_MOST'], 'number'),
+  UNWATCHED_EPISODES: fieldDefinition('filters.fields.unwatchedEpisodes', ['IS'], 'boolean'),
+  EPISODE_RESOLUTION: fieldDefinition(
+    'filters.fields.episodeResolution',
+    ['AT_MOST', 'AT_LEAST'],
+    'resolutions',
+  ),
+  EPISODE_VIDEO_CODEC: fieldDefinition(
+    'filters.fields.episodeVideoCodec',
+    TOKEN_OPERATORS,
+    'videoCodecs',
+  ),
+  EPISODE_AUDIO_CODEC: fieldDefinition(
+    'filters.fields.episodeAudioCodec',
+    TOKEN_OPERATORS,
+    'audioCodecs',
+  ),
+  EPISODE_AUDIO_LANGUAGE: fieldDefinition(
+    'filters.fields.episodeAudioLanguage',
+    TOKEN_OPERATORS,
+    'audioLanguages',
+  ),
+  EPISODE_SUBTITLE_LANGUAGE: fieldDefinition(
+    'filters.fields.episodeSubtitleLanguage',
+    TOKEN_OPERATORS,
+    'subtitleLanguages',
+  ),
+  EPISODE_VIDEO_SOURCE: fieldDefinition(
+    'filters.fields.episodeVideoSource',
+    TOKEN_OPERATORS,
+    'videoSources',
+  ),
+  EPISODE_STREAM_DETAILS: fieldDefinition(
+    'filters.fields.episodeStreamDetails',
+    PRESENCE_OPERATORS,
+    'none',
+  ),
 };
 
 export const ALL_TVSHOWS: TvShowFilter = { matchAll: true, conditions: [] };
 
-/** Mitgelieferte Filter; gespeicherte kommen dazu. */
+/** Filters that come with the application; saved ones are added. */
 export const PREDEFINED_TVSHOW_FILTERS: readonly PredefinedFilter<TvShowFilterField>[] = [
-  {
-    name: 'Mit ungesehenen Episoden',
-    filter: only({ field: 'UNWATCHED_EPISODES', operator: 'IS', value: 'true' }),
-  },
-  {
-    name: 'Laufende Serien',
-    filter: only({ field: 'STATUS', operator: 'IS', value: 'Continuing' }),
-  },
-  {
-    name: 'Neu (letzte 30 Tage)',
-    filter: only({ field: 'ADDED_DAYS_AGO', operator: 'AT_MOST', value: '30' }),
-  },
-  {
-    name: 'Episoden unter 720p',
-    filter: only({ field: 'EPISODE_RESOLUTION', operator: 'AT_MOST', value: '576' }),
-  },
-  { name: 'Ohne TVDB-ID', filter: only({ field: 'TVDB_ID', operator: 'EMPTY', value: null }) },
-  {
-    name: 'Episoden ohne technische Angaben',
-    filter: only({ field: 'EPISODE_STREAM_DETAILS', operator: 'EMPTY', value: null }),
-  },
-  { name: 'Ohne NFO', filter: only({ field: 'NFO', operator: 'EMPTY', value: null }) },
-  { name: 'Ohne Trailer', filter: only({ field: 'TRAILER', operator: 'EMPTY', value: null }) },
+  predefinedFilter(
+    'filters.predefined.withUnwatchedEpisodes',
+    only({ field: 'UNWATCHED_EPISODES', operator: 'IS', value: 'true' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.continuing',
+    only({ field: 'STATUS', operator: 'IS', value: 'Continuing' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.newLast30Days',
+    only({ field: 'ADDED_DAYS_AGO', operator: 'AT_MOST', value: '30' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.episodesBelow720p',
+    only({ field: 'EPISODE_RESOLUTION', operator: 'AT_MOST', value: '576' }),
+  ),
+  predefinedFilter(
+    'filters.predefined.withoutTvdbId',
+    only({ field: 'TVDB_ID', operator: 'EMPTY', value: null }),
+  ),
+  predefinedFilter(
+    'filters.predefined.episodesWithoutStreamDetails',
+    only({ field: 'EPISODE_STREAM_DETAILS', operator: 'EMPTY', value: null }),
+  ),
+  predefinedFilter(
+    'filters.predefined.withoutNfo',
+    only({ field: 'NFO', operator: 'EMPTY', value: null }),
+  ),
+  predefinedFilter(
+    'filters.predefined.withoutTrailer',
+    only({ field: 'TRAILER', operator: 'EMPTY', value: null }),
+  ),
 ];

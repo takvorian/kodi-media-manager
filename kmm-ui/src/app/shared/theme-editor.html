@@ -3,19 +3,33 @@
   <div class="current">
     @if (info.exists) {
       <audio class="theme-player" controls preload="none" [src]="fileUrl(info)"></audio>
-      <span class="hint theme-size">theme.mp3 · {{ kilobytes(info) | number: '1.0-0' }} KB</span>
-      <button matButton type="button" class="remove-theme-button" [disabled]="busy()" (click)="remove()">
-        Löschen
+      <span class="hint theme-size"
+        >theme.mp3 · {{ kilobytes(info) | translocoDecimal: { maximumFractionDigits: 0 } }} KB</span
+      >
+      <button
+        matButton
+        type="button"
+        class="remove-theme-button"
+        [disabled]="busy()"
+        (click)="remove()"
+      >
+        {{ 'common.delete' | transloco }}
       </button>
     } @else {
-      <span class="hint no-theme">Keine Titelmusik (theme.mp3) vorhanden.</span>
+      <span class="hint no-theme">{{ 'shared.theme.none' | transloco }}</span>
     }
-    <button matButton="tonal" type="button" class="find-themes-button" [disabled]="busy()" (click)="findCandidates()">
-      Vorschläge suchen
+    <button
+      matButton="tonal"
+      type="button"
+      class="find-themes-button"
+      [disabled]="busy()"
+      (click)="findCandidates()"
+    >
+      {{ 'shared.suggestions.find' | transloco }}
     </button>
   </div>
 } @else if (theme.error()) {
-  <p class="hint theme-error">Die Titelmusik konnte nicht geprüft werden.</p>
+  <p class="hint theme-error">{{ 'shared.theme.checkFailed' | transloco }}</p>
 }
 
 @let found = options();
@@ -24,7 +38,7 @@
     <p class="hint theme-warning">{{ warning }}</p>
   }
   @if (found.candidates.length === 0) {
-    <p class="hint no-candidates">Keine Titelmusik gefunden.</p>
+    <p class="hint no-candidates">{{ 'shared.theme.noneFound' | transloco }}</p>
   } @else {
     <ul class="candidates">
       @for (candidate of found.candidates; track candidate.source) {
@@ -39,7 +53,7 @@
             <span class="hint">
               {{ candidate.scraperName }}
               @if (candidate.sameTitle) {
-                · gleicher Titel
+                · {{ 'shared.theme.sameTitle' | transloco }}
               }
               @if (candidate.durationSeconds) {
                 · {{ candidate.durationSeconds }} s
@@ -49,7 +63,9 @@
           @if (candidate.previewUrl) {
             <audio controls preload="none" [src]="candidate.previewUrl"></audio>
           }
-          <a matButton [href]="candidate.webUrl" target="_blank" rel="noopener">Seite</a>
+          <a matButton [href]="candidate.webUrl" target="_blank" rel="noopener">{{
+            'shared.suggestions.page' | transloco
+          }}</a>
           <button
             matButton="filled"
             type="button"
@@ -57,13 +73,15 @@
             [disabled]="busy()"
             (click)="apply(candidate)"
           >
-            Übernehmen
+            {{ 'common.apply' | transloco }}
           </button>
         </li>
       }
     </ul>
   }
-  <button matButton type="button" class="close-candidates-button" (click)="closeCandidates()">Vorschläge schließen</button>
+  <button matButton type="button" class="close-candidates-button" (click)="closeCandidates()">
+    {{ 'shared.suggestions.close' | transloco }}
+  </button>
 }
 
-<p class="hint kodi-hint">Kodi spielt die Titelmusik nur mit einem Add-on wie TvTunes ab.</p>
+<p class="hint kodi-hint">{{ 'shared.theme.kodiHint' | transloco }}</p>

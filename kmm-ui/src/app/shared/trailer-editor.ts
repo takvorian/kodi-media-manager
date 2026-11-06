@@ -3,6 +3,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { translate, TranslocoPipe } from '@jsverse/transloco';
 import { finalize } from 'rxjs';
 
 import { CONFIRM } from './confirm';
@@ -15,12 +16,12 @@ const WEB_LINK = /^https?:\/\//i;
 const YOUTUBE_WATCH = 'https://www.youtube.com/watch?v=';
 
 /**
- * Trailer-Link der NFO eines Films oder einer Serie, den Kodi abspielt: anzeigen, aus Vorschlägen wählen, selbst
- * eintragen oder entfernen.
+ * Trailer link in the NFO of a movie or TV show that Kodi plays: show it, choose from suggestions, enter one
+ * yourself or remove it.
  */
 @Component({
   selector: 'app-trailer-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule],
+  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
   templateUrl: './trailer-editor.html',
   styleUrl: './trailer-editor.scss',
 })
@@ -29,17 +30,17 @@ export class TrailerEditor {
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
 
-  /** Trailer-Endpunkt, z. B. `/api/v1/movies/5/trailer`. */
+  /** Trailer endpoint, e.g. `/api/v1/movies/5/trailer`. */
   readonly endpoint = input.required<string>();
   readonly trailer = input<string | null>(null);
-  /** Der neue Trailer-Link oder `null`, wenn er entfernt wurde. */
+  /** The new trailer link, or `null` if it was removed. */
   readonly changed = output<string | null>();
 
   protected readonly busy = signal(false);
   protected readonly options = signal<TrailerOptions | null>(null);
   protected readonly manualLink = signal('');
 
-  /** Adresse zum Ansehen im Browser, sofern sich eine aus dem Link ableiten lässt. */
+  /** Address for watching in the browser, if one can be derived from the link. */
   protected readonly watchUrl = computed(() => {
     const link = this.trailer();
     if (!link) {
@@ -73,7 +74,7 @@ export class TrailerEditor {
           this.options.set(null);
           this.manualLink.set('');
           this.changed.emit(details.trailer);
-          this.notify('Trailer übernommen und in die NFO geschrieben.');
+          this.notify(translate('shared.trailer.applied'));
         },
         error: (error: unknown) => this.notify(problemMessage(error)),
       });
@@ -86,7 +87,7 @@ export class TrailerEditor {
   }
 
   protected remove(): void {
-    if (!this.confirm('Trailer-Link aus Bibliothek und NFO entfernen?')) {
+    if (!this.confirm(translate('shared.trailer.confirmRemove'))) {
       return;
     }
     this.busy.set(true);
@@ -96,7 +97,7 @@ export class TrailerEditor {
       .subscribe({
         next: (details) => {
           this.changed.emit(details.trailer);
-          this.notify('Trailer entfernt.');
+          this.notify(translate('shared.trailer.removed'));
         },
         error: (error: unknown) => this.notify(problemMessage(error)),
       });

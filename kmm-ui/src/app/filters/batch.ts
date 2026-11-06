@@ -1,24 +1,26 @@
-import { Job } from '../jobs/job';
+import { translate } from '@jsverse/transloco';
+
+import { Job, unsuccessfulJobSummary } from '../jobs/job';
 
 export interface ListChange {
   readonly add: readonly string[];
   readonly remove: readonly string[];
 }
 
-/** Ein Feld setzen (`value`) oder leeren (`clear`); ohne beides bleibt es unverändert. */
+/** Sets a field (`value`) or clears it (`clear`); without either it stays unchanged. */
 export interface FieldChange {
   readonly clear: boolean;
   readonly value: string | null;
 }
 
-/** Was der Stapel-Editor meldet: Genres und Tags sowie die einzelnen Felder der Liste. */
+/** What the batch editor reports: genres and tags plus the single fields of the list. */
 export interface BatchChanges {
   readonly genres: ListChange;
   readonly tags: ListChange;
   readonly fields: Readonly<Record<string, FieldChange>>;
 }
 
-/** Ein einzelnes Feld der Stapel-Bearbeitung, z. B. `mpaa` mit „Altersfreigabe“. */
+/** A single field of the batch edit, e.g. `mpaa` with “Certification”. */
 export interface BatchField {
   readonly key: BatchFieldKey;
   readonly label: string;
@@ -33,17 +35,26 @@ export interface BatchResult {
   readonly failures: readonly string[];
 }
 
-/** Fasst einen beendeten Job der Stapel-Bearbeitung für eine Snackbar-Meldung zusammen. */
+/** Sums up a finished batch edit job for a snackbar message, in the active UI language. */
 export function batchSummary(job: Job): string {
-  if (job.status === 'SUCCEEDED') {
-    const result = job.result as BatchResult;
-    const failed =
-      result.failed > 0
-        ? `, ${result.failed} Fehler: ${result.failures.join('; ').replace(/\.$/, '')}`
-        : '';
-    return `${job.title}: ${result.changed} geändert, ${result.unchanged} unverändert${failed}.`;
+  if (job.status !== 'SUCCEEDED') {
+    return unsuccessfulJobSummary(job);
   }
-  return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+  const result = job.result as BatchResult;
+  const parts = [
+    translate('filters.batch.summary', {
+      title: job.title,
+      changed: result.changed,
+      unchanged: result.unchanged,
+    }),
+  ];
+  if (result.failed > 0) {
+    parts.push(
+      translate('filters.batch.failures', {
+        failed: result.failed,
+        failures: result.failures.join('; ').replace(/\.$/, ''),
+      }),
+    );
+  }
+  return `${parts.join(', ')}.`;
 }

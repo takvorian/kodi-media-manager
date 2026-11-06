@@ -1,8 +1,9 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, inject, input, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { translate, TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoDecimalPipe } from '@jsverse/transloco-locale';
 import { finalize } from 'rxjs';
 
 import { CONFIRM } from './confirm';
@@ -13,12 +14,12 @@ const SNACKBAR_DURATION_MS = 5000;
 const BYTES_PER_KB = 1024;
 
 /**
- * Titelmusik eines Films oder einer Serie als `theme.mp3` im Ordner: anhören, aus Vorschlägen wählen oder
- * entfernen. Kodi spielt sie nur mit einem Add-on wie TvTunes ab.
+ * Theme music of a movie or TV show as `theme.mp3` in its folder: listen, choose from suggestions or remove.
+ * Kodi plays it only with an add-on such as TvTunes.
  */
 @Component({
   selector: 'app-theme-editor',
-  imports: [DecimalPipe, MatButtonModule],
+  imports: [MatButtonModule, TranslocoDecimalPipe, TranslocoPipe],
   templateUrl: './theme-editor.html',
   styleUrl: './theme-editor.scss',
 })
@@ -27,7 +28,7 @@ export class ThemeEditor {
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
 
-  /** Titelmusik-Endpunkt, z. B. `/api/v1/tvshows/3/theme`. */
+  /** Theme music endpoint, e.g. `/api/v1/tvshows/3/theme`. */
   readonly endpoint = input.required<string>();
 
   protected readonly theme = rxResource({
@@ -57,10 +58,7 @@ export class ThemeEditor {
   }
 
   protected apply(option: ThemeOption): void {
-    if (
-      this.theme.value()?.exists &&
-      !this.confirm('Die vorhandene theme.mp3 durch diese Titelmusik ersetzen?')
-    ) {
+    if (this.theme.value()?.exists && !this.confirm(translate('shared.theme.confirmReplace'))) {
       return;
     }
     this.busy.set(true);
@@ -71,14 +69,14 @@ export class ThemeEditor {
         next: (info) => {
           this.theme.set(info);
           this.options.set(null);
-          this.notify('Titelmusik als theme.mp3 gespeichert.');
+          this.notify(translate('shared.theme.saved'));
         },
         error: (error: unknown) => this.notify(problemMessage(error)),
       });
   }
 
   protected remove(): void {
-    if (!this.confirm('theme.mp3 löschen?')) {
+    if (!this.confirm(translate('shared.theme.confirmDelete'))) {
       return;
     }
     this.busy.set(true);
@@ -88,7 +86,7 @@ export class ThemeEditor {
       .subscribe({
         next: (info) => {
           this.theme.set(info);
-          this.notify('Titelmusik gelöscht.');
+          this.notify(translate('shared.theme.deleted'));
         },
         error: (error: unknown) => this.notify(problemMessage(error)),
       });

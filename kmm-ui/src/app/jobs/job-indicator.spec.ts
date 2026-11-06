@@ -1,6 +1,8 @@
 import { provideHttpClient } from '@angular/common/http';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 
+import { provideI18nTesting } from '../i18n/testing';
+import { switchLanguage } from '../shared/testing';
 import { FakeJobEvents, job } from './fake-job-events';
 import { JobIndicator } from './job-indicator';
 
@@ -12,7 +14,7 @@ describe('JobIndicator', () => {
     events = new FakeJobEvents();
     TestBed.configureTestingModule({
       imports: [JobIndicator],
-      providers: [provideHttpClient(), events.provider()],
+      providers: [provideI18nTesting(), provideHttpClient(), events.provider()],
     });
     fixture = TestBed.createComponent(JobIndicator);
   });
@@ -45,5 +47,16 @@ describe('JobIndicator', () => {
     events.emit(job({ status: 'SUCCEEDED' }));
 
     expect(text()).toBe('');
+  });
+
+  it('counts further jobs in the UI language', async () => {
+    events.emit(job({ message: 'Verzeichnisse werden durchsucht' }));
+    events.emit(job({ id: 'job-2', key: 'scan:2', startedAt: '2026-10-25T11:00:00Z' }));
+    text();
+
+    await switchLanguage('en');
+    await fixture.whenStable();
+
+    expect(text()).toBe('Scan „Filme“ – Verzeichnisse werden durchsucht · 1 more');
   });
 });

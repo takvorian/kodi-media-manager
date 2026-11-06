@@ -1,13 +1,13 @@
 import chapterList from '../../../../docs/handbuch/kapitel.json';
 
-/** Ein Kapitel des Handbuchs aus `docs/handbuch/kapitel.json`; `routes` sind die Seiten, zu denen es gehört. */
+/** A chapter of the manual from `docs/handbuch/kapitel.json`; `routes` are the pages it belongs to. */
 export interface HelpChapter {
   slug: string;
   title: string;
   routes: string[];
 }
 
-/** Ein Suchtreffer: das Kapitel, der Abschnitt und ein Ausschnitt um die Fundstelle. */
+/** A search hit: the chapter, the section and an excerpt around the match. */
 export interface HelpHit {
   slug: string;
   chapter: string;
@@ -23,7 +23,7 @@ const SNIPPET_RADIUS = 60;
 const HEADING = /^#{1,6}\s+(.*)$/;
 const MARKDOWN_SYNTAX = /!?\[([^\]]*)\]\([^)]*\)|[*`|]/g;
 
-/** Das Kapitel zu einer Seite der Anwendung; Seiten ohne eigenes Kapitel führen zum Anfang. */
+/** The chapter for a page of the application; pages without their own chapter lead to the start. */
 export function chapterForUrl(url: string): string {
   const path = url.split(/[?#]/)[0];
   let best: { slug: string; length: number } | null = null;
@@ -46,7 +46,7 @@ function matchesRoute(route: string, path: string): boolean {
   );
 }
 
-/** Anker einer Überschrift, gebildet wie auf GitHub, damit Links in beiden Ansichten gelten. */
+/** Anchor of a heading, built as on GitHub so links work in both views. */
 export function headingAnchor(text: string): string {
   return text
     .toLowerCase()
@@ -55,7 +55,7 @@ export function headingAnchor(text: string): string {
     .replace(/\s/g, '-');
 }
 
-/** Sucht alle Wörter der Anfrage im Kapitel, Groß- und Kleinschreibung zählen nicht. */
+/** Searches the chapter for all words of the query, ignoring case. */
 export function searchChapter(
   chapter: HelpChapter,
   markdown: string,

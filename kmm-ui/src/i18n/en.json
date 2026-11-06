@@ -133,5 +133,176 @@
     "lastPage": "Last page",
     "range": "{first} – {last} of {length}",
     "emptyRange": "0 of 0"
+  },
+  "shared": {
+    "languageCode": "en",
+    "helpLink": {
+      "title": "Read in the manual (new tab)"
+    },
+    "export": {
+      "button": "Export",
+      "busy": "Exporting …",
+      "html": "HTML list with posters (ZIP)",
+      "csv": "CSV for Excel"
+    },
+    "languageSelect": {
+      "custom": "Custom",
+      "changeTo": "The language is changed to {language}.",
+      "changeToDefault": "The language is changed to the default.",
+      "refetch": "Fetch {texts} again in this language now?\n\nOK: The existing texts are overwritten, including ones edited by hand.\nCancel: Only change the language; the texts stay."
+    },
+    "streams": {
+      "video": "Video",
+      "audio": "Audio",
+      "none": "No details on video and audio tracks.",
+      "channels": "{count} channels",
+      "forced": "forced",
+      "external": "external"
+    },
+    "suggestions": {
+      "find": "Find suggestions",
+      "close": "Close suggestions",
+      "page": "Page"
+    },
+    "theme": {
+      "none": "No theme music (theme.mp3) yet.",
+      "checkFailed": "The theme music could not be checked.",
+      "noneFound": "No theme music found.",
+      "sameTitle": "same title",
+      "kodiHint": "Kodi plays theme music only with an add-on such as TvTunes.",
+      "confirmReplace": "Replace the existing theme.mp3 with this theme music?",
+      "saved": "Theme music saved as theme.mp3.",
+      "confirmDelete": "Delete theme.mp3?",
+      "deleted": "Theme music deleted."
+    },
+    "trailer": {
+      "watch": "Watch",
+      "none": "No trailer set.",
+      "noneFound": "No trailers found.",
+      "noLanguage": "no language",
+      "official": "official",
+      "current": "Current",
+      "manualLink": "Custom link",
+      "manualLinkHint": "plugin://, http(s)://, smb:// or nfs://",
+      "applyLink": "Apply link",
+      "applied": "Trailer applied and written to the NFO.",
+      "confirmRemove": "Remove the trailer link from the library and the NFO?",
+      "removed": "Trailer removed."
+    }
+  },
+  "problems": {
+    "unknown": "Unknown error",
+    "backendUnreachable": "The backend cannot be reached.",
+    "serverStatus": "The server responded with error {status}."
+  },
+  "jobs": {
+    "moreRunning": "{count} more",
+    "cancelled": "{title} cancelled.",
+    "failed": "{title} failed: {message}"
+  },
+  "filters": {
+    "matchLabel": "Must match",
+    "matchAll": "all conditions",
+    "matchAny": "any condition",
+    "field": "Field",
+    "operator": "Comparison",
+    "addCondition": "Add condition",
+    "explained": "Fields and comparisons explained",
+    "operators": {
+      "is": "is",
+      "isNot": "is not",
+      "contains": "contains",
+      "atLeast": "at least",
+      "atMost": "at most",
+      "empty": "is missing",
+      "notEmpty": "is present"
+    },
+    "fields": {
+      "hdr": "HDR",
+      "audioLanguage": "Audio language",
+      "subtitleLanguage": "Subtitle language",
+      "streamDetails": "Technical details",
+      "nfo": "NFO",
+      "addedDaysAgo": "Added days ago",
+      "studioNetwork": "Studio/network",
+      "episodes": "Number of episodes",
+      "unwatchedEpisodes": "Unwatched episodes",
+      "episodeResolution": "Episode: resolution",
+      "episodeVideoCodec": "Episode: video codec",
+      "episodeAudioCodec": "Episode: audio codec",
+      "episodeAudioLanguage": "Episode: audio language",
+      "episodeSubtitleLanguage": "Episode: subtitle language",
+      "episodeVideoSource": "Episode: video source",
+      "episodeStreamDetails": "Episode: technical details"
+    },
+    "predefined": {
+      "unwatched": "Unwatched",
+      "newLast30Days": "New (last 30 days)",
+      "below720p": "Below 720p",
+      "uhd4k": "4K",
+      "withoutTmdbId": "Without TMDB ID",
+      "withoutStreamDetails": "Without technical details",
+      "withoutNfo": "Without NFO",
+      "withoutTrailer": "Without trailer",
+      "withUnwatchedEpisodes": "With unwatched episodes",
+      "continuing": "Continuing TV shows",
+      "episodesBelow720p": "Episodes below 720p",
+      "withoutTvdbId": "Without TVDB ID",
+      "episodesWithoutStreamDetails": "Episodes without technical details"
+    },
+    "batch": {
+      "intro": "{count} {items} selected. Separate multiple entries with commas. The NFOs are written and Kodi reloads the {items}; nothing is renamed.",
+      "addGenres": "Add genres",
+      "removeGenres": "Remove genres",
+      "addTags": "Add tags",
+      "removeTags": "Remove tags",
+      "modes": {
+        "keep": "unchanged",
+        "set": "set",
+        "clear": "clear"
+      },
+      "newValue": "New value",
+      "empty": "Please enter at least one change.",
+      "apply": "Change {count} {items}",
+      "summary": "{title}: {changed} changed, {unchanged} unchanged",
+      "failures": "{failed, plural, one {# error} other {# errors}}: {failures}"
+    }
+  },
+  "help": {
+    "search": "Search the manual",
+    "noHits": "Nothing found.",
+    "chapters": "Chapters",
+    "loadFailed": "This chapter could not be loaded.",
+    "loading": "Loading chapter …"
+  },
+  "system": {
+    "title": "System",
+    "version": "Version",
+    "java": "Java",
+    "database": "Database",
+    "profiles": "Profiles",
+    "loading": "Loading system information …",
+    "clear": {
+      "title": "Clear database",
+      "description": "Deletes all sources, movies, TV shows, episodes, movie sets, filters and Kodi devices from KMM.",
+      "irreversible": "This cannot be undone.",
+      "untouched": "Your media, NFOs and artwork stay untouched, but details edited by hand in KMM that are not in an NFO are lost.",
+      "keepSettings": "Keep settings and API keys",
+      "word": "CLEAR",
+      "confirmLabel": "Type {word} to confirm",
+      "done": "The database has been cleared."
+    },
+    "changes": {
+      "title": "Changes",
+      "loadFailed": "The changes could not be loaded.",
+      "none": "No version released yet.",
+      "loading": "Loading changes …"
+    }
+  },
+  "mediaInfo": {
+    "episodesRead": "{updated, plural, one {Read the technical details of # episode file.} other {Read the technical details of # episode files.}}",
+    "failures": "{count, plural, one {# error} other {# errors}} (e.g. {example})",
+    "jobDone": "{title} finished: {updated} read",
+    "skipped": "{skipped} already had details"
   }
 }

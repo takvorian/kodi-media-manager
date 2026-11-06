@@ -5,15 +5,24 @@ import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { TranslocoPipe, translateSignal } from '@jsverse/transloco';
 
 import { problemMessage } from '../shared/problem-message';
 import { SystemInfoService } from './system-info.service';
 
-export const CLEAR_DATABASE_WORD = 'LEEREN';
+/** Key of the word the user types to confirm clearing; it differs per UI language. */
+export const CLEAR_DATABASE_WORD_KEY = 'system.clear.word';
 
 @Component({
   selector: 'app-system-status',
-  imports: [MatButtonModule, MatCardModule, MatCheckboxModule, MatFormFieldModule, MatInputModule],
+  imports: [
+    MatButtonModule,
+    MatCardModule,
+    MatCheckboxModule,
+    MatFormFieldModule,
+    MatInputModule,
+    TranslocoPipe,
+  ],
   templateUrl: './system-status.html',
   styleUrl: './system-status.scss',
 })
@@ -23,14 +32,14 @@ export class SystemStatus {
   protected readonly systemInfo = rxResource({ stream: () => this.systemInfoService.load() });
   protected readonly changelog = rxResource({ stream: () => this.systemInfoService.changelog() });
 
-  protected readonly clearWord = CLEAR_DATABASE_WORD;
+  protected readonly clearWord = translateSignal(CLEAR_DATABASE_WORD_KEY);
   protected readonly keepSettings = signal(true);
   protected readonly confirmation = signal('');
   protected readonly clearing = signal(false);
   protected readonly cleared = signal(false);
   protected readonly clearError = signal<string | null>(null);
   protected readonly canClear = computed(
-    () => this.confirmation() === CLEAR_DATABASE_WORD && !this.clearing(),
+    () => this.confirmation() === this.clearWord() && !this.clearing(),
   );
 
   protected clearDatabase(): void {

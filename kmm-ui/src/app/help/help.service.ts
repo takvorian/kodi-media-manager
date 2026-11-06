@@ -4,7 +4,7 @@ import { forkJoin, map, Observable, shareReplay } from 'rxjs';
 
 import { HELP_CHAPTERS, HelpHit, searchChapter } from './help';
 
-/** Lädt die Kapitel des Handbuchs, die mit der Oberfläche unter `help/` ausgeliefert werden. */
+/** Loads the chapters of the manual, which ship with the UI under `help/`. */
 @Injectable({ providedIn: 'root' })
 export class HelpService {
   private readonly http = inject(HttpClient);

@@ -1,62 +1,114 @@
 import { ChangeDetectionStrategy, Component, computed, input, output } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
+import { translate, TranslocoPipe } from '@jsverse/transloco';
 
-/** Sprachen, die die Anbieter gut abdecken; andere können aus Ember oder einer NFO stammen. */
-export const METADATA_LANGUAGES: readonly { readonly value: string; readonly label: string }[] = [
-  { value: 'de-DE', label: 'Deutsch' },
-  { value: 'en-US', label: 'Englisch (USA)' },
-  { value: 'en-GB', label: 'Englisch (Großbritannien)' },
-  { value: 'fr-FR', label: 'Französisch' },
-  { value: 'es-ES', label: 'Spanisch' },
-  { value: 'it-IT', label: 'Italienisch' },
-  { value: 'nl-NL', label: 'Niederländisch' },
-  { value: 'pt-PT', label: 'Portugiesisch' },
-  { value: 'pt-BR', label: 'Portugiesisch (Brasilien)' },
-  { value: 'pl-PL', label: 'Polnisch' },
-  { value: 'cs-CZ', label: 'Tschechisch' },
-  { value: 'hu-HU', label: 'Ungarisch' },
-  { value: 'da-DK', label: 'Dänisch' },
-  { value: 'sv-SE', label: 'Schwedisch' },
-  { value: 'nb-NO', label: 'Norwegisch' },
-  { value: 'fi-FI', label: 'Finnisch' },
-  { value: 'tr-TR', label: 'Türkisch' },
-  { value: 'ru-RU', label: 'Russisch' },
-  { value: 'ja-JP', label: 'Japanisch' },
-  { value: 'ko-KR', label: 'Koreanisch' },
-  { value: 'zh-CN', label: 'Chinesisch' },
+import { activeUiLocale, injectUiLocale } from './ui-locale';
+
+/**
+ * Metadata languages the providers cover well; others may come from Ember or an NFO. The names are not stored
+ * but taken from the browser in the active UI language.
+ */
+export const METADATA_LANGUAGES: readonly string[] = [
+  'de-DE',
+  'en-US',
+  'en-GB',
+  'fr-FR',
+  'es-ES',
+  'it-IT',
+  'nl-NL',
+  'pt-PT',
+  'pt-BR',
+  'pl-PL',
+  'cs-CZ',
+  'hu-HU',
+  'da-DK',
+  'sv-SE',
+  'nb-NO',
+  'fi-FI',
+  'tr-TR',
+  'ru-RU',
+  'ja-JP',
+  'ko-KR',
+  'zh-CN',
 ];
 
-/** Die Frage beim Sprachwechsel; OK überschreibt die Texte, Abbrechen ändert nur die Sprache. */
-export function languageChangeQuestion(language: string | null, texts: string): string {
-  const target = language ? `auf ${language}` : 'auf den Standard';
-  return (
-    `Die Sprache wird ${target} geändert. Sollen ${texts} jetzt in dieser Sprache neu geholt werden?\n\n` +
-    'OK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\n' +
-    'Abbrechen: Nur die Sprache ändern, die Texte bleiben.'
-  );
+/** A language of the list with its name in the UI language. */
+export interface LanguageOption {
+  readonly value: string;
+  readonly label: string;
 }
 
-/** Steht für „keine eigene Sprache“; eine Option mit {@code null} würde die Auswahl nur leeren. */
+function baseLanguage(code: string): string {
+  return code.split('-')[0];
+}
+
+/** The region is named only where the list offers one language in several regions, e.g. `en-US` and `en-GB`. */
+function hasSeveralRegions(code: string): boolean {
+  const language = baseLanguage(code);
+  return METADATA_LANGUAGES.filter((entry) => baseLanguage(entry) === language).length > 1;
+}
+
+/**
+ * Name of a metadata language in the given UI locale, e.g. `fr-FR` → „Französisch“ or “French”.
+ *
+ * @return the name, or the code itself if the browser does not know it or the code is malformed
+ */
+export function metadataLanguageName(code: string, uiLocale: string): string {
+  try {
+    const names = new Intl.DisplayNames([uiLocale], {
+      type: 'language',
+      languageDisplay: 'standard',
+    });
+    return names.of(hasSeveralRegions(code) ? code : baseLanguage(code)) ?? code;
+  } catch {
+    return code;
+  }
+}
+
+/** The list of metadata languages named in the given UI locale. */
+export function metadataLanguageOptions(uiLocale: string): readonly LanguageOption[] {
+  return METADATA_LANGUAGES.map((value) => ({
+    value,
+    label: metadataLanguageName(value, uiLocale),
+  }));
+}
+
+/**
+ * The question on a language change; OK overwrites the texts, Cancel only changes the language.
+ *
+ * @param language the new metadata language, `null` for the default
+ * @param texts    the texts to fetch again, already translated by the caller
+ */
+export function languageChangeQuestion(language: string | null, texts: string): string {
+  const change = language
+    ? translate('shared.languageSelect.changeTo', {
+        language: `${metadataLanguageName(language, activeUiLocale())} (${language})`,
+      })
+    : translate('shared.languageSelect.changeToDefault');
+  return `${change} ${translate('shared.languageSelect.refetch', { texts })}`;
+}
+
+/** Stands for “no own language”; an option with `null` would only clear the selection. */
 const NO_LANGUAGE = '';
 
 /**
- * Auswahl einer Metadaten-Sprache. Die Auswahl zeigt immer den Wert von {@code value}: Sie meldet eine Wahl nur und
- * übernimmt sie erst, wenn der neue Wert ankommt. Ohne Wert bleibt sie leer und dient als Aktion für eine Auswahl.
+ * Selection of a metadata language. The selection always shows `value`: it only reports a choice and takes it
+ * over once the new value arrives. Without a value it stays empty and serves as an action for a selection.
  */
 @Component({
   selector: 'app-language-select',
-  imports: [MatFormFieldModule, MatSelectModule],
+  imports: [MatFormFieldModule, MatSelectModule, TranslocoPipe],
   template: `
     <mat-form-field subscriptSizing="dynamic" class="language-field">
-      <mat-label>{{ label() }}</mat-label>
+      <mat-label>{{ label() ?? ('common.language' | transloco) }}</mat-label>
       <mat-select
         #select
         [value]="selected()"
         [disabled]="disabled()"
         (selectionChange)="choose(select, $event.value)"
       >
-        <mat-option value="">{{ defaultLabel() }}</mat-option>
+        <mat-option value="">{{ defaultLabel() ?? ('common.default' | transloco) }}</mat-option>
         @for (language of options(); track language.value) {
           <mat-option [value]="language.value"
             >{{ language.label }} ({{ language.value }})</mat-option
@@ -79,12 +131,16 @@ const NO_LANGUAGE = '';
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class LanguageSelect {
-  /** Aktuelle Sprache, {@code null} für keine eigene; {@code undefined} zeigt nichts an. */
+  private readonly uiLocale = injectUiLocale();
+
+  /** Current language, `null` for no own language; `undefined` shows nothing. */
   readonly value = input<string | null | undefined>(undefined);
-  readonly label = input('Sprache');
-  readonly defaultLabel = input('Standard');
+  /** Label of the field; without one it is called “Language” in the UI language. */
+  readonly label = input<string>();
+  /** Label of the option without an own language; without one it is called “Default”. */
+  readonly defaultLabel = input<string>();
   readonly disabled = input(false);
-  /** Die gewählte Sprache, {@code null} für keine eigene. */
+  /** The chosen language, `null` for no own language. */
   readonly chosen = output<string | null>();
 
   protected readonly selected = computed(() => {
@@ -92,12 +148,13 @@ export class LanguageSelect {
     return value === null ? NO_LANGUAGE : value;
   });
 
-  /** Auch eine Sprache außerhalb der Liste muss sichtbar bleiben. */
+  /** A language outside the list must stay visible as well. */
   protected readonly options = computed(() => {
     const value = this.value();
-    return !value || METADATA_LANGUAGES.some((language) => language.value === value)
-      ? METADATA_LANGUAGES
-      : [...METADATA_LANGUAGES, { value, label: 'Eigene' }];
+    const languages = metadataLanguageOptions(this.uiLocale());
+    return !value || METADATA_LANGUAGES.includes(value)
+      ? languages
+      : [...languages, { value, label: translate('shared.languageSelect.custom') }];
   });
 
   protected choose(select: MatSelect, value: string): void {

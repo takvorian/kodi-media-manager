@@ -133,5 +133,176 @@
     "lastPage": "Letzte Seite",
     "range": "{first} – {last} von {length}",
     "emptyRange": "0 von 0"
+  },
+  "shared": {
+    "languageCode": "de",
+    "helpLink": {
+      "title": "Im Handbuch nachlesen (neuer Tab)"
+    },
+    "export": {
+      "button": "Exportieren",
+      "busy": "Exportiere …",
+      "html": "HTML-Liste mit Postern (ZIP)",
+      "csv": "CSV für Excel"
+    },
+    "languageSelect": {
+      "custom": "Eigene",
+      "changeTo": "Die Sprache wird auf {language} geändert.",
+      "changeToDefault": "Die Sprache wird auf den Standard geändert.",
+      "refetch": "Sollen {texts} jetzt in dieser Sprache neu geholt werden?\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur die Sprache ändern, die Texte bleiben."
+    },
+    "streams": {
+      "video": "Video",
+      "audio": "Ton",
+      "none": "Keine Angaben zu Video- und Tonspuren.",
+      "channels": "{count} Kanäle",
+      "forced": "erzwungen",
+      "external": "extern"
+    },
+    "suggestions": {
+      "find": "Vorschläge suchen",
+      "close": "Vorschläge schließen",
+      "page": "Seite"
+    },
+    "theme": {
+      "none": "Keine Titelmusik (theme.mp3) vorhanden.",
+      "checkFailed": "Die Titelmusik konnte nicht geprüft werden.",
+      "noneFound": "Keine Titelmusik gefunden.",
+      "sameTitle": "gleicher Titel",
+      "kodiHint": "Kodi spielt die Titelmusik nur mit einem Add-on wie TvTunes ab.",
+      "confirmReplace": "Die vorhandene theme.mp3 durch diese Titelmusik ersetzen?",
+      "saved": "Titelmusik als theme.mp3 gespeichert.",
+      "confirmDelete": "theme.mp3 löschen?",
+      "deleted": "Titelmusik gelöscht."
+    },
+    "trailer": {
+      "watch": "Ansehen",
+      "none": "Kein Trailer eingetragen.",
+      "noneFound": "Keine Trailer gefunden.",
+      "noLanguage": "ohne Sprache",
+      "official": "offiziell",
+      "current": "Eingetragen",
+      "manualLink": "Eigener Link",
+      "manualLinkHint": "plugin://, http(s)://, smb:// oder nfs://",
+      "applyLink": "Link übernehmen",
+      "applied": "Trailer übernommen und in die NFO geschrieben.",
+      "confirmRemove": "Trailer-Link aus Bibliothek und NFO entfernen?",
+      "removed": "Trailer entfernt."
+    }
+  },
+  "problems": {
+    "unknown": "Unbekannter Fehler",
+    "backendUnreachable": "Das Backend ist nicht erreichbar.",
+    "serverStatus": "Der Server hat mit dem Fehler {status} geantwortet."
+  },
+  "jobs": {
+    "moreRunning": "{count} weitere",
+    "cancelled": "{title} abgebrochen.",
+    "failed": "{title} fehlgeschlagen: {message}"
+  },
+  "filters": {
+    "matchLabel": "Es müssen gelten",
+    "matchAll": "alle Bedingungen",
+    "matchAny": "eine Bedingung",
+    "field": "Feld",
+    "operator": "Vergleich",
+    "addCondition": "Bedingung hinzufügen",
+    "explained": "Felder und Vergleiche erklärt",
+    "operators": {
+      "is": "ist",
+      "isNot": "ist nicht",
+      "contains": "enthält",
+      "atLeast": "mindestens",
+      "atMost": "höchstens",
+      "empty": "fehlt",
+      "notEmpty": "vorhanden"
+    },
+    "fields": {
+      "hdr": "HDR",
+      "audioLanguage": "Audiosprache",
+      "subtitleLanguage": "Untertitelsprache",
+      "streamDetails": "Technische Angaben",
+      "nfo": "NFO",
+      "addedDaysAgo": "Hinzugefügt vor Tagen",
+      "studioNetwork": "Studio/Sender",
+      "episodes": "Anzahl Episoden",
+      "unwatchedEpisodes": "Ungesehene Episoden",
+      "episodeResolution": "Episode: Auflösung",
+      "episodeVideoCodec": "Episode: Videocodec",
+      "episodeAudioCodec": "Episode: Audiocodec",
+      "episodeAudioLanguage": "Episode: Audiosprache",
+      "episodeSubtitleLanguage": "Episode: Untertitelsprache",
+      "episodeVideoSource": "Episode: Videoquelle",
+      "episodeStreamDetails": "Episode: technische Angaben"
+    },
+    "predefined": {
+      "unwatched": "Ungesehen",
+      "newLast30Days": "Neu (letzte 30 Tage)",
+      "below720p": "Unter 720p",
+      "uhd4k": "4K",
+      "withoutTmdbId": "Ohne TMDB-ID",
+      "withoutStreamDetails": "Ohne technische Angaben",
+      "withoutNfo": "Ohne NFO",
+      "withoutTrailer": "Ohne Trailer",
+      "withUnwatchedEpisodes": "Mit ungesehenen Episoden",
+      "continuing": "Laufende Serien",
+      "episodesBelow720p": "Episoden unter 720p",
+      "withoutTvdbId": "Ohne TVDB-ID",
+      "episodesWithoutStreamDetails": "Episoden ohne technische Angaben"
+    },
+    "batch": {
+      "intro": "{count} {items} ausgewählt. Mehrere Einträge durch Komma trennen. Die NFOs werden geschrieben, Kodi liest die {items} neu ein; umbenannt wird nicht.",
+      "addGenres": "Genres hinzufügen",
+      "removeGenres": "Genres entfernen",
+      "addTags": "Tags hinzufügen",
+      "removeTags": "Tags entfernen",
+      "modes": {
+        "keep": "unverändert",
+        "set": "setzen",
+        "clear": "leeren"
+      },
+      "newValue": "Neuer Wert",
+      "empty": "Bitte mindestens eine Änderung angeben.",
+      "apply": "{count} {items} ändern",
+      "summary": "{title}: {changed} geändert, {unchanged} unverändert",
+      "failures": "{failed} Fehler: {failures}"
+    }
+  },
+  "help": {
+    "search": "Im Handbuch suchen",
+    "noHits": "Nichts gefunden.",
+    "chapters": "Kapitel",
+    "loadFailed": "Dieses Kapitel konnte nicht geladen werden.",
+    "loading": "Lade Kapitel …"
+  },
+  "system": {
+    "title": "System",
+    "version": "Version",
+    "java": "Java",
+    "database": "Datenbank",
+    "profiles": "Profile",
+    "loading": "Lade Systeminformationen …",
+    "clear": {
+      "title": "Datenbank leeren",
+      "description": "Löscht alle Quellen, Filme, Serien, Episoden, Filmsets, Filter und Kodi-Geräte aus KMM.",
+      "irreversible": "Das lässt sich nicht rückgängig machen.",
+      "untouched": "Deine Medien, NFOs und Bilder bleiben unberührt, aber von Hand in KMM bearbeitete Angaben, die nicht in einer NFO stehen, gehen verloren.",
+      "keepSettings": "Einstellungen und API-Keys behalten",
+      "word": "LEEREN",
+      "confirmLabel": "Zur Bestätigung {word} eingeben",
+      "done": "Die Datenbank wurde geleert."
+    },
+    "changes": {
+      "title": "Änderungen",
+      "loadFailed": "Die Änderungen konnten nicht geladen werden.",
+      "none": "Noch keine Version veröffentlicht.",
+      "loading": "Lade Änderungen …"
+    }
+  },
+  "mediaInfo": {
+    "episodesRead": "{updated, plural, one {Technische Angaben von # Episodendatei ausgelesen.} other {Technische Angaben von # Episodendateien ausgelesen.}}",
+    "failures": "{count} Fehler (z. B. {example})",
+    "jobDone": "{title} abgeschlossen: {updated} ausgelesen",
+    "skipped": "{skipped} hatten schon Angaben"
   }
 }

@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslocoPipe } from '@jsverse/transloco';
 
 import { BatchChanges, BatchField, BatchFieldKey, FieldChange } from './batch';
 import { HelpLink } from '../shared/help-link';
@@ -14,8 +15,8 @@ const LIST_SEPARATOR = ',';
 const KEEP: FieldMode = 'KEEP';
 
 /**
- * Formular der Stapel-Bearbeitung: Genres und Tags hinzufügen oder entfernen und die einzelnen Felder der Liste
- * setzen oder leeren. Gemeldet wird die Änderung; ausführen muss sie die Liste.
+ * Form of the batch edit: add or remove genres and tags and set or clear the single fields of the list. The
+ * change is reported; the list has to carry it out.
  */
 @Component({
   selector: 'app-batch-editor',
@@ -26,22 +27,24 @@ const KEEP: FieldMode = 'KEEP';
     MatInputModule,
     MatSelectModule,
     ReactiveFormsModule,
+    TranslocoPipe,
   ],
   templateUrl: './batch-editor.html',
   styleUrl: './batch-editor.scss',
 })
 export class BatchEditor {
   readonly count = input.required<number>();
-  /** Bezeichnung der Einträge in der Mehrzahl, z. B. „Filme“. */
+  /** Name of the entries in the plural, already translated, e.g. “movies”. */
   readonly itemLabel = input.required<string>();
   readonly singleFields = input.required<readonly BatchField[]>();
   readonly busy = input(false);
   readonly submitted = output<BatchChanges>();
 
+  /** Each mode with the key of its name. */
   protected readonly modes: readonly [FieldMode, string][] = [
-    [KEEP, 'unverändert'],
-    ['SET', 'setzen'],
-    ['CLEAR', 'leeren'],
+    [KEEP, 'filters.batch.modes.keep'],
+    ['SET', 'filters.batch.modes.set'],
+    ['CLEAR', 'filters.batch.modes.clear'],
   ];
   protected readonly empty = signal(false);
   protected readonly form = inject(NonNullableFormBuilder).group({
@@ -102,5 +105,5 @@ function field(mode: FieldMode, value: string): FieldChange {
   };
 }
 
-/** Ein Feld, das nicht geändert wird. */
+/** A field that is not changed. */
 export const KEEP_FIELD: FieldChange = { clear: false, value: null };

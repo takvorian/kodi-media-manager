@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-/** Ein Trailer-Vorschlag; `url` kommt in die NFO, `webUrl` öffnet ihn im Browser. */
+/** A trailer suggestion; `url` goes into the NFO, `webUrl` opens it in the browser. */
 export interface TrailerOption {
   readonly name: string;
   readonly url: string;
@@ -16,18 +16,18 @@ export interface TrailerOption {
   readonly scraperName: string;
 }
 
-/** Vorschläge, die besten zuerst, und Hinweise zu nicht eingerichteten oder fehlerhaften Anbietern. */
+/** Suggestions, best first, and notes on providers that are not set up or failed. */
 export interface TrailerOptions {
   readonly candidates: readonly TrailerOption[];
   readonly warnings: readonly string[];
 }
 
-/** Film oder Serie nach einer Änderung; gebraucht wird nur der Trailer. */
+/** Movie or TV show after a change; only the trailer is needed. */
 export interface WithTrailer {
   readonly trailer: string | null;
 }
 
-/** Trailer-Endpunkte eines Films oder einer Serie, z. B. `/api/v1/movies/5/trailer`. */
+/** Trailer endpoints of a movie or TV show, e.g. `/api/v1/movies/5/trailer`. */
 @Injectable({ providedIn: 'root' })
 export class TrailerService {
   private readonly http = inject(HttpClient);
@@ -36,7 +36,7 @@ export class TrailerService {
     return this.http.get<TrailerOptions>(`${endpoint}/candidates`);
   }
 
-  /** Trägt den Link in Bibliothek und NFO ein. */
+  /** Writes the link into the library and the NFO. */
   apply(endpoint: string, url: string): Observable<WithTrailer> {
     return this.http.put<WithTrailer>(endpoint, { url });
   }

@@ -1,26 +1,27 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="batch-form">
   <p class="hint">
-    {{ count() }} {{ itemLabel() }} ausgewählt. Mehrere Einträge durch Komma trennen. Die NFOs werden geschrieben, Kodi
-    liest die {{ itemLabel() }} neu ein; umbenannt wird nicht.
-    <app-help-link chapter="filter" anchor="stapel-bearbeitung">Mehr dazu</app-help-link>
+    {{ 'filters.batch.intro' | transloco: { count: count(), items: itemLabel() } }}
+    <app-help-link chapter="filter" anchor="stapel-bearbeitung">{{
+      'common.learnMore' | transloco
+    }}</app-help-link>
   </p>
   <div class="row">
     <mat-form-field>
-      <mat-label>Genres hinzufügen</mat-label>
+      <mat-label>{{ 'filters.batch.addGenres' | transloco }}</mat-label>
       <input matInput formControlName="addGenres" name="addGenres" />
     </mat-form-field>
     <mat-form-field>
-      <mat-label>Genres entfernen</mat-label>
+      <mat-label>{{ 'filters.batch.removeGenres' | transloco }}</mat-label>
       <input matInput formControlName="removeGenres" name="removeGenres" />
     </mat-form-field>
   </div>
   <div class="row">
     <mat-form-field>
-      <mat-label>Tags hinzufügen</mat-label>
+      <mat-label>{{ 'filters.batch.addTags' | transloco }}</mat-label>
       <input matInput formControlName="addTags" name="addTags" />
     </mat-form-field>
     <mat-form-field>
-      <mat-label>Tags entfernen</mat-label>
+      <mat-label>{{ 'filters.batch.removeTags' | transloco }}</mat-label>
       <input matInput formControlName="removeTags" name="removeTags" />
     </mat-form-field>
   </div>
@@ -30,22 +31,22 @@
         <mat-label>{{ single.label }}</mat-label>
         <mat-select [formControlName]="single.key + 'Mode'">
           @for (choice of modes; track choice[0]) {
-            <mat-option [value]="choice[0]">{{ choice[1] }}</mat-option>
+            <mat-option [value]="choice[0]">{{ choice[1] | transloco }}</mat-option>
           }
         </mat-select>
       </mat-form-field>
       @if (mode(single.key) === 'SET') {
         <mat-form-field>
-          <mat-label>Neuer Wert</mat-label>
+          <mat-label>{{ 'filters.batch.newValue' | transloco }}</mat-label>
           <input matInput [formControlName]="single.key" [attr.name]="single.key" />
         </mat-form-field>
       }
     </div>
   }
   @if (empty()) {
-    <p class="error">Bitte mindestens eine Änderung angeben.</p>
+    <p class="error">{{ 'filters.batch.empty' | transloco }}</p>
   }
   <button matButton="filled" type="submit" class="apply-batch-button" [disabled]="busy()">
-    {{ count() }} {{ itemLabel() }} ändern
+    {{ 'filters.batch.apply' | transloco: { count: count(), items: itemLabel() } }}
   </button>
 </form>

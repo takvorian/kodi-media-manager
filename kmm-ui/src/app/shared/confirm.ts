@@ -1,6 +1,6 @@
 import { InjectionToken } from '@angular/core';
 
-/** Fragt den Nutzer nach einer Bestätigung. Als Token, damit Tests die Antwort vorgeben können. */
+/** Asks the user for a confirmation. A token, so tests can provide the answer. */
 export type Confirm = (message: string) => boolean;
 
 export const CONFIRM = new InjectionToken<Confirm>('CONFIRM', {

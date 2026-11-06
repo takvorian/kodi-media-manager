@@ -1,7 +1,7 @@
 <div class="help-layout">
   <aside class="help-index">
     <mat-form-field class="help-search" subscriptSizing="dynamic">
-      <mat-label>Im Handbuch suchen</mat-label>
+      <mat-label>{{ 'help.search' | transloco }}</mat-label>
       <input
         matInput
         type="search"
@@ -26,11 +26,11 @@
             </a>
           </li>
         } @empty {
-          <li class="help-no-hits">Nichts gefunden.</li>
+          <li class="help-no-hits">{{ 'help.noHits' | transloco }}</li>
         }
       </ul>
     } @else {
-      <nav class="help-chapters" aria-label="Kapitel">
+      <nav class="help-chapters" [attr.aria-label]="'help.chapters' | transloco">
         @for (entry of chapters; track entry.slug) {
           <a [routerLink]="['/help', entry.slug]" [class.active]="entry.slug === chapter()">{{
             entry.title
@@ -42,7 +42,7 @@
 
   <article class="help-article">
     @if (content.error()) {
-      <p class="error">Dieses Kapitel konnte nicht geladen werden.</p>
+      <p class="error">{{ 'help.loadFailed' | transloco }}</p>
     } @else if (content.hasValue()) {
       <div class="help-content" [innerHTML]="content.value()" (click)="followLink($event)"></div>
       <div class="help-pager">
@@ -58,7 +58,7 @@
         }
       </div>
     } @else {
-      <p class="loading">Lade Kapitel …</p>
+      <p class="loading">{{ 'help.loading' | transloco }}</p>
     }
   </article>
 </div>
