@@ -260,8 +260,7 @@ class EmberLibraryImporterTest {
 
     private static MediaSourceConflictException conflict(String detail) {
         MediaSourceConflictException exception = mock(MediaSourceConflictException.class);
-        when(exception.getBody()).thenReturn(org.springframework.http.ProblemDetail.forStatusAndDetail(
-                org.springframework.http.HttpStatus.CONFLICT, detail));
+        when(exception.localizedText()).thenReturn(de.tiktak.kmm.i18n.LocalizedText.literal(detail));
         return exception;
     }
 
