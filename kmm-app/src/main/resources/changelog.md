@@ -1,5 +1,36 @@
 # Changelog
 
+## v0.15 - 2026-11-06
+- Make the last scan time test independent of the system locale (ca79b3d)
+- Expect the British spelling in the movie scan progress test (f7c1dc2)
+- Use British English for the English interface (344319a)
+- Remove the transitional string-title overloads and translate the POMs (275d3a9)
+- Check the theme fill title and Ember source conflicts by key (5252c8f)
+- Pass on localized causes and translate the Kodi batch refresh title (7631f28)
+- Parse ICU messages when comparing translation arguments (aa03acd)
+- Deliver Kodi, migration, backup and library texts as message keys (5c52979)
+- Deliver movie, artwork, theme, trailer, media info, tag and filter texts as message keys (6fd00e2)
+- Deliver TV show, auto-scrape, source and settings texts as message keys (54a26f3)
+- Align the manual with the user interface and the localized export (d0ed241)
+- Use the same English button names in the movie and TV show lists (605aad9)
+- Fix the Docker build after the manual move and the new i18n module (67a6d66)
+- Add the English README and translate the concept (dd89e02)
+- Add the English manual (6163ddc)
+- Rename README and concept to make room for English versions (c17a6ef)
+- Deliver scraper texts as message keys with arguments (1189ce0)
+- Translate the comments of the Docker environment example (e183140)
+- Translate script, Docker and configuration comments and messages (117d500)
+- Restructure the manual for several languages (d25fb31)
+- Export lists in the language of the user interface (fb87497)
+- Deliver backend texts as message keys with arguments (285f166)
+- Derive the active UI language from Transloco and fix merged specs (0823597)
+- Translate movies, movie sets and tags into German and English (cf9d8f0)
+- Translate sources, Kodi, settings, migration and backup pages (5cb0b7a)
+- Translate shared, filter, job, help, system and media info texts (ccfbeda)
+- Translate the TV show views into German and English (0f83b3c)
+- Add shared common and field translations (e5487c8)
+- Add i18n infrastructure with runtime language switch (0536c7d)
+
 ## v0.14 - 2026-11-05
 - Technische Angaben einer Staffel neu auslesen (afb4085)
 
