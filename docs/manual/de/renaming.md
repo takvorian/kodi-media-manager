@@ -4,7 +4,7 @@ KMM benennt Ordner und Dateien nach Mustern um. **Das ändert deine Medienordner
 
 ## Muster festlegen
 
-Die Muster stehen unter [Einstellungen → Umbenennen](einstellungen.md#umbenennen). Die Vorgaben sind:
+Die Muster stehen unter [Einstellungen → Umbenennen](settings.md#umbenennen). Die Vorgaben sind:
 
 | Was | Vorgabe | Ergebnis |
 |---|---|---|
@@ -13,6 +13,8 @@ Die Muster stehen unter [Einstellungen → Umbenennen](einstellungen.md#umbenenn
 | Serienordner | `{show}` | `ALF` |
 | Staffelordner | `Season {season:2}` | `Season 01` |
 | Episodendateien | `{show} - S{season:2}E{episode:2}[ - {title}]` | `ALF - S01E05 - Der Besuch.mkv` |
+
+<a id="how-patterns-work"></a>
 
 ## So sind Muster aufgebaut
 
@@ -32,6 +34,8 @@ Ein Format steht hinter einem Doppelpunkt:
 | `:lower` | Kleinbuchstaben | `{title:lower}` → `heat` |
 | `:upper` | Großbuchstaben | `{title:upper}` → `HEAT` |
 
+<a id="placeholders"></a>
+
 ### Platzhalter
 
 **Filme:** `{title}`, `{originaltitle}`, `{sorttitle}`, `{year}`, `{edition}`, `{set}`, `{imdb}`, `{tmdb}`, `{genres}`, `{directors}`, `{countries}`, `{mpaa}`, `{rating}`, `{resolution}`, `{videocodec}`, `{audiocodec}`, `{channels}`, `{source}`, `{3d}`
@@ -44,13 +48,13 @@ Ein Format steht hinter einem Doppelpunkt:
 
 ## Eine ganze Quelle umbenennen
 
-1. Klicke bei der [Quelle](quellen.md) auf **Umbenennen**.
+1. Klicke bei der [Quelle](sources.md) auf **Umbenennen**.
 2. Ändere bei Bedarf die Muster. Änderungen hier gelten nur für diesen Durchlauf.
 3. Klicke auf **Vorschau**. Noch passiert nichts.
 4. Prüfe die Liste. Mit **Unveränderte ausblenden** siehst du nur, was sich ändert.
 5. Wähle die Einträge aus, die umbenannt werden sollen, und klicke auf **… umbenennen**.
 
-![Die Vorschau zum Umbenennen](bilder/umbenennen.png)
+![Die Vorschau zum Umbenennen](../images/renaming.png)
 
 Die Vorschau zeigt vier Zustände:
 
@@ -83,4 +87,4 @@ Dann gibt es **keine Vorschau**. Schalte es erst ein, wenn deine Muster bewährt
 
 ## Was Kodi dazu macht
 
-Mit [Echtzeit-Sync](kodi.md#echtzeit-sync) liest Kodi den neuen Ordner ein und bereinigt nur den alten. Gesehen-Status und Bewertung kommen aus der NFO zurück.
+Mit [Echtzeit-Sync](kodi.md#real-time-sync) liest Kodi den neuen Ordner ein und bereinigt nur den alten. Gesehen-Status und Bewertung kommen aus der NFO zurück.

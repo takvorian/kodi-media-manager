@@ -1,8 +1,8 @@
 # Export
 
-Dieser Export liefert Listen zum Ansehen und Weiterverarbeiten, er lässt sich nicht wieder einlesen. Um KMM zu sichern oder umzuziehen, nutze die [Sicherung](sicherung.md).
+Dieser Export liefert Listen zum Ansehen und Weiterverarbeiten, er lässt sich nicht wieder einlesen. Um KMM zu sichern oder umzuziehen, nutze die [Sicherung](backup.md).
 
-In der Film- und der Serienliste lädt **Exportieren** die aktuelle Liste herunter. Exportiert wird genau, was der gewählte [Filter](filter.md) samt Suche zeigt, also auch die Einträge auf den weiteren Seiten.
+In der Film- und der Serienliste lädt **Exportieren** die aktuelle Liste herunter. Exportiert wird genau, was der gewählte [Filter](filters.md) samt Suche zeigt, also auch die Einträge auf den weiteren Seiten.
 
 ## Formate
 

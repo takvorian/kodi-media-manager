@@ -1,9 +1,13 @@
-import chapterList from '../../../../docs/handbuch/kapitel.json';
+import chapterList from '../../../../docs/manual/chapters.json';
+import { UiLanguage } from '../i18n/ui-language';
 
-/** A chapter of the manual from `docs/handbuch/kapitel.json`; `routes` are the pages it belongs to. */
+/**
+ * A chapter of the manual from `docs/manual/chapters.json`; `routes` are the pages it belongs to. The slug names
+ * the file in every language (`docs/manual/<language>/<slug>.md`).
+ */
 export interface HelpChapter {
   slug: string;
-  title: string;
+  title: Readonly<Record<UiLanguage, string>>;
   routes: string[];
 }
 
@@ -60,13 +64,15 @@ export function searchChapter(
   chapter: HelpChapter,
   markdown: string,
   query: string,
+  language: UiLanguage,
 ): HelpHit | null {
   const words = query.toLowerCase().split(/\s+/).filter(Boolean);
   const text = markdown.toLowerCase();
   if (words.length === 0 || !words.every((word) => text.includes(word))) {
     return null;
   }
-  let section = chapter.title;
+  const title = chapter.title[language];
+  let section = title;
   let anchor = '';
   for (const line of markdown.split('\n')) {
     const heading = HEADING.exec(line);
@@ -79,7 +85,7 @@ export function searchChapter(
     if (position >= 0) {
       return {
         slug: chapter.slug,
-        chapter: chapter.title,
+        chapter: title,
         section,
         anchor,
         snippet: snippet(plain, position),
@@ -88,8 +94,8 @@ export function searchChapter(
   }
   return {
     slug: chapter.slug,
-    chapter: chapter.title,
-    section: chapter.title,
+    chapter: title,
+    section: title,
     anchor: '',
     snippet: '',
   };

@@ -4,7 +4,7 @@ Tags sind frei wählbare Stichwörter für Filme und Serien, zum Beispiel „Wei
 
 Die Seite **Tags** zeigt links alle Tags mit der Anzahl der Filme und Serien. Ein Klick öffnet einen Tag.
 
-![Der Tag-Manager](bilder/tags.png)
+![Der Tag-Manager](../images/tags.png)
 
 ## Neuer Tag
 
@@ -24,6 +24,6 @@ Setze in der Liste des Tags die Häkchen und klicke auf **… entfernen**. Film 
 
 ## Was im Hintergrund passiert
 
-Jede Änderung schreibt die NFOs der betroffenen Einträge als Hintergrund-Aufgabe. Mit [Echtzeit-Sync](kodi.md#echtzeit-sync) liest Kodi sie danach neu ein.
+Jede Änderung schreibt die NFOs der betroffenen Einträge als Hintergrund-Aufgabe. Mit [Echtzeit-Sync](kodi.md#real-time-sync) liest Kodi sie danach neu ein.
 
-Tags für viele Einträge auf einmal setzt du am schnellsten über die [Stapel-Bearbeitung](filter.md#stapel-bearbeitung).
+Tags für viele Einträge auf einmal setzt du am schnellsten über die [Stapel-Bearbeitung](filters.md#batch-edit).

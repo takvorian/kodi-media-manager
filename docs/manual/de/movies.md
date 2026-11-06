@@ -2,9 +2,9 @@
 
 ## Die Filmliste
 
-Die Seite **Filme** zeigt alle Filme mit Titel, Jahr, Format, Hinzugefügt und Datei. Ein Klick auf einen Spaltenkopf sortiert die Liste danach, ein zweiter dreht die Richtung um. So siehst du zum Beispiel mit **Hinzugefügt** die neuesten Filme zuerst. Die Seitenleiste steht über und unter der Liste. Oben kannst du nach dem Titel suchen und einen [Filter](filter.md) wählen. Über die Häkchen links wählst du Filme für [Stapel-Aktionen](filter.md#stapel-bearbeitung) aus, und über **Exportieren** lädst du die aktuelle Liste als [Export](export.md) herunter.
+Die Seite **Filme** zeigt alle Filme mit Titel, Jahr, Format, Hinzugefügt und Datei. Ein Klick auf einen Spaltenkopf sortiert die Liste danach, ein zweiter dreht die Richtung um. So siehst du zum Beispiel mit **Hinzugefügt** die neuesten Filme zuerst. Die Seitenleiste steht über und unter der Liste. Oben kannst du nach dem Titel suchen und einen [Filter](filters.md) wählen. Über die Häkchen links wählst du Filme für [Stapel-Aktionen](filters.md#batch-edit) aus, und über **Exportieren** lädst du die aktuelle Liste als [Export](export.md) herunter.
 
-![Die Filmliste](bilder/filmliste.png)
+![Die Filmliste](../images/movie-list.png)
 
 ## Die Filmansicht
 
@@ -13,14 +13,14 @@ Ein Klick auf den Titel öffnet die Filmansicht. Sie zeigt von oben nach unten:
 - **Datei und NFO:** wo der Film und seine NFO liegen. Gibt es noch keine NFO, legt KMM sie beim Speichern an.
 - **Weitere Angaben:** Filmset, Bewertungen, Regie, Drehbuch, Studios, Länder, Tags, Gesehen-Status und Besetzung.
 - **Technik:** Video, Ton und Untertitel.
-- **Trailer**, **Titelmusik** und **Bilder**, siehe [Scrapen](scrapen.md).
+- **Trailer**, **Titelmusik** und **Bilder**, siehe [Scrapen](scraping.md).
 - **Formular:** die Angaben, die du direkt bearbeiten kannst.
 
-![Die Filmansicht](bilder/filmansicht.png)
+![Die Filmansicht](../images/movie-view.png)
 
 ## Angaben bearbeiten
 
-Ändere die Felder im Formular und klicke auf **Speichern**. KMM schreibt dann die NFO und aktualisiert Kodi, wenn der [Echtzeit-Sync](kodi.md#echtzeit-sync) eingeschaltet ist. **Verwerfen** stellt den gespeicherten Stand wieder her.
+Ändere die Felder im Formular und klicke auf **Speichern**. KMM schreibt dann die NFO und aktualisiert Kodi, wenn der [Echtzeit-Sync](kodi.md#real-time-sync) eingeschaltet ist. **Verwerfen** stellt den gespeicherten Stand wieder her.
 
 Einige Felder im Detail:
 
@@ -40,17 +40,19 @@ Einige Felder im Detail:
 | **Gesehen-Status aus Kodi** | Holt Wiedergaben und eigene Bewertung aus Kodi. |
 | **Technische Angaben auslesen** | Liest die Datei mit ffprobe aus. |
 | **Umbenennen** | Benennt nur diesen Film nach den Mustern der Einstellungen um. |
-| **Scrapen** | Ergänzt alles Fehlende nur für diesen Film, siehe [Scrapen](scrapen.md#automatisches-scrapen). |
-| **Online suchen** | Sucht den Film bei einem Anbieter, siehe [Scrapen](scrapen.md#online-suche). |
+| **Scrapen** | Ergänzt alles Fehlende nur für diesen Film, siehe [Scrapen](scraping.md#automatisches-scrapen). |
+| **Online suchen** | Sucht den Film bei einem Anbieter, siehe [Scrapen](scraping.md#online-suche). |
+
+<a id="technical-details"></a>
 
 ## Technische Angaben
 
 Die Karte **Technik** zeigt Codec, Auflösung, Seitenverhältnis, Laufzeit, HDR, Tonspuren und Untertitel. Die Angaben stammen aus der NFO oder aus ffprobe. Dafür muss FFmpeg installiert sein, siehe [Installation](installation.md#zusatzprogramme). Du kannst sie auslesen
 
 - einzeln mit **Technische Angaben auslesen**,
-- für eine ganze Quelle unter [Quellen](quellen.md),
-- für alle Episoden einer Staffel in der Serienansicht, siehe [Eine Staffel scrapen](serien.md#eine-staffel-scrapen),
-- und automatisch nach dem Scrapen und nach dem Scan neuer Dateien, siehe [Einstellungen](einstellungen.md#technische-angaben).
+- für eine ganze Quelle unter [Quellen](sources.md),
+- für alle Episoden einer Staffel in der Serienansicht, siehe [Eine Staffel scrapen](tv-shows.md#eine-staffel-scrapen),
+- und automatisch nach dem Scrapen und nach dem Scan neuer Dateien, siehe [Einstellungen](settings.md#technische-angaben).
 
 Beim Schreiben ersetzt KMM in der NFO nur diesen technischen Teil, der Rest der Datei bleibt unverändert.
 

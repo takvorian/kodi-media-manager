@@ -2,7 +2,9 @@
 
 Der Assistent übernimmt deine Bibliothek aus Ember Media Manager. **Dein Ember-Profil wird nur gelesen**, NFOs und Bilder bleiben ebenfalls unverändert. Unterstützt wird die Datenbank-Version 48 (`MyVideos48.emm`). Ältere Profile öffnest du vorher einmal mit der neuesten Ember-Version, die aktualisiert sie selbst.
 
-![Der Ember-Import](bilder/ember-import.png)
+![Der Ember-Import](../images/ember-import.png)
+
+<a id="upload-profile"></a>
 
 ## 1. Profil hochladen
 
@@ -19,7 +21,7 @@ Hier trägst du ein, wo Embers Quellen aus Sicht von KMM liegen. Läuft KMM auf 
 Darunter wählst du, was du übernehmen willst:
 
 - **Serien und Episoden:** Episoden ohne Datei bleiben außen vor.
-- **Sprachen:** die jeder Quelle, jedes Films und jeder Serie, siehe [Sprache je Eintrag](scrapen.md#sprache-je-quelle-und-eintrag). Eine vorhandene Quelle behält eine eigene Sprache. Bereits importierte Einträge bekommen sie durch einen neuen Import.
+- **Sprachen:** die jeder Quelle, jedes Films und jeder Serie, siehe [Sprache je Eintrag](scraping.md#sprache-je-quelle-und-eintrag). Eine vorhandene Quelle behält eine eigene Sprache. Bereits importierte Einträge bekommen sie durch einen neuen Import.
 - **Einstellungen:** Sprache, Dateiendungen, ausgeschlossene Ordner und Proxy. Das Proxy-Passwort wird nicht übernommen.
 - **Kodi-Geräte** mit Zugangsdaten. Ihre Pfade laufen über die Zuordnung oben.
 
@@ -41,9 +43,9 @@ Er zählt neue, aktualisierte und übersprungene Einträge und nennt
 ## Gut zu wissen
 
 - **Ember gewinnt:** Metadaten kommen aus Embers Datenbank. Die NFO gilt danach als eingelesen, damit der nächste Scan die Ember-Daten nicht überschreibt.
-- **Wiederholbar:** Ein erneuter Import aktualisiert, statt zu verdoppeln. Das gilt aber nur bei gleichen Pfaden. Änderst du die Zuordnung, entstehen die Einträge doppelt; leere dann vorher die Datenbank, siehe [Neu anfangen](fehlerbehebung.md#neu-anfangen).
+- **Wiederholbar:** Ein erneuter Import aktualisiert, statt zu verdoppeln. Das gilt aber nur bei gleichen Pfaden. Änderst du die Zuordnung, entstehen die Einträge doppelt; leere dann vorher die Datenbank, siehe [Neu anfangen](troubleshooting.md#neu-anfangen).
 - **Umrechnung:** Freigaben wie `Germany:16` werden zu `FSK 16`.
-- **Eigene Filmlisten** aus Ember werden zu gespeicherten [Filtern](filter.md), soweit sie sich übersetzen lassen.
+- **Eigene Filmlisten** aus Ember werden zu gespeicherten [Filtern](filters.md), soweit sie sich übersetzen lassen.
 - **Umbenennungs-Muster** aus Ember werden in die neue Schreibweise übersetzt.
 
-**Nicht übernommen werden:** API-Keys, Embers Bildpfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren und Markierungen sowie Episoden ohne Datei. Die API-Keys trägst du danach unter [Einstellungen](einstellungen.md#api-keys) ein.
+**Nicht übernommen werden:** API-Keys, Embers Bildpfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren und Markierungen sowie Episoden ohne Datei. Die API-Keys trägst du danach unter [Einstellungen](settings.md#api-keys) ein.

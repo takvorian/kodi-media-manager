@@ -19,7 +19,7 @@ Du bedienst KMM im Browser. Es läuft auf deinem Rechner oder als Container auf 
 Das solltest du wissen, bevor du loslegst:
 
 - **NFO-Dateien:** KMM speichert Angaben in einer Datenbank und zusätzlich in NFO-Dateien neben deinen Videos. Kodi liest diese Dateien, und sie bleiben auch ohne KMM nutzbar.
-- **Speichern schreibt in deine Medienordner:** Wenn du einen Film speicherst, einen Trailer einträgst oder ein Bild übernimmst, ändert KMM Dateien neben dem Video. Auch der Scan kann schreiben: Bei neuen Dateien trägt er die technischen Angaben in die NFO ein, das ist voreingestellt und [abschaltbar](einstellungen.md#technische-angaben).
+- **Speichern schreibt in deine Medienordner:** Wenn du einen Film speicherst, einen Trailer einträgst oder ein Bild übernimmst, ändert KMM Dateien neben dem Video. Auch der Scan kann schreiben: Bei neuen Dateien trägt er die technischen Angaben in die NFO ein, das ist voreingestellt und [abschaltbar](settings.md#technische-angaben).
 - **Vorhandenes bleibt:** Das automatische Scrapen füllt nur, was fehlt. Es überschreibt keine Angaben und keine Bilder, die schon da sind.
 - **Umbenennen ist abschaltbar:** Automatisches Umbenennen ist anfangs aus. Vor dem Umbenennen einer ganzen Quelle siehst du immer eine Vorschau.
 - **Ember bleibt unberührt:** Beim Ember-Import wird dein Ember-Profil nur gelesen.
@@ -28,4 +28,4 @@ Mache vor größeren Aktionen trotzdem eine Sicherung deiner NFO-Dateien, vor al
 
 ## Wo es weitergeht
 
-Beginne mit [Installation und Start](installation.md) und danach mit den [ersten Schritten](erste-schritte.md). Wenn etwas nicht klappt, hilft die [Fehlerbehebung](fehlerbehebung.md).
+Beginne mit [Installation und Start](installation.md) und danach mit den [ersten Schritten](getting-started.md). Wenn etwas nicht klappt, hilft die [Fehlerbehebung](troubleshooting.md).

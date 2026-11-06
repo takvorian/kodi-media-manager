@@ -7,7 +7,7 @@
 1. Lege die Datei in den Ordner der Quelle.
 2. Klicke auf der Seite **Quellen** auf **Scannen**. Der Bericht nennt den neuen Film, mit einem Klick öffnest du ihn.
 3. Klicke in der Filmansicht auf **Scrapen**. KMM holt Metadaten, Bilder, Trailer, Titelmusik und Bewertungen.
-4. Steht der Film danach unter **Ohne eindeutigen Treffer**, ordne ihn über die [Online-Suche](scrapen.md#online-suche) zu und klicke danach noch einmal auf **Scrapen**.
+4. Steht der Film danach unter **Ohne eindeutigen Treffer**, ordne ihn über die [Online-Suche](scraping.md#online-suche) zu und klicke danach noch einmal auf **Scrapen**.
 
 Bei Serien gehst du genauso vor. Mehrere neue Einträge bearbeitest du am schnellsten in der Liste: Filter **Neu (letzte 30 Tage)** wählen, **Alle gefilterten auswählen**, **Scrapen**.
 
@@ -16,8 +16,8 @@ Bei Serien gehst du genauso vor. Mehrere neue Einträge bearbeitest du am schnel
 In welcher Sprache Texte und Episodennamen kommen, legst du an drei Stellen fest. Es gilt die erste, die etwas angibt:
 
 1. **Film oder Serie:** In der Film- oder Serienansicht unter **Sprache**, für mehrere in der Liste über die Auswahl mit **Sprache ändern**. Episoden folgen ihrer Serie.
-2. **Quelle:** in der Spalte **Sprache** auf der Seite [Quellen](quellen.md).
-3. **[Einstellungen](einstellungen.md#sprache)**.
+2. **Quelle:** in der Spalte **Sprache** auf der Seite [Quellen](sources.md).
+3. **[Einstellungen](settings.md#sprache)**.
 
 Wechselst du die Sprache bei einem Film oder einer Serie, fragt KMM, ob die Texte sofort in dieser Sprache neu geholt werden sollen:
 
@@ -42,7 +42,7 @@ Die Sprache steht auch in der NFO als `<language>`, wie bei Ember. Sie bestimmt 
 | TelevisionTunes | Titelmusik | nein |
 | YouTube | Titelmusik, braucht yt-dlp | nein |
 
-Keys trägst du unter [Einstellungen](einstellungen.md#api-keys) ein. Einen Anbieter ohne Key überspringt KMM.
+Keys trägst du unter [Einstellungen](settings.md#api-keys) ein. Einen Anbieter ohne Key überspringt KMM.
 
 ## Online-Suche
 
@@ -56,7 +56,7 @@ Mit der Online-Suche ordnest du einen einzelnen Film oder eine Serie selbst zu. 
 
 Das speichert nur die Metadaten. Bilder, Trailer, Titelmusik und Bewertungen holt danach **Scrapen**.
 
-![Die Online-Suche](bilder/online-suche.png)
+![Die Online-Suche](../images/online-search.png)
 
 Das ist auch der Weg für Titel, die beim automatischen Scrapen keinen eindeutigen Treffer hatten.
 
@@ -67,9 +67,9 @@ Das ist auch der Weg für Titel, die beim automatischen Scrapen keinen eindeutig
 | Wo | Was bearbeitet wird |
 |---|---|
 | Film- oder Serienansicht | dieser Eintrag |
-| Staffel in der Serienansicht | nur diese Staffel, siehe [Eine Staffel scrapen](serien.md#eine-staffel-scrapen) |
+| Staffel in der Serienansicht | nur diese Staffel, siehe [Eine Staffel scrapen](tv-shows.md#eine-staffel-scrapen) |
 | Film- oder Serienliste, wenn du Einträge ausgewählt hast | die Auswahl |
-| [Quelle](quellen.md) | alle Einträge der Quelle |
+| [Quelle](sources.md) | alle Einträge der Quelle |
 
 Das passiert dabei:
 
@@ -78,7 +78,7 @@ Das passiert dabei:
 - Bei Serien ergänzt es zusätzlich leere Episodenfelder, fehlende Bilder von Staffeln und Standbilder.
 - Fehlende Trailer und sichere Treffer für die Titelmusik kommen ebenfalls dazu.
 - Ergänzungs-Anbieter füllen leere Felder und holen fehlende Bewertungen. Deutsche Anbieter kommen dabei vor OMDb.
-- Ist [Umbenennen nach dem Scrapen](einstellungen.md) eingeschaltet, benennt KMM die Einträge auch um.
+- Ist [Umbenennen nach dem Scrapen](settings.md) eingeschaltet, benennt KMM die Einträge auch um.
 
 Danach erscheint ein Bericht, in der Ansicht und in der Liste bleibt er stehen, bis du ihn schließt. Einträge ohne eindeutigen Treffer sind dort verlinkt. Endet das Scrapen einer Auswahl, während du auf einer anderen Seite bist, findest du den Bericht in der Liste unter **Ergebnis des letzten Scrapens**. KMM behält ihn, bis der Server neu startet oder er aus den letzten 50 Aufgaben herausfällt.
 
@@ -97,11 +97,11 @@ Die Karte **Bilder** zeigt jede Bildart mit dem aktuellen Bild oder dem Vermerk 
 - **Suchen** oder **Ändern** zeigt die Vorschläge der Anbieter. Mit einem Klick auf einen Vorschlag übernimmst du ihn.
 - **Löschen** entfernt das Bild.
 
-Bilder deiner bevorzugten Sprache stehen weiter vorn, siehe [Einstellungen](einstellungen.md#sprache).
+Bilder deiner bevorzugten Sprache stehen weiter vorn, siehe [Einstellungen](settings.md#sprache).
 
 **Bildarten bei Filmen:** Poster, Fanart, Clearlogo, Clearart, Disc, Banner, Landscape. Die Dateien heißen wie von Kodi erwartet, zum Beispiel `Film-poster.jpg`.
 
-![Die Bilder eines Films](bilder/bilder.png)
+![Die Bilder eines Films](../images/artwork.png)
 
 ## Trailer
 

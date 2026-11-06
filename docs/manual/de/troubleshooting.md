@@ -19,7 +19,7 @@
 
 ## Scan
 
-**Die Quelle findet nichts.** Prüfe, ob das Verzeichnis aus Sicht von KMM stimmt, unter Docker also der Pfad im Container. Prüfe auch die [Dateiendungen und ausgeschlossenen Ordner](einstellungen.md#scan).
+**Die Quelle findet nichts.** Prüfe, ob das Verzeichnis aus Sicht von KMM stimmt, unter Docker also der Pfad im Container. Prüfe auch die [Dateiendungen und ausgeschlossenen Ordner](settings.md#scan).
 
 **Eine Serie wird falsch erkannt.** Jeder Ordner direkt unter der Quelle gilt als Serie. Die Quelle muss also auf den Ordner *über* den Serien zeigen.
 
@@ -27,11 +27,11 @@
 
 ## Scrapen
 
-**„Es ist kein Metadaten-Scraper installiert oder aktiv“ oder der Suchknopf ist gesperrt.** Meist fehlt der [API-Key](einstellungen.md#api-keys) des Anbieters.
+**„Es ist kein Metadaten-Scraper installiert oder aktiv“ oder der Suchknopf ist gesperrt.** Meist fehlt der [API-Key](settings.md#api-keys) des Anbieters.
 
 **Keine Treffer.** Versuche einen anderen Suchbegriff, den Originaltitel, oder lass das Jahr weg.
 
-**Das automatische Scrapen lässt Titel aus.** Es übernimmt nur eindeutige Treffer. Suche diese Titel einzeln, siehe [Online-Suche](scrapen.md#online-suche). Danach kennt KMM die ID, und auch andere Anbieter finden den Titel.
+**Das automatische Scrapen lässt Titel aus.** Es übernimmt nur eindeutige Treffer. Suche diese Titel einzeln, siehe [Online-Suche](scraping.md#online-suche). Danach kennt KMM die ID, und auch andere Anbieter finden den Titel.
 
 **Moviepilot oder OFDb bringen nichts.** Sie brauchen die IMDb-ID und finden nicht jeden Film. Bauen die Seiten ihre Darstellung um, fallen diese Anbieter aus, im Log steht dann eine Warnung. Andere Anbieter sind davon nicht betroffen.
 
@@ -41,13 +41,13 @@
 
 ## Technische Angaben
 
-**Das Auslesen schlägt fehl.** ffprobe wurde nicht gefunden. Prüfe den [Pfad](einstellungen.md#technische-angaben).
+**Das Auslesen schlägt fehl.** ffprobe wurde nicht gefunden. Prüfe den [Pfad](settings.md#technische-angaben).
 
 ## Kodi
 
 **Verbindung testen schlägt fehl.** Prüfe, ob Kodi läuft, ob die HTTP-Steuerung aktiviert ist, und ob Adresse (ohne `http://`), Port, Benutzer und Passwort stimmen. Siehe [Kodi vorbereiten](kodi.md#in-kodi-vorbereiten).
 
-**Kodi aktualisiert nichts, obwohl die Verbindung steht.** Fast immer stimmt die [Pfad-Zuordnung](kodi.md#pfad-zuordnung) nicht. Der Pfad in KMM muss zur Quelle passen, der Pfad in Kodi genau zu dem, was Kodi unter *Videos → Dateien* zeigt. Das Ergebnis steht bei „Letzter Abgleich“ auf der Karte des Geräts.
+**Kodi aktualisiert nichts, obwohl die Verbindung steht.** Fast immer stimmt die [Pfad-Zuordnung](kodi.md#path-mapping) nicht. Der Pfad in KMM muss zur Quelle passen, der Pfad in Kodi genau zu dem, was Kodi unter *Videos → Dateien* zeigt. Das Ergebnis steht bei „Letzter Abgleich“ auf der Karte des Geräts.
 
 **Titelmusik wird nicht abgespielt.** Kodi braucht dafür ein Add-on wie TvTunes.
 

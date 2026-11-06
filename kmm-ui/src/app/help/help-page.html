@@ -33,7 +33,7 @@
       <nav class="help-chapters" [attr.aria-label]="'help.chapters' | transloco">
         @for (entry of chapters; track entry.slug) {
           <a [routerLink]="['/help', entry.slug]" [class.active]="entry.slug === chapter()">{{
-            entry.title
+            title(entry)
           }}</a>
         }
       </nav>
@@ -48,12 +48,12 @@
       <div class="help-pager">
         @if (previous(); as entry) {
           <a matButton class="help-previous" [routerLink]="['/help', entry.slug]"
-            >← {{ entry.title }}</a
+            >← {{ title(entry) }}</a
           >
         }
         @if (next(); as entry) {
           <a matButton class="help-next" [routerLink]="['/help', entry.slug]"
-            >{{ entry.title }} →</a
+            >{{ title(entry) }} →</a
           >
         }
       </div>

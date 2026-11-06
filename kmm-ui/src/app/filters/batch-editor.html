@@ -1,7 +1,7 @@
 <form [formGroup]="form" (ngSubmit)="submit()" class="batch-form">
   <p class="hint">
     {{ 'filters.batch.intro' | transloco: { count: count(), items: itemLabel() } }}
-    <app-help-link chapter="filter" anchor="stapel-bearbeitung">{{
+    <app-help-link chapter="filters" anchor="batch-edit">{{
       'common.learnMore' | transloco
     }}</app-help-link>
   </p>

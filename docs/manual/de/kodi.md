@@ -15,9 +15,11 @@ KMM hält deine Kodi-Geräte auf dem aktuellen Stand und holt den Gesehen-Status
 - **Port, Benutzer, Passwort:** wie in Kodi eingestellt. Beim Bearbeiten behält ein leeres Passwortfeld das gespeicherte Passwort.
 - **Echtzeit-Sync:** siehe unten.
 
-![Die Seite Kodi](bilder/kodi.png)
+![Die Seite Kodi](../images/kodi.png)
 
 Prüfe die Einstellungen danach mit **Verbindung testen**. Das Ergebnis erscheint auf der Karte des Geräts. Kodi muss dafür laufen.
+
+<a id="path-mapping"></a>
 
 ## Pfad-Zuordnung
 
@@ -31,6 +33,8 @@ KMM und Kodi sehen dieselben Dateien oft unter verschiedenen Pfaden. Die Zuordnu
 Lege für jede Quelle eine Zeile an. Den Pfad in Kodi siehst du dort unter *Videos → Dateien*.
 
 **Verbindung testen** vergleicht die Zuordnung auch mit den Quellen in Kodi und warnt, wenn Kodi zu einem Pfad keine Quelle hat. Dieselbe Warnung erscheint, wenn KMM einen Scan außerhalb der Quellen startet, denn Kodi meldet in dem Fall keinen Fehler und liest nichts ein. Probleme beim Aktualisieren bleiben als Meldung stehen, bis du sie mit **OK** schließt. Eine abweichende Groß- und Kleinschreibung erkennt die Prüfung nicht.
+
+<a id="real-time-sync"></a>
 
 ## Echtzeit-Sync
 
@@ -48,7 +52,7 @@ Aus KMM entfernte Filme bleiben in Kodi, bis dort die Bibliothek bereinigt wird.
 
 - **In Kodi aktualisieren** in Film-, Serien- und Episodenansicht wirkt auf alle Geräte.
 - **In Kodi aktualisieren** in der Film- und Serienliste macht dasselbe für die Auswahl. Bei Serien liest Kodi nur die Serie neu ein, nicht ihre Episoden. Antwortet ein Gerät nicht, überspringt KMM es für den Rest des Laufs.
-- **Kodi-Scan** bei einer [Quelle](quellen.md) lässt alle Geräte die Quelle durchsuchen.
+- **Kodi-Scan** bei einer [Quelle](sources.md) lässt alle Geräte die Quelle durchsuchen.
 
 Beides funktioniert auch ohne Echtzeit-Sync.
 

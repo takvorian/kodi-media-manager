@@ -4,6 +4,8 @@ import { headingAnchor } from './help';
 
 const INTERNAL_LINK = /^([a-z-]+)\.md(#.*)?$/;
 const EXTERNAL_LINK = /^https?:/;
+/** Images are shared by all languages, next to the language folders. */
+const IMAGE_FOLDER = /^\.\.\/images\//;
 
 function escapeHtml(text: string): string {
   return text
@@ -30,7 +32,8 @@ const MARKED = new Marked({
       return `<a href="${escapeHtml(helpHref(href))}"${target}>${this.parser.parseInline(tokens)}</a>`;
     },
     image({ href, text }) {
-      return `<img src="help/${escapeHtml(href)}" alt="${escapeHtml(text)}" loading="lazy" />`;
+      const source = `help/${href.replace(IMAGE_FOLDER, 'images/')}`;
+      return `<img src="${escapeHtml(source)}" alt="${escapeHtml(text)}" loading="lazy" />`;
     },
   },
 });

@@ -1,0 +1,93 @@
+[
+  {
+    "slug": "introduction",
+    "title": { "de": "Einführung", "en": "Introduction" },
+    "routes": []
+  },
+  {
+    "slug": "installation",
+    "title": { "de": "Installation und Start", "en": "Installation and start" },
+    "routes": ["/system"]
+  },
+  {
+    "slug": "getting-started",
+    "title": { "de": "Erste Schritte", "en": "Getting started" },
+    "routes": []
+  },
+  {
+    "slug": "sources",
+    "title": { "de": "Quellen und Scan", "en": "Sources and scanning" },
+    "routes": ["/sources"]
+  },
+  {
+    "slug": "movies",
+    "title": { "de": "Filme", "en": "Movies" },
+    "routes": ["/movies"]
+  },
+  {
+    "slug": "tv-shows",
+    "title": { "de": "Serien und Episoden", "en": "TV shows and episodes" },
+    "routes": ["/tvshows", "/episodes"]
+  },
+  {
+    "slug": "filters",
+    "title": {
+      "de": "Filter und Stapel-Bearbeitung",
+      "en": "Filters and batch edit"
+    },
+    "routes": []
+  },
+  {
+    "slug": "scraping",
+    "title": {
+      "de": "Scrapen: Daten, Bilder, Trailer, Titelmusik",
+      "en": "Scraping: data, artwork, trailers, theme music"
+    },
+    "routes": []
+  },
+  {
+    "slug": "movie-sets",
+    "title": { "de": "Filmsets", "en": "Movie sets" },
+    "routes": ["/moviesets"]
+  },
+  {
+    "slug": "tags",
+    "title": { "de": "Tags", "en": "Tags" },
+    "routes": ["/tags"]
+  },
+  {
+    "slug": "renaming",
+    "title": { "de": "Umbenennen", "en": "Renaming" },
+    "routes": ["/sources/*/rename", "/sources/*/tv-rename"]
+  },
+  {
+    "slug": "kodi",
+    "title": { "de": "Kodi", "en": "Kodi" },
+    "routes": ["/kodi"]
+  },
+  {
+    "slug": "ember-import",
+    "title": { "de": "Ember-Import", "en": "Ember import" },
+    "routes": ["/migration"]
+  },
+  {
+    "slug": "export",
+    "title": { "de": "Export", "en": "Export" },
+    "routes": []
+  },
+  {
+    "slug": "backup",
+    "title": { "de": "Sicherung", "en": "Backup" },
+    "routes": ["/backup"]
+  },
+  {
+    "slug": "settings",
+    "title": { "de": "Einstellungen", "en": "Settings" },
+    "routes": ["/settings"]
+  },
+  {
+    "slug": "troubleshooting",
+    "title": { "de": "Fehlerbehebung", "en": "Troubleshooting" },
+    "routes": []
+  }
+]

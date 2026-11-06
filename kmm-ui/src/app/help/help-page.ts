@@ -17,13 +17,14 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { map, of } from 'rxjs';
 
-import { HELP_CHAPTERS } from './help';
+import { LanguageService } from '../i18n/language.service';
+import { HELP_CHAPTERS, HelpChapter } from './help';
 import { renderHelp } from './help-markdown';
 import { HelpService } from './help.service';
 
 const MIN_QUERY_LENGTH = 2;
 
-/** Shows the manual: table of contents with search and the chosen chapter. */
+/** Shows the manual in the UI language: table of contents with search and the chosen chapter. */
 @Component({
   selector: 'app-help-page',
   imports: [RouterLink, MatButtonModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
@@ -38,23 +39,26 @@ export class HelpPage {
   private readonly router = inject(Router);
   private readonly element = inject<ElementRef<HTMLElement>>(ElementRef);
   private readonly fragment = toSignal(inject(ActivatedRoute).fragment);
+  private readonly language = inject(LanguageService).current;
 
   readonly chapter = input.required<string>();
 
   protected readonly chapters = HELP_CHAPTERS;
   protected readonly query = signal('');
   protected readonly content = rxResource({
-    params: () => this.chapter(),
+    params: () => ({ chapter: this.chapter(), language: this.language() }),
     // The manual ships with the application; otherwise the sanitizer would remove the anchors of the headings.
     stream: ({ params }) =>
       this.helpService
-        .markdown(params)
+        .markdown(params.chapter, params.language)
         .pipe(map((markdown) => this.sanitizer.bypassSecurityTrustHtml(renderHelp(markdown)))),
   });
   protected readonly hits = rxResource({
-    params: () => this.query().trim(),
+    params: () => ({ query: this.query().trim(), language: this.language() }),
     stream: ({ params }) =>
-      params.length < MIN_QUERY_LENGTH ? of(null) : this.helpService.search(params),
+      params.query.length < MIN_QUERY_LENGTH
+        ? of(null)
+        : this.helpService.search(params.query, params.language),
   });
   protected readonly position = computed(() =>
     HELP_CHAPTERS.findIndex((chapter) => chapter.slug === this.chapter()),
@@ -70,6 +74,10 @@ export class HelpPage {
         this.scrollTo(this.fragment());
       }
     });
+  }
+
+  protected title(chapter: HelpChapter): string {
+    return chapter.title[this.language()];
   }
 
   /** Links within the manual stay in the application instead of reloading the page. */

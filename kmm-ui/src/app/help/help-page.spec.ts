@@ -17,7 +17,7 @@ describe('HelpPage', () => {
     fixture.componentRef.setInput('chapter', slug);
     fixture.detectChanges();
     await new Promise((resolve) => setTimeout(resolve));
-    httpTesting.expectOne(`help/${slug}.md`).flush(markdown);
+    httpTesting.expectOne(`help/de/${slug}.md`).flush(markdown);
     await fixture.whenStable();
     fixture.detectChanges();
   }
@@ -39,7 +39,7 @@ describe('HelpPage', () => {
   afterEach(() => httpTesting.verify());
 
   it('shows the chapter and all chapters in the index', async () => {
-    await showChapter('filme', '# Filme\n\nDie **Liste**.');
+    await showChapter('movies', '# Filme\n\nDie **Liste**.');
 
     expect(element.querySelector('.help-content h1')?.textContent).toBe('Filme');
     expect(element.querySelector('.help-content strong')?.textContent).toBe('Liste');
@@ -48,17 +48,17 @@ describe('HelpPage', () => {
   });
 
   it('keeps anchors, images and external links through the sanitizer', async () => {
-    await showChapter('filme', '## Abschnitt\n\n![Bild](bilder/a.png) [Kodi](https://kodi.tv)');
+    await showChapter('movies', '## Abschnitt\n\n![Bild](../images/a.png) [Kodi](https://kodi.tv)');
 
     expect(element.querySelector('.help-content h2')?.id).toBe('abschnitt');
     expect(element.querySelector('.help-content img')?.getAttribute('src')).toBe(
-      'help/bilder/a.png',
+      'help/images/a.png',
     );
     expect(element.querySelector('.help-content a')?.getAttribute('target')).toBe('_blank');
   });
 
   it('links to the neighbouring chapters', async () => {
-    await showChapter('filme', '# Filme');
+    await showChapter('movies', '# Filme');
 
     expect(element.querySelector('.help-previous')?.textContent).toContain('Quellen und Scan');
     expect(element.querySelector('.help-next')?.textContent).toContain('Serien und Episoden');
@@ -73,19 +73,19 @@ describe('HelpPage', () => {
 
   it('follows links between chapters inside the application', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    await showChapter('filme', '[Serien](serien.md#staffeln)');
+    await showChapter('movies', '[Serien](tv-shows.md#staffeln)');
 
     const link = element.querySelector<HTMLAnchorElement>('.help-content a')!;
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     link.dispatchEvent(event);
 
     expect(event.defaultPrevented).toBe(true);
-    expect(navigate).toHaveBeenCalledWith('/help/serien#staffeln');
+    expect(navigate).toHaveBeenCalledWith('/help/tv-shows#staffeln');
   });
 
   it('leaves external links to the browser', async () => {
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
-    await showChapter('filme', '[Kodi](https://kodi.tv)');
+    await showChapter('movies', '[Kodi](https://kodi.tv)');
 
     const event = new MouseEvent('click', { bubbles: true, cancelable: true });
     element
@@ -101,7 +101,7 @@ describe('HelpPage', () => {
     fixture.detectChanges();
     await new Promise((resolve) => setTimeout(resolve));
     httpTesting
-      .expectOne('help/gibt-es-nicht.md')
+      .expectOne('help/de/gibt-es-nicht.md')
       .flush('', { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
     fixture.detectChanges();
@@ -111,7 +111,7 @@ describe('HelpPage', () => {
   });
 
   it('searches all chapters and shows the hits instead of the index', async () => {
-    await showChapter('filme', '# Filme');
+    await showChapter('movies', '# Filme');
 
     const input = element.querySelector<HTMLInputElement>('.help-search input')!;
     input.value = 'pfad-zuordnung';
@@ -120,7 +120,7 @@ describe('HelpPage', () => {
     await new Promise((resolve) => setTimeout(resolve));
 
     for (const chapter of HELP_CHAPTERS) {
-      const requests = httpTesting.match(`help/${chapter.slug}.md`);
+      const requests = httpTesting.match(`help/de/${chapter.slug}.md`);
       requests.forEach((request) =>
         request.flush(
           chapter.slug === 'kodi' ? '# Kodi\n\n## Pfade\n\nDie Pfad-Zuordnung.' : '# Anderes',
@@ -137,7 +137,7 @@ describe('HelpPage', () => {
   });
 
   it('says when the search finds nothing and ignores a single letter', async () => {
-    await showChapter('filme', '# Filme');
+    await showChapter('movies', '# Filme');
     const input = element.querySelector<HTMLInputElement>('.help-search input')!;
 
     input.value = 'x';
@@ -151,7 +151,9 @@ describe('HelpPage', () => {
     fixture.detectChanges();
     await new Promise((resolve) => setTimeout(resolve));
     for (const chapter of HELP_CHAPTERS) {
-      httpTesting.match(`help/${chapter.slug}.md`).forEach((request) => request.flush('# Anderes'));
+      httpTesting
+        .match(`help/de/${chapter.slug}.md`)
+        .forEach((request) => request.flush('# Anderes'));
     }
     await fixture.whenStable();
     fixture.detectChanges();
@@ -159,15 +161,20 @@ describe('HelpPage', () => {
     expect(element.querySelector('.help-no-hits')?.textContent).toContain('Nichts gefunden');
   });
 
-  it('switches the texts of the page to English, but not the manual', async () => {
-    await showChapter('filme', '# Filme');
+  it('switches the page and the manual to English', async () => {
+    await showChapter('movies', '# Filme');
 
     await switchLanguage('en');
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve));
+    httpTesting.expectOne('help/en/movies.md').flush('# Movies');
     await fixture.whenStable();
+    fixture.detectChanges();
 
     expect(element.querySelector('.help-search mat-label')?.textContent).toBe('Search the manual');
     expect(element.querySelector('.help-chapters')?.getAttribute('aria-label')).toBe('Chapters');
-    expect(element.querySelector('.help-content h1')?.textContent).toBe('Filme');
-    expect(element.querySelector('.help-next')?.textContent).toContain('Serien und Episoden');
+    expect(element.querySelector('.help-content h1')?.textContent).toBe('Movies');
+    expect(element.querySelector('.help-chapters a.active')?.textContent).toBe('Movies');
+    expect(element.querySelector('.help-next')?.textContent).toContain('TV shows and episodes');
   });
 });

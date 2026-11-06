@@ -39,8 +39,8 @@ Mache KMM **nie ohne Anmeldung** im Netz erreichbar, sonst kann jeder im Netz de
 
 Zwei Funktionen brauchen Programme, die nicht im Installer enthalten sind:
 
-- **FFmpeg** für die [technischen Angaben](filme.md#technische-angaben): zum Beispiel mit `winget install Gyan.FFmpeg`. Den Pfad zu `ffprobe` trägst du unter [Einstellungen](einstellungen.md#technische-angaben) ein, falls es nicht im Suchpfad liegt.
-- **yt-dlp** für [Titelmusik von YouTube](scrapen.md#titelmusik): zum Beispiel mit `winget install yt-dlp.yt-dlp`. Liegt es nicht im Suchpfad, setze `KMM_YTDLP` auf das Programm und `KMM_FFMPEG_LOCATION` auf den Ordner von FFmpeg.
+- **FFmpeg** für die [technischen Angaben](movies.md#technical-details): zum Beispiel mit `winget install Gyan.FFmpeg`. Den Pfad zu `ffprobe` trägst du unter [Einstellungen](settings.md#technische-angaben) ein, falls es nicht im Suchpfad liegt.
+- **yt-dlp** für [Titelmusik von YouTube](scraping.md#titelmusik): zum Beispiel mit `winget install yt-dlp.yt-dlp`. Liegt es nicht im Suchpfad, setze `KMM_YTDLP` auf das Programm und `KMM_FFMPEG_LOCATION` auf den Ordner von FFmpeg.
 
 ## Docker
 
@@ -64,7 +64,7 @@ Die Oberfläche ist dann unter `http://<Server>:8080` erreichbar. Benutzer und P
 
 **Aktualisieren:** `docker compose pull` und danach `docker compose up -d`. Deine Daten bleiben dabei erhalten.
 
-**Umziehen:** Von einer anderen KMM-Installation übernimmst du alles mit einer [Sicherung](sicherung.md), auch von Windows auf ein NAS.
+**Umziehen:** Von einer anderen KMM-Installation übernimmst du alles mit einer [Sicherung](backup.md), auch von Windows auf ein NAS.
 
 **Feste Version:** Ohne weitere Angabe holt `pull` die neueste Version. Trage in der `.env` zum Beispiel `KMM_IMAGE_TAG=0.1` ein, um bei einer Version zu bleiben oder zu einer früheren zurückzukehren. Das Zurückgehen klappt nur, wenn die Datenbank noch nicht von einer neueren Version geändert wurde, sichere sie also vor Aktualisierungen.
 
@@ -72,4 +72,4 @@ Die Oberfläche ist dann unter `http://<Server>:8080` erreichbar. Benutzer und P
 
 Die aktuelle Version steht in der Kopfleiste neben dem Titel, ein Klick darauf öffnet die Seite **System**. Dort stehen auch die **Änderungen** jeder Version. Bei `dev` ist es ein selbst gebauter Stand ohne veröffentlichte Version.
 
-Die Seite **System** zeigt außerdem die Java-Version, die verwendete Datenbank und die aktiven Profile. Steht dort, dass das Backend nicht erreichbar ist, läuft KMM nicht mehr, siehe [Fehlerbehebung](fehlerbehebung.md).
+Die Seite **System** zeigt außerdem die Java-Version, die verwendete Datenbank und die aktiven Profile. Steht dort, dass das Backend nicht erreichbar ist, läuft KMM nicht mehr, siehe [Fehlerbehebung](troubleshooting.md).

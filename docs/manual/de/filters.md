@@ -10,11 +10,13 @@ Das Feld **Filter** bietet „Alle“, mitgelieferte und deine gespeicherten Fil
 
 **Mitgeliefert bei Serien:** Mit ungesehenen Episoden, Laufende Serien, Neu (letzte 30 Tage), Episoden unter 720p, Ohne TVDB-ID, Episoden ohne technische Angaben, Ohne NFO, Ohne Trailer.
 
+<a id="build-your-own-filter"></a>
+
 ## Eigenen Filter bauen
 
 Klicke auf **Filter bearbeiten**. Ein Filter besteht aus Bedingungen, jeweils mit Feld, Vergleich und meist einem Wert. Bei **Es müssen gelten** wählst du, ob alle oder nur eine Bedingung zutreffen muss.
 
-![Der Filter-Baukasten](bilder/filter.png)
+![Der Filter-Baukasten](../images/filters.png)
 
 | Vergleich | Bedeutung |
 |---|---|
@@ -41,6 +43,8 @@ Die Suche nach dem Titel gilt zusätzlich zum Filter.
 - **Alle gefilterten auswählen** nimmt alle Treffer des aktuellen Filters, auch auf den weiteren Seiten.
 - **Auswahl aufheben** leert die Auswahl.
 
+<a id="batch-edit"></a>
+
 ## Stapel-Bearbeitung
 
 Mit **Auswahl bearbeiten** änderst du alle gewählten Einträge auf einmal:
@@ -57,6 +61,6 @@ Die NFOs werden geschrieben, und Kodi liest die Einträge neu ein. Umbenannt wir
 - **Fehlende Titelmusik holen**
 - **Bewertungen aktualisieren**
 - **In Kodi aktualisieren**, siehe [Kodi](kodi.md#von-hand-aktualisieren)
-- **Sprache ändern**, siehe [Sprache je Eintrag](scrapen.md#sprache-je-quelle-und-eintrag)
+- **Sprache ändern**, siehe [Sprache je Eintrag](scraping.md#sprache-je-quelle-und-eintrag)
 
-Mehr dazu unter [Scrapen](scrapen.md).
+Mehr dazu unter [Scrapen](scraping.md).

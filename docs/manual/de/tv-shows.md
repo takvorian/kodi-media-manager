@@ -2,19 +2,19 @@
 
 ## Die Serienliste
 
-Die Seite **Serien** funktioniert wie die [Filmliste](filme.md#die-filmliste), mit Suche, [Filtern](filter.md), Auswahl, [Export](export.md), Sortierung über die Spaltenköpfe und Seitenleiste über und unter der Liste.
+Die Seite **Serien** funktioniert wie die [Filmliste](movies.md#die-filmliste), mit Suche, [Filtern](filters.md), Auswahl, [Export](export.md), Sortierung über die Spaltenköpfe und Seitenleiste über und unter der Liste.
 
 ## Die Serienansicht
 
 Ein Klick auf den Titel öffnet die Serie:
 
 - **Ordner und NFO:** wo die Serie und ihre `tvshow.nfo` liegen.
-- **Trailer**, **Titelmusik** und **Bilder der Serie**, siehe [Scrapen](scrapen.md).
+- **Trailer**, **Titelmusik** und **Bilder der Serie**, siehe [Scrapen](scraping.md).
 - **Staffeln und Episoden:** zum Aufklappen, mit den Bildern jeder Staffel.
 - **Weitere Angaben:** Besetzung und Bewertungen.
 - **Formular:** die Angaben der Serie.
 
-![Die Serienansicht](bilder/serienansicht.png)
+![Die Serienansicht](../images/tv-show-view.png)
 
 Das Formular speicherst du wie bei Filmen mit **Speichern**. Zusätzlich gibt es **Status** (`Continuing` für laufend, `Ended` für beendet), **Sender/Studios** und **Tags**, jeweils durch Komma getrennt.
 
@@ -24,7 +24,7 @@ Das Formular speicherst du wie bei Filmen mit **Speichern**. Zusätzlich gibt es
 
 ## Eine Serie scrapen
 
-**Scrapen** in der Serienansicht ergänzt alles Fehlende nur für diese Serie, auch leere Episodenfelder, siehe [Scrapen](scrapen.md#automatisches-scrapen).
+**Scrapen** in der Serienansicht ergänzt alles Fehlende nur für diese Serie, auch leere Episodenfelder, siehe [Scrapen](scraping.md#automatisches-scrapen).
 
 ## Eine Staffel scrapen
 
@@ -35,17 +35,17 @@ Klappst du unter **Staffeln und Episoden** eine Staffel auf, findest du zwei Kn�
 
 Beide Knöpfe ergänzen außerdem den Titel der Staffel, **Staffel neu holen** ersetzt ihn. Die übrigen Angaben der Serie bleiben unverändert. Trailer, Titelmusik und Bewertungen gehören zur ganzen Serie und kommen nur über **Scrapen**. Ist eine Serie noch nicht zugeordnet, übernimmt **Staffel scrapen** sie wie **Scrapen** nur bei eindeutigem Treffer. **Staffel neu holen** braucht eine zugeordnete Serie.
 
-Ist das Auslesen technischer Angaben beim Scrapen eingeschaltet, liest KMM nach Änderungen die Episoden der Staffel aus, die noch keine technischen Angaben haben. Ist [Umbenennen nach dem Scrapen](einstellungen.md) eingeschaltet, benennt es Staffelordner und Episodendateien dieser Staffel um, der Serienordner bleibt.
+Ist das Auslesen technischer Angaben beim Scrapen eingeschaltet, liest KMM nach Änderungen die Episoden der Staffel aus, die noch keine technischen Angaben haben. Ist [Umbenennen nach dem Scrapen](settings.md) eingeschaltet, benennt es Staffelordner und Episodendateien dieser Staffel um, der Serienordner bleibt.
 
 Fortschritt und Bericht erscheinen oben in der Serienansicht. Solange eine Staffel oder die Serie gescrapt wird, sind alle Scrapen-Knöpfe der Serie gesperrt.
 
-**Technische Angaben auslesen** liest alle Episoden der Staffel mit ffprobe neu aus, auch solche, die schon Angaben haben. Sprachen der Spuren aus der NFO bleiben dabei erhalten, wie bei den [technischen Angaben](filme.md#technische-angaben) von Filmen. Den Fortschritt zeigt KMM über den Staffeln, das Ergebnis als Meldung. Solange das läuft, sind die Scrapen-Knöpfe der Serie gesperrt, denn beide schreiben in dieselben NFOs.
+**Technische Angaben auslesen** liest alle Episoden der Staffel mit ffprobe neu aus, auch solche, die schon Angaben haben. Sprachen der Spuren aus der NFO bleiben dabei erhalten, wie bei den [technischen Angaben](movies.md#technical-details) von Filmen. Den Fortschritt zeigt KMM über den Staffeln, das Ergebnis als Meldung. Solange das läuft, sind die Scrapen-Knöpfe der Serie gesperrt, denn beide schreiben in dieselben NFOs.
 
 ## Online-Suche für Serien
 
-**Online suchen** arbeitet wie bei [Filmen](scrapen.md#online-suche). Die Vorgabe ist TVDB. Die übernommenen Angaben landen zuerst im Formular. Beim Speichern ergänzt KMM zusätzlich die Episoden, und zwar nur deren leere Felder. Ein Hinweis über den Knöpfen sagt dir vorher, wie viele Episoden betroffen sind.
+**Online suchen** arbeitet wie bei [Filmen](scraping.md#online-suche). Die Vorgabe ist TVDB. Die übernommenen Angaben landen zuerst im Formular. Beim Speichern ergänzt KMM zusätzlich die Episoden, und zwar nur deren leere Felder. Ein Hinweis über den Knöpfen sagt dir vorher, wie viele Episoden betroffen sind.
 
-Welche Reihenfolge der Episoden gilt (Ausstrahlung, DVD oder absolut), stellst du unter [Einstellungen](einstellungen.md#serien) ein. Das wirkt nur bei TVDB, TMDB kennt nur die Ausstrahlungsreihenfolge.
+Welche Reihenfolge der Episoden gilt (Ausstrahlung, DVD oder absolut), stellst du unter [Einstellungen](settings.md#serien) ein. Das wirkt nur bei TVDB, TMDB kennt nur die Ausstrahlungsreihenfolge.
 
 ## Die Episodenansicht
 

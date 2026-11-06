@@ -12,7 +12,9 @@ Eine Quelle ist ein Verzeichnis, in dem deine Filme oder Serien liegen. Du kanns
 
 Klicke dann auf **Hinzufügen**.
 
-![Die Seite Quellen](bilder/quellen.png)
+![Die Seite Quellen](../images/sources.png)
+
+<a id="how-to-organize-your-files"></a>
 
 ## Wie deine Dateien liegen sollten
 
@@ -24,19 +26,19 @@ Klicke dann auf **Hinzufügen**.
 
 | Knopf | Was passiert |
 |---|---|
-| **Scannen** | Sucht neue und geänderte Dateien und liest NFOs ein. Bei neuen Dateien liest er auch die technischen Angaben aus, wenn das [eingeschaltet](einstellungen.md#technische-angaben) ist. |
-| **Scrapen** | Ergänzt fehlende Metadaten und Bilder aller Einträge der Quelle, auch der alten. Für einzelne Einträge siehe [Scrapen](scrapen.md#automatisches-scrapen). |
+| **Scannen** | Sucht neue und geänderte Dateien und liest NFOs ein. Bei neuen Dateien liest er auch die technischen Angaben aus, wenn das [eingeschaltet](settings.md#technische-angaben) ist. |
+| **Scrapen** | Ergänzt fehlende Metadaten und Bilder aller Einträge der Quelle, auch der alten. Für einzelne Einträge siehe [Scrapen](scraping.md#automatisches-scrapen). |
 | **Kodi-Scan** | Lässt alle Kodi-Geräte diese Quelle durchsuchen, siehe [Kodi](kodi.md). |
 | **Gesehen-Status** | Holt Wiedergaben und eigene Bewertungen aus Kodi. |
 | **Technische Angaben** | Liest mit ffprobe die fehlenden oder alle Angaben neu aus. |
-| **Umbenennen** | Öffnet die Vorschau zum [Umbenennen](umbenennen.md). |
+| **Umbenennen** | Öffnet die Vorschau zum [Umbenennen](renaming.md). |
 | **Entfernen** | Entfernt die Quelle und alle ihre Einträge aus KMM, nach einer Rückfrage. Deine Dateien bleiben liegen. |
 
 Während eine Aufgabe läuft, zeigt die Zeile den Fortschritt und einen Knopf **Abbrechen**.
 
 ## Sprache einer Quelle
 
-In der Spalte **Sprache** legst du fest, in welcher Sprache die Einträge dieser Quelle gescrapt werden, wenn sie selbst keine eigene haben. Vorhandene Texte ändern sich dadurch nicht. Mehr dazu unter [Scrapen](scrapen.md#sprache-je-quelle-und-eintrag).
+In der Spalte **Sprache** legst du fest, in welcher Sprache die Einträge dieser Quelle gescrapt werden, wenn sie selbst keine eigene haben. Vorhandene Texte ändern sich dadurch nicht. Mehr dazu unter [Scrapen](scraping.md#sprache-je-quelle-und-eintrag).
 
 ## Woher Titel, Jahr und IMDb-ID kommen
 
@@ -74,4 +76,4 @@ Bleibt beim Scrapen etwas offen, erscheint unten ein Bericht:
 
 ## Dateiendungen und ausgeschlossene Ordner
 
-Welche Dateien als Video gelten und welche Ordner der Scan überspringt, stellst du unter [Einstellungen](einstellungen.md#scan) ein.
+Welche Dateien als Video gelten und welche Ordner der Scan überspringt, stellst du unter [Einstellungen](settings.md#scan) ein.

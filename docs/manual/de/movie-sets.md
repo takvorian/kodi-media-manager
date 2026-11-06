@@ -2,7 +2,7 @@
 
 Ein Filmset fasst zusammengehörige Filme zusammen, zum Beispiel alle Teile einer Reihe. Kodi zeigt sie dann gemeinsam an. **Ein Film kann nur in einem Set sein**, das gibt Kodi so vor.
 
-![Der Filmset-Manager](bilder/filmsets.png)
+![Der Filmset-Manager](../images/movie-sets.png)
 
 ## Set anlegen und bearbeiten
 
@@ -23,17 +23,21 @@ Unter **Bei TMDB suchen** findest du die passende Sammlung. Ein Klick auf einen 
 - **Hinzufügen:** Suche unter **Filme suchen**, setze die Häkchen und klicke auf **… hinzufügen**. Filme aus einem anderen Set wechseln dabei in dieses.
 - **Entfernen:** Setze in der Filmliste des Sets die Häkchen und klicke auf **… entfernen**.
 
-Die NFOs der betroffenen Filme werden im Hintergrund neu geschrieben. Mit [Echtzeit-Sync](kodi.md#echtzeit-sync) übernimmt Kodi Titel, Beschreibung und Bilder.
+Die NFOs der betroffenen Filme werden im Hintergrund neu geschrieben. Mit [Echtzeit-Sync](kodi.md#real-time-sync) übernimmt Kodi Titel, Beschreibung und Bilder.
+
+<a id="set-artwork"></a>
 
 ## Set-Bilder
 
-Unter **Bilder** wählst du Poster, Fanart, Banner, Clearlogo, Clearart, Disc, Keyart und Landscape, wie bei [Filmen](scrapen.md#bilder). Die Suche braucht die TMDB-ID der Sammlung.
+Unter **Bilder** wählst du Poster, Fanart, Banner, Clearlogo, Clearart, Disc, Keyart und Landscape, wie bei [Filmen](scraping.md#bilder). Die Suche braucht die TMDB-ID der Sammlung.
 
-Wo die Bilder liegen, legst du unter [Einstellungen](einstellungen.md#filmsets) fest. Es gibt zwei Ablagen, die du einzeln einschaltest: Embers flaches Schema und Kodis Set-Ordner. Ist keine eingeschaltet, lässt KMM die Set-Bilder in Kodi unberührt.
+Wo die Bilder liegen, legst du unter [Einstellungen](settings.md#filmsets) fest. Es gibt zwei Ablagen, die du einzeln einschaltest: Embers flaches Schema und Kodis Set-Ordner. Ist keine eingeschaltet, lässt KMM die Set-Bilder in Kodi unberührt.
 
 ## Alle Sets ergänzen
 
 **Alle Sets ergänzen** holt für alle Sets mit TMDB-ID fehlende Beschreibungen und Bilder. Vorhandenes bleibt.
+
+<a id="assign-movies-automatically"></a>
 
 ## Filme automatisch zuordnen
 

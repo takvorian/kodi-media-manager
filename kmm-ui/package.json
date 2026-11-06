@@ -3,7 +3,7 @@
   "version": "0.0.0",
   "scripts": {
     "help": "node scripts/copy-help.mjs",
-    "handbuch:pdf": "node scripts/handbuch-pdf.mjs",
+    "manual:pdf": "node scripts/manual-pdf.mjs",
     "prestart": "npm run help",
     "prebuild": "npm run help",
     "ng": "ng",

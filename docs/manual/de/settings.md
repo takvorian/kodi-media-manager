@@ -6,7 +6,7 @@ Steht bei einem Feld „Durch die Konfiguration festgelegt“, hat jemand den We
 
 ## Sprache
 
-Gilt für Filme, wenn weder der Film noch seine Quelle eine eigene Sprache haben, siehe [Sprache je Eintrag](scrapen.md#sprache-je-quelle-und-eintrag).
+Gilt für Filme, wenn weder der Film noch seine Quelle eine eigene Sprache haben, siehe [Sprache je Eintrag](scraping.md#sprache-je-quelle-und-eintrag).
 
 - **Metadaten:** zum Beispiel `de-DE` oder `en-US`.
 - **Bevorzugte Bildsprache:** zweistellig, zum Beispiel `de`. Solche Bilder erscheinen in der Auswahl zuerst.
@@ -23,7 +23,7 @@ Dieselben beiden Felder für Serien, dazu die **Episodenreihenfolge**: Ausstrahl
 
 ## Umbenennen
 
-Die Muster und die automatischen Auslöser, ausführlich erklärt unter [Umbenennen](umbenennen.md).
+Die Muster und die automatischen Auslöser, ausführlich erklärt unter [Umbenennen](renaming.md).
 
 ## Filmsets
 
@@ -31,7 +31,7 @@ Die Muster und die automatischen Auslöser, ausführlich erklärt unter [Umbenen
 - **Set-Bilder im flachen Schema ablegen:** wie Ember, als `<Ordner>/<Settitel>-poster.jpg`.
 - **Set-Bilder in Kodis Set-Ordnern ablegen:** als `<Ordner>/<Settitel>/poster.jpg`. Der Ordner muss der in Kodi eingestellte „Ordner für Filmset-Informationen“ sein.
 
-Mehr dazu unter [Filmsets](filmsets.md).
+Mehr dazu unter [Filmsets](movie-sets.md).
 
 ## Scan
 

@@ -28,16 +28,16 @@ describe('HelpLink', () => {
   });
 
   it('links to a section', () => {
-    expect(link('kodi', 'pfad-zuordnung').getAttribute('href')).toBe('/help/kodi#pfad-zuordnung');
+    expect(link('kodi', 'path-mapping').getAttribute('href')).toBe('/help/kodi#path-mapping');
   });
 
   it('translates the tooltip but keeps chapter and anchor', async () => {
-    const element = link('kodi', 'pfad-zuordnung');
+    const element = link('kodi', 'path-mapping');
 
     await switchLanguage('en');
     await fixture.whenStable();
 
     expect(element.getAttribute('title')).toBe('Read in the manual (new tab)');
-    expect(element.getAttribute('href')).toBe('/help/kodi#pfad-zuordnung');
+    expect(element.getAttribute('href')).toBe('/help/kodi#path-mapping');
   });
 });

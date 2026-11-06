@@ -8,7 +8,11 @@ import {
 } from './help';
 import { renderHelp } from './help-markdown';
 
-const CHAPTER = { slug: 'quellen', title: 'Quellen und Scan', routes: [] };
+const CHAPTER = {
+  slug: 'sources',
+  title: { de: 'Quellen und Scan', en: 'Sources and scanning' },
+  routes: [],
+};
 
 describe('help', () => {
   it('finds a chapter for every page of the application', () => {
@@ -24,11 +28,11 @@ describe('help', () => {
   });
 
   it('prefers the most specific route and ignores query and fragment', () => {
-    expect(chapterForUrl('/sources')).toBe('quellen');
-    expect(chapterForUrl('/sources/3/rename')).toBe('umbenennen');
-    expect(chapterForUrl('/sources/3/tv-rename?x=1')).toBe('umbenennen');
-    expect(chapterForUrl('/movies/12#top')).toBe('filme');
-    expect(chapterForUrl('/episodes/5')).toBe('serien');
+    expect(chapterForUrl('/sources')).toBe('sources');
+    expect(chapterForUrl('/sources/3/rename')).toBe('renaming');
+    expect(chapterForUrl('/sources/3/tv-rename?x=1')).toBe('renaming');
+    expect(chapterForUrl('/movies/12#top')).toBe('movies');
+    expect(chapterForUrl('/episodes/5')).toBe('tv-shows');
   });
 
   it('falls back to the first chapter for unknown pages', () => {
@@ -43,18 +47,31 @@ describe('help', () => {
 
   it('renders headings with anchors and keeps links in the application', () => {
     const html = renderHelp(
-      '## Erste Hilfe\n\n[Filme](filme.md#liste) und [Kodi](https://kodi.tv)',
+      '## Erste Hilfe\n\n[Filme](movies.md#liste) und [Kodi](https://kodi.tv)',
     );
 
     expect(html).toContain('<h2 id="erste-hilfe">Erste Hilfe</h2>');
-    expect(html).toContain('<a href="/help/filme#liste">Filme</a>');
+    expect(html).toContain('<a href="/help/movies#liste">Filme</a>');
     expect(html).toContain('<a href="https://kodi.tv" target="_blank" rel="noopener">Kodi</a>');
   });
 
-  it('serves images from the help files and escapes their text', () => {
-    expect(renderHelp('![Liste "A"](bilder/a.png)')).toContain(
-      '<img src="help/bilder/a.png" alt="Liste &quot;A&quot;" loading="lazy" />',
+  it('serves images from the shared image folder and escapes their text', () => {
+    expect(renderHelp('![Liste "A"](../images/a.png)')).toContain(
+      '<img src="help/images/a.png" alt="Liste &quot;A&quot;" loading="lazy" />',
     );
+  });
+
+  it('keeps explicit anchors that work in every language', () => {
+    expect(renderHelp('<a id="batch-edit"></a>\n\n## Stapel-Bearbeitung')).toContain(
+      '<a id="batch-edit"></a>',
+    );
+  });
+
+  it('has a title in every language for every chapter', () => {
+    for (const chapter of HELP_CHAPTERS) {
+      expect(chapter.title.de, chapter.slug).toBeTruthy();
+      expect(chapter.title.en, chapter.slug).toBeTruthy();
+    }
   });
 
   it('renders tables', () => {
@@ -66,10 +83,11 @@ describe('help', () => {
       CHAPTER,
       '# Quellen\n\n## Der Bericht\n\nBleibt beim **Scrapen** etwas offen.',
       'scrapen',
+      'de',
     );
 
     expect(hit).toEqual({
-      slug: 'quellen',
+      slug: 'sources',
       chapter: 'Quellen und Scan',
       section: 'Der Bericht',
       anchor: 'der-bericht',
@@ -78,15 +96,24 @@ describe('help', () => {
   });
 
   it('shortens long excerpts', () => {
-    const hit = searchChapter(CHAPTER, `${'a'.repeat(100)} treffer ${'b'.repeat(100)}`, 'treffer');
+    const hit = searchChapter(
+      CHAPTER,
+      `${'a'.repeat(100)} treffer ${'b'.repeat(100)}`,
+      'treffer',
+      'de',
+    );
 
     expect(hit?.snippet.startsWith('… ')).toBe(true);
     expect(hit?.snippet.endsWith(' …')).toBe(true);
   });
 
   it('requires all words and ignores case', () => {
-    expect(searchChapter(CHAPTER, 'Der Scan läuft', 'SCAN LÄUFT')).not.toBeNull();
-    expect(searchChapter(CHAPTER, 'Der Scan läuft', 'scan steht')).toBeNull();
-    expect(searchChapter(CHAPTER, 'Der Scan läuft', '   ')).toBeNull();
+    expect(searchChapter(CHAPTER, 'Der Scan läuft', 'SCAN LÄUFT', 'de')).not.toBeNull();
+    expect(searchChapter(CHAPTER, 'Der Scan läuft', 'scan steht', 'de')).toBeNull();
+    expect(searchChapter(CHAPTER, 'Der Scan läuft', '   ', 'de')).toBeNull();
+  });
+
+  it('names the chapter in the requested language', () => {
+    expect(searchChapter(CHAPTER, 'Scan', 'scan', 'en')?.chapter).toBe('Sources and scanning');
   });
 });
