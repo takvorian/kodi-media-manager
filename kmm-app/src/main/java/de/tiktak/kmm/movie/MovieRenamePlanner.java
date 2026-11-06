@@ -10,6 +10,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieRenamePlan.FileRename;
 import de.tiktak.kmm.movie.MovieRenamePlan.Status;
 import de.tiktak.kmm.scanner.CompanionFiles;
@@ -17,16 +18,15 @@ import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.naming.NamePattern;
 
 /**
- * Berechnet, wie ein Film nach den Mustern heißen würde, ohne etwas zu ändern. Wie Ember:
+ * Calculates what a movie would be called according to the patterns, without changing anything. Like Ember:
  * <ul>
- * <li>Der Ordner wird nur umbenannt, wenn er allein diesem Film gehört. Ein Ordnermuster ohne {@code /}
- * benennt ihn an Ort und Stelle um, eines mit {@code /} legt ihn relativ zur Quelle ab.</li>
- * <li>Umbenannt werden alle Dateien im Ordner, deren Name mit dem bisherigen Namen des Films beginnt,
- * gefolgt von Punkt, Bindestrich, Unterstrich oder Leerzeichen: Video, Stapelteile, NFO, Bilder,
- * Untertitel, Trailer. Gehört eine Datei zu einem anderen Film mit längerem Namen im selben Ordner, bleibt
- * sie unberührt.</li>
- * <li>Bei DVD- und Blu-ray-Ordnern wird nur der Ordner umbenannt.</li>
- * <li>Ist ein Ziel schon belegt, wird nichts geändert (Konflikt).</li>
+ * <li>The folder is only renamed if it belongs to this movie alone. A folder pattern without {@code /} renames it
+ * in place, one with {@code /} puts it relative to the source.</li>
+ * <li>All files in the folder are renamed whose name starts with the former name of the movie, followed by a dot,
+ * hyphen, underscore or space: video, stack parts, NFO, images, subtitles, trailers. If a file belongs to another
+ * movie with a longer name in the same folder, it stays untouched.</li>
+ * <li>For DVD and Blu-ray folders only the folder is renamed.</li>
+ * <li>If a target is taken already, nothing is changed (conflict).</li>
  * </ul>
  */
 final class MovieRenamePlanner {
@@ -45,7 +45,7 @@ final class MovieRenamePlanner {
         if (candidate.ownsFolder()) {
             List<String> segments = folderPattern.render(candidate.values());
             if (segments.isEmpty()) {
-                return planned.failed("Das Ordnermuster ergibt keinen Namen.");
+                return planned.failed(LocalizedText.of("movie.rename.folderPatternEmpty"));
             }
             Path base = folderPattern.hasFolders() ? candidate.sourceRoot() : currentDirectory.getParent();
             targetDirectory = resolve(base, segments);
@@ -54,13 +54,14 @@ final class MovieRenamePlanner {
         if (candidate.discFormat() == DiscFormat.FILE) {
             List<String> name = filePattern.render(candidate.values());
             if (name.size() != 1) {
-                return planned.failed("Das Dateimuster ergibt keinen gültigen Dateinamen.");
+                return planned.failed(LocalizedText.of("movie.rename.filePatternInvalid"));
             }
             try {
                 renames = fileRenames(currentDirectory, companions.baseName(), name.getFirst(),
                         candidate.otherBaseNames());
             } catch (IOException e) {
-                return planned.failed("Der Ordner ist nicht lesbar: " + e.getMessage());
+                return planned.failed(LocalizedText.of("movie.rename.folderUnreadable")
+                        .with("reason", LocalizedReasons.of(e)));
             }
         }
         return planned.result(targetDirectory, renames);
@@ -99,13 +100,13 @@ final class MovieRenamePlanner {
     }
 
     /**
-     * Ein Film, wie ihn der Planer braucht.
+     * A movie as the planner needs it.
      *
-     * @param mainFile       Hauptdatei (bei Stapeln der erste Teil, bei Discs die Markerdatei)
-     * @param sourceRoot     Wurzel der Quelle
-     * @param ownsFolder     ob der Ordner allein diesem Film gehört und nicht die Quelle selbst ist
-     * @param otherBaseNames Namen anderer Filme im selben Ordner
-     * @param values         Werte der Platzhalter
+     * @param mainFile       main file (the first part for stacks, the marker file for discs)
+     * @param sourceRoot     root of the source
+     * @param ownsFolder     whether the folder belongs to this movie alone and is not the source itself
+     * @param otherBaseNames names of other movies in the same folder
+     * @param values         values of the placeholders
      */
     record Candidate(long movieId, String title, Path mainFile, DiscFormat discFormat, int partCount,
                      Path sourceRoot, boolean ownsFolder, Set<String> otherBaseNames,
@@ -114,7 +115,7 @@ final class MovieRenamePlanner {
 
     private record Planned(Candidate candidate, Path currentDirectory) {
 
-        MovieRenamePlan failed(String message) {
+        MovieRenamePlan failed(LocalizedText message) {
             return plan(currentDirectory, List.of(), Status.FAILED, message);
         }
 
@@ -123,7 +124,7 @@ final class MovieRenamePlanner {
             if (sameDirectory && renames.isEmpty()) {
                 return plan(targetDirectory, renames, Status.UNCHANGED, null);
             }
-            String conflict = sameDirectory ? null : directoryConflict(targetDirectory);
+            LocalizedText conflict = sameDirectory ? null : directoryConflict(targetDirectory);
             if (conflict == null) {
                 conflict = fileConflict(renames);
             }
@@ -131,33 +132,34 @@ final class MovieRenamePlanner {
                     : plan(targetDirectory, renames, Status.CONFLICT, conflict);
         }
 
-        /** Nur Groß- und Kleinschreibung zu ändern ist kein Konflikt, auch wenn Windows den Ordner findet. */
-        private String directoryConflict(Path targetDirectory) {
+        /** Changing upper and lower case only is no conflict, even though Windows finds the folder. */
+        private LocalizedText directoryConflict(Path targetDirectory) {
             boolean sameIgnoringCase = targetDirectory.toString().toLowerCase(Locale.ROOT)
                     .equals(currentDirectory.toString().toLowerCase(Locale.ROOT));
             if (!sameIgnoringCase && Files.exists(targetDirectory)) {
-                return "Der Ordner „%s“ existiert bereits.".formatted(targetDirectory);
+                return LocalizedText.of("movie.rename.folderExists").with("folder", targetDirectory);
             }
             if (targetDirectory.startsWith(currentDirectory) && !sameIgnoringCase) {
-                return "Der neue Ordner liegt im bisherigen.";
+                return LocalizedText.of("movie.rename.folderInsideCurrent");
             }
             return null;
         }
 
-        private String fileConflict(List<FileRename> renames) {
+        private LocalizedText fileConflict(List<FileRename> renames) {
             Set<String> renamed = Set.copyOf(renames.stream()
                     .map(rename -> rename.currentName().toLowerCase(Locale.ROOT)).toList());
             for (FileRename rename : renames) {
                 String target = rename.targetName();
                 boolean freed = renamed.contains(target.toLowerCase(Locale.ROOT));
                 if (!freed && Files.exists(currentDirectory.resolve(target))) {
-                    return "Die Datei „%s“ existiert bereits.".formatted(target);
+                    return LocalizedText.of("movie.rename.fileExists").with("file", target);
                 }
             }
             return null;
         }
 
-        private MovieRenamePlan plan(Path targetDirectory, List<FileRename> renames, Status status, String message) {
+        private MovieRenamePlan plan(Path targetDirectory, List<FileRename> renames, Status status,
+                                     LocalizedText message) {
             return new MovieRenamePlan(candidate.movieId(), candidate.title(), currentDirectory.toString(),
                     targetDirectory.toString(), renames, status, message);
         }

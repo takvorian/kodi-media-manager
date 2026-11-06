@@ -46,7 +46,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Titelmusik von Filmen und Serien Ende zu Ende, mit einem Titelmusik-Scraper als Attrappe.
+ * Theme music of movies and TV shows end to end, with a theme music scraper as a dummy.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

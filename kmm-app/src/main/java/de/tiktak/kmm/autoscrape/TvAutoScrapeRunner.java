@@ -118,7 +118,7 @@ class TvAutoScrapeRunner {
             context.reportProgress(2, SEASON_STEPS, label);
             ArtworkFillResult artwork = artworkService.fillMissingSeason(showId, season);
             progress.imagesSaved += artwork.saved();
-            artwork.warnings().forEach(warning -> progress.warn(LocalizedTexts.asText(warning)));
+            artwork.warnings().forEach(progress::warn);
             context.throwIfCancellationRequested();
             context.reportProgress(3, SEASON_STEPS, label);
             renameService.renameSeasonIfEnabled(showId, season, TvRenameTrigger.SCRAPE)
@@ -177,7 +177,7 @@ class TvAutoScrapeRunner {
             }
             ArtworkFillResult artwork = artworkService.fillMissing(showId);
             progress.imagesSaved += artwork.saved();
-            artwork.warnings().forEach(warning -> progress.warn(LocalizedTexts.asText(warning)));
+            artwork.warnings().forEach(progress::warn);
             if (trailerService.fillMissing(showId)) {
                 progress.trailersSaved++;
             }

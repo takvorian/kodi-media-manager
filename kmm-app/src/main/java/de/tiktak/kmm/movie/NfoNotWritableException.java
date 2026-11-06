@@ -1,19 +1,20 @@
 package de.tiktak.kmm.movie;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.NfoException;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Die NFO eines Films kann nicht geschrieben werden, z. B. wegen fehlender Schreibrechte. Die
- * Änderung wird dann nicht gespeichert. Wird als HTTP 422 beantwortet.
+ * The NFO of a movie cannot be written, e.g. for lack of write permissions. The change is not saved then.
+ * Answered as HTTP 422.
  */
-public class NfoNotWritableException extends ErrorResponseException {
+public class NfoNotWritableException extends LocalizedProblemException {
 
     NfoNotWritableException(NfoException cause) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, cause);
-        getBody().setTitle("NFO konnte nicht geschrieben werden");
-        getBody().setDetail(cause.getMessage() + " Bitte Schreibrechte im Filmordner prüfen.");
+        super(HttpStatus.UNPROCESSABLE_CONTENT, LocalizedText.of("movie.nfo.notWritable.title"),
+                LocalizedText.of("movie.nfo.notWritable.detail").with("reason", cause.localizedText()),
+                cause);
     }
 }

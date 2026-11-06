@@ -5,7 +5,7 @@ import java.net.URI;
 import de.tiktak.kmm.plugin.api.SearchResult;
 
 /**
- * Suchtreffer eines Scrapers für die Auswahl in der Oberfläche.
+ * Search match of a scraper for selection in the user interface.
  */
 public record ScrapeCandidate(
         String providerId,

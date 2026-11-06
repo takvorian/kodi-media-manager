@@ -32,8 +32,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Vorschau des Umbenennens Ende zu Ende: Werte aus den NFOs, gemeinsame Ziele als Konflikt, nichts wird
- * geändert.
+ * Renaming preview end to end: values from the NFOs, shared targets as a conflict, nothing is
+ * changed.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -75,7 +75,7 @@ class MovieRenameIntegrationTest {
         long movieId = jdbcClient.sql("SELECT id FROM movie").query(Long.class).single();
 
         assertThat(save(movieId)).hasStatusOk();
-        assertThat(filme.resolve("heat/heat.mkv")).as("Auslöser aus").exists();
+        assertThat(filme.resolve("heat/heat.mkv")).as("trigger off").exists();
 
         RenameSettings defaults = RenameSettings.DEFAULTS;
         settingsService.update(settingsService.current().withRename(new RenameSettings("{title} ({year})", "{title}",
@@ -115,14 +115,15 @@ class MovieRenameIntegrationTest {
         JsonNode plans = read(preview);
         assertThat(plans).hasSize(4);
         assertThat(plans.get(0).get("status").asString()).isEqualTo("CONFLICT");
-        assertThat(plans.get(0).get("message").asString()).startsWith("Mehrere Filme bekämen den Ordner");
+        assertThat(plans.get(0).get("message").get("key").asString()).isEqualTo("movie.rename.sharedTarget");
         JsonNode heat = plans.get(2);
         assertThat(heat.get("title").asString()).isEqualTo("Heat");
         assertThat(heat.get("status").asString()).isEqualTo("RENAME");
         assertThat(heat.get("targetDirectory").asString()).isEqualTo(filme.resolve("Heat (1995)").toString());
         assertThat(heat.get("renames").toString()).contains("\"currentName\":\"heat.mkv\"",
                 "\"targetName\":\"Heat.bluray.mkv\"");
-        assertThat(plans.get(3).get("status").asString()).as("Ronin.mkv statt Ronin (1998).mkv").isEqualTo("RENAME");
+        assertThat(plans.get(3).get("status").asString()).as("Ronin.mkv instead of Ronin (1998).mkv")
+                .isEqualTo("RENAME");
         assertThat(filme.resolve("heat/heat.mkv")).exists();
     }
 
@@ -185,7 +186,7 @@ class MovieRenameIntegrationTest {
         assertThat(result.get("renamed").asInt()).isEqualTo(2);
         assertThat(filme.resolve("Alien2/Alien.mkv")).exists();
         assertThat(filme.resolve("Heat2/Heat.mkv")).exists();
-        assertThat(filme.resolve("ronin/ronin.mkv")).as("nicht ausgewählt").exists();
+        assertThat(filme.resolve("ronin/ronin.mkv")).as("not selected").exists();
 
         JsonNode all = runJob(mockMvc.post().uri(MovieRenameController.SOURCE_RENAME_PATH, sourceId).with(csrf())
                 .contentType(JSON).content("""
@@ -194,7 +195,10 @@ class MovieRenameIntegrationTest {
         assertThat(all.get("renamed").asInt()).isZero();
         assertThat(all.get("unchanged").asInt()).isEqualTo(2);
         assertThat(all.get("skipped").asInt()).isEqualTo(1);
-        assertThat(all.get("problems").get(0).asString()).startsWith("„Ronin“: Der Ordner");
+        JsonNode problem = all.get("problems").get(0);
+        assertThat(problem.get("key").asString()).isEqualTo("movie.rename.problem");
+        assertThat(problem.get("args").get("title").asString()).isEqualTo("Ronin");
+        assertThat(problem.get("args").get("reason").get("key").asString()).isEqualTo("movie.rename.folderExists");
     }
 
     @Test
@@ -204,8 +208,8 @@ class MovieRenameIntegrationTest {
         assertThat(mockMvc.post().uri(MovieRenameController.SOURCE_PREVIEW_PATH, sourceId).with(csrf())
                 .contentType(JSON).content("""
                         {"folder": "{titel}", "file": "{title}"}""").exchange())
-                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson().extractingPath("$.detail")
-                .isEqualTo("Ordnermuster: Unbekannter Platzhalter „{titel}“ (Stelle 1).");
+                .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson().extractingPath("$.detailText.args.pattern.key")
+                .isEqualTo("movie.rename.pattern.folder");
         assertThat(mockMvc.post().uri(MovieRenameController.SOURCE_PREVIEW_PATH, sourceId).with(csrf())
                 .contentType(JSON).content("""
                         {"folder": "{title}", "file": "{title:first}/{title}"}""").exchange())
@@ -232,7 +236,7 @@ class MovieRenameIntegrationTest {
 
     private JsonNode scan(long sourceId) {
         JsonNode result = runJob(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange());
-        // Die technischen Angaben neuer Dateien werden danach gelesen; unter Windows sperrt das die Dateien.
+        // The technical details of new files are read afterwards; on Windows this locks the files.
         await().atMost(TIMEOUT).pollInSameThread()
                 .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH).exchange()).valueStream()
                         .noneMatch(job -> "RUNNING".equals(job.get("status").asString())));

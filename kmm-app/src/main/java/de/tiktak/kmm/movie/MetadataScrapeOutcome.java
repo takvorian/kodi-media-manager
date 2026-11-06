@@ -1,15 +1,15 @@
 package de.tiktak.kmm.movie;
 
 /**
- * Ergebnis von „fehlende Metadaten holen“ für einen Film.
+ * Result of "fetch missing metadata" for a movie.
  */
 public enum MetadataScrapeOutcome {
-    /** Metadaten wurden geholt und in die NFO geschrieben. */
+    /** Metadata was fetched and written to the NFO. */
     SCRAPED,
-    /** Der Film hat bereits eine TMDB-ID und wurde nicht verändert. */
+    /** The movie already has a TMDB ID and was not changed. */
     ALREADY_IDENTIFIED,
-    /** Kein Treffer war eindeutig genug; der Film muss von Hand zugeordnet werden. */
+    /** No match was unambiguous enough; the movie has to be assigned by hand. */
     NO_MATCH,
-    /** Kein Metadaten-Scraper ist installiert und eingerichtet. */
+    /** No metadata scraper is installed and set up. */
     NO_SCRAPER
 }

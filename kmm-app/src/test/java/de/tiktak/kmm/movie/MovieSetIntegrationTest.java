@@ -33,8 +33,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Filmset-Manager Ende zu Ende: anlegen, Filme zuordnen, umbenennen, sortieren, entfernen und löschen; die NFOs der
- * Filme tragen danach das richtige Set.
+ * Movie set manager end to end: create, assign movies, rename, sort, remove and delete; the NFOs of the
+ * movies afterwards carry the correct set.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -99,7 +99,7 @@ class MovieSetIntegrationTest {
                 .content("{\"name\": \"Matrix Trilogie\", \"overview\": \"Neo\", \"sortMethod\": \"TITLE\"}")
                 .exchange());
         assertThat(Files.readString(reloadedNfo)).contains("<name>Matrix Trilogie</name>");
-        assertThat(titles(setId)).as("nach Sortiertitel").containsExactly("Matrix", "Animatrix", "Matrix Reloaded");
+        assertThat(titles(setId)).as("by sort title").containsExactly("Matrix", "Animatrix", "Matrix Reloaded");
         JsonNode sets = read(mockMvc.get().uri(MovieSetController.BASE_PATH).exchange());
         assertThat(sets.valueStream().filter(set -> set.get("id").asLong() == alt || set.get("id").asLong() == setId)
                 .map(set -> set.get("name").asString() + ":" + set.get("movies").asInt() + ":"

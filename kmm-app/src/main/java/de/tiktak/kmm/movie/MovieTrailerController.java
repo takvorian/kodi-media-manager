@@ -23,7 +23,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Trailer eines Films als Link in der NFO.
+ * Trailer of a movie as a link in the NFO.
  */
 @RestController
 @RequiredArgsConstructor
@@ -52,7 +52,7 @@ public class MovieTrailerController {
         return trailerService.remove(movieId);
     }
 
-    /** Holt für die Filme ohne Trailer den besten Vorschlag, als Job. */
+    /** Fetches the best suggestion for movies without a trailer, as a job. */
     @PostMapping(FILL_PATH)
     public ResponseEntity<JobSnapshot> fillMissing(@Valid @RequestBody Movies movies) {
         JobSnapshot job = batchService.startTrailerFill(movies.movieIds());

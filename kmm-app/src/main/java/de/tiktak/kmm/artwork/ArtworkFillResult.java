@@ -2,13 +2,15 @@ package de.tiktak.kmm.artwork;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis von „fehlende Bilder füllen“ für einen Film.
+ * Result of “fill missing images” for a movie.
  *
- * @param saved    Anzahl neu gespeicherter Bilder
- * @param warnings Hinweise zu Anbietern oder Bildern, die nicht geladen werden konnten
+ * @param saved    number of newly saved images
+ * @param warnings hints about providers or images that could not be loaded
  */
-public record ArtworkFillResult(int saved, List<String> warnings) {
+public record ArtworkFillResult(int saved, List<LocalizedText> warnings) {
 
     public ArtworkFillResult {
         warnings = List.copyOf(warnings);

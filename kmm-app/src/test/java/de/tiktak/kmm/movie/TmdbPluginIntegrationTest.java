@@ -33,9 +33,9 @@ import de.tiktak.kmm.plugin.ScraperController;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 /**
- * Lädt das echte TMDB-Plugin-JAR über PF4J und spricht es über die REST-API an. Prüft damit auch,
- * dass das Plugin Jackson und die Plugin-API zur Laufzeit aus der Anwendung erhält. TMDB selbst
- * wird durch einen lokalen HTTP-Server ersetzt.
+ * Loads the real TMDB plugin JAR via PF4J and addresses it through the REST API. This also verifies
+ * that the plugin receives Jackson and the plugin API from the application at runtime. TMDB itself
+ * is replaced by a local HTTP server.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

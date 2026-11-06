@@ -24,7 +24,7 @@ public class MovieQueryService {
     private final Clock clock;
 
     /**
-     * @param search Teil des Titels; leer oder {@code null} liefert alle Filme
+     * @param search part of the title; empty or {@code null} returns all movies
      */
     public Page<MovieSummary> findMovies(String search, Pageable pageable) {
         Page<Movie> movies = search == null || search.isBlank()
@@ -34,13 +34,13 @@ public class MovieQueryService {
     }
 
     /**
-     * @throws de.tiktak.kmm.filter.InvalidFilterException wenn eine Bedingung nicht zu ihrem Feld passt
+     * @throws de.tiktak.kmm.filter.InvalidFilterException if a condition does not fit its field
      */
     public Page<MovieSummary> findFiltered(MovieFilter filter, Pageable pageable) {
         return movieRepository.findAll(MovieFilterSpecification.of(filter, clock), pageable).map(MovieSummary::from);
     }
 
-    /** IDs aller Filme, auf die der Filter passt, etwa für die Stapel-Bearbeitung. */
+    /** IDs of all movies matching the filter, e.g. for batch edit. */
     public List<Long> findMovieIds(MovieFilter filter) {
         return movieRepository.findAll(MovieFilterSpecification.of(filter, clock)).stream().map(Movie::getId).toList();
     }
@@ -67,7 +67,7 @@ public class MovieQueryService {
         return lists.stream().flatMap(list -> StreamIndex.tokensOf(list).stream()).toList();
     }
 
-    /** IDs der Filme einer Quelle, nach Titel sortiert. */
+    /** IDs of the movies of a source, sorted by title. */
     public List<Long> findMovieIds(long sourceId) {
         return movieRepository.findBySourceId(sourceId).stream()
                 .sorted(Comparator.comparing(Movie::getTitle, String.CASE_INSENSITIVE_ORDER))

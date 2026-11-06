@@ -2,12 +2,14 @@ package de.tiktak.kmm.artwork;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis einer Bildsuche.
+ * Result of an image search.
  *
- * @param warnings Hinweise zu Scrapern, die nicht eingerichtet sind oder einen Fehler gemeldet haben
+ * @param warnings hints about scrapers that are not set up or reported an error
  */
-public record ArtworkCandidates(List<ArtworkCandidate> candidates, List<String> warnings) {
+public record ArtworkCandidates(List<ArtworkCandidate> candidates, List<LocalizedText> warnings) {
 
     public ArtworkCandidates {
         candidates = List.copyOf(candidates);

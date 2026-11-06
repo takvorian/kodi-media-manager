@@ -3,7 +3,7 @@ package de.tiktak.kmm.tag;
 import java.util.List;
 
 /**
- * Die Filme und Serien mit einem Tag, jeweils nach Titel sortiert.
+ * The movies and TV shows with a tag, each sorted by title.
  */
 public record TaggedItems(String tag, List<Item> movies, List<Item> shows) {
 

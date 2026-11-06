@@ -13,10 +13,10 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
- * Bearbeitbare Metadaten eines Films. Entspricht den Feldern, die KMM in die NFO schreibt.
- * Fassung ({@code edition}) und Videoquelle ({@code videosource}) kennt Kodi nicht; sie stammen aus Ember
- * und dienen etwa dem Umbenennen.
- * Nicht gesetzte Werte sind {@code null}.
+ * Editable metadata of a movie. Corresponds to the fields KMM writes to the NFO.
+ * Kodi does not know the edition ({@code edition}) and the video source ({@code videosource}); they come from Ember
+ * and are used for renaming, among other things.
+ * Values that are not set are {@code null}.
  */
 public record MovieMetadata(
         @NotBlank @Size(max = MAX_TITLE_LENGTH) String title,
@@ -67,8 +67,8 @@ public record MovieMetadata(
     }
 
     /**
-     * Kopie für Daten aus Fremdquellen, die die Grenzen der Datenbank einhält: Texte werden gekürzt,
-     * ungültige Jahre, Laufzeiten und IDs entfallen.
+     * Copy for data from third-party sources that respects the database limits: texts are truncated,
+     * invalid years, runtimes and IDs are dropped.
      */
     public MovieMetadata withinLimits() {
         return new MovieMetadata(

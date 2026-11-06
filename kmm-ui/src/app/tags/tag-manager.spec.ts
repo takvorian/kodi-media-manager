@@ -256,7 +256,7 @@ describe('TagManager', () => {
     expect(
       tagJobSummary({
         ...done,
-        result: { changed: 1, unchanged: 0, failed: 1, failures: ['Film 3: kaputt'] },
+        result: { changed: 1, unchanged: 0, failed: 1, failures: [literal('Film 3: kaputt')] },
       }),
     ).toBe('Tag löschen: 1 geändert, 0 unverändert, 1 Fehler: Film 3: kaputt.');
     expect(tagJobSummary({ ...done, status: 'CANCELLED' })).toBe('Tag löschen abgebrochen.');

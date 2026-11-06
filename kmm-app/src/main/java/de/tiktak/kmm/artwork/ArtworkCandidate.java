@@ -7,9 +7,9 @@ import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.ImageType;
 
 /**
- * Ein Bild, das ein Scraper zur Auswahl anbietet.
+ * An image that a scraper offers for selection.
  *
- * @param season Staffel des Bildes oder {@code null} für Bilder des ganzen Mediums
+ * @param season season of the image or {@code null} for images of the whole medium
  */
 public record ArtworkCandidate(
         String scraperId,

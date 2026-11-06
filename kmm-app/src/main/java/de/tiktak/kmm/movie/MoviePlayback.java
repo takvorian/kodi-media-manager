@@ -3,12 +3,12 @@ package de.tiktak.kmm.movie;
 import java.time.Instant;
 
 /**
- * Wiedergabestand und eigene Bewertung eines Films.
+ * Playback state and own rating of a movie.
  *
- * @param filePath     Hauptdatei, bei mehrteiligen Filmen der erste Teil
- * @param playCount    Anzahl der Wiedergaben oder {@code null}
- * @param lastPlayedAt letzte Wiedergabe oder {@code null}
- * @param userRating   eigene Bewertung 1–10 oder {@code null}
+ * @param filePath     main file; the first part for multi-part movies
+ * @param playCount    number of playbacks or {@code null}
+ * @param lastPlayedAt last playback or {@code null}
+ * @param userRating   own rating 1-10 or {@code null}
  */
 public record MoviePlayback(long movieId, String title, String filePath, Integer playCount, Instant lastPlayedAt,
                             Integer userRating) {

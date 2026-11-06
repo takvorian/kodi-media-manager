@@ -96,7 +96,7 @@ class MovieControllerTest {
         assertThat(mockMvc.get().uri(MovieController.MOVIES_PATH).param("sort", "foo"))
                 .hasStatus(400)
                 .bodyJson()
-                .extractingPath("$.title").isEqualTo(MovieController.INVALID_SORT_TITLE);
+                .extractingPath("$.titleText.key").isEqualTo(MovieController.INVALID_SORT_TITLE.key());
     }
 
     @Test

@@ -6,7 +6,7 @@ import java.util.Locale;
 import de.tiktak.kmm.plugin.api.ImageType;
 
 /**
- * Bildarten, die KMM für Filme, Serien, Staffeln und Episoden verwaltet, und ihre Kodi-Bezeichnungen.
+ * Image types that KMM manages for movies, TV shows, seasons and episodes, and their Kodi names.
  */
 final class ArtworkTypes {
 
@@ -36,7 +36,7 @@ final class ArtworkTypes {
 
     static final List<ImageType> EPISODE_TYPES = List.of(ImageType.THUMB);
 
-    /** Wie Ember; Kodi liest dieselben Namen aus dem Set-Ordner. */
+    /** Like Ember; Kodi reads the same names from the set folder. */
     static final List<ImageType> MOVIE_SET_TYPES = List.of(
             ImageType.POSTER,
             ImageType.FANART,
@@ -50,7 +50,7 @@ final class ArtworkTypes {
     private ArtworkTypes() {
     }
 
-    /** Kodi-Bezeichnung für Dateinamen, z. B. {@code poster} oder {@code clearlogo}. */
+    /** Kodi name for file names, e.g. {@code poster} or {@code clearlogo}. */
     static String kodiName(ImageType type) {
         return type.name().toLowerCase(Locale.ROOT);
     }

@@ -6,6 +6,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { translate, TranslocoPipe } from '@jsverse/transloco';
 import { finalize } from 'rxjs';
 
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { CONFIRM } from './confirm';
 import { problemMessage } from './problem-message';
 import { TrailerOptions, TrailerService } from './trailer';
@@ -21,7 +22,7 @@ const YOUTUBE_WATCH = 'https://www.youtube.com/watch?v=';
  */
 @Component({
   selector: 'app-trailer-editor',
-  imports: [MatButtonModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
+  imports: [LocalizedPipe, MatButtonModule, MatFormFieldModule, MatInputModule, TranslocoPipe],
   templateUrl: './trailer-editor.html',
   styleUrl: './trailer-editor.scss',
 })

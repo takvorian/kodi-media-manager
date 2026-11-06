@@ -31,10 +31,10 @@ final class AutoScrapeTexts {
     }
 
     /**
-     * @param failure why the technical details could not be read, as plain string or translatable text
+     * @param failure why the technical details could not be read
      */
-    static LocalizedText technicalDetails(Object failure) {
-        return LocalizedText.of("autoScrape.technicalDetails").with("reason", LocalizedTexts.asText(failure));
+    static LocalizedText technicalDetails(LocalizedText failure) {
+        return LocalizedText.of("autoScrape.technicalDetails").with("reason", failure);
     }
 
     static LocalizedText theme(Throwable cause) {
@@ -46,11 +46,10 @@ final class AutoScrapeTexts {
     }
 
     /**
-     * @param reason why renaming was skipped or failed, as plain string or translatable text
+     * @param reason why renaming was skipped or failed
      */
-    static LocalizedText notRenamed(String title, Object reason) {
-        return LocalizedText.of("autoScrape.notRenamed").with("title", title)
-                .with("reason", LocalizedTexts.asText(reason));
+    static LocalizedText notRenamed(String title, LocalizedText reason) {
+        return LocalizedText.of("autoScrape.notRenamed").with("title", title).with("reason", reason);
     }
 
     static LocalizedText nfoNotWritten(String file) {

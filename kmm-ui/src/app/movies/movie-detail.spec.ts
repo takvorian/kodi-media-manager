@@ -614,7 +614,11 @@ describe('MovieDetail', () => {
       answerPreview({ ...plan, status: 'UNCHANGED', renames: [] });
       button('.rename-button').click();
       answerSettings();
-      answerPreview({ ...plan, status: 'CONFLICT', message: 'Der Ordner existiert bereits.' });
+      answerPreview({
+        ...plan,
+        status: 'CONFLICT',
+        message: literal('Der Ordner existiert bereits.'),
+      });
 
       expect(confirmMessages).toEqual([]);
       expect(snackBarMessages).toEqual([

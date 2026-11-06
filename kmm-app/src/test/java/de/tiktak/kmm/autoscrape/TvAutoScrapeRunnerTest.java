@@ -112,14 +112,14 @@ class TvAutoScrapeRunnerTest {
         when(scrapeService.scrapeMissing(3L))
                 .thenThrow(new ErrorResponseException(HttpStatus.BAD_GATEWAY));
         when(scrapeService.scrapeMissing(4L)).thenThrow(new IllegalStateException("kaputt"));
-        when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(2, List.of("POSTER: 404")));
+        when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(2, List.of(LocalizedText.literal("POSTER: 404"))));
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(1, List.of()));
         when(trailerService.fillMissing(1L)).thenReturn(true);
         when(themeService.fillShow(1L)).thenReturn(true);
         when(enrichmentService.fillMissing(1L)).thenReturn(true);
         when(enrichmentService.fillMissing(2L)).thenThrow(new ErrorResponseException(HttpStatus.CONFLICT));
         when(themeService.fillShow(2L)).thenThrow(new ErrorResponseException(HttpStatus.BAD_GATEWAY));
-        when(streamDetails.probeEpisodesAfterScrape(2L)).thenReturn(List.of("ffprobe fehlt"));
+        when(streamDetails.probeEpisodesAfterScrape(2L)).thenReturn(List.of(LocalizedText.literal("ffprobe fehlt")));
         when(renameService.renameIfEnabled(1L, TvRenameTrigger.SCRAPE)).thenReturn(Optional.empty());
         when(renameService.renameIfEnabled(2L, TvRenameTrigger.SCRAPE)).thenReturn(Optional.of(new TvShowRenamePlan(2,
                 "Lost", "/lost", "/Lost", List.of(), TvShowRenamePlan.Status.CONFLICT, LocalizedText.literal("Ordner belegt"))));
@@ -137,7 +137,7 @@ class TvAutoScrapeRunnerTest {
                 LocalizedText.literal("POSTER: 404"),
                 AutoScrapeTexts.notRenamed("Lost", LocalizedText.literal("Ordner belegt")));
         verify(renameService, never()).renameIfEnabled(3L, TvRenameTrigger.SCRAPE);
-        assertThat(result.failures()).contains(failure("Lost", AutoScrapeTexts.technicalDetails("ffprobe fehlt")));
+        assertThat(result.failures()).contains(failure("Lost", AutoScrapeTexts.technicalDetails(LocalizedText.literal("ffprobe fehlt"))));
         verify(streamDetails, never()).probeEpisodesAfterScrape(1L);
         assertThat(result.failures()).hasSize(6)
                 .first().isEqualTo(failure("Lost", AutoScrapeTexts.nfoNotWritten("/lost/x.nfo")));
@@ -163,8 +163,8 @@ class TvAutoScrapeRunnerTest {
         givenShow(2L, "Lost");
         when(scrapeService.refetchSeason(2L, 3))
                 .thenReturn(new TvShowAutoScrapeOutcome(Status.ALREADY_IDENTIFIED, 2, List.of("/lost/x.nfo")));
-        when(streamDetails.probeSeasonAfterScrape(2L, 3)).thenReturn(List.of("ffprobe fehlt"));
-        when(artworkService.fillMissingSeason(2L, 3)).thenReturn(new ArtworkFillResult(1, List.of("POSTER: 404")));
+        when(streamDetails.probeSeasonAfterScrape(2L, 3)).thenReturn(List.of(LocalizedText.literal("ffprobe fehlt")));
+        when(artworkService.fillMissingSeason(2L, 3)).thenReturn(new ArtworkFillResult(1, List.of(LocalizedText.literal("POSTER: 404"))));
         when(renameService.renameSeasonIfEnabled(2L, 3, TvRenameTrigger.SCRAPE)).thenReturn(Optional.of(
                 new TvShowRenamePlan(2, "Lost", "/lost", "/lost", List.of(), TvShowRenamePlan.Status.FAILED,
                         LocalizedText.literal("gesperrt"))));
@@ -175,7 +175,7 @@ class TvAutoScrapeRunnerTest {
         assertThat(result.episodesUpdated()).isEqualTo(2);
         assertThat(result.imagesSaved()).isEqualTo(1);
         assertThat(result.failures()).containsExactly(failure("Lost", AutoScrapeTexts.nfoNotWritten("/lost/x.nfo")),
-                failure("Lost", AutoScrapeTexts.technicalDetails("ffprobe fehlt")));
+                failure("Lost", AutoScrapeTexts.technicalDetails(LocalizedText.literal("ffprobe fehlt"))));
         assertThat(result.warnings()).containsExactly(LocalizedText.literal("POSTER: 404"),
                 AutoScrapeTexts.notRenamed("Lost", LocalizedText.literal("gesperrt")));
         verify(context).reportProgress(0, 4, AutoScrapeTexts.season(3, "Lost"));

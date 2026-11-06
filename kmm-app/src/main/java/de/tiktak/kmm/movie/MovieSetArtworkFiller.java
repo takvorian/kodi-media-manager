@@ -2,18 +2,20 @@ package de.tiktak.kmm.movie;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Holt fehlende Bilder eines Filmsets. Umgesetzt im Bildermodul, das selbst auf die Filmsets zugreift; die
- * Schnittstelle lässt den Job „Alle Sets ergänzen“ Bilder holen, ohne das Modul zu kennen.
+ * Fetches missing images of a movie set. Implemented in the artwork module, which accesses the movie sets itself;
+ * the interface lets the job “Complete all sets” fetch images without knowing that module.
  */
 public interface MovieSetArtworkFiller {
 
     /**
-     * @return Anzahl gespeicherter Bilder und Hinweise
+     * @return number of saved images and hints
      */
     Fill fillMissingArtwork(long setId);
 
-    record Fill(int saved, List<String> warnings) {
+    record Fill(int saved, List<LocalizedText> warnings) {
 
         public Fill {
             warnings = List.copyOf(warnings);

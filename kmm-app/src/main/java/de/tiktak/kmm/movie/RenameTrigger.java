@@ -5,12 +5,12 @@ import java.util.function.Predicate;
 import de.tiktak.kmm.settings.RenameSettings;
 
 /**
- * Wann Filme automatisch umbenannt werden; ob, steht in den Einstellungen.
+ * When movies are renamed automatically; whether they are is set in the settings.
  */
 public enum RenameTrigger {
-    /** Nach dem Speichern bearbeiteter Metadaten. */
+    /** After saving edited metadata. */
     EDIT(RenameSettings::movieOnEdit),
-    /** Nach dem automatischen Scrapen. */
+    /** After automatic scraping. */
     SCRAPE(RenameSettings::movieOnScrape);
 
     private final Predicate<RenameSettings> enabled;

@@ -8,15 +8,15 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import de.tiktak.kmm.source.ScanDetails;
 
 /**
- * Ergebnis eines Quellen-Scans.
+ * Result of a source scan.
  *
- * @param added                neu gefundene Filme
- * @param updated              bekannte Filme, deren NFO sich geändert hat und neu eingelesen wurde
- * @param removed              Filme, deren Datei nicht mehr existiert
- * @param unchanged            bekannte Filme ohne Änderung
- * @param nfoErrors            NFOs, die nicht gelesen werden konnten (die Filme bleiben trotzdem erhalten)
- * @param details              die betroffenen Filme, gekürzt
- * @param newWithoutStreams    IDs der neu gefundenen Filme ohne technische Angaben in der NFO
+ * @param added                newly found movies
+ * @param updated              known movies whose NFO has changed and was re-read
+ * @param removed              movies whose file no longer exists
+ * @param unchanged            known movies without changes
+ * @param nfoErrors            NFOs that could not be read (the movies are kept anyway)
+ * @param details              the affected movies, truncated
+ * @param newWithoutStreams    IDs of the newly found movies without stream details in the NFO
  */
 public record ScanResult(long sourceId, int added, int updated, int removed, int unchanged, int nfoErrors,
         ScanDetails details, @JsonIgnore List<Long> newWithoutStreams) {

@@ -13,8 +13,8 @@ import de.tiktak.kmm.plugin.api.ImageType;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Bilddateien im Dateisystem: finden, ersetzen und löschen. Ein neues Bild ersetzt auch Varianten mit
- * anderer Endung (z. B. {@code poster.png} durch {@code poster.jpg}).
+ * Image files in the file system: find, replace and delete. A new image also replaces variants with a
+ * different extension (e.g. {@code poster.png} by {@code poster.jpg}).
  */
 @Slf4j
 @Component
@@ -61,7 +61,7 @@ class ArtworkFiles {
         }
     }
 
-    /** Netzlaufwerke unterstützen teils kein atomares Ersetzen; dann wird normal verschoben. */
+    /** Network drives sometimes do not support atomic replacement; then a normal move is used. */
     private static void replace(Path source, Path target) throws IOException {
         try {
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

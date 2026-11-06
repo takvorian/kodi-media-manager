@@ -17,7 +17,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Bewertungen und leere Felder über die Ergänzungs-Scraper (etwa Trakt, OMDb) für die ausgewählten Filme.
+ * Ratings and empty fields via the supplementing scrapers (such as Trakt, OMDb) for the selected movies.
  */
 @RestController
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ public class MovieEnrichmentController {
 
     private final MovieBatchService batchService;
 
-    /** Aktualisiert die Bewertungen der Auswahl und füllt leere Felder, als Job. */
+    /** Updates the ratings of the selection and fills empty fields, as a job. */
     @PostMapping(REFRESH_PATH)
     public ResponseEntity<JobSnapshot> refresh(@Valid @RequestBody Selection selection) {
         JobSnapshot job = batchService.startEnrichment(selection.movieIds());

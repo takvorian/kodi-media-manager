@@ -1,26 +1,26 @@
 package de.tiktak.kmm.movie;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Ein Filmset gibt es nicht oder sein Name ist vergeben.
+ * A movie set does not exist or its name is taken.
  */
-public class MovieSetProblemException extends ErrorResponseException {
+public class MovieSetProblemException extends LocalizedProblemException {
 
-    private MovieSetProblemException(HttpStatus status, String title, String detail) {
-        super(status);
-        getBody().setTitle(title);
-        getBody().setDetail(detail);
+    private MovieSetProblemException(HttpStatus status, String key, LocalizedText detail) {
+        super(status, LocalizedText.of(key + ".title"), detail, null);
     }
 
     static MovieSetProblemException notFound(long setId) {
-        return new MovieSetProblemException(HttpStatus.NOT_FOUND, "Filmset nicht gefunden",
-                "Es gibt kein Filmset mit der ID %d.".formatted(setId));
+        return new MovieSetProblemException(HttpStatus.NOT_FOUND, "movieSet.notFound",
+                LocalizedText.of("movieSet.notFound.detail").with("id", setId));
     }
 
     static MovieSetProblemException nameTaken(String name) {
-        return new MovieSetProblemException(HttpStatus.CONFLICT, "Name vergeben",
-                "Es gibt schon ein Filmset „%s“.".formatted(name));
+        return new MovieSetProblemException(HttpStatus.CONFLICT, "movieSet.nameTaken",
+                LocalizedText.of("movieSet.nameTaken.detail").with("name", name));
     }
 }

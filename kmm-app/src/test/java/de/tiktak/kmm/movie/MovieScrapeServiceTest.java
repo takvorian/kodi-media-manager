@@ -147,7 +147,7 @@ class MovieScrapeServiceTest {
                 .isInstanceOfSatisfying(ScraperProblemException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                     assertThat(exception.getBody().getDetail()).isEqualTo("API-Key fehlt");
-                    assertThat(exception.getBody().getTitle()).isEqualTo("TMDB ist nicht eingerichtet");
+                    assertThat(exception.getBody().getTitle()).isEqualTo("TMDB is not set up");
                 });
         verify(tmdb, never()).search(any());
     }

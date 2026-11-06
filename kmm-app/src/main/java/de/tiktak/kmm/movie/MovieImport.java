@@ -7,15 +7,15 @@ import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 /**
- * Ein Film aus einer Migration.
+ * A movie from a migration.
  *
- * @param filePath            absoluter Pfad der Filmdatei (bei DVD/Blu-ray die IFO- bzw. index.bdmv-Datei)
- * @param supplement          weitere Angaben; das Set wird über {@link MovieSupplement#set()} zugeordnet
- * @param setOrder            Position im Set oder {@code null}
- * @param setTmdbCollectionId TMDB-Collection-ID des Sets oder {@code null}
- * @param addedAt             Aufnahme in die Bibliothek oder {@code null} für „jetzt“
- * @param trailer             Trailer-Link oder {@code null}
- * @param language            Sprache oder {@code null}, dann bleibt eine vorhandene erhalten
+ * @param filePath            absolute path of the movie file (for DVD/Blu-ray the IFO or index.bdmv file)
+ * @param supplement          further details; the set is assigned via {@link MovieSupplement#set()}
+ * @param setOrder            position in the set or {@code null}
+ * @param setTmdbCollectionId TMDB collection ID of the set or {@code null}
+ * @param addedAt             addition to the library or {@code null} for "now"
+ * @param trailer             trailer link or {@code null}
+ * @param language            language or {@code null}, in which case an existing one is kept
  */
 public record MovieImport(
         long sourceId,
@@ -39,7 +39,7 @@ public record MovieImport(
         streams = streams == null ? StreamDetails.EMPTY : streams;
     }
 
-    /** Ein Film ohne Angabe der Sprache. */
+    /** A movie without a language. */
     public MovieImport(long sourceId, String filePath, DiscFormat discFormat, int partCount, MovieMetadata metadata,
             MovieSupplement supplement, Integer setOrder, String setTmdbCollectionId, Instant addedAt,
             StreamDetails streams, String trailer) {
@@ -47,7 +47,7 @@ public record MovieImport(
                 streams, trailer, null);
     }
 
-    /** Ein Film ohne Trailer-Angabe. */
+    /** A movie without a trailer value. */
     public MovieImport(long sourceId, String filePath, DiscFormat discFormat, int partCount, MovieMetadata metadata,
             MovieSupplement supplement, Integer setOrder, String setTmdbCollectionId, Instant addedAt,
             StreamDetails streams) {

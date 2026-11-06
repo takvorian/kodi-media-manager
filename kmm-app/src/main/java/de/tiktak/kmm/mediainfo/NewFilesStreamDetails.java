@@ -9,7 +9,7 @@ import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Liest nach einem Scan die neu gefundenen Dateien aus, deren NFO keine technischen Angaben enthält.
+ * After a scan, reads the newly found files whose NFO contains no technical details.
  */
 @Component
 @RequiredArgsConstructor

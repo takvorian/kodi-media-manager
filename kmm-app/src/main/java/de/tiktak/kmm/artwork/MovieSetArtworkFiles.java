@@ -16,9 +16,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Bilddateien eines Filmsets in allen eingeschalteten Ablagen: im flachen Schema
- * ({@code <Ordner>/<Settitel>-poster.jpg}) und in Kodis Set-Ordnern ({@code <Ordner>/<Settitel>/poster.jpg}).
- * Gelesen wird aus der ersten Ablage, die ein Bild hat; geschrieben in alle.
+ * Image files of a movie set in all enabled storage locations: in the flat scheme
+ * ({@code <folder>/<settitle>-poster.jpg}) and in Kodi's set folders ({@code <folder>/<settitle>/poster.jpg}).
+ * Reading uses the first storage location that has an image; writing goes to all.
  */
 @Slf4j
 @Component
@@ -43,7 +43,7 @@ class MovieSetArtworkFiles {
     }
 
     /**
-     * @return die Datei in der ersten Ablage
+     * @return the file in the first storage location
      */
     ArtworkFile save(MovieSetSettings settings, String title, ImageType type, DownloadedImage image) {
         List<ArtworkFile> saved = new ArrayList<>();
@@ -59,8 +59,8 @@ class MovieSetArtworkFiles {
     }
 
     /**
-     * Verschiebt die Bilder nach einer Umbenennung des Sets auf den neuen Titel. Ein leerer alter Set-Ordner wird
-     * entfernt.
+     * Moves the images to the new title after a set has been renamed. An empty old set folder is
+     * removed.
      */
     void rename(MovieSetSettings settings, String previousTitle, String title, List<ImageType> types) {
         for (ImageType type : types) {

@@ -34,7 +34,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Filter der Filmliste Ende zu Ende gegen die Datenbank, mit technischen Angaben aus den NFOs.
+ * Movie list filter end to end against the database, with technical details from the NFOs.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -62,7 +62,7 @@ class MovieFilterIntegrationTest {
 
     @BeforeEach
     void givenLibrary() throws IOException {
-        // Andere Tests im selben Spring-Kontext können Filmsets hinterlassen; die Auswahlwerte enthalten alle.
+        // Other tests in the same Spring context may leave movie sets behind; the selection values contain all of them.
         jdbcClient.sql("DELETE FROM movie_set").update();
         Path filme = Files.createDirectories(library.resolve("filme"));
         givenMovie(filme, "Heat", 1995, "<genre>Krimi</genre><genre>Drama</genre><tag>Favorit</tag>"
@@ -95,7 +95,7 @@ class MovieFilterIntegrationTest {
                 .containsExactly("Heat", "Matrix");
         assertThat(titles(false, condition("TAG", "IS", "Favorit"), condition("MPAA", "EMPTY", null)))
                 .containsExactly("Heat", "Matrix", "Ohne Angaben", "Pippi");
-        assertThat(titles(true, condition("TITLE", "CONTAINS", "_"))).as("_ ist kein Platzhalter").isEmpty();
+        assertThat(titles(true, condition("TITLE", "CONTAINS", "_"))).as("_ is not a wildcard").isEmpty();
         assertThat(titles(true, condition("TAG", "IS", "kinder_50%"))).containsExactly("Pippi");
         assertThat(titles(true, condition("USER_RATING", "AT_LEAST", "8"))).containsExactly("Heat");
         assertThat(titles(true, condition("TRAILER", "NOT_EMPTY", null))).containsExactly("Heat");

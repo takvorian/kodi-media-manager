@@ -5,13 +5,13 @@ import java.net.URI;
 import de.tiktak.kmm.plugin.api.ThemeCandidate;
 
 /**
- * Eine Titelmusik zur Auswahl in der Film- oder Serienansicht.
+ * A theme music for selection in the movie or TV show view.
  *
- * @param subject     Serie bzw. Film beim Anbieter
- * @param source      Adresse, aus der die Musik geladen wird
- * @param previewUrl  direkt abspielbare Audiodatei oder {@code null}
- * @param webUrl      Seite des Anbieters
- * @param sameTitle   ob der Anbieter sie unter demselben Titel führt; nur solche Treffer übernimmt KMM automatisch
+ * @param subject     TV show or movie at the provider
+ * @param source      address the music is loaded from
+ * @param previewUrl  directly playable audio file or {@code null}
+ * @param webUrl      page of the provider
+ * @param sameTitle   whether the provider lists it under the same title; only such matches are applied automatically
  */
 public record ThemeOption(String name, String subject, URI source, URI previewUrl, URI webUrl,
         Integer durationSeconds, String scraperId, String scraperName, boolean sameTitle) {

@@ -21,6 +21,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 
@@ -80,14 +81,14 @@ class ArtworkControllerTest {
         when(artworkService.candidates(5L, ImageType.POSTER)).thenReturn(new ArtworkCandidates(List.of(
                 new ArtworkCandidate("tmdb", "TMDB", ImageType.POSTER, URI.create("https://img/p.jpg"),
                         URI.create("https://img/w342/p.jpg"), 1000, 1500, "de", 5.4, null)),
-                List.of("Für fanart.tv fehlt ein API-Key.")));
+                List.of(LocalizedText.literal("Für fanart.tv fehlt ein API-Key."))));
 
         assertThat(mockMvc.get().uri(ArtworkController.CANDIDATES_PATH, 5L, "POSTER"))
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         {"candidates": [{"scraperId": "tmdb", "previewUrl": "https://img/w342/p.jpg", "language": "de"}],
-                         "warnings": ["Für fanart.tv fehlt ein API-Key."]}
+                         "warnings": [{"key": "literal", "args": {"text": "Für fanart.tv fehlt ein API-Key."}}]}
                         """);
     }
 

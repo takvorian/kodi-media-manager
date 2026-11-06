@@ -6,7 +6,7 @@ import de.tiktak.kmm.i18n.Localized;
 import de.tiktak.kmm.i18n.LocalizedText;
 
 /**
- * Turns causes and messages of other modules into translatable texts for result lists and problem details.
+ * Turns causes from other modules into translatable texts for result lists and problem details.
  */
 public final class LocalizedTexts {
 
@@ -25,13 +25,5 @@ public final class LocalizedTexts {
             return LocalizedText.literal(response.getBody().getDetail());
         }
         return LocalizedText.literal(String.valueOf(cause.getMessage()));
-    }
-
-    /**
-     * A message that is either a translatable text already or a plain string, shown as is. Bridges APIs of other
-     * modules that still deliver plain strings.
-     */
-    public static LocalizedText asText(Object message) {
-        return message instanceof LocalizedText text ? text : LocalizedText.literal(String.valueOf(message));
     }
 }

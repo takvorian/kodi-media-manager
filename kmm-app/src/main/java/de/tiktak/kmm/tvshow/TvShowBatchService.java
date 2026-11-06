@@ -62,15 +62,6 @@ public class TvShowBatchService {
                 context -> apply(distinct, change, context));
     }
 
-    /**
-     * @param title title of the job with {@code %d} for the number of TV shows, shown as is
-     * @deprecated use {@link #startFill(LocalizedText, List, LongPredicate)} with a translatable title
-     */
-    @Deprecated(forRemoval = true)
-    public JobSnapshot startFill(String title, List<Long> showIds, LongPredicate change) {
-        int count = new LinkedHashSet<>(showIds).size();
-        return startFill(LocalizedText.literal(title.formatted(count)), showIds, change);
-    }
 
     TvShowBatchResult apply(TvShowBatchEdit edit, JobContext context) {
         return apply(edit.showIds(), showId -> metadataService.changeShow(showId, edit::apply), context);

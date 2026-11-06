@@ -94,7 +94,7 @@ class MovieArtworkFilesTest {
         assertThatThrownBy(() -> artworkFiles.save(missing, ImageType.POSTER, image("x", "jpg")))
                 .isInstanceOfSatisfying(ArtworkProblemException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
-                    assertThat(exception.getBody().getDetail()).contains("Schreibrechte");
+                    assertThat(exception.localizedText().key()).isEqualTo("artwork.unwritable.detail");
                 });
     }
 

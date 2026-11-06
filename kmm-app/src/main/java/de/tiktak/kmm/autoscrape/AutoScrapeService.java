@@ -179,7 +179,7 @@ public class AutoScrapeService {
             }
             ArtworkFillResult artwork = artworkService.fillMissing(movieId);
             progress.imagesSaved(artwork.saved());
-            artwork.warnings().forEach(warning -> progress.warn(LocalizedTexts.asText(warning)));
+            artwork.warnings().forEach(progress::warn);
             if (trailerService.fillMissing(movieId)) {
                 progress.trailerSaved();
             }

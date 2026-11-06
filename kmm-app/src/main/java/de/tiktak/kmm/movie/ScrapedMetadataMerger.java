@@ -3,8 +3,8 @@ package de.tiktak.kmm.movie;
 import de.tiktak.kmm.plugin.api.MetadataResult;
 
 /**
- * Legt Scraper-Ergebnisse über vorhandene Metadaten: Was der Scraper liefert, ersetzt den bisherigen
- * Wert; was er nicht kennt (z. B. Sortiertitel oder Kurzinhalt), bleibt erhalten.
+ * Overlays scraper results onto existing metadata: whatever the scraper delivers replaces the previous
+ * value; whatever it does not know (e.g. sort title or tagline) is kept.
  */
 final class ScrapedMetadataMerger {
 

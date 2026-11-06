@@ -19,9 +19,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Übernimmt den Inhalt einer NFO in einen Film. Bevor KMM eine NFO neu schreibt, liest es sie ein, wenn sie seit dem
- * letzten Einlesen außerhalb von KMM geändert wurde (etwa von Ember oder von Hand); sonst gingen diese Änderungen
- * verloren.
+ * Takes over the content of an NFO into a movie. Before KMM rewrites an NFO, it reads it in if it was changed
+ * outside KMM since it was last read (for example by Ember or by hand); otherwise these changes would be
+ * lost.
  */
 @Slf4j
 @Component
@@ -33,8 +33,8 @@ class MovieNfoSync {
     private final Clock clock;
 
     /**
-     * @throws NfoChangedOutsideException wenn die geänderte NFO nicht lesbar ist; dann darf sie nicht überschrieben
-     *                                    werden
+     * @throws NfoChangedOutsideException if the changed NFO is not readable; it must then not be
+     *                                    overwritten
      */
     void refreshIfChangedOutside(Movie movie) {
         Optional<NfoFileState> nfoFile = nfoFiles.find(movie.companionFiles());
@@ -51,8 +51,8 @@ class MovieNfoSync {
     }
 
     /**
-     * Liest eine außerhalb von KMM geänderte NFO ein, damit die Filmansicht ihre Werte zeigt und beim Speichern nicht
-     * ältere zurückschreibt. Eine unlesbare NFO bleibt hier unberücksichtigt.
+     * Reads in an NFO changed outside KMM so that the movie view shows its values and does not write back
+     * older ones when saving. An unreadable NFO is ignored here.
      */
     void readIfOutdated(Movie movie) {
         try {
@@ -63,10 +63,10 @@ class MovieNfoSync {
     }
 
     /**
-     * Liest den Trailer aus der NFO nach, wenn KMM ihn noch nicht kennt, etwa bei Filmen aus einer Version ohne
-     * Trailer. Ohne NFO gibt es keinen Trailer.
+     * Reads the trailer from the NFO later if KMM does not know it yet, for example for movies from a version without
+     * trailer support. Without an NFO there is no trailer.
      *
-     * @return ob der Trailer danach bekannt ist; {@code false}, wenn die NFO nicht lesbar ist
+     * @return whether the trailer is known afterwards; {@code false} if the NFO is not readable
      */
     boolean readTrailerIfUnknown(Movie movie) {
         if (movie.isTrailerKnown()) {
@@ -88,9 +88,10 @@ class MovieNfoSync {
     }
 
     /**
-     * Übernimmt Metadaten, weitere Angaben, technische Angaben und Hinzugefügt-Datum der NFO. Stammen die Angaben bisher
-     * nicht aus der NFO (Ember-Import), bleibt erhalten, was nur Ember kennt: Darsteller, die in der NFO fehlen, und
-     * technische Angaben oder Trailer, wenn die NFO keine hat.
+     * Takes over metadata, further details, technical details and the added date of the NFO. If the details
+     * did not come from the NFO so far (Ember import), what only Ember knows is kept: cast members missing from the
+     * NFO, and
+     * technical details or trailer if the NFO has none.
      */
     void apply(Movie movie, NfoFileState nfoFile, MovieNfo nfo, String fallbackTitle, Integer fallbackYear) {
         Known known = movie.isNfoRead() ? null : new Known(movie.supplement().actors(), movie.streamDetails(),
@@ -127,7 +128,7 @@ class MovieNfoSync {
         }
     }
 
-    /** Die Darsteller der NFO, dahinter die bekannten, die in der NFO fehlen. */
+    /** The cast of the NFO, followed by the known ones that are missing from the NFO. */
     private static List<MovieSupplement.Actor> withMissingActors(List<MovieSupplement.Actor> fromNfo,
             List<MovieSupplement.Actor> known) {
         Set<String> names = fromNfo.stream().map(MovieSupplement.Actor::name).collect(Collectors.toSet());
@@ -135,7 +136,7 @@ class MovieNfoSync {
                 .toList();
     }
 
-    /** Was KMM vor dem ersten Einlesen der NFO aus Ember kennt. */
+    /** What KMM knows from Ember before the NFO is first read. */
     private record Known(List<MovieSupplement.Actor> actors, StreamDetails streams, String trailer) {
     }
 }

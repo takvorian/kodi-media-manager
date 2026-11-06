@@ -28,7 +28,7 @@ import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.nfo.StreamLabels;
 
 /**
- * Die Werte der Platzhalter eines Films für die Namensmuster.
+ * The values of a movie's placeholders for the name patterns.
  */
 record MovieNameValues(MovieMetadata metadata, MovieSupplement supplement, StreamDetails streams) {
 
@@ -38,7 +38,7 @@ record MovieNameValues(MovieMetadata metadata, MovieSupplement supplement, Strea
         return new MovieNameValues(movie.metadata(), movie.supplement(), movie.streamDetails());
     }
 
-    /** @return der Wert oder {@code null}, wenn er fehlt */
+    /** @return the value, or {@code null} if it is missing */
     String value(String placeholder) {
         return switch (placeholder) {
             case TITLE -> MovieSearchTitle.of(metadata);

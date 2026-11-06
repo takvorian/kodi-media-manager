@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { LocalizedText } from '../i18n/localized-text';
+
 /** A trailer suggestion; `url` goes into the NFO, `webUrl` opens it in the browser. */
 export interface TrailerOption {
   readonly name: string;
@@ -19,7 +21,7 @@ export interface TrailerOption {
 /** Suggestions, best first, and notes on providers that are not set up or failed. */
 export interface TrailerOptions {
   readonly candidates: readonly TrailerOption[];
-  readonly warnings: readonly string[];
+  readonly warnings: readonly LocalizedText[];
 }
 
 /** Movie or TV show after a change; only the trailer is needed. */

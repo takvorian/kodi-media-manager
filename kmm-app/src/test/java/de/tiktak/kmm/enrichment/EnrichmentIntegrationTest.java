@@ -50,7 +50,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Ergänzungen (Bewertungen und leere Felder) Ende zu Ende, mit Trakt und OMDb als Attrappen.
+ * Enrichments (ratings and empty fields) end to end, with Trakt and OMDb as dummies.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -122,7 +122,8 @@ class EnrichmentIntegrationTest {
 
         JsonNode job = awaitJob(post(MovieEnrichmentController.REFRESH_PATH, "{\"movieIds\": [%d]}".formatted(heatId)));
 
-        assertThat(job.get("title").get("args").get("text").asString()).isEqualTo("Bewertungen für 1 Filme aktualisieren");
+        assertThat(job.get("title").get("key").asString()).isEqualTo("movie.batch.enrichment.jobTitle");
+        assertThat(job.get("title").get("args").get("count").asInt()).isEqualTo(1);
         assertThat(job.get("result").get("changed").asInt()).as(job.toString()).isEqualTo(1);
         String nfo = Files.readString(library.resolve("filme/Heat/Heat.nfo"));
         assertThat(nfo).contains("<plot>A group of professional thieves.</plot>", "<runtime>170</runtime>",
@@ -130,7 +131,7 @@ class EnrichmentIntegrationTest {
                 "<name>Al Pacino</name>", "<country>United States</country>", "<mpaa>R</mpaa>",
                 "<value>8.3</value>", "<votes>741503</votes>", "name=\"trakt\"", "name=\"tomatometerallcritics\"")
                 .doesNotContain("<genre>Crime</genre>", "<value>7.0</value>");
-        assertThat(nfo.indexOf("name=\"imdb\"")).as("bleibt Standard").isLessThan(nfo.indexOf("name=\"trakt\""));
+        assertThat(nfo.indexOf("name=\"imdb\"")).as("stays default").isLessThan(nfo.indexOf("name=\"trakt\""));
         assertThat(nfo).contains("default=\"true\" max=\"10\" name=\"imdb\"");
 
         JsonNode again = awaitJob(post(MovieEnrichmentController.REFRESH_PATH,

@@ -87,7 +87,7 @@ class MovieSetScrapeServiceTest {
     void reportsMissingOrUnconfiguredScrapers() {
         when(scraperRegistry.movieSetScrapers()).thenReturn(List.of());
         assertThatThrownBy(() -> service.search("Matrix")).isInstanceOfSatisfying(ScraperProblemException.class,
-                e -> assertThat(e.getBody().getTitle()).isEqualTo("Kein Scraper für Filmsets"));
+                e -> assertThat(e.getBody().getTitle()).isEqualTo("No scraper for movie sets"));
 
         MovieSetScraper unconfigured = scraper(Optional.of(LocalizedText.literal("Bitte den TMDB-API-Key eintragen.")));
         when(scraperRegistry.movieSetScrapers()).thenReturn(List.of(unconfigured));

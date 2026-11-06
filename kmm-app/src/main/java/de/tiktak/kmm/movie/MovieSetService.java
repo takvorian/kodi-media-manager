@@ -15,8 +15,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Filmsets: auflisten, anlegen, ändern und löschen. Die Filme eines Sets stehen in dessen Reihenfolge (Jahr oder
- * Titel, wie in Ember). Was Film-NFOs ändert, startet {@link MovieSetJobService} als Hintergrund-Job.
+ * Movie sets: list, create, change and delete. The movies of a set are in its order (year or
+ * title, as in Ember). Whatever changes movie NFOs is started by {@link MovieSetJobService} as a background job.
  */
 @Slf4j
 @Service
@@ -28,7 +28,7 @@ public class MovieSetService {
     private final MovieRepository movieRepository;
     private final ApplicationEventPublisher events;
 
-    /** @return alle Sets mit der Anzahl ihrer Filme, nach Name sortiert */
+    /** @return all sets with the number of their movies, sorted by name */
     public List<MovieSetSummary> findAll() {
         Map<Long, Long> counts = movieRepository.countByMovieSet().stream()
                 .collect(Collectors.toMap(row -> (Long) row[0], row -> (Long) row[1]));
@@ -40,7 +40,7 @@ public class MovieSetService {
     }
 
     /**
-     * @throws MovieSetProblemException wenn es das Set nicht gibt
+     * @throws MovieSetProblemException if the set does not exist
      */
     public MovieSetDetails find(long setId) {
         MovieSet set = require(setId);
@@ -48,7 +48,7 @@ public class MovieSetService {
     }
 
     /**
-     * @throws MovieSetProblemException wenn der Name vergeben ist
+     * @throws MovieSetProblemException if the name is taken
      */
     @Transactional
     public MovieSetDetails create(MovieSetData data) {
@@ -61,10 +61,10 @@ public class MovieSetService {
     }
 
     /**
-     * Übernimmt die Angaben. Ändern sich Name oder Beschreibung, müssen die NFOs der Filme neu geschrieben werden.
+     * Takes over the details. If name or description change, the movies' NFOs have to be rewritten.
      *
-     * @return die Filme, deren NFO neu geschrieben werden muss
-     * @throws MovieSetProblemException wenn es das Set nicht gibt oder der Name vergeben ist
+     * @return the movies whose NFO has to be rewritten
+     * @throws MovieSetProblemException if the set does not exist or the name is taken
      */
     @Transactional
     public List<Long> update(long setId, MovieSetData data) {
@@ -82,8 +82,8 @@ public class MovieSetService {
     }
 
     /**
-     * Übernimmt ein Set aus einer Migration: legt es an oder ergänzt das gleichnamige; vorhandene Angaben bleiben,
-     * wenn die Migration keine hat.
+     * Takes over a set from a migration: creates it or supplements the one with the same name; existing details are
+     * kept if the migration has none.
      */
     @Transactional
     public void importSet(String name, String overview, String tmdbCollectionId, SetSortMethod sortMethod) {
@@ -93,13 +93,13 @@ public class MovieSetService {
         set.sortBy(sortMethod);
     }
 
-    /** @return die Filme des Sets */
+    /** @return the movies of the set */
     public List<Long> findMovieIds(long setId) {
         require(setId);
         return movieRepository.findIdsByMovieSetId(setId);
     }
 
-    /** Löscht ein Set, das keine Filme mehr hat. */
+    /** Deletes a set that has no movies left. */
     @Transactional
     public void deleteEmpty(long setId) {
         MovieSet set = require(setId);
@@ -136,7 +136,7 @@ public class MovieSetService {
         return setRepository.findById(setId).orElseThrow(() -> MovieSetProblemException.notFound(setId));
     }
 
-    /** Ein Film des Sets mit dem Schlüssel für die Sortierung nach (Sortier-)Titel. */
+    /** A movie of the set with the key for sorting by (sort) title. */
     private record Row(MovieSetDetails.Member member, String sortKey) {
 
         static Row of(Object[] row) {

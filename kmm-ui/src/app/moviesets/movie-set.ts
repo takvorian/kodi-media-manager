@@ -1,7 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
-import { localize } from '../i18n/localized-text';
+import { LocalizedText, localize } from '../i18n/localized-text';
 
 /** Job key of the set changes; must match MovieSetJobService.JOB_KEY. */
 export const MOVIE_SET_JOB_KEY = 'moviesets';
@@ -52,14 +52,14 @@ export interface MovieSetCompletionResult {
   readonly overviews: number;
   readonly images: number;
   readonly withoutCollection: number;
-  readonly problems: readonly string[];
+  readonly problems: readonly LocalizedText[];
 }
 
 export interface MovieSetChangeResult {
   readonly changed: number;
   readonly unchanged: number;
   readonly failed: number;
-  readonly failures: readonly string[];
+  readonly failures: readonly LocalizedText[];
 }
 
 /** Summarizes a finished set job for a snackbar message. */
@@ -75,7 +75,7 @@ export function movieSetJobSummary(job: Job): string {
       overviews: result.overviews,
       images: result.images,
       skipped: result.withoutCollection,
-      notes: result.problems.join('; '),
+      notes: result.problems.map(localize).join('; '),
     });
   }
   if (job.status === 'SUCCEEDED') {
@@ -86,7 +86,7 @@ export function movieSetJobSummary(job: Job): string {
       title: localize(job.title),
       changed: result.changed,
       failed: result.failed,
-      failures: result.failures.join('; '),
+      failures: result.failures.map(localize).join('; '),
     });
   }
   return job.status === 'CANCELLED'

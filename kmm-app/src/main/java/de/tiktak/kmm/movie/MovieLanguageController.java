@@ -20,7 +20,7 @@ public class MovieLanguageController {
 
     private final MovieLanguageService languageService;
 
-    /** Ändert die Sprache der Filme als Job, auch für einen einzelnen Film. */
+    /** Changes the language of the movies as a job, also for a single movie. */
     @PostMapping(LANGUAGE_PATH)
     public ResponseEntity<JobSnapshot> change(@Valid @RequestBody MovieLanguageChange change) {
         JobSnapshot job = languageService.start(change);

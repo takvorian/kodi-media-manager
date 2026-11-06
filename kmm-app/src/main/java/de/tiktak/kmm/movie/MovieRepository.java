@@ -59,7 +59,7 @@ interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationEx
             + "WHERE m.streamIndex.subtitleLanguages IS NOT NULL")
     List<String> findDistinctSubtitleLanguageLists();
 
-    /** Datei und Änderungszeit der eingelesenen NFO je Film einer Quelle. */
+    /** File and modification time of the read NFO per movie of a source. */
     @Query("SELECT m.filePath, m.nfoModifiedAt FROM Movie m WHERE m.sourceId = :sourceId")
     List<Object[]> findNfoTimestampsBySourceId(long sourceId);
 
@@ -73,11 +73,11 @@ interface MovieRepository extends JpaRepository<Movie, Long>, JpaSpecificationEx
     @Query("SELECT m.id, m.title, m.releaseYear, m.sortTitle FROM Movie m WHERE m.movieSet.id = :setId")
     List<Object[]> findMembersByMovieSetId(long setId);
 
-    /** Je Set die Anzahl der Filme. */
+    /** Number of movies per set. */
     @Query("SELECT m.movieSet.id, COUNT(m) FROM Movie m WHERE m.movieSet IS NOT NULL GROUP BY m.movieSet.id")
     List<Object[]> countByMovieSet();
 
-    /** Je Tag die Anzahl der Filme. */
+    /** Number of movies per tag. */
     @Query("SELECT t, COUNT(m) FROM Movie m JOIN m.tags t GROUP BY t")
     List<Object[]> countByTag();
 

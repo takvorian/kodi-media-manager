@@ -24,7 +24,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Filmset-Manager.
+ * Movie set manager.
  */
 @RestController
 @RequestMapping(MovieSetController.BASE_PATH)
@@ -46,19 +46,19 @@ public class MovieSetController {
         return setService.findAll();
     }
 
-    /** Sucht Sammlungen beim Online-Dienst. */
+    /** Searches for collections at the online service. */
     @GetMapping(SEARCH_PATH)
     public List<ScrapeCandidate> search(@RequestParam @NotBlank String title) {
         return scrapeService.search(title);
     }
 
-    /** Titel, Beschreibung und TMDB-ID eines Treffers als Vorschlag; gespeichert wird erst mit {@code PUT}. */
+    /** Title, description and TMDB ID of a match as a suggestion; nothing is saved until {@code PUT}. */
     @GetMapping(PROPOSAL_PATH)
     public MovieSetData proposal(@PathVariable long setId, @RequestParam @NotBlank String providerId) {
         return scrapeService.proposal(setId, providerId);
     }
 
-    /** Ergänzt fehlende Beschreibungen und Bilder aller Sets als Job. */
+    /** Fills in missing descriptions and images of all sets as a job. */
     @PostMapping(COMPLETE_PATH)
     public ResponseEntity<JobSnapshot> completeAll() {
         return accepted(jobService.completeAll());
@@ -76,7 +76,7 @@ public class MovieSetController {
                 .body(created);
     }
 
-    /** Speichert die Angaben; die NFOs der Filme schreibt ein Job neu. */
+    /** Saves the details; a job rewrites the movies' NFOs. */
     @PutMapping(SET_PATH)
     public ResponseEntity<JobSnapshot> update(@PathVariable long setId, @Valid @RequestBody MovieSetData data) {
         return accepted(jobService.update(setId, data));

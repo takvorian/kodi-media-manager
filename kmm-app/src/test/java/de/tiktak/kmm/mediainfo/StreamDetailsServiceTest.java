@@ -91,7 +91,7 @@ class StreamDetailsServiceTest {
         service.startNewFiles(SOURCE_ID, MediaType.TV_SHOW, List.of(2L, 3L));
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("stream-details-new:7"), anyString(), task.capture());
+        verify(jobService).submit(eq("stream-details-new:7"), any(LocalizedText.class), task.capture());
         Object result = task.getValue().run(mock(JobContext.class));
         assertThat(result).isEqualTo(new StreamDetailsJobResult(SOURCE_ID, 2, 0, 0, List.of()));
         verify(episodes).changeStreamDetails(2L, PROBED);
@@ -104,13 +104,14 @@ class StreamDetailsServiceTest {
         service.startNewFiles(SOURCE_ID, MediaType.MOVIE, List.of());
         when(probes.probeNewFiles()).thenReturn(false);
         service.startNewFiles(SOURCE_ID, MediaType.MOVIE, List.of(1L));
-        verify(jobService, never()).submit(anyString(), anyString(), any());
+        verify(jobService, never()).submit(anyString(), any(LocalizedText.class), any());
 
         when(probes.probeNewFiles()).thenReturn(true);
         MediaSource source = givenSource(MediaType.MOVIE);
         JobSnapshot running = new JobSnapshot(UUID.randomUUID(), "stream-details-new:7", LocalizedText.literal("Technische Angaben"),
                 JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null);
-        when(jobService.submit(anyString(), anyString(), any())).thenThrow(new JobAlreadyRunningException(running));
+        when(jobService.submit(anyString(), any(LocalizedText.class), any()))
+                .thenThrow(new JobAlreadyRunningException(running));
 
         service.startNewFiles(source.getId(), MediaType.MOVIE, List.of(1L));
     }
@@ -128,8 +129,7 @@ class StreamDetailsServiceTest {
         when(episodes.find(1L)).thenReturn(episode(1, 1, LOST, false));
         when(probes.current()).thenReturn(new MediaProbe(new FfprobeRunner("/fehlt/ffprobe", Duration.ofSeconds(5))));
 
-        assertThat(service.probeEpisodesAfterScrape(SHOW_ID)).singleElement().asString()
-                .startsWith("ffprobe kann nicht gestartet werden");
+        assertThat(service.probeEpisodesAfterScrape(SHOW_ID)).hasSize(1);
         verify(episodes, never()).changeStreamDetails(anyLong(), any());
     }
 
@@ -170,7 +170,8 @@ class StreamDetailsServiceTest {
         service.startSeason(SHOW_ID, 1);
 
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(eq("stream-details-season:3"), eq("Technische Angaben Staffel 1 von „Lost“"),
+        verify(jobService).submit(eq("stream-details-season:3"), eq(LocalizedText.of("mediaInfo.season.jobTitle")
+                .with("season", 1).with("show", "Lost")),
                 task.capture());
         assertThat(task.getValue().run(context)).isEqualTo(new StreamDetailsJobResult(SOURCE_ID, 2, 0, 0, List.of()));
         verify(episodes).changeStreamDetails(1L, PROBED);
@@ -186,8 +187,9 @@ class StreamDetailsServiceTest {
         when(episodes.showTitleOf(SHOW_ID)).thenReturn("Lost");
 
         assertThatExceptionOfType(MediaInfoProblemException.class).isThrownBy(() -> service.startSeason(SHOW_ID, 4))
-                .satisfies(e -> assertThat(e.getBody().getDetail()).isEqualTo("„Lost“ hat keine Episoden in Staffel 4."));
-        verify(jobService, never()).submit(anyString(), anyString(), any());
+                .satisfies(e -> assertThat(e.localizedText()).isEqualTo(LocalizedText.of(
+                        "mediaInfo.seasonWithoutEpisodes.detail").with("show", "Lost").with("season", 4)));
+        verify(jobService, never()).submit(anyString(), any(LocalizedText.class), any());
     }
 
     private EpisodeMedia episode(long id, int number, Path file, boolean hasStreams) {

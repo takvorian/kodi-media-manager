@@ -22,6 +22,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 
@@ -100,13 +101,14 @@ class MovieSetArtworkControllerTest {
 
     @Test
     void fillsMissingImages() {
-        when(artworkService.fillMissing(7L)).thenReturn(new ArtworkFillResult(2, List.of("fanart.tv: aus")));
+        when(artworkService.fillMissing(7L)).thenReturn(new ArtworkFillResult(2,
+                List.of(LocalizedText.literal("fanart.tv: aus"))));
 
         assertThat(mockMvc.post().uri(MovieSetArtworkController.FILL_PATH, 7L).with(csrf()))
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
-                        {"saved": 2, "warnings": ["fanart.tv: aus"]}
+                        {"saved": 2, "warnings": [{"key": "literal", "args": {"text": "fanart.tv: aus"}}]}
                         """);
     }
 

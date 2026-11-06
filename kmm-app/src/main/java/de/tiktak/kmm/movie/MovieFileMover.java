@@ -7,13 +7,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieRenamePlan.FileRename;
 import de.tiktak.kmm.scanner.naming.FileMoves;
 
 /**
- * Führt einen Umbenennungsplan im Dateisystem aus. Dateien werden über einen Zwischennamen umbenannt, damit
- * auch reine Änderungen der Groß- und Kleinschreibung und vertauschte Namen gelingen. Schlägt ein Schritt
- * fehl, werden die bisherigen zurückgenommen. Leere frühere Ordner werden bis zur Quelle entfernt.
+ * Carries out a rename plan in the file system. Files are renamed via an intermediate name, so that changes of
+ * upper and lower case only and swapped names succeed as well. If a step fails, the previous ones are undone.
+ * Empty former folders are removed up to the source.
  */
 final class MovieFileMover {
 
@@ -21,15 +22,14 @@ final class MovieFileMover {
     }
 
     /**
-     * @param sourceRoot Wurzel der Quelle; sie und Ordner darüber werden nie entfernt
-     * @throws IOException wenn ein Schritt fehlschlägt; das Dateisystem ist dann wieder im alten Zustand,
-     *                     soweit das möglich war
+     * @param sourceRoot root of the source; it and the folders above it are never removed
+     * @throws IOException if a step fails; the file system is then back in its old state, as far as possible
      */
     static Relocation move(MovieRenamePlan plan, Path sourceRoot) throws IOException {
         Path current = Path.of(plan.currentDirectory());
         Path target = Path.of(plan.targetDirectory());
         if (!Files.isDirectory(current)) {
-            throw new IOException("Der Ordner „%s“ existiert nicht mehr.".formatted(current));
+            throw new LocalizedIOException(LocalizedText.of("movie.rename.folderGone").with("folder", current));
         }
         FileMoves moves = new FileMoves();
         try {
@@ -55,16 +55,17 @@ final class MovieFileMover {
         for (FileRename rename : renames) {
             Path target = directory.resolve(rename.targetName());
             if (Files.exists(target)) {
-                throw new IOException("Die Datei „%s“ existiert bereits.".formatted(target.getFileName()));
+                throw new LocalizedIOException(LocalizedText.of("movie.rename.fileExists")
+                        .with("file", target.getFileName()));
             }
             moves.move(FileMoves.temporary(directory.resolve(rename.currentName())), target);
         }
     }
 
     /**
-     * Wohin Dateien des Films gewandert sind.
+     * Where the files of the movie went.
      *
-     * @param names neue Dateinamen je bisherigem Namen
+     * @param names new file names per former name
      */
     record Relocation(Path previousDirectory, Path directory, Map<String, String> names) {
 
@@ -72,7 +73,7 @@ final class MovieFileMover {
             names = Map.copyOf(names);
         }
 
-        /** @return der neue Ort einer Datei des Films, andere Pfade unverändert */
+        /** @return the new location of a file of the movie, other paths unchanged */
         Path relocate(Path file) {
             if (!file.startsWith(previousDirectory)) {
                 return file;

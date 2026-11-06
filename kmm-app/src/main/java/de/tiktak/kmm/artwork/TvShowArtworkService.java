@@ -11,6 +11,8 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.artwork.ArtworkProblemException.Target;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -28,9 +30,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Bilder von Serien, Staffeln und Episoden nach Kodi-Konvention: {@code poster.jpg} im Serienordner,
- * {@code season01-poster.jpg} für Staffeln und {@code <episode>-thumb.jpg} neben der Episode. Die
- * Bilder liegen nur als Dateien vor.
+ * Images of TV shows, seasons and episodes following the Kodi convention: {@code poster.jpg} in the show folder,
+ * {@code season01-poster.jpg} for seasons and {@code <episode>-thumb.jpg} next to the episode. The
+ * images exist only as files.
  */
 @Slf4j
 @Service
@@ -40,9 +42,6 @@ public class TvShowArtworkService {
     private static final String TVDB = "tvdb";
     private static final String TMDB = "tmdb";
     private static final String IMDB = "imdb";
-    private static final String SHOW_TARGET = "Serien";
-    private static final String SEASON_TARGET = "Staffeln";
-    private static final String EPISODE_TARGET = "Episoden";
 
     private final TvShowMetadataService metadataService;
     private final TvShowScrapeService scrapeService;
@@ -52,7 +51,7 @@ public class TvShowArtworkService {
     private final ApplicationEventPublisher events;
 
     /**
-     * @param season Staffel oder {@code null} für die Bilder der Serie
+     * @param season season or {@code null} for the images of the show
      */
     public List<ArtworkInfo> artwork(long showId, Integer season) {
         Path directory = directory(metadataService.findShow(showId));
@@ -67,7 +66,7 @@ public class TvShowArtworkService {
                 .orElseThrow(() -> ArtworkProblemException.imageMissing(type));
     }
 
-    /** Die Poster-Datei der Serie, etwa für den Export. */
+    /** The poster file of the show, e.g. for the export. */
     public Optional<Path> posterFile(TvShowDetails show) {
         return artworkFiles.find(slot(directory(show), ImageType.POSTER, null)).map(ArtworkFile::file);
     }
@@ -100,10 +99,10 @@ public class TvShowArtworkService {
     }
 
     /**
-     * Holt für jede fehlende Bildart der Serie, ihrer Staffeln mit Episoden und für fehlende Standbilder
-     * den besten Treffer. Vorhandene Bilder bleiben unverändert.
+     * Fetches the best match for each missing image type of the show, its seasons with episodes and for missing
+     * stills. Existing images stay unchanged.
      *
-     * @return Anzahl gespeicherter Bilder und Hinweise; ohne TVDB-, TMDB- oder IMDb-ID wird nichts gesucht
+     * @return number of saved images and notices; without a TVDB, TMDB or IMDb ID nothing is searched
      */
     public ArtworkFillResult fillMissing(long showId) {
         TvShowDetails show = metadataService.findShow(showId);
@@ -115,8 +114,8 @@ public class TvShowArtworkService {
     }
 
     /**
-     * Wie {@link #fillMissing(long)}, aber nur für die Bilder einer Staffel und die Standbilder ihrer Episoden. Die
-     * Bilder der Serie bleiben, wie sie sind.
+     * Like {@link #fillMissing(long)}, but only for the images of one season and the stills of its episodes. The
+     * images of the show stay as they are.
      */
     public ArtworkFillResult fillMissingSeason(long showId, int season) {
         TvShowDetails show = metadataService.findShow(showId);
@@ -124,7 +123,7 @@ public class TvShowArtworkService {
                 show.episodes().stream().filter(episode -> episode.season() == season).toList());
     }
 
-    /** @param targets die Serie ({@code null}) und Staffelnummern, deren Bilder ergänzt werden */
+    /** @param targets the show ({@code null}) and season numbers whose images are supplemented */
     private ArtworkFillResult fillMissing(TvShowDetails show, List<Integer> targets, List<EpisodeSummary> episodes) {
         long showId = show.id();
         Path directory = directory(show);
@@ -132,7 +131,7 @@ public class TvShowArtworkService {
         if (uniqueIds.isEmpty()) {
             return new ArtworkFillResult(0, List.of());
         }
-        List<String> warnings = new ArrayList<>();
+        List<LocalizedText> warnings = new ArrayList<>();
         int saved = 0;
         ArtworkSearch search = null;
         for (Integer season : targets) {
@@ -160,7 +159,7 @@ public class TvShowArtworkService {
         return new ArtworkFillResult(saved, warnings);
     }
 
-    private int fillMissingThumbs(List<EpisodeSummary> episodes, List<String> warnings) {
+    private int fillMissingThumbs(List<EpisodeSummary> episodes, List<LocalizedText> warnings) {
         int saved = 0;
         for (EpisodeSummary episode : episodes) {
             ArtworkSlot slot = episodeSlot(Path.of(episode.filePath()), ImageType.THUMB);
@@ -182,7 +181,7 @@ public class TvShowArtworkService {
         return saved;
     }
 
-    /** Erst die Serie ({@code null}), dann die Staffeln. */
+    /** First the show ({@code null}), then the seasons. */
     private static List<Integer> withShow(List<Integer> seasons) {
         List<Integer> targets = new ArrayList<>();
         targets.add(null);
@@ -203,7 +202,7 @@ public class TvShowArtworkService {
                 .orElseThrow(() -> ArtworkProblemException.imageMissing(type));
     }
 
-    /** Die Standbilder kommen von den Serien-Scrapern, die die Episode kennen. */
+    /** The stills come from the TV show scrapers that know the episode. */
     public ArtworkCandidates episodeCandidates(long episodeId, ImageType type) {
         requireEpisodeType(type);
         EpisodeThumbs thumbs = scrapeService.episodeThumbs(episodeId);
@@ -270,13 +269,13 @@ public class TvShowArtworkService {
 
     private static void requireSupported(ImageType type, Integer season) {
         if (!types(season).contains(type)) {
-            throw ArtworkProblemException.unsupportedTvType(type, season == null ? SHOW_TARGET : SEASON_TARGET);
+            throw ArtworkProblemException.unsupportedTvType(type, season == null ? Target.TV_SHOW : Target.SEASON);
         }
     }
 
     private static void requireEpisodeType(ImageType type) {
         if (!ArtworkTypes.EPISODE_TYPES.contains(type)) {
-            throw ArtworkProblemException.unsupportedTvType(type, EPISODE_TARGET);
+            throw ArtworkProblemException.unsupportedTvType(type, Target.EPISODE);
         }
     }
 }

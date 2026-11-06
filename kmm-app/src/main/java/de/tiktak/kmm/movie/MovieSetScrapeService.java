@@ -6,7 +6,6 @@ import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
-import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MovieSetResult;
 import de.tiktak.kmm.plugin.api.MovieSetScraper;
@@ -14,8 +13,8 @@ import de.tiktak.kmm.plugin.api.ScraperException;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Filmsets bei einem Online-Dienst (TMDB-Sammlungen) suchen und deren Titel und Beschreibung übernehmen, wie
- * Embers „MovieSetScraperTitle“ und „MovieSetScraperPlot“. Gefragt wird der erste eingerichtete Scraper.
+ * Searches movie sets at an online service (TMDB collections) and takes over their title and description, like
+ * Ember's "MovieSetScraperTitle" and "MovieSetScraperPlot". The first scraper that is set up is queried.
  */
 @Service
 @RequiredArgsConstructor
@@ -25,7 +24,7 @@ public class MovieSetScrapeService {
     private final MovieSetService setService;
 
     /**
-     * @throws ScraperProblemException wenn kein Scraper bereitsteht oder der Anbieter einen Fehler meldet
+     * @throws ScraperProblemException if no scraper is available or the provider reports an error
      */
     public List<ScrapeCandidate> search(String title) {
         return call(scraper(), scraper -> scraper.searchSets(title)).stream()
@@ -34,8 +33,8 @@ public class MovieSetScrapeService {
     }
 
     /**
-     * @return die Angaben des Sets mit Titel, Beschreibung und ID des Treffers; eine Beschreibung bleibt, wenn der
-     *         Anbieter keine kennt
+     * @return the set's details with title, description and ID of the match; a description is kept if the
+     *         provider does not know one
      */
     public MovieSetData proposal(long setId, String providerId) {
         MovieSetData current = setService.find(setId).data();
@@ -46,7 +45,7 @@ public class MovieSetScrapeService {
                 scraped.providerId(), current.sortMethod());
     }
 
-    /** Die Angaben einer Sammlung, leer, wenn der Anbieter sie nicht kennt. */
+    /** The details of a collection, empty if the provider does not know it. */
     Optional<MovieSetResult> fetch(String providerId) {
         return call(scraper(), scraper -> scraper.fetchSet(providerId));
     }
@@ -60,7 +59,7 @@ public class MovieSetScrapeService {
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())
                 .findFirst()
                 .orElseThrow(() -> ScraperProblemException.notConfigured(scrapers.getFirst(),
-                        scrapers.getFirst().missingConfiguration().map(Messages::english).orElseThrow()));
+                        scrapers.getFirst().missingConfiguration().orElseThrow()));
     }
 
     private static <T> T call(MovieSetScraper scraper, Function<MovieSetScraper, T> request) {

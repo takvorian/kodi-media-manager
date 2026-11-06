@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Nimmt die Bilder eines umbenannten Filmsets mit, sobald der neue Titel gespeichert ist. Ein Fehler beim
- * Verschieben macht die Umbenennung nicht rückgängig.
+ * Takes along the images of a renamed movie set as soon as the new title is saved. An error while
+ * moving does not undo the renaming.
  */
 @Slf4j
 @Component

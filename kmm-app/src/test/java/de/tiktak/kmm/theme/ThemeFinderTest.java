@@ -91,8 +91,10 @@ class ThemeFinderTest {
         ThemeOptions options = finder.find(ALF);
 
         assertThat(options.candidates()).isEmpty();
-        assertThat(options.warnings()).containsExactly("YouTube: yt-dlp fehlt", "TelevisionTunes: nicht erreichbar",
-                "TelevisionTunes: nicht erreichbar");
+        LocalizedText failure = LocalizedText.of("theme.warning").with("provider", "TelevisionTunes")
+                .with("reason", LocalizedText.literal("nicht erreichbar"));
+        assertThat(options.warnings()).containsExactly(LocalizedText.literal("YouTube: yt-dlp fehlt"), failure,
+                failure);
         verify(unconfigured, never()).findThemes(any());
     }
 

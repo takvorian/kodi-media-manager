@@ -8,6 +8,7 @@ import java.util.function.LongPredicate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -15,8 +16,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Stapel-Bearbeitung: gemeinsame Änderungen an vielen Filmen als Hintergrund-Job, je Film in einer eigenen
- * Transaktion. Ein Fehler bei einem Film hält die übrigen nicht auf. Umbenannt wird dabei nicht.
+ * Batch edit: common changes to many movies as a background job, each movie in its own transaction. A failure with
+ * one movie does not stop the others. Nothing is renamed.
  */
 @Slf4j
 @Service
@@ -25,6 +26,8 @@ public class MovieBatchService {
 
     static final String JOB_KEY = "movies-batch";
     static final int MAX_LISTED_FAILURES = 20;
+    /** Argument of the job title with the number of movies. */
+    public static final String COUNT_ARGUMENT = "count";
 
     private final MovieMetadataService metadataService;
     private final MovieTagService tagService;
@@ -33,30 +36,43 @@ public class MovieBatchService {
     private final JobService jobService;
 
     public JobSnapshot start(MovieBatchEdit edit) {
-        return jobService.submit(JOB_KEY, "%d Filme bearbeiten".formatted(edit.movieIds().size()),
-                context -> apply(edit, context));
+        LocalizedText title = LocalizedText.of("movie.batch.edit.jobTitle")
+                .with(COUNT_ARGUMENT, edit.movieIds().size());
+        return jobService.submit(JOB_KEY, title, context -> apply(edit, context));
     }
 
-    /** Trägt für Filme ohne Trailer den besten Vorschlag ein, als Job wie die Stapel-Bearbeitung. */
+    /** Enters the best suggestion for movies without a trailer, as a job like the batch edit. */
     public JobSnapshot startTrailerFill(List<Long> movieIds) {
-        return startFill("Fehlende Trailer für %d Filme holen", movieIds, trailerService::fillMissing);
+        return startFill(LocalizedText.of("movie.batch.trailerFill.jobTitle"), movieIds,
+                trailerService::fillMissing);
     }
 
-    /** Aktualisiert Bewertungen und füllt leere Felder über die Ergänzungs-Scraper, als Job. */
+    /** Updates ratings and fills empty fields with the supplementing scrapers, as a job. */
     public JobSnapshot startEnrichment(List<Long> movieIds) {
-        return startFill("Bewertungen für %d Filme aktualisieren", movieIds, enrichmentService::refresh);
+        return startFill(LocalizedText.of("movie.batch.enrichment.jobTitle"), movieIds, enrichmentService::refresh);
     }
 
     /**
-     * Ändert jeden Film der Auswahl als Job wie die Stapel-Bearbeitung.
+     * Changes every movie of the selection, as a job like the batch edit.
      *
-     * @param title  Titel des Jobs mit {@code %d} für die Anzahl der Filme
-     * @param change Änderung je Film; liefert, ob sich etwas geändert hat
+     * @param title  title of the job; gets the number of distinct movies as argument {@value #COUNT_ARGUMENT}
+     * @param change change per movie; returns whether something changed
      */
+    public JobSnapshot startFill(LocalizedText title, List<Long> movieIds, LongPredicate change) {
+        List<Long> distinct = List.copyOf(new LinkedHashSet<>(movieIds));
+        return jobService.submit(JOB_KEY, title.with(COUNT_ARGUMENT, distinct.size()),
+                context -> apply(distinct, change, context));
+    }
+
+    /**
+     * @param title title of the job with {@code %d} for the number of movies, shown as is
+     * @deprecated use {@link #startFill(LocalizedText, List, LongPredicate)} with a translatable title
+     */
+    @Deprecated(forRemoval = true)
     public JobSnapshot startFill(String title, List<Long> movieIds, LongPredicate change) {
         List<Long> distinct = List.copyOf(new LinkedHashSet<>(movieIds));
-        return jobService.submit(JOB_KEY, title.formatted(distinct.size()), context -> apply(distinct, change,
-                context));
+        return jobService.submit(JOB_KEY, LocalizedText.literal(title.formatted(distinct.size())),
+                context -> apply(distinct, change, context));
     }
 
     MovieBatchResult apply(MovieBatchEdit edit, JobContext context) {
@@ -64,13 +80,14 @@ public class MovieBatchService {
     }
 
     MovieBatchResult apply(List<Long> movieIds, LongPredicate change, JobContext context) {
-        List<String> failures = new ArrayList<>();
+        List<LocalizedText> failures = new ArrayList<>();
         int changed = 0;
         int unchanged = 0;
         int failed = 0;
         for (long movieId : movieIds) {
             context.throwIfCancellationRequested();
-            context.reportProgress(changed + unchanged + failed, movieIds.size(), "Film " + movieId);
+            context.reportProgress(changed + unchanged + failed, movieIds.size(),
+                    LocalizedText.of("movie.item").with("id", movieId));
             try {
                 if (change.test(movieId)) {
                     changed++;
@@ -80,7 +97,9 @@ public class MovieBatchService {
             } catch (ErrorResponseException e) {
                 failed++;
                 if (failures.size() < MAX_LISTED_FAILURES) {
-                    failures.add("Film %d: %s".formatted(movieId, e.getBody().getDetail()));
+                    failures.add(LocalizedText.of("movie.failure")
+                            .with("id", movieId)
+                            .with("reason", LocalizedReasons.of(e)));
                 }
             }
         }

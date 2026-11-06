@@ -1,5 +1,5 @@
 /**
- * Technische Angaben (Stream-Details) mit ffprobe auslesen: je Film oder Episode, je Quelle, nach dem
- * automatischen Scrapen und für neue Dateien nach einem Scan.
+ * Reading technical details (stream details) with ffprobe: per movie or episode, per source, after
+ * automatic scraping and for new files after a scan.
  */
 package de.tiktak.kmm.mediainfo;

@@ -2,15 +2,18 @@ package de.tiktak.kmm.movie;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis von „Alle Sets ergänzen“.
+ * Result of “Complete all sets”.
  *
- * @param overviews         Sets, die eine Beschreibung bekommen haben
- * @param images            gespeicherte Bilder
- * @param withoutCollection Sets ohne TMDB-ID, für die nichts gesucht wurde
- * @param problems          Fehler und Hinweise, höchstens {@link MovieSetJobService#MAX_LISTED_FAILURES}
+ * @param overviews         sets that got an overview
+ * @param images            saved images
+ * @param withoutCollection sets without a TMDB ID, for which nothing was searched
+ * @param problems          failures and hints, at most {@link MovieSetJobService#MAX_LISTED_FAILURES}
  */
-public record MovieSetCompletionResult(int overviews, int images, int withoutCollection, List<String> problems) {
+public record MovieSetCompletionResult(int overviews, int images, int withoutCollection,
+                                       List<LocalizedText> problems) {
 
     public MovieSetCompletionResult {
         problems = List.copyOf(problems);

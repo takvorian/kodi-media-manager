@@ -1,13 +1,13 @@
 package de.tiktak.kmm.mediainfo;
 
 /**
- * Welche Einträge einer Quelle ausgelesen werden.
+ * Which entries of a source are read.
  */
 public enum StreamDetailsScope {
 
-    /** Nur Einträge ohne technische Angaben. */
+    /** Only entries without technical details. */
     MISSING,
 
-    /** Alle Einträge; vorhandene Angaben werden ersetzt, Sprachen bleiben. */
+    /** All entries; existing details are replaced, languages stay. */
     ALL
 }

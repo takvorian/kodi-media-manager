@@ -6,7 +6,7 @@ import de.tiktak.kmm.nfo.MovieNfo;
 import de.tiktak.kmm.nfo.NfoException;
 
 /**
- * Inhalt einer NFO, gelesen außerhalb der Datenbanktransaktion, oder der Fehler beim Lesen.
+ * Content of an NFO read outside the database transaction, or the error that occurred while reading.
  */
 final class LoadedMovieNfo {
 
@@ -27,7 +27,7 @@ final class LoadedMovieNfo {
     }
 
     /**
-     * @throws NfoException wenn die Datei beim Lesen unlesbar war
+     * @throws NfoException if the file was unreadable when read
      */
     MovieNfo content() {
         if (failure != null) {

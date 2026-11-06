@@ -134,7 +134,7 @@
               <td class="status">
                 {{ statusKeys[plan.status] | transloco }}
                 @if (plan.message) {
-                  <div class="message">{{ plan.message }}</div>
+                  <div class="message">{{ plan.message | localized }}</div>
                 }
               </td>
             </tr>

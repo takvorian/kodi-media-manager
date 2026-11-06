@@ -15,7 +15,7 @@ import de.tiktak.kmm.filter.FilterField;
 import de.tiktak.kmm.filter.FilterOperator;
 
 /**
- * Wonach die Filmliste gefiltert werden kann, mit den jeweils erlaubten Vergleichen.
+ * What the movie list can be filtered by, with the comparisons allowed for each.
  */
 public enum MovieFilterField implements FilterField {
 
@@ -26,28 +26,28 @@ public enum MovieFilterField implements FilterField {
     COUNTRY(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
     STUDIO(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
     SET(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
-    /** Gesehen heißt: mindestens eine Wiedergabe. */
+    /** Watched means: at least one playback. */
     WATCHED(ValueType.BOOLEAN, IS),
     USER_RATING(ValueType.NUMBER, IS, AT_LEAST, AT_MOST, EMPTY, NOT_EMPTY),
     MPAA(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
     EDITION(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
     VIDEO_SOURCE(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
-    /** Zeilen der Auflösungsstufe wie Kodi, z. B. 720, 1080, 2160. */
+    /** Lines of the resolution tier like Kodi, e.g. 720, 1080, 2160. */
     RESOLUTION(ValueType.NUMBER, IS, AT_LEAST, AT_MOST, EMPTY, NOT_EMPTY),
     VIDEO_CODEC(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
     HDR(ValueType.TEXT, IS, IS_NOT, EMPTY, NOT_EMPTY),
     AUDIO_CODEC(ValueType.TEXT, IS, IS_NOT),
     AUDIO_LANGUAGE(ValueType.TEXT, IS, IS_NOT),
     SUBTITLE_LANGUAGE(ValueType.TEXT, IS, IS_NOT),
-    /** Ohne technische Angaben, z. B. noch nicht mit ffprobe ausgelesen. */
+    /** Without technical details, e.g. not yet read with ffprobe. */
     STREAM_DETAILS(ValueType.NONE, EMPTY, NOT_EMPTY),
     TMDB_ID(ValueType.NONE, EMPTY, NOT_EMPTY),
     IMDB_ID(ValueType.NONE, EMPTY, NOT_EMPTY),
     NFO(ValueType.NONE, EMPTY, NOT_EMPTY),
     TRAILER(ValueType.NONE, EMPTY, NOT_EMPTY),
-    /** ID der Quelle. */
+    /** ID of the source. */
     SOURCE(ValueType.NUMBER, IS, IS_NOT),
-    /** Vor wie vielen Tagen der Film hinzugefügt wurde. */
+    /** How many days ago the movie was added. */
     ADDED_DAYS_AGO(ValueType.NUMBER, AT_LEAST, AT_MOST);
 
     private final ValueType valueType;

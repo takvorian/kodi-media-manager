@@ -25,8 +25,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Zugriff auf die NFO-Datei eines Films: finden, lesen und schreiben. Eine vorhandene NFO wird an
- * ihrem bisherigen Ort aktualisiert (auch eine {@code movie.nfo}), damit keine zweite Datei entsteht.
+ * Access to the NFO file of a movie: find, read and write. An existing NFO is updated at
+ * its previous location (also a {@code movie.nfo}) so that no second file is created.
  */
 @Slf4j
 @Component
@@ -52,11 +52,11 @@ class MovieNfoFiles {
     }
 
     /**
-     * Schreibt die Metadaten in die NFO des Films.
+     * Writes the metadata to the movie's NFO.
      *
-     * @param supplement weitere Angaben oder {@code null}, um die vorhandenen in der Datei zu belassen
-     * @return Zustand der geschriebenen Datei
-     * @throws NfoException wenn die Datei nicht geschrieben werden kann
+     * @param supplement further details, or {@code null} to leave the existing ones in the file
+     * @return state of the written file
+     * @throws NfoException if the file cannot be written
      */
     NfoFileState write(CompanionFiles companionFiles, MovieMetadata metadata, MovieNfoSupplement supplement) {
         Optional<NfoFileState> existing = find(companionFiles);
@@ -67,10 +67,10 @@ class MovieNfoFiles {
     }
 
     /**
-     * Schreibt nur Wiedergabestand und eigene Bewertung in die vorhandene NFO.
+     * Writes only the playback state and own rating to the existing NFO.
      *
-     * @return Zustand der geschriebenen Datei
-     * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
+     * @return state of the written file
+     * @throws NfoException if the file does not contain a movie or cannot be written
      */
     NfoFileState writePlayback(NfoFileState nfoFile, NfoPlayback playback) {
         playbackWriter.writeMovie(nfoFile.file(), playback);
@@ -79,10 +79,10 @@ class MovieNfoFiles {
     }
 
     /**
-     * Ersetzt nur die technischen Angaben in der vorhandenen NFO.
+     * Replaces only the technical details in the existing NFO.
      *
-     * @return Zustand der geschriebenen Datei
-     * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
+     * @return state of the written file
+     * @throws NfoException if the file does not contain a movie or cannot be written
      */
     NfoFileState writeStreamDetails(NfoFileState nfoFile, StreamDetails details) {
         streamDetailsWriter.writeMovie(nfoFile.file(), details);
@@ -91,11 +91,11 @@ class MovieNfoFiles {
     }
 
     /**
-     * Ändert nur den Trailer-Link in der vorhandenen NFO; alles andere bleibt Zeichen für Zeichen.
+     * Changes only the trailer link in the existing NFO; everything else stays character for character.
      *
-     * @param trailer Link oder {@code null}, um ihn zu entfernen
-     * @return Zustand der geschriebenen Datei
-     * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
+     * @param trailer link, or {@code null} to remove it
+     * @return state of the written file
+     * @throws NfoException if the file does not contain a movie or cannot be written
      */
     NfoFileState writeTrailer(NfoFileState nfoFile, String trailer) {
         trailerWriter.writeMovie(nfoFile.file(), trailer);
@@ -104,11 +104,11 @@ class MovieNfoFiles {
     }
 
     /**
-     * Ändert nur die Sprache in der vorhandenen NFO; alles andere bleibt Zeichen für Zeichen.
+     * Changes only the language in the existing NFO; everything else stays character for character.
      *
-     * @param language Sprache oder {@code null}, um sie zu entfernen
-     * @return Zustand der geschriebenen Datei
-     * @throws NfoException wenn die Datei keinen Film enthält oder nicht geschrieben werden kann
+     * @param language language, or {@code null} to remove it
+     * @return state of the written file
+     * @throws NfoException if the file does not contain a movie or cannot be written
      */
     NfoFileState writeLanguage(NfoFileState nfoFile, String language) {
         languageWriter.writeMovie(nfoFile.file(), language);

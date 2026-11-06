@@ -15,6 +15,9 @@ import java.util.function.UnaryOperator;
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.Localized;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -24,9 +27,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Tag-Manager wie in Ember: Tags von Filmen und Serien zählen, umbenennen, löschen, zuweisen und entfernen. Tags
- * gibt es nur an Filmen und Serien; ein Tag ohne Einträge verschwindet. Änderungen schreiben die NFOs der
- * betroffenen Einträge und laufen deshalb als Hintergrund-Job.
+ * Tag manager as in Ember: count, rename, delete, assign and remove tags of movies and TV shows. Tags
+ * exist only on movies and TV shows; a tag without entries disappears. Changes write the NFOs of the
+ * affected entries and therefore run as a background job.
  */
 @Slf4j
 @Service
@@ -40,7 +43,7 @@ public class TagService {
     private final TvShowTagService showTags;
     private final JobService jobService;
 
-    /** @return alle Tags mit der Anzahl ihrer Filme und Serien, nach Name sortiert */
+    /** @return all tags with the number of their movies and TV shows, sorted by name */
     public List<TagSummary> findAll() {
         Map<String, Long> movies = movieTags.countByTag();
         Map<String, Long> shows = showTags.countByTag();
@@ -53,57 +56,63 @@ public class TagService {
                 .toList();
     }
 
-    /** @return die Filme und Serien mit dem Tag */
+    /** @return the movies and TV shows with the tag */
     public TaggedItems findTagged(String tag) {
         return new TaggedItems(tag, items(movieTags.findTitlesByTag(tag)), items(showTags.findTitlesByTag(tag)));
     }
 
-    /** Benennt einen Tag an allen Filmen und Serien um; trägt ein Eintrag beide Namen, bleibt einer. */
+    /** Renames a tag on all movies and TV shows; if an entry carries both names, one remains. */
     public JobSnapshot rename(String tag, String newName) {
         String name = TagNames.clean(newName);
-        return submit("Tag „%s“ in „%s“ umbenennen".formatted(tag, name), movieTags.findIdsByTag(tag),
+        return submit(LocalizedText.of("tag.rename.jobTitle").with("tag", tag).with("name", name),
+                movieTags.findIdsByTag(tag),
                 showTags.findIdsByTag(tag), tags -> replace(tags, tag, name));
     }
 
-    /** Entfernt einen Tag von allen Filmen und Serien. */
+    /** Removes a tag from all movies and TV shows. */
     public JobSnapshot delete(String tag) {
-        return submit("Tag „%s“ löschen".formatted(tag), movieTags.findIdsByTag(tag), showTags.findIdsByTag(tag),
+        return submit(LocalizedText.of("tag.delete.jobTitle").with("tag", tag), movieTags.findIdsByTag(tag),
+                showTags.findIdsByTag(tag),
                 tags -> tags.stream().filter(existing -> !existing.equals(tag)).toList());
     }
 
-    /** Fügt den ausgewählten Filmen und Serien einen Tag hinzu, auch einen neuen. */
+    /** Adds a tag to the selected movies and TV shows, including a new one. */
     public JobSnapshot assign(TagAssignment assignment) {
         String tag = TagNames.clean(assignment.tag());
-        return submit("Tag „%s“ zuweisen".formatted(tag), assignment.movieIds(), assignment.showIds(),
+        return submit(LocalizedText.of("tag.assign.jobTitle").with("tag", tag), assignment.movieIds(),
+                assignment.showIds(),
                 tags -> tags.contains(tag) ? tags : append(tags, tag));
     }
 
-    /** Entfernt einen Tag von den ausgewählten Filmen und Serien. */
+    /** Removes a tag from the selected movies and TV shows. */
     public JobSnapshot unassign(TagAssignment assignment) {
         String tag = assignment.tag();
-        return submit("Tag „%s“ entfernen".formatted(tag), assignment.movieIds(), assignment.showIds(),
+        return submit(LocalizedText.of("tag.unassign.jobTitle").with("tag", tag), assignment.movieIds(),
+                assignment.showIds(),
                 tags -> tags.stream().filter(existing -> !existing.equals(tag)).toList());
     }
 
-    private JobSnapshot submit(String title, Collection<Long> movieIds, Collection<Long> showIds,
+    private JobSnapshot submit(LocalizedText title, Collection<Long> movieIds, Collection<Long> showIds,
                                UnaryOperator<List<String>> change) {
         List<Long> movies = List.copyOf(new LinkedHashSet<>(movieIds));
         List<Long> shows = List.copyOf(new LinkedHashSet<>(showIds));
         return jobService.submit(JOB_KEY, title, context -> apply(title, movies, shows, change, context));
     }
 
-    TagChangeResult apply(String title, List<Long> movieIds, List<Long> showIds, UnaryOperator<List<String>> change,
-                          JobContext context) {
+    TagChangeResult apply(LocalizedText title, List<Long> movieIds, List<Long> showIds,
+                          UnaryOperator<List<String>> change, JobContext context) {
         Tally tally = new Tally(movieIds.size() + showIds.size());
         for (long movieId : movieIds) {
-            tally.change(context, "Film " + movieId, id -> movieTags.changeTags(id, change), movieId);
+            tally.change(context, LocalizedText.of("tag.item.movie").with("id", movieId),
+                    id -> movieTags.changeTags(id, change), movieId);
         }
         for (long showId : showIds) {
-            tally.change(context, "Serie " + showId, id -> showTags.changeTags(id, change), showId);
+            tally.change(context, LocalizedText.of("tag.item.tvShow").with("id", showId),
+                    id -> showTags.changeTags(id, change), showId);
         }
         TagChangeResult result = tally.result();
-        log.info("{}: {} changed, {} unchanged, {} failed", title, result.changed(), result.unchanged(),
-                result.failed());
+        log.info("{}: {} changed, {} unchanged, {} failed", Messages.english(title), result.changed(),
+                result.unchanged(), result.failed());
         return result;
     }
 
@@ -131,7 +140,7 @@ public class TagService {
     private static final class Tally {
 
         private final int total;
-        private final List<String> failures = new ArrayList<>();
+        private final List<LocalizedText> failures = new ArrayList<>();
         private int changed;
         private int unchanged;
         private int failed;
@@ -140,7 +149,7 @@ public class TagService {
             this.total = total;
         }
 
-        void change(JobContext context, String label, LongPredicate change, long id) {
+        void change(JobContext context, LocalizedText label, LongPredicate change, long id) {
             context.throwIfCancellationRequested();
             context.reportProgress(changed + unchanged + failed, total, label);
             try {
@@ -152,9 +161,14 @@ public class TagService {
             } catch (ErrorResponseException e) {
                 failed++;
                 if (failures.size() < MAX_LISTED_FAILURES) {
-                    failures.add("%s: %s".formatted(label, e.getBody().getDetail()));
+                    failures.add(LocalizedText.of("tag.failure").with("entry", label).with("reason", reason(e)));
                 }
             }
+        }
+
+        private static LocalizedText reason(ErrorResponseException e) {
+            return e instanceof Localized localized ? localized.localizedText()
+                    : LocalizedText.literal(e.getBody().getDetail());
         }
 
         TagChangeResult result() {

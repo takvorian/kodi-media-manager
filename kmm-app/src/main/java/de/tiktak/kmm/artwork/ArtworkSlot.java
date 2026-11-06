@@ -8,11 +8,11 @@ import java.util.Objects;
 import de.tiktak.kmm.plugin.api.ImageType;
 
 /**
- * Der Platz eines Bildes im Dateisystem: alle Dateinamen, unter denen Kodi es findet (je Endung, bei
- * Stapeln auch nach dem ersten Teil benannt). Ein neues Bild wird unter dem ersten Namen mit seiner
- * Endung gespeichert.
+ * The place of an image in the file system: all file names under which Kodi finds it (per extension, for
+ * batches also named after the first part). A new image is saved under the first name with its
+ * extension.
  *
- * @param candidates mögliche Dateien, die bevorzugten zuerst
+ * @param candidates possible files, preferred ones first
  */
 record ArtworkSlot(ImageType type, List<Path> candidates) {
 
@@ -26,7 +26,7 @@ record ArtworkSlot(ImageType type, List<Path> candidates) {
         }
     }
 
-    /** Zieldatei für ein Bild mit dieser Endung, z. B. {@code poster.jpg}. */
+    /** Target file for an image with this extension, e.g. {@code poster.jpg}. */
     Path target(String extension) {
         String suffix = EXTENSION_SEPARATOR + extension.toLowerCase(Locale.ROOT);
         return candidates.stream()

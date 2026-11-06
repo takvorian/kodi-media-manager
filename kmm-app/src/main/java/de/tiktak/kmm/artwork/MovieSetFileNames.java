@@ -3,9 +3,9 @@ package de.tiktak.kmm.artwork;
 import java.util.regex.Pattern;
 
 /**
- * Namen der Set-Bilder aus dem Settitel. Das flache Schema ersetzt wie Ember unzulässige Zeichen eines
- * Windows-Dateinamens durch {@code -}; den Set-Ordner benennt KMM wie Kodi ({@code CUtil::MakeLegalFileName}),
- * damit Kodi ihn findet.
+ * Names of the set images derived from the set title. Like Ember, the flat scheme replaces characters of a
+ * Windows file name that are not allowed by {@code -}; KMM names the set folder like Kodi
+ * ({@code CUtil::MakeLegalFileName}), so that Kodi finds it.
  */
 final class MovieSetFileNames {
 
@@ -18,12 +18,12 @@ final class MovieSetFileNames {
     private MovieSetFileNames() {
     }
 
-    /** Anfang der Dateinamen im flachen Schema, z. B. {@code Star Wars- Filmreihe} für {@code -poster.jpg}. */
+    /** Start of the file names in the flat scheme, e.g. {@code Star Wars- Filmreihe} for {@code -poster.jpg}. */
     static String flat(String title) {
         return FLAT_INVALID.matcher(title).replaceAll(FLAT_REPLACEMENT);
     }
 
-    /** Name des Set-Ordners, z. B. {@code Star Wars_ Filmreihe}. */
+    /** Name of the set folder, e.g. {@code Star Wars_ Filmreihe}. */
     static String kodiFolder(String title) {
         return KODI_TRAILING.matcher(KODI_INVALID.matcher(title).replaceAll(KODI_REPLACEMENT)).replaceAll("");
     }

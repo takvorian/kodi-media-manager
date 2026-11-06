@@ -1,7 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job, unsuccessfulJobSummary } from '../jobs/job';
-import { localize } from '../i18n/localized-text';
+import { LocalizedText, localize } from '../i18n/localized-text';
 
 /** Which entries of a source are read; must match StreamDetailsScope. */
 export type StreamDetailsScope = 'MISSING' | 'ALL';
@@ -30,18 +30,18 @@ export interface StreamDetailsJobResult {
   readonly updated: number;
   readonly skipped: number;
   readonly failed: number;
-  readonly failures: readonly string[];
+  readonly failures: readonly LocalizedText[];
 }
 
 /** Result of reading the episodes of a TV show after the online search. */
 export interface ShowStreamDetailsResult {
   readonly updated: number;
-  readonly failures: readonly string[];
+  readonly failures: readonly LocalizedText[];
 }
 
 /** Number of failures with the first one as an example. */
-function failuresText(count: number, failures: readonly string[]): string {
-  return translate('mediaInfo.failures', { count, example: failures[0] });
+function failuresText(count: number, failures: readonly LocalizedText[]): string {
+  return translate('mediaInfo.failures', { count, example: localize(failures[0]) });
 }
 
 /**

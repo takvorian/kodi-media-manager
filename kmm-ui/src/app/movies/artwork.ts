@@ -1,5 +1,7 @@
 import { Observable } from 'rxjs';
 
+import { LocalizedText } from '../i18n/localized-text';
+
 export type ArtworkType =
   | 'POSTER'
   | 'FANART'
@@ -50,7 +52,7 @@ export interface ArtworkCandidate {
 
 export interface ArtworkCandidates {
   readonly candidates: readonly ArtworkCandidate[];
-  readonly warnings: readonly string[];
+  readonly warnings: readonly LocalizedText[];
 }
 
 /** Where an artwork gallery gets its images from: a movie, a movie set, a TV show, a season or an episode. */

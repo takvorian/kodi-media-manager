@@ -13,6 +13,7 @@ import { CONFIRM } from '../shared/confirm';
 import { ArtworkCandidate, ArtworkInfo } from './artwork';
 import { MovieArtwork } from './movie-artwork';
 import { MOVIES_URL } from './movie.service';
+import { literal } from '../i18n/localized-text';
 
 describe('MovieArtwork', () => {
   const artworkUrl = `${MOVIES_URL}/5/artwork`;
@@ -150,7 +151,7 @@ describe('MovieArtwork', () => {
     tile('POSTER').querySelector<HTMLButtonElement>('.change-button')!.click();
     expectCandidates('POSTER').flush({
       candidates: [],
-      warnings: ['Für fanart.tv fehlt ein API-Key.'],
+      warnings: [literal('Für fanart.tv fehlt ein API-Key.')],
     });
     await fixture.whenStable();
 

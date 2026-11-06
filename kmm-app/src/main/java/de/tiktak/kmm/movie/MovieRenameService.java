@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -20,8 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Benennt Filme nach Mustern um, für eine ganze Quelle als Hintergrund-Job oder einzeln. Die Vorschau ändert
- * nichts; beim Umbenennen wird der Plan neu berechnet, damit zwischenzeitliche Änderungen auffallen.
+ * Renames movies according to patterns, for a whole source as a background job or one by one. The preview changes
+ * nothing; renaming calculates the plan again, so that changes in between are noticed.
  */
 @Slf4j
 @Service
@@ -30,7 +32,7 @@ public class MovieRenameService {
 
     static final String JOB_KEY_PREFIX = "movie-rename:";
     static final int MAX_LISTED_PROBLEMS = 20;
-    private static final String PLANNING_MESSAGE = "Neue Namen werden berechnet";
+    private static final LocalizedText PLANNING_MESSAGE = LocalizedText.of("movie.rename.planning");
     private static final int UNKNOWN_TOTAL = 0;
 
     private final MediaSourceService sourceService;
@@ -40,25 +42,25 @@ public class MovieRenameService {
     private final SettingsService settingsService;
 
     /**
-     * @return je Film der Quelle, was das Umbenennen ändern würde, sortiert nach Ordner
-     * @throws MovieRenameProblemException wenn die Quelle keine Filme enthält oder ein Muster ungültig ist
+     * @return per movie of the source what renaming would change, sorted by folder
+     * @throws MovieRenameProblemException if the source does not contain movies or a pattern is invalid
      */
     public List<MovieRenamePlan> preview(long sourceId, MovieRenamePatterns patterns) {
         return planning.planSource(sourceId, patterns.parse()).plans();
     }
 
     /**
-     * @throws MovieRenameProblemException wenn ein Muster ungültig ist
+     * @throws MovieRenameProblemException if a pattern is invalid
      */
     public MovieRenamePlan previewMovie(long movieId, MovieRenamePatterns patterns) {
         return planning.planMovie(movieId, patterns.parse()).plans().getFirst();
     }
 
     /**
-     * Benennt einen Film um.
+     * Renames one movie.
      *
-     * @return der ausgeführte Plan; bei {@link Status#FAILED} mit dem Grund, bei {@link Status#CONFLICT} ist nichts
-     *         geändert
+     * @return the executed plan; with the reason for {@link Status#FAILED}, nothing changed for
+     *         {@link Status#CONFLICT}
      */
     public MovieRenamePlan renameMovie(long movieId, MovieRenamePatterns patterns) {
         MovieRenamePlanning.Planned planned = planning.planMovie(movieId, patterns.parse());
@@ -67,9 +69,9 @@ public class MovieRenameService {
     }
 
     /**
-     * Benennt einen Film mit den Mustern aus den Einstellungen um, wenn der Auslöser dort eingeschaltet ist.
+     * Renames a movie with the patterns from the settings if the trigger is turned on there.
      *
-     * @return der ausgeführte Plan oder leer, wenn der Auslöser ausgeschaltet ist
+     * @return the executed plan, or empty if the trigger is turned off
      */
     public Optional<MovieRenamePlan> renameIfEnabled(long movieId, RenameTrigger trigger) {
         RenameSettings settings = settingsService.current().rename();
@@ -78,19 +80,20 @@ public class MovieRenameService {
         }
         MovieRenamePlan plan = renameMovie(movieId, new MovieRenamePatterns(settings.movieFolder(), settings.movieFile()));
         if (plan.status() == Status.CONFLICT || plan.status() == Status.FAILED) {
-            log.warn("Movie {} not renamed automatically: {}", movieId, plan.message());
+            log.warn("Movie {} not renamed automatically: {}", movieId, Messages.english(plan.message()));
         }
         return Optional.of(plan);
     }
 
     /**
-     * Benennt die Filme einer Quelle im Hintergrund um.
+     * Renames the movies of a source in the background.
      *
-     * @throws MovieRenameProblemException wenn ein Muster ungültig ist
+     * @throws MovieRenameProblemException if a pattern is invalid
      */
     public JobSnapshot startSourceRename(long sourceId, MovieRenameRequest request) {
         MovieRenamePatterns.Parsed patterns = request.patterns().parse();
-        String title = "Filme umbenennen „%s“".formatted(sourceService.require(sourceId).getName());
+        LocalizedText title = LocalizedText.of("movie.rename.jobTitle")
+                .with("source", sourceService.require(sourceId).getName());
         Set<Long> selected = request.movieIds() == null ? null : new HashSet<>(request.movieIds());
         return jobService.submit(JOB_KEY_PREFIX + sourceId, title,
                 context -> renameSource(sourceId, patterns, selected, context));
@@ -126,13 +129,14 @@ public class MovieRenameService {
         } catch (IOException e) {
             log.warn("Movie {} not renamed: {}", plan.movieId(), e.getMessage());
             return new MovieRenamePlan(plan.movieId(), plan.title(), plan.currentDirectory(), plan.targetDirectory(),
-                    plan.renames(), Status.FAILED, "Umbenennen fehlgeschlagen: " + e.getMessage());
+                    plan.renames(), Status.FAILED,
+                    LocalizedText.of("movie.rename.failed").with("reason", LocalizedReasons.of(e)));
         }
     }
 
     private static final class Tally {
 
-        private final List<String> problems = new ArrayList<>();
+        private final List<LocalizedText> problems = new ArrayList<>();
         private int renamed;
         private int unchanged;
         private int skipped;
@@ -142,7 +146,7 @@ public class MovieRenameService {
             return renamed + unchanged + skipped + failed;
         }
 
-        /** Ein Film, den das Dateisystem umbenannt oder abgelehnt hat. */
+        /** A movie the file system renamed or refused. */
         void addExecuted(MovieRenamePlan plan) {
             if (plan.status() == Status.FAILED) {
                 failed++;
@@ -152,7 +156,7 @@ public class MovieRenameService {
             }
         }
 
-        /** Ein Film, der nicht umbenannt werden musste oder konnte. */
+        /** A movie that did not need to be or could not be renamed. */
         void addPlanned(MovieRenamePlan plan) {
             if (plan.status() == Status.UNCHANGED) {
                 unchanged++;
@@ -164,7 +168,9 @@ public class MovieRenameService {
 
         private void problem(MovieRenamePlan plan) {
             if (problems.size() < MAX_LISTED_PROBLEMS) {
-                problems.add("„%s“: %s".formatted(plan.title(), plan.message()));
+                problems.add(LocalizedText.of("movie.rename.problem")
+                        .with("title", plan.title())
+                        .with("reason", plan.message()));
             }
         }
 

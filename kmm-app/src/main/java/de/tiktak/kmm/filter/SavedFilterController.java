@@ -18,7 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Gespeicherte Filter der Film- und Serienlisten.
+ * Saved filters of the movie and TV show lists.
  */
 @RestController
 @RequestMapping(SavedFilterController.BASE_PATH)

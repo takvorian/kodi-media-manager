@@ -98,7 +98,7 @@ class TvShowScrapeServiceTest {
         EpisodeThumbs thumbs = service.episodeThumbs(3);
 
         assertThat(thumbs.thumbs()).isEmpty();
-        assertThat(thumbs.localizedWarnings()).singleElement().satisfies(warning -> {
+        assertThat(thumbs.warnings()).singleElement().satisfies(warning -> {
             assertThat(warning.key()).isEqualTo("tvShow.thumbs.scraperFailed");
             assertThat(warning.args()).containsEntry("scraper", "TheTVDB");
             assertThat(((LocalizedText) warning.args().get("message")).key()).isEqualTo("tvShow.notIdentified.detail");

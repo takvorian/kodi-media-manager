@@ -10,8 +10,8 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * Einträge einer Liste (Genres, Tags …) in der Stapel-Bearbeitung hinzufügen und entfernen; ohne Rücksicht auf Groß-
- * und Kleinschreibung, vorhandene Einträge behalten ihre Schreibweise.
+ * Add and remove entries of a list (genres, tags ...) in the batch edit; case-insensitively,
+ * existing entries keep their spelling.
  */
 public record ListChange(
         @Size(max = ListChange.MAX_ENTRIES) List<@NotNull @Size(max = ListChange.MAX_LENGTH) String> add,
