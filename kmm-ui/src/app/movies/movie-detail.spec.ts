@@ -1,4 +1,5 @@
 import { By } from '@angular/platform-browser';
+import { provideI18nTesting } from '../i18n/testing';
 import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
@@ -10,6 +11,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 import { of } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
 
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
 
@@ -88,6 +90,7 @@ describe('MovieDetail', () => {
         { provide: ThemeService, useValue: { info: () => of(NO_THEME) } },
         events.provider(),
         provideHttpClient(),
+        provideI18nTesting(),
         provideHttpClientTesting(),
         provideRouter([]),
         {
@@ -125,13 +128,13 @@ describe('MovieDetail', () => {
   async function load(details: MovieDetails): Promise<void> {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5` }).flush(details);
-    // Der Bild-Bereich lädt seine Daten beim Rendern selbst; hier genügt eine leere Liste.
+    // The artwork section loads its data itself when rendered; an empty list is enough here.
     await renderPendingChanges();
     httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5/artwork` }).flush([]);
     await fixture.whenStable();
   }
 
-  /** Rendert, bis die gerade beantwortete Anfrage im Template angekommen ist. */
+  /** Renders until the request just answered has reached the template. */
   async function renderPendingChanges(): Promise<void> {
     const renderPasses = 2;
     for (let pass = 0; pass < renderPasses; pass++) {
@@ -165,6 +168,24 @@ describe('MovieDetail', () => {
     );
     expect(element().querySelector('.audios')?.textContent?.trim()).toBe('deu · DTS · 5.1');
     expect(element().querySelector('.subtitles')?.textContent?.trim()).toBe('deu (erzwungen)');
+  });
+
+  it('switches to English at runtime', async () => {
+    await load(heat);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(button('.kodi-refresh-button').textContent?.trim()).toBe('Refresh in Kodi');
+    expect(button('.online-search-button').textContent?.trim()).toBe('Search online');
+    expect(button('.save-button').textContent?.trim()).toBe('Save');
+    expect(element().querySelector('.back-link')?.textContent?.trim()).toBe('← Back to movies');
+    expect(element().querySelector('.nfo-status')?.textContent).toContain('(changed 10/25/26');
+
+    await type('title', '');
+    button('.scrape-button').click();
+
+    expect(snackBarMessages).toEqual(['Please save the changes first.']);
   });
 
   it('refreshes the movie in Kodi and reports each host', async () => {

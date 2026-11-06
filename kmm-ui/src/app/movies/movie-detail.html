@@ -1,26 +1,56 @@
-<a matButton routerLink="/movies" class="back-link">← Zur Filmliste</a>
+<a matButton routerLink="/movies" class="back-link">{{ 'movies.detail.backToList' | transloco }}</a>
 
 @if (movie.error()) {
-  <p class="error">Der Film konnte nicht geladen werden.</p>
+  <p class="error">{{ 'movies.detail.loadError' | transloco }}</p>
 } @else if (movie.hasValue()) {
   @let details = movie.value();
   <div class="title-row">
     <h2 class="page-title">{{ details.metadata.title }}</h2>
     <div class="title-actions">
-      <button matButton type="button" class="kodi-refresh-button" [disabled]="refreshingKodi()" (click)="refreshInKodi()">
-        In Kodi aktualisieren
+      <button
+        matButton
+        type="button"
+        class="kodi-refresh-button"
+        [disabled]="refreshingKodi()"
+        (click)="refreshInKodi()"
+      >
+        {{ 'movies.actions.refreshInKodi' | transloco }}
       </button>
-      <button matButton type="button" class="kodi-playback-button" [disabled]="importingPlayback()" (click)="importPlayback()">
-        Gesehen-Status aus Kodi
+      <button
+        matButton
+        type="button"
+        class="kodi-playback-button"
+        [disabled]="importingPlayback()"
+        (click)="importPlayback()"
+      >
+        {{ 'movies.detail.importPlayback' | transloco }}
       </button>
-      <button matButton type="button" class="stream-details-button" [disabled]="probingStreams()" (click)="probeStreams()">
-        Technische Angaben auslesen
+      <button
+        matButton
+        type="button"
+        class="stream-details-button"
+        [disabled]="probingStreams()"
+        (click)="probeStreams()"
+      >
+        {{ 'movies.detail.probeStreams' | transloco }}
       </button>
-      <button matButton type="button" class="rename-button" [disabled]="renaming()" (click)="renameMovie()">
-        Umbenennen
+      <button
+        matButton
+        type="button"
+        class="rename-button"
+        [disabled]="renaming()"
+        (click)="renameMovie()"
+      >
+        {{ 'common.rename' | transloco }}
       </button>
-      <button matButton="tonal" type="button" class="scrape-button" [disabled]="!!scrapeJob()" (click)="scrape()">
-        Scrapen
+      <button
+        matButton="tonal"
+        type="button"
+        class="scrape-button"
+        [disabled]="!!scrapeJob()"
+        (click)="scrape()"
+      >
+        {{ 'movies.actions.scrape' | transloco }}
       </button>
       <button
         matButton="tonal"
@@ -29,7 +59,10 @@
         [disabled]="!!scrapeJob()"
         (click)="toggleOnlineSearch()"
       >
-        {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
+        {{
+          (searchingOnline() ? 'movies.detail.closeSearch' : 'movies.detail.searchOnline')
+            | transloco
+        }}
       </button>
     </div>
   </div>
@@ -58,15 +91,27 @@
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>
       <dl class="facts">
-        <dt>Datei</dt>
+        <dt>{{ 'common.file' | transloco }}</dt>
         <dd class="path file-path">{{ details.filePath }}</dd>
         <dt>NFO</dt>
         <dd class="nfo-status">
           @if (details.nfo.exists) {
             <span class="path">{{ details.nfo.path }}</span>
-            <span class="hint"> (geändert {{ details.nfo.modifiedAt | date: 'short' }})</span>
+            @if (details.nfo.modifiedAt; as modifiedAt) {
+              <span class="hint">
+                {{
+                  'movies.detail.nfoModified'
+                    | transloco
+                      : {
+                          date:
+                            (modifiedAt
+                            | translocoDate: { dateStyle: 'short', timeStyle: 'short' }),
+                        }
+                }}</span
+              >
+            }
           } @else {
-            <span class="hint">Noch keine NFO – wird beim Speichern angelegt:</span>
+            <span class="hint">{{ 'movies.detail.nfoMissing' | transloco }}</span>
             <span class="path">{{ details.nfo.path }}</span>
           }
         </dd>
@@ -74,19 +119,19 @@
       <app-language-select
         class="language-select"
         [value]="details.language"
-        defaultLabel="Standard (Quelle oder Einstellungen)"
+        [defaultLabel]="'movies.language.default' | transloco"
         [disabled]="!!scrapeJob() || !!languageJob()"
         (chosen)="changeLanguage($event)"
       />
       @if (languageJob()) {
-        <p class="hint language-running">Die Sprache wird geändert …</p>
+        <p class="hint language-running">{{ 'movies.language.running' | transloco }}</p>
       }
     </mat-card-content>
   </mat-card>
 
   <mat-card appearance="outlined" class="supplement-card">
     <mat-card-header>
-      <mat-card-title>Weitere Angaben</mat-card-title>
+      <mat-card-title>{{ 'movies.detail.supplement' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <app-movie-supplement [supplement]="details.supplement" [addedAt]="details.addedAt" />
@@ -95,29 +140,35 @@
 
   <mat-card appearance="outlined" class="streams-card">
     <mat-card-header>
-      <mat-card-title>Technik</mat-card-title>
+      <mat-card-title>{{ 'movies.detail.streams' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <app-stream-details [streams]="details.streams" />
       <p class="hint">
-        Stammt aus der NFO oder aus ffprobe.
-        <app-help-link chapter="filme" anchor="technische-angaben">Mehr dazu</app-help-link>
+        {{ 'movies.detail.streamsOrigin' | transloco }}
+        <app-help-link chapter="filme" anchor="technische-angaben">{{
+          'common.learnMore' | transloco
+        }}</app-help-link>
       </p>
     </mat-card-content>
   </mat-card>
 
   <mat-card appearance="outlined" class="trailer-card">
     <mat-card-header>
-      <mat-card-title>Trailer</mat-card-title>
+      <mat-card-title>{{ 'fields.trailer' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <app-trailer-editor [endpoint]="trailerEndpoint()" [trailer]="details.trailer" (changed)="showTrailer($event)" />
+      <app-trailer-editor
+        [endpoint]="trailerEndpoint()"
+        [trailer]="details.trailer"
+        (changed)="showTrailer($event)"
+      />
     </mat-card-content>
   </mat-card>
 
   <mat-card appearance="outlined" class="theme-card">
     <mat-card-header>
-      <mat-card-title>Titelmusik</mat-card-title>
+      <mat-card-title>{{ 'fields.theme' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       @for (version of [scrapeRuns()]; track version) {
@@ -128,7 +179,7 @@
 
   <mat-card appearance="outlined" class="artwork-card">
     <mat-card-header>
-      <mat-card-title>Bilder</mat-card-title>
+      <mat-card-title>{{ 'movies.detail.artwork' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       @for (version of [scrapeRuns()]; track version) {
@@ -140,102 +191,137 @@
   <form [formGroup]="form" (ngSubmit)="save()" class="metadata-form">
     <div class="row">
       <mat-form-field class="wide">
-        <mat-label>Titel</mat-label>
+        <mat-label>{{ 'fields.title' | transloco }}</mat-label>
         <input matInput formControlName="title" name="title" required />
         @if (form.controls.title.hasError('required')) {
-          <mat-error>Der Titel ist erforderlich.</mat-error>
+          <mat-error>{{ 'movies.form.titleRequired' | transloco }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field class="wide">
-        <mat-label>Originaltitel</mat-label>
+        <mat-label>{{ 'fields.originalTitle' | transloco }}</mat-label>
         <input matInput formControlName="originalTitle" name="originalTitle" />
       </mat-form-field>
       <mat-form-field class="wide">
-        <mat-label>Sortiertitel</mat-label>
+        <mat-label>{{ 'fields.sortTitle' | transloco }}</mat-label>
         <input matInput formControlName="sortTitle" name="sortTitle" />
-        <mat-hint>Reihenfolge in Kodi, z. B. „Pate, Der“</mat-hint>
+        <mat-hint>{{ 'movies.form.sortTitleHint' | transloco }}</mat-hint>
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field class="narrow">
-        <mat-label>Jahr</mat-label>
-        <input matInput type="number" formControlName="year" name="year" [min]="minYear" [max]="maxYear" />
+        <mat-label>{{ 'fields.year' | transloco }}</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="year"
+          name="year"
+          [min]="minYear"
+          [max]="maxYear"
+        />
         @if (form.controls.year.invalid) {
-          <mat-error>Zwischen {{ minYear }} und {{ maxYear }}.</mat-error>
+          <mat-error>{{
+            'movies.form.yearRange' | transloco: { min: minYear, max: maxYear }
+          }}</mat-error>
         }
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Erstaufführung</mat-label>
+        <mat-label>{{ 'movies.form.premiered' | transloco }}</mat-label>
         <input matInput type="date" formControlName="premiered" name="premiered" />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Laufzeit (Minuten)</mat-label>
+        <mat-label>{{ 'movies.form.runtimeMinutes' | transloco }}</mat-label>
         <input matInput type="number" formControlName="runtime" name="runtime" min="0" />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Altersfreigabe</mat-label>
-        <input matInput formControlName="mpaa" name="mpaa" placeholder="z. B. FSK 16" />
+        <mat-label>{{ 'fields.certification' | transloco }}</mat-label>
+        <input
+          matInput
+          formControlName="mpaa"
+          name="mpaa"
+          [placeholder]="'movies.form.certificationExample' | transloco"
+        />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Fassung</mat-label>
-        <input matInput formControlName="edition" name="edition" placeholder="z. B. Director's Cut" />
-        <mat-hint>Für den Dateinamen</mat-hint>
+        <mat-label>{{ 'fields.edition' | transloco }}</mat-label>
+        <input
+          matInput
+          formControlName="edition"
+          name="edition"
+          [placeholder]="'movies.form.editionExample' | transloco"
+        />
+        <mat-hint>{{ 'movies.form.forFileName' | transloco }}</mat-hint>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Videoquelle</mat-label>
-        <input matInput formControlName="videoSource" name="videoSource" placeholder="z. B. bluray" />
-        <mat-hint>Für den Dateinamen</mat-hint>
+        <mat-label>{{ 'fields.videoSource' | transloco }}</mat-label>
+        <input
+          matInput
+          formControlName="videoSource"
+          name="videoSource"
+          [placeholder]="'movies.form.videoSourceExample' | transloco"
+        />
+        <mat-hint>{{ 'movies.form.forFileName' | transloco }}</mat-hint>
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field class="wide">
-        <mat-label>Genres</mat-label>
+        <mat-label>{{ 'fields.genres' | transloco }}</mat-label>
         <input matInput formControlName="genres" name="genres" />
-        <mat-hint>Mehrere durch Komma trennen</mat-hint>
+        <mat-hint>{{ 'movies.form.genresHint' | transloco }}</mat-hint>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>IMDb-ID</mat-label>
+        <mat-label>{{ 'fields.imdbId' | transloco }}</mat-label>
         <input matInput formControlName="imdbId" name="imdbId" placeholder="tt0113277" />
         @if (form.controls.imdbId.invalid) {
-          <mat-error>Format: tt gefolgt von 7–10 Ziffern</mat-error>
+          <mat-error>{{ 'movies.form.imdbIdFormat' | transloco }}</mat-error>
         } @else {
-          <mat-hint>Nötig für Moviepilot, OFDb und OMDb</mat-hint>
+          <mat-hint>{{ 'movies.form.imdbIdHint' | transloco }}</mat-hint>
         }
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>TMDB-ID</mat-label>
+        <mat-label>{{ 'fields.tmdbId' | transloco }}</mat-label>
         <input matInput formControlName="tmdbId" name="tmdbId" />
         @if (form.controls.tmdbId.invalid) {
-          <mat-error>Nur Ziffern</mat-error>
+          <mat-error>{{ 'movies.form.digitsOnly' | transloco }}</mat-error>
         }
       </mat-form-field>
     </div>
 
     <mat-form-field class="full">
-      <mat-label>Tagline</mat-label>
+      <mat-label>{{ 'movies.form.tagline' | transloco }}</mat-label>
       <input matInput formControlName="tagline" name="tagline" />
     </mat-form-field>
     <mat-form-field class="full">
-      <mat-label>Kurzinhalt</mat-label>
+      <mat-label>{{ 'fields.outline' | transloco }}</mat-label>
       <textarea matInput formControlName="outline" name="outline" rows="2"></textarea>
-      <mat-hint>Ein bis zwei Sätze; die ausführliche Fassung steht unter „Handlung“</mat-hint>
+      <mat-hint>{{ 'movies.form.outlineHint' | transloco }}</mat-hint>
     </mat-form-field>
     <mat-form-field class="full">
-      <mat-label>Handlung</mat-label>
+      <mat-label>{{ 'fields.plot' | transloco }}</mat-label>
       <textarea matInput formControlName="plot" name="plot" rows="6"></textarea>
     </mat-form-field>
 
     <div class="actions">
-      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving() || !!scrapeJob()">
-        Verwerfen
+      <button
+        matButton
+        type="button"
+        class="reset-button"
+        (click)="reset()"
+        [disabled]="form.pristine || saving() || !!scrapeJob()"
+      >
+        {{ 'movies.detail.discard' | transloco }}
       </button>
-      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving() || !!scrapeJob()">
-        {{ saving() ? 'Speichere …' : 'Speichern' }}
+      <button
+        matButton="filled"
+        type="submit"
+        class="save-button"
+        [disabled]="form.pristine || saving() || !!scrapeJob()"
+      >
+        {{ (saving() ? 'movies.detail.saving' : 'common.save') | transloco }}
       </button>
     </div>
   </form>
 } @else {
-  <p class="loading">Lade Film …</p>
+  <p class="loading">{{ 'movies.detail.loading' | transloco }}</p>
 }

@@ -1,14 +1,14 @@
 @if (scrapers.error()) {
-  <p class="error">Die Scraper konnten nicht geladen werden.</p>
+  <p class="error">{{ 'movies.onlineSearch.scrapersError' | transloco }}</p>
 } @else if (scrapers.hasValue()) {
   @let scraper = selectedScraper();
   @if (!scraper) {
-    <p class="hint no-scraper">Es ist kein Metadaten-Scraper installiert oder aktiv.</p>
+    <p class="hint no-scraper">{{ 'movies.onlineSearch.noScraper' | transloco }}</p>
   } @else {
     <form [formGroup]="form" (ngSubmit)="search()" class="search-form">
       @if (scrapers.value().length > 1) {
         <mat-form-field class="scraper-field">
-          <mat-label>Quelle</mat-label>
+          <mat-label>{{ 'common.source' | transloco }}</mat-label>
           <mat-select formControlName="scraper" [placeholder]="scraper.displayName">
             @for (option of scrapers.value(); track option.id) {
               <mat-option [value]="option.id">{{ option.displayName }}</mat-option>
@@ -17,15 +17,26 @@
         </mat-form-field>
       }
       <mat-form-field class="query-field">
-        <mat-label>Suchbegriff</mat-label>
+        <mat-label>{{ 'movies.onlineSearch.query' | transloco }}</mat-label>
         <input matInput formControlName="query" name="query" [placeholder]="title()" />
       </mat-form-field>
       <mat-form-field class="year-field">
-        <mat-label>Jahr</mat-label>
-        <input matInput type="number" formControlName="year" name="searchYear" [placeholder]="year()?.toString() ?? ''" />
+        <mat-label>{{ 'fields.year' | transloco }}</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="year"
+          name="searchYear"
+          [placeholder]="year()?.toString() ?? ''"
+        />
       </mat-form-field>
-      <button matButton="tonal" type="submit" class="search-button" [disabled]="busy() || !!scraper.missingConfiguration">
-        Bei {{ scraper.displayName }} suchen
+      <button
+        matButton="tonal"
+        type="submit"
+        class="search-button"
+        [disabled]="busy() || !!scraper.missingConfiguration"
+      >
+        {{ 'movies.onlineSearch.searchAt' | transloco: { scraper: scraper.displayName } }}
       </button>
     </form>
 
@@ -39,7 +50,7 @@
     @let results = candidates();
     @if (results !== null) {
       @if (results.length === 0) {
-        <p class="hint no-results">Keine Treffer. Versuche einen anderen Suchbegriff oder lass das Jahr weg.</p>
+        <p class="hint no-results">{{ 'movies.onlineSearch.noResults' | transloco }}</p>
       } @else {
         <ul class="candidates">
           @for (candidate of results; track candidate.providerId) {
@@ -63,8 +74,14 @@
                   <span class="overview">{{ candidate.overview }}</span>
                 }
               </div>
-              <button matButton class="adopt-button" type="button" (click)="adopt(candidate)" [disabled]="busy()">
-                Übernehmen
+              <button
+                matButton
+                class="adopt-button"
+                type="button"
+                (click)="adopt(candidate)"
+                [disabled]="busy()"
+              >
+                {{ 'common.apply' | transloco }}
               </button>
             </li>
           }
@@ -73,5 +90,5 @@
     }
   }
 } @else {
-  <p class="hint">Lade Scraper …</p>
+  <p class="hint">{{ 'movies.onlineSearch.loading' | transloco }}</p>
 }

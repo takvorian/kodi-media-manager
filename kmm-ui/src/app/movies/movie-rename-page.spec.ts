@@ -4,7 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { MovieRenamePlan } from './movie-rename';
@@ -65,6 +67,7 @@ describe('MovieRenamePage', () => {
       imports: [MovieRenamePage],
       providers: [
         provideHttpClient(),
+        provideI18nTesting(),
         provideHttpClientTesting(),
         provideRouter([]),
         {
@@ -142,13 +145,27 @@ describe('MovieRenamePage', () => {
     await preview();
 
     expect(element().querySelector('.summary')!.textContent).toContain('2 umzubenennen');
-    expect(element().querySelector('.count-conflict')!.textContent).toContain('1 Konflikte');
+    expect(element().querySelector('.count-conflict')!.textContent).toContain('1 Konflikt');
     expect(rows()).toEqual([
       'Brazil | /filme/brazil → /filme/Brazil (1985) | Konflikt Der Ordner existiert bereits.',
       'Heat | /filme/heat → /filme/Heat (1995) | heat.mkv → Heat.mkv | wird umbenannt',
       'Ronin | /filme/ronin → /filme/Ronin (1998) | ronin.mkv → Ronin.mkv | wird umbenannt',
     ]);
     expect(button('.rename-button').textContent).toContain('2 umbenennen');
+  });
+
+  it('switches to English at runtime', async () => {
+    await load();
+    await preview();
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.summary')!.textContent).toContain('2 to rename');
+    expect(element().querySelector('.count-conflict')!.textContent).toContain('1 conflict');
+    expect(rows()[0]).toContain('| conflict');
+    expect(rows()[1]).toContain('| will be renamed');
+    expect(button('.rename-button').textContent).toContain('Rename 2');
   });
 
   it('sorts the preview by a column header', async () => {
@@ -178,7 +195,7 @@ describe('MovieRenamePage', () => {
 
     await preview([plans[0]]);
 
-    expect(rows()).toEqual(['Alle 1 Filme heißen schon so.']);
+    expect(rows()).toEqual(['Der Film heißt schon so.']);
     expect(button('.rename-button').disabled).toBe(true);
   });
 

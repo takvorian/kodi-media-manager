@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Observable, filter } from 'rxjs';
 
 import { Job } from '../jobs/job';
@@ -23,16 +24,17 @@ import { TagService } from './tag.service';
 const SNACKBAR_DURATION_MS = 8000;
 const SEARCH_SIZE = 20;
 
-/** Ein Treffer der Suche zum Zuweisen. */
+/** A search result to assign the tag to. */
 interface Candidate {
   readonly kind: 'movie' | 'show';
   readonly id: number;
+  /** Title, for movies with the year; the template marks TV shows in the active language. */
   readonly label: string;
 }
 
 /**
- * Tag-Manager wie in Ember: Tags von Filmen und Serien anlegen (durch Zuweisen), umbenennen, löschen, zuweisen
- * und entfernen. Änderungen laufen als Hintergrund-Job, weil sie NFOs schreiben.
+ * Tag manager as in Ember: creates (by assigning), renames, deletes, assigns and removes tags of movies and TV
+ * shows. Changes run as a background job because they write NFOs.
  */
 @Component({
   selector: 'app-tag-manager',
@@ -45,6 +47,7 @@ interface Candidate {
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
+    TranslocoPipe,
   ],
   templateUrl: './tag-manager.html',
   styleUrl: './tag-manager.scss',
@@ -56,6 +59,7 @@ export class TagManager {
   private readonly jobStore = inject(JobStore);
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly tags = rxResource({ stream: () => this.tagService.findAll() });
   protected readonly selected = signal<string | null>(null);
@@ -92,7 +96,7 @@ export class TagManager {
     this.removal.set(new Set());
   }
 
-  /** Ein neuer Tag entsteht erst, wenn er etwas zugewiesen bekommt. */
+  /** A new tag only comes into being when it is assigned to something. */
   protected startNewTag(name: string): void {
     const tag = name.trim();
     if (tag) {
@@ -112,7 +116,7 @@ export class TagManager {
 
   protected delete(): void {
     const tag = this.selected();
-    if (tag && this.confirm(`Tag „${tag}“ von allen Filmen und Serien entfernen?`)) {
+    if (tag && this.confirm(this.transloco.translate('tags.confirmDelete', { tag }))) {
       this.track(this.tagService.delete(tag), () => this.selected.set(null));
     }
   }
@@ -159,7 +163,7 @@ export class TagManager {
           ...page.content.map((show): Candidate => ({
             kind: 'show',
             id: show.id,
-            label: `${show.title} (Serie)`,
+            label: show.title,
           })),
         ]),
       error: (error: unknown) => this.notify(problemMessage(error)),
@@ -206,7 +210,7 @@ function toggled(current: ReadonlySet<string>, key: string): ReadonlySet<string>
   return next;
 }
 
-/** Schlüssel wie `movie:12` in Film- und Serien-IDs aufteilen. */
+/** Splits keys like `movie:12` into movie and TV show IDs. */
 function ids(keys: ReadonlySet<string>): { movieIds: number[]; showIds: number[] } {
   const parse = (kind: string) =>
     [...keys]

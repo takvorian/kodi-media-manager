@@ -40,24 +40,24 @@ export class MovieSetService {
     return this.http.post<Job>(`${MOVIE_SETS_URL}/${setId}/movies/remove`, { movieIds });
   }
 
-  /** Sucht Sammlungen bei TMDB. */
+  /** Searches collections at TMDB. */
   searchCollections(title: string): Observable<MovieSetCandidate[]> {
     return this.http.get<MovieSetCandidate[]>(`${MOVIE_SETS_URL}/search`, { params: { title } });
   }
 
-  /** Titel, Beschreibung und TMDB-ID eines Treffers als Vorschlag für das Formular. */
+  /** Title, description and TMDB ID of a result as a proposal for the form. */
   proposal(setId: number, providerId: string): Observable<MovieSetData> {
     return this.http.get<MovieSetData>(`${MOVIE_SETS_URL}/${setId}/proposal`, {
       params: { providerId },
     });
   }
 
-  /** Ergänzt fehlende Beschreibungen und Bilder aller Sets als Job. */
+  /** Adds missing descriptions and artwork of all sets as a job. */
   completeAll(): Observable<Job> {
     return this.http.post<Job>(`${MOVIE_SETS_URL}/complete`, null);
   }
 
-  /** Bilder eines Sets; gespeichert wird in den Ablagen aus den Einstellungen. */
+  /** Artwork of a set; it is saved in the locations from the settings. */
   artwork(setId: number): ArtworkSource {
     const baseUrl = `${MOVIE_SETS_URL}/${setId}/artwork`;
     return {

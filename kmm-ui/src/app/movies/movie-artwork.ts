@@ -3,7 +3,7 @@ import { Component, computed, inject, input } from '@angular/core';
 import { ArtworkGallery } from './artwork-gallery';
 import { ArtworkService } from './artwork.service';
 
-/** Bilder eines Films; gespeichert wird nach Kodi-Konvention neben dem Film. */
+/** Artwork of a movie; it is saved next to the movie following the Kodi convention. */
 @Component({
   selector: 'app-movie-artwork',
   imports: [ArtworkGallery],

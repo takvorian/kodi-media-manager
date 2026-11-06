@@ -4,7 +4,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
 import { Subject } from 'rxjs';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { ArtworkInfo } from '../movies/artwork';
@@ -74,6 +76,7 @@ describe('MovieSetManager', () => {
       imports: [MovieSetManager],
       providers: [
         provideHttpClient(),
+        provideI18nTesting(),
         provideHttpClientTesting(),
         provideRouter([]),
         {
@@ -138,6 +141,25 @@ describe('MovieSetManager', () => {
   function job(title: string): Job {
     return { id: 'j', key: 'moviesets', title, status: 'RUNNING' } as Job;
   }
+
+  it('switches to English at runtime', async () => {
+    await load();
+    await selectMatrix();
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(texts('.complete-button')).toEqual(['Complete all sets']);
+    expect(texts('h3')).toEqual(['Artwork', 'Movies (2)', 'Add movies']);
+    expect(texts('mat-option, .mat-mdc-select-value')).toContain('by year');
+    expect(
+      movieSetJobSummary({
+        ...job('Save movie set'),
+        status: 'SUCCEEDED',
+        result: { changed: 1, unchanged: 0, failed: 0, failures: [] },
+      }),
+    ).toBe('Save movie set: 1 movie changed.');
+  });
 
   it('lists and filters sets and shows the selected one', async () => {
     await load();
@@ -339,7 +361,7 @@ describe('MovieSetManager', () => {
         ...done,
         result: { changed: 1, unchanged: 0, failed: 1, failures: ['Film 5: x'] },
       }),
-    ).toBe('Filmset löschen: 1 Filme geändert, 1 Fehler: Film 5: x.');
+    ).toBe('Filmset löschen: 1 Film geändert, 1 Fehler: Film 5: x.');
     expect(movieSetJobSummary({ ...done, status: 'CANCELLED' })).toBe(
       'Filmset löschen abgebrochen.',
     );

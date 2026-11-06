@@ -10,6 +10,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSortModule } from '@angular/material/sort';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
@@ -20,7 +21,7 @@ import { problemMessage } from '../shared/problem-message';
 import {
   MovieRenamePatterns,
   MovieRenamePlan,
-  RENAME_STATUS_LABELS,
+  RENAME_STATUS_KEYS,
   movesFolder,
   movieRenameJobKey,
   movieRenameSummary,
@@ -31,8 +32,8 @@ import { HelpLink } from '../shared/help-link';
 const SNACKBAR_DURATION_MS = 8000;
 
 /**
- * Filme einer Quelle nach Mustern umbenennen: Vorschau mit allen Änderungen und Konflikten, Auswahl, dann
- * Umbenennen als Hintergrund-Job. Die Vorschau ändert nichts.
+ * Renames the movies of a source following patterns: preview with all changes and conflicts, selection, then
+ * renaming as a background job. The preview changes nothing.
  */
 @Component({
   selector: 'app-movie-rename-page',
@@ -47,6 +48,7 @@ const SNACKBAR_DURATION_MS = 8000;
     MatInputModule,
     MatProgressBarModule,
     MatSortModule,
+    TranslocoPipe,
   ],
   templateUrl: './movie-rename-page.html',
   styleUrl: './movie-rename-page.scss',
@@ -55,11 +57,12 @@ export class MovieRenamePage {
   private readonly renameService = inject(MovieRenameService);
   private readonly jobStore = inject(JobStore);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly transloco = inject(TranslocoService);
 
-  /** Quelle aus der Route. */
+  /** Source from the route. */
   readonly id = input.required({ transform: numberAttribute });
 
-  protected readonly statusLabels = RENAME_STATUS_LABELS;
+  protected readonly statusKeys = RENAME_STATUS_KEYS;
   protected readonly form = inject(NonNullableFormBuilder).group({
     folder: ['', Validators.required],
     file: ['', Validators.required],
@@ -187,7 +190,7 @@ export class MovieRenamePage {
       case 'folder':
         return plan.currentDirectory;
       case 'status':
-        return this.statusLabels[plan.status];
+        return this.transloco.translate(RENAME_STATUS_KEYS[plan.status]);
       default:
         return plan.title;
     }

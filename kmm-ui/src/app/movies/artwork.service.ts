@@ -9,7 +9,7 @@ import { MOVIES_URL } from './movie.service';
 export class ArtworkService {
   private readonly http = inject(HttpClient);
 
-  /** Die Bilder eines Films als Quelle für eine Bildergalerie. */
+  /** The artwork of a movie as the source of an artwork gallery. */
   forMovie(movieId: number): ArtworkSource {
     return {
       findAll: () => this.findAll(movieId),
@@ -24,7 +24,7 @@ export class ArtworkService {
     return this.http.get<ArtworkInfo[]>(artworkUrl(movieId));
   }
 
-  /** URL des Bildes; die Änderungszeit sorgt dafür, dass der Browser ein ersetztes Bild neu lädt. */
+  /** URL of the image; the modification time makes the browser reload a replaced image. */
   imageUrl(movieId: number, artwork: ArtworkInfo): string {
     return versioned(`${artworkUrl(movieId)}/${artwork.type}/image`, artwork);
   }
@@ -33,7 +33,7 @@ export class ArtworkService {
     return this.http.get<ArtworkCandidates>(`${artworkUrl(movieId)}/${type}/candidates`);
   }
 
-  /** Lädt das Bild und speichert es nach Kodi-Konvention neben dem Film. */
+  /** Downloads the image and saves it next to the movie following the Kodi convention. */
   apply(movieId: number, type: ArtworkType, url: string): Observable<ArtworkInfo> {
     return this.http.put<ArtworkInfo>(`${artworkUrl(movieId)}/${type}`, { url });
   }

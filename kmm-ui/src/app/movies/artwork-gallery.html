@@ -1,23 +1,29 @@
 @if (artwork.error()) {
-  <p class="error">Die Bilder konnten nicht geladen werden.</p>
+  <p class="error">{{ 'movies.artwork.loadError' | transloco }}</p>
 } @else if (artwork.hasValue()) {
   <div class="tiles">
     @for (item of artwork.value(); track item.type) {
-      <div class="tile" [class.selected]="selectedType() === item.type" [attr.data-type]="item.type">
-        <span class="tile-label">{{ labels[item.type] }}</span>
+      <div
+        class="tile"
+        [class.selected]="selectedType() === item.type"
+        [attr.data-type]="item.type"
+      >
+        <span class="tile-label">{{ labelKeys[item.type] | transloco }}</span>
         <div class="tile-image" [class]="'shape-' + item.type.toLowerCase()">
           @if (item.exists) {
-            <img [src]="imageUrl(item)" [alt]="labels[item.type]" loading="lazy" />
+            <img [src]="imageUrl(item)" [alt]="labelKeys[item.type] | transloco" loading="lazy" />
           } @else {
-            <span class="missing">fehlt</span>
+            <span class="missing">{{ 'movies.artwork.missing' | transloco }}</span>
           }
         </div>
         <div class="tile-actions">
           <button matButton type="button" class="change-button" (click)="select(item.type)">
-            {{ item.exists ? 'Ändern' : 'Suchen' }}
+            {{ (item.exists ? 'movies.artwork.change' : 'common.search') | transloco }}
           </button>
           @if (item.exists) {
-            <button matButton type="button" class="remove-button" (click)="remove(item)">Löschen</button>
+            <button matButton type="button" class="remove-button" (click)="remove(item)">
+              {{ 'common.delete' | transloco }}
+            </button>
           }
         </div>
       </div>
@@ -28,8 +34,10 @@
   @if (type) {
     <section class="selection" aria-live="polite">
       <div class="selection-header">
-        <h3>{{ labels[type] }} auswählen</h3>
-        <button matButton type="button" class="close-button" (click)="closeSelection()">Schließen</button>
+        <h3>{{ 'movies.artwork.choose' | transloco: { type: (labelKeys[type] | transloco) } }}</h3>
+        <button matButton type="button" class="close-button" (click)="closeSelection()">
+          {{ 'common.close' | transloco }}
+        </button>
       </div>
       @if (candidatesError()) {
         <p class="error">{{ candidatesError() }}</p>
@@ -38,7 +46,7 @@
           <p class="warning">{{ warning }}</p>
         }
         @if (result.candidates.length === 0) {
-          <p class="hint no-candidates">Keine Bilder gefunden.</p>
+          <p class="hint no-candidates">{{ 'movies.artwork.noCandidates' | transloco }}</p>
         } @else {
           <div class="candidates" [class]="'shape-' + type.toLowerCase()">
             @for (candidate of result.candidates; track candidate.url) {
@@ -47,11 +55,16 @@
                 class="candidate"
                 [disabled]="busy()"
                 (click)="apply(candidate)"
-                [title]="'Von ' + candidate.scraperName + ' übernehmen'"
+                [title]="'movies.artwork.applyFrom' | transloco: { scraper: candidate.scraperName }"
               >
                 <img [src]="candidate.previewUrl" alt="" loading="lazy" />
                 <span class="candidate-meta">
-                  {{ candidate.scraperName }} · {{ languageLabel(candidate) }}
+                  {{ candidate.scraperName }} ·
+                  {{
+                    candidate.language
+                      ? candidate.language.toUpperCase()
+                      : ('movies.artwork.noText' | transloco)
+                  }}
                   @if (candidate.width && candidate.height) {
                     · {{ candidate.width }}×{{ candidate.height }}
                   }
@@ -61,10 +74,10 @@
           </div>
         }
       } @else {
-        <p class="hint loading-candidates">Suche Bilder bei allen Anbietern …</p>
+        <p class="hint loading-candidates">{{ 'movies.artwork.searching' | transloco }}</p>
       }
     </section>
   }
 } @else {
-  <p class="hint">Lade Bilder …</p>
+  <p class="hint">{{ 'movies.artwork.loading' | transloco }}</p>
 }

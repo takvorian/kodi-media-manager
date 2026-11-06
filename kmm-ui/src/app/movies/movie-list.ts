@@ -12,6 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { debounceTime, distinctUntilChanged, filter as where, tap } from 'rxjs';
 
 import {
@@ -44,17 +45,21 @@ import { MOVIES_URL, MovieService } from './movie.service';
 export const SEARCH_DEBOUNCE_MS = 300;
 export const DEFAULT_PAGE_SIZE = 50;
 
-const DISC_FORMAT_LABELS: Record<DiscFormat, string> = {
-  FILE: 'Datei',
-  DVD: 'DVD',
-  BLURAY: 'Blu-ray',
+/** Translation key of the label of each disc format. */
+const DISC_FORMAT_KEYS: Record<DiscFormat, string> = {
+  FILE: 'movies.list.discFormat.FILE',
+  DVD: 'movies.list.discFormat.DVD',
+  BLURAY: 'movies.list.discFormat.BLURAY',
 };
 const SNACKBAR_DURATION_MS = 5000;
+
+/** Named arguments of a translated message. */
+type TranslationParams = Record<string, unknown>;
 const ALL = 'all';
 const PREDEFINED = 'predefined:';
 const SAVED = 'saved:';
 
-/** Filmliste mit Titelsuche und Filtern (mitgelieferte, gespeicherte und eigene Bedingungen). */
+/** Movie list with title search and filters (built-in, saved and custom conditions). */
 @Component({
   selector: 'app-movie-list',
   imports: [
@@ -75,6 +80,7 @@ const SAVED = 'saved:';
     RouterLink,
     ScrapeProgress,
     ScrapeReport,
+    TranslocoPipe,
   ],
   templateUrl: './movie-list.html',
   styleUrl: './movie-list.scss',
@@ -87,6 +93,7 @@ export class MovieList {
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
   private readonly jobStore = inject(JobStore);
+  private readonly transloco = inject(TranslocoService);
 
   protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
   protected readonly columns = ['select', 'title', 'year', 'discFormat', 'addedAt', 'filePath'];
@@ -99,17 +106,17 @@ export class MovieList {
   protected readonly sort = signal<ListSort>(SORT_BY_TITLE);
   protected readonly localDateTime = localDateTime;
   protected readonly filter = signal<MovieFilter>(ALL_MOVIES);
-  /** Gewählter Eintrag der Filterauswahl: `all`, `predefined:<Index>` oder `saved:<ID>`. */
+  /** Chosen entry of the filter selection: `all`, `predefined:<index>` or `saved:<ID>`. */
   protected readonly selection = signal(ALL);
   protected readonly editing = signal(false);
   protected readonly filterName = signal('');
-  /** Für die Stapel-Bearbeitung ausgewählte Filme, auch über Seiten hinweg. */
+  /** Movies chosen for the batch edit, also across pages. */
   protected readonly chosen = signal<ReadonlySet<number>>(new Set());
   protected readonly batchEditing = signal(false);
   protected readonly batchJob = computed(() => this.jobStore.runningJob(MOVIE_BATCH_JOB_KEY));
   protected readonly scrapeJob = computed(() => this.jobStore.runningJob(MOVIES_SCRAPE_JOB_KEY));
   protected readonly scrapeReport = signal<Job | null>(null);
-  /** Beendeter Lauf, solange sein Bericht nicht offen ist: Er kann enden, während man auf einer anderen Seite ist. */
+  /** Finished run while its report is not open: it may end while the user is on another page. */
   protected readonly lastScrape = computed(() =>
     this.scrapeReport()
       ? undefined
@@ -138,13 +145,13 @@ export class MovieList {
   );
 
   protected readonly exportEndpoint = `${MOVIES_URL}/export`;
-  /** Der gewählte Filter samt Suche, wie ihn die Liste anzeigt. */
+  /** The chosen filter including the search, as the list shows it. */
   protected readonly exportFilter = computed(() => ({
     ...completeConditions(this.filter()),
     search: this.search().trim() || null,
   }));
 
-  /** Neu geladen wird nur, wenn sich die Abfrage inhaltlich ändert, nicht schon bei einer leeren neuen Zeile. */
+  /** Reloads only when the query changes in content, not already for a new empty row. */
   private readonly query = computed(
     () => ({
       filter: { ...completeConditions(this.filter()), search: this.search().trim() || null },
@@ -161,7 +168,7 @@ export class MovieList {
       this.movieService.queryMovies(params.filter, params.page, params.size, params.sort),
   });
 
-  /** Ob die Liste eingeschränkt ist; dann heißt eine leere Liste „nichts gefunden“ statt „Bibliothek leer“. */
+  /** Whether the list is restricted; an empty list then means “nothing found” instead of “library empty”. */
   protected readonly restricted = computed(
     () =>
       this.searchInput().trim() !== '' || completeConditions(this.filter()).conditions.length > 0,
@@ -212,7 +219,7 @@ export class MovieList {
     });
   }
 
-  /** Wählt alle Filme aus, auf die der aktuelle Filter samt Suche passt, nicht nur die sichtbare Seite. */
+  /** Chooses all movies matching the current filter and search, not only the visible page. */
   protected chooseAllFiltered(): void {
     this.movieService.queryMovieIds(this.query().filter).subscribe({
       next: (ids) => this.chosen.set(new Set(ids)),
@@ -235,7 +242,7 @@ export class MovieList {
 
   protected startBatch(changes: BatchChanges): void {
     const movieIds = this.chosenIds();
-    if (!this.confirm(`${movieIds.length} Filme ändern? Die NFOs werden neu geschrieben.`)) {
+    if (!this.confirmTranslated('movies.list.confirmBatch', { count: movieIds.length })) {
       return;
     }
     const edit = {
@@ -255,14 +262,10 @@ export class MovieList {
     });
   }
 
-  /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle; Vorhandenes bleibt. */
+  /** Adds everything missing for the selection like scraping a source does; existing data is kept. */
   protected scrapeChosen(): void {
     const ids = this.chosenIds();
-    if (
-      !this.confirm(
-        `${ids.length === 1 ? '1 Film' : `${ids.length} Filme`} scrapen? KMM ergänzt fehlende Metadaten, Bilder, Trailer, Titelmusik und Bewertungen und schreibt sie in die Medienordner. Vorhandenes bleibt. Ist „Filme nach dem Scrapen umbenennen“ eingeschaltet, werden sie auch umbenannt.`,
-      )
-    ) {
+    if (!this.confirmTranslated('movies.list.confirmScrape', { count: ids.length })) {
       return;
     }
     this.scrapeReport.set(null);
@@ -272,14 +275,10 @@ export class MovieList {
     });
   }
 
-  /** Aktualisiert die Bewertungen der Auswahl (etwa Trakt, OMDb) und füllt leere Felder; vorhandene Angaben bleiben. */
+  /** Refreshes the ratings of the selection (e.g. Trakt, OMDb) and fills empty fields; existing data is kept. */
   protected refreshRatings(): void {
     const ids = this.chosenIds();
-    if (
-      !this.confirm(
-        `Bewertungen für ${ids.length} Filme aktualisieren und leere Felder füllen (Trakt, OMDb)? Die NFOs werden dabei geschrieben.`,
-      )
-    ) {
+    if (!this.confirmTranslated('movies.list.confirmRatings', { count: ids.length })) {
       return;
     }
     this.movieService.refreshRatings(ids).subscribe({
@@ -288,14 +287,10 @@ export class MovieList {
     });
   }
 
-  /** Holt für die Auswahl fehlende Titelmusik (theme.mp3), nur bei gleichem Titel beim Anbieter. */
+  /** Fetches missing theme music (theme.mp3) for the selection, only if the provider has the same title. */
   protected fillMissingThemes(): void {
     const ids = this.chosenIds();
-    if (
-      !this.confirm(
-        `Für ${ids.length} Filme fehlende Titelmusik holen? Sie wird als theme.mp3 im Ordner gespeichert.`,
-      )
-    ) {
+    if (!this.confirmTranslated('movies.list.confirmThemes', { count: ids.length })) {
       return;
     }
     this.movieService.fillMissingThemes(ids).subscribe({
@@ -304,14 +299,10 @@ export class MovieList {
     });
   }
 
-  /** Trägt für die ausgewählten Filme ohne Trailer den besten Vorschlag ein; vorhandene bleiben. */
+  /** Enters the best proposal for the chosen movies without a trailer; existing ones are kept. */
   protected fillMissingTrailers(): void {
     const movieIds = this.chosenIds();
-    if (
-      !this.confirm(
-        `Für ${movieIds.length} Filme fehlende Trailer holen? Die NFOs werden dabei geschrieben.`,
-      )
-    ) {
+    if (!this.confirmTranslated('movies.list.confirmTrailers', { count: movieIds.length })) {
       return;
     }
     this.movieService.fillMissingTrailers(movieIds).subscribe({
@@ -320,20 +311,20 @@ export class MovieList {
     });
   }
 
-  /** Fragt, ob die Texte in der neuen Sprache neu geholt werden; die Sprache ändert sich in jedem Fall. */
+  /** Asks whether the texts are fetched again in the new language; the language changes either way. */
   protected changeChosenLanguage(language: string | null): void {
-    const refetchTexts = this.confirm(languageChangeQuestion(language, 'Titel und Inhaltsangaben'));
+    const texts = this.transloco.translate('movies.language.textsOfMovies');
+    const refetchTexts = this.confirm(languageChangeQuestion(language, texts));
     this.movieService.changeLanguage(this.chosenIds(), language, refetchTexts).subscribe({
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }
 
-  /** Lässt Kodi NFO und Bilder der Auswahl neu einlesen, unabhängig vom Echtzeit-Sync. */
+  /** Makes Kodi read the NFOs and artwork of the selection again, independently of the real-time sync. */
   protected refreshChosenInKodi(): void {
     const ids = this.chosenIds();
-    const count = ids.length === 1 ? '1 Film' : `${ids.length} Filme`;
-    if (!this.confirm(`${count} auf allen Kodi-Geräten aktualisieren?`)) {
+    if (!this.confirmTranslated('movies.list.confirmKodiRefresh', { count: ids.length })) {
       return;
     }
     this.kodiService.refreshMovies(ids).subscribe({
@@ -342,8 +333,8 @@ export class MovieList {
     });
   }
 
-  protected discFormatLabel(format: DiscFormat): string {
-    return DISC_FORMAT_LABELS[format];
+  protected discFormatKey(format: DiscFormat): string {
+    return DISC_FORMAT_KEYS[format];
   }
 
   protected onSearch(event: Event): void {
@@ -382,11 +373,11 @@ export class MovieList {
     this.applyFilter(filter as MovieFilter);
   }
 
-  /** Speichert unter dem eingegebenen Namen: einen gewählten gespeicherten Filter ändern, sonst neu anlegen. */
+  /** Saves under the entered name: changes a chosen saved filter, otherwise creates a new one. */
   protected saveFilter(): void {
     const name = this.filterName().trim();
     if (!name) {
-      this.notify('Bitte einen Namen für den Filter eingeben.');
+      this.notifyTranslated('movies.list.enterFilterName');
       return;
     }
     const definition = completeConditions(this.filter());
@@ -397,7 +388,7 @@ export class MovieList {
         : this.savedFilterService.create('MOVIE', name, definition);
     request.subscribe({
       next: (stored) => {
-        this.notify(`Filter „${stored.name}“ gespeichert.`);
+        this.notifyTranslated('movies.list.filterSaved', { name: stored.name });
         this.savedFilters.reload();
         this.selection.set(SAVED + stored.id);
       },
@@ -407,12 +398,15 @@ export class MovieList {
 
   protected deleteFilter(): void {
     const saved = this.selectedSaved();
-    if (!saved || !this.confirm(`Filter „${saved.name}“ löschen?`)) {
+    if (
+      !saved ||
+      !this.confirmTranslated('movies.list.confirmDeleteFilter', { name: saved.name })
+    ) {
       return;
     }
     this.savedFilterService.delete(saved.id).subscribe({
       next: () => {
-        this.notify(`Filter „${saved.name}“ gelöscht.`);
+        this.notifyTranslated('movies.list.filterDeleted', { name: saved.name });
         this.savedFilters.reload();
         this.select(ALL);
       },
@@ -431,6 +425,14 @@ export class MovieList {
   private applyFilter(filter: MovieFilter): void {
     this.filter.set(filter);
     this.pageIndex.set(0);
+  }
+
+  private confirmTranslated(key: string, params: TranslationParams): boolean {
+    return this.confirm(this.transloco.translate(key, params));
+  }
+
+  private notifyTranslated(key: string, params?: TranslationParams): void {
+    this.notify(this.transloco.translate(key, params));
   }
 
   private notify(message: string): void {

@@ -9,7 +9,7 @@ import { MovieRenamePatterns, MovieRenamePlan } from './movie-rename';
 export class MovieRenameService {
   private readonly http = inject(HttpClient);
 
-  /** Was das Umbenennen der Filme einer Quelle ändern würde; ändert nichts. */
+  /** What renaming the movies of a source would change; changes nothing. */
   previewSource(sourceId: number, patterns: MovieRenamePatterns): Observable<MovieRenamePlan[]> {
     return this.http.post<MovieRenamePlan[]>(
       `/api/v1/sources/${sourceId}/movie-rename/preview`,
@@ -17,7 +17,7 @@ export class MovieRenameService {
     );
   }
 
-  /** Benennt die ausgewählten Filme der Quelle im Hintergrund um. */
+  /** Renames the chosen movies of the source in the background. */
   renameSource(
     sourceId: number,
     patterns: MovieRenamePatterns,

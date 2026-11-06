@@ -10,7 +10,9 @@ describe('ArtworkService', () => {
   let httpTesting: HttpTestingController;
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting()],
+    });
     service = TestBed.inject(ArtworkService);
     httpTesting = TestBed.inject(HttpTestingController);
   });
@@ -24,16 +26,27 @@ describe('ArtworkService', () => {
   });
 
   it('builds image urls that change with the file', () => {
-    const poster = { type: 'POSTER' as const, exists: true, path: '/x', modifiedAt: '2026-10-25T12:00:00Z' };
+    const poster = {
+      type: 'POSTER' as const,
+      exists: true,
+      path: '/x',
+      modifiedAt: '2026-10-25T12:00:00Z',
+    };
 
-    expect(service.imageUrl(5, poster)).toBe(`${MOVIES_URL}/5/artwork/POSTER/image?v=2026-10-25T12%3A00%3A00Z`);
-    expect(service.imageUrl(5, { ...poster, modifiedAt: null })).toBe(`${MOVIES_URL}/5/artwork/POSTER/image`);
+    expect(service.imageUrl(5, poster)).toBe(
+      `${MOVIES_URL}/5/artwork/POSTER/image?v=2026-10-25T12%3A00%3A00Z`,
+    );
+    expect(service.imageUrl(5, { ...poster, modifiedAt: null })).toBe(
+      `${MOVIES_URL}/5/artwork/POSTER/image`,
+    );
   });
 
   it('loads candidates of an artwork type', () => {
     service.candidates(5, 'FANART').subscribe();
 
-    httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5/artwork/FANART/candidates` }).flush({});
+    httpTesting
+      .expectOne({ method: 'GET', url: `${MOVIES_URL}/5/artwork/FANART/candidates` })
+      .flush({});
   });
 
   it('applies an image by url', () => {

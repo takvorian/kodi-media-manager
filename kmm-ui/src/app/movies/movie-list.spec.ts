@@ -1,4 +1,5 @@
 import { By } from '@angular/platform-browser';
+import { provideI18nTesting } from '../i18n/testing';
 import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
@@ -12,6 +13,7 @@ import { provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoService } from '@jsverse/transloco';
 
 import { FILTERS_URL, SavedFilter } from '../filters/saved-filter.service';
 import { Job } from '../jobs/job';
@@ -94,6 +96,7 @@ describe('MovieList', () => {
       imports: [MovieList],
       providers: [
         provideHttpClient(),
+        provideI18nTesting(),
         provideHttpClientTesting(),
         provideRouter([]),
         {
@@ -143,7 +146,7 @@ describe('MovieList', () => {
     return request;
   }
 
-  /** Tippt einen Suchbegriff und lässt die Entprellzeit verstreichen. */
+  /** Types a search term and lets the debounce time pass. */
   async function typeSearch(term: string): Promise<void> {
     const input = element().querySelector<HTMLInputElement>('input[name="search"]')!;
     input.value = term;
@@ -200,6 +203,23 @@ describe('MovieList', () => {
     );
     expect(cells).toContain('–');
     expect(cells).toContain('DVD (2 Teile)');
+  });
+
+  it('switches to English at runtime', async () => {
+    await respond(page([ronin]));
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    const text = (selector: string) =>
+      Array.from(element().querySelectorAll(selector)).map((cell) =>
+        cell.textContent?.replace(/\s+/g, ' ').trim(),
+      );
+    expect(text('h2')).toEqual(['Movies']);
+    expect(text('th')).toEqual(['', 'Title', 'Year', 'Format', 'Added', 'File']);
+    expect(text('td')).toContain('DVD (2 parts)');
+    expect(text('.selection > span')).toEqual(['0 selected']);
+    expect(text('.edit-filter-button')).toEqual(['Edit filter']);
   });
 
   it('points to the sources page when the library is empty', async () => {
