@@ -17,12 +17,57 @@ function flatten(dictionary: Dictionary, prefix = ''): Map<string, string> {
   return entries;
 }
 
-/** Names of the ICU arguments such as `{count}` or `{count, plural, …}`, without the plural cases. */
+/**
+ * Names of the ICU arguments such as `{count}` or `{count, plural, …}`. The texts of plural and select options
+ * (`=0 {unwatched}`) are messages, not arguments; quoted parts (`'{title}'`) are literal text.
+ */
 function argumentNames(text: string): string[] {
-  return [
-    ...new Set([...text.matchAll(/\{\s*([A-Za-z]\w*)\s*[,}]/g)].map((match) => match[1])),
-  ].sort();
+  const names = new Set<string>();
+  let position = 0;
+
+  function message(): void {
+    while (position < text.length && text[position] !== '}') {
+      if (text[position] === "'" && /[{}#]/.test(text[position + 1] ?? '')) {
+        position = text.indexOf("'", position + 1) + 1 || text.length;
+      } else if (text[position] === '{') {
+        argument();
+      } else {
+        position++;
+      }
+    }
+  }
+
+  function argument(): void {
+    position++;
+    const end = text.slice(position).search(/[,}]/);
+    names.add(text.slice(position, position + end).trim());
+    position += end;
+    if (text[position] === ',') {
+      // Skip the type, then read each option's message: `selector {message}`.
+      position = text.indexOf(',', position + 1) + 1;
+      while (position < text.length && text[position] !== '}') {
+        if (text[position] === '{') {
+          position++;
+          message();
+        }
+        position++;
+      }
+    }
+    position++;
+  }
+
+  message();
+  return [...names].sort();
 }
+
+describe('argumentNames', () => {
+  it('ignores the texts of plural and select options and quoted braces', () => {
+    expect(
+      argumentNames("{count, plural, =0 {unwatched} one {# film by {who}} other {#}} '{x}'"),
+    ).toEqual(['count', 'who']);
+    expect(argumentNames('{a} and {b, select, x {y} other {z}}')).toEqual(['a', 'b']);
+  });
+});
 
 describe('translations', () => {
   const german = flatten(de as Dictionary);
