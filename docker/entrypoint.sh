@@ -1,14 +1,14 @@
 #!/bin/sh
-# Startet KMM als PUID:PGID. Docker legt ein fehlendes /config auf dem Host als root an; deshalb startet der
-# Container als root, gibt /config dem Benutzer und wechselt dann zu ihm. /media bleibt unangetastet.
+# Starts KMM as PUID:PGID. Docker creates a missing /config on the host as root; so the container starts as
+# root, gives /config to the user and then switches to it. /media stays untouched.
 set -eu
 
 CONFIG=/config
 
 if [ "$(id -u)" != "0" ]; then
     if [ ! -w "$CONFIG" ]; then
-        echo "FEHLER: $CONFIG ist für Benutzer $(id -u):$(id -g) nicht beschreibbar." >&2
-        echo "Entferne 'user:' aus der Compose-Datei und setze PUID/PGID, oder gib ihm das Verzeichnis auf dem Host." >&2
+        echo "ERROR: $CONFIG is not writable for user $(id -u):$(id -g)." >&2
+        echo "Remove 'user:' from the compose file and set PUID/PGID, or give the user the directory on the host." >&2
         exit 1
     fi
     exec "$@"
@@ -18,8 +18,8 @@ PUID="${PUID:-1000}"
 PGID="${PGID:-1000}"
 
 if [ "$(stat -c %u:%g "$CONFIG")" != "$PUID:$PGID" ]; then
-    echo "Gebe $CONFIG dem Benutzer $PUID:$PGID"
-    chown -R "$PUID:$PGID" "$CONFIG" || echo "WARNUNG: $CONFIG konnte nicht dem Benutzer $PUID:$PGID gegeben werden." >&2
+    echo "Giving $CONFIG to user $PUID:$PGID"
+    chown -R "$PUID:$PGID" "$CONFIG" || echo "WARNING: $CONFIG could not be given to user $PUID:$PGID." >&2
 fi
 
 exec setpriv --reuid="$PUID" --regid="$PGID" --clear-groups "$@"

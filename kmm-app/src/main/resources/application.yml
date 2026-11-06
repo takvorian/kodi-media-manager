@@ -13,7 +13,7 @@ spring:
   flyway:
     locations: classpath:db/migration/{vendor}
   servlet:
-    # Das Ember-Profil wird hochgeladen; seine Datenbank wächst mit der Bibliothek.
+    # The Ember profile is uploaded; its database grows with the library.
     multipart:
       max-file-size: 500MB
       max-request-size: 510MB
@@ -46,72 +46,72 @@ springdoc:
     path: /swagger-ui.html
 
 kmm:
-  # Arbeitsverzeichnis für Datenbank (H2), Plugins und Cache
+  # Working directory for database (H2), plugins and cache
   home: ${KMM_HOME:${user.home}/.kodi-media-manager}
   plugins:
     directory: ${kmm.home}/plugins
     install-bundled: true
-    # API-Keys stehen im Einstellungsspeicher (Seite „Einstellungen“). Die Werte hier füllen nur einen
-    # noch nicht gespeicherten Key beim Start; danach gilt der gespeicherte.
+    # API keys are kept in the settings store ("Settings" page). The values here only fill a key that has
+    # not been saved yet at startup; after that the saved one applies.
     settings:
       tmdb:
-        # TMDB-API-Key (v3) oder Lese-Token (v4): https://www.themoviedb.org/settings/api
+        # TMDB API key (v3) or read access token (v4): https://www.themoviedb.org/settings/api
         api-key: ${KMM_TMDB_API_KEY:}
         certification-country: ${KMM_TMDB_CERTIFICATION_COUNTRY:DE}
       fanarttv:
-        # Projekt-API-Key: https://fanart.tv/get-an-api-key/
+        # Project API key: https://fanart.tv/get-an-api-key/
         api-key: ${KMM_FANARTTV_API_KEY:}
-        # optionaler persönlicher Key: neue Bilder erscheinen damit früher
+        # optional personal key: new artwork shows up earlier with it
         client-key: ${KMM_FANARTTV_CLIENT_KEY:}
       tvdb:
-        # Projekt-Key der TVDB-API v4: https://thetvdb.com/api-information
+        # Project key of the TVDB API v4: https://thetvdb.com/api-information
         api-key: ${KMM_TVDB_API_KEY:}
-        # PIN eines TVDB-Abonnements, nur bei Keys für Abonnenten nötig
+        # PIN of a TVDB subscription, only needed for subscriber keys
         pin: ${KMM_TVDB_PIN:}
       omdb:
-        # OMDb-API-Key (kostenlos 1.000 Abfragen am Tag): https://www.omdbapi.com/apikey.aspx
+        # OMDb API key (free: 1,000 requests a day): https://www.omdbapi.com/apikey.aspx
         api-key: ${KMM_OMDB_API_KEY:}
       trakt:
-        # Client-ID einer eigenen Trakt-App für die öffentlichen Bewertungen: https://trakt.tv/oauth/applications
+        # Client ID of your own Trakt app for the public ratings: https://trakt.tv/oauth/applications
         client-id: ${KMM_TRAKT_CLIENT_ID:}
       youtube:
-        # yt-dlp für Titelmusik von YouTube: https://github.com/yt-dlp/yt-dlp; ohne Pfad aus dem Suchpfad
+        # yt-dlp for theme music from YouTube: https://github.com/yt-dlp/yt-dlp; without a path from the search path
         yt-dlp: ${KMM_YTDLP:yt-dlp}
-        # Ordner von ffmpeg für das Umwandeln in MP3; leer, wenn ffmpeg im Suchpfad liegt
+        # Folder of ffmpeg for converting to MP3; empty if ffmpeg is on the search path
         ffmpeg-location: ${KMM_FFMPEG_LOCATION:}
   settings:
-    # Gesetzte Werte haben Vorrang vor den Einstellungen in der Oberfläche und sind dort gesperrt.
-    # Sprache der Metadaten beim Scrapen, z. B. de-DE
+    # Values set here take precedence over the settings in the user interface and are locked there.
+    # Language of the metadata when scraping, e.g. de-DE
     metadata-language: ${KMM_TMDB_LANGUAGE:}
-    # Bilder dieser Sprache (ISO 639-1) erscheinen in der Auswahl zuerst, z. B. de
+    # Artwork in this language (ISO 639-1) comes first in the selection, e.g. de
     artwork-language: ${KMM_ARTWORK_LANGUAGE:}
-    # HTTP-Proxy für Online-Dienste
+    # HTTP proxy for online services
     proxy-host: ${KMM_PROXY_HOST:}
     proxy-port: ${KMM_PROXY_PORT:8080}
     proxy-username: ${KMM_PROXY_USERNAME:}
     proxy-password: ${KMM_PROXY_PASSWORD:}
   scraping:
-    # Metadaten-Scraper für das automatische Scrapen (Fallback: erster eingerichteter)
+    # Metadata scraper for automatic scraping (fallback: the first one configured)
     preferred-metadata-scraper: tmdb
-    # Serien-Scraper für das automatische Scrapen (Fallback: erster eingerichteter)
+    # TV show scraper for automatic scraping (fallback: the first one configured)
     preferred-tv-show-scraper: tvdb
   artwork:
     max-download-size: 25MB
   kodi:
-    # Wartezeit nach einer Änderung, bevor KMM Kodi aktualisiert; fasst Metadaten und Bilder zusammen
+    # Delay after a change before KMM updates Kodi; combines metadata and artwork
     sync-delay: 5s
     connect-timeout: 5s
     request-timeout: 15s
-    # Kodi führt nur einen Scan gleichzeitig aus; so lange wartet KMM höchstens auf dessen Ende
+    # Kodi runs only one scan at a time; this is the longest KMM waits for it to end
     scan-wait-interactive: 10s
     scan-wait-background: 30m
     scan-poll-interval: 1s
   security:
     enabled: true
   jobs:
-    # beendete Jobs, die in der Oberfläche sichtbar bleiben
+    # finished jobs that stay visible in the user interface
     history-size: 50
-    # Mindestabstand zwischen Fortschrittsmeldungen eines Jobs
+    # minimum interval between progress reports of a job
     progress-interval: 250ms
-    # Lebenszeichen auf offenen SSE-Verbindungen
+    # keep-alive on open SSE connections
     heartbeat-interval: 30s

@@ -1,5 +1,5 @@
-# Standalone-Betrieb: eingebettete H2-Datenbank, nur lokal erreichbar, ohne Anmeldung.
-# Eine andere Datenbank lässt sich per spring.datasource.* (oder SPRING_DATASOURCE_URL usw.) setzen.
+# Standalone mode: embedded H2 database, only reachable locally, without login.
+# Another database can be set via spring.datasource.* (or SPRING_DATASOURCE_URL etc.).
 spring:
   datasource:
     url: jdbc:h2:file:${kmm.home}/db/kmm

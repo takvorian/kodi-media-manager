@@ -21,14 +21,14 @@ services:
     build:
       context: ..
       dockerfile: docker/Dockerfile
-    # Ohne Quelltext genügt: docker compose pull && docker compose up -d. Selbst bauen: docker compose up -d --build
+    # Without the sources this is enough: docker compose pull && docker compose up -d. To build yourself: docker compose up -d --build
     image: takvorian/kodi-media-manager:${KMM_IMAGE_TAG:-latest}
     restart: unless-stopped
     depends_on:
       db:
         condition: service_healthy
     environment:
-      # Läuft mit den Rechten des Besitzers der Mediendateien (NAS: z. B. 1026:100 bei Synology).
+      # Runs with the rights of the owner of the media files (NAS: e.g. 1026:100 on Synology).
       PUID: ${PUID:-1000}
       PGID: ${PGID:-1000}
       KMM_DB_PASSWORD: ${KMM_DB_PASSWORD}
@@ -40,7 +40,7 @@ services:
       KMM_TVDB_API_KEY: ${KMM_TVDB_API_KEY:-}
       KMM_TRAKT_CLIENT_ID: ${KMM_TRAKT_CLIENT_ID:-}
       KMM_OMDB_API_KEY: ${KMM_OMDB_API_KEY:-}
-      # Optional: gesetzte Werte haben Vorrang vor der Einstellungsseite und sind dort gesperrt.
+      # Optional: values set here take precedence over the settings page and are locked there.
       KMM_TMDB_LANGUAGE: ${KMM_TMDB_LANGUAGE:-}
       KMM_ARTWORK_LANGUAGE: ${KMM_ARTWORK_LANGUAGE:-}
       KMM_PROXY_HOST: ${KMM_PROXY_HOST:-}

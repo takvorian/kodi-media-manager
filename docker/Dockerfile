@@ -17,9 +17,9 @@ COPY kmm-ui/ kmm-ui/
 COPY docs/handbuch/ docs/handbuch/
 COPY kmm-app/ kmm-app/
 
-# Tests laufen in der CI; das Image baut nur das Artefakt.
-# Das Zeitlimit beendet einen hängenden Build: Fällt beim npm-Download die optionale Sass-Binärdatei aus,
-# meldet npm das nicht, und ng build wartet danach endlos.
+# Tests run in CI; the image only builds the artifact.
+# The time limit ends a hanging build: if the optional Sass binary fails during the npm download,
+# npm does not report it and ng build then waits forever.
 RUN --mount=type=cache,target=/root/.m2 \
     --mount=type=cache,target=/workspace/kmm-ui/node \
     timeout 30m ./mvnw -B -DskipTests package \
@@ -28,12 +28,12 @@ RUN --mount=type=cache,target=/root/.m2 \
 # ---- Runtime --------------------------------------------------------------
 FROM eclipse-temurin:25-jre
 
-# ffprobe liefert die Stream-Details (Codecs, Auflösung, Tonspuren).
+# ffprobe provides the stream details (codecs, resolution, audio tracks).
 RUN apt-get update \
     && apt-get install -y --no-install-recommends ffmpeg curl \
     && rm -rf /var/lib/apt/lists/*
 
-# yt-dlp lädt Titelmusik von YouTube. YouTube ändert sich oft; deshalb die jeweils aktuelle Version.
+# yt-dlp downloads theme music from YouTube. YouTube changes often, hence always the latest version.
 ARG TARGETARCH
 RUN case "$TARGETARCH" in arm64) asset=yt-dlp_linux_aarch64 ;; *) asset=yt-dlp_linux ;; esac \
     && curl -fsSL -o /usr/local/bin/yt-dlp "https://github.com/yt-dlp/yt-dlp/releases/latest/download/$asset" \

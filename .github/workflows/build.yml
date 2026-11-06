@@ -4,7 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
-  # Start von Hand unter Actions, etwa wenn ein Push keinen Lauf ausgelöst hat.
+  # Manual start under Actions, e.g. when a push did not trigger a run.
   workflow_dispatch:
 
 permissions:
@@ -22,7 +22,7 @@ jobs:
           java-version: '25'
           cache: maven
 
-      # Die ffprobe-Tests in kmm-media laufen nur mit ffmpeg auf dem PATH.
+      # The ffprobe tests in kmm-media only run with ffmpeg on the PATH.
       - name: Install ffmpeg
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends ffmpeg
 
@@ -74,13 +74,13 @@ jobs:
           java-version: '25'
           cache: maven
 
-      # jpackage braucht WiX 3 auf dem PATH. Die Programmdateien kommen ohne Installation aus.
+      # jpackage needs WiX 3 on the PATH. The program files work without installation.
       - name: Install WiX
         shell: pwsh
         run: |
           $zip = "$env:RUNNER_TEMP\wix314-binaries.zip"
           Invoke-WebRequest https://github.com/wixtoolset/wix3/releases/download/wix3141rtm/wix314-binaries.zip -OutFile $zip
-          if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne '6AC824E1642D6F7277D0ED7EA09411A508F6116BA6FAE0AA5F2C7DAA2FF43D31') { throw 'Prüfsumme von WiX stimmt nicht' }
+          if ((Get-FileHash $zip -Algorithm SHA256).Hash -ne '6AC824E1642D6F7277D0ED7EA09411A508F6116BA6FAE0AA5F2C7DAA2FF43D31') { throw 'WiX checksum does not match' }
           Expand-Archive $zip "$env:RUNNER_TEMP\wix"
           Add-Content $env:GITHUB_PATH "$env:RUNNER_TEMP\wix"
 

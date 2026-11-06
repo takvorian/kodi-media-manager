@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 # ============================================================
 #  release.sh [--dry-run]
-#  Bestimmt die naechste Minor-Version der 0.-Linie (Start v0.1),
-#  erzeugt kmm-app/src/main/resources/changelog.md aus den
-#  Git-Logs je Version (Versions-Commits "Release vX.Y" werden
-#  ausgefiltert), committet + taggt sie, pusht Branch+Tag nach
-#  origin und ruft build-push.sh <version> auf (Docker-Build/-Push).
-#  --dry-run zeigt nur die naechste Version + Changelog-Vorschau.
-#  Im Repo-Verzeichnis (auf Branch main, sauberer Arbeitsbaum,
-#  CI fuer den aktuellen Commit gruen) starten.
+#  Determines the next minor version of the 0. line (starting at
+#  v0.1), generates kmm-app/src/main/resources/changelog.md from
+#  the git logs per version (version commits "Release vX.Y" are
+#  filtered out), commits and tags it, pushes branch and tag to
+#  origin and calls build-push.sh <version> (Docker build/push).
+#  --dry-run only shows the next version and a changelog preview.
+#  Run in the repository directory (on branch main, clean working
+#  tree, CI green for the current commit).
 # ============================================================
 set -u
 cd "$(dirname "$0")" || exit 1
@@ -18,40 +18,40 @@ DRYRUN=""
 
 fail() {
     echo ""
-    echo "ABGEBROCHEN: $1"
+    echo "ABORTED: $1"
     exit 1
 }
 
-# Commit-Zeilen eines Bereichs anhaengen; Versions-Commits ("Release vX.Y") ausfiltern.
+# Appends the commit lines of a range; filters out version commits ("Release vX.Y").
 log_lines() {
     git log "$@" --no-merges --invert-grep --grep='^Release v[0-9]' --pretty=tformat:'- %s (%h)'
 }
 
-# Ergebnis des CI-Laufs fuer den aktuellen Commit, z. B. "completed/success"; leer ohne Lauf.
+# Result of the CI run for the current commit, e.g. "completed/success"; empty without a run.
 ci_state() {
     gh run list --commit "$(git rev-parse HEAD)" --workflow Build --limit 1 \
         --json status,conclusion --jq '.[0] | .status + "/" + .conclusion' 2>/dev/null
 }
 
-# --- Sicherheit: auf Branch main ---
-BRANCH="$(git rev-parse --abbrev-ref HEAD)" || fail "kein Git-Repository."
-[ "$BRANCH" = "main" ] || fail "nicht auf Branch main (aktuell: $BRANCH)."
+# --- Safety: on branch main ---
+BRANCH="$(git rev-parse --abbrev-ref HEAD)" || fail "not a git repository."
+[ "$BRANCH" = "main" ] || fail "not on branch main (current: $BRANCH)."
 
-# --- Sicherheit: sauberer Arbeitsbaum, Stand von origin, gruene CI + Docker (nur fuer den echten Lauf) ---
-# Vorab pruefen, damit der Lauf NICHT erst nach Commit/Tag/Push scheitert. Der Image-Build
-# ueberspringt die Tests, deshalb muss die CI den Commit vorher geprueft haben.
+# --- Safety: clean working tree, same as origin, green CI and Docker (only for the real run) ---
+# Checked up front so the run does NOT fail only after commit/tag/push. The image build
+# skips the tests, so CI must have checked the commit before.
 if [ -z "$DRYRUN" ]; then
-    # Veraltete Stat-Cache-Eintraege wuerden diff --quiet faelschlich anschlagen lassen
+    # Stale stat cache entries would make diff --quiet report changes that are not there
     git update-index -q --refresh
-    git diff --quiet || fail "ungespeicherte Aenderungen im Arbeitsbaum."
-    git diff --cached --quiet || fail "gestagte Aenderungen vorhanden."
+    git diff --quiet || fail "uncommitted changes in the working tree."
+    git diff --cached --quiet || fail "staged changes present."
     git fetch -q --tags origin main || fail "git fetch origin main"
-    [ "$(git rev-parse HEAD)" = "$(git rev-parse FETCH_HEAD)" ] || fail "main weicht von origin/main ab."
-    [ "$(ci_state)" = "completed/success" ] || fail "CI fuer diesen Commit nicht gruen (Status: $(ci_state))."
-    docker info >/dev/null 2>&1 || fail "Docker-Daemon nicht erreichbar - laeuft Docker?"
+    [ "$(git rev-parse HEAD)" = "$(git rev-parse FETCH_HEAD)" ] || fail "main differs from origin/main."
+    [ "$(ci_state)" = "completed/success" ] || fail "CI not green for this commit (status: $(ci_state))."
+    docker info >/dev/null 2>&1 || fail "Docker daemon not reachable - is Docker running?"
 fi
 
-# --- Naechste Version der 0.-Linie bestimmen ---
+# --- Determine the next version of the 0. line ---
 HIGH="$(git tag --list 'v0.*' --sort=-version:refname | head -n1)"
 if [ -z "$HIGH" ]; then
     NEWVER="0.1"
@@ -59,21 +59,21 @@ else
     NEWVER="0.$(( ${HIGH#v0.} + 1 ))"
 fi
 NEWTAG="v$NEWVER"
-git rev-parse -q --verify "refs/tags/$NEWTAG" >/dev/null && fail "Tag $NEWTAG existiert bereits."
+git rev-parse -q --verify "refs/tags/$NEWTAG" >/dev/null && fail "tag $NEWTAG already exists."
 
 RELDATE="$(date +%F)"
 
-# --- Ausgabedatei: echte Ressource bzw. Temp-Datei im Dry-Run ---
+# --- Output file: the real resource, or a temporary file in a dry run ---
 if [ -n "$DRYRUN" ]; then
     CHANGELOG="$(mktemp -t kmm-changelog-preview.XXXXXX)"
 else
     CHANGELOG="kmm-app/src/main/resources/changelog.md"
 fi
 
-# --- Bestehende Tags (neueste zuerst) ---
+# --- Existing tags (newest first) ---
 mapfile -t TAGS < <(git tag --list 'v*' --sort=-version:refname)
 
-# --- Changelog voll neu erzeugen ---
+# --- Regenerate the whole changelog ---
 {
     echo "# Changelog"
     echo ""
@@ -100,36 +100,36 @@ mapfile -t TAGS < <(git tag --list 'v*' --sort=-version:refname)
 
 if [ -n "$DRYRUN" ]; then
     echo ""
-    echo "=== DRY-RUN: naechste Version = $NEWTAG ($RELDATE) ==="
-    echo "--- Changelog-Vorschau ---"
+    echo "=== DRY RUN: next version = $NEWTAG ($RELDATE) ==="
+    echo "--- Changelog preview ---"
     cat "$CHANGELOG"
     rm -f "$CHANGELOG"
     echo ""
     if docker info >/dev/null 2>&1; then
-        echo "Docker-Daemon: erreichbar"
+        echo "Docker daemon: reachable"
     else
-        echo "Docker-Daemon: NICHT erreichbar - vor dem echten Lauf Docker starten"
+        echo "Docker daemon: NOT reachable - start Docker before the real run"
     fi
-    echo "CI fuer diesen Commit: $(ci_state)"
-    echo "(Dry-Run: kein commit/tag/push/build)"
+    echo "CI for this commit: $(ci_state)"
+    echo "(dry run: no commit/tag/push/build)"
     exit 0
 fi
 
-# --- Commit + Tag ---
+# --- Commit and tag ---
 echo ""
-echo "[1/4] Changelog committen ..."
+echo "[1/4] Committing the changelog ..."
 git add "$CHANGELOG" || fail "git add"
 git commit -m "Release $NEWTAG" || fail "git commit"
 
 echo ""
-echo "[2/4] Tag $NEWTAG setzen ..."
+echo "[2/4] Setting tag $NEWTAG ..."
 git tag -a "$NEWTAG" -m "Release $NEWTAG" || fail "git tag"
 
 echo ""
-echo "[3/4] Branch main + Tag $NEWTAG nach origin pushen ..."
+echo "[3/4] Pushing branch main and tag $NEWTAG to origin ..."
 git push origin main || fail "git push origin main"
 git push origin "$NEWTAG" || fail "git push origin $NEWTAG"
 
 echo ""
-echo "[4/4] Image bauen und pushen (build-push.sh $NEWVER) ..."
+echo "[4/4] Building and pushing the image (build-push.sh $NEWVER) ..."
 ./build-push.sh "$NEWVER"

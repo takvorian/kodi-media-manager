@@ -1,4 +1,4 @@
-# Docker-Betrieb: MariaDB, Anmeldung erforderlich. Zugangsdaten kommen aus Umgebungsvariablen.
+# Docker mode: MariaDB, login required. Credentials come from environment variables.
 spring:
   datasource:
     url: jdbc:mariadb://${KMM_DB_HOST:db}:${KMM_DB_PORT:3306}/${KMM_DB_NAME:kmm}
