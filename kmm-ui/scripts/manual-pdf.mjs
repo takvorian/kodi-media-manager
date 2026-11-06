@@ -17,7 +17,8 @@ const CHROME_CANDIDATES = [
   '/usr/bin/google-chrome',
   '/usr/bin/chromium',
 ].filter(Boolean);
-const EXPLICIT_ANCHOR = /<a id="([a-z0-9-]+)"><\/a>/g;
+// Marked passes <a id="…"></a> on a line of its own as two inline tokens, so only the opening tag is matched.
+const EXPLICIT_ANCHOR = /<a id="([a-z0-9-]+)">/g;
 
 const LANGUAGES = {
   de: { file: 'KMM-Handbuch.pdf', subtitle: 'Handbuch', contents: 'Inhalt' },
@@ -60,7 +61,7 @@ function renderLanguage(language) {
         html({ text }) {
           return text.replace(EXPLICIT_ANCHOR, (_, id) => {
             anchors.add(`${chapter.slug}--${id}`);
-            return `<a id="${chapter.slug}--${id}"></a>`;
+            return `<a id="${chapter.slug}--${id}">`;
           });
         },
         link({ href, tokens }) {
