@@ -3,10 +3,10 @@ package de.tiktak.kmm.migration.ember.library;
 import java.util.List;
 
 /**
- * Der Serienbestand einer Ember-Datenbank.
+ * The TV shows of an Ember database.
  *
- * @param episodes             Episoden mit Datei
- * @param episodesWithoutFile  Episoden, die Ember nur aus der Online-Suche kennt (fehlende Episoden)
+ * @param episodes             episodes with a file
+ * @param episodesWithoutFile  episodes Ember only knows from the online search (missing episodes)
  */
 public record EmberTvLibrary(
         List<EmberTvShowSource> sources,

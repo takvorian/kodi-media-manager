@@ -1,28 +1,29 @@
 package de.tiktak.kmm.autoscrape;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.source.MediaSource;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Eine Quelle oder Staffel kann nicht automatisch gescrapt werden. Wird als HTTP 422 beantwortet.
+ * A source or season cannot be scraped automatically. Answered as HTTP 422.
  */
-public class AutoScrapeNotPossibleException extends ErrorResponseException {
+public class AutoScrapeNotPossibleException extends LocalizedProblemException {
 
     AutoScrapeNotPossibleException(MediaSource source) {
-        this("Quelle kann nicht gescrapt werden", "Die Quelle '%s' enthält weder Filme noch Serien (%s)."
-                .formatted(source.getName(), source.getMediaType()));
+        this(LocalizedText.of("autoScrape.sourceNotPossible.title"),
+                LocalizedText.of("autoScrape.sourceNotPossible.detail").with("source", source.getName())
+                        .with("mediaType", source.getMediaType().name()));
     }
 
-    private AutoScrapeNotPossibleException(String title, String detail) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT);
-        getBody().setTitle(title);
-        getBody().setDetail(detail);
+    private AutoScrapeNotPossibleException(LocalizedText title, LocalizedText detail) {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, title, detail, null);
     }
 
     static AutoScrapeNotPossibleException seasonWithoutEpisodes(String showTitle, int season) {
-        return new AutoScrapeNotPossibleException("Staffel kann nicht gescrapt werden",
-                "„%s“ hat keine Episoden in Staffel %d.".formatted(showTitle, season));
+        return new AutoScrapeNotPossibleException(LocalizedText.of("autoScrape.seasonNotPossible.title"),
+                LocalizedText.of("autoScrape.seasonNotPossible.detail").with("title", showTitle)
+                        .with("season", season));
     }
 }

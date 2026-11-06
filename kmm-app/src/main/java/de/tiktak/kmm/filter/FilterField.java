@@ -1,7 +1,7 @@
 package de.tiktak.kmm.filter;
 
 /**
- * Ein Feld, nach dem eine Liste gefiltert werden kann, mit seinen erlaubten Vergleichen.
+ * A field a list can be filtered by, with its allowed comparisons.
  */
 public interface FilterField {
 
@@ -11,7 +11,7 @@ public interface FilterField {
 
     boolean allows(FilterOperator operator);
 
-    /** Art des Vergleichswerts; {@link #NONE} bei Vergleichen ohne Wert. */
+    /** Kind of the comparison value; {@link #NONE} for comparisons without a value. */
     enum ValueType {
         TEXT, NUMBER, BOOLEAN, NONE
     }

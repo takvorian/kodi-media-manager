@@ -16,6 +16,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 @ExtendWith(MockitoExtension.class)
 class SettingsServiceTest {
 
@@ -58,11 +60,18 @@ class SettingsServiceTest {
         var unknown = KmmSettings.DEFAULTS.withRename(new RenameSettings("{titel}", "{title}", "{show}", "{season}",
                 "{episode}", false, false, false, false, false));
 
-        assertThatThrownBy(() -> service.update(folderInFile)).isInstanceOf(InvalidSettingsException.class)
-                .hasMessageContaining("Muster für Filmdateien: Ordner (/) sind hier nicht erlaubt.");
+        assertThatThrownBy(() -> service.update(folderInFile)).isInstanceOfSatisfying(InvalidSettingsException.class,
+                e -> assertThat(e.localizedText()).isEqualTo(LocalizedText.of("settings.rename.foldersNotAllowed")
+                        .with("pattern", LocalizedText.of("settings.rename.pattern.movieFile"))));
         assertThatThrownBy(() -> service.update(unknown)).isInstanceOfSatisfying(InvalidSettingsException.class,
-                e -> assertThat(e.getBody().getDetail())
-                        .isEqualTo("Muster für Filmordner: Unbekannter Platzhalter „{titel}“ (Stelle 1)."));
+                e -> {
+                    assertThat(e.localizedText().key()).isEqualTo("settings.rename.invalidPattern");
+                    assertThat(e.localizedText().args()).containsEntry("pattern",
+                            LocalizedText.of("settings.rename.pattern.movieFolder"));
+                    assertThat(((LocalizedText) e.localizedText().args().get("reason")).key())
+                            .isEqualTo("scanner.pattern.invalid");
+                    assertThat(e.getBody().getDetail()).startsWith("Pattern for movie folders: ").contains("{titel}");
+                });
         verify(store, never()).save(any());
     }
 
@@ -72,10 +81,12 @@ class SettingsServiceTest {
         var flat = KmmSettings.DEFAULTS.withMovieSets(new MovieSetSettings(true, " ", false, null, false));
         var kodi = KmmSettings.DEFAULTS.withMovieSets(new MovieSetSettings(false, null, true, null, false));
 
-        assertThatThrownBy(() -> service.update(flat)).isInstanceOf(InvalidSettingsException.class)
-                .hasMessageContaining("flachen Schema fehlt der Ordner");
-        assertThatThrownBy(() -> service.update(kodi)).isInstanceOf(InvalidSettingsException.class)
-                .hasMessageContaining("Kodis Set-Ordnern fehlt der Ordner");
+        assertThatThrownBy(() -> service.update(flat)).isInstanceOfSatisfying(InvalidSettingsException.class,
+                e -> assertThat(e.localizedText()).isEqualTo(
+                        LocalizedText.of("settings.movieSets.flatFolderMissing")));
+        assertThatThrownBy(() -> service.update(kodi)).isInstanceOfSatisfying(InvalidSettingsException.class,
+                e -> assertThat(e.localizedText()).isEqualTo(
+                        LocalizedText.of("settings.movieSets.kodiFolderMissing")));
         assertThat(service.update(KmmSettings.DEFAULTS.withMovieSets(
                 new MovieSetSettings(false, null, true, "/media/sets", true))).movieSets().kodiImagesFolder())
                 .isEqualTo("/media/sets");

@@ -10,9 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verwaltet die Benutzereinstellungen. Wirksam ist die Konfiguration ({@link SettingsOverrides}),
- * dann der gespeicherte Wert, dann der Standard. Die wirksamen Werte werden zwischengespeichert,
- * weil Scraper und Scanner sie bei jedem Aufruf lesen.
+ * Manages the user settings. The configuration ({@link SettingsOverrides}) is effective first,
+ * then the stored value, then the default. The effective values are cached
+ * because scrapers and scanners read them on every call.
  */
 @Slf4j
 @Service
@@ -23,7 +23,7 @@ public class SettingsService {
     private final SettingsOverrides overrides;
     private final AtomicReference<KmmSettings> stored = new AtomicReference<>();
 
-    /** Wirksame Einstellungen. */
+    /** Effective settings. */
     public KmmSettings current() {
         return overrides.applyTo(stored());
     }
@@ -33,11 +33,11 @@ public class SettingsService {
     }
 
     /**
-     * Speichert die Einstellungen. Durch die Konfiguration festgelegte Werte bleiben unverändert;
-     * ein Proxy ohne Passwort ({@code null}) behält das bisher gespeicherte.
+     * Stores the settings. Values fixed by the configuration remain unchanged;
+     * a proxy without a password ({@code null}) keeps the one stored so far.
      */
     /**
-     * @throws InvalidSettingsException wenn ein Namensmuster ungültig ist oder einer Ablage der Ordner fehlt
+     * @throws InvalidSettingsException if a naming pattern is invalid or a storage location lacks its folder
      */
     @Transactional
     public SettingsView update(KmmSettings changes) {
@@ -51,7 +51,7 @@ public class SettingsService {
         return view();
     }
 
-    /** Vergisst die zwischengespeicherten Werte, nachdem der Einstellungsspeicher von außen geändert wurde. */
+    /** Forgets the cached values after the settings store was changed from outside. */
     public void reload() {
         stored.set(null);
     }

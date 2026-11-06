@@ -33,9 +33,9 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Durchläuft den kompletten Weg über die REST-API: Quelle anlegen, scannen, Filme abfragen,
- * erneut scannen und Quelle löschen. Der Scan läuft als echter Hintergrund-Job; deshalb arbeitet
- * der Test ohne umschließende Transaktion und räumt die Datenbank danach selbst auf.
+ * Runs through the complete flow via the REST API: create a source, scan, query movies,
+ * scan again and delete the source. The scan runs as a real background job; therefore
+ * the test works without an enclosing transaction and cleans up the database itself afterwards.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -63,7 +63,7 @@ class MovieLibraryIntegrationTest {
 
     @AfterEach
     void deleteLibrary() {
-        // Filme und Genres folgen per ON DELETE CASCADE.
+        // Movies and genres follow via ON DELETE CASCADE.
         jdbcClient.sql("DELETE FROM media_source").update();
         jdbcClient.sql("DELETE FROM movie_set").update();
     }
@@ -169,7 +169,7 @@ class MovieLibraryIntegrationTest {
         return body.get("id").asLong();
     }
 
-    /** Startet den Scan, wartet auf das Ende des Jobs und liefert sein Ergebnis. */
+    /** Starts the scan, waits for the job to finish and returns its result. */
     private ScanResult scan(long sourceId) {
         JsonNode job = startScan(sourceId);
         return objectMapper.treeToValue(awaitResult(job.get("id").asString()), ScanResult.class);
@@ -183,7 +183,7 @@ class MovieLibraryIntegrationTest {
     }
 
     private JsonNode awaitResult(String jobId) {
-        // Im Test-Thread abfragen, damit der Security-Kontext von @WithMockUser gilt.
+        // Query in the test thread so that the security context of @WithMockUser applies.
         JsonNode job = await().atMost(JOB_TIMEOUT).pollInSameThread()
                 .until(() -> readJob(jobId), node -> !"RUNNING".equals(node.get("status").asString()));
         assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");

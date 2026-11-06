@@ -1,7 +1,7 @@
 package de.tiktak.kmm.kodi.rpc;
 
 /**
- * Name und Version der Kodi-Installation, z. B. „Kodi 21.2“.
+ * Name and version of the Kodi installation, e.g. "Kodi 21.2".
  */
 public record KodiVersion(String name, int major, int minor) {
 

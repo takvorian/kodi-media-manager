@@ -1,11 +1,11 @@
 package de.tiktak.kmm.tvshow;
 
 /**
- * Eine Bewertung aus einer Quelle (TVDB, TMDB, IMDb …).
+ * A rating from a source (TVDB, TMDB, IMDb ...).
  *
- * @param max          Höchstwert der Skala oder {@code null}
- * @param votes        Anzahl der Stimmen oder {@code null}
- * @param defaultRating ob Kodi diese Bewertung anzeigt
+ * @param max          maximum of the scale or {@code null}
+ * @param votes        number of votes or {@code null}
+ * @param defaultRating whether Kodi displays this rating
  */
 public record TvRating(String source, double value, Integer max, Integer votes, boolean defaultRating) {
 

@@ -2,24 +2,27 @@ package de.tiktak.kmm.nfo;
 
 import java.nio.file.Path;
 
-/**
- * Eine NFO-Datei kann nicht gelesen oder geschrieben werden.
- */
-public class NfoException extends RuntimeException {
+import de.tiktak.kmm.i18n.LocalizedException;
+import de.tiktak.kmm.i18n.LocalizedText;
 
-    private NfoException(String message, Throwable cause) {
+/**
+ * An NFO file cannot be read or written.
+ */
+public class NfoException extends LocalizedException {
+
+    private NfoException(LocalizedText message, Throwable cause) {
         super(message, cause);
     }
 
     static NfoException unreadable(Path nfoFile, Throwable cause) {
-        return new NfoException("Die NFO-Datei '%s' kann nicht gelesen werden.".formatted(nfoFile), cause);
+        return new NfoException(LocalizedText.of("nfo.unreadable").with("file", nfoFile), cause);
     }
 
     static NfoException missingEntry(Path nfoFile) {
-        return new NfoException("Die NFO-Datei '%s' fehlt oder enthält den Eintrag nicht.".formatted(nfoFile), null);
+        return new NfoException(LocalizedText.of("nfo.missingEntry").with("file", nfoFile), null);
     }
 
     static NfoException unwritable(Path nfoFile, Throwable cause) {
-        return new NfoException("Die NFO-Datei '%s' kann nicht geschrieben werden.".formatted(nfoFile), cause);
+        return new NfoException(LocalizedText.of("nfo.unwritable").with("file", nfoFile), cause);
     }
 }

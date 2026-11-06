@@ -7,6 +7,7 @@ import {
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { TranslocoService } from '@jsverse/transloco';
 
+import { literal } from '../i18n/localized-text';
 import { provideI18nTesting } from '../i18n/testing';
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import { TvShowProposal } from './tvshow';
@@ -25,7 +26,10 @@ describe('TvShowOnlineSearch', () => {
     displayName: 'TheTVDB',
     mediaTypes: ['TV_SHOW'],
     missingConfiguration: null,
-    attribution: { text: 'Metadata provided by TheTVDB.', link: 'https://www.thetvdb.com' },
+    attribution: {
+      text: literal('Metadata provided by TheTVDB.'),
+      link: 'https://www.thetvdb.com',
+    },
   };
   const lost: ScrapeCandidate = {
     providerId: '73739',
@@ -151,7 +155,7 @@ describe('TvShowOnlineSearch', () => {
   });
 
   it('shows provider errors and missing configuration', async () => {
-    await loadScrapers([{ ...tvdb, missingConfiguration: 'Für TVDB fehlt ein API-Key.' }]);
+    await loadScrapers([{ ...tvdb, missingConfiguration: literal('Für TVDB fehlt ein API-Key.') }]);
 
     expect(element().querySelector('.missing-configuration')?.textContent).toContain('API-Key');
     expect(searchButton().disabled).toBe(true);

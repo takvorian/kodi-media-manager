@@ -2,21 +2,22 @@ package de.tiktak.kmm.autoscrape;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.source.ScanEntry;
 
 /**
- * Ergebnis des automatischen Scrapens einer Filmquelle oder einer Auswahl von Filmen.
+ * Result of auto-scraping a movie source or a selection of movies.
  *
- * @param movies          bearbeitete Filme
- * @param scraped         Filme, deren Metadaten neu geholt wurden
- * @param unmatched       Filme ohne eindeutigen Treffer
- * @param imagesSaved     neu gespeicherte Bilder
- * @param trailersSaved   neu eingetragene Trailer-Links
- * @param themesSaved     neu gespeicherte Titelmusik ({@code theme.mp3})
- * @param enriched        Filme mit ergänzten Bewertungen oder Feldern (etwa Trakt, OMDb)
- * @param unmatchedEntries Filme ohne eindeutigen Treffer (gekürzt)
- * @param failures        Fehler je Film als „Titel: Meldung“ (gekürzt)
- * @param warnings        einmalige Hinweise, z. B. zu nicht eingerichteten Anbietern (gekürzt)
+ * @param movies           processed movies
+ * @param scraped          movies whose metadata was fetched anew
+ * @param unmatched        movies without a unique match
+ * @param imagesSaved      newly saved images
+ * @param trailersSaved    newly entered trailer links
+ * @param themesSaved      newly saved theme music ({@code theme.mp3})
+ * @param enriched         movies with completed ratings or fields (e.g. Trakt, OMDb)
+ * @param unmatchedEntries movies without a unique match (truncated)
+ * @param failures         errors per movie as "title: message" (truncated)
+ * @param warnings         one-time notes, e.g. about providers that are not set up (truncated)
  */
 public record AutoScrapeResult(
         int movies,
@@ -27,8 +28,8 @@ public record AutoScrapeResult(
         int themesSaved,
         int enriched,
         List<ScanEntry> unmatchedEntries,
-        List<String> failures,
-        List<String> warnings) {
+        List<LocalizedText> failures,
+        List<LocalizedText> warnings) {
 
     public AutoScrapeResult {
         unmatchedEntries = List.copyOf(unmatchedEntries);

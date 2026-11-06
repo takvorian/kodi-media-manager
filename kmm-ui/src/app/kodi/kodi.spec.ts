@@ -4,8 +4,10 @@ import { TranslocoService } from '@jsverse/transloco';
 import { provideI18nTesting } from '../i18n/testing';
 import { job } from '../jobs/fake-job-events';
 import {
+  KodiPlaybackResult,
   KodiSyncResult,
   kodiPlaybackJobKey,
+  kodiPlaybackMessage,
   kodiPlaybackSummary,
   kodiSyncSnackBarConfig,
   kodiSyncSummary,
@@ -23,7 +25,7 @@ describe('kodi', () => {
     hostId: 1,
     host,
     outcome,
-    message: 'Meldung.',
+    message: literal('Meldung.'),
     at: '2026-10-25T20:00:00Z',
   });
 
@@ -47,6 +49,34 @@ describe('kodi', () => {
       'Wohnzimmer: Meldung. Küche: Meldung.',
     );
     expect(kodiSyncSummary([])).toBe('Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.');
+  });
+
+  it('translates the messages of the server', () => {
+    const scan: KodiSyncResult = {
+      ...result('SCAN_STARTED'),
+      message: {
+        key: 'kodi.sync.scanSource',
+        args: { directory: 'smb://nas/serien/', kind: 'tvShow' },
+      },
+    };
+    const playback = (args: Record<string, unknown>): KodiPlaybackResult => ({
+      host: 'Wohnzimmer',
+      outcome: 'UPDATED',
+      message: { key: 'kodi.playback.updated', args: { label: 'Heat', ...args } },
+      playCount: null,
+      lastPlayedAt: null,
+      userRating: null,
+    });
+
+    expect(kodiSyncSummary([scan])).toBe(
+      'Wohnzimmer: Kodi sucht in smb://nas/serien/ nach neuen Serien und Episoden.',
+    );
+    expect(kodiPlaybackMessage(playback({ playCount: 2, rating: 8 }))).toBe(
+      'Wohnzimmer: „Heat“ aus Kodi übernommen: 2× gesehen, Bewertung 8.',
+    );
+    expect(kodiPlaybackMessage(playback({ playCount: 0, rating: 'none' }))).toBe(
+      'Wohnzimmer: „Heat“ aus Kodi übernommen: nicht gesehen.',
+    );
   });
 
   it('summarizes the import of the watched status', () => {
@@ -98,7 +128,7 @@ describe('kodi', () => {
       kept: 2,
       notInKodi: 0,
       failed: 1,
-      failures: ['x'],
+      failures: [literal('x')],
     };
 
     expect(kodiSyncSummary([])).toBe('No Kodi device set up – add one under “Kodi”.');

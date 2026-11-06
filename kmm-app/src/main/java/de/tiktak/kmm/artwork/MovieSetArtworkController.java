@@ -57,7 +57,7 @@ public class MovieSetArtworkController {
         return artworkService.apply(setId, type, request.url());
     }
 
-    /** Holt fehlende Bilder des Sets; vorhandene bleiben. */
+    /** Fetches missing images of the set; existing ones stay. */
     @PostMapping(FILL_PATH)
     public ArtworkFillResult fill(@PathVariable long setId) {
         return artworkService.fillMissing(setId);

@@ -17,8 +17,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest und ändert Serien und Episoden. Änderungen werden zuerst in die NFO geschrieben; schlägt das
- * fehl, bleibt auch die Datenbank unverändert.
+ * Reads and changes TV shows and episodes. Changes are written to the NFO first; if that
+ * fails, the database stays unchanged as well.
  */
 @Slf4j
 @Service
@@ -35,8 +35,8 @@ public class TvShowMetadataService {
     private final MediaSourceService sourceService;
 
     /**
-     * Die Metadaten einer Serie, nachdem eine außerhalb von KMM geänderte NFO eingelesen wurde; für Änderungen, die
-     * auf den bisherigen Metadaten aufbauen.
+     * The metadata of a TV show after an NFO changed outside KMM has been read; for changes that
+     * build on the existing metadata.
      */
     @Transactional
     TvShowMetadata currentMetadata(long showId) {
@@ -51,8 +51,8 @@ public class TvShowMetadataService {
     }
 
     /**
-     * Die Serie für die Serienansicht. Eine außerhalb von KMM geänderte NFO, oder eine, aus der die Angaben noch nicht
-     * stammen (Ember-Import), wird vorher eingelesen; sonst schriebe das Speichern ältere Werte zurück.
+     * The TV show for the TV show view. An NFO changed outside KMM, or one the details do not yet come from
+     * (Ember import), is read first; otherwise saving would write older values back.
      */
     @Transactional
     public TvShowDetails openShow(long showId) {
@@ -61,7 +61,7 @@ public class TvShowMetadataService {
         return details(show);
     }
 
-    /** Die Sprache für das Scrapen dieser Serie und ihrer Episoden; {@code null} heißt: die der Einstellungen. */
+    /** The language for scraping this TV show and its episodes; {@code null} means the settings' language. */
     @Transactional(readOnly = true)
     public String scrapeLanguage(long showId) {
         TvShow show = requireShow(showId);
@@ -70,12 +70,12 @@ public class TvShowMetadataService {
     }
 
     /**
-     * Ändert die eigene Sprache der Serie in Datenbank und NFO. Eine außerhalb von KMM geänderte NFO wird vorher
-     * eingelesen.
+     * Changes the TV show's own language in the database and NFO. An NFO changed outside KMM is read
+     * first.
      *
-     * @param language Sprache oder {@code null}, dann gilt die der Quelle bzw. der Einstellungen
-     * @return ob sich etwas geändert hat
-     * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
+     * @param language language, or {@code null} to use the source's or the settings' language
+     * @return whether anything changed
+     * @throws TvShowProblemException if the NFO cannot be read or written
      */
     @Transactional
     public boolean changeLanguage(long showId, String language) {
@@ -89,7 +89,7 @@ public class TvShowMetadataService {
         return true;
     }
 
-    /** Trägt eine eigene Sprache in eine eben erst angelegte NFO ein. */
+    /** Enters its own language into a just-created NFO. */
     @Transactional
     public void storeLanguageInNfo(long showId) {
         TvShow show = requireShow(showId);
@@ -117,11 +117,11 @@ public class TvShowMetadataService {
     }
 
     /**
-     * Ändert die Metadaten einer Serie ausgehend vom aktuellen Stand, etwa in der Stapel-Bearbeitung. Eine außerhalb
-     * von KMM geänderte NFO wird vorher eingelesen.
+     * Changes the metadata of a TV show starting from the current state, e.g. in batch editing. An NFO changed
+     * outside KMM is read first.
      *
-     * @return ob sich etwas geändert hat
-     * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
+     * @return whether anything changed
+     * @throws TvShowProblemException if the NFO cannot be read or written
      */
     @Transactional
     public boolean changeShow(long showId, UnaryOperator<TvShowMetadata> change) {
@@ -141,11 +141,11 @@ public class TvShowMetadataService {
     }
 
     /**
-     * Ändert den Trailer-Link einer Serie in Datenbank und NFO. Eine außerhalb von KMM geänderte NFO wird vorher
-     * eingelesen; in einer vorhandenen NFO ändert sich nur {@code <trailer>}, sonst wird sie neu angelegt.
+     * Changes the trailer link of a TV show in the database and NFO. An NFO changed outside KMM is read
+     * first; in an existing NFO only {@code <trailer>} changes, otherwise it is created anew.
      *
-     * @param trailer Link oder {@code null} für „kein Trailer“
-     * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
+     * @param trailer link, or {@code null} for "no trailer"
+     * @throws TvShowProblemException if the NFO cannot be read or written
      */
     @Transactional
     public TvShowDetails changeTrailer(long showId, String trailer) {
@@ -164,11 +164,11 @@ public class TvShowMetadataService {
     }
 
     /**
-     * Ändert Metadaten und weitere Angaben einer Serie (etwa Bewertungen) ausgehend vom aktuellen Stand in einem
-     * Schreibvorgang; eine außerhalb von KMM geänderte oder noch nicht eingelesene NFO wird vorher eingelesen.
+     * Changes metadata and further details of a TV show (such as ratings) starting from the current state in a
+     * single write; an NFO changed outside KMM or not yet read is read first.
      *
-     * @return ob sich etwas geändert hat
-     * @throws TvShowProblemException wenn die NFO nicht gelesen oder geschrieben werden kann
+     * @return whether anything changed
+     * @throws TvShowProblemException if the NFO cannot be read or written
      */
     @Transactional
     public boolean changeContent(long showId, UnaryOperator<TvShowContent> change) {
@@ -193,7 +193,7 @@ public class TvShowMetadataService {
         return episodeDetails(episode);
     }
 
-    /** Die Episode für die Episodenansicht; eine veraltete NFO wird vorher eingelesen wie bei {@link #openShow}. */
+    /** The episode for the episode view; an outdated NFO is read first, as with {@link #openShow}. */
     @Transactional
     public EpisodeDetails openEpisode(long episodeId) {
         Episode episode = requireEpisode(episodeId);
@@ -202,8 +202,8 @@ public class TvShowMetadataService {
     }
 
     /**
-     * Speichert die Metadaten einer Episode. Bei Mehrfachepisoden wird die gemeinsame NFO mit allen
-     * Episoden der Datei geschrieben.
+     * Saves the metadata of an episode. For multi-episode files the shared NFO is written with all
+     * episodes of the file.
      */
     @Transactional
     public EpisodeDetails updateEpisode(long episodeId, EpisodeMetadata metadata) {

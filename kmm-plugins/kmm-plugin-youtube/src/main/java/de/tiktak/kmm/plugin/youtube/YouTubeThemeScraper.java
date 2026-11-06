@@ -16,6 +16,7 @@ import java.util.stream.Stream;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -28,14 +29,14 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Titelmusik von YouTube, wie Embers YouTube-Theme-Scraper: Suche und Download über yt-dlp, Umwandeln in MP3 über
- * ffmpeg. Die Treffer sind Videos mit eigenem Titel; KMM übernimmt sie deshalb nie automatisch.
+ * Theme music from YouTube, like Ember's YouTube theme scraper: search and download via yt-dlp, conversion to MP3 via
+ * ffmpeg. The results are videos with titles of their own; that is why KMM never applies them automatically.
  */
 @Extension
 public class YouTubeThemeScraper implements ThemeScraper {
 
     static final String ID = "youtube";
-    /** Titelmusik ist selten länger; längere Videos sind meist ganze Folgen oder Soundtracks. */
+    /** Theme music is rarely longer; longer videos are mostly whole episodes or soundtracks. */
     static final int MAX_DURATION_SECONDS = 600;
     private static final Duration SEARCH_TIMEOUT = Duration.ofSeconds(60);
     private static final Duration DOWNLOAD_TIMEOUT = Duration.ofMinutes(5);
@@ -81,17 +82,17 @@ public class YouTubeThemeScraper implements ThemeScraper {
         ytDlpAvailable = null;
     }
 
-    /** Prüft einmal, ob yt-dlp läuft; danach gilt das Ergebnis bis zum nächsten Start. */
+    /** Checks once whether yt-dlp runs; after that the result holds until the next start. */
     @Override
-    public synchronized Optional<String> missingConfiguration() {
+    public synchronized Optional<LocalizedText> missingConfiguration() {
         if (settings == null) {
-            return Optional.of("YouTube: Plugin nicht initialisiert.");
+            return Optional.of(LocalizedText.of("scraper.youtube.notInitialized"));
         }
         if (ytDlpAvailable == null) {
             ytDlpAvailable = ytDlpRuns();
         }
-        return ytDlpAvailable ? Optional.empty() : Optional.of("YouTube: yt-dlp nicht gefunden (%s). Bitte yt-dlp "
-                .formatted(settings.ytDlp()) + "installieren oder unter kmm.plugins.settings.youtube.yt-dlp angeben.");
+        return ytDlpAvailable ? Optional.empty()
+                : Optional.of(LocalizedText.of("scraper.youtube.ytDlpNotFound").with("command", settings.ytDlp()));
     }
 
     @Override
@@ -115,7 +116,8 @@ public class YouTubeThemeScraper implements ThemeScraper {
     public void download(ThemeCandidate candidate, Path target) {
         requireInitialized();
         String videoId = videoId(candidate.source())
-                .orElseThrow(() -> new ScraperException("„%s“ ist kein YouTube-Video.".formatted(candidate.source())));
+                .orElseThrow(() -> new ScraperException(LocalizedText.of("scraper.youtube.notAVideo")
+                        .with("source", candidate.source())));
         Path directory = createTempDirectory();
         try {
             List<String> command = new ArrayList<>(List.of(settings.ytDlp(), "--no-playlist", "--no-warnings",
@@ -128,17 +130,18 @@ public class YouTubeThemeScraper implements ThemeScraper {
             run(command, DOWNLOAD_TIMEOUT);
             Path mp3 = directory.resolve(DOWNLOAD_NAME + MP3);
             if (!Files.isRegularFile(mp3)) {
-                throw new ScraperException("yt-dlp hat keine MP3 erzeugt. Ist ffmpeg installiert?");
+                throw new ScraperException(LocalizedText.of("scraper.youtube.noMp3"));
             }
             Files.move(mp3, target, StandardCopyOption.REPLACE_EXISTING);
         } catch (IOException e) {
-            throw new ScraperException("Die Titelmusik konnte nicht gespeichert werden: " + e.getMessage(), e);
+            throw new ScraperException(LocalizedText.of("scraper.youtube.saveFailed")
+                    .with("reason", e.getMessage()), e);
         } finally {
             deleteRecursively(directory);
         }
     }
 
-    /** Serien heißen bei YouTube meist „Intro“, Filme „Main Theme“. */
+    /** On YouTube TV show themes are mostly called "Intro", movie themes "Main Theme". */
     private static String query(ScrapeRequest request) {
         String suffix = request.mediaType() == MediaType.TV_SHOW ? "intro" : "main theme";
         return Stream.of(request.title().strip(), request.year() == null ? null : request.year().toString(), suffix)
@@ -162,7 +165,7 @@ public class YouTubeThemeScraper implements ThemeScraper {
         }
     }
 
-    /** Kein {@code subject}: Videos tragen nie den Titel der Serie selbst und gelten so nie als sicherer Treffer. */
+    /** No {@code subject}: videos never carry the title of the TV show itself, so they never count as a safe match. */
     private static ThemeCandidate toCandidate(Video video) {
         URI watch = URI.create(WATCH + video.id());
         String name = video.channel().isEmpty() ? video.title() : "%s (%s)".formatted(video.title(), video.channel());
@@ -185,11 +188,13 @@ public class YouTubeThemeScraper implements ThemeScraper {
         try {
             CommandRunner.Result result = runner.run(command, timeout);
             if (!result.succeeded()) {
-                throw new ScraperException("yt-dlp meldet einen Fehler: " + shorten(result.errors()));
+                throw new ScraperException(LocalizedText.of("scraper.youtube.ytDlpFailed")
+                        .with("errors", shorten(result.errors())));
             }
             return result;
         } catch (IOException e) {
-            throw new ScraperException("yt-dlp läuft nicht: " + e.getMessage(), e);
+            throw new ScraperException(LocalizedText.of("scraper.youtube.ytDlpNotRunning")
+                    .with("reason", e.getMessage()), e);
         }
     }
 
@@ -210,7 +215,8 @@ public class YouTubeThemeScraper implements ThemeScraper {
         try {
             return Files.createTempDirectory("kmm-youtube-");
         } catch (IOException e) {
-            throw new ScraperException("Kein temporärer Ordner für den Download: " + e.getMessage(), e);
+            throw new ScraperException(LocalizedText.of("scraper.youtube.noTempDirectory")
+                    .with("reason", e.getMessage()), e);
         }
     }
 

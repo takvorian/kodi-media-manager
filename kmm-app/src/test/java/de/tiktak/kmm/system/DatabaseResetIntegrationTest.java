@@ -38,7 +38,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Leeren der Datenbank Ende zu Ende mit einer gescannten Bibliothek.
+ * Clearing the database end to end with a scanned library.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -137,7 +137,7 @@ class DatabaseResetIntegrationTest {
         assertThat(count("movie")).isEqualTo(1);
     }
 
-    /** Wiederholt, solange der Scan und seine Folge-Jobs noch laufen und das Leeren sperren. */
+    /** Retries while the scan and its follow-up jobs are still running and block the clearing. */
     private MvcTestResult clear(boolean keepSettings) {
         return await().atMost(TIMEOUT).pollInSameThread()
                 .until(() -> mockMvc.post().uri(DatabaseResetController.CLEAR_PATH).with(csrf()).contentType(JSON)

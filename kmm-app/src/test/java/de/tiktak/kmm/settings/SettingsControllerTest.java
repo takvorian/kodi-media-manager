@@ -72,11 +72,12 @@ class SettingsControllerTest {
     @Test
     void listsApiKeysWithoutTheirValues() {
         when(apiKeyService.view()).thenReturn(List.of(
-                new ApiKeyView(ApiKey.TMDB_API_KEY, "tmdb", "TMDB-API-Key", true, "…cdef")));
+                new ApiKeyView(ApiKey.TMDB_API_KEY, "tmdb", ApiKey.TMDB_API_KEY.label(), true, "…cdef")));
 
         assertThat(mockMvc.get().uri(KEYS))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
-                        [{"key": "TMDB_API_KEY", "pluginId": "tmdb", "set": true, "hint": "…cdef"}]
+                        [{"key": "TMDB_API_KEY", "pluginId": "tmdb", "label": {"key": "settings.apiKey.tmdbApiKey"},
+                          "set": true, "hint": "…cdef"}]
                         """);
     }
 

@@ -70,7 +70,7 @@ class MovieFileMoverTest {
 
         assertThatThrownBy(() -> MovieFileMover.move(plan("heat", "Heat (1995)",
                 new FileRename("heat.mkv", "Heat.mkv"), new FileRename("heat.nfo", "Heat.nfo")), source))
-                .isInstanceOf(IOException.class).hasMessageContaining("existiert bereits");
+                .isInstanceOf(IOException.class);
 
         assertThat(names("heat")).containsExactly("heat.mkv", "heat.nfo");
         assertThat(names("Heat (1995)")).containsExactly("belegt.txt");
@@ -100,7 +100,8 @@ class MovieFileMoverTest {
     @Test
     void failsWhenTheFolderIsGone() {
         assertThatThrownBy(() -> MovieFileMover.move(plan("weg", "Weg"), source))
-                .isInstanceOf(IOException.class).hasMessageContaining("existiert nicht mehr");
+                .isInstanceOfSatisfying(LocalizedIOException.class, e -> assertThat(e.localizedText().key())
+                        .isEqualTo("movie.rename.folderGone"));
     }
 
     @Test

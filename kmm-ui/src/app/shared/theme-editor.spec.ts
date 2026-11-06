@@ -8,6 +8,7 @@ import { provideI18nTesting } from '../i18n/testing';
 import { NO_THEME, switchLanguage } from './testing';
 import { ThemeInfo, ThemeOption } from './theme';
 import { ThemeEditor } from './theme-editor';
+import { literal } from '../i18n/localized-text';
 
 describe('ThemeEditor', () => {
   const endpoint = '/api/v1/tvshows/3/theme';
@@ -104,7 +105,7 @@ describe('ThemeEditor', () => {
     button('.find-themes-button').click();
     httpTesting
       .expectOne(`${endpoint}/candidates`)
-      .flush({ candidates: [main, video], warnings: ['YouTube: yt-dlp fehlt'] });
+      .flush({ candidates: [main, video], warnings: [literal('YouTube: yt-dlp fehlt')] });
     await fixture.whenStable();
 
     const candidates = element().querySelectorAll('.theme-candidate');

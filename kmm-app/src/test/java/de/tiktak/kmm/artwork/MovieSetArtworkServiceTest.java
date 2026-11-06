@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieSetChangedEvent;
 import de.tiktak.kmm.movie.MovieSetData;
 import de.tiktak.kmm.movie.MovieSetDetails;
@@ -46,6 +47,7 @@ class MovieSetArtworkServiceTest {
             Path.of("/media/_filmsets/Matrix Filmreihe-poster.jpg"), MODIFIED);
     private static final URI URL = URI.create("https://image.tmdb.org/t/p/original/matrix.jpg");
     private static final DownloadedImage IMAGE = new DownloadedImage(new byte[] {1}, "jpg");
+    private static final List<LocalizedText> WARNINGS = List.of(LocalizedText.literal("fanart.tv: aus"));
 
     @Mock
     private MovieSetService movieSetService;
@@ -96,10 +98,10 @@ class MovieSetArtworkServiceTest {
         givenSet("2344");
         ArtworkCandidate candidate = candidate(ImageType.KEYART);
         when(candidateFinder.findAll(MediaType.MOVIE_SET, TITLE, null, Map.of("tmdb", "2344")))
-                .thenReturn(new ArtworkSearch(Map.of(ImageType.KEYART, List.of(candidate)), List.of("fanart.tv: aus")));
+                .thenReturn(new ArtworkSearch(Map.of(ImageType.KEYART, List.of(candidate)), WARNINGS));
 
         assertThat(service.candidates(SET_ID, ImageType.KEYART))
-                .isEqualTo(new ArtworkCandidates(List.of(candidate), List.of("fanart.tv: aus")));
+                .isEqualTo(new ArtworkCandidates(List.of(candidate), WARNINGS));
     }
 
     @Test
@@ -108,7 +110,7 @@ class MovieSetArtworkServiceTest {
 
         assertThatThrownBy(() -> service.candidates(SET_ID, ImageType.POSTER))
                 .isInstanceOfSatisfying(ArtworkProblemException.class,
-                        e -> assertThat(e.getBody().getTitle()).isEqualTo("Set nicht zugeordnet"));
+                        e -> assertThat(e.getBody().getTitle()).isEqualTo("Set not matched"));
     }
 
     @Test
@@ -129,7 +131,7 @@ class MovieSetArtworkServiceTest {
 
         assertThatThrownBy(() -> service.apply(SET_ID, ImageType.POSTER, URL.toString()))
                 .isInstanceOfSatisfying(ArtworkProblemException.class,
-                        e -> assertThat(e.getBody().getTitle()).isEqualTo("Keine Ablage für Set-Bilder"));
+                        e -> assertThat(e.getBody().getTitle()).isEqualTo("No storage for set images"));
         assertThatThrownBy(() -> service.remove(SET_ID, ImageType.POSTER)).isInstanceOf(ArtworkProblemException.class);
         verifyNoInteractions(downloader, events);
     }

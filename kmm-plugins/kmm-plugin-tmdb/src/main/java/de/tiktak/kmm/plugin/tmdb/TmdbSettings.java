@@ -7,15 +7,15 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.tmdb.*}).
+ * Settings of the plugin ({@code kmm.plugins.settings.tmdb.*}).
  *
- * @param apiKey               TMDB-API-Key (v3) oder Lese-Token (v4); leer, wenn nicht konfiguriert
- * @param language             Sprache der Texte, z. B. {@code de-DE}
- * @param tvLanguage           Sprache der Serientexte; ohne eigene Einstellung wie {@code language}
- * @param certificationCountry Land, dessen Altersfreigabe übernommen wird, z. B. {@code DE}
- * @param certificationPrefix  Präfix der Altersfreigabe in der NFO, z. B. {@code FSK }
- * @param baseUrl              Basis-URL der TMDB-API
- * @param imageHost            Basis-URL der TMDB-Bilder; die Größe (z. B. {@code w185}) wird angehängt
+ * @param apiKey               TMDB API key (v3) or read access token (v4); empty if not configured
+ * @param language             language of the texts, e.g. {@code de-DE}
+ * @param tvLanguage           language of the TV show texts; like {@code language} without a setting of its own
+ * @param certificationCountry country whose age rating is used, e.g. {@code DE}
+ * @param certificationPrefix  prefix of the age rating in the NFO, e.g. {@code FSK }
+ * @param baseUrl              base URL of the TMDB API
+ * @param imageHost            base URL of the TMDB images; the size (e.g. {@code w185}) is appended
  */
 record TmdbSettings(
         String apiKey,
@@ -56,13 +56,13 @@ record TmdbSettings(
         return !apiKey.isEmpty();
     }
 
-    /** Sprache ohne Region für Bilder, z. B. {@code de} aus {@code de-DE}. */
+    /** Language without region for images, e.g. {@code de} from {@code de-DE}. */
     String imageLanguage() {
         int separator = language.indexOf(LANGUAGE_REGION_SEPARATOR);
         return separator > 0 ? language.substring(0, separator) : language;
     }
 
-    /** URL eines Bildes in einer TMDB-Größe, z. B. {@code w185} oder {@code original}. */
+    /** URL of an image in a TMDB size, e.g. {@code w185} or {@code original}. */
     URI imageUrl(String size, String filePath) {
         return URI.create(imageHost.toString().replaceAll("/+$", "") + "/" + size + filePath);
     }

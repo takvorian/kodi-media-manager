@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.tvshow.TvShowFileMover.Relocation;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.EpisodeFile;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.FileRename;
@@ -34,7 +35,7 @@ class TvShowFileMoverTest {
 
         assertThat(names("Lost")).containsExactly("Season 9", "Staffel 1", "Staffel 9", "tvshow.nfo");
         assertThat(names("Lost/Staffel 1")).containsExactly("Lost - S01E01.mkv", "Lost - S01E01.nfo", "Lost - S01E02.mkv");
-        assertThat(names("Lost/Season 9")).as("nicht leer").containsExactly("rest.txt");
+        assertThat(names("Lost/Season 9")).as("not empty").containsExactly("rest.txt");
         assertThat(source.resolve("alt")).doesNotExist();
         assertThat(relocation.relocate(source.resolve("alt/lost/Season 1/e1.mkv")))
                 .isEqualTo(source.resolve("Lost/Staffel 1/Lost - S01E01.mkv"));
@@ -48,7 +49,7 @@ class TvShowFileMoverTest {
 
         TvShowFileMover.move(plan("Lost", "Lost", file("", "Staffel 1", rename("e1.mkv", "x.mkv")),
                 new EpisodeFile("S01E02", "", "Staffel 1", List.of(rename("e2.mkv", "x.mkv")), Status.CONFLICT,
-                        "belegt")), source);
+                        LocalizedText.literal("belegt"))), source);
 
         assertThat(names("Lost")).containsExactly("Staffel 1", "e2.mkv");
     }
@@ -60,7 +61,7 @@ class TvShowFileMoverTest {
         assertThatThrownBy(() -> TvShowFileMover.move(plan("lost", "Lost (2004)",
                 file("", "Staffel 1", rename("e1.mkv", "Lost - S01E01.mkv")),
                 file("", "Staffel 1", rename("e2.mkv", "Lost - S01E02.mkv"))), source))
-                .isInstanceOf(IOException.class).hasMessageContaining("existiert bereits");
+                .isInstanceOf(IOException.class).hasMessageContaining("already exists");
 
         assertThat(names("lost")).containsExactly("e1.mkv", "e2.mkv");
     }
@@ -68,7 +69,8 @@ class TvShowFileMoverTest {
     @Test
     void failsWhenTheShowFolderIsGone() {
         assertThatThrownBy(() -> TvShowFileMover.move(plan("weg", "Weg"), source))
-                .isInstanceOf(IOException.class).hasMessageContaining("existiert nicht mehr");
+                .isInstanceOfSatisfying(LocalizedIOException.class, e -> assertThat(e.localizedText().key())
+                        .isEqualTo("tvShow.rename.folderGone"));
     }
 
     private TvShowRenamePlan plan(String current, String target, EpisodeFile... files) {

@@ -23,6 +23,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.MediaType;
 
 @ExtendWith(MockitoExtension.class)
@@ -81,7 +82,8 @@ class MediaSourceServiceTest {
                 new CreateMediaSourceCommand("Filme", directory.toString(), MediaType.MOVIE)))
                 .isInstanceOfSatisfying(MediaSourceConflictException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
-                    assertThat(exception.getBody().getDetail()).contains("Filme");
+                    assertThat(exception.localizedText())
+                            .isEqualTo(LocalizedText.of("source.conflict.nameTaken").with("name", "Filme"));
                 });
     }
 
@@ -93,7 +95,7 @@ class MediaSourceServiceTest {
         assertThatThrownBy(() -> service.create(
                 new CreateMediaSourceCommand("Kinderfilme", nested.toString(), MediaType.MOVIE)))
                 .isInstanceOfSatisfying(MediaSourceConflictException.class,
-                        exception -> assertThat(exception.getBody().getDetail()).contains("überschneidet"));
+                        exception -> assertThat(exception.localizedText().key()).isEqualTo("source.conflict.overlaps"));
     }
 
     @Test
@@ -180,7 +182,7 @@ class MediaSourceServiceTest {
 
         assertThat(imported.created()).isFalse();
         assertThat(imported.source()).isSameAs(existing);
-        assertThat(existing.getMetadataLanguage()).as("bisher ohne eigene Sprache").isEqualTo("de-DE");
+        assertThat(existing.getMetadataLanguage()).as("previously without own language").isEqualTo("de-DE");
         verify(repository, never()).save(any());
     }
 

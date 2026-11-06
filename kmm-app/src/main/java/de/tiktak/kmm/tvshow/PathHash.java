@@ -6,8 +6,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
 /**
- * SHA-256 eines Pfads als Hex-Zeichenkette. Dient als Schlüssel, weil ein Index über den vollständigen
- * Pfad die Indexgrenzen mancher Datenbanken überschreitet.
+ * SHA-256 of a path as a hex string. Serves as a key because an index over the full
+ * path exceeds the index limits of some databases.
  */
 final class PathHash {
 
@@ -21,7 +21,7 @@ final class PathHash {
             byte[] digest = MessageDigest.getInstance(ALGORITHM).digest(path.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException e) {
-            // SHA-256 muss jede Java-Plattform bereitstellen.
+            // Every Java platform must provide SHA-256.
             throw new IllegalStateException(e);
         }
     }

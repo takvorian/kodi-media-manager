@@ -4,11 +4,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
 /**
- * Einstellungen für die technischen Angaben (Stream-Details), die KMM mit ffprobe ausliest.
+ * Settings for the technical details (stream details) that KMM reads with ffprobe.
  *
- * @param ffprobePath   Pfad zu ffprobe oder nur {@code ffprobe}, wenn es auf dem PATH liegt
- * @param probeOnScrape ob nach dem automatischen Scrapen ausgelesen wird, wie Embers „MetaDataScan“
- * @param probeNewFiles ob der Scan neue Dateien ausliest, deren NFO keine technischen Angaben enthält
+ * @param ffprobePath   path to ffprobe or just {@code ffprobe} if it is on the PATH
+ * @param probeOnScrape whether to read after automatic scraping, like Ember's "MetaDataScan"
+ * @param probeNewFiles whether the scan reads new files whose NFO contains no technical details
  */
 public record MediaInfoSettings(
         @NotBlank @Size(max = KmmSettings.MAX_PATH_LENGTH) String ffprobePath,

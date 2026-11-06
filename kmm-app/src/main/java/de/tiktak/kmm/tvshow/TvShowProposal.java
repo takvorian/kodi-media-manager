@@ -1,11 +1,11 @@
 package de.tiktak.kmm.tvshow;
 
 /**
- * Vorschlag aus der Online-Suche für das Formular der Serie.
+ * Proposal from the online search for the TV show form.
  *
- * @param metadata         die vorhandenen Metadaten, überlagert mit den Daten des Treffers
- * @param matchedEpisodes  Episoden der Bibliothek, die der Anbieter kennt und beim Übernehmen ergänzt
- * @param providerEpisodes Episoden beim Anbieter insgesamt
+ * @param metadata         the existing metadata, overlaid with the data of the hit
+ * @param matchedEpisodes  episodes of the library that the provider knows and enriches when applied
+ * @param providerEpisodes total episodes at the provider
  */
 public record TvShowProposal(TvShowMetadata metadata, int matchedEpisodes, int providerEpisodes) {
 }

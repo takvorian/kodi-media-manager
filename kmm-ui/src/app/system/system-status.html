@@ -12,7 +12,7 @@
         <dt>{{ 'system.java' | transloco }}</dt>
         <dd>{{ info.javaVersion }}</dd>
         <dt>{{ 'system.database' | transloco }}</dt>
-        <dd class="database">{{ info.database }}</dd>
+        <dd class="database">{{ info.database ?? ('common.unknown' | transloco) }}</dd>
         <dt>{{ 'system.profiles' | transloco }}</dt>
         <dd>{{ info.activeProfiles.join(', ') }}</dd>
       </dl>

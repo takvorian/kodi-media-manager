@@ -13,7 +13,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Holt den Gesehen-Status aus Kodi, für eine ganze Quelle oder einen einzelnen Film bzw. eine Episode.
+ * Fetches the watched status from Kodi, for a whole source or a single movie or episode.
  */
 @RestController
 @RequestMapping(KodiSyncController.BASE_PATH)
@@ -22,7 +22,7 @@ public class KodiPlaybackController {
 
     private final KodiPlaybackService playbackService;
 
-    /** Startet die Übernahme im Hintergrund. Fortschritt und Ergebnis liefert die Job-API. */
+    /** Starts the import in the background. The job API delivers progress and result. */
     @PostMapping("/sources/{sourceId}/playback")
     public ResponseEntity<JobSnapshot> importSource(@PathVariable long sourceId) {
         JobSnapshot job = playbackService.startSourceImport(sourceId);

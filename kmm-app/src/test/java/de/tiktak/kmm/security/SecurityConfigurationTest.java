@@ -79,8 +79,8 @@ class SecurityConfigurationTest {
         @Test
         void rejectsStateChangingRequestWithoutCsrfToken() {
             assertThat(mockMvc.post().uri(ENABLE_PATH).with(httpBasic(USER, PASSWORD))).hasStatus(403)
-                    .bodyJson().isLenientlyEqualTo("{\"status\": 403, \"detail\": \"%s\"}"
-                            .formatted(ProblemAccessDeniedHandler.CSRF_DETAIL));
+                    .bodyJson().isLenientlyEqualTo("{\"status\": 403, \"detailText\": {\"key\": \"%s\"}}"
+                            .formatted(ProblemAccessDeniedHandler.CSRF_DETAIL.key()));
         }
 
         @Test

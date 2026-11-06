@@ -12,9 +12,13 @@
 
     <artifactId>kmm-nfo</artifactId>
     <name>KMM NFO</name>
-    <description>Liest und schreibt Kodi-NFO-Dateien für Filme. Unbekannte Elemente bleiben beim Schreiben erhalten.</description>
+    <description>Reads and writes Kodi NFO files. Unknown elements are kept when writing.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-i18n</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

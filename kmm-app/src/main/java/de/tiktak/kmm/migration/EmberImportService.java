@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -31,9 +32,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Analysiert Ember-Profile und übernimmt ihren Film- und Serienbestand als Hintergrund-Job. Ein Probelauf
- * führt den Import vollständig aus und rollt ihn am Ende zurück; so zeigt sein Bericht genau, was
- * der echte Import ändern würde. Ein erneuter Import aktualisiert statt zu duplizieren.
+ * Analyzes Ember profiles and imports their movie and TV show library as a background job. A dry run performs the
+ * import completely and rolls it back at the end; so its report shows exactly what the real import would change.
+ * Importing again updates instead of duplicating.
  */
 @Slf4j
 @Service
@@ -41,7 +42,9 @@ import lombok.extern.slf4j.Slf4j;
 public class EmberImportService {
 
     public static final String JOB_KEY = "ember-import";
-    static final String READING_MESSAGE = "Ember-Datenbank wird gelesen";
+    static final String TITLE = "migration.import.title";
+    static final String DRY_RUN_TITLE = "migration.import.dryRunTitle";
+    static final LocalizedText READING_MESSAGE = LocalizedText.of("migration.import.reading");
 
     private final EmberProfileInspector profileInspector;
     private final EmberProfileDetector profileDetector;
@@ -57,10 +60,10 @@ public class EmberImportService {
     private final EmberProfileUpload profileUpload;
 
     /**
-     * Nimmt das hochgeladene Profil an und analysiert es. Ein unbrauchbares Profil bleibt nicht liegen.
+     * Accepts the uploaded profile and analyzes it. An unusable profile is not kept.
      *
-     * @throws EmberProfileUploadException wenn die Dateien nicht passen oder gerade ein Import läuft
-     * @throws de.tiktak.kmm.migration.ember.EmberProfileException wenn das Profil ungültig ist
+     * @throws EmberProfileUploadException if the files do not fit or an import is running
+     * @throws de.tiktak.kmm.migration.ember.EmberProfileException if the profile is invalid
      */
     public EmberInspectionResponse upload(List<MultipartFile> files) {
         requireNoRunningImport();
@@ -74,9 +77,9 @@ public class EmberImportService {
     }
 
     /**
-     * Verwirft das hochgeladene Profil.
+     * Discards the uploaded profile.
      *
-     * @throws EmberProfileUploadException wenn gerade ein Import läuft
+     * @throws EmberProfileUploadException if an import is running
      */
     public void discardUpload() {
         requireNoRunningImport();
@@ -92,15 +95,15 @@ public class EmberImportService {
     }
 
     /**
-     * Prüft das hochgeladene Profil und startet den Import. Nach dem echten Import wird es gelöscht, auch wenn er
-     * fehlschlägt oder abgebrochen wird; ein Probelauf behält es für den Import danach.
+     * Checks the uploaded profile and starts the import. After the real import it is deleted, even if the import
+     * fails or is cancelled; a dry run keeps it for the import afterwards.
      *
-     * @throws EmberProfileUploadException wenn kein Profil hochgeladen ist
-     * @throws de.tiktak.kmm.migration.ember.EmberProfileException wenn das Profil ungültig ist
+     * @throws EmberProfileUploadException if no profile is uploaded
+     * @throws de.tiktak.kmm.migration.ember.EmberProfileException if the profile is invalid
      */
     public JobSnapshot start(EmberImportRequest request) {
         EmberProfile profile = profileDetector.detect(profileUpload.directory());
-        String title = request.dryRun() ? "Ember-Import (Probelauf)" : "Ember-Import";
+        LocalizedText title = LocalizedText.of(request.dryRun() ? DRY_RUN_TITLE : TITLE);
         return jobService.submit(JOB_KEY, title, context -> {
             try {
                 return run(profile, request, context);
@@ -138,11 +141,11 @@ public class EmberImportService {
     private void requireNoRunningImport() {
         if (jobService.findAll().stream()
                 .anyMatch(job -> JOB_KEY.equals(job.key()) && job.status() == JobStatus.RUNNING)) {
-            throw new EmberProfileUploadException("Gerade läuft ein Ember-Import. Bitte warte, bis er fertig ist.");
+            throw new EmberProfileUploadException(LocalizedText.of("migration.upload.importRunning"));
         }
     }
 
-    /** Fehlerhafte Kodi-Einstellungen sollen die Analyse des übrigen Profils nicht verhindern. */
+    /** Faulty Kodi settings must not prevent the analysis of the rest of the profile. */
     private List<EmberKodiHost> inspectKodiHosts(EmberProfile profile) {
         try {
             return kodiHostsReader.read(profile);
@@ -160,7 +163,7 @@ public class EmberImportService {
         try {
             return kodiHostsReader.read(profile);
         } catch (EmberProfileException e) {
-            progress.warn("Die Kodi-Geräte konnten nicht gelesen werden: " + e.getMessage());
+            progress.warn(LocalizedText.of("migration.warning.kodiHostsUnreadable").with("reason", e.localizedText()));
             return List.of();
         }
     }
@@ -174,13 +177,14 @@ public class EmberImportService {
         try {
             settings = settingsReader.read(profile.settingsFile().get());
         } catch (EmberSettingsException e) {
-            progress.warn("Die Ember-Einstellungen konnten nicht gelesen werden: " + e.getMessage());
+            progress.warn(LocalizedText.of("migration.warning.settingsUnreadable").with("reason", e.localizedText()));
             return Optional.empty();
         }
         try {
             return Optional.of(settings.withRename(advancedSettingsReader.readRenameSettings(profile).orElse(null)));
         } catch (EmberSettingsException e) {
-            progress.warn("Die Einstellungen zum Umbenennen konnten nicht gelesen werden: " + e.getMessage());
+            progress.warn(LocalizedText.of("migration.warning.renameSettingsUnreadable")
+                    .with("reason", e.localizedText()));
             return Optional.of(settings);
         }
     }

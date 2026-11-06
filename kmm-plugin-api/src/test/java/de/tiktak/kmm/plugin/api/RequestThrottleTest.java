@@ -7,6 +7,8 @@ import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 class RequestThrottleTest {
 
     @Test
@@ -27,7 +29,8 @@ class RequestThrottleTest {
 
         Thread.currentThread().interrupt();
         try {
-            assertThatThrownBy(throttle::await).isInstanceOf(ScraperException.class);
+            assertThatThrownBy(throttle::await).isInstanceOfSatisfying(ScraperException.class, e ->
+                    assertThat(e.localizedText()).isEqualTo(LocalizedText.of("scraper.requestInterrupted")));
             assertThat(Thread.currentThread().isInterrupted()).isTrue();
         } finally {
             Thread.interrupted();

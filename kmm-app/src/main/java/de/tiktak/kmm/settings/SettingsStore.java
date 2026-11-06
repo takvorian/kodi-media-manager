@@ -10,8 +10,8 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Liest und schreibt {@link KmmSettings} als Schlüssel-Wert-Paare. Nicht gespeicherte Werte
- * kommen aus {@link KmmSettings#DEFAULTS}; Listen stehen zeilenweise in einem Wert.
+ * Reads and writes {@link KmmSettings} as key-value pairs. Values that are not stored
+ * come from {@link KmmSettings#DEFAULTS}; lists are stored line by line in one value.
  */
 @Component
 @RequiredArgsConstructor

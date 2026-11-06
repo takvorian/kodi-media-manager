@@ -6,12 +6,12 @@ import java.util.Locale;
 import java.util.Objects;
 
 /**
- * Begleitdateien von Serien und Episoden nach Kodi-Konvention (Kodi 19–21):
+ * Companion files of TV shows and episodes according to Kodi's convention (Kodi 19–21):
  * <ul>
- * <li>Serie: {@code tvshow.nfo}, {@code poster.jpg}, {@code fanart.jpg} … im Serienordner</li>
- * <li>Staffel: {@code season01-poster.jpg}, {@code season-specials-poster.jpg} für Staffel 0 und
- * {@code season-all-poster.jpg} für alle Staffeln, ebenfalls im Serienordner</li>
- * <li>Episode: {@code <dateiname>.nfo} und {@code <dateiname>-thumb.jpg} neben der Videodatei</li>
+ * <li>TV show: {@code tvshow.nfo}, {@code poster.jpg}, {@code fanart.jpg} … in the TV show folder</li>
+ * <li>season: {@code season01-poster.jpg}, {@code season-specials-poster.jpg} for season 0 and
+ * {@code season-all-poster.jpg} for all seasons, also in the TV show folder</li>
+ * <li>episode: {@code <filename>.nfo} and {@code <filename>-thumb.jpg} next to the video file</li>
  * </ul>
  */
 public final class TvShowFiles {
@@ -31,7 +31,7 @@ public final class TvShowFiles {
         return showDirectory.resolve(TV_SHOW_NFO);
     }
 
-    /** Mögliche Bilddateien einer Serie, z. B. {@code poster.jpg} oder {@code poster.png}. */
+    /** Possible image files of a TV show, e.g. {@code poster.jpg} or {@code poster.png}. */
     public static List<Path> tvShowArtworkCandidates(Path showDirectory, String kodiName) {
         return CompanionFiles.ARTWORK_EXTENSIONS.stream()
                 .map(extension -> showDirectory.resolve(kodiName + EXTENSION_SEPARATOR + extension))
@@ -39,7 +39,7 @@ public final class TvShowFiles {
     }
 
     /**
-     * @param season Staffel oder {@code null} für das Bild aller Staffeln
+     * @param season season, or {@code null} for the image of all seasons
      */
     public static List<Path> seasonArtworkCandidates(Path showDirectory, Integer season, String kodiName) {
         String prefix = seasonPrefix(season);

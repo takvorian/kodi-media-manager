@@ -3,10 +3,10 @@ package de.tiktak.kmm.tvshow;
 import java.util.Objects;
 
 /**
- * Eine Serie aus einer Migration.
+ * A TV show from a migration.
  *
- * @param directoryPath absoluter Pfad des Serienordners
- * @param language      Sprache oder {@code null}, dann bleibt eine vorhandene erhalten
+ * @param directoryPath absolute path of the TV show folder
+ * @param language      language, or {@code null} to keep an existing one
  */
 public record TvShowImport(long sourceId, String directoryPath, TvShowMetadata metadata, TvShowExtras extras,
         String language) {
@@ -17,7 +17,7 @@ public record TvShowImport(long sourceId, String directoryPath, TvShowMetadata m
         extras = extras == null ? TvShowExtras.EMPTY : extras;
     }
 
-    /** Eine Serie ohne Angabe der Sprache. */
+    /** A TV show without a language. */
     public TvShowImport(long sourceId, String directoryPath, TvShowMetadata metadata, TvShowExtras extras) {
         this(sourceId, directoryPath, metadata, extras, null);
     }

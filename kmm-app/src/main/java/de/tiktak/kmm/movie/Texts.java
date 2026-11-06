@@ -1,7 +1,7 @@
 package de.tiktak.kmm.movie;
 
 /**
- * Bereinigt Texte aus NFOs und Fremddatenbanken, bevor sie gespeichert werden.
+ * Cleans texts from NFOs and third-party databases before they are saved.
  */
 final class Texts {
 
@@ -9,7 +9,7 @@ final class Texts {
     }
 
     /**
-     * @return den getrimmten, auf {@code maxLength} Zeichen gekürzten Text oder {@code null}, wenn er leer ist
+     * @return the trimmed text, shortened to {@code maxLength} characters, or {@code null} if it is empty
      */
     static String clean(String value, int maxLength) {
         if (value == null) {

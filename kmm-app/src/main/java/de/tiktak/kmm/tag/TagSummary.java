@@ -1,7 +1,7 @@
 package de.tiktak.kmm.tag;
 
 /**
- * Ein Tag mit der Anzahl seiner Filme und Serien.
+ * A tag with the number of its movies and TV shows.
  */
 public record TagSummary(String name, long movies, long shows) {
 }

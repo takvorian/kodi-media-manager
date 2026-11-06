@@ -3,11 +3,11 @@ package de.tiktak.kmm.tvshow;
 import java.util.List;
 
 /**
- * Ein Scan hat die Serien einer Quelle mit dem Dateisystem abgeglichen.
+ * A scan has reconciled the TV shows of a source with the file system.
  *
- * @param added             neu gefundene Serien und Episoden
- * @param newWithoutStreams IDs der neu gefundenen Episoden ohne technische Angaben in der NFO
- * @param showsWithNewEpisodes IDs der Serien mit neu gefundenen Episoden
+ * @param added             newly found TV shows and episodes
+ * @param newWithoutStreams IDs of newly found episodes without technical details in the NFO
+ * @param showsWithNewEpisodes IDs of the TV shows with newly found episodes
  */
 public record TvShowSourceScannedEvent(long sourceId, int added, List<Long> newWithoutStreams,
                                        List<Long> showsWithNewEpisodes) {

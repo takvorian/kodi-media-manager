@@ -2,8 +2,10 @@ package de.tiktak.kmm.plugin.api;
 
 import java.time.Duration;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Hält Abstand zwischen den Anfragen an eine Webseite ohne API, damit ein Job sie nicht belastet.
+ * Keeps a gap between the requests to a web page without an API so a job does not burden it.
  */
 public final class RequestThrottle {
 
@@ -15,9 +17,9 @@ public final class RequestThrottle {
     }
 
     /**
-     * Wartet, bis die nächste Anfrage erlaubt ist.
+     * Waits until the next request is allowed.
      *
-     * @throws ScraperException wenn das Warten unterbrochen wird
+     * @throws ScraperException if the wait is interrupted
      */
     public synchronized void await() {
         long waitNanos = nextRequestNanos - System.nanoTime();
@@ -26,7 +28,7 @@ public final class RequestThrottle {
                 Thread.sleep(Duration.ofNanos(waitNanos));
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
-                throw new ScraperException("Die Anfrage wurde unterbrochen.", e);
+                throw new ScraperException(LocalizedText.of("scraper.requestInterrupted"), e);
             }
         }
         nextRequestNanos = System.nanoTime() + delayNanos;

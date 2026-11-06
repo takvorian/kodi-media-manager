@@ -1,10 +1,10 @@
 package de.tiktak.kmm.migration.ember.library;
 
 /**
- * Eine Serienquelle aus Ember.
+ * A TV show source from Ember.
  *
- * @param path     Verzeichnis, wie Ember es gespeichert hat (Windows)
- * @param language Sprache der Quelle, z. B. {@code de-DE}
+ * @param path     directory as Ember stored it (Windows)
+ * @param language language of the source, e.g. {@code de-DE}
  */
 public record EmberTvShowSource(long id, String name, String path, String language) {
 }

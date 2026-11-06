@@ -5,10 +5,10 @@ import java.nio.file.Path;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 /**
- * Die Videodatei eines Films, wie ffprobe sie braucht.
+ * The video file of a movie, as ffprobe needs it.
  *
- * @param file              Hauptdatei, bei mehrteiligen Filmen der erste Teil
- * @param hasStreamDetails  ob technische Angaben bekannt sind
+ * @param file              main file; the first part for multi-part movies
+ * @param hasStreamDetails  whether technical details are known
  */
 public record MovieMedia(long movieId, String title, Path file, DiscFormat format, boolean hasStreamDetails) {
 

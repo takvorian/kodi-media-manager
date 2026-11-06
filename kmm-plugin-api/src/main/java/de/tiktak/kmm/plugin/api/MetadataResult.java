@@ -8,13 +8,13 @@ import java.util.Objects;
 import lombok.Builder;
 
 /**
- * Ergebnis eines Metadaten-Scrapers. Felder, die der Scraper nicht kennt, sind {@code null} bzw. leer.
+ * Result of a metadata scraper. Fields the scraper does not know are {@code null} or empty.
  *
- * @param premiered     Datum der Erstaufführung
- * @param runtime       Laufzeit in Minuten
- * @param certification Altersfreigabe in der Schreibweise für die NFO, z. B. {@code FSK 12}
- * @param uniqueIds     IDs je Anbieter, z. B. {@code imdb -> tt0113277}, {@code tmdb -> 949}
- * @param collection    Sammlung (Filmset), zu der der Film gehört, oder {@code null}
+ * @param premiered     date of the premiere
+ * @param runtime       runtime in minutes
+ * @param certification age rating as written in the NFO, e.g. {@code FSK 12}
+ * @param uniqueIds     IDs per provider, e.g. {@code imdb -> tt0113277}, {@code tmdb -> 949}
+ * @param collection    collection (movie set) the movie belongs to, or {@code null}
  */
 @Builder
 public record MetadataResult(

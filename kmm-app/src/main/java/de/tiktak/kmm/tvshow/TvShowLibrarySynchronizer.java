@@ -26,9 +26,9 @@ import de.tiktak.kmm.source.ScanEntry;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Gleicht die Serien einer Quelle mit dem Scan-Ergebnis ab: Neue Serien und Episoden werden angelegt,
- * verschwundene entfernt. Angaben kommen aus den NFOs; bekannte Einträge werden nur aktualisiert,
- * wenn sich ihre NFO seit dem letzten Einlesen geändert hat.
+ * Reconciles the TV shows of a source with the scan result: new TV shows and episodes are created,
+ * vanished ones removed. Details come from the NFOs; known entries are only updated
+ * if their NFO changed since it was last read.
  */
 @Component
 @RequiredArgsConstructor
@@ -79,7 +79,7 @@ class TvShowLibrarySynchronizer {
                 outcome.details.build(), outcome.newWithoutStreams, List.copyOf(outcome.showsWithNewEpisodes));
     }
 
-    /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs, damit der Scan nur geänderte liest. */
+    /** Returns the modification times of the NFOs read last, so that the scan only reads changed ones. */
     @Transactional(readOnly = true)
     KnownNfos knownNfos(long sourceId) {
         Map<String, Instant> shows = new HashMap<>();
@@ -182,7 +182,7 @@ class TvShowLibrarySynchronizer {
                 episode.getSeason(), episode.getEpisode(), episode.getTitle()));
     }
 
-    /** Titel aus dem Dateinamen, bei Mehrfachepisoden mit der Episodennummer. */
+    /** Title from the file name, with the episode number for multi-episode files. */
     private static String defaultTitle(EpisodeCandidate candidate, int number) {
         String base = candidate.title() != null ? candidate.title() : "Episode %d".formatted(number);
         String title = candidate.number().episodes().size() > 1 && candidate.title() != null
@@ -198,8 +198,8 @@ class TvShowLibrarySynchronizer {
     }
 
     /**
-     * Inhalt der NFO einer Datei, auch bei Mehrfachepisoden höchstens einmal gelesen. Normalerweise hat
-     * der Scan sie bereits gelesen; nur wenn sie sich seither geändert hat, wird sie hier gelesen.
+     * Content of the NFO of a file, read at most once even for multi-episode files. Normally
+     * the scan has already read it; it is only read here if it changed since.
      */
     private static final class NfoContent {
 
@@ -220,7 +220,7 @@ class TvShowLibrarySynchronizer {
             return episodes;
         }
 
-        /** Eine unlesbare Mehrfachepisoden-NFO zählt nur einmal als Fehler. */
+        /** An unreadable multi-episode NFO counts as an error only once. */
         boolean reportFailureOnce() {
             boolean first = !failureReported;
             failureReported = true;

@@ -20,7 +20,7 @@ public class TvShowLanguageController {
 
     private final TvShowLanguageService languageService;
 
-    /** Ändert die Sprache der Serien als Job, auch für eine einzelne Serie. */
+    /** Changes the language of the TV shows as a job, also for a single TV show. */
     @PostMapping(LANGUAGE_PATH)
     public ResponseEntity<JobSnapshot> change(@Valid @RequestBody TvShowLanguageChange change) {
         JobSnapshot job = languageService.start(change);

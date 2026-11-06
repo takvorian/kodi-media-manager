@@ -1,7 +1,7 @@
 package de.tiktak.kmm.plugin.api;
 
 /**
- * Artwork-Arten nach Kodi-Konvention.
+ * Artwork types following the Kodi convention.
  */
 public enum ImageType {
     POSTER,
@@ -13,6 +13,6 @@ public enum ImageType {
     LANDSCAPE,
     CHARACTERART,
     KEYART,
-    /** Standbild einer Episode. */
+    /** Still image of an episode. */
     THUMB
 }

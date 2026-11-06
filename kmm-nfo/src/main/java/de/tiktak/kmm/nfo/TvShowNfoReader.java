@@ -14,15 +14,15 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
- * Liest {@code tvshow.nfo}-Dateien, auch in der älteren Schreibweise von Ember ({@code <id>} als
- * TVDB-ID, {@code <imdb>}, {@code <tmdb>}).
+ * Reads {@code tvshow.nfo} files, including Ember's older notation ({@code <id>} as TVDB ID, {@code <imdb>},
+ * {@code <tmdb>}).
  */
 public class TvShowNfoReader {
 
     private static final Pattern NUMERIC = Pattern.compile("[0-9]+");
 
     /**
-     * @throws NfoException wenn die Datei nicht gelesen werden kann oder keine Serien-NFO ist
+     * @throws NfoException if the file cannot be read or is not a TV show NFO
      */
     public TvShowNfo read(Path nfoFile) {
         try {

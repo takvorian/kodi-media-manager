@@ -8,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
- * Jobs laufen auf virtuellen Threads; sie warten meist auf Dateisystem oder Netzwerk.
+ * Jobs run on virtual threads; they mostly wait for the file system or the network.
  */
 @Configuration(proxyBeanMethods = false)
 @EnableScheduling

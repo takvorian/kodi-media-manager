@@ -31,11 +31,11 @@ import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.nfo.StreamLabels;
 
 /**
- * Die Werte der Platzhalter einer Serie und, für Staffelordner und Episodendateien, der Episoden einer Datei.
- * Bei Mehrfachepisoden werden die Nummern mit „E“ verbunden ({@code S{season:2}E{episode:2}} ergibt
- * {@code S01E01E02}) und die Titel mit „ - “.
+ * The values of the placeholders of a TV show and, for season folders and episode files, of the episodes of a file.
+ * For multi-episodes the numbers are joined with "E" ({@code S{season:2}E{episode:2}} yields
+ * {@code S01E01E02}) and the titles with " - ".
  *
- * @param episodes die Episoden einer Datei in Reihenfolge; leer für den Serienordner
+ * @param episodes the episodes of a file in order; empty for the TV show folder
  */
 record TvNameValues(TvShowMetadata show, TvShowExtras showExtras, List<EpisodeValues> episodes) {
 
@@ -55,7 +55,7 @@ record TvNameValues(TvShowMetadata show, TvShowExtras showExtras, List<EpisodeVa
         return new TvNameValues(show, showExtras, fileEpisodes);
     }
 
-    /** @return der Wert oder {@code null}, wenn er fehlt */
+    /** @return the value, or {@code null} if it is missing */
     String value(String placeholder) {
         return switch (placeholder) {
             case SHOW -> show.title();
@@ -111,9 +111,9 @@ record TvNameValues(TvShowMetadata show, TvShowExtras showExtras, List<EpisodeVa
     }
 
     /**
-     * Was eine Episode zum Namen beiträgt.
+     * What an episode contributes to the name.
      *
-     * @param aired Erstausstrahlung als {@code JJJJ-MM-TT} oder {@code null}
+     * @param aired first air date as {@code YYYY-MM-DD} or {@code null}
      */
     record EpisodeValues(int season, int episode, String title, String aired, String videoSource,
                          StreamDetails streams) {

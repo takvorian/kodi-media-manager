@@ -19,8 +19,8 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 
 /**
- * Lädt das echte Test-Plugin ({@code kmm-plugin-testdata}) über PF4J und prüft den Weg vom JAR bis
- * zum Scraper-Aufruf. Maven kopiert das Plugin-JAR vorab nach {@code target/test-plugins}.
+ * Loads the real test plugin ({@code kmm-plugin-testdata}) via PF4J and checks the path from the JAR to
+ * the scraper call. Maven copies the plugin JAR to {@code target/test-plugins} beforehand.
  */
 @SpringBootTest
 @ActiveProfiles("test")

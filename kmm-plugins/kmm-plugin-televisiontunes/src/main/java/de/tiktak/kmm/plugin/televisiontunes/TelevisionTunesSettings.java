@@ -5,9 +5,9 @@ import java.net.URI;
 import de.tiktak.kmm.plugin.api.PluginContext;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.televisiontunes.*}).
+ * Settings of the plugin ({@code kmm.plugins.settings.televisiontunes.*}).
  *
- * @param baseUrl Adresse der Seite; TelevisionTunes ist nur über HTTP erreichbar
+ * @param baseUrl address of the site; TelevisionTunes can only be reached via HTTP
  */
 record TelevisionTunesSettings(URI baseUrl) {
 

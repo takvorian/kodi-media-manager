@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verwaltet die installierten Plugins. PF4J merkt sich deaktivierte Plugins im Plugin-Verzeichnis,
- * der Zustand übersteht also Neustarts.
+ * Manages the installed plugins. PF4J remembers disabled plugins in the plugin directory,
+ * so the state survives restarts.
  */
 @Slf4j
 @Service

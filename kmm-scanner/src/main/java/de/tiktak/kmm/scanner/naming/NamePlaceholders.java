@@ -4,7 +4,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Die Platzhalter der Namensmuster je Medientyp.
+ * The placeholders of the name patterns per media type.
  */
 public final class NamePlaceholders {
 
@@ -33,19 +33,19 @@ public final class NamePlaceholders {
     public static final String EPISODE = "episode";
     public static final String AIRED = "aired";
 
-    /** Platzhalter für Filmordner und -dateien. */
+    /** Placeholders for movie folders and files. */
     public static final Set<String> MOVIE = Set.of(TITLE, ORIGINAL_TITLE, SORT_TITLE, YEAR, EDITION, SET, IMDB, TMDB,
             GENRES, DIRECTORS, COUNTRIES, MPAA, RATING, RESOLUTION, VIDEO_CODEC, AUDIO_CODEC, CHANNELS, SOURCE,
             THREE_D);
 
-    /** Platzhalter für Serienordner. */
+    /** Placeholders for TV show folders. */
     public static final Set<String> TV_SHOW = Set.of(SHOW, ORIGINAL_TITLE, SORT_TITLE, YEAR, IMDB, TMDB, TVDB, GENRES,
             MPAA, RATING);
 
-    /** Platzhalter für Staffelordner. */
+    /** Placeholders for season folders. */
     public static final Set<String> SEASON_FOLDER = union(TV_SHOW, Set.of(SEASON));
 
-    /** Platzhalter für Episodendateien; {@code {title}} ist der Titel der Episode. */
+    /** Placeholders for episode files; {@code {title}} is the title of the episode. */
     public static final Set<String> EPISODE_FILE = union(SEASON_FOLDER, Set.of(EPISODE, TITLE, AIRED, RESOLUTION,
             VIDEO_CODEC, AUDIO_CODEC, CHANNELS, SOURCE, THREE_D));
 

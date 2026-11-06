@@ -2,18 +2,19 @@ package de.tiktak.kmm.plugin;
 
 import java.util.Set;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Attribution;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.Scraper;
 
 /**
- * Darstellung eines verfügbaren Scrapers für die REST-API.
+ * Representation of an available scraper for the REST API.
  *
- * @param missingConfiguration Hinweis, was zur Nutzung fehlt, oder {@code null}, wenn einsatzbereit
- * @param attribution          vom Anbieter verlangter Hinweis auf die Datenquelle oder {@code null}
+ * @param missingConfiguration hint about what is missing for use, or {@code null} if ready
+ * @param attribution          notice about the data source required by the provider, or {@code null}
  */
-public record ScraperInfo(String id, String displayName, Set<MediaType> mediaTypes, String missingConfiguration,
-        Attribution attribution) {
+public record ScraperInfo(String id, String displayName, Set<MediaType> mediaTypes,
+        LocalizedText missingConfiguration, Attribution attribution) {
 
     public ScraperInfo {
         mediaTypes = Set.copyOf(mediaTypes);

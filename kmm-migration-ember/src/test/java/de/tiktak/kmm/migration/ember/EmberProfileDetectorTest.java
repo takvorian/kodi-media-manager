@@ -85,14 +85,14 @@ class EmberProfileDetectorTest {
 
         assertThatThrownBy(() -> detector.detect(missing))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("existiert nicht");
+                .hasMessageContaining("does not exist");
     }
 
     @Test
     void rejectsDirectoryWithoutDatabase() {
         assertThatThrownBy(() -> detector.detect(directory))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("keine Ember-Datenbank");
+                .hasMessageContaining("No Ember database");
     }
 
     @Test
@@ -101,8 +101,8 @@ class EmberProfileDetectorTest {
 
         assertThatThrownBy(() -> detector.detect(directory))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("Schema-Version 47")
-                .hasMessageContaining("letzten Ember-Version");
+                .hasMessageContaining("schema version 47")
+                .hasMessageContaining("latest Ember version");
     }
 
     @Test
@@ -111,6 +111,6 @@ class EmberProfileDetectorTest {
 
         assertThatThrownBy(() -> detector.detect(directory))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("Schema-Version 49");
+                .hasMessageContaining("schema version 49");
     }
 }

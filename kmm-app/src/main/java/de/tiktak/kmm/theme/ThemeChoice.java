@@ -6,7 +6,7 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Die gewählte Titelmusik, wie sie ein {@link ThemeOption} beschreibt.
+ * The chosen theme music, as described by a {@link ThemeOption}.
  */
 public record ThemeChoice(
         @NotBlank String scraperId,

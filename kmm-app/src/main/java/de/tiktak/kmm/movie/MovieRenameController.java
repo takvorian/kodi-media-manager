@@ -16,7 +16,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Umbenennen von Filmen nach Mustern.
+ * Renaming of movies by patterns.
  */
 @RestController
 @RequiredArgsConstructor
@@ -29,13 +29,13 @@ public class MovieRenameController {
 
     private final MovieRenameService renameService;
 
-    /** Zeigt, was das Umbenennen ändern würde, ohne etwas zu ändern. */
+    /** Shows what renaming would change, without changing anything. */
     @PostMapping(SOURCE_PREVIEW_PATH)
     public List<MovieRenamePlan> preview(@PathVariable long sourceId, @Valid @RequestBody MovieRenamePatterns patterns) {
         return renameService.preview(sourceId, patterns);
     }
 
-    /** Benennt die Filme der Quelle im Hintergrund um. */
+    /** Renames the movies of the source in the background. */
     @PostMapping(SOURCE_RENAME_PATH)
     public ResponseEntity<JobSnapshot> rename(@PathVariable long sourceId, @Valid @RequestBody MovieRenameRequest request) {
         JobSnapshot job = renameService.startSourceRename(sourceId, request);
@@ -47,7 +47,7 @@ public class MovieRenameController {
         return renameService.previewMovie(movieId, patterns);
     }
 
-    /** Benennt einen Film sofort um; Konflikte und Fehler stehen im Ergebnis. */
+    /** Renames a movie immediately; conflicts and errors are in the result. */
     @PostMapping(MOVIE_RENAME_PATH)
     public MovieRenamePlan renameMovie(@PathVariable long movieId, @Valid @RequestBody MovieRenamePatterns patterns) {
         return renameService.renameMovie(movieId, patterns);

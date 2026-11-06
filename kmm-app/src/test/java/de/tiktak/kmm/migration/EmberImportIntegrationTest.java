@@ -49,8 +49,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Ember-Import über die REST-API mit der Fixture-Datenbank; die Ember-Pfade ({@code D:\Filme} und
- * {@code \\nas\serien}) werden auf temporäre Verzeichnisse abgebildet.
+ * Ember import via the REST API with the fixture database; the Ember paths ({@code D:\Filme} and
+ * {@code \\nas\serien}) are mapped to temporary directories.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -59,7 +59,7 @@ import tools.jackson.databind.ObjectMapper;
 @DirtiesContext
 class EmberImportIntegrationTest {
 
-    /** Ember speichert lokale Uhrzeiten (hier 30.11.2016 00:20:15); KMM rechnet mit der eigenen Zeitzone um. */
+    /** Ember stores local times (here 30.11.2016 00:20:15); KMM converts them with its own time zone. */
     private static final Instant EMBER_DATE_ADDED =
             LocalDateTime.of(2016, 11, 30, 0, 20, 15).atZone(ZoneId.systemDefault()).toInstant();
     private static final Duration JOB_TIMEOUT = Duration.ofSeconds(20);
@@ -127,7 +127,8 @@ class EmberImportIntegrationTest {
                 "{\"showsCreated\":1,\"showsUpdated\":0,\"showsSkipped\":0,\"episodesCreated\":3,"
                         + "\"episodesUpdated\":0,\"episodesSkipped\":0,\"episodesMissing\":1}");
         assertThat(report.get("moviesWithoutNfo").asInt()).isEqualTo(2);
-        assertThat(report.get("settingsChanges").toString()).contains("Sprache der Metadaten: de-DE");
+        assertThat(report.get("settingsChanges").toString())
+                .contains("{\"key\":\"migration.settings.metadataLanguage\",\"args\":{\"value\":\"de-DE\"}}");
         assertThat(count("media_source")).isZero();
         assertThat(count("movie")).isZero();
         assertThat(count("movie_set")).isZero();
@@ -163,7 +164,7 @@ class EmberImportIntegrationTest {
         assertThat(jdbcClient.sql("SELECT tmdb_collection_id FROM movie_set WHERE name = 'Matrix Collection'")
                 .query(String.class).single()).isEqualTo("2344");
         assertThat(jdbcClient.sql("SELECT sort_method FROM movie_set WHERE name = 'Leeres Set'").query(String.class)
-                .single()).as("auch Sets ohne Filme").isEqualTo("TITLE");
+                .single()).as("also sets without movies").isEqualTo("TITLE");
         assertThat(jdbcClient.sql("SELECT part_count FROM movie WHERE title = 'Matrix Reloaded'").query(Integer.class)
                 .single()).isEqualTo(2);
 
@@ -187,9 +188,9 @@ class EmberImportIntegrationTest {
         assertThat(scan.get("added").asInt()).isZero();
         assertThat(scan.get("removed").asInt()).isZero();
         assertThat(movieService.findDetails(movieId("Heat")).metadata().title())
-                .as("der Scan behält Embers Werte").isEqualTo("Heat");
+                .as("the scan keeps Ember's values").isEqualTo("Heat");
         assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, movieId("Heat"))).bodyJson()
-                .extractingPath("$.metadata.title").as("beim Öffnen gilt die NFO").isEqualTo("Heat aus der NFO");
+                .extractingPath("$.metadata.title").as("opening uses the NFO").isEqualTo("Heat aus der NFO");
     }
 
     @Test
@@ -241,9 +242,9 @@ class EmberImportIntegrationTest {
         assertThat(scan.get("added").asInt()).as(scan.toString()).isZero();
         assertThat(scan.get("removed").asInt()).isZero();
         assertThat(jdbcClient.sql("SELECT title FROM episode WHERE id = :id").param("id", episodeId(3))
-                .query(String.class).single()).as("der Scan behält Embers Werte").isEqualTo("Tabula Rasa");
+                .query(String.class).single()).as("the scan keeps Ember's values").isEqualTo("Tabula Rasa");
         assertThat(mockMvc.get().uri(TvShowController.EPISODE_PATH, episodeId(3))).bodyJson()
-                .extractingPath("$.metadata.title").as("beim Öffnen gilt die NFO").isEqualTo("Aus der NFO");
+                .extractingPath("$.metadata.title").as("opening uses the NFO").isEqualTo("Aus der NFO");
     }
 
     @Test
@@ -280,7 +281,7 @@ class EmberImportIntegrationTest {
                         "pathMappings", List.of(), "importSettings", false, "importKodiHosts", false,
                         "importTvShows", false, "dryRun", true))))
                 .hasStatus(422)
-                .bodyJson().extractingPath("$.detail").asString().contains("hochladen");
+                .bodyJson().extractingPath("$.detailText.key").isEqualTo("migration.upload.missing");
     }
 
     @Test

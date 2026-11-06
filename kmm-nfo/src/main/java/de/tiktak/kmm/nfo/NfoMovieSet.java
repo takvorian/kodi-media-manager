@@ -3,11 +3,11 @@ package de.tiktak.kmm.nfo;
 import java.util.Objects;
 
 /**
- * Das Filmset, zu dem der Film gehört ({@code <set>}).
+ * The movie set the movie belongs to ({@code <set>}).
  *
- * @param name     Name des Sets
- * @param overview Beschreibung oder {@code null}
- * @param tmdbId   TMDB-ID der Sammlung ({@code <tmdb>}, wie Ember sie schreibt) oder {@code null}
+ * @param name     name of the set
+ * @param overview description or {@code null}
+ * @param tmdbId   TMDB ID of the collection ({@code <tmdb>}, as Ember writes it) or {@code null}
  */
 public record NfoMovieSet(String name, String overview, String tmdbId) {
 
@@ -15,7 +15,7 @@ public record NfoMovieSet(String name, String overview, String tmdbId) {
         Objects.requireNonNull(name, "name must not be null");
     }
 
-    /** Ein Set ohne TMDB-ID. */
+    /** A set without TMDB ID. */
     public NfoMovieSet(String name, String overview) {
         this(name, overview, null);
     }

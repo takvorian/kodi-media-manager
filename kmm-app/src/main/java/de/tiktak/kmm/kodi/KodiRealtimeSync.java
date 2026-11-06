@@ -17,11 +17,10 @@ import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
 
 /**
- * Echtzeit-Sync wie in Ember: Nach einer Änderung an einem Film, einer Serie oder Episode aktualisiert
- * KMM sie auf allen Kodi-Geräten mit Echtzeit-Sync, nach einem Scan mit neuen Einträgen durchsucht Kodi
- * die Quelle.
- * Die Aufrufe laufen verzögert und nacheinander im Hintergrund, damit Speichern und Scrapen nicht
- * auf Kodi warten und mehrere Änderungen am selben Film nur eine Aktualisierung auslösen.
+ * Realtime sync as in Ember: after a change to a movie, a TV show or an episode KMM updates it on all Kodi devices
+ * with realtime sync; after a scan with new entries Kodi scans the source.
+ * The calls run delayed and one after another in the background, so that saving and scraping do not wait for Kodi
+ * and several changes to the same movie trigger only one update.
  */
 @Component
 class KodiRealtimeSync implements DisposableBean {
@@ -43,13 +42,13 @@ class KodiRealtimeSync implements DisposableBean {
         this.episodes = new Debouncer<>(executor, properties.syncDelay(), syncService::refreshEpisodeOnRealtimeHosts);
     }
 
-    /** Erst nach erfolgreichem Speichern; ohne Transaktion (Bilder) sofort. */
+    /** Only after a successful save; without a transaction (images) right away. */
     @TransactionalEventListener(fallbackExecution = true)
     void onMovieFilesChanged(MovieFilesChangedEvent event) {
         movies.submit(event.movieId());
     }
 
-    /** Nacheinander und ohne Entprellen: Jedes Umbenennen hat eigene Ordner. */
+    /** One after another and without debouncing: every renaming has its own folders. */
     @TransactionalEventListener(fallbackExecution = true)
     void onMovieRenamed(MovieRenamedEvent event) {
         executor.execute(() -> syncService.syncRenamedMovieOnRealtimeHosts(event));

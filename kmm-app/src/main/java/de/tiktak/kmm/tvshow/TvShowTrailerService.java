@@ -17,9 +17,8 @@ import de.tiktak.kmm.trailer.TrailerOptions;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Trailer einer Serie als Link in der {@code tvshow.nfo} ({@code <trailer>}), den Kodi abspielt: Vorschläge der
- * Trailer-Scraper anzeigen, einen übernehmen oder entfernen und fehlende automatisch ergänzen. Heruntergeladen wird
- * nichts.
+ * Trailer of a TV show as a link in the {@code tvshow.nfo} ({@code <trailer>}) that Kodi plays: show proposals of
+ * the trailer scrapers, apply or remove one, and add missing ones automatically. Nothing is downloaded.
  */
 @Service
 @RequiredArgsConstructor
@@ -31,7 +30,7 @@ public class TvShowTrailerService {
     private final TrailerFinder trailerFinder;
     private final SettingsService settingsService;
 
-    /** Vorschläge, die besten zuerst: bevorzugte Sprache der Serienbilder, dann Englisch. */
+    /** Proposals, best first: preferred language of the TV show images, then English. */
     @Transactional(readOnly = true)
     public TrailerOptions candidates(long showId) {
         TvShow show = requireShow(showId);
@@ -45,9 +44,9 @@ public class TvShowTrailerService {
     }
 
     /**
-     * Übernimmt den Link in Datenbank und NFO.
+     * Applies the link to the database and NFO.
      *
-     * @throws TvShowProblemException wenn der Link nichts ist, was Kodi abspielen kann
+     * @throws TvShowProblemException if the link is not something Kodi can play
      */
     public TvShowDetails apply(long showId, String url) {
         String trailer = url == null ? "" : url.strip();
@@ -62,10 +61,10 @@ public class TvShowTrailerService {
     }
 
     /**
-     * Trägt den besten Vorschlag ein, wenn die Serie keinen Trailer hat. Ein unbekannter Trailer wird vorher aus der
-     * NFO gelesen; ist sie nicht lesbar, bleibt die Serie unverändert.
+     * Enters the best proposal if the TV show has no trailer. An unknown trailer is read from the
+     * NFO first; if it is unreadable, the TV show stays unchanged.
      *
-     * @return ob ein Trailer eingetragen wurde
+     * @return whether a trailer was entered
      */
     @Transactional
     public boolean fillMissing(long showId) {
@@ -84,7 +83,7 @@ public class TvShowTrailerService {
         return showRepository.findById(showId).orElseThrow(() -> TvShowProblemException.showNotFound(showId));
     }
 
-    /** Reihenfolge TVDB, TMDB, IMDb wie in der NFO; jeder Trailer-Scraper sucht sich die passende aus. */
+    /** Order TVDB, TMDB, IMDb as in the NFO; each trailer scraper picks the matching one. */
     private static Map<String, String> uniqueIds(TvShowMetadata metadata) {
         Map<String, String> ids = new LinkedHashMap<>();
         putIfPresent(ids, TvNfoMapper.TVDB, metadata.tvdbId());

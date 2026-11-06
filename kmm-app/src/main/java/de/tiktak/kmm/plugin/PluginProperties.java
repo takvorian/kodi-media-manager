@@ -10,9 +10,9 @@ import org.springframework.validation.annotation.Validated;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * @param directory      Verzeichnis, aus dem PF4J die Plugin-JARs lädt
- * @param installBundled mitgelieferte Plugins beim Start in das Verzeichnis kopieren
- * @param settings       Einstellungen je Plugin-ID, z. B. {@code tmdb -> {api-key -> …}}
+ * @param directory      directory from which PF4J loads the plugin JARs
+ * @param installBundled copy bundled plugins into the directory on startup
+ * @param settings       settings per plugin ID, e.g. {@code tmdb -> {api-key -> …}}
  */
 @Validated
 @ConfigurationProperties("kmm.plugins")

@@ -1,30 +1,32 @@
 package de.tiktak.kmm.source;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Eine neue Quelle kollidiert mit einer vorhandenen. Wird als HTTP 409 beantwortet.
+ * A new source collides with an existing one. Answered as HTTP 409.
  */
-public class MediaSourceConflictException extends ErrorResponseException {
+public class MediaSourceConflictException extends LocalizedProblemException {
 
-    private static final String TITLE = "Quelle kollidiert mit vorhandener Quelle";
+    private static final LocalizedText TITLE = LocalizedText.of("source.conflict.title");
 
-    private MediaSourceConflictException(String detail) {
-        super(HttpStatus.CONFLICT);
-        getBody().setTitle(TITLE);
-        getBody().setDetail(detail);
+    private MediaSourceConflictException(LocalizedText detail) {
+        super(HttpStatus.CONFLICT, TITLE, detail, null);
     }
 
     static MediaSourceConflictException nameTaken(String name) {
-        return new MediaSourceConflictException("Es gibt bereits eine Quelle mit dem Namen '%s'.".formatted(name));
+        return new MediaSourceConflictException(LocalizedText.of("source.conflict.nameTaken").with("name", name));
     }
 
     /**
-     * Überlappende Quellen würden dieselben Dateien doppelt erfassen.
+     * Overlapping sources would cover the same files twice.
      */
     static MediaSourceConflictException overlaps(String path, MediaSource existing) {
-        return new MediaSourceConflictException("Der Pfad '%s' überschneidet sich mit der Quelle '%s' (%s)."
-                .formatted(path, existing.getName(), existing.getPath()));
+        return new MediaSourceConflictException(LocalizedText.of("source.conflict.overlaps")
+                .with("path", path)
+                .with("source", existing.getName())
+                .with("sourcePath", existing.getPath()));
     }
 }

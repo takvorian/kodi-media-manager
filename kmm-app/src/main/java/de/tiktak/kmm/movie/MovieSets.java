@@ -5,7 +5,7 @@ import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Findet Filmsets über ihren Namen und legt unbekannte an.
+ * Finds movie sets by their name and creates unknown ones.
  */
 @Component
 @RequiredArgsConstructor
@@ -14,7 +14,7 @@ class MovieSets {
     private final MovieSetRepository repository;
 
     /**
-     * @return das Set zum Verweis (mit übernommener Beschreibung) oder {@code null} ohne Verweis
+     * @return the set for the reference (with the description taken over) or {@code null} without a reference
      */
     MovieSet resolve(MovieSupplement.SetReference reference) {
         if (reference == null) {

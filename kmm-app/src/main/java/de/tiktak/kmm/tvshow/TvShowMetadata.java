@@ -12,9 +12,9 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
- * Bearbeitbare Metadaten einer Serie, wie sie in die {@code tvshow.nfo} geschrieben werden.
+ * Editable metadata of a TV show as written to the {@code tvshow.nfo}.
  *
- * @param status z. B. {@code Continuing} oder {@code Ended}
+ * @param status e.g. {@code Continuing} or {@code Ended}
  */
 public record TvShowMetadata(
         @NotBlank @Size(max = TvTexts.MAX_TITLE_LENGTH) String title,
@@ -56,15 +56,15 @@ public record TvShowMetadata(
         tags = tags == null ? null : TvTexts.cleanAll(tags, Integer.MAX_VALUE, Integer.MAX_VALUE);
     }
 
-    /** Kopie mit anderen Tags. */
+    /** Copy with different tags. */
     public TvShowMetadata withTags(List<String> newTags) {
         return new TvShowMetadata(title, originalTitle, sortTitle, year, premiered, plot, runtime, mpaa, status, genres,
                 studios, newTags, tvdbId, tmdbId, imdbId, userRating);
     }
 
     /**
-     * Kopie für Daten aus Dateien und Fremdquellen, die die Grenzen der Datenbank einhält: Texte werden
-     * gekürzt, ungültige Zahlen und IDs entfallen.
+     * Copy for data from files and external sources that respects the database limits: texts are
+     * truncated, invalid numbers and IDs are dropped.
      */
     public TvShowMetadata withinLimits() {
         return new TvShowMetadata(

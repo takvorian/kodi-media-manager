@@ -5,11 +5,11 @@ import java.time.Instant;
 import java.util.Optional;
 
 /**
- * Zustand einer NFO für die Detailansicht.
+ * State of an NFO for the detail view.
  *
- * @param path       vorhandene NFO bzw. Pfad, unter dem KMM sie anlegen würde
- * @param exists     ob die Datei existiert
- * @param modifiedAt letzte Änderung oder {@code null}
+ * @param path       existing NFO, or the path under which KMM would create it
+ * @param exists     whether the file exists
+ * @param modifiedAt last modification or {@code null}
  */
 public record TvNfoInfo(String path, boolean exists, Instant modifiedAt) {
 

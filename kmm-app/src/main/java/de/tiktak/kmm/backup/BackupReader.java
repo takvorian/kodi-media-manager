@@ -14,6 +14,7 @@ import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.flywaydb.core.api.MigrationVersion;
 import org.springframework.stereotype.Component;
 
@@ -26,21 +27,20 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Liest Sicherungsdateien als Strom, damit große Bibliotheken nicht in den Speicher müssen. Tabellen, die KMM nicht
- * kennt, überspringt er: Ihre Namen gelangen so nie in SQL.
+ * Reads backup files as a stream so that large libraries need not fit into memory. It skips tables that KMM does not
+ * know: their names thus never get into SQL.
  */
 @Component
 @RequiredArgsConstructor
 class BackupReader {
 
-    private static final String INVALID = "Die Datei ist keine gültige KMM-Sicherung.";
     private static final Set<String> KNOWN_TABLES =
             BackupTables.ALL.stream().map(BackupTable::name).collect(Collectors.toSet());
 
     private final ObjectMapper objectMapper;
 
     /**
-     * @throws BackupFileException wenn die Datei beschädigt ist
+     * @throws BackupFileException if the file is damaged
      */
     BackupHeader readHeader(Path file) {
         List<BackupHeader.Source> sources = new ArrayList<>();
@@ -51,16 +51,16 @@ class BackupReader {
     }
 
     /**
-     * Liefert alle Zeilen in der Reihenfolge der Datei.
+     * Delivers all rows in the order of the file.
      *
-     * @throws BackupFileException wenn die Datei beschädigt ist
+     * @throws BackupFileException if the file is damaged
      */
     void readRows(Path file, BiConsumer<String, Map<String, Object>> rows) {
         parse(file, null, rows);
     }
 
     /**
-     * @param lastTable Tabelle, nach der das Lesen endet; {@code null} für alle
+     * @param lastTable table after which reading ends; {@code null} for all
      */
     private Parsed parse(Path file, String lastTable, BiConsumer<String, Map<String, Object>> rows) {
         try (InputStream input = new GZIPInputStream(new BufferedInputStream(Files.newInputStream(file)));
@@ -81,7 +81,7 @@ class BackupReader {
             }
             return parsed;
         } catch (IOException | JacksonException e) {
-            throw new BackupFileException(INVALID, e);
+            throw BackupFileException.invalid(e);
         }
     }
 
@@ -108,7 +108,7 @@ class BackupReader {
         }
     }
 
-    /** Liest nur den aktuellen Wert; dahinter geht es in der Datei weiter. */
+    /** Reads only the current value; the file continues behind it. */
     private JsonNode tree(JsonParser parser) {
         return objectMapper.readerFor(JsonNode.class)
                 .without(DeserializationFeature.FAIL_ON_TRAILING_TOKENS)
@@ -137,11 +137,11 @@ class BackupReader {
 
     private static void require(boolean valid) {
         if (!valid) {
-            throw new BackupFileException(INVALID);
+            throw BackupFileException.invalid(null);
         }
     }
 
-    /** Kopfdaten der Datei, soweit gelesen. */
+    /** Header of the file, as far as read. */
     private static final class Parsed {
 
         private final Map<String, JsonNode> fields = new LinkedHashMap<>();
@@ -156,13 +156,12 @@ class BackupReader {
             JsonNode counts = fields.get(BackupFormat.COUNTS);
             require(format != null && format.isNumber() && schema != null && counts != null && counts.isObject());
             if (format.asInt() > BackupFormat.VERSION) {
-                throw new BackupFileException("Die Sicherung stammt aus einer neueren KMM-Version. Bitte aktualisiere "
-                        + "KMM zuerst.");
+                throw new BackupFileException(LocalizedText.of("backup.newerVersion"));
             }
             try {
                 MigrationVersion.fromVersion(schema.asString());
             } catch (RuntimeException e) {
-                throw new BackupFileException(INVALID, e);
+                throw BackupFileException.invalid(e);
             }
             Map<String, Integer> tableCounts = new LinkedHashMap<>();
             counts.properties().forEach(entry -> tableCounts.put(entry.getKey(), entry.getValue().asInt()));

@@ -22,6 +22,8 @@ import org.pf4j.PluginState;
 import org.pf4j.PluginWrapper;
 import org.springframework.http.HttpStatus;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 @ExtendWith(MockitoExtension.class)
 class PluginServiceTest {
 
@@ -80,7 +82,8 @@ class PluginServiceTest {
         assertThatThrownBy(() -> service.enable(UNKNOWN_ID))
                 .isInstanceOfSatisfying(PluginNotFoundException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.NOT_FOUND);
-                    assertThat(exception.getBody().getDetail()).contains(UNKNOWN_ID);
+                    assertThat(exception.localizedText())
+                            .isEqualTo(LocalizedText.of("plugin.notFound.detail").with("id", UNKNOWN_ID));
                 });
         verify(pluginManager, never()).enablePlugin(UNKNOWN_ID);
     }

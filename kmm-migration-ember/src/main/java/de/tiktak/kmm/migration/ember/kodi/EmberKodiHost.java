@@ -3,15 +3,15 @@ package de.tiktak.kmm.migration.ember.kodi;
 import java.util.List;
 
 /**
- * Ein Kodi-Gerät aus Embers {@code Interface.Kodi.xml}.
+ * A Kodi device from Ember's {@code Interface.Kodi.xml}.
  *
- * @param label        Anzeigename in Ember
- * @param address      Rechnername oder IP-Adresse
- * @param port         Port des Kodi-Webservers; {@code 0}, wenn Ember keinen kennt
- * @param username     Benutzername oder {@code null}
- * @param password     Passwort im Klartext oder {@code null}
- * @param realtimeSync ob Ember Kodi nach jeder Änderung aktualisiert hat
- * @param sources      Zuordnung der Ember-Pfade zu Kodi-Pfaden
+ * @param label        display name in Ember
+ * @param address      host name or IP address
+ * @param port         port of the Kodi web server; {@code 0} if Ember knows none
+ * @param username     user name or {@code null}
+ * @param password     password in plain text or {@code null}
+ * @param realtimeSync whether Ember updated Kodi after every change
+ * @param sources      mapping of Ember paths to Kodi paths
  */
 public record EmberKodiHost(
         String label,
@@ -27,9 +27,9 @@ public record EmberKodiHost(
     }
 
     /**
-     * @param contentType {@code Movie} oder {@code TV}
-     * @param localPath   Pfad, wie Ember ihn kannte, z. B. {@code a:\medien\filme}
-     * @param remotePath  derselbe Ort aus Sicht von Kodi, z. B. {@code smb://nas/medien/filme/}
+     * @param contentType {@code Movie} or {@code TV}
+     * @param localPath   path as Ember knew it, e.g. {@code a:\medien\filme}
+     * @param remotePath  the same location as Kodi sees it, e.g. {@code smb://nas/medien/filme/}
      */
     public record Source(String contentType, String localPath, String remotePath) {
     }

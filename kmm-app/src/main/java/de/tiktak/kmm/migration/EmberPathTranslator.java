@@ -10,7 +10,7 @@ import de.tiktak.kmm.migration.ember.path.PathMapper;
 import de.tiktak.kmm.migration.ember.path.PathMappingRule;
 
 /**
- * Übersetzt Ember-Pfade mit der Pfad-Zuordnung des Imports in Pfade dieses Systems.
+ * Translates Ember paths into paths of this system with the path mapping of the import.
  */
 final class EmberPathTranslator {
 
@@ -20,7 +20,7 @@ final class EmberPathTranslator {
         this.mapping = mapping;
     }
 
-    /** Ohne Regeln bleiben die Pfade unverändert (KMM läuft auf demselben Rechner wie Ember). */
+    /** Without rules the paths stay unchanged (KMM runs on the same computer as Ember). */
     static EmberPathTranslator of(List<EmberImportRequest.PathMapping> mappings) {
         if (mappings.isEmpty()) {
             return new EmberPathTranslator(Optional::of);
@@ -31,7 +31,7 @@ final class EmberPathTranslator {
         return new EmberPathTranslator(mapper::map);
     }
 
-    /** Zugeordneter Pfad, sofern er auf diesem System ein absoluter Pfad ist. */
+    /** Mapped path, provided it is an absolute path on this system. */
     Optional<String> translate(String emberPath) {
         return mapping.apply(emberPath).flatMap(EmberPathTranslator::absolute);
     }

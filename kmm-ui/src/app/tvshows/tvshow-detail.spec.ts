@@ -107,7 +107,10 @@ describe('TvShowDetail', () => {
       displayName: 'TheTVDB',
       mediaTypes: ['TV_SHOW'],
       missingConfiguration: null,
-      attribution: { text: 'Metadata provided by TheTVDB.', link: 'https://www.thetvdb.com' },
+      attribution: {
+        text: literal('Metadata provided by TheTVDB.'),
+        link: 'https://www.thetvdb.com',
+      },
     },
   ];
   const proposal: TvShowProposal = {
@@ -285,7 +288,7 @@ describe('TvShowDetail', () => {
         hostId: 1,
         host: 'Wohnzimmer',
         outcome: 'REFRESHED',
-        message: '„ALF“ aktualisiert.',
+        message: literal('„ALF“ aktualisiert.'),
         at: '',
       },
     ]);
@@ -520,7 +523,7 @@ describe('TvShowDetail', () => {
           targetFolder: 'Staffel 1',
           renames: [],
           status: 'CONFLICT',
-          message: 'belegt',
+          message: literal('belegt'),
         },
       ],
       status: 'RENAME',
@@ -578,7 +581,11 @@ describe('TvShowDetail', () => {
       answerPreview({ ...plan, status: 'UNCHANGED', files: [] });
       click('.rename-button');
       answerSettings();
-      answerPreview({ ...plan, status: 'CONFLICT', message: 'Der Ordner existiert bereits.' });
+      answerPreview({
+        ...plan,
+        status: 'CONFLICT',
+        message: literal('Der Ordner existiert bereits.'),
+      });
 
       expect(snackBarMessages).toEqual([
         '„ALF“ heißt schon so.',
@@ -619,7 +626,7 @@ describe('TvShowDetail', () => {
         imagesSaved: 4,
         unmatchedEntries: [],
         failures: [],
-        warnings: ['fanart.tv: Key fehlt'],
+        warnings: [literal('fanart.tv: Key fehlt')],
       },
     };
 

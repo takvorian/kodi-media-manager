@@ -39,6 +39,7 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.plugin.ScraperRegistry;
@@ -53,8 +54,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Bilder von Serien, Staffeln und Episoden über die REST-API mit Stub-Scrapern; die Bilddateien liefert
- * ein lokaler HTTP-Server.
+ * Images of TV shows, seasons and episodes via the REST API with stub scrapers; the image files are served by
+ * a local HTTP server.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -133,7 +134,8 @@ class TvShowArtworkIntegrationTest {
                 .episodes(List.of(EpisodeResult.builder().season(1).episode(1).thumb(url("/thumb.jpg")).build()))
                 .build()));
         TvShowScraper unconfigured = mock(TvShowScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Für TMDB fehlt ein API-Key."));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("Für TMDB fehlt ein API-Key.")));
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(metadata, unconfigured));
     }
 
@@ -189,7 +191,7 @@ class TvShowArtworkIntegrationTest {
         assertThat(mockMvc.get().uri(TvShowArtworkController.EPISODE_CANDIDATES_PATH, episodeId, "THUMB"))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
                         {"candidates": [{"scraperId": "tvdb", "scraperName": "TheTVDB", "type": "THUMB"}],
-                         "warnings": ["Für TMDB fehlt ein API-Key."]}""");
+                         "warnings": [{"key": "literal", "args": {"text": "Für TMDB fehlt ein API-Key."}}]}""");
 
         assertThat(put(TvShowArtworkController.EPISODE_TYPE_PATH, episodeId, "THUMB", "/thumb.jpg", null))
                 .hasStatusOk();
@@ -214,7 +216,7 @@ class TvShowArtworkIntegrationTest {
         jdbcClient.sql("UPDATE tv_show SET tvdb_id = NULL").update();
         assertThat(mockMvc.get().uri(TvShowArtworkController.SHOW_CANDIDATES_PATH, showId, "POSTER"))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
-                .bodyJson().extractingPath("$.detail").asString().contains("TVDB-, TMDB- oder IMDb-ID");
+                .bodyJson().extractingPath("$.detailText.key").isEqualTo("artwork.missingTvIds.detail");
     }
 
     private MvcTestResult put(String path, long id, String type, String image, String season) {

@@ -4,8 +4,9 @@ import de.tiktak.kmm.scanner.MovieNameParser;
 import de.tiktak.kmm.scanner.ParsedMovieName;
 
 /**
- * Der eigentliche Titel eines Films. Ein noch nicht zugeordneter Film heißt nach dem Scan wie sein Ordner, etwa
- * {@code Wonka (2023) tt6166392}; damit fände ein Anbieter nichts, und beim Umbenennen stünde das Jahr doppelt im Namen.
+ * The actual title of a movie. A movie not yet matched is named after its folder following the scan, e.g.
+ * {@code Wonka (2023) tt6166392}; a provider would find nothing with that, and renaming would put the year in the
+ * name twice.
  */
 final class MovieSearchTitle {
 
@@ -14,7 +15,7 @@ final class MovieSearchTitle {
     private MovieSearchTitle() {
     }
 
-    /** Der Titel ohne Jahr, ID und Release-Angaben; bei einem zugeordneten Film der Titel selbst. */
+    /** The title without year, ID and release details; for a matched movie, the title itself. */
     static String of(MovieMetadata metadata) {
         if (metadata.tmdbId() != null) {
             return metadata.title();
@@ -25,7 +26,7 @@ final class MovieSearchTitle {
         return parsed.hasTitle() && !numberBelongsToTitle ? parsed.title() : metadata.title();
     }
 
-    /** Das Jahr des Films, sonst das im Titel genannte. */
+    /** The movie's year, otherwise the one named in the title. */
     static Integer yearOf(MovieMetadata metadata) {
         return metadata.year() != null ? metadata.year() : PARSER.parse(metadata.title()).year();
     }

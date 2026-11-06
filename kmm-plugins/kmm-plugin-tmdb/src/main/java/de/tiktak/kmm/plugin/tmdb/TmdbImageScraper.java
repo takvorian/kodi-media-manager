@@ -13,8 +13,8 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 
 /**
- * Poster, Fanart und Logos von The Movie Database (TMDB) für Filme, Filmsets (Sammlungen) und Serien, bei
- * Serien auch die Staffelposter.
+ * Posters, fanart and logos from The Movie Database (TMDB) for movies, movie sets (collections) and TV shows, for TV
+ * shows also the season posters.
  */
 @Extension
 public class TmdbImageScraper extends AbstractTmdbScraper implements ImageScraper {

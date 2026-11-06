@@ -7,16 +7,18 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Muster für Ordner- und Dateinamen, etwa {@code {title}[ ({year})]}.
+ * Pattern for folder and file names, e.g. {@code {title}[ ({year})]}.
  * <ul>
- * <li>{@code {name}} ist ein Platzhalter, {@code {name:format}} ein formatierter (siehe {@link NameFormat}).</li>
- * <li>{@code [ … ]} ist ein optionaler Teil: Er entfällt, wenn ein Platzhalter darin leer ist.</li>
- * <li>{@code /} und {@code \} trennen Ordner, etwa {@code {title:first}/{title}}.</li>
- * <li>{@code {{}, {@code }}}, {@code [[} und {@code ]]} stehen für die Zeichen selbst.</li>
+ * <li>{@code {name}} is a placeholder, {@code {name:format}} a formatted one (see {@link NameFormat}).</li>
+ * <li>{@code [ … ]} is an optional part: it is dropped if a placeholder in it is empty.</li>
+ * <li>{@code /} and {@code \} separate folders, e.g. {@code {title:first}/{title}}.</li>
+ * <li>{@code {{}, {@code }}}, {@code [[} and {@code ]]} stand for the characters themselves.</li>
  * </ul>
- * Die Werte werden vor dem Einsetzen so bereinigt, dass sie keine Ordner trennen; das Ergebnis wird je
- * Ordner bzw. Datei mit {@link FileNames#clean} gültig gemacht.
+ * Values are cleaned before they are inserted so they do not separate folders; the result is made valid per folder
+ * or file with {@link FileNames#clean}.
  */
 public final class NamePattern {
 
@@ -35,13 +37,13 @@ public final class NamePattern {
     }
 
     /**
-     * @param placeholders die erlaubten Platzhalter
-     * @throws NamePatternException wenn das Muster ungültig ist; die Meldung eignet sich für die Oberfläche
+     * @param placeholders the allowed placeholders
+     * @throws NamePatternException if the pattern is invalid; the message is meant for the user interface
      */
     public static NamePattern parse(String text, Set<String> placeholders) {
         Objects.requireNonNull(placeholders, "placeholders must not be null");
         if (text == null || text.isBlank()) {
-            throw new NamePatternException("Das Muster ist leer.");
+            throw new NamePatternException(LocalizedText.of("scanner.pattern.empty"));
         }
         return new NamePattern(text, new Parser(text, placeholders).parse());
     }
@@ -50,14 +52,14 @@ public final class NamePattern {
         return text;
     }
 
-    /** Ob das Muster Ordner trennt, also mehrere Namensteile ergibt. */
+    /** Whether the pattern separates folders, i.e. results in several name parts. */
     public boolean hasFolders() {
         return parts.stream().anyMatch(Part::separatesFolders);
     }
 
     /**
-     * @param values liefert den Wert eines Platzhalters; {@code null} oder leer heißt „nicht gesetzt“
-     * @return die bereinigten Namensteile, je Ordner einer; leere Teile entfallen
+     * @param values supplies the value of a placeholder; {@code null} or empty means "not set"
+     * @return the cleaned name parts, one per folder; empty parts are dropped
      */
     public List<String> render(Function<String, String> values) {
         StringBuilder raw = new StringBuilder();
@@ -79,10 +81,10 @@ public final class NamePattern {
         return text;
     }
 
-    /** Ein Teil des Musters: Text, Platzhalter, optionaler Teil oder Ordnertrenner. */
+    /** A part of the pattern: text, placeholder, optional part or folder separator. */
     private sealed interface Part {
 
-        /** @return der Text oder leer, wenn ein optionaler Teil entfällt */
+        /** @return the text, or empty if an optional part is dropped */
         Optional<String> render(Function<String, String> values);
 
         default boolean separatesFolders() {
@@ -97,7 +99,7 @@ public final class NamePattern {
         }
     }
 
-    /** Ordnertrenner; im Zwischenergebnis ein Nullzeichen, das in keinem Wert vorkommen kann. */
+    /** Folder separator; a null character in the intermediate result that cannot occur in any value. */
     private record FolderSeparator() implements Part {
 
         public Optional<String> render(Function<String, String> values) {
@@ -141,7 +143,7 @@ public final class NamePattern {
         }
     }
 
-    /** Zerlegt den Mustertext; Fehler nennen die Stelle (ab 1). */
+    /** Parses the pattern text; errors name the position (starting at 1). */
     private static final class Parser {
 
         private final String text;
@@ -156,7 +158,7 @@ public final class NamePattern {
         List<Part> parse() {
             List<Part> parts = parseParts(false);
             if (position < text.length()) {
-                throw error("„]“ ohne passendes „[“");
+                throw unmatched(OPTIONAL_END, OPTIONAL_START);
             }
             return List.copyOf(parts);
         }
@@ -173,23 +175,23 @@ public final class NamePattern {
                     flush(literal, parts);
                     parts.add(placeholder());
                 } else if (c == PLACEHOLDER_END) {
-                    throw error("„}“ ohne passendes „{“");
+                    throw unmatched(PLACEHOLDER_END, PLACEHOLDER_START);
                 } else if (c == OPTIONAL_START) {
                     if (inOptional) {
-                        throw error("Optionale Teile lassen sich nicht verschachteln");
+                        throw error(LocalizedText.of("scanner.pattern.nestedOptional"));
                     }
                     flush(literal, parts);
                     int start = position++;
                     List<Part> optional = parseParts(true);
                     if (position >= text.length()) {
                         position = start;
-                        throw error("„[“ ohne passendes „]“");
+                        throw unmatched(OPTIONAL_START, OPTIONAL_END);
                     }
                     position++;
                     parts.add(new OptionalPart(List.copyOf(optional)));
                 } else if (c == OPTIONAL_END) {
                     if (!inOptional) {
-                        throw error("„]“ ohne passendes „[“");
+                        throw unmatched(OPTIONAL_END, OPTIONAL_START);
                     }
                     break;
                 } else if (c == '/' || c == '\\') {
@@ -215,17 +217,20 @@ public final class NamePattern {
             int end = text.indexOf(PLACEHOLDER_END, start);
             int nextStart = text.indexOf(PLACEHOLDER_START, start + 1);
             if (end < 0 || (nextStart >= 0 && nextStart < end)) {
-                throw error("„{“ ohne passendes „}“");
+                throw unmatched(PLACEHOLDER_START, PLACEHOLDER_END);
             }
             String content = text.substring(start + 1, end).strip();
             int separator = content.indexOf(FORMAT_SEPARATOR);
             String name = (separator < 0 ? content : content.substring(0, separator)).strip();
             String formatText = separator < 0 ? null : content.substring(separator + 1).strip();
             if (!placeholders.contains(name)) {
-                throw error("Unbekannter Platzhalter „{" + name + "}“");
+                throw error(LocalizedText.of("scanner.pattern.unknownPlaceholder")
+                        .with("placeholder", PLACEHOLDER_START + name + PLACEHOLDER_END));
             }
             NameFormat format = NameFormat.parse(formatText)
-                    .orElseThrow(() -> error("Unbekanntes Format „" + formatText + "“ bei „{" + name + "}“"));
+                    .orElseThrow(() -> error(LocalizedText.of("scanner.pattern.unknownFormat")
+                            .with("format", formatText)
+                            .with("placeholder", PLACEHOLDER_START + name + PLACEHOLDER_END)));
             position = end + 1;
             return new Placeholder(name, format);
         }
@@ -237,8 +242,16 @@ public final class NamePattern {
             }
         }
 
-        private NamePatternException error(String message) {
-            return new NamePatternException(message + " (Stelle " + (position + 1) + ").");
+        private NamePatternException unmatched(char found, char missing) {
+            return error(LocalizedText.of("scanner.pattern.unmatched")
+                    .with("found", String.valueOf(found))
+                    .with("missing", String.valueOf(missing)));
+        }
+
+        private NamePatternException error(LocalizedText problem) {
+            return new NamePatternException(LocalizedText.of("scanner.pattern.invalid")
+                    .with("problem", problem)
+                    .with("position", position + 1));
         }
     }
 }

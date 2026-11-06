@@ -11,13 +11,13 @@ import de.tiktak.kmm.nfo.TvShowNfo;
 import de.tiktak.kmm.scanner.TvShowCandidate;
 
 /**
- * Eine gefundene Serie mit dem Zustand ihrer NFOs, gelesen außerhalb der Datenbanktransaktion. NFOs,
- * die sich seit dem letzten Scan geändert haben, sind bereits eingelesen.
+ * A TV show found, with the state of its NFOs, read outside the database transaction. NFOs
+ * that have changed since the last scan have already been read.
  *
- * @param showNfo           die {@code tvshow.nfo}, sofern vorhanden
- * @param episodeNfos       NFO je Episodendatei; Dateien ohne NFO fehlen
- * @param loadedShowNfo     Inhalt der {@code tvshow.nfo}, sofern sie gelesen wurde
- * @param loadedEpisodeNfos Inhalt der gelesenen Episoden-NFOs je Episodendatei
+ * @param showNfo           the {@code tvshow.nfo}, if present
+ * @param episodeNfos       NFO per episode file; files without an NFO are missing
+ * @param loadedShowNfo     content of the {@code tvshow.nfo}, if it was read
+ * @param loadedEpisodeNfos content of the episode NFOs read, per episode file
  */
 record ScannedTvShow(TvShowCandidate candidate, Optional<TvNfoState> showNfo, Map<Path, TvNfoState> episodeNfos,
                      Optional<LoadedNfo<TvShowNfo>> loadedShowNfo,
@@ -36,16 +36,16 @@ record ScannedTvShow(TvShowCandidate candidate, Optional<TvNfoState> showNfo, Ma
     }
 
     /**
-     * @return den vorab gelesenen Inhalt der {@code tvshow.nfo} oder leer, wenn sie nicht oder in einem
-     *         anderen Zustand gelesen wurde
+     * @return the previously read content of the {@code tvshow.nfo}, or empty if it was not read or was read in a
+     *         different state
      */
     Optional<LoadedNfo<TvShowNfo>> loadedShowNfo(TvNfoState nfo) {
         return loadedShowNfo.filter(loaded -> loaded.isOf(nfo));
     }
 
     /**
-     * @return den vorab gelesenen Inhalt der Episoden-NFO oder leer, wenn sie nicht oder in einem anderen
-     *         Zustand gelesen wurde
+     * @return the previously read content of the episode NFO, or empty if it was not read or was read in a
+     *         different state
      */
     Optional<LoadedNfo<List<EpisodeNfo>>> loadedEpisodeNfo(Path episodeFile, TvNfoState nfo) {
         return Optional.ofNullable(loadedEpisodeNfos.get(episodeFile)).filter(loaded -> loaded.isOf(nfo));

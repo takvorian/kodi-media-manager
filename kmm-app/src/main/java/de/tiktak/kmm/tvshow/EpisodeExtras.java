@@ -6,12 +6,12 @@ import java.util.List;
 import de.tiktak.kmm.nfo.StreamDetails;
 
 /**
- * Weitere Angaben zu einer Episode, die KMM aus NFO und Migration übernimmt, aber noch nicht bearbeitet.
+ * Further details of an episode that KMM takes over from the NFO and migration but does not edit yet.
  *
- * @param actors     Darsteller einschließlich Gaststars
- * @param playCount  Anzahl der Wiedergaben oder {@code null}
- * @param lastPlayed letzte Wiedergabe oder {@code null}
- * @param streams    Video-, Ton- und Untertitelspuren
+ * @param actors     cast including guest stars
+ * @param playCount  number of plays or {@code null}
+ * @param lastPlayed last play or {@code null}
+ * @param streams    video, audio and subtitle tracks
  */
 public record EpisodeExtras(
         List<String> directors,
@@ -39,12 +39,12 @@ public record EpisodeExtras(
         streams = streams == null ? StreamDetails.EMPTY : streams;
     }
 
-    /** Dieselben Angaben mit anderen Darstellern. */
+    /** The same details with a different cast. */
     public EpisodeExtras withActors(List<TvActor> newActors) {
         return new EpisodeExtras(directors, writers, newActors, ratings, playCount, lastPlayed, streams);
     }
 
-    /** Dieselben Angaben mit anderen technischen Angaben. */
+    /** The same details with different technical details. */
     public EpisodeExtras withStreams(StreamDetails newStreams) {
         return new EpisodeExtras(directors, writers, actors, ratings, playCount, lastPlayed, newStreams);
     }

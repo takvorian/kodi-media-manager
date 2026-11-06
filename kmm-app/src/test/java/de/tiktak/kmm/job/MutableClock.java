@@ -7,7 +7,7 @@ import java.time.ZoneId;
 import java.time.ZoneOffset;
 
 /**
- * Uhr für Tests, die sich gezielt vorstellen lässt.
+ * Clock for tests that can be set deliberately.
  */
 final class MutableClock extends Clock {
 

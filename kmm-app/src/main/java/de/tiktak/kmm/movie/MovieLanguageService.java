@@ -1,15 +1,14 @@
 package de.tiktak.kmm.movie;
 
-import java.util.List;
-
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobSnapshot;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Ändert die Sprache von Filmen als Job der Stapel-Bearbeitung und holt auf Wunsch ihre Texte in der neuen Sprache.
- * Umbenannt wird dabei nicht.
+ * Changes the language of movies as a batch edit job and, if wanted, fetches their texts in the new language.
+ * Nothing is renamed.
  */
 @Service
 @RequiredArgsConstructor
@@ -20,9 +19,8 @@ public class MovieLanguageService {
     private final MovieBatchService batchService;
 
     public JobSnapshot start(MovieLanguageChange change) {
-        List<Long> movieIds = change.movieIds();
-        String title = movieIds.size() == 1 ? "Sprache von 1 Film ändern" : "Sprache von %d Filmen ändern";
-        return batchService.startFill(title, movieIds, movieId -> apply(movieId, change));
+        return batchService.startFill(LocalizedText.of("movie.batch.language.jobTitle"), change.movieIds(),
+                movieId -> apply(movieId, change));
     }
 
     private boolean apply(long movieId, MovieLanguageChange change) {

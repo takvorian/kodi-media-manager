@@ -34,7 +34,7 @@ describe('BackupPage', () => {
     unmappedPaths: 4,
     credentialsKept: true,
     safetyCopy: '/config/backup/vor-import.json.gz',
-    warnings: ['Das Verzeichnis ist nicht erreichbar.'],
+    warnings: [literal('Das Verzeichnis ist nicht erreichbar.')],
   };
   const importJob = (overrides: Partial<Job> = {}): Job =>
     job({

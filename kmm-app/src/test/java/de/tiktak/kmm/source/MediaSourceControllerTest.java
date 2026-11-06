@@ -117,7 +117,7 @@ class MediaSourceControllerTest {
                         """))
                 .hasStatus(409)
                 .bodyJson()
-                .extractingPath("$.detail").asString().contains("Filme");
+                .extractingPath("$.detailText.args.name").isEqualTo("Filme");
     }
 
     @Test
@@ -133,7 +133,7 @@ class MediaSourceControllerTest {
         assertThat(mockMvc.delete().uri(MediaSourceController.BASE_PATH + "/9").with(csrf()))
                 .hasStatus(404)
                 .bodyJson()
-                .extractingPath("$.title").isEqualTo("Quelle nicht gefunden");
+                .extractingPath("$.titleText.key").isEqualTo("source.notFound.title");
     }
 
     private static MediaSource source(long id, String name, String path) {

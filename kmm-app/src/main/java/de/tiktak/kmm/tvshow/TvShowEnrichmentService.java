@@ -17,8 +17,8 @@ import de.tiktak.kmm.plugin.api.ProviderRating;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Ergänzt Serien über die Ergänzungs-Scraper (etwa Trakt, OMDb) um Bewertungen und füllt leere Felder der
- * {@code tvshow.nfo}. Vorhandene Angaben bleiben; vorhandene Bewertungen ändern sich nur beim Aktualisieren.
+ * Enriches TV shows with ratings via the enrichment scrapers (such as Trakt, OMDb) and fills empty fields of the
+ * {@code tvshow.nfo}. Existing values are kept; existing ratings only change on refresh.
  */
 @Service
 @RequiredArgsConstructor
@@ -45,16 +45,16 @@ public class TvShowEnrichmentService {
     private final EnrichmentFinder finder;
 
     /**
-     * Ergänzt fehlende Bewertungen und leere Felder.
+     * Adds missing ratings and fills empty fields.
      *
-     * @return ob sich etwas geändert hat
-     * @throws TvShowProblemException wenn es die Serie nicht gibt oder die NFO nicht geschrieben werden kann
+     * @return whether anything changed
+     * @throws TvShowProblemException if the TV show does not exist or the NFO cannot be written
      */
     public boolean fillMissing(long showId) {
         return metadataService.changeContent(showId, content -> enrich(content, false));
     }
 
-    /** Wie {@link #fillMissing}, aktualisiert aber auch vorhandene Bewertungen der Anbieter. */
+    /** Like {@link #fillMissing}, but also refreshes existing ratings from the providers. */
     public boolean refresh(long showId) {
         return metadataService.changeContent(showId, content -> enrich(content, true));
     }

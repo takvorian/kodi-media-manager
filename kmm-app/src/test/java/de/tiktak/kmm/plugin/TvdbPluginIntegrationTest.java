@@ -19,8 +19,8 @@ import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
 /**
- * Lädt das echte TVDB-Plugin-JAR über PF4J und prüft, dass es als Serien-Scraper mit der von TVDB
- * verlangten Attribution erscheint.
+ * Loads the real TVDB plugin JAR via PF4J and checks that it appears as a TV show scraper with the
+ * attribution required by TVDB.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

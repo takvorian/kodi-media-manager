@@ -1,19 +1,18 @@
 package de.tiktak.kmm.settings;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Einstellungen, die einzeln gültig aussehen, aber nicht passen, etwa ein ungültiges Namensmuster. Wird als
- * HTTP 422 beantwortet.
+ * Settings that look valid one by one but do not fit, such as an invalid name pattern. Answered as HTTP 422.
  */
-public class InvalidSettingsException extends ErrorResponseException {
+public class InvalidSettingsException extends LocalizedProblemException {
 
-    private static final String TITLE = "Ungültige Einstellungen";
+    private static final LocalizedText TITLE = LocalizedText.of("settings.invalid.title");
 
-    InvalidSettingsException(String detail) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT);
-        getBody().setTitle(TITLE);
-        getBody().setDetail(detail);
+    InvalidSettingsException(LocalizedText detail) {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, TITLE, detail, null);
     }
 }

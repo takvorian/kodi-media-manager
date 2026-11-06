@@ -1,21 +1,21 @@
 package de.tiktak.kmm.kodi;
 
 /**
- * Ergebnis eines Abgleichs mit einem Kodi-Gerät.
+ * Result of a sync with a Kodi device.
  */
 public enum KodiSyncOutcome {
-    /** Kodi hat NFO und Bilder des Films neu eingelesen. */
+    /** Kodi read the NFO and images of the movie again. */
     REFRESHED,
-    /** Kodi durchsucht ein Verzeichnis nach neuen Filmen. */
+    /** Kodi scans a directory for new movies. */
     SCAN_STARTED,
-    /** Kodi hat geänderte Angaben übernommen, etwa Titel und Beschreibung eines Filmsets. */
+    /** Kodi took over changed details, e.g. title and overview of a movie set. */
     UPDATED,
-    /** Kodi kennt den Eintrag (noch) nicht; er kommt mit dem nächsten Einlesen. */
+    /** Kodi does not know the entry (yet); it arrives with the next scan. */
     NOT_IN_KODI,
-    /** Für den Pfad gibt es keine Zuordnung zu einem Kodi-Pfad. */
+    /** There is no mapping of the path to a Kodi path. */
     NOT_MAPPED,
-    /** Der Pfad liegt außerhalb aller Quellen des Geräts; ein Scan findet dort vermutlich nichts. */
+    /** The path lies outside all sources of the device; a scan will probably find nothing there. */
     NO_KODI_SOURCE,
-    /** Kodi war nicht erreichbar oder meldete einen Fehler. */
+    /** Kodi could not be reached or reported an error. */
     FAILED
 }

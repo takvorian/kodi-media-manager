@@ -3,7 +3,7 @@ package de.tiktak.kmm.tvshow;
 import java.util.Objects;
 
 /**
- * Was die {@code tvshow.nfo} einer Serie beschreibt: Metadaten und weitere Angaben.
+ * What the {@code tvshow.nfo} of a TV show describes: metadata and further details.
  */
 public record TvShowContent(TvShowMetadata metadata, TvShowExtras extras) {
 

@@ -16,18 +16,20 @@ import java.util.stream.Stream;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.EnrichmentScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ProviderRating;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Bewertungen und englische Angaben von OMDb (omdbapi.com) über die IMDb-ID: IMDb-Bewertung mit Stimmen, Rotten
- * Tomatoes und Metacritic sowie Handlung, Laufzeit, Erstaufführung, Freigabe, Genres, Regie, Drehbuch, Darsteller und
- * Länder für leere Felder. Ohne IMDb-ID wird nicht gesucht, damit keine falschen Treffer entstehen.
+ * Ratings and English details from OMDb (omdbapi.com) via the IMDb ID: IMDb rating with votes, Rotten Tomatoes and
+ * Metacritic as well as plot, runtime, premiere, age rating, genres, directors, writers, actors and countries for
+ * empty fields. Without an IMDb ID there is no search, so no wrong matches arise.
  */
 @Extension
 public class OmdbEnrichmentScraper implements EnrichmentScraper {
@@ -36,7 +38,9 @@ public class OmdbEnrichmentScraper implements EnrichmentScraper {
     static final String IMDB = "imdb";
     static final String ROTTEN_TOMATOES = "tomatometerallcritics";
     static final String METACRITIC = "metacritic";
-    static final String MISSING_API_KEY = "OMDb: API-Key fehlt (Einstellungen → API-Keys).";
+    /** Name of the provider in messages for the user. */
+    static final String PROVIDER = "OMDb";
+    static final LocalizedText MISSING_API_KEY = ScraperTexts.apiKeyMissing(PROVIDER);
     private static final Pattern IMDB_ID = Pattern.compile("tt[0-9]{7,10}");
     private static final Pattern NUMBER = Pattern.compile("([0-9]+(?:\\.[0-9]+)?)");
     private static final Pattern PARENTHESES = Pattern.compile("\\s*\\([^)]*\\)");
@@ -80,7 +84,7 @@ public class OmdbEnrichmentScraper implements EnrichmentScraper {
     }
 
     @Override
-    public Optional<String> missingConfiguration() {
+    public Optional<LocalizedText> missingConfiguration() {
         return settings != null && settings.hasApiKey() ? Optional.empty() : Optional.of(MISSING_API_KEY);
     }
 
@@ -127,7 +131,7 @@ public class OmdbEnrichmentScraper implements EnrichmentScraper {
                 case "Metacritic" -> value.ifPresent(score -> ratings.add(
                         new ProviderRating(METACRITIC, score, PERCENT_MAX, null)));
                 default -> {
-                    // Die IMDb-Bewertung steht mit Stimmenzahl schon in imdbRating.
+                    // The IMDb rating with its number of votes is already in imdbRating.
                 }
             }
         }
@@ -155,7 +159,7 @@ public class OmdbEnrichmentScraper implements EnrichmentScraper {
         }
     }
 
-    /** Kommagetrennte Namen ohne Zusätze in Klammern, etwa „(novel)“, jeder einmal. */
+    /** Comma-separated names without additions in parentheses such as "(novel)", each once. */
     private static List<String> names(JsonNode node, String field) {
         String value = text(node, field);
         if (value == null) {

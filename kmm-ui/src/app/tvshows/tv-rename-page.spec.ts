@@ -49,7 +49,7 @@ describe('TvRenamePage', () => {
           targetFolder: 'Season 1',
           renames: [],
           status: 'FAILED',
-          message: 'Das Muster ergibt keinen Namen.',
+          message: literal('Das Muster ergibt keinen Namen.'),
         },
       ],
       status: 'RENAME',
@@ -62,7 +62,7 @@ describe('TvRenamePage', () => {
       targetDirectory: '/serien/Monk (2002)',
       files: [],
       status: 'CONFLICT',
-      message: 'Der Ordner existiert bereits.',
+      message: { key: 'tvShow.rename.folderExists', args: { folder: '/serien/Monk (2002)' } },
     },
   ];
 
@@ -155,7 +155,7 @@ describe('TvRenamePage', () => {
       'lost.mkv → Lost - S01E01E02.mkv',
       'Das Muster ergibt keinen Namen.',
     ]);
-    expect(text('.show .message')).toContain('Der Ordner existiert bereits.');
+    expect(text('.show .message')).toContain('Der Ordner „/serien/Monk (2002)“ existiert bereits.');
     expect(button('.rename-button').textContent).toContain('1 umbenennen');
 
     element().querySelector<HTMLInputElement>('.only-changes input')!.click();

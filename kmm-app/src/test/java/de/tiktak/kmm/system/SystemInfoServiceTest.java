@@ -65,8 +65,8 @@ class SystemInfoServiceTest {
 
         SystemInfo info = service.currentSystemInfo();
 
-        assertThat(info.applicationName()).isEqualTo(SystemInfoService.UNKNOWN);
-        assertThat(info.database()).isEqualTo(SystemInfoService.UNKNOWN);
+        assertThat(info.applicationName()).isNull();
+        assertThat(info.database()).isNull();
     }
 
     private void givenDatabaseProduct(String productName) throws SQLException {

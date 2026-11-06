@@ -11,8 +11,8 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Startet Programme als eigenen Prozess. Ausgaben werden nebenher gelesen, damit volle Puffer den Prozess nicht
- * anhalten; nach Ablauf der Zeit wird er beendet.
+ * Starts programs as a process of their own. Outputs are read alongside so full buffers do not stop the process; it
+ * is ended when the time is up.
  */
 final class ProcessCommandRunner implements CommandRunner {
 
@@ -25,14 +25,14 @@ final class ProcessCommandRunner implements CommandRunner {
         try {
             if (!process.waitFor(timeout.toMillis(), TimeUnit.MILLISECONDS)) {
                 process.destroyForcibly();
-                throw new IOException("%s hat nach %d Sekunden nicht geantwortet".formatted(command.getFirst(),
+                throw new IOException("%s did not respond within %d seconds".formatted(command.getFirst(),
                         timeout.toSeconds()));
             }
             return new Result(process.exitValue(), output.join(), errors.join());
         } catch (InterruptedException e) {
             process.destroyForcibly();
             Thread.currentThread().interrupt();
-            throw new IOException("Abgebrochen", e);
+            throw new IOException("Interrupted", e);
         }
     }
 

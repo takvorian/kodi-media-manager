@@ -12,14 +12,14 @@
 
     <artifactId>kmm-plugin-ofdb</artifactId>
     <name>KMM Plugin OFDb</name>
-    <description>Deutsche Angaben für leere Felder von Filmen von OFDb.de, gefunden über die Sitemap der Seite und nur nach Prüfung der IMDb-ID. Kein API, kann bei Änderungen der Seite ausfallen.</description>
+    <description>German details for empty fields of movies from OFDb.de, found via the sitemap of the site and only after checking the IMDb ID. No API, may fail when the site changes.</description>
 
     <properties>
         <plugin.id>ofdb</plugin.id>
     </properties>
 
     <dependencies>
-        <!-- provided: SLF4J stellt die Anwendung zur Laufzeit bereit. -->
+        <!-- provided: the application supplies SLF4J at runtime. -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

@@ -5,7 +5,7 @@ import java.net.URI;
 import de.tiktak.kmm.plugin.api.SearchResult;
 
 /**
- * Suchtreffer eines Serien-Scrapers für die Auswahl in der Oberfläche.
+ * Search hit of a TV show scraper for the selection in the user interface.
  */
 public record TvShowScrapeCandidate(
         String providerId,

@@ -30,6 +30,8 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import de.tiktak.kmm.filter.SavedFilterData;
 import de.tiktak.kmm.filter.SavedFilterService;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.migration.ember.library.EmberLibrary;
@@ -52,8 +54,6 @@ import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceConflictException;
 import de.tiktak.kmm.source.MediaSourceService;
 import tools.jackson.databind.json.JsonMapper;
-import de.tiktak.kmm.i18n.LocalizedText;
-import de.tiktak.kmm.i18n.Messages;
 
 @ExtendWith(MockitoExtension.class)
 class EmberLibraryImporterTest {
@@ -115,7 +115,8 @@ class EmberLibraryImporterTest {
         EmberImportReport report = run(library(source("D:\\Filme"), movie(1, "D:\\Filme\\Heat.mkv")),
                 request(List.of(new EmberImportRequest.PathMapping("E:\\Andere", library.toString()))));
 
-        assertThat(report.skippedSources()).singleElement().asString().contains("keine gültige Pfad-Zuordnung");
+        assertThat(report.skippedSources()).singleElement().isEqualTo(LocalizedText.of("migration.sourceSkipped.notMapped")
+                .with("name", "Filme").with("path", "D:\\Filme"));
         assertThat(report.moviesSkipped()).isEqualTo(1);
         verify(sourceService, never()).importSource(anyString(), anyString(), any(), any());
     }
@@ -146,8 +147,8 @@ class EmberLibraryImporterTest {
         assertThat(report.sourcesReused()).isEqualTo(1);
         assertThat(report.moviesUpdated()).isEqualTo(1);
         assertThat(report.missingFiles()).containsExactly("Matrix");
-        assertThat(report.warnings()).anySatisfy(warning -> assertThat(warning).contains("nicht erreichbar"))
-                .anySatisfy(warning -> assertThat(warning).contains("mehreren Sets"));
+        assertThat(report.warnings()).extracting(LocalizedText::key)
+                .contains("migration.warning.sourceUnreachable", "migration.warning.severalSets");
     }
 
     @Test
@@ -159,7 +160,8 @@ class EmberLibraryImporterTest {
         EmberImportReport report = run(library(source("D:\\Filme"), movie(1, "D:\\Filme\\Film .mkv")), mapped());
 
         assertThat(report.moviesSkipped()).isEqualTo(1);
-        assertThat(report.warnings()).singleElement().asString().contains("übersprungen");
+        assertThat(report.warnings()).singleElement().extracting(LocalizedText::key)
+                .isEqualTo("migration.warning.invalidPath");
     }
 
     @Test
@@ -189,8 +191,9 @@ class EmberLibraryImporterTest {
         verify(savedFilterService).importFilter(saved.capture());
         assertThat(saved.getValue().name()).isEqualTo("tiktak_unviewed");
         assertThat(saved.getValue().definition().get("conditions").get(0).get("field").asString()).isEqualTo("WATCHED");
-        assertThat(report.settingsChanges()).contains("Filmliste „tiktak_unviewed“ als Filter übernommen");
-        assertThat(report.warnings()).anySatisfy(warning -> assertThat(warning).contains("„bond“"));
+        assertThat(report.settingsChanges())
+                .contains(LocalizedText.of("migration.settings.movieList").with("name", "tiktak_unviewed"));
+        assertThat(report.warnings()).anySatisfy(warning -> assertThat(warning.args()).containsEntry("name", "bond"));
     }
 
     @Test
@@ -257,12 +260,11 @@ class EmberLibraryImporterTest {
 
     private static MediaSourceConflictException conflict(String detail) {
         MediaSourceConflictException exception = mock(MediaSourceConflictException.class);
-        when(exception.getBody()).thenReturn(org.springframework.http.ProblemDetail.forStatusAndDetail(
-                org.springframework.http.HttpStatus.CONFLICT, detail));
+        when(exception.localizedText()).thenReturn(de.tiktak.kmm.i18n.LocalizedText.literal(detail));
         return exception;
     }
 
-    /** Merkt sich die Fortschrittsmeldungen als „erledigt/gesamt Nachricht“. */
+    /** Remembers the progress reports as "done/total message". */
     private static final class RecordingContext implements JobContext {
 
         private final boolean cancelled;

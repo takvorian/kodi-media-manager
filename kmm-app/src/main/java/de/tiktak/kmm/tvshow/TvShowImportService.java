@@ -15,16 +15,16 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Übernimmt Serien und Episoden aus einer Migration in die Bibliothek. Eine Serie wird über ihren
- * Ordner erkannt, eine Episode über Datei, Staffel und Nummer; ein erneuter Import aktualisiert sie,
- * statt sie doppelt anzulegen. NFOs werden nicht geschrieben, aber als eingelesen vermerkt, damit der
- * nächste Scan die importierten Angaben nicht mit dem Inhalt der Dateien überschreibt.
+ * Takes over TV shows and episodes from a migration into the library. A TV show is recognized by its
+ * folder, an episode by file, season and number; a repeated import updates them instead of creating
+ * duplicates. NFOs are not written but marked as read, so that the next scan does not overwrite the
+ * imported details with the content of the files.
  */
 @Service
 @RequiredArgsConstructor
 public class TvShowImportService {
 
-    /** Höchstzahl der Parameter einer IN-Abfrage, damit auch große Bibliotheken jede Datenbank vertragen. */
+    /** Maximum number of parameters of an IN query, so that even large libraries work with any database. */
     static final int QUERY_CHUNK_SIZE = 1000;
 
     private final TvShowRepository showRepository;
@@ -32,10 +32,10 @@ public class TvShowImportService {
     private final TvShowNfoFiles nfoFiles;
 
     /**
-     * Beginnt einen Import. Die Sitzung lädt die vorhandenen Serien und ihre Episoden vorab, damit
-     * nicht jede Episode eigene Abfragen auslöst. Sie ist nur innerhalb der aufrufenden Transaktion gültig.
+     * Starts an import. The session preloads the existing TV shows and their episodes so that
+     * each episode does not trigger its own queries. It is only valid within the calling transaction.
      *
-     * @param showDirectories Ordner aller Serien, die importiert werden sollen
+     * @param showDirectories folders of all TV shows to be imported
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public TvShowImportSession startSession(Collection<String> showDirectories) {
@@ -60,7 +60,7 @@ public class TvShowImportService {
     }
 
     /**
-     * Import mehrerer Serien innerhalb einer laufenden Transaktion.
+     * Import of several TV shows within a running transaction.
      */
     public final class TvShowImportSession {
 
@@ -73,7 +73,7 @@ public class TvShowImportService {
         }
 
         /**
-         * @return die Serie, der anschließend ihre Episoden zugeordnet werden, und das Ergebnis
+         * @return the TV show to which its episodes are assigned afterwards, and the result
          */
         public ImportedTvShow importShow(TvShowImport showImport) {
             String hash = PathHash.of(showImport.directoryPath());
@@ -126,9 +126,9 @@ public class TvShowImportService {
     }
 
     /**
-     * Eine übernommene Serie.
+     * A TV show that was taken over.
      *
-     * @param id ID der Serie in KMM
+     * @param id ID of the TV show in KMM
      */
     public record ImportedTvShow(long id, TvImportResult result) {
     }

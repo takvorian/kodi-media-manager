@@ -12,10 +12,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Übernimmt neu ausgelesene technische Angaben eines Films in die vorhandene NFO und die Datenbank;
- * ohne NFO nur in die Datenbank. Sprachen und 3D-Angaben, die ffprobe nicht kennt, bleiben erhalten.
- * Wie beim Wiedergabestand wird kein {@link MovieFilesChangedEvent} veröffentlicht: Kodi liest die
- * Angaben beim Abspielen selbst aus.
+ * Takes over newly read stream details of a movie into the existing NFO and the database;
+ * without an NFO, only into the database. Languages and 3D details that ffprobe does not know are kept.
+ * As with the playback state, no {@link MovieFilesChangedEvent} is published: Kodi reads the
+ * details itself during playback.
  */
 @Slf4j
 @Service
@@ -35,9 +35,9 @@ public class MovieStreamDetailsService {
     }
 
     /**
-     * @return die übernommenen Angaben
-     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann; die Datenbank bleibt
-     *                                 dann unverändert
+     * @return the details that were taken over
+     * @throws NfoNotWritableException if the NFO cannot be written; the database then
+     *                                 remains unchanged
      */
     @Transactional
     public StreamDetails changeStreamDetails(long movieId, StreamDetails probed) {

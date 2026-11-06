@@ -3,10 +3,10 @@ package de.tiktak.kmm.tvshow;
 import java.nio.file.Path;
 
 /**
- * Die Videodatei einer Episode, wie ffprobe sie braucht. Episoden einer Mehrfachepisoden-Datei teilen
- * sich die Datei.
+ * The video file of an episode, as ffprobe needs it. Episodes of a multi-episode file share
+ * the file.
  *
- * @param hasStreamDetails ob technische Angaben bekannt sind
+ * @param hasStreamDetails whether technical details are known
  */
 public record EpisodeMedia(long episodeId, String showTitle, int season, int episode, Path file,
         boolean hasStreamDetails) {

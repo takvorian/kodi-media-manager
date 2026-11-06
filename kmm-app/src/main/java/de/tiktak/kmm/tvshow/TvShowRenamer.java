@@ -18,8 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Benennt eine Serie nach ihrem Plan um: zuerst im Dateisystem, dann in der Datenbank. Externe Untertitel stehen
- * mit Pfad in den technischen Angaben; sie werden in Datenbank und Episoden-NFO nachgezogen.
+ * Renames a TV show according to its plan: first in the file system, then in the database. External subtitles are
+ * listed with their path in the technical details; they are updated in the database and episode NFO.
  */
 @Slf4j
 @Component
@@ -32,8 +32,8 @@ class TvShowRenamer {
     private final ApplicationEventPublisher events;
 
     /**
-     * @param plan ein Plan mit Status {@link TvShowRenamePlan.Status#RENAME}
-     * @throws IOException wenn das Dateisystem die Änderung ablehnt; dann ist nichts geändert
+     * @param plan a plan with status {@link TvShowRenamePlan.Status#RENAME}
+     * @throws IOException if the file system rejects the change; then nothing is changed
      */
     @Transactional
     public void rename(TvShowRenamePlan plan, Path sourceRoot) throws IOException {

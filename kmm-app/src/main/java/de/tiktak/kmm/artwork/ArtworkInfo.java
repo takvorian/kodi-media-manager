@@ -6,10 +6,10 @@ import java.util.Optional;
 import de.tiktak.kmm.plugin.api.ImageType;
 
 /**
- * Stand einer Bildart eines Films für die Oberfläche.
+ * State of an image type of a movie for the UI.
  *
- * @param path       vorhandene Datei oder {@code null}
- * @param modifiedAt letzte Änderung oder {@code null}; dient der Oberfläche auch als Cache-Schlüssel
+ * @param path       existing file or {@code null}
+ * @param modifiedAt last change or {@code null}; the UI also uses it as a cache key
  */
 public record ArtworkInfo(ImageType type, boolean exists, String path, Instant modifiedAt) {
 

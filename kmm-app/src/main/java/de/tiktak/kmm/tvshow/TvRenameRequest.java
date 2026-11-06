@@ -6,9 +6,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Auftrag, Serien einer Quelle umzubenennen.
+ * Request to rename TV shows of a source.
  *
- * @param showIds die umzubenennenden Serien; {@code null} heißt alle der Quelle
+ * @param showIds the TV shows to rename; {@code null} means all of the source
  */
 public record TvRenameRequest(@NotNull @Valid TvRenamePatterns patterns, List<Long> showIds) {
 

@@ -202,7 +202,7 @@ class NfoReaderTest {
 
         assertThatThrownBy(() -> reader.read(nfoFile))
                 .isInstanceOf(NfoException.class)
-                .hasMessageContaining("kann nicht gelesen werden");
+                .hasMessageContaining("cannot be read");
     }
 
     @Test

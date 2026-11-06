@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 /**
- * Eine Seite der Serienliste. Eigene, stabile Darstellung statt der Spring-Data-internen {@code Page}.
+ * A page of the TV show list. Its own stable representation instead of the Spring Data internal {@code Page}.
  */
 public record TvShowPage(List<TvShowSummary> content, int page, int size, long totalElements, int totalPages) {
 

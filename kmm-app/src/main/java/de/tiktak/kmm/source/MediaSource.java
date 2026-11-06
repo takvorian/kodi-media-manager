@@ -18,7 +18,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Ein Verzeichnis, in dem KMM nach Medien sucht (entspricht Embers „Quellen“).
+ * A directory in which KMM looks for media (corresponds to Ember's "Sources").
  */
 @Entity
 @Table(name = "media_source")
@@ -46,7 +46,7 @@ public class MediaSource {
     @Column(name = "last_scanned_at")
     private Instant lastScannedAt;
 
-    /** Sprache der Einträge dieser Quelle beim Scrapen; ohne Angabe gelten die allgemeinen Einstellungen. */
+    /** Language of the entries of this source when scraping; if omitted, the general settings apply. */
     @Column(name = "metadata_language", length = 16)
     private String metadataLanguage;
 

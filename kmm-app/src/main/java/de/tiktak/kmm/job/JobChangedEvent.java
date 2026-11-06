@@ -1,7 +1,7 @@
 package de.tiktak.kmm.job;
 
 /**
- * Ein Job wurde gestartet, hat Fortschritt gemeldet oder ist beendet.
+ * A job was started, reported progress or has finished.
  */
 public record JobChangedEvent(JobSnapshot job) {
 }

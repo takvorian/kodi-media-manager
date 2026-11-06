@@ -4,22 +4,22 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Liefert Angaben zu Filmsets (Sammlungen wie „Matrix Filmreihe“).
+ * Supplies details of movie sets (collections such as "The Matrix Collection").
  */
 public interface MovieSetScraper extends Scraper {
 
     /**
-     * Sucht passende Sammlungen; der Nutzer wählt daraus einen Treffer aus.
+     * Searches for matching collections; the user picks one of the results.
      *
-     * @throws ScraperException wenn der Anbieter nicht erreichbar ist oder die Anfrage ablehnt
+     * @throws ScraperException if the provider cannot be reached or rejects the request
      */
     List<SearchResult> searchSets(String title);
 
     /**
-     * Lädt Titel und Beschreibung einer Sammlung in der eingestellten Sprache.
+     * Loads title and description of a collection in the configured language.
      *
-     * @return leer, wenn der Anbieter die ID nicht kennt
-     * @throws ScraperException wenn der Anbieter nicht erreichbar ist oder die Anfrage ablehnt
+     * @return empty if the provider does not know the ID
+     * @throws ScraperException if the provider cannot be reached or rejects the request
      */
     Optional<MovieSetResult> fetchSet(String providerId);
 }

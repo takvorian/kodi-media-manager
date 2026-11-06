@@ -16,8 +16,8 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.MediaSource;
 
 /**
- * Prüft die PostgreSQL-Migrationen gegen ein echtes PostgreSQL. Das Mapping aller Entities validiert
- * Hibernate beim Start ({@code ddl-auto=validate}). Wird ohne Docker übersprungen.
+ * Checks the PostgreSQL migrations against a real PostgreSQL. Hibernate validates the mapping of all entities
+ * at startup ({@code ddl-auto=validate}). Skipped without Docker.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)

@@ -1,9 +1,9 @@
 package de.tiktak.kmm.job;
 
 /**
- * Die eigentliche Arbeit eines Jobs.
+ * The actual work of a job.
  *
- * @param <T> Ergebnistyp; wird im {@link JobSnapshot} an die Oberfläche ausgeliefert
+ * @param <T> result type; delivered to the user interface in the {@link JobSnapshot}
  */
 @FunctionalInterface
 public interface JobTask<T> {

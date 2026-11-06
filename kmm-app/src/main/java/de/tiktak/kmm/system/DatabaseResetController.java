@@ -18,7 +18,7 @@ public class DatabaseResetController {
 
     private final DatabaseResetService databaseResetService;
 
-    /** Die Angabe ist Pflicht, damit eine unvollständige Anfrage nicht auch die Einstellungen löscht. */
+    /** The value is mandatory so that an incomplete request does not also delete the settings. */
     public record ClearDatabaseRequest(@NotNull Boolean keepSettings) {
     }
 

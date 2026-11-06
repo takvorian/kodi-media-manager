@@ -1,11 +1,11 @@
 package de.tiktak.kmm.scanner;
 
 /**
- * Aus einem Datei- oder Ordnernamen abgeleiteter Filmtitel.
+ * Movie title derived from a file or folder name.
  *
- * @param title  Titel, leer wenn der Name keinen verwertbaren Titel enthält
- * @param year   Erscheinungsjahr oder {@code null}
- * @param imdbId IMDb-ID wie {@code tt0113277} oder {@code null}
+ * @param title  title, empty if the name contains no usable title
+ * @param year   release year or {@code null}
+ * @param imdbId IMDb ID like {@code tt0113277} or {@code null}
  */
 public record ParsedMovieName(String title, Integer year, String imdbId) {
 
@@ -13,7 +13,7 @@ public record ParsedMovieName(String title, Integer year, String imdbId) {
         return !title.isBlank();
     }
 
-    /** Dieser Name, aber mit der übergebenen ID, wenn es eine gibt. */
+    /** This name, but with the given ID if there is one. */
     ParsedMovieName withPreferredImdbId(String preferred) {
         return preferred == null ? this : new ParsedMovieName(title, year, preferred);
     }

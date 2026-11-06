@@ -3,9 +3,9 @@ package de.tiktak.kmm.plugin.api;
 import java.util.Objects;
 
 /**
- * Die Sammlung (das Filmset), zu der ein Film beim Anbieter gehört.
+ * The collection (movie set) a movie belongs to at the provider.
  *
- * @param providerId ID der Sammlung beim Anbieter, z. B. die TMDB-Collection-ID
+ * @param providerId ID of the collection at the provider, e.g. the TMDB collection ID
  */
 public record CollectionReference(String providerId, String name) {
 

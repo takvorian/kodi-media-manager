@@ -12,18 +12,18 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Benutzereinstellungen von KMM. Listen werden bereinigt (getrimmt, ohne Leereinträge und Duplikate),
- * Dateiendungen ohne Punkt und klein geschrieben.
+ * User settings of KMM. Lists are cleaned up (trimmed, without empty entries and duplicates),
+ * file extensions without a dot and in lower case.
  *
- * @param metadataLanguage Sprache der Metadaten beim Scrapen, z. B. {@code de-DE}
- * @param artworkLanguage  bevorzugte Sprache der Bilder (ISO 639-1), z. B. {@code de}
- * @param videoExtensions  Dateiendungen, die der Scan als Film erkennt
- * @param excludedPaths    Ordner, die der Scan samt Inhalt überspringt
- * @param proxy            Proxy für Anfragen an Online-Dienste oder {@code null} für eine direkte Verbindung
- * @param tv               Einstellungen für Serien; ohne Angabe wie bei Filmen
- * @param mediaInfo        Einstellungen für ffprobe; ohne Angabe die Vorgaben
- * @param rename           Muster und Auslöser für das Umbenennen; ohne Angabe die Vorgaben
- * @param movieSets        Ablage der Set-Bilder und Zuordnung beim Scrapen; ohne Angabe die Vorgaben
+ * @param metadataLanguage language of the metadata when scraping, e.g. {@code de-DE}
+ * @param artworkLanguage  preferred language of the artwork (ISO 639-1), e.g. {@code de}
+ * @param videoExtensions  file extensions that the scan recognizes as a movie
+ * @param excludedPaths    folders that the scan skips including their contents
+ * @param proxy            proxy for requests to online services or {@code null} for a direct connection
+ * @param tv               settings for TV shows; if omitted, same as for movies
+ * @param mediaInfo        settings for ffprobe; if omitted, the defaults
+ * @param rename           patterns and triggers for renaming; if omitted, the defaults
+ * @param movieSets        storage of set artwork and identification when scraping; if omitted, the defaults
  */
 public record KmmSettings(
         @NotBlank @Pattern(regexp = METADATA_LANGUAGE_PATTERN) String metadataLanguage,
@@ -64,32 +64,32 @@ public record KmmSettings(
         movieSets = movieSets != null ? movieSets : MovieSetSettings.DEFAULTS;
     }
 
-    /** Einstellungen ohne eigene Angaben zu Filmsets. */
+    /** Settings without any values of their own for movie sets. */
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy, TvSettings tv, MediaInfoSettings mediaInfo,
             RenameSettings rename) {
         this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, mediaInfo, rename, null);
     }
 
-    /** Einstellungen ohne eigene Angaben zum Umbenennen. */
+    /** Settings without any values of their own for renaming. */
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy, TvSettings tv, MediaInfoSettings mediaInfo) {
         this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, mediaInfo, null, null);
     }
 
-    /** Einstellungen ohne eigene Angaben für ffprobe. */
+    /** Settings without any values of their own for ffprobe. */
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy, TvSettings tv) {
         this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, tv, null, null, null);
     }
 
-    /** Einstellungen ohne eigene Angaben für Serien; diese folgen den Film-Sprachen. */
+    /** Settings without any values of their own for TV shows; these follow the movie languages. */
     public KmmSettings(String metadataLanguage, String artworkLanguage, List<String> videoExtensions,
             List<String> excludedPaths, ProxySettings proxy) {
         this(metadataLanguage, artworkLanguage, videoExtensions, excludedPaths, proxy, null, null, null, null);
     }
 
-    /** Ob der Wert eine Sprache wie {@code de-DE} ist; Werte aus Fremddaten müssen das nicht sein. */
+    /** Whether the value is a language such as {@code de-DE}; values from foreign data need not be. */
     public static boolean isMetadataLanguage(String value) {
         return value != null && value.matches(METADATA_LANGUAGE_PATTERN);
     }

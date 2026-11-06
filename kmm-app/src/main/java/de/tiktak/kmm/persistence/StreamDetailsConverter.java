@@ -6,8 +6,8 @@ import jakarta.persistence.Converter;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Speichert Stream-Details als JSON in einer Spalte. Einzelne Spuren werden nie abgefragt, daher
- * lohnt keine eigene Tabelle. Leere Angaben werden als {@code NULL} gespeichert.
+ * Stores stream details as JSON in a single column. Individual tracks are never queried, so
+ * a separate table is not worthwhile. Empty details are stored as {@code NULL}.
  */
 @Converter
 public class StreamDetailsConverter implements AttributeConverter<StreamDetails, String> {

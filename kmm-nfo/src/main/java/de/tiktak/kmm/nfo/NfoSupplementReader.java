@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 import org.w3c.dom.Element;
 
 /**
- * Liest die weiteren Angaben ({@link MovieNfoSupplement}) aus dem {@code <movie>}-Element.
- * Unbrauchbare Einzelwerte werden ignoriert statt die ganze NFO zu verwerfen.
+ * Reads the further details ({@link MovieNfoSupplement}) from the {@code <movie>} element. Unusable single values
+ * are ignored instead of discarding the whole NFO.
  */
 final class NfoSupplementReader {
 
@@ -43,7 +43,7 @@ final class NfoSupplementReader {
                 trailer(movie));
     }
 
-    /** Der Trailer-Link oder {@link MovieNfoSupplement#NO_TRAILER}, wenn das Element fehlt. */
+    /** The trailer link, or {@link MovieNfoSupplement#NO_TRAILER} if the element is missing. */
     static String trailer(Element element) {
         String trailer = NfoDocuments.text(element, NfoElements.TRAILER);
         return trailer == null ? MovieNfoSupplement.NO_TRAILER : trailer;
@@ -78,7 +78,7 @@ final class NfoSupplementReader {
         return ratings;
     }
 
-    /** Kodi schreibt {@code <set><name>…</name></set>}, ältere NFOs nur {@code <set>Name</set>}. */
+    /** Kodi writes {@code <set><name>…</name></set>}, older NFOs only {@code <set>Name</set>}. */
     private static NfoMovieSet set(Element movie) {
         List<Element> sets = NfoDocuments.children(movie, NfoElements.SET);
         if (sets.isEmpty()) {
@@ -91,7 +91,7 @@ final class NfoSupplementReader {
                 structured ? NfoDocuments.text(set, NfoElements.LEGACY_TMDB) : null);
     }
 
-    /** Ganze Zahl; Tausendertrennzeichen („650,000“) werden ignoriert. */
+    /** Whole number; thousands separators ("650,000") are ignored. */
     static Integer integer(String value) {
         if (value == null) {
             return null;

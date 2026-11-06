@@ -15,8 +15,8 @@ import de.tiktak.kmm.settings.SettingsService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Erzeugt für jeden Scan einen Scanner mit den aktuellen Einstellungen (Dateiendungen,
- * ausgeschlossene Ordner).
+ * Creates a scanner for each scan with the current settings (file extensions,
+ * excluded folders).
  */
 @Component
 @RequiredArgsConstructor

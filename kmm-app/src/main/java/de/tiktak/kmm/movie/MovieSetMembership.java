@@ -9,8 +9,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Ändert die Set-Zugehörigkeit eines Films in Datenbank und NFO, je Film in einer eigenen Transaktion. Kodi kennt
- * nur ein Set je Film; wer einem Set hinzugefügt wird, verlässt sein bisheriges.
+ * Changes a movie's set membership in the database and NFO, each movie in its own transaction. Kodi knows
+ * only one set per movie; a movie added to a set leaves its previous one.
  */
 @Slf4j
 @Component
@@ -23,8 +23,8 @@ class MovieSetMembership {
     private final MovieNfoSync nfoSync;
 
     /**
-     * @param setId das neue Set oder {@code null}, um den Film aus seinem Set zu nehmen
-     * @return ob sich etwas geändert hat
+     * @param setId the new set or {@code null} to remove the movie from its set
+     * @return whether anything has changed
      */
     @Transactional
     public boolean assign(long movieId, Long setId) {
@@ -42,7 +42,7 @@ class MovieSetMembership {
         return true;
     }
 
-    /** Schreibt die NFO neu, etwa nachdem das Set umbenannt wurde. */
+    /** Rewrites the NFO, for example after the set was renamed. */
     @Transactional
     public boolean rewrite(long movieId) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new MovieNotFoundException(movieId));

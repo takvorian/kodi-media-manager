@@ -7,8 +7,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Bindet das Laden und Entladen der Plugins an den Lebenszyklus des Spring-Kontexts. Vor dem
- * Laden werden die mitgelieferten Plugins installiert.
+ * Ties loading and unloading of plugins to the lifecycle of the Spring context. Before
+ * loading, the bundled plugins are installed.
  */
 @Slf4j
 @RequiredArgsConstructor

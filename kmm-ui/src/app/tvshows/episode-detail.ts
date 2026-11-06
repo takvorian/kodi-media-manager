@@ -10,7 +10,12 @@ import { RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 
-import { KodiPlaybackResult, kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
+import {
+  KodiPlaybackResult,
+  kodiPlaybackMessage,
+  kodiSyncSnackBarConfig,
+  kodiSyncSummary,
+} from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { MediaInfoService } from '../media-info/media-info.service';
@@ -147,7 +152,7 @@ export class EpisodeDetail {
       next: (result) => {
         this.importingPlayback.set(false);
         this.showPlayback(result);
-        this.notify(`${result.host}: ${result.message}`);
+        this.notify(kodiPlaybackMessage(result));
       },
       error: (error: unknown) => {
         this.importingPlayback.set(false);

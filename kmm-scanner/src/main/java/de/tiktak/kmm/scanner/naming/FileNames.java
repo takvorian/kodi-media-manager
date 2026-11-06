@@ -3,8 +3,8 @@ package de.tiktak.kmm.scanner.naming;
 import java.util.regex.Pattern;
 
 /**
- * Macht Texte zu gültigen Datei- und Ordnernamen unter Windows, Linux und auf Netzlaufwerken, wie Ember:
- * {@code :} wird zu {@code " -"}, verbotene Zeichen entfallen, Leerzeichen und Punkte am Ende ebenso.
+ * Turns texts into valid file and folder names on Windows, Linux and network drives, like Ember: {@code :} becomes
+ * {@code " -"}, forbidden characters are dropped, as are trailing spaces and dots.
  */
 public final class FileNames {
 
@@ -17,7 +17,7 @@ public final class FileNames {
     private FileNames() {
     }
 
-    /** @return der gültige Name, leer, wenn nichts übrig bleibt */
+    /** @return the valid name, empty if nothing is left */
     public static String clean(String name) {
         String cleaned = COLON.matcher(name).replaceAll(" - ");
         cleaned = FORBIDDEN.matcher(cleaned).replaceAll("");
@@ -26,7 +26,7 @@ public final class FileNames {
         return TRAILING.matcher(cleaned).replaceAll("");
     }
 
-    /** Ein Wert darf keine Ordner trennen: {@code AC/DC} wird zu {@code AC-DC}. */
+    /** A value must not separate folders: {@code AC/DC} becomes {@code AC-DC}. */
     static String withoutSeparators(String value) {
         return SEPARATORS.matcher(value).replaceAll("-");
     }

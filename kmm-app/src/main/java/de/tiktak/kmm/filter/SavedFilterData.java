@@ -6,9 +6,9 @@ import jakarta.validation.constraints.Size;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Anlegen oder Ändern eines gespeicherten Filters.
+ * Create or change a saved filter.
  *
- * @param definition die Bedingungen, wie die Liste sie abfragt, z. B. {@code {"matchAll": true, "conditions": [...]}}
+ * @param definition the conditions as the list queries them, e.g. {@code {"matchAll": true, "conditions": [...]}}
  */
 public record SavedFilterData(
         @NotNull FilterMediaType mediaType,

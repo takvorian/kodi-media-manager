@@ -4,11 +4,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Staffel und Episodennummern einer Episodendatei. Mehrfachepisoden ({@code S01E01E02}) enthalten
- * mehrere Nummern in aufsteigender Reihenfolge.
+ * Season and episode numbers of an episode file. Multi-episode files ({@code S01E01E02}) contain several numbers in
+ * ascending order.
  *
- * @param season   Staffel; 0 für Specials
- * @param episodes Episodennummern, mindestens eine
+ * @param season   season; 0 for specials
+ * @param episodes episode numbers, at least one
  */
 public record EpisodeNumber(int season, List<Integer> episodes) {
 

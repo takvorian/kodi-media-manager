@@ -1,51 +1,65 @@
 package de.tiktak.kmm.kodi;
 
-import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+import java.util.List;
 
+import org.springframework.http.HttpStatus;
+
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.kodi.rpc.KodiException;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Fehler beim Verwalten oder Ansprechen der Kodi-Geräte, als Problem Detail für die Oberfläche.
+ * Error while managing or contacting the Kodi devices, as problem detail for the user interface.
  */
-public class KodiProblemException extends ErrorResponseException {
+public class KodiProblemException extends LocalizedProblemException {
 
-    private KodiProblemException(HttpStatus status, String title, String detail, Throwable cause) {
-        super(status, cause);
-        getBody().setTitle(title);
-        getBody().setDetail(detail);
+    private static final LocalizedText UNAVAILABLE = LocalizedText.of("kodi.unavailable.title");
+
+    private KodiProblemException(HttpStatus status, LocalizedText title, LocalizedText detail, Throwable cause) {
+        super(status, title, detail, cause);
     }
 
     static KodiProblemException hostNotFound(long hostId) {
-        return new KodiProblemException(HttpStatus.NOT_FOUND, "Kodi-Gerät nicht gefunden",
-                "Es gibt kein Kodi-Gerät mit der ID %d.".formatted(hostId), null);
+        return new KodiProblemException(HttpStatus.NOT_FOUND, LocalizedText.of("kodi.hostNotFound.title"),
+                LocalizedText.of("kodi.hostNotFound.detail").with("id", hostId), null);
     }
 
     static KodiProblemException nameTaken(String name) {
-        return new KodiProblemException(HttpStatus.CONFLICT, "Name bereits vergeben",
-                "Es gibt bereits ein Kodi-Gerät mit dem Namen '%s'.".formatted(name), null);
+        return new KodiProblemException(HttpStatus.CONFLICT, LocalizedText.of("kodi.nameTaken.title"),
+                LocalizedText.of("kodi.nameTaken.detail").with("name", name), null);
     }
 
     static KodiProblemException noHostFor(String path) {
-        return new KodiProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein passendes Kodi-Gerät",
-                "Kein Kodi-Gerät hat eine Pfad-Zuordnung für %s.".formatted(path), null);
+        return new KodiProblemException(HttpStatus.UNPROCESSABLE_CONTENT, LocalizedText.of("kodi.noHostFor.title"),
+                LocalizedText.of("kodi.noHostFor.detail").with("path", path), null);
     }
 
     static KodiProblemException noHosts() {
-        return new KodiProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Kodi-Gerät",
-                "Es ist kein Kodi-Gerät eingerichtet.", null);
+        return new KodiProblemException(HttpStatus.UNPROCESSABLE_CONTENT, LocalizedText.of("kodi.noHosts.title"),
+                LocalizedText.of("kodi.noHosts.detail"), null);
     }
 
     static KodiProblemException noHostLeft() {
-        return new KodiProblemException(HttpStatus.BAD_GATEWAY, "Kodi nicht erreichbar",
-                "Übersprungen, weil kein Kodi-Gerät mehr antwortet.", null);
+        return new KodiProblemException(HttpStatus.BAD_GATEWAY, UNAVAILABLE, LocalizedText.of("kodi.noHostLeft.detail"),
+                null);
     }
 
-    static KodiProblemException refreshFailed(String problems) {
-        return new KodiProblemException(HttpStatus.BAD_GATEWAY, "Nicht aktualisiert", problems, null);
+    /** @param problems one text per device, e.g. {@code kodi.hostProblem} */
+    static KodiProblemException refreshFailed(List<LocalizedText> problems) {
+        return new KodiProblemException(HttpStatus.BAD_GATEWAY, LocalizedText.of("kodi.refreshFailed.title"),
+                joined(problems), null);
     }
 
     static KodiProblemException unavailable(KodiException cause) {
-        return new KodiProblemException(HttpStatus.BAD_GATEWAY, "Kodi nicht erreichbar", cause.getMessage(), cause);
+        return new KodiProblemException(HttpStatus.BAD_GATEWAY, UNAVAILABLE, cause.localizedText(), cause);
+    }
+
+    /** Joins the texts with semicolons, as nested texts so each part stays translatable. */
+    private static LocalizedText joined(List<LocalizedText> texts) {
+        if (texts.size() == 1) {
+            return texts.getFirst();
+        }
+        return LocalizedText.of("kodi.problems").with("first", texts.getFirst())
+                .with("rest", joined(texts.subList(1, texts.size())));
     }
 }

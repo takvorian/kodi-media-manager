@@ -17,9 +17,12 @@ import org.springframework.web.bind.annotation.RequestPart;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
+import de.tiktak.kmm.i18n.LocalizedException;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.migration.ember.EmberProfileException;
+import de.tiktak.kmm.web.LocalizedProblems;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
@@ -30,14 +33,14 @@ import lombok.RequiredArgsConstructor;
 public class EmberMigrationController {
 
     public static final String BASE_PATH = "/api/v1/migrations/ember";
-    static final String INVALID_PROFILE_TITLE = "Ungültiges Ember-Profil";
+    static final LocalizedText INVALID_PROFILE_TITLE = LocalizedText.of("migration.invalidProfile.title");
 
     private final EmberImportService importService;
 
     /**
-     * Nimmt ein Ember-Profil an und analysiert es, ohne Daten zu übernehmen.
+     * Accepts an Ember profile and analyzes it without importing any data.
      *
-     * @param files Datenbank {@code MyVideosNN.emm} und, soweit vorhanden, die Einstellungsdateien des Profils
+     * @param files database {@code MyVideosNN.emm} and, if present, the settings files of the profile
      */
     @PostMapping(path = "/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public EmberInspectionResponse upload(@RequestPart("files") List<MultipartFile> files) {
@@ -45,7 +48,7 @@ public class EmberMigrationController {
     }
 
     /**
-     * Verwirft das hochgeladene Profil.
+     * Discards the uploaded profile.
      */
     @DeleteMapping("/upload")
     public ResponseEntity<Void> discardUpload() {
@@ -54,7 +57,7 @@ public class EmberMigrationController {
     }
 
     /**
-     * Startet den Import (bzw. Probelauf) des hochgeladenen Profils als Hintergrund-Job.
+     * Starts the import (or dry run) of the uploaded profile as background job.
      */
     @PostMapping("/import")
     public ResponseEntity<JobSnapshot> startImport(@Valid @RequestBody EmberImportRequest request) {
@@ -62,17 +65,9 @@ public class EmberMigrationController {
         return ResponseEntity.accepted().location(URI.create(JobController.BASE_PATH + "/" + job.id())).body(job);
     }
 
-    @ExceptionHandler(EmberProfileException.class)
-    ProblemDetail handleInvalidProfile(EmberProfileException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
-        problem.setTitle(INVALID_PROFILE_TITLE);
-        return problem;
-    }
-
-    @ExceptionHandler(EmberProfileUploadException.class)
-    ProblemDetail handleInvalidUpload(EmberProfileUploadException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
-        problem.setTitle(INVALID_PROFILE_TITLE);
-        return problem;
+    @ExceptionHandler({EmberProfileException.class, EmberProfileUploadException.class})
+    ProblemDetail handleInvalidProfile(LocalizedException exception) {
+        return LocalizedProblems.problem(HttpStatus.UNPROCESSABLE_CONTENT, INVALID_PROFILE_TITLE,
+                exception.localizedText());
     }
 }

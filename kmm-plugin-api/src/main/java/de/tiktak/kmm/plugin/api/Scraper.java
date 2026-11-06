@@ -5,13 +5,15 @@ import java.util.Set;
 
 import org.pf4j.ExtensionPoint;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Gemeinsame Eigenschaften aller Scraper-Erweiterungen.
+ * Properties shared by all scraper extensions.
  */
 public interface Scraper extends ExtensionPoint {
 
     /**
-     * Eindeutige, stabile Kennung des Scrapers, z. B. {@code tmdb}.
+     * Unique, stable identifier of the scraper, e.g. {@code tmdb}.
      */
     String id();
 
@@ -24,21 +26,20 @@ public interface Scraper extends ExtensionPoint {
     }
 
     /**
-     * Wird von KMM einmal nach dem Erzeugen aufgerufen, bevor der Scraper benutzt wird.
+     * Called by KMM once after creation, before the scraper is used.
      */
     default void initialize(PluginContext context) {
     }
 
     /**
-     * @return Hinweis für den Nutzer, was zur Nutzung fehlt (z. B. ein API-Key), oder leer, wenn
-     *         der Scraper einsatzbereit ist
+     * @return note for the user on what is missing for use (e.g. an API key), or empty if the scraper is ready
      */
-    default Optional<String> missingConfiguration() {
+    default Optional<LocalizedText> missingConfiguration() {
         return Optional.empty();
     }
 
     /**
-     * @return Hinweis auf die Datenquelle, den der Anbieter verlangt, oder leer
+     * @return attribution of the data source required by the provider, or empty
      */
     default Optional<Attribution> attribution() {
         return Optional.empty();

@@ -12,8 +12,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Titelmusik von Filmen und Serien als {@code theme.mp3} im Ordner: Vorschläge anzeigen, einen übernehmen oder
- * entfernen und fehlende automatisch ergänzen, aber nur bei sicherem Treffer (gleicher Titel beim Anbieter).
+ * Theme music of movies and TV shows as {@code theme.mp3} in the folder: show suggestions, apply or
+ * remove one and add missing ones automatically, but only for a safe match (same title at the provider).
  */
 @Slf4j
 @Service
@@ -57,22 +57,22 @@ public class ThemeService {
         return remove(targets.forShow(showId));
     }
 
-    /** @throws ThemeProblemException wenn es keine Titelmusik gibt */
+    /** @throws ThemeProblemException if there is no theme music */
     public Path movieThemeFile(long movieId) {
         return files.find(targets.forMovie(movieId)).orElseThrow(ThemeProblemException::themeMissing);
     }
 
-    /** @throws ThemeProblemException wenn es keine Titelmusik gibt */
+    /** @throws ThemeProblemException if there is no theme music */
     public Path showThemeFile(long showId) {
         return files.find(targets.forShow(showId)).orElseThrow(ThemeProblemException::themeMissing);
     }
 
-    /** @return ob eine Titelmusik eingetragen wurde; vorhandene bleibt */
+    /** @return whether a theme music was added; an existing one stays */
     public boolean fillMovie(long movieId) {
         return fillMissing(targets.forMovie(movieId));
     }
 
-    /** @return ob eine Titelmusik eingetragen wurde; vorhandene bleibt */
+    /** @return whether a theme music was added; an existing one stays */
     public boolean fillShow(long showId) {
         return fillMissing(targets.forShow(showId));
     }

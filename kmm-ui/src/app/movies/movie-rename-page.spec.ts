@@ -49,7 +49,7 @@ describe('MovieRenamePage', () => {
       targetDirectory: '/filme/Brazil (1985)',
       renames: [],
       status: 'CONFLICT',
-      message: 'Der Ordner existiert bereits.',
+      message: literal('Der Ordner existiert bereits.'),
     },
   ];
 

@@ -2,13 +2,15 @@ package de.tiktak.kmm.mediainfo;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis des Auslesens der Episoden einer Serie nach dem Scrapen.
+ * Result of reading the episodes of a TV show after scraping.
  *
- * @param updated  Dateien mit neu übernommenen Angaben
- * @param failures die Fehlermeldungen der Dateien, die nicht gelesen werden konnten
+ * @param updated  files with newly applied details
+ * @param failures the error messages of the files that could not be read
  */
-public record ShowStreamDetailsResult(int updated, List<String> failures) {
+public record ShowStreamDetailsResult(int updated, List<LocalizedText> failures) {
 
     public ShowStreamDetailsResult {
         failures = List.copyOf(failures);

@@ -34,7 +34,7 @@
           <p class="last-sync" [class.error]="failed(sync)">
             {{ 'kodi.lastSync' | transloco }}
             {{ sync.at | translocoDate: { dateStyle: 'short', timeStyle: 'short' } }}:
-            {{ sync.message }}
+            {{ sync.message | localized }}
           </p>
         }
         @if (connectionResult(host); as result) {
@@ -43,7 +43,7 @@
               {{ 'kodi.connected' | transloco: { version: result.version } }}
             </p>
             @if (result.warning) {
-              <p class="warning connection-warning">{{ result.warning }}</p>
+              <p class="warning connection-warning">{{ result.warning | localized }}</p>
             }
           } @else {
             <p class="connection-result error">{{ result.message }}</p>

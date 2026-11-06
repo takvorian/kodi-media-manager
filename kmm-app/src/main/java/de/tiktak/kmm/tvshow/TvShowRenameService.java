@@ -9,6 +9,8 @@ import java.util.Set;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -16,12 +18,13 @@ import de.tiktak.kmm.settings.RenameSettings;
 import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.Status;
+import de.tiktak.kmm.web.LocalizedTexts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Benennt Serien, Staffelordner und Episodendateien nach Mustern um, für eine ganze Quelle als Hintergrund-Job
- * oder je Serie. Die Vorschau ändert nichts; beim Umbenennen wird der Plan neu berechnet.
+ * Renames TV shows, season folders and episode files after patterns, for a whole source as a background job or per
+ * TV show. The preview changes nothing; renaming computes the plan again.
  */
 @Slf4j
 @Service
@@ -30,7 +33,7 @@ public class TvShowRenameService {
 
     static final String JOB_KEY_PREFIX = "tv-rename:";
     static final int MAX_LISTED_PROBLEMS = 20;
-    private static final String PLANNING_MESSAGE = "Neue Namen werden berechnet";
+    private static final LocalizedText PLANNING_MESSAGE = LocalizedText.of("tvShow.rename.planning");
     private static final int UNKNOWN_TOTAL = 0;
 
     private final MediaSourceService sourceService;
@@ -40,25 +43,25 @@ public class TvShowRenameService {
     private final SettingsService settingsService;
 
     /**
-     * @return je Serie der Quelle, was das Umbenennen ändern würde, sortiert nach Ordner
-     * @throws TvRenameProblemException wenn die Quelle keine Serien enthält oder ein Muster ungültig ist
+     * @return per TV show of the source, what renaming would change, sorted by folder
+     * @throws TvRenameProblemException if the source contains no TV shows or a pattern is invalid
      */
     public List<TvShowRenamePlan> preview(long sourceId, TvRenamePatterns patterns) {
         return planning.planSource(sourceId, patterns.parse()).plans();
     }
 
     /**
-     * @throws TvRenameProblemException wenn ein Muster ungültig ist
+     * @throws TvRenameProblemException if a pattern is invalid
      */
     public TvShowRenamePlan previewShow(long showId, TvRenamePatterns patterns) {
         return planning.planShow(showId, patterns.parse()).plans().getFirst();
     }
 
     /**
-     * Benennt eine Serie um.
+     * Renames a TV show.
      *
-     * @return der ausgeführte Plan; bei {@link Status#FAILED} mit dem Grund, bei {@link Status#CONFLICT} ist nichts
-     *         geändert
+     * @return the executed plan; with {@link Status#FAILED} with the reason, with {@link Status#CONFLICT} nothing has
+     *         changed
      */
     public TvShowRenamePlan renameShow(long showId, TvRenamePatterns patterns) {
         TvShowRenamePlanning.Planned planned = planning.planShow(showId, patterns.parse());
@@ -67,9 +70,9 @@ public class TvShowRenameService {
     }
 
     /**
-     * Benennt eine Serie mit den Mustern aus den Einstellungen um, wenn der Auslöser dort eingeschaltet ist.
+     * Renames a TV show with the patterns from the settings if the trigger is switched on there.
      *
-     * @return der ausgeführte Plan oder leer, wenn der Auslöser ausgeschaltet ist
+     * @return the executed plan, or empty if the trigger is switched off
      */
     public Optional<TvShowRenamePlan> renameIfEnabled(long showId, TvRenameTrigger trigger) {
         RenameSettings settings = settingsService.current().rename();
@@ -79,16 +82,16 @@ public class TvShowRenameService {
         TvShowRenamePlan plan = renameShow(showId, new TvRenamePatterns(settings.tvShowFolder(),
                 settings.seasonFolder(), settings.episodeFile()));
         if (plan.status() == Status.CONFLICT || plan.status() == Status.FAILED) {
-            log.warn("TV show {} not renamed automatically: {}", showId, plan.message());
+            log.warn("TV show {} not renamed automatically: {}", showId, english(plan.message()));
         }
         return Optional.of(plan);
     }
 
     /**
-     * Benennt die Staffel-Ordner und Episodendateien einer Staffel mit den Mustern aus den Einstellungen um, wenn der
-     * Auslöser dort eingeschaltet ist. Der Serienordner bleibt, wie er ist.
+     * Renames the season folders and episode files of a season with the patterns from the settings if the trigger is
+     * switched on there. The show folder stays as it is.
      *
-     * @return der ausgeführte Plan oder leer, wenn der Auslöser ausgeschaltet ist
+     * @return the executed plan, or empty if the trigger is switched off
      */
     public Optional<TvShowRenamePlan> renameSeasonIfEnabled(long showId, int season, TvRenameTrigger trigger) {
         RenameSettings settings = settingsService.current().rename();
@@ -101,19 +104,21 @@ public class TvShowRenameService {
         TvShowRenamePlan plan = planned.plans().getFirst();
         TvShowRenamePlan result = plan.status() == Status.RENAME ? apply(plan, planned) : plan;
         if (result.status() == Status.CONFLICT || result.status() == Status.FAILED) {
-            log.warn("Season {} of TV show {} not renamed automatically: {}", season, showId, result.message());
+            log.warn("Season {} of TV show {} not renamed automatically: {}", season, showId,
+                    english(result.message()));
         }
         return Optional.of(result);
     }
 
     /**
-     * Benennt die Serien einer Quelle im Hintergrund um.
+     * Renames the TV shows of a source in the background.
      *
-     * @throws TvRenameProblemException wenn ein Muster ungültig ist
+     * @throws TvRenameProblemException if a pattern is invalid
      */
     public JobSnapshot startSourceRename(long sourceId, TvRenameRequest request) {
         TvShowRenamePlanner.Patterns patterns = request.patterns().parse();
-        String title = "Serien umbenennen „%s“".formatted(sourceService.require(sourceId).getName());
+        LocalizedText title = LocalizedText.of("tvShow.rename.jobTitle")
+                .with("source", sourceService.require(sourceId).getName());
         Set<Long> selected = request.showIds() == null ? null : new HashSet<>(request.showIds());
         return jobService.submit(JOB_KEY_PREFIX + sourceId, title,
                 context -> renameSource(sourceId, patterns, selected, context));
@@ -149,13 +154,18 @@ public class TvShowRenameService {
         } catch (IOException e) {
             log.warn("TV show {} not renamed: {}", plan.showId(), e.getMessage());
             return new TvShowRenamePlan(plan.showId(), plan.title(), plan.currentDirectory(), plan.targetDirectory(),
-                    plan.files(), Status.FAILED, "Umbenennen fehlgeschlagen: " + e.getMessage());
+                    plan.files(), Status.FAILED,
+                    LocalizedText.of("tvShow.rename.failed").with("reason", LocalizedTexts.of(e)));
         }
+    }
+
+    private static String english(LocalizedText message) {
+        return message == null ? null : Messages.english(message);
     }
 
     private static final class Tally {
 
-        private final List<String> problems = new ArrayList<>();
+        private final List<LocalizedText> problems = new ArrayList<>();
         private int renamed;
         private int unchanged;
         private int skipped;
@@ -165,24 +175,24 @@ public class TvShowRenameService {
             return renamed + unchanged + skipped + failed;
         }
 
-        /** Eine Serie, die das Dateisystem umbenannt oder abgelehnt hat. */
+        /** A TV show the file system renamed or refused. */
         void addExecuted(TvShowRenamePlan plan) {
             if (plan.status() == Status.FAILED) {
                 failed++;
-                problem("„%s“: %s".formatted(plan.title(), plan.message()));
+                problem(showProblem(plan));
             } else {
                 renamed++;
                 episodeProblems(plan);
             }
         }
 
-        /** Eine Serie, die nicht umbenannt werden musste oder konnte. */
+        /** A TV show that did not have to or could not be renamed. */
         void addPlanned(TvShowRenamePlan plan) {
             if (plan.status() == Status.UNCHANGED) {
                 unchanged++;
             } else {
                 skipped++;
-                problem("„%s“: %s".formatted(plan.title(), plan.message()));
+                problem(showProblem(plan));
                 episodeProblems(plan);
             }
         }
@@ -190,10 +200,18 @@ public class TvShowRenameService {
         private void episodeProblems(TvShowRenamePlan plan) {
             plan.files().stream()
                     .filter(file -> file.status() != Status.RENAME)
-                    .forEach(file -> problem("„%s“ %s: %s".formatted(plan.title(), file.episodes(), file.message())));
+                    .forEach(file -> problem(LocalizedText.of("tvShow.rename.episodeProblem")
+                            .with("title", plan.title())
+                            .with("episodes", file.episodes())
+                            .with("message", file.message())));
         }
 
-        private void problem(String message) {
+        private static LocalizedText showProblem(TvShowRenamePlan plan) {
+            return LocalizedText.of("tvShow.rename.showProblem").with("title", plan.title())
+                    .with("message", plan.message());
+        }
+
+        private void problem(LocalizedText message) {
             if (problems.size() < MAX_LISTED_PROBLEMS) {
                 problems.add(message);
             }

@@ -6,19 +6,19 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Inhalt eines {@code <episodedetails>}-Elements. Eine NFO einer Mehrfachepisode enthält mehrere davon.
+ * Content of an {@code <episodedetails>} element. The NFO of a multi-episode file contains several of them.
  *
- * @param season     Staffel; {@code null}, wenn die NFO keine angibt
- * @param episode    Episode; {@code null}, wenn die NFO keine angibt
- * @param aired      Erstausstrahlung
- * @param runtime    Laufzeit in Minuten
- * @param videoSource Videoquelle, z. B. {@code dvd} (wie Ember)
- * @param writers    Drehbuch ({@code <credits>})
- * @param actors     Darsteller einschließlich Gaststars
- * @param userRating eigene Bewertung 1–10 oder {@code null}
- * @param lastPlayed letzte Wiedergabe in lokaler Zeit
- * @param dateAdded  Hinzugefügt-Datum in lokaler Zeit
- * @param streams    Video-, Ton- und Untertitelspuren; leer, wenn unbekannt
+ * @param season     season; {@code null} if the NFO has none
+ * @param episode    episode; {@code null} if the NFO has none
+ * @param aired      first aired date
+ * @param runtime    runtime in minutes
+ * @param videoSource video source, e.g. {@code dvd} (like Ember)
+ * @param writers    writers ({@code <credits>})
+ * @param actors     actors including guest stars
+ * @param userRating own rating 1–10 or {@code null}
+ * @param lastPlayed last playback in local time
+ * @param dateAdded  date added in local time
+ * @param streams    video, audio and subtitle streams; empty if unknown
  */
 public record EpisodeNfo(
         String title,
@@ -49,7 +49,7 @@ public record EpisodeNfo(
         streams = streams == null ? StreamDetails.EMPTY : streams;
     }
 
-    /** Ob dieses Element zu Staffel und Episode gehört. */
+    /** Whether this element belongs to the season and episode. */
     public boolean describes(int seasonNumber, int episodeNumber) {
         return season != null && episode != null && season == seasonNumber && episode == episodeNumber;
     }

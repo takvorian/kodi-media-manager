@@ -4,6 +4,7 @@ import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe } from '@jsverse/transloco';
 
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { problemMessage } from '../shared/problem-message';
@@ -13,7 +14,7 @@ const SNACKBAR_DURATION_MS = 5000;
 /** Progress of a running scrape job with cancel; with a large selection it can take a long time. */
 @Component({
   selector: 'app-scrape-progress',
-  imports: [MatButtonModule, MatProgressBarModule, TranslocoPipe],
+  imports: [LocalizedPipe, MatButtonModule, MatProgressBarModule, TranslocoPipe],
   template: `
     <div class="scrape-progress">
       <mat-progress-bar mode="determinate" [value]="percent()" />
@@ -21,10 +22,10 @@ const SNACKBAR_DURATION_MS = 5000;
         <span class="scrape-message">
           {{
             'sources.scrapeProgress'
-              | transloco: { title: job().title, done: job().done, total: job().total }
+              | transloco: { title: job().title | localized, done: job().done, total: job().total }
           }}
           @if (job().message) {
-            ({{ job().message }})
+            ({{ job().message | localized }})
           }
         </span>
         <button matButton type="button" class="cancel-scrape-button" (click)="cancel()">

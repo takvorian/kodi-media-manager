@@ -11,15 +11,15 @@ import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
 import lombok.Builder;
 
 /**
- * Eine Serie aus der Ember-Datenbank mit allen verknüpften Angaben. Leere Texte sind {@code null},
- * fehlende Listen leer.
+ * A TV show from the Ember database with all linked data. Empty texts are {@code null}, missing lists are
+ * empty.
  *
- * @param path         Verzeichnis der Serie, wie Ember es gespeichert hat (Windows)
- * @param uniqueIds    IDs je Anbieter, Schlüssel klein geschrieben (z. B. {@code tvdb}, {@code tmdb}, {@code imdb})
- * @param status       z. B. {@code Continuing} oder {@code Ended}
- * @param seasonTitles Staffeltitel nach Staffelnummer
- * @param userRating   eigene Bewertung oder {@code null}, wenn keine vergeben ist
- * @param language     Sprache der Serie, z. B. {@code de-DE}, oder {@code null}
+ * @param path         directory of the TV show as Ember stored it (Windows)
+ * @param uniqueIds    IDs per provider, keys in lower case (e.g. {@code tvdb}, {@code tmdb}, {@code imdb})
+ * @param status       e.g. {@code Continuing} or {@code Ended}
+ * @param seasonTitles season titles by season number
+ * @param userRating   user rating, or {@code null} if none is given
+ * @param language     language of the TV show, e.g. {@code de-DE}, or {@code null}
  */
 @Builder
 public record EmberTvShow(

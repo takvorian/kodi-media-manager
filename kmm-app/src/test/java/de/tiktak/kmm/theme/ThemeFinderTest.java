@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -82,15 +83,18 @@ class ThemeFinderTest {
     @Test
     void reportsUnconfiguredAndFailingScrapers() {
         ThemeScraper unconfigured = mock(ThemeScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("YouTube: yt-dlp fehlt"));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("YouTube: yt-dlp fehlt")));
         when(scraperRegistry.themeScrapersFor(MediaType.TV_SHOW)).thenReturn(List.of(unconfigured, scraper));
         when(scraper.findThemes(any())).thenThrow(new ScraperException("nicht erreichbar"));
 
         ThemeOptions options = finder.find(ALF);
 
         assertThat(options.candidates()).isEmpty();
-        assertThat(options.warnings()).containsExactly("YouTube: yt-dlp fehlt", "TelevisionTunes: nicht erreichbar",
-                "TelevisionTunes: nicht erreichbar");
+        LocalizedText failure = LocalizedText.of("theme.warning").with("provider", "TelevisionTunes")
+                .with("reason", LocalizedText.literal("nicht erreichbar"));
+        assertThat(options.warnings()).containsExactly(LocalizedText.literal("YouTube: yt-dlp fehlt"), failure,
+                failure);
         verify(unconfigured, never()).findThemes(any());
     }
 

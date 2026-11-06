@@ -200,10 +200,16 @@ describe('MovieDetail', () => {
         hostId: 1,
         host: 'Wohnzimmer',
         outcome: 'REFRESHED',
-        message: '„Heat“ aktualisiert.',
+        message: literal('„Heat“ aktualisiert.'),
         at: '',
       },
-      { hostId: 2, host: 'Küche', outcome: 'FAILED', message: 'nicht erreichbar.', at: '' },
+      {
+        hostId: 2,
+        host: 'Küche',
+        outcome: 'FAILED',
+        message: literal('nicht erreichbar.'),
+        at: '',
+      },
     ]);
     fixture.detectChanges();
     button('.kodi-refresh-button').click();
@@ -233,7 +239,7 @@ describe('MovieDetail', () => {
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/playback' }).flush({
       host: 'Wohnzimmer',
       outcome: 'UPDATED',
-      message: '„Heat“ aus Kodi übernommen: 2× gesehen.',
+      message: literal('„Heat“ aus Kodi übernommen: 2× gesehen.'),
       playCount: 2,
       lastPlayedAt: '2025-04-03T21:14:16Z',
       userRating: 10,
@@ -608,7 +614,11 @@ describe('MovieDetail', () => {
       answerPreview({ ...plan, status: 'UNCHANGED', renames: [] });
       button('.rename-button').click();
       answerSettings();
-      answerPreview({ ...plan, status: 'CONFLICT', message: 'Der Ordner existiert bereits.' });
+      answerPreview({
+        ...plan,
+        status: 'CONFLICT',
+        message: literal('Der Ordner existiert bereits.'),
+      });
 
       expect(confirmMessages).toEqual([]);
       expect(snackBarMessages).toEqual([
@@ -656,7 +666,7 @@ describe('MovieDetail', () => {
         imagesSaved: 4,
         unmatchedEntries: [],
         failures: [],
-        warnings: ['fanart.tv: Key fehlt'],
+        warnings: [literal('fanart.tv: Key fehlt')],
       },
     };
 

@@ -1,3 +1,5 @@
+import { LocalizedText } from '../i18n/localized-text';
+
 /** Settings that may be fixed by the server configuration. */
 export type SettingsField = 'METADATA_LANGUAGE' | 'ARTWORK_LANGUAGE' | 'PROXY';
 
@@ -63,7 +65,7 @@ export type ApiKeyName =
 export interface ApiKeyView {
   readonly key: ApiKeyName;
   readonly pluginId: string;
-  readonly label: string;
+  readonly label: LocalizedText;
   readonly set: boolean;
   readonly hint: string | null;
 }

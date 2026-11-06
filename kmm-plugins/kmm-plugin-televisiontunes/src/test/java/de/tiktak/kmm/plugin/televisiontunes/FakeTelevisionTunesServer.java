@@ -15,7 +15,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 /**
- * Kleiner HTTP-Server mit festen Antworten von TelevisionTunes; schreibt die angefragten Pfade mit.
+ * Small HTTP server with fixed responses of TelevisionTunes; records the requested paths.
  */
 final class FakeTelevisionTunesServer implements AutoCloseable {
 
@@ -40,7 +40,7 @@ final class FakeTelevisionTunesServer implements AutoCloseable {
         return URI.create("http://127.0.0.1:" + server.getAddress().getPort());
     }
 
-    /** @param path Pfad samt Anfrage, z. B. {@code /search.php?q=ALF} */
+    /** @param path path including the query, e.g. {@code /search.php?q=ALF} */
     FakeTelevisionTunesServer page(String path, String html) {
         responses.put(path, new Response(200, "text/html; charset=utf-8", html.getBytes(StandardCharsets.UTF_8)));
         return this;

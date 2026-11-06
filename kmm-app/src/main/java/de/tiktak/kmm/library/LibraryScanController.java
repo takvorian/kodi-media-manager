@@ -16,7 +16,7 @@ import de.tiktak.kmm.tvshow.TvShowScanService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Startet den Scan einer Quelle, je nach Inhalt als Film- oder Serien-Scan.
+ * Starts the scan of a source, as a movie or TV show scan depending on its content.
  */
 @RestController
 @RequiredArgsConstructor
@@ -29,7 +29,7 @@ public class LibraryScanController {
     private final TvShowScanService tvShowScanService;
 
     /**
-     * Startet den Scan im Hintergrund. Fortschritt und Ergebnis liefert die Job-API.
+     * Starts the scan in the background. Progress and result are provided by the job API.
      */
     @PostMapping(SCAN_PATH)
     public ResponseEntity<JobSnapshot> scan(@PathVariable long sourceId) {

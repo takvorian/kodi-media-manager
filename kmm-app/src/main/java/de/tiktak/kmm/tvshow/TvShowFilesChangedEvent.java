@@ -1,7 +1,7 @@
 package de.tiktak.kmm.tvshow;
 
 /**
- * Die {@code tvshow.nfo} oder Bilder einer Serie bzw. ihrer Staffeln wurden geschrieben oder gelöscht.
+ * The {@code tvshow.nfo} or images of a TV show or its seasons were written or deleted.
  */
 public record TvShowFilesChangedEvent(long showId) {
 }

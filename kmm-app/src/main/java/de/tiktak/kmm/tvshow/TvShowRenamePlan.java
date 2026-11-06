@@ -2,56 +2,59 @@ package de.tiktak.kmm.tvshow;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Was das Umbenennen einer Serie ändern würde: der Serienordner und je Episodendatei Staffelordner und Namen.
+ * What renaming a TV show would change: the show folder and, per episode file, season folder and names.
  *
- * @param currentDirectory Ordner der Serie
- * @param targetDirectory  Ordner danach; gleich {@code currentDirectory}, wenn er bleibt
- * @param files            die Episodendateien, die sich ändern oder nicht umbenannt werden können
- * @param message          Grund bei {@link Status#CONFLICT} und {@link Status#FAILED}, sonst {@code null}
+ * @param currentDirectory folder of the TV show
+ * @param targetDirectory  folder afterwards; equal to {@code currentDirectory} if it stays
+ * @param files            the episode files that change or cannot be renamed
+ * @param message          reason for {@link Status#CONFLICT} and {@link Status#FAILED}, otherwise {@code null}
  */
 public record TvShowRenamePlan(long showId, String title, String currentDirectory, String targetDirectory,
-                               List<EpisodeFile> files, Status status, String message) {
+                               List<EpisodeFile> files, Status status, LocalizedText message) {
 
     public TvShowRenamePlan {
         files = List.copyOf(files);
     }
 
-    /** Ob sich etwas umbenennen lässt: der Serienordner oder mindestens eine Episodendatei. */
+    /** Whether something can be renamed: the show folder or at least one episode file. */
     public boolean hasChanges() {
         return !currentDirectory.equals(targetDirectory)
                 || files.stream().anyMatch(file -> file.status() == Status.RENAME);
     }
 
     public enum Status {
-        /** Ordner und Dateien heißen schon so. */
+        /** Folders and files already have these names. */
         UNCHANGED,
-        /** Ordner oder Dateien bekommen neue Namen; Episodendateien mit Konflikt bleiben. */
+        /** Folders or files get new names; episode files with a conflict stay. */
         RENAME,
-        /** Ein Ziel ist schon belegt; die Serie bzw. Episodendatei wird übersprungen. */
+        /** A target is already taken; the TV show or episode file is skipped. */
         CONFLICT,
-        /** Ein Muster ergibt keinen Namen oder ein Ordner ist nicht lesbar. */
+        /** A pattern yields no name or a folder cannot be read. */
         FAILED
     }
 
     /**
-     * Eine Episodendatei samt Begleitdateien.
+     * An episode file with its companion files.
      *
-     * @param episodes      z. B. {@code S01E01E02}
-     * @param currentFolder Ordner relativ zum Serienordner, leer für den Serienordner selbst
-     * @param targetFolder  Ordner danach, relativ zum Serienordner
-     * @param renames       Video- und Begleitdateien, vorher und nachher
-     * @param status        {@link Status#RENAME} oder {@link Status#CONFLICT} bzw. {@link Status#FAILED}
+     * @param episodes      e.g. {@code S01E01E02}
+     * @param currentFolder folder relative to the show folder, empty for the show folder itself
+     * @param targetFolder  folder afterwards, relative to the show folder
+     * @param renames       video and companion files, before and after
+     * @param status        {@link Status#RENAME} or {@link Status#CONFLICT} or {@link Status#FAILED}
+     * @param message       reason for {@link Status#CONFLICT} and {@link Status#FAILED}, otherwise {@code null}
      */
     public record EpisodeFile(String episodes, String currentFolder, String targetFolder, List<FileRename> renames,
-                              Status status, String message) {
+                              Status status, LocalizedText message) {
 
         public EpisodeFile {
             renames = List.copyOf(renames);
         }
     }
 
-    /** Eine Datei, vorher und nachher, ohne Ordner. */
+    /** A file, before and after, without folder. */
     public record FileRename(String currentName, String targetName) {
     }
 }

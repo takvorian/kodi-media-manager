@@ -12,8 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Tags von Serien: zählen, finden und ändern. Geänderte Tags werden wie beim Speichern der Metadaten in die
- * {@code tvshow.nfo} und die Datenbank geschrieben.
+ * Tags of TV shows: count, find and change. Changed tags are written to the
+ * {@code tvshow.nfo} and the database, as when saving the metadata.
  */
 @Service
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ public class TvShowTagService {
     private final TvShowRepository showRepository;
     private final TvShowMetadataService metadataService;
 
-    /** @return je Tag die Anzahl der Serien */
+    /** @return the number of TV shows per tag */
     public Map<String, Long> countByTag() {
         return showRepository.countByTag().stream()
                 .collect(Collectors.toMap(row -> (String) row[0], row -> (Long) row[1]));
@@ -33,16 +33,16 @@ public class TvShowTagService {
         return showRepository.findIdsByTag(tag);
     }
 
-    /** @return ID und Titel der Serien mit dem Tag, nach Titel sortiert */
+    /** @return ID and title of the TV shows with the tag, sorted by title */
     public Map<Long, String> findTitlesByTag(String tag) {
         return showRepository.findTitlesByTag(tag).stream().collect(Collectors.toMap(row -> (Long) row[0],
                 row -> (String) row[1], (first, second) -> first, LinkedHashMap::new));
     }
 
     /**
-     * @param change bildet die bisherigen Tags auf die neuen ab
-     * @return ob sich die Tags geändert haben
-     * @throws TvShowProblemException wenn es die Serie nicht gibt oder die NFO nicht geschrieben werden kann
+     * @param change maps the previous tags to the new ones
+     * @return whether the tags changed
+     * @throws TvShowProblemException if the TV show does not exist or the NFO cannot be written
      */
     @Transactional
     public boolean changeTags(long showId, UnaryOperator<List<String>> change) {

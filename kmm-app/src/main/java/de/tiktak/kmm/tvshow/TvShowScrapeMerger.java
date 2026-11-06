@@ -14,9 +14,9 @@ import de.tiktak.kmm.plugin.api.ProviderRating;
 import de.tiktak.kmm.plugin.api.TvShowResult;
 
 /**
- * Führt Scraper-Ergebnisse mit vorhandenen Serien und Episoden zusammen. Die Serie wird wie bei Filmen
- * überlagert (was der Scraper liefert, ersetzt den bisherigen Wert); Episoden bekommen nur leere Felder
- * gefüllt.
+ * Merges scraper results with existing TV shows and episodes. The TV show is overlaid as with movies
+ * (what the scraper delivers replaces the previous value); episodes only get empty fields
+ * filled.
  */
 final class TvShowScrapeMerger {
 
@@ -47,7 +47,7 @@ final class TvShowScrapeMerger {
                 current.userRating()).withinLimits();
     }
 
-    /** Darsteller nur, wenn noch keine bekannt sind; Bewertungen und Staffeltitel ergänzen. */
+    /** Actors only if none are known yet; ratings and season titles are added. */
     static TvShowExtras fillShowExtras(TvShowExtras current, TvShowResult scraped) {
         TreeMap<Integer, String> seasonNames = new TreeMap<>(current.seasonNames());
         scraped.seasons().stream()
@@ -59,7 +59,7 @@ final class TvShowScrapeMerger {
                 seasonNames);
     }
 
-    /** Wie {@link #fillShowExtras}, ersetzt aber vorhandene Staffeltitel durch die des Anbieters. */
+    /** Like {@link #fillShowExtras}, but replaces existing season titles with the provider's. */
     static TvShowExtras refreshShowExtras(TvShowExtras current, TvShowResult scraped) {
         TvShowExtras filled = fillShowExtras(current, scraped);
         TreeMap<Integer, String> seasonNames = new TreeMap<>(filled.seasonNames());
@@ -69,7 +69,7 @@ final class TvShowScrapeMerger {
         return new TvShowExtras(filled.actors(), filled.ratings(), seasonNames);
     }
 
-    /** Ändert nur den Titel einer Staffel: ergänzt ihn oder ersetzt ihn mit {@code overwrite} durch den des Anbieters. */
+    /** Changes only the title of a season: adds it, or with {@code overwrite} replaces it with the provider's. */
     static TvShowExtras withSeasonTitle(TvShowExtras current, TvShowResult scraped, int season, boolean overwrite) {
         TreeMap<Integer, String> seasonNames = new TreeMap<>(current.seasonNames());
         scraped.seasons().stream()
@@ -86,9 +86,9 @@ final class TvShowScrapeMerger {
     }
 
     /**
-     * Wie {@link #fillEpisode}, ersetzt aber vorhandene Titel und Inhaltsangaben, wenn der Anbieter welche hat.
+     * Like {@link #fillEpisode}, but replaces existing titles and plots if the provider has any.
      *
-     * @return die neuen Angaben oder leer, wenn sich nichts ändert
+     * @return the new details, or empty if nothing changes
      */
     static Optional<EpisodeFill> refreshEpisode(EpisodeMetadata metadata, EpisodeExtras extras, EpisodeResult scraped) {
         EpisodeFill filled = fillEpisode(metadata, extras, scraped, true)
@@ -109,8 +109,8 @@ final class TvShowScrapeMerger {
     }
 
     /**
-     * @param titleReplaceable ob der Titel nur aus dem Dateinamen stammt (keine NFO) und ersetzt werden darf
-     * @return die ergänzten Angaben oder leer, wenn sich nichts ändert
+     * @param titleReplaceable whether the title only comes from the file name (no NFO) and may be replaced
+     * @return the enriched details, or empty if nothing changes
      */
     static Optional<EpisodeFill> fillEpisode(EpisodeMetadata metadata, EpisodeExtras extras, EpisodeResult scraped,
             boolean titleReplaceable) {
@@ -143,7 +143,7 @@ final class TvShowScrapeMerger {
                 .toList();
     }
 
-    /** Bewertungen von Quellen, die noch fehlen, werden angehängt; vorhandene bleiben unverändert. */
+    /** Ratings from sources that are still missing are appended; existing ones stay unchanged. */
     private static List<TvRating> withRatings(List<TvRating> current, List<ProviderRating> scraped) {
         Set<String> known = current.stream().map(TvRating::source).collect(Collectors.toSet());
         List<TvRating> ratings = new ArrayList<>(current);
@@ -159,7 +159,7 @@ final class TvShowScrapeMerger {
     }
 
     /**
-     * Die ergänzten Angaben einer Episode.
+     * The enriched details of an episode.
      */
     record EpisodeFill(EpisodeMetadata metadata, EpisodeExtras extras) {
 

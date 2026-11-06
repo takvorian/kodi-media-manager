@@ -10,9 +10,8 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Liest und schreibt {@code <fileinfo><streamdetails>} im Format von Ember: Spuren und Elemente
- * alphabetisch, dazu {@code longlanguage}, {@code filesize} und der Typ der Untertitel. Kodi liest
- * davon nur, was es kennt.
+ * Reads and writes {@code <fileinfo><streamdetails>} in Ember's format: streams and elements in alphabetical order,
+ * plus {@code longlanguage}, {@code filesize} and the type of the subtitles. Kodi reads only what it knows.
  */
 final class NfoStreamDetails {
 
@@ -61,7 +60,7 @@ final class NfoStreamDetails {
                 NfoDocuments.children(streams, SUBTITLE).stream().map(NfoStreamDetails::subtitle).toList());
     }
 
-    /** Ersetzt {@code <fileinfo>}; ohne bekannte Spuren bleibt die NFO unverändert. */
+    /** Replaces {@code <fileinfo>}; without known streams the NFO stays unchanged. */
     static void write(Document document, Element root, StreamDetails details) {
         if (details == null || details.isEmpty()) {
             return;
@@ -79,10 +78,10 @@ final class NfoStreamDetails {
     }
 
     /**
-     * Der Block {@code <fileinfo>} als Text, eingerückt wie die übrige Datei.
+     * The {@code <fileinfo>} block as text, indented like the rest of the file.
      *
-     * @param indent  Einrückung eines Kindelements des Wurzelelements, zugleich eine Einrückungsstufe
-     * @param newline Zeilenende der Datei
+     * @param indent  indentation of a child element of the root element, at the same time one indentation level
+     * @param newline line ending of the file
      */
     static String toText(StreamDetails details, String indent, String newline) {
         StringBuilder text = new StringBuilder();
@@ -168,7 +167,7 @@ final class NfoStreamDetails {
                 NfoSupplementReader.integer(NfoDocuments.text(audio, BITRATE)));
     }
 
-    /** Ember kennzeichnet externe Untertitel mit dem Typ {@code External} und ihrem Pfad. */
+    /** Ember marks external subtitles with the type {@code External} and their path. */
     private static StreamDetails.Subtitle subtitle(Element subtitle) {
         String path = NfoDocuments.text(subtitle, PATH);
         boolean external = EXTERNAL.equalsIgnoreCase(NfoDocuments.text(subtitle, TYPE)) || path != null;
@@ -191,7 +190,7 @@ final class NfoStreamDetails {
         }
     }
 
-    /** Ember schreibt die Größe als Gleitkommazahl, Kodi als Ganzzahl. */
+    /** Ember writes the size as a floating-point number, Kodi as an integer. */
     private static Long fileSize(String value) {
         Double size = decimal(value);
         return size == null || size <= 0 ? null : Math.round(size);
@@ -200,7 +199,7 @@ final class NfoStreamDetails {
     private record Stream(String name, Map<String, String> fields) {
     }
 
-    /** Elemente einer Spur in Schreibreihenfolge; leere Werte entfallen. */
+    /** Elements of a stream in writing order; empty values are dropped. */
     private static final class Fields {
 
         private final Map<String, String> values = new LinkedHashMap<>();

@@ -5,11 +5,11 @@ import java.net.URI;
 import de.tiktak.kmm.plugin.api.PluginContext;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.fanarttv.*}).
+ * Settings of the plugin ({@code kmm.plugins.settings.fanarttv.*}).
  *
- * @param apiKey    Projekt-API-Key von fanart.tv; leer, wenn nicht konfiguriert
- * @param clientKey optionaler persönlicher Key; neue Bilder erscheinen damit früher
- * @param baseUrl   Basis-URL der API
+ * @param apiKey    project API key of fanart.tv; empty if not configured
+ * @param clientKey optional personal key; new images show up earlier with it
+ * @param baseUrl   base URL of the API
  */
 record FanartTvSettings(String apiKey, String clientKey, URI baseUrl) {
 

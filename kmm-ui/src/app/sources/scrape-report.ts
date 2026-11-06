@@ -5,6 +5,7 @@ import { RouterLink } from '@angular/router';
 import { translate, TranslocoPipe } from '@jsverse/transloco';
 
 import { LanguageService } from '../i18n/language.service';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { Job } from '../jobs/job';
 import { finishedJobSummary, unsuccessfulJobSummary } from './job-summary';
 import { AutoScrapeResult } from './media-source';
@@ -15,7 +16,7 @@ const SUMMARY = 'sources.scrapeSummary';
 /** Stays until it is closed, because titles without a match have to be edited one by one afterwards. */
 @Component({
   selector: 'app-scrape-report',
-  imports: [MatButtonModule, MatCardModule, RouterLink, TranslocoPipe],
+  imports: [LocalizedPipe, MatButtonModule, MatCardModule, RouterLink, TranslocoPipe],
   templateUrl: './scrape-report.html',
   styleUrl: './scrape-report.scss',
 })

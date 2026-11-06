@@ -1,7 +1,7 @@
 package de.tiktak.kmm.backup;
 
 /**
- * Feldnamen und Version des Dateiformats: gzip-komprimiertes JSON mit den Kopfdaten, danach den Zeilen je Tabelle.
+ * Field names and version of the file format: gzip-compressed JSON with the header, followed by the rows per table.
  */
 final class BackupFormat {
 

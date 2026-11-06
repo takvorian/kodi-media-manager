@@ -7,9 +7,9 @@ import org.springframework.core.io.Resource;
 import org.springframework.web.servlet.resource.PathResourceResolver;
 
 /**
- * Liefert für Routen der Angular-App (z. B. {@code /movies/42}) die {@code index.html} aus, damit
- * Deep Links und Browser-Reloads funktionieren. Fehlende Dateien mit Endung und Backend-Pfade
- * bleiben 404.
+ * Serves the {@code index.html} for routes of the Angular app (e.g. {@code /movies/42}) so that
+ * deep links and browser reloads work. Missing files with an extension and backend paths
+ * remain 404.
  */
 class SpaFallbackResourceResolver extends PathResourceResolver {
 

@@ -5,11 +5,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 
 /**
- * Einstellungen für Serien, getrennt von denen für Filme wie in Ember.
+ * Settings for TV shows, separate from those for movies as in Ember.
  *
- * @param metadataLanguage Sprache der Serien-Metadaten beim Scrapen, z. B. {@code de-DE}
- * @param artworkLanguage  bevorzugte Sprache der Serienbilder (ISO 639-1)
- * @param episodeOrdering  Reihenfolge der Episoden für die Scraper
+ * @param metadataLanguage language of the TV show metadata when scraping, e.g. {@code de-DE}
+ * @param artworkLanguage  preferred language of the TV show artwork (ISO 639-1)
+ * @param episodeOrdering  order of the episodes for the scrapers
  */
 public record TvSettings(
         @NotBlank @Pattern(regexp = KmmSettings.METADATA_LANGUAGE_PATTERN) String metadataLanguage,
@@ -21,7 +21,7 @@ public record TvSettings(
         artworkLanguage = artworkLanguage == null ? null : artworkLanguage.strip();
     }
 
-    /** Vorgabe: dieselben Sprachen wie bei Filmen, Episoden in Ausstrahlungsreihenfolge. */
+    /** Default: the same languages as for movies, episodes in airing order. */
     static TvSettings like(String metadataLanguage, String artworkLanguage) {
         return new TvSettings(metadataLanguage, artworkLanguage, EpisodeOrdering.AIRED);
     }

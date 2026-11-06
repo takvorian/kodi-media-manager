@@ -13,13 +13,13 @@ import de.tiktak.kmm.filter.FieldChange;
 import de.tiktak.kmm.filter.ListChange;
 
 /**
- * Gemeinsame Änderungen an mehreren Serien. Nicht angegebene Teile bleiben unverändert.
+ * Common changes to several TV shows. Parts not specified stay unchanged.
  *
- * @param showIds die zu ändernden Serien
- * @param genres  Genres hinzufügen bzw. entfernen
- * @param tags    Tags hinzufügen bzw. entfernen
- * @param mpaa    Altersfreigabe setzen oder leeren
- * @param status  Status setzen oder leeren, z. B. {@code Ended}
+ * @param showIds the TV shows to change
+ * @param genres  add or remove genres
+ * @param tags    add or remove tags
+ * @param mpaa    set or clear the age rating
+ * @param status  set or clear the status, e.g. {@code Ended}
  */
 public record TvShowBatchEdit(
         @NotNull @NotEmpty @Size(max = MAX_SHOWS) List<@NotNull Long> showIds,
@@ -38,8 +38,8 @@ public record TvShowBatchEdit(
         status = status == null ? FieldChange.KEEP : status;
     }
 
-    /** Altersfreigabe und Status sind kürzer als die übrigen Felder. */
-    @AssertTrue(message = "Altersfreigabe oder Status sind zu lang.")
+    /** Certification and status are shorter than the other fields. */
+    @AssertTrue(message = "Certification or status is too long.")
     boolean isShortEnough() {
         return (mpaa == null || mpaa.fits(TvTexts.MAX_SHORT_LENGTH))
                 && (status == null || status.fits(TvTexts.MAX_SHORT_LENGTH));

@@ -15,9 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest und ändert die Metadaten eines Films. Änderungen werden zuerst in die NFO geschrieben;
- * schlägt das fehl, bleibt auch die Datenbank unverändert. Die NFO ist die maßgebliche Quelle.
- * Nach dem Speichern wird ein {@link MovieFilesChangedEvent} veröffentlicht.
+ * Reads and changes the metadata of a movie. Changes are written to the NFO first;
+ * if that fails, the database stays unchanged as well. The NFO is the authoritative source.
+ * After saving, a {@link MovieFilesChangedEvent} is published.
  */
 @Slf4j
 @Service
@@ -37,7 +37,7 @@ public class MovieMetadataService {
         return MovieDetails.from(movie, nfoFiles.find(movie.companionFiles()));
     }
 
-    /** Der Film für die Filmansicht; eine außerhalb von KMM geänderte NFO wird vorher eingelesen. */
+    /** The movie for the movie view; an NFO changed outside KMM is read in first. */
     @Transactional
     public MovieDetails open(long movieId) {
         Movie movie = require(movieId);
@@ -58,11 +58,11 @@ public class MovieMetadataService {
     }
 
     /**
-     * Ändert die Metadaten ausgehend vom aktuellen Stand, etwa in der Stapel-Bearbeitung. Eine außerhalb von KMM
-     * geänderte NFO wird vorher eingelesen, damit die Änderung auf ihr aufsetzt.
+     * Changes the metadata starting from the current state, e.g. in batch edit. An NFO changed outside KMM
+     * is read in first so that the change builds on it.
      *
-     * @return ob sich etwas geändert hat
-     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann
+     * @return whether anything changed
+     * @throws NfoNotWritableException if the NFO cannot be written
      */
     @Transactional
     public boolean change(long movieId, UnaryOperator<MovieMetadata> change) {
@@ -80,7 +80,7 @@ public class MovieMetadataService {
         return true;
     }
 
-    /** Die Sprache für das Scrapen dieses Films; {@code null} heißt: die der Einstellungen. */
+    /** The language for scraping this movie; {@code null} means: the one from the settings. */
     public String scrapeLanguage(long movieId) {
         Movie movie = require(movieId);
         return movie.getMetadataLanguage() != null ? movie.getMetadataLanguage()
@@ -88,11 +88,11 @@ public class MovieMetadataService {
     }
 
     /**
-     * Ändert die eigene Sprache des Films in Datenbank und NFO. Eine außerhalb von KMM geänderte NFO wird vorher
-     * eingelesen.
+     * Changes the movie's own language in the database and NFO. An NFO changed outside KMM is
+     * read in first.
      *
-     * @param language Sprache oder {@code null}, dann gilt die der Quelle bzw. der Einstellungen
-     * @return ob sich etwas geändert hat
+     * @param language language or {@code null}, in which case the source or settings language applies
+     * @return whether anything changed
      */
     @Transactional
     public boolean changeLanguage(long movieId, String language) {
@@ -106,7 +106,7 @@ public class MovieMetadataService {
         return true;
     }
 
-    /** Trägt eine eigene Sprache in eine eben erst angelegte NFO ein. */
+    /** Enters an own language into a freshly created NFO. */
     @Transactional
     public void storeLanguageInNfo(long movieId) {
         Movie movie = require(movieId);

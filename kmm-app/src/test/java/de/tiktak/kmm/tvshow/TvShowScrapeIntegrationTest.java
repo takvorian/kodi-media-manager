@@ -38,6 +38,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.plugin.ScraperRegistry;
@@ -56,8 +57,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Online-Suche für Serien über die REST-API mit einem Stub-Scraper: Suche, Vorschlag, Übernahme der
- * Episodendaten in Datenbank und NFOs sowie fehlende Episoden.
+ * Online search for TV shows via the REST API with a stub scraper: search, suggestion, applying the
+ * episode data to the database and NFOs, and missing episodes.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -68,7 +69,7 @@ class TvShowScrapeIntegrationTest {
     private static final String JSON = "application/json";
     private static final Duration JOB_TIMEOUT = Duration.ofSeconds(10);
     private static final String SCRAPER = "stub";
-    /** Jeder Test nutzt eine eigene ID, weil geladene Serien zwischengespeichert werden. */
+    /** Each test uses its own ID because loaded TV shows are cached. */
     private static final AtomicInteger PROVIDER_IDS = new AtomicInteger(4600);
 
     @Autowired
@@ -170,7 +171,7 @@ class TvShowScrapeIntegrationTest {
         verify(scraper).episodeDetails(argThat(episode -> episode.episode() == 2));
         verify(scraper).episodeDetails(argThat(episode -> episode.episode() == 3));
 
-        assertThat(fill().toString()).as("zweite Übernahme ändert nichts").isEqualTo(
+        assertThat(fill().toString()).as("a second apply changes nothing").isEqualTo(
                 "{\"updated\":0,\"unchanged\":3,\"unmatched\":1,\"failedFiles\":[]}");
         verify(scraper, times(1)).fetch(providerId);
         verify(scraper).episodeDetails(argThat(episode -> episode.episode() == 2));
@@ -203,14 +204,15 @@ class TvShowScrapeIntegrationTest {
 
         assertThat(mockMvc.get().uri(TvShowScrapeController.MISSING_EPISODES_PATH, showId).param("scraper", SCRAPER))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT)
-                .bodyJson().extractingPath("$.detail").asString().contains("nicht eindeutig zugeordnet");
+                .bodyJson().extractingPath("$.detailText.key").isEqualTo("tvShow.notIdentified.detail");
     }
 
     @Test
     void reportsScraperProblems() {
         TvShowScraper unconfigured = mock(TvShowScraper.class);
         when(unconfigured.displayName()).thenReturn("TheTVDB");
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Für TVDB fehlt ein API-Key."));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("Für TVDB fehlt ein API-Key.")));
         when(scraperRegistry.tvShowScraper("tvdb")).thenReturn(Optional.of(unconfigured));
         when(scraper.fetch("404")).thenReturn(Optional.empty());
         when(scraper.fetch("502")).thenThrow(new ScraperException("Anbieter nicht erreichbar"));
@@ -266,7 +268,9 @@ class TvShowScrapeIntegrationTest {
         JsonNode result = changeLanguage("fr-FR", true);
 
         assertThat(result.get("failed").asInt()).isEqualTo(1);
-        assertThat(result.get("failures").get(0).asString()).contains("nicht eindeutig zugeordnet");
+        JsonNode failure = result.get("failures").get(0);
+        assertThat(failure.get("key").asString()).isEqualTo("tvShow.batch.failure");
+        assertThat(failure.get("args").get("message").get("key").asString()).isEqualTo("tvShow.notIdentified.detail");
     }
 
     private JsonNode changeLanguage(String language, boolean refetchTexts) {

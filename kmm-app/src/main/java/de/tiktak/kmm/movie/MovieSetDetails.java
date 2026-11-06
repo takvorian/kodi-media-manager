@@ -3,7 +3,7 @@ package de.tiktak.kmm.movie;
 import java.util.List;
 
 /**
- * Ein Filmset mit seinen Filmen in der Reihenfolge des Sets.
+ * A movie set with its movies in the order of the set.
  */
 public record MovieSetDetails(long id, MovieSetData data, List<Member> movies) {
 
@@ -11,7 +11,7 @@ public record MovieSetDetails(long id, MovieSetData data, List<Member> movies) {
         movies = List.copyOf(movies);
     }
 
-    /** Ein Film des Sets. */
+    /** A movie of the set. */
     public record Member(long id, String title, Integer year) {
     }
 }

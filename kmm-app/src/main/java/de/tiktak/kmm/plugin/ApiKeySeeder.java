@@ -9,9 +9,9 @@ import de.tiktak.kmm.settings.ApiKeyService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Übernimmt beim Start API-Keys aus der Konfiguration ({@code kmm.plugins.settings.*}, gefüllt aus
- * Umgebungsvariablen wie {@code KMM_TMDB_API_KEY}) in den Einstellungsspeicher, solange dort noch
- * keiner steht. Danach gilt der gespeicherte Key, auch wenn die Umgebungsvariable gesetzt bleibt.
+ * On startup, takes over API keys from the configuration ({@code kmm.plugins.settings.*}, filled from
+ * environment variables such as {@code KMM_TMDB_API_KEY}) into the settings store as long as there is
+ * none there yet. After that the stored key applies, even if the environment variable stays set.
  */
 @Component
 @RequiredArgsConstructor

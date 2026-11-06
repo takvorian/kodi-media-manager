@@ -1044,13 +1044,94 @@
     "backup": {
       "import": {
         "title": "Sicherung einspielen",
-        "dryRunTitle": "Sicherung einspielen (Probelauf)"
+        "dryRunTitle": "Sicherung einspielen (Probelauf)",
+        "progress": "Daten werden übernommen",
+        "safetyCopy": "Bisheriger Stand wird gesichert"
+      },
+      "unusable": {
+        "title": "Sicherung nicht verwendbar"
+      },
+      "uploadMissing": "Bitte zuerst eine Sicherung hochladen.",
+      "invalidFile": "Die Datei ist keine gültige KMM-Sicherung.",
+      "invalidId": "Die Sicherung enthält eine ungültige ID: {id}",
+      "invalidValue": "Die Sicherung enthält einen ungültigen Wert: {value}",
+      "newerVersion": "Die Sicherung stammt aus einer neueren KMM-Version. Bitte aktualisiere KMM zuerst.",
+      "newerVersionOf": "Die Sicherung stammt aus einer neueren KMM-Version ({version}). Bitte aktualisiere KMM zuerst.",
+      "importFailed": "Der Import ist fehlgeschlagen, es wurde nichts geändert: {reason}",
+      "pathInvalid": "„{path}“ ist auf diesem System kein gültiger Pfad.",
+      "pathNotAbsolute": "„{path}“ ist auf diesem System kein absoluter Pfad. Unter Docker beginnt er zum Beispiel mit /media.",
+      "warning": {
+        "sourceNameTaken": "Die Quelle „{name}“ ({path}) wurde mit ihrem Inhalt übersprungen: Der Name ist schon vergeben.",
+        "sourceOverlaps": "Die Quelle „{name}“ ({path}) wurde mit ihrem Inhalt übersprungen: Sie überschneidet sich mit „{other}“.",
+        "sourcePathInvalid": "Der Pfad {path} der Quelle „{name}“ ist auf diesem System ungültig.",
+        "sourceUnreachable": "Das Verzeichnis {path} der Quelle „{name}“ ist derzeit nicht erreichbar."
       }
     },
     "migration": {
       "import": {
         "title": "Ember-Import",
-        "dryRunTitle": "Ember-Import (Probelauf)"
+        "dryRunTitle": "Ember-Import (Probelauf)",
+        "reading": "Ember-Datenbank wird gelesen"
+      },
+      "invalidProfile": {
+        "title": "Ungültiges Ember-Profil"
+      },
+      "upload": {
+        "importRunning": "Gerade läuft ein Ember-Import. Bitte warte, bis er fertig ist.",
+        "noDatabase": "In den hochgeladenen Dateien ist keine Ember-Datenbank.",
+        "missing": "Bitte zuerst das Ember-Profil hochladen.",
+        "foreignFile": "„{name}“ gehört nicht zu einem Ember-Profil."
+      },
+      "warning": {
+        "kodiHostsUnreadable": "Die Kodi-Geräte konnten nicht gelesen werden: {reason}",
+        "settingsUnreadable": "Die Ember-Einstellungen konnten nicht gelesen werden: {reason}",
+        "renameSettingsUnreadable": "Die Einstellungen zum Umbenennen konnten nicht gelesen werden: {reason}",
+        "kodiHostWithoutAddress": "Ein Kodi-Gerät ohne Adresse wurde nicht übernommen.",
+        "kodiMappingMissing": "Kodi-Gerät „{host}“: Für {local} gibt es keine Pfad-Zuordnung; diese Zuordnung zu {remote} fehlt.",
+        "invalidPath": "„{title}“ wurde übersprungen, der Pfad ist auf diesem System ungültig: {path}",
+        "severalSets": "„{title}“ gehört in Ember zu mehreren Sets; übernommen wurde das erste.",
+        "movieListNotTranslated": "Die Ember-Filmliste „{name}“ wurde nicht übernommen, ihre Bedingungen lassen sich nicht übersetzen: {conditions}",
+        "sourceUnreachable": "Das Verzeichnis {directory} der Quelle „{name}“ ist derzeit nicht erreichbar.",
+        "episodeMismatch": "{path} wurde übersprungen: Ember nennt {ember}, der Dateiname aber {file}."
+      },
+      "sourceSkipped": {
+        "notMapped": "{name} ({path}): keine gültige Pfad-Zuordnung auf diesem System",
+        "conflict": "{name} ({path}): {reason}"
+      },
+      "settings": {
+        "movieList": "Filmliste „{name}“ als Filter übernommen",
+        "metadataLanguage": "Sprache der Metadaten: {value}",
+        "artworkLanguage": "Bevorzugte Bildsprache: {value}",
+        "videoExtensions": "Video-Dateiendungen: {value}",
+        "excludedPaths": "Ausgeschlossene Ordner: {value}",
+        "tvMetadataLanguage": "Sprache der Serien-Metadaten: {value}",
+        "tvArtworkLanguage": "Bevorzugte Bildsprache für Serien: {value}",
+        "episodeOrdering": "Episodenreihenfolge: {value}",
+        "proxy": "Proxy: {host}:{port}{withUser, select, true { (Passwort bitte in den Einstellungen eingeben)} other {}}",
+        "folderNotMapped": "Ordner für {label} nicht übernommen: „{ember}“ passt zu keiner Pfadzuordnung.",
+        "folder": "Ordner für {label}: {folder}",
+        "storageOff": "{label} bleibt aus, weil der Ordner fehlt.",
+        "patternNotTranslated": "Muster für {label} nicht übernommen: „{ember}“ lässt sich nicht übersetzen, es bleibt „{current}“.",
+        "pattern": "Muster für {label}: {pattern} (Ember: {ember})",
+        "flag": "{label}: {value}",
+        "yes": "ja",
+        "no": "nein",
+        "label": {
+          "movieFolder": "Filmordner",
+          "movieFile": "Filmdateien",
+          "tvShowFolder": "Serienordner",
+          "seasonFolder": "Staffelordner",
+          "episodeFile": "Episodendateien",
+          "movieOnEdit": "Filme nach dem Bearbeiten umbenennen",
+          "movieOnScrape": "Filme nach dem Scrapen umbenennen",
+          "tvOnEdit": "Episoden nach dem Bearbeiten umbenennen",
+          "tvOnScrape": "Serien nach dem Scrapen umbenennen",
+          "episodesOnScan": "Neue Episoden beim Scan umbenennen",
+          "flatImages": "Set-Bilder im flachen Schema",
+          "kodiImages": "Set-Bilder in Kodis Set-Ordnern",
+          "assignOnScrape": "Filme beim Scrapen ihrem Filmset zuordnen",
+          "metaDataScan": "Technische Angaben beim Scrapen auslesen"
+        }
       }
     },
     "job": {
@@ -1062,6 +1143,644 @@
       "notFound": {
         "title": "Job nicht gefunden",
         "detail": "Es gibt keinen Job mit der ID {id}."
+      }
+    },
+    "scraper": {
+      "httpError": "{provider} antwortet mit Fehler {status}.",
+      "unreachable": "{provider} ist nicht erreichbar: {reason}",
+      "interrupted": "Die Anfrage an {provider} wurde unterbrochen.",
+      "requestInterrupted": "Die Anfrage wurde unterbrochen.",
+      "unexpectedResponse": "{provider} hat eine unerwartete Antwort geliefert.",
+      "apiKeyRejected": "{provider} lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.",
+      "rateLimitReached": "Das Anfragelimit von {provider} ist erreicht. Bitte später erneut versuchen.",
+      "apiKeyMissing": "Für {provider} fehlt ein API-Key (Einstellungen → API-Keys).",
+      "tvdb": {
+        "credentialsRejected": "TVDB lehnt den API-Key oder die PIN ab. Bitte unter Einstellungen → API-Keys prüfen.",
+        "loginFailed": "Die Anmeldung bei TVDB ist fehlgeschlagen (Fehler {status}).",
+        "noToken": "TVDB hat bei der Anmeldung kein Token geliefert.",
+        "attribution": "Metadata provided by TheTVDB. Please consider adding missing information or subscribing."
+      },
+      "trakt": {
+        "clientIdRejected": "Trakt lehnt die Client-ID ab. Bitte unter Einstellungen → API-Keys prüfen.",
+        "clientIdMissing": "Für Trakt fehlt die Client-ID (Einstellungen → API-Keys)."
+      },
+      "omdb": {
+        "dailyLimitReached": "Das Tageslimit des OMDb-API-Keys ist erreicht; morgen geht es weiter."
+      },
+      "moviepilot": {
+        "unknownPageFormat": "Moviepilot: Die Filmseite hat ein unbekanntes Format."
+      },
+      "ofdb": {
+        "sitemapMissing": "OFDb: Die Sitemap {path} fehlt.",
+        "noMovies": "OFDb: Die Sitemaps enthalten keine Filme mehr."
+      },
+      "televisiontunes": {
+        "noAudioFile": "TelevisionTunes liefert unter {url} keine Audiodatei ({status}, {contentType}).",
+        "downloadFailed": "Die Titelmusik von TelevisionTunes konnte nicht geladen werden: {reason}",
+        "foreignTheme": "„{source}“ ist keine Titelmusik von TelevisionTunes."
+      },
+      "youtube": {
+        "notInitialized": "YouTube: Plugin nicht initialisiert.",
+        "ytDlpNotFound": "YouTube: yt-dlp nicht gefunden ({command}). Bitte yt-dlp installieren oder unter kmm.plugins.settings.youtube.yt-dlp angeben.",
+        "notAVideo": "„{source}“ ist kein YouTube-Video.",
+        "noMp3": "yt-dlp hat keine MP3 erzeugt. Ist ffmpeg installiert?",
+        "saveFailed": "Die Titelmusik konnte nicht gespeichert werden: {reason}",
+        "ytDlpFailed": "yt-dlp meldet einen Fehler: {errors}",
+        "ytDlpNotRunning": "yt-dlp läuft nicht: {reason}",
+        "noTempDirectory": "Kein temporärer Ordner für den Download: {reason}"
+      }
+    },
+    "security": {
+      "denied": {
+        "title": "Anfrage abgelehnt",
+        "csrf": "Der Server hat die Anfrage abgelehnt, weil das Sicherheits-Cookie fehlt oder nicht passt. Lade die Seite neu. Hilft das nicht, lösche die Cookies dieser Adresse im Browser.",
+        "permission": "Für diese Aktion fehlt die Berechtigung."
+      }
+    },
+    "tvShow": {
+      "notFound": {
+        "title": "Serie nicht gefunden",
+        "detail": "Es gibt keine Serie mit der ID {id}."
+      },
+      "episodeNotFound": {
+        "title": "Episode nicht gefunden",
+        "detail": "Es gibt keine Episode mit der ID {id}."
+      },
+      "scan": {
+        "title": "Quelle kann nicht gescannt werden",
+        "notATvSource": "Die Quelle „{source}“ enthält keine Serien ({mediaType}).",
+        "unreachable": "Das Verzeichnis „{path}“ der Quelle „{source}“ ist nicht erreichbar.",
+        "jobTitle": "Scan „{source}“",
+        "searching": "Verzeichnisse werden durchsucht",
+        "synchronizing": "Bibliothek wird abgeglichen"
+      },
+      "nfoChangedOutside": {
+        "title": "NFO außerhalb von KMM geändert",
+        "detail": "{file} wurde außerhalb von KMM geändert und lässt sich nicht lesen ({reason}). KMM überschreibt sie deshalb nicht; bitte die Datei prüfen."
+      },
+      "nfoNotWritable": {
+        "title": "NFO konnte nicht geschrieben werden",
+        "detail": "{reason} Bitte Schreibrechte im Serienordner prüfen."
+      },
+      "nfosNotWritten": {
+        "title": "NFO nicht geschrieben",
+        "detail": "NFO nicht geschrieben: {files}"
+      },
+      "noScraper": {
+        "title": "Kein Scraper eingerichtet",
+        "detail": "Es ist kein Serien-Scraper eingerichtet, etwa TVDB oder TMDB mit API-Key."
+      },
+      "missingIdsForTrailers": {
+        "title": "Serie nicht eindeutig zugeordnet",
+        "detail": "Für die Trailersuche wird eine TVDB-, TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+      },
+      "invalidTrailer": {
+        "title": "Ungültiger Trailer",
+        "detail": "„{url}“ ist kein Link, den Kodi abspielen kann (plugin://, http(s)://, smb:// oder nfs://)."
+      },
+      "unknownScraper": {
+        "title": "Scraper nicht gefunden",
+        "detail": "Es ist kein Serien-Scraper mit der ID „{id}“ installiert und aktiv."
+      },
+      "scraperNotConfigured": {
+        "title": "{scraper} ist nicht eingerichtet"
+      },
+      "providerFailed": {
+        "title": "{scraper} meldet einen Fehler"
+      },
+      "notFoundAtProvider": {
+        "title": "Treffer nicht gefunden",
+        "detail": "{scraper} kennt den Eintrag „{id}“ nicht."
+      },
+      "notIdentified": {
+        "title": "Serie nicht zugeordnet",
+        "detail": "„{title}“ ist bei {scraper} nicht eindeutig zugeordnet. Bitte zuerst über die Online-Suche übernehmen."
+      },
+      "invalidSort": {
+        "title": "Ungültige Sortierung",
+        "detail": "Nach „{property}“ kann nicht sortiert werden."
+      },
+      "rename": {
+        "title": "Umbenennen nicht möglich",
+        "invalidPattern": "Muster für {pattern}: {reason}",
+        "foldersNotAllowed": "Muster für {pattern}: Ordner (/) sind hier nicht erlaubt.",
+        "notATvSource": "Die Quelle „{source}“ enthält keine Serien.",
+        "pattern": {
+          "showFolder": "Serienordner",
+          "seasonFolder": "Staffelordner",
+          "episodeFile": "Episodendateien"
+        },
+        "showFolderEmpty": "Das Muster für Serienordner ergibt keinen Namen.",
+        "folderUnreadable": "Ein Ordner der Serie ist nicht lesbar: {reason}",
+        "noEpisodeFile": "Keine Episodendatei lässt sich umbenennen.",
+        "episodeFileInvalid": "Das Muster für Episodendateien ergibt keinen gültigen Dateinamen.",
+        "fileExists": "Die Datei „{file}“ existiert bereits.",
+        "sameName": "Mehrere Episodendateien bekämen denselben Namen.",
+        "folderExists": "Der Ordner „{folder}“ existiert bereits.",
+        "folderInside": "Der neue Ordner liegt im bisherigen.",
+        "folderGone": "Der Ordner „{folder}“ existiert nicht mehr.",
+        "planning": "Neue Namen werden berechnet",
+        "jobTitle": "Serien umbenennen „{source}“",
+        "failed": "Umbenennen fehlgeschlagen: {reason}",
+        "showProblem": "„{title}“: {message}",
+        "episodeProblem": "„{title}“ {episodes}: {message}"
+      },
+      "batch": {
+        "editJobTitle": "{count, plural, one {# Serie} other {# Serien}} bearbeiten",
+        "trailerFillJobTitle": "Fehlende Trailer für {count, plural, one {# Serie} other {# Serien}} holen",
+        "enrichmentJobTitle": "Bewertungen für {count, plural, one {# Serie} other {# Serien}} aktualisieren",
+        "languageJobTitle": "Sprache von {count, plural, one {# Serie} other {# Serien}} ändern",
+        "progress": "Serie {id}",
+        "failure": "Serie {id}: {message}"
+      },
+      "thumbs": {
+        "scraperFailed": "{scraper}: {message}"
+      }
+    },
+    "autoScrape": {
+      "sourceNotPossible": {
+        "title": "Quelle kann nicht gescrapt werden",
+        "detail": "Die Quelle „{source}“ enthält weder Filme noch Serien ({mediaType})."
+      },
+      "seasonNotPossible": {
+        "title": "Staffel kann nicht gescrapt werden",
+        "detail": "„{title}“ hat keine Episoden in Staffel {season}."
+      },
+      "jobTitle": {
+        "single": "Scrapen „{title}“",
+        "movies": "{count, plural, one {# Film} other {# Filme}} scrapen",
+        "tvShows": "{count, plural, one {# Serie} other {# Serien}} scrapen",
+        "season": "Staffel {season} von „{title}“ scrapen",
+        "seasonRefetch": "Staffel {season} von „{title}“ neu holen"
+      },
+      "season": "Staffel {season} von „{title}“",
+      "unexpectedError": "unerwarteter Fehler",
+      "noMetadataScraper": "Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.",
+      "noTvShowScraper": "Kein Serien-Scraper ist eingerichtet; es werden nur Bilder geholt.",
+      "failure": "{entry}: {message}",
+      "unknownMovie": "Film {id}",
+      "unknownShow": "Serie {id}",
+      "technicalDetails": "Technische Angaben: {reason}",
+      "theme": "Titelmusik: {reason}",
+      "enrichment": "Ergänzen: {reason}",
+      "notRenamed": "„{title}“ nicht umbenannt: {reason}",
+      "nfoNotWritten": "NFO nicht geschrieben: {file}"
+    },
+    "source": {
+      "notFound": {
+        "title": "Quelle nicht gefunden",
+        "detail": "Es gibt keine Quelle mit der ID {id}."
+      },
+      "invalidPath": {
+        "title": "Ungültiger Quellpfad",
+        "detail": "„{path}“ ist kein erreichbares Verzeichnis."
+      },
+      "conflict": {
+        "title": "Quelle kollidiert mit vorhandener Quelle",
+        "nameTaken": "Es gibt bereits eine Quelle mit dem Namen „{name}“.",
+        "overlaps": "Der Pfad „{path}“ überschneidet sich mit der Quelle „{source}“ ({sourcePath})."
+      }
+    },
+    "plugin": {
+      "notFound": {
+        "title": "Plugin nicht gefunden",
+        "detail": "Es ist kein Plugin mit der ID „{id}“ installiert."
+      }
+    },
+    "settings": {
+      "invalid": {
+        "title": "Ungültige Einstellungen"
+      },
+      "rename": {
+        "pattern": {
+          "movieFolder": "Filmordner",
+          "movieFile": "Filmdateien",
+          "tvShowFolder": "Serienordner",
+          "seasonFolder": "Staffelordner",
+          "episodeFile": "Episodendateien"
+        },
+        "foldersNotAllowed": "Muster für {pattern}: Ordner (/) sind hier nicht erlaubt.",
+        "invalidPattern": "Muster für {pattern}: {reason}"
+      },
+      "movieSets": {
+        "flatFolderMissing": "Für Set-Bilder im flachen Schema fehlt der Ordner.",
+        "kodiFolderMissing": "Für Set-Bilder in Kodis Set-Ordnern fehlt der Ordner."
+      },
+      "apiKey": {
+        "tmdbApiKey": "TMDB-API-Key",
+        "tvdbApiKey": "TVDB-API-Key (v4)",
+        "tvdbPin": "TVDB-Abonnenten-PIN",
+        "fanartTvApiKey": "fanart.tv-Projekt-Key",
+        "fanartTvClientKey": "fanart.tv-Persönlicher-Key",
+        "traktClientId": "Trakt-Client-ID",
+        "omdbApiKey": "OMDb-API-Key"
+      }
+    },
+    "kodiRpc": {
+      "unauthorized": "Kodi unter {address} lehnt Benutzername oder Passwort ab.",
+      "httpStatus": "Kodi unter {address} antwortet mit HTTP-Status {status}.",
+      "error": "Kodi meldet bei {method} einen Fehler: {message} ({code}).",
+      "timeout": "Kodi unter {address} antwortet nicht rechtzeitig.",
+      "interrupted": "Die Anfrage an Kodi wurde unterbrochen.",
+      "unreachable": "Kodi unter {address}:{port} ist nicht erreichbar. Läuft Kodi, und ist „Steuerung über HTTP erlauben“ aktiviert?",
+      "invalidResponse": "Die Antwort von {address} ist keine gültige Kodi-Antwort.",
+      "libraryBusy": "Kodi liest gerade seine Bibliothek ein. Versuche es danach noch einmal.",
+      "waitInterrupted": "Das Warten auf Kodi wurde abgebrochen.",
+      "noSources": "keine"
+    },
+    "ember": {
+      "directoryNotFound": "Das Verzeichnis „{directory}“ existiert nicht.",
+      "databaseNotFound": "Im Verzeichnis „{directory}“ wurde keine Ember-Datenbank (MyVideos*.emm) gefunden.",
+      "unsupportedSchemaVersion": "Die Ember-Datenbank hat die Schema-Version {found}, unterstützt wird nur Version {supported}. Bitte das Profil einmal mit der letzten Ember-Version öffnen, damit Ember die Datenbank aktualisiert.",
+      "missingTables": "Die Datei „{file}“ ist keine gültige Ember-Datenbank, es fehlen die Tabellen: {tables}.",
+      "databaseUnreadable": "Die Ember-Datenbank „{file}“ kann nicht gelesen werden.",
+      "kodiSettingsUnreadable": "Die Ember-Einstellungen für Kodi „{file}“ können nicht gelesen werden.",
+      "settingsUnreadable": "Die Ember-Einstellungen „{file}“ können nicht gelesen werden."
+    },
+    "media": {
+      "ffprobe": {
+        "notStartable": "ffprobe kann nicht gestartet werden („{executable}“). Ist es installiert und der Pfad richtig eingestellt?",
+        "failed": "ffprobe kann „{input}“ nicht lesen: {detail}",
+        "unintelligibleOutput": "ffprobe kann „{input}“ nicht lesen: unverständliche Ausgabe",
+        "timedOut": "ffprobe hat für „{input}“ zu lange gebraucht."
+      },
+      "unreadable": "„{path}“ kann nicht gelesen werden.",
+      "noStreams": "„{input}“ enthält keine erkennbaren Spuren."
+    },
+    "nfo": {
+      "unreadable": "Die NFO-Datei „{file}“ kann nicht gelesen werden.",
+      "missingEntry": "Die NFO-Datei „{file}“ fehlt oder enthält den Eintrag nicht.",
+      "unwritable": "Die NFO-Datei „{file}“ kann nicht geschrieben werden."
+    },
+    "scanner": {
+      "pattern": {
+        "empty": "Das Muster ist leer.",
+        "invalid": "{problem} (Stelle {position}).",
+        "unmatched": "„{found}“ ohne passendes „{missing}“",
+        "nestedOptional": "Optionale Teile lassen sich nicht verschachteln",
+        "unknownPlaceholder": "Unbekannter Platzhalter „{placeholder}“",
+        "unknownFormat": "Unbekanntes Format „{format}“ bei „{placeholder}“"
+      },
+      "folderExists": "Der Ordner „{folder}“ existiert bereits."
+    },
+    "kodi": {
+      "hostNotFound": {
+        "title": "Kodi-Gerät nicht gefunden",
+        "detail": "Es gibt kein Kodi-Gerät mit der ID {id}."
+      },
+      "nameTaken": {
+        "title": "Name bereits vergeben",
+        "detail": "Es gibt bereits ein Kodi-Gerät mit dem Namen „{name}“."
+      },
+      "noHostFor": {
+        "title": "Kein passendes Kodi-Gerät",
+        "detail": "Kein Kodi-Gerät hat eine Pfad-Zuordnung für {path}."
+      },
+      "noHosts": {
+        "title": "Kein Kodi-Gerät",
+        "detail": "Es ist kein Kodi-Gerät eingerichtet."
+      },
+      "unavailable": {
+        "title": "Kodi nicht erreichbar"
+      },
+      "noHostLeft": {
+        "detail": "Übersprungen, weil kein Kodi-Gerät mehr antwortet."
+      },
+      "refreshFailed": {
+        "title": "Nicht aktualisiert"
+      },
+      "hostProblem": "{host}: {message}",
+      "problems": "{first}; {rest}",
+      "host": {
+        "noSourceWarning": "Kodi hat keine Quelle für {paths}. Prüfe die Pfad-Zuordnung. Quellen in Kodi: {sources}."
+      },
+      "sync": {
+        "refreshed": "„{title}“ aktualisiert.",
+        "scanUnknown": "„{title}“ ist in Kodi noch unbekannt; Kodi liest {directory} ein.",
+        "noSource": "Kodi hat keine Quelle für {directory} und findet dort vermutlich nichts. Prüfe die Pfad-Zuordnung von „{host}“. Quellen in Kodi: {sources}.",
+        "renamed": "Kodi liest {directory} ein und entfernt die alten Einträge aus {previous}.",
+        "setNotInKodi": "Das Filmset „{name}“ ist in Kodi noch unbekannt.",
+        "setUpdated": "Filmset „{name}“ aktualisiert.",
+        "scanSource": "{kind, select, tvShow {Kodi sucht in {directory} nach neuen Serien und Episoden.} other {Kodi sucht in {directory} nach neuen Filmen.}}",
+        "notMapped": "Keine Pfad-Zuordnung für {path}."
+      },
+      "playback": {
+        "jobTitle": "Gesehen-Status „{source}“ aus Kodi",
+        "querying": "Kodi wird abgefragt",
+        "notInKodi": "„{label}“ ist in Kodi nicht bekannt.",
+        "unchanged": "„{label}“ ist bereits auf dem Stand von Kodi.",
+        "kept": "„{label}“: KMM weiß mehr als Kodi, der Stand bleibt.",
+        "failed": "„{label}“: {reason}",
+        "updated": "„{label}“ aus Kodi übernommen: {playCount, plural, =0 {nicht gesehen} other {#× gesehen}}{rating, select, none {} other {, Bewertung {rating}}}."
+      },
+      "batch": {
+        "refreshTvShows": "{count, plural, one {# Serie} other {# Serien}} in Kodi aktualisieren",
+        "refreshMovies": "{count, plural, one {# Film} other {# Filme}} in Kodi aktualisieren"
+      }
+    },
+    "movie": {
+      "notFound": {
+        "title": "Film nicht gefunden",
+        "detail": "Es gibt keinen Film mit der ID {id}."
+      },
+      "item": "Film {id}",
+      "failure": "Film {id}: {reason}",
+      "sort": {
+        "invalid": {
+          "title": "Ungültige Sortierung",
+          "detail": "Nach „{property}“ kann nicht sortiert werden."
+        }
+      },
+      "batch": {
+        "edit": {
+          "jobTitle": "{count, plural, one {# Film bearbeiten} other {# Filme bearbeiten}}"
+        },
+        "trailerFill": {
+          "jobTitle": "{count, plural, one {Fehlenden Trailer für # Film holen} other {Fehlende Trailer für # Filme holen}}"
+        },
+        "enrichment": {
+          "jobTitle": "{count, plural, one {Bewertungen für # Film aktualisieren} other {Bewertungen für # Filme aktualisieren}}"
+        },
+        "language": {
+          "jobTitle": "{count, plural, one {Sprache von # Film ändern} other {Sprache von # Filmen ändern}}"
+        }
+      },
+      "scan": {
+        "jobTitle": "Scan „{source}“",
+        "searching": "Verzeichnisse werden durchsucht",
+        "checkingNfos": "NFOs werden geprüft",
+        "synchronizing": "Bibliothek wird abgeglichen",
+        "notScannable": {
+          "title": "Quelle kann nicht gescannt werden"
+        },
+        "notAMovieSource": {
+          "detail": "Die Quelle „{source}“ enthält keine Filme ({mediaType})."
+        },
+        "unreachable": {
+          "detail": "Das Verzeichnis „{path}“ der Quelle „{source}“ ist nicht erreichbar."
+        }
+      },
+      "rename": {
+        "jobTitle": "Filme umbenennen „{source}“",
+        "planning": "Neue Namen werden berechnet",
+        "impossible": {
+          "title": "Umbenennen nicht möglich"
+        },
+        "invalidPattern": {
+          "detail": "{pattern}: {reason}"
+        },
+        "pattern": {
+          "folder": "Ordnermuster",
+          "file": "Dateimuster"
+        },
+        "folderInFilePattern": {
+          "detail": "Das Dateimuster darf keine Ordner (/) enthalten."
+        },
+        "notAMovieSource": {
+          "detail": "Die Quelle „{source}“ enthält keine Filme."
+        },
+        "folderPatternEmpty": "Das Ordnermuster ergibt keinen Namen.",
+        "filePatternInvalid": "Das Dateimuster ergibt keinen gültigen Dateinamen.",
+        "folderUnreadable": "Der Ordner ist nicht lesbar: {reason}",
+        "folderExists": "Der Ordner „{folder}“ existiert bereits.",
+        "folderInsideCurrent": "Der neue Ordner liegt im bisherigen.",
+        "fileExists": "Die Datei „{file}“ existiert bereits.",
+        "folderGone": "Der Ordner „{folder}“ existiert nicht mehr.",
+        "sharedTarget": "Mehrere Filme bekämen den Ordner „{folder}“.",
+        "failed": "Umbenennen fehlgeschlagen: {reason}",
+        "problem": "„{title}“: {reason}"
+      },
+      "nfo": {
+        "changedOutside": {
+          "title": "NFO außerhalb von KMM geändert",
+          "detail": "{file} wurde außerhalb von KMM geändert und lässt sich nicht lesen ({reason}). KMM überschreibt sie deshalb nicht; bitte die Datei prüfen."
+        },
+        "notWritable": {
+          "title": "NFO konnte nicht geschrieben werden",
+          "detail": "{reason} Bitte Schreibrechte im Filmordner prüfen."
+        }
+      },
+      "scraper": {
+        "unknown": {
+          "title": "Scraper nicht gefunden",
+          "detail": "Es ist kein Scraper mit der ID „{id}“ installiert und aktiv."
+        },
+        "notConfigured": {
+          "title": "{scraper} ist nicht eingerichtet"
+        },
+        "providerFailed": {
+          "title": "{scraper} meldet einen Fehler"
+        },
+        "noMetadataScraper": {
+          "title": "Kein Scraper eingerichtet",
+          "detail": "Es ist kein Metadaten-Scraper eingerichtet, etwa TMDB mit API-Key."
+        },
+        "notIdentified": {
+          "title": "Film nicht zugeordnet",
+          "detail": "„{title}“ ist bei {scraper} nicht eindeutig zugeordnet. Bitte zuerst über die Online-Suche übernehmen."
+        },
+        "noMovieSetScraper": {
+          "title": "Kein Scraper für Filmsets",
+          "detail": "Es ist kein Scraper für Filmsets installiert und aktiv, etwa das TMDB-Plugin."
+        },
+        "notFoundAtProvider": {
+          "title": "Treffer nicht gefunden",
+          "detail": "{scraper} kennt den Eintrag „{id}“ nicht."
+        }
+      },
+      "trailer": {
+        "missingIds": {
+          "title": "Film nicht eindeutig zugeordnet",
+          "detail": "Für die Trailersuche wird eine TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+        },
+        "invalid": {
+          "title": "Ungültiger Trailer",
+          "detail": "„{url}“ ist kein Link, den Kodi abspielen kann (plugin://, http(s)://, smb:// oder nfs://)."
+        }
+      }
+    },
+    "movieSet": {
+      "notFound": {
+        "title": "Filmset nicht gefunden",
+        "detail": "Es gibt kein Filmset mit der ID {id}."
+      },
+      "nameTaken": {
+        "title": "Name vergeben",
+        "detail": "Es gibt schon ein Filmset „{name}“."
+      },
+      "save": {
+        "jobTitle": "Filmset „{name}“ speichern"
+      },
+      "delete": {
+        "jobTitle": "Filmset „{name}“ löschen"
+      },
+      "addMovies": {
+        "jobTitle": "Filme zu „{name}“ hinzufügen"
+      },
+      "removeMovies": {
+        "jobTitle": "Filme aus „{name}“ entfernen"
+      },
+      "completeAll": {
+        "jobTitle": "Alle Sets ergänzen"
+      },
+      "failure": "{set}: {reason}"
+    },
+    "artwork": {
+      "unsupportedType": {
+        "title": "Bildart nicht unterstützt",
+        "detail": "Die Bildart {type} wird für Filme nicht verwaltet.",
+        "otherDetail": "Die Bildart {type} wird für {target} nicht verwaltet."
+      },
+      "target": {
+        "movieSet": "Filmsets",
+        "tvShow": "Serien",
+        "season": "Staffeln",
+        "episode": "Episoden"
+      },
+      "missingIds": {
+        "title": "Film nicht eindeutig zugeordnet",
+        "detail": "Für die Bildsuche wird eine TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+      },
+      "imageMissing": {
+        "title": "Kein Bild vorhanden",
+        "detail": "Es gibt kein Bild der Art {type}."
+      },
+      "unwritable": {
+        "title": "Bild konnte nicht gespeichert werden",
+        "detail": "{file} kann nicht geschrieben werden. Bitte Schreibrechte im Ordner prüfen."
+      },
+      "missingCollectionId": {
+        "title": "Set nicht zugeordnet",
+        "detail": "Für die Bildsuche wird die TMDB-ID der Sammlung benötigt. Bitte zuerst das Set bei TMDB suchen."
+      },
+      "noMovieSetImageStorage": {
+        "title": "Keine Ablage für Set-Bilder",
+        "detail": "Bitte in den Einstellungen unter „Filmsets“ eine Ablage für Set-Bilder einschalten."
+      },
+      "missingTvIds": {
+        "title": "Serie nicht eindeutig zugeordnet",
+        "detail": "Für die Bildsuche wird eine TVDB-, TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+      },
+      "download": {
+        "invalidUrl": {
+          "title": "Ungültige Bildadresse",
+          "detail": "„{url}“ ist keine gültige http(s)-Adresse."
+        },
+        "failed": {
+          "title": "Bild konnte nicht geladen werden",
+          "detail": "{url}: {reason}"
+        },
+        "httpStatus": "HTTP {status}",
+        "interrupted": "Download unterbrochen",
+        "notAnImage": {
+          "title": "Kein unterstütztes Bild",
+          "detail": "{url} liefert „{contentType}“ statt JPEG oder PNG."
+        },
+        "unknownContentType": "unbekannt",
+        "tooLarge": {
+          "title": "Bild zu groß",
+          "detail": "{url} ist größer als {megabytes} MB."
+        }
+      },
+      "warning": {
+        "provider": "{provider}: {reason}",
+        "unexpectedError": "unerwarteter Fehler",
+        "interrupted": "Abfrage unterbrochen",
+        "download": "{type}: {reason}"
+      }
+    },
+    "theme": {
+      "unknownScraper": {
+        "title": "Anbieter nicht gefunden",
+        "detail": "Es ist kein Titelmusik-Anbieter mit der ID „{id}“ installiert und aktiv."
+      },
+      "downloadFailed": {
+        "title": "Titelmusik nicht geladen"
+      },
+      "missing": {
+        "title": "Keine Titelmusik",
+        "detail": "Es gibt keine theme.mp3."
+      },
+      "unwritable": {
+        "title": "Titelmusik nicht gespeichert",
+        "detail": "{file} kann nicht geschrieben werden. Bitte Schreibrechte im Ordner prüfen."
+      },
+      "fill": {
+        "movies": {
+          "jobTitle": "{count, plural, one {Fehlende Titelmusik für # Film holen} other {Fehlende Titelmusik für # Filme holen}}"
+        },
+        "tvShows": {
+          "jobTitle": "Fehlende Titelmusik für {count, plural, one {# Serie} other {# Serien}} holen"
+        }
+      },
+      "warning": "{provider}: {reason}"
+    },
+    "trailer": {
+      "warning": "{provider}: {reason}"
+    },
+    "mediaInfo": {
+      "unreadable": {
+        "title": "Technische Angaben nicht lesbar"
+      },
+      "seasonWithoutEpisodes": {
+        "title": "Keine Episoden",
+        "detail": "„{show}“ hat keine Episoden in Staffel {season}."
+      },
+      "source": {
+        "jobTitle": "Technische Angaben „{source}“"
+      },
+      "season": {
+        "jobTitle": "Technische Angaben Staffel {season} von „{show}“"
+      },
+      "newFiles": {
+        "jobTitle": "Technische Angaben neuer Dateien „{source}“"
+      },
+      "failure": "{entry}: {reason}"
+    },
+    "tag": {
+      "invalid": {
+        "title": "Ungültiger Tag",
+        "detail": "Ein Tag braucht einen Namen mit höchstens {max} Zeichen."
+      },
+      "rename": {
+        "jobTitle": "Tag „{tag}“ in „{name}“ umbenennen"
+      },
+      "delete": {
+        "jobTitle": "Tag „{tag}“ löschen"
+      },
+      "assign": {
+        "jobTitle": "Tag „{tag}“ zuweisen"
+      },
+      "unassign": {
+        "jobTitle": "Tag „{tag}“ entfernen"
+      },
+      "item": {
+        "movie": "Film {id}",
+        "tvShow": "Serie {id}"
+      },
+      "failure": "{entry}: {reason}"
+    },
+    "filter": {
+      "invalid": {
+        "title": "Ungültiger Filter",
+        "operatorNotAllowed": "{field} erlaubt den Vergleich {operator} nicht.",
+        "valueMissing": "Für {field} fehlt der Vergleichswert.",
+        "notANumber": "{field} erwartet eine Zahl, nicht „{value}“.",
+        "notABoolean": "{field} erwartet true oder false, nicht „{value}“."
+      },
+      "saved": {
+        "notFound": {
+          "title": "Filter nicht gefunden",
+          "detail": "Es gibt keinen gespeicherten Filter mit der ID {id}."
+        },
+        "nameTaken": {
+          "title": "Name vergeben",
+          "detail": "Es gibt schon einen Filter „{name}“."
+        },
+        "tooLong": {
+          "title": "Filter zu groß",
+          "detail": "Der Filter hat zu viele oder zu lange Bedingungen."
+        }
       }
     }
   }

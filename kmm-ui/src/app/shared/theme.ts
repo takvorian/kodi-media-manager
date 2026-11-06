@@ -2,6 +2,8 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
+import { LocalizedText } from '../i18n/localized-text';
+
 /** The `theme.mp3` of a movie or TV show. */
 export interface ThemeInfo {
   readonly exists: boolean;
@@ -27,7 +29,7 @@ export interface ThemeOption {
 /** Suggestions, same title first, and notes on providers that are not set up or failed. */
 export interface ThemeOptions {
   readonly candidates: readonly ThemeOption[];
-  readonly warnings: readonly string[];
+  readonly warnings: readonly LocalizedText[];
 }
 
 /** Theme music endpoints of a movie or TV show, e.g. `/api/v1/tvshows/3/theme`. */

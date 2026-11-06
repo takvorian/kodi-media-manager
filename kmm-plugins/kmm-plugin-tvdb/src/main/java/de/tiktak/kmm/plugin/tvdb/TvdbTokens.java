@@ -8,8 +8,8 @@ import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Merkt sich TVDB-Tokens über die Lebensdauer einzelner Scraper hinaus, denn PF4J erzeugt die
- * Erweiterung bei jeder Abfrage neu. Ein Token gilt einen Monat; es wird vorher erneuert.
+ * Remembers TVDB tokens beyond the lifetime of single scrapers because PF4J creates the extension anew for every
+ * request. A token is valid for one month; it is renewed before.
  */
 final class TvdbTokens {
 

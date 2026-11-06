@@ -22,8 +22,8 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Startet das automatische Scrapen im Hintergrund, für eine Quelle, einen einzelnen Eintrag oder eine Auswahl.
- * Fortschritt und Ergebnis liefert die Job-API.
+ * Starts automatic scraping in the background, for a source, a single entry or a selection.
+ * Progress and result are provided by the job API.
  */
 @RestController
 @RequiredArgsConstructor
@@ -59,7 +59,7 @@ public class AutoScrapeController {
         return accepted(autoScrapeService.startTvShow(showId));
     }
 
-    /** @param overwrite ob Titel und Texte der Episoden durch die des Anbieters ersetzt werden */
+    /** @param overwrite whether episode titles and texts are replaced by those of the provider */
     @PostMapping(TV_SEASON_PATH)
     public ResponseEntity<JobSnapshot> startTvSeason(@PathVariable long showId, @PathVariable @PositiveOrZero int season,
             @RequestParam(defaultValue = "false") boolean overwrite) {

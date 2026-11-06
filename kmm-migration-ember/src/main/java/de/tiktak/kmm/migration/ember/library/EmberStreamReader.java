@@ -10,8 +10,8 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Liest Embers Stream-Tabellen ({@code MoviesVStreams} … bzw. {@code TVVStreams} …) und ordnet die
- * Spuren Filmen bzw. Episoden zu.
+ * Reads Ember's stream tables ({@code MoviesVStreams} … or {@code TVVStreams} …) and assigns the streams to movies
+ * or episodes.
  */
 final class EmberStreamReader {
 
@@ -81,7 +81,7 @@ final class EmberStreamReader {
                 EmberValues.text(row, "Subs_Path"));
     }
 
-    /** Ember speichert die Größe als Text einer Gleitkommazahl. */
+    /** Ember stores the size as the text of a floating point number. */
     private static Long fileSize(String text) {
         if (text == null) {
             return null;

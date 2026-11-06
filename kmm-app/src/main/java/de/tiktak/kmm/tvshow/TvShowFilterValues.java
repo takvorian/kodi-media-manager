@@ -4,10 +4,10 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Vorhandene Werte je Filterfeld der Serienliste für Auswahllisten, sortiert; Codecs und Sprachen stammen aus den
- * Episoden.
+ * Existing values per filter field of the TV show list for selection lists, sorted; codecs and languages come from
+ * the episodes.
  *
- * @param resolutions Zeilen der Auflösungsstufen der Episoden, z. B. 720, 1080
+ * @param resolutions rows of the episodes' resolution levels, e.g. 720, 1080
  */
 public record TvShowFilterValues(
         List<String> genres,

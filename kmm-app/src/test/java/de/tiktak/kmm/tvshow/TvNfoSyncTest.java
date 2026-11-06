@@ -120,7 +120,7 @@ class TvNfoSyncTest {
 
         TvNfoSync.applyShow(show, new TvShowNfo("ALF", null, null, null, null, null, null, null, null, null, null,
                 Map.of(), null, List.of(new NfoActor("Paul Fusco", "ALF", 0, null)), null, null), "ALF", 1986);
-        assertThat(show.extras().actors()).as("danach gilt die NFO").extracting(TvActor::name)
+        assertThat(show.extras().actors()).as("afterwards the NFO applies").extracting(TvActor::name)
                 .containsExactly("Paul Fusco");
     }
 
@@ -198,7 +198,7 @@ class TvNfoSyncTest {
         assertThat(show.getTrailer()).isEqualTo(TRAILER);
 
         TvNfoSync.applyShow(show, showNfo(), "ALF", 1986);
-        assertThat(show.getTrailer()).as("unbekannt bleibt wie bisher").isEqualTo(TRAILER);
+        assertThat(show.getTrailer()).as("unknown stays as before").isEqualTo(TRAILER);
 
         TvNfoSync.applyShow(show, showNfo().withTrailer(TvShowNfo.NO_TRAILER), "ALF", 1986);
         assertThat(show.getTrailer()).isNull();

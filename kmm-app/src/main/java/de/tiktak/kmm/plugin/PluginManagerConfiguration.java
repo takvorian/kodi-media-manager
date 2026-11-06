@@ -27,10 +27,10 @@ import lombok.extern.slf4j.Slf4j;
 class PluginManagerConfiguration {
 
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
-    /** Gemeinsame Plugin-Einstellung mit der Sprache der Metadaten. */
+    /** Shared plugin setting with the metadata language. */
     static final String LANGUAGE_SETTING = "language";
 
-    /** Gemeinsamer HTTP-Client für Plugins und Bild-Downloads; der Proxy kommt aus den Einstellungen. */
+    /** Shared HTTP client for plugins and image downloads; the proxy comes from the settings. */
     @Bean
     HttpClient pluginHttpClient(SettingsService settingsService) {
         return HttpClient.newBuilder()
@@ -51,7 +51,7 @@ class PluginManagerConfiguration {
                 () -> sharedSettings(settingsService.current()), apiKeyService::overlay));
     }
 
-    /** Sprachen und Episodenreihenfolge aus dem Einstellungsspeicher; {@link ScrapeLanguage} hat Vorrang. */
+    /** Languages and episode ordering from the settings store; {@link ScrapeLanguage} takes precedence. */
     static Map<String, String> sharedSettings(KmmSettings settings) {
         String language = ScrapeLanguage.current();
         return Map.of(

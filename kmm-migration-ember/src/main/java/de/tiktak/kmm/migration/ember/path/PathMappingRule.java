@@ -1,7 +1,7 @@
 package de.tiktak.kmm.migration.ember.path;
 
 /**
- * Ersetzt einen Pfad-Präfix aus Ember durch einen Präfix im Zielsystem, z. B.
+ * Replaces a path prefix from Ember with a prefix in the target system, e.g.
  * {@code D:\Filme -> /media/filme}.
  */
 public record PathMappingRule(String sourcePrefix, String targetPrefix) {

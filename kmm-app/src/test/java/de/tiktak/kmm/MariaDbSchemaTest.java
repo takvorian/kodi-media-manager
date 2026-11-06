@@ -16,8 +16,8 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.MediaSource;
 
 /**
- * Prüft die MariaDB-Migrationen gegen eine echte MariaDB. Das Mapping aller Entities validiert
- * Hibernate beim Start ({@code ddl-auto=validate}). Wird ohne Docker übersprungen.
+ * Checks the MariaDB migrations against a real MariaDB. Hibernate validates the mapping of all entities
+ * at startup ({@code ddl-auto=validate}). Skipped without Docker.
  */
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
@@ -57,7 +57,7 @@ class MariaDbSchemaTest {
         assertThat(countMovies()).isZero();
     }
 
-    /** Die Filter maskieren Platzhalter mit {@code !} statt Backslash, den MariaDB auch in Zeichenketten auswertet. */
+    /** The filters escape wildcards with {@code !} instead of a backslash, which MariaDB also evaluates in strings. */
     @Test
     void understandsTheLikeEscapeOfTheFilters() {
         Object matches = entityManager.getEntityManager()

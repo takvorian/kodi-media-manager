@@ -4,9 +4,9 @@ import java.util.Locale;
 import java.util.function.Supplier;
 
 /**
- * Die Sprache eines einzelnen Vorgangs, wenn für den Eintrag oder seine Quelle eine eigene gilt. Plugins bekommen ihre
- * Sprache über den Kontext, den {@link PluginContextFactory} bei jeder Abfrage eines Scrapers neu erzeugt. Scraper
- * müssen deshalb innerhalb von {@link #with} abgefragt werden.
+ * The language of a single operation, if the entry or its source has its own. Plugins receive their
+ * language via the context that {@link PluginContextFactory} creates anew on every lookup of a scraper. Scrapers
+ * must therefore be looked up within {@link #with}.
  */
 public final class ScrapeLanguage {
 
@@ -18,23 +18,23 @@ public final class ScrapeLanguage {
     }
 
     /**
-     * @param language Sprache wie {@code de-DE} oder {@code null}, dann gelten die allgemeinen Einstellungen
+     * @param language language such as {@code de-DE} or {@code null}, in which case the general settings apply
      */
     public static <T> T with(String language, Supplier<T> body) {
         return language == null ? body.get() : ScopedValue.where(CURRENT, language).call(body::get);
     }
 
-    /** Die Sprache des laufenden Vorgangs oder {@code null}, wenn die allgemeinen Einstellungen gelten. */
+    /** The language of the current operation or {@code null} if the general settings apply. */
     static String current() {
         return CURRENT.isBound() ? CURRENT.get() : null;
     }
 
-    /** Unterscheidet zwischengespeicherte Antworten nach der Sprache, in der sie geholt wurden. */
+    /** Distinguishes cached responses by the language in which they were fetched. */
     public static String cacheKey() {
         return CURRENT.isBound() ? CURRENT.get() : DEFAULT_KEY;
     }
 
-    /** Die zweistellige Sprache des laufenden Vorgangs, sonst die übergebene. */
+    /** The two-letter language of the current operation, otherwise the one passed in. */
     public static String preferredImageLanguage(String fallback) {
         return CURRENT.isBound() ? CURRENT.get().substring(0, ISO_639_1_LENGTH).toLowerCase(Locale.ROOT) : fallback;
     }

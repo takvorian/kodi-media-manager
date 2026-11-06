@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.EnrichmentScraper;
@@ -54,7 +55,7 @@ class EnrichmentFinderTest {
     @Test
     void asksOnlyWantedAndConfiguredScrapers() {
         EnrichmentScraper unconfigured = mock(EnrichmentScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("OMDb: API-Key fehlt"));
+        when(unconfigured.missingConfiguration()).thenReturn(Optional.of(LocalizedText.literal("OMDb: API-Key fehlt")));
         when(scraperRegistry.enrichmentScrapersFor(MediaType.MOVIE)).thenReturn(List.of(unconfigured, trakt));
         when(trakt.findEnrichment(any())).thenReturn(Optional.of(TRAKT));
 
@@ -134,7 +135,7 @@ class EnrichmentFinderTest {
         assertThat(EnrichmentFinder.first(List.of(empty), Enrichment::runtime)).isNull();
     }
 
-    /** Bewertungen als {Kennung, Wert, Standard}. */
+    /** Ratings as {identifier, value, default}. */
     private static final class RatingAdapterForTest implements EnrichmentFinder.RatingAdapter<String[]> {
 
         @Override

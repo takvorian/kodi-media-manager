@@ -19,8 +19,8 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
- * Liest Kodi-Film-NFOs. Unterstützt neben dem XML-Format auch reine URL-NFOs (nur ein Link auf
- * IMDb oder TMDB) und kombinierte NFOs (XML gefolgt von einem Link), wie Kodi sie akzeptiert.
+ * Reads Kodi movie NFOs. Besides the XML format it supports pure URL NFOs (just a link to IMDb or TMDB) and
+ * combined NFOs (XML followed by a link), as Kodi accepts them.
  */
 public class NfoReader {
 
@@ -120,7 +120,7 @@ public class NfoReader {
         return value != null && YEAR.matcher(value).matches() ? Integer.valueOf(value) : null;
     }
 
-    /** Kodi schreibt die Laufzeit in Minuten, ältere Scraper teils als „120 min“. */
+    /** Kodi writes the runtime in minutes, older scrapers sometimes as "120 min". */
     static Integer number(String value) {
         if (value == null) {
             return null;

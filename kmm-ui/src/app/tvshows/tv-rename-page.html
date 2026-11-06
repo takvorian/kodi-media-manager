@@ -112,7 +112,7 @@
             }
           </div>
           @if (plan.message) {
-            <div class="message">{{ plan.message }}</div>
+            <div class="message">{{ plan.message | localized }}</div>
           }
           @if (plan.files.length > 0) {
             <table class="files">
@@ -137,7 +137,7 @@
                         </div>
                       }
                       @if (file.message) {
-                        <div class="message">{{ file.message }}</div>
+                        <div class="message">{{ file.message | localized }}</div>
                       }
                     </td>
                   </tr>

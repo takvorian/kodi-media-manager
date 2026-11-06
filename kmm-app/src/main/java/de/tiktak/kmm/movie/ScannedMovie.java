@@ -6,9 +6,9 @@ import java.util.Optional;
 import de.tiktak.kmm.scanner.MovieCandidate;
 
 /**
- * Ein beim Scan gefundener Film samt seiner NFO, falls vorhanden.
+ * A movie found during the scan, together with its NFO if present.
  *
- * @param loaded der vorab gelesene Inhalt der NFO; leer, wenn sie seit dem letzten Scan unverändert ist
+ * @param loaded the pre-read content of the NFO; empty if it is unchanged since the last scan
  */
 record ScannedMovie(MovieCandidate candidate, Optional<NfoFileState> nfo, Optional<LoadedMovieNfo> loaded) {
 

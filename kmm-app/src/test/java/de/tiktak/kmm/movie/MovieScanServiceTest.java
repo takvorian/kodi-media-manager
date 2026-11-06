@@ -95,7 +95,8 @@ class MovieScanServiceTest {
         givenSource(MediaType.MOVIE, directory);
         JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "scan:3", LocalizedText.literal("Scan „Filme“"), JobStatus.RUNNING,
                 0, 0, null, null, Instant.now(), null);
-        when(jobService.submit(eq("scan:3"), eq("Scan „Filme“"), any())).thenReturn(started);
+        when(jobService.submit(eq("scan:3"), eq(LocalizedText.of("movie.scan.jobTitle").with("source", "Filme")),
+                any())).thenReturn(started);
 
         assertThat(service.startScan(SOURCE_ID)).isEqualTo(started);
     }
@@ -107,7 +108,7 @@ class MovieScanServiceTest {
         when(synchronizer.synchronize(SOURCE_ID, List.of())).thenReturn(new ScanResult(SOURCE_ID, 0, 0, 0, 0, 0));
         service.startScan(SOURCE_ID);
         ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
-        verify(jobService).submit(anyString(), anyString(), task.capture());
+        verify(jobService).submit(anyString(), any(LocalizedText.class), task.capture());
 
         Object result = task.getValue().run(new RecordingContext(false));
 
@@ -132,11 +133,11 @@ class MovieScanServiceTest {
 
         assertThat(service.scan(source, directory, context)).isEqualTo(expected);
         assertThat(context.progress).containsExactly(
-                "0/0 " + MovieScanService.SEARCHING_MESSAGE,
-                "1/1 " + MovieScanService.SEARCHING_MESSAGE,
-                "1/2 " + MovieScanService.CHECKING_NFOS_MESSAGE,
-                "2/2 " + MovieScanService.CHECKING_NFOS_MESSAGE,
-                "2/2 " + MovieScanService.SYNCHRONIZING_MESSAGE);
+                "0/0 Searching directories",
+                "1/1 Searching directories",
+                "1/2 Checking NFOs",
+                "2/2 Checking NFOs",
+                "2/2 Synchronizing library");
         verify(events).publishEvent(new MovieSourceScannedEvent(SOURCE_ID, 2, 0));
         verify(nfoFiles, never()).read(any());
     }
@@ -186,9 +187,9 @@ class MovieScanServiceTest {
         assertThatThrownBy(() -> service.startScan(SOURCE_ID))
                 .isInstanceOfSatisfying(SourceNotScannableException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
-                    assertThat(exception.getBody().getDetail()).contains("keine Filme");
+                    assertThat(exception.localizedText().key()).isEqualTo("movie.scan.notAMovieSource.detail");
                 });
-        verify(jobService, never()).submit(anyString(), anyString(), any());
+        verify(jobService, never()).submit(anyString(), any(LocalizedText.class), any());
     }
 
     @Test
@@ -197,8 +198,9 @@ class MovieScanServiceTest {
 
         assertThatThrownBy(() -> service.startScan(SOURCE_ID))
                 .isInstanceOfSatisfying(SourceNotScannableException.class,
-                        exception -> assertThat(exception.getBody().getDetail()).contains("nicht erreichbar"));
-        verify(jobService, never()).submit(anyString(), anyString(), any());
+                        exception -> assertThat(exception.localizedText().key())
+                                .isEqualTo("movie.scan.unreachable.detail"));
+        verify(jobService, never()).submit(anyString(), any(LocalizedText.class), any());
     }
 
     @Test
@@ -211,7 +213,7 @@ class MovieScanServiceTest {
         verify(synchronizer, never()).synchronize(anyLong(), anyList());
     }
 
-    /** Der Scanner findet die Filme in einem einzigen Unterordner. */
+    /** The scanner finds the movies in a single subfolder. */
     private void givenScannerFinds(MovieCandidate... candidates) {
         when(scanner.scan(eq(directory), any())).thenAnswer(invocation -> {
             MovieDirectoryScanner.SubtreeScanner subtrees = invocation.getArgument(1);
@@ -234,7 +236,7 @@ class MovieScanServiceTest {
         return source;
     }
 
-    /** Merkt sich alle Fortschrittsmeldungen als „erledigt/gesamt Nachricht“. */
+    /** Remembers all progress messages as "done/total message". */
     private static final class RecordingContext implements JobContext {
 
         private final boolean cancelled;

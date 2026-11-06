@@ -13,14 +13,14 @@ import de.tiktak.kmm.filter.FieldChange;
 import de.tiktak.kmm.filter.ListChange;
 
 /**
- * Gemeinsame Änderungen an mehreren Filmen. Nicht angegebene Teile bleiben unverändert.
+ * Common changes to several movies. Parts not given stay unchanged.
  *
- * @param movieIds    die zu ändernden Filme
- * @param genres      Genres hinzufügen bzw. entfernen
- * @param tags        Tags hinzufügen bzw. entfernen
- * @param mpaa        Altersfreigabe setzen oder leeren
- * @param edition     Fassung setzen oder leeren
- * @param videoSource Videoquelle setzen oder leeren
+ * @param movieIds    the movies to change
+ * @param genres      genres to add or remove
+ * @param tags        tags to add or remove
+ * @param mpaa        set or clear the certification
+ * @param edition     set or clear the edition
+ * @param videoSource set or clear the video source
  */
 public record MovieBatchEdit(
         @NotNull @NotEmpty @Size(max = MAX_MOVIES) List<@NotNull Long> movieIds,
@@ -41,8 +41,8 @@ public record MovieBatchEdit(
         videoSource = videoSource == null ? FieldChange.KEEP : videoSource;
     }
 
-    /** Die Altersfreigabe ist kürzer als die übrigen Felder. */
-    @AssertTrue(message = "Die Altersfreigabe ist zu lang.")
+    /** The certification is shorter than the other fields. */
+    @AssertTrue(message = "The certification is too long.")
     boolean isMpaaShortEnough() {
         return mpaa == null || mpaa.fits(MovieMetadata.MAX_MPAA_LENGTH);
     }
@@ -51,7 +51,7 @@ public record MovieBatchEdit(
         return genres.changes() || mpaa.changes() || edition.changes() || videoSource.changes();
     }
 
-    /** Die Metadaten nach den Änderungen; Genres, Freigabe, Fassung und Videoquelle, sonst alles wie bisher. */
+    /** The metadata after the changes: genres, certification, edition and video source, everything else as before. */
     MovieMetadata apply(MovieMetadata metadata) {
         return new MovieMetadata(metadata.title(), metadata.originalTitle(), metadata.sortTitle(), metadata.year(),
                 metadata.premiered(), metadata.plot(), metadata.outline(), metadata.tagline(), metadata.runtime(),

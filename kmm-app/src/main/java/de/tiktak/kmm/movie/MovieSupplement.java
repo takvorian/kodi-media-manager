@@ -5,15 +5,15 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Weitere Angaben zu einem Film neben den bearbeitbaren Metadaten: Mitwirkende, Zuordnungen,
- * Bewertungen und Nutzerdaten. Texte werden getrimmt und auf die Spaltenlängen gekürzt, leere
- * Einträge entfallen.
+ * Further details of a movie besides the editable metadata: contributors, assignments,
+ * ratings and user data. Texts are trimmed and shortened to the column lengths, empty
+ * entries are dropped.
  *
- * @param writers    Drehbuchautoren
- * @param set        Filmset oder {@code null}
- * @param userRating eigene Bewertung (1–10) oder {@code null}
- * @param playCount  Anzahl der Wiedergaben oder {@code null}
- * @param lastPlayed letzte Wiedergabe oder {@code null}
+ * @param writers    screenwriters
+ * @param set        movie set or {@code null}
+ * @param userRating own rating (1-10) or {@code null}
+ * @param playCount  number of plays or {@code null}
+ * @param lastPlayed last play or {@code null}
  */
 public record MovieSupplement(
         List<Actor> actors,
@@ -46,29 +46,29 @@ public record MovieSupplement(
         ratings = withoutNulls(ratings);
     }
 
-    /** Kopie mit anderen Darstellern. */
+    /** Copy with different actors. */
     public MovieSupplement withActors(List<Actor> newActors) {
         return new MovieSupplement(newActors, directors, writers, studios, countries, tags, ratings, set, userRating,
                 playCount, lastPlayed);
     }
 
-    /** Kopie mit anderen Bewertungen. */
+    /** Copy with different ratings. */
     public MovieSupplement withRatings(List<Rating> newRatings) {
         return new MovieSupplement(actors, directors, writers, studios, countries, tags, newRatings, set, userRating,
                 playCount, lastPlayed);
     }
 
-    /** Kopie mit anderen Tags. */
+    /** Copy with different tags. */
     public MovieSupplement withTags(List<String> newTags) {
         return new MovieSupplement(actors, directors, writers, studios, countries, newTags, ratings, set, userRating,
                 playCount, lastPlayed);
     }
 
     /**
-     * Ein Darsteller; die Reihenfolge ergibt sich aus der Position in der Liste.
+     * An actor; the order results from the position in the list.
      *
-     * @param role  Rolle oder {@code null}
-     * @param thumb URL oder Pfad des Bildes oder {@code null}
+     * @param role  role or {@code null}
+     * @param thumb URL or path of the image or {@code null}
      */
     public record Actor(String name, String role, String thumb) {
 
@@ -80,12 +80,12 @@ public record MovieSupplement(
     }
 
     /**
-     * Eine Bewertung.
+     * A rating.
      *
-     * @param source        Quelle, z. B. {@code imdb}, {@code themoviedb}
-     * @param max           Höchstwert der Skala oder {@code null}
-     * @param votes         Anzahl der Stimmen oder {@code null}
-     * @param defaultRating ob diese Bewertung in Kodi angezeigt wird
+     * @param source        source, e.g. {@code imdb}, {@code themoviedb}
+     * @param max           maximum value of the scale or {@code null}
+     * @param votes         number of votes or {@code null}
+     * @param defaultRating whether this rating is shown in Kodi
      */
     public record Rating(String source, double value, Integer max, Integer votes, boolean defaultRating) {
 
@@ -96,10 +96,10 @@ public record MovieSupplement(
     }
 
     /**
-     * Verweis auf ein Filmset.
+     * Reference to a movie set.
      *
-     * @param overview         Beschreibung des Sets oder {@code null}
-     * @param tmdbCollectionId TMDB-ID der Sammlung oder {@code null}
+     * @param overview         description of the set or {@code null}
+     * @param tmdbCollectionId TMDB ID of the collection or {@code null}
      */
     public record SetReference(String name, String overview, String tmdbCollectionId) {
 
@@ -111,7 +111,7 @@ public record MovieSupplement(
             tmdbCollectionId = Texts.clean(tmdbCollectionId, MAX_ID_LENGTH);
         }
 
-        /** Ein Set ohne TMDB-ID. */
+        /** A set without a TMDB ID. */
         public SetReference(String name, String overview) {
             this(name, overview, null);
         }

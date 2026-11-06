@@ -7,6 +7,8 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.migration.ember.settings.EmberMovieSetSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
@@ -33,8 +35,8 @@ class EmberSettingsMapperTest {
         var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of());
 
         assertThat(imported.settings().tv()).isEqualTo(new TvSettings("de-DE", "de", EpisodeOrdering.ABSOLUTE));
-        assertThat(imported.changes()).containsExactly("Sprache der Serien-Metadaten: de-DE",
-                "Bevorzugte Bildsprache für Serien: de", "Episodenreihenfolge: Absolute");
+        assertThat(english(imported)).containsExactly("Language of the TV show metadata: de-DE",
+                "Preferred image language for TV shows: de", "Episode order: Absolute");
     }
 
     @Test
@@ -47,9 +49,13 @@ class EmberSettingsMapperTest {
 
         assertThat(imported.settings().movieSets())
                 .isEqualTo(new MovieSetSettings(true, "/media/filme/_filmsets", false, null, true));
-        assertThat(imported.changes()).containsExactly("Ordner für Set-Bilder im flachen Schema: /media/filme/_filmsets",
-                "Set-Bilder im flachen Schema: ja", "Set-Bilder in Kodis Set-Ordnern: nein",
-                "Filme beim Scrapen ihrem Filmset zuordnen: ja");
+        assertThat(english(imported)).containsExactly(
+                "Folder for “Set images in the flat scheme”: /media/filme/_filmsets",
+                "Set images in the flat scheme: yes", "Set images in Kodi's set folders: no",
+                "Assign movies to their movie set when scraping: yes");
+        assertThat(imported.changes().getFirst()).isEqualTo(LocalizedText.of("migration.settings.folder")
+                .with("label", LocalizedText.of("migration.settings.label.flatImages"))
+                .with("folder", "/media/filme/_filmsets"));
     }
 
     @Test
@@ -60,9 +66,9 @@ class EmberSettingsMapperTest {
         var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of(), path -> Optional.empty());
 
         assertThat(imported.settings().movieSets()).isEqualTo(MovieSetSettings.DEFAULTS);
-        assertThat(imported.changes()).containsExactly(
-                "Ordner für Set-Bilder in Kodis Set-Ordnern nicht übernommen: „\\\\nas\\sets“ passt zu keiner Pfadzuordnung.",
-                "Set-Bilder in Kodis Set-Ordnern bleibt aus, weil der Ordner fehlt.");
+        assertThat(english(imported)).containsExactly(
+                "Folder for “Set images in Kodi's set folders” not imported: “\\\\nas\\sets” matches no path mapping.",
+                "“Set images in Kodi's set folders” stays off because the folder is missing.");
     }
 
     @Test
@@ -72,7 +78,7 @@ class EmberSettingsMapperTest {
         var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of());
 
         assertThat(imported.settings().mediaInfo()).isEqualTo(new MediaInfoSettings("ffprobe", false, true));
-        assertThat(imported.changes()).containsExactly("Technische Angaben beim Scrapen auslesen: nein");
+        assertThat(english(imported)).containsExactly("Read technical details when scraping: no");
         var withoutValue = new EmberSettings(1, null, List.of(), List.of(), Optional.empty(), null, null, null);
         assertThat(EmberSettingsMapper.map(CURRENT, Optional.of(withoutValue), List.of()).settings().mediaInfo())
                 .isEqualTo(MediaInfoSettings.DEFAULTS);
@@ -89,14 +95,14 @@ class EmberSettingsMapperTest {
         assertThat(imported.settings().rename()).isEqualTo(new RenameSettings("{title} [({year})]",
                 RenameSettings.DEFAULTS.movieFile(), RenameSettings.DEFAULTS.tvShowFolder(), "Staffel {season}",
                 "{show} - S{season:2}E{episode:2}[ - {title}]", false, true, false, false, false));
-        assertThat(imported.changes()).containsExactly(
-                "Muster für Filmordner: {title} [({year})] (Ember: $T {($Y)})",
-                "Muster für Filmdateien nicht übernommen: „$F“ lässt sich nicht übersetzen, es bleibt „{title}[.{source}]“.",
-                "Muster für Staffelordner: Staffel {season} (Ember: Staffel $K1_?)",
-                "Muster für Episodendateien: {show} - S{season:2}E{episode:2}[ - {title}] (Ember: $Z - $W2_S?2E?{ - $T})",
-                "Filme nach dem Bearbeiten umbenennen: nein",
-                "Filme nach dem Scrapen umbenennen: ja",
-                "Neue Episoden beim Scan umbenennen: nein");
+        assertThat(english(imported)).containsExactly(
+                "Pattern for “Movie folders”: {title} [({year})] (Ember: $T {($Y)})",
+                "Pattern for “Movie files” not imported: “$F” cannot be translated, “{title}[.{source}]” remains.",
+                "Pattern for “Season folders”: Staffel {season} (Ember: Staffel $K1_?)",
+                "Pattern for “Episode files”: {show} - S{season:2}E{episode:2}[ - {title}] (Ember: $Z - $W2_S?2E?{ - $T})",
+                "Rename movies after editing: no",
+                "Rename movies after scraping: yes",
+                "Rename new episodes when scanning: no");
         assertThat(EmberSettingsMapper.map(CURRENT, Optional.of(ember.withRename(null)), List.of()).settings()
                 .rename()).isEqualTo(RenameSettings.DEFAULTS);
     }
@@ -120,10 +126,10 @@ class EmberSettingsMapperTest {
         assertThat(imported.settings()).isEqualTo(new KmmSettings("de-DE", "de", List.of("mkv", "avi"),
                 List.of("/media/tmp", "/media/privat"), new ProxySettings("proxy.local", 3128, "user", null),
                 CURRENT.tv()));
-        assertThat(imported.changes()).containsExactly("Sprache der Metadaten: de-DE", "Bevorzugte Bildsprache: de",
-                "Video-Dateiendungen: mkv, avi",
-                "Proxy: proxy.local:3128 (Passwort bitte in den Einstellungen eingeben)",
-                "Ausgeschlossene Ordner: /media/privat");
+        assertThat(english(imported)).containsExactly("Language of the metadata: de-DE",
+                "Preferred image language: de", "Video file extensions: mkv, avi",
+                "Proxy: proxy.local:3128 (please enter the password in the settings)",
+                "Excluded folders: /media/privat");
     }
 
     @Test
@@ -145,7 +151,7 @@ class EmberSettingsMapperTest {
         var imported = EmberSettingsMapper.map(CURRENT, Optional.of(ember), List.of());
 
         assertThat(imported.settings().proxy()).isEqualTo(new ProxySettings("proxy.local", 8080, null, null));
-        assertThat(imported.changes()).containsExactly("Proxy: proxy.local:8080");
+        assertThat(english(imported)).containsExactly("Proxy: proxy.local:8080");
     }
 
     @Test
@@ -154,6 +160,10 @@ class EmberSettingsMapperTest {
 
         assertThat(imported.settings().excludedPaths()).containsExactly("/media/tmp", "/media/privat");
         assertThat(imported.settings().metadataLanguage()).isEqualTo("en-US");
+    }
+
+    private static List<String> english(EmberSettingsMapper.SettingsImport imported) {
+        return imported.changes().stream().map(Messages::english).toList();
     }
 
     @Test

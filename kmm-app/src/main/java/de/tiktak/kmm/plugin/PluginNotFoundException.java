@@ -1,16 +1,17 @@
 package de.tiktak.kmm.plugin;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Ein Plugin mit der angefragten ID ist nicht installiert. Wird als HTTP 404 beantwortet.
+ * No plugin with the requested ID is installed. Answered as HTTP 404.
  */
-public class PluginNotFoundException extends ErrorResponseException {
+public class PluginNotFoundException extends LocalizedProblemException {
 
     PluginNotFoundException(String pluginId) {
-        super(HttpStatus.NOT_FOUND);
-        getBody().setTitle("Plugin nicht gefunden");
-        getBody().setDetail("Es ist kein Plugin mit der ID '%s' installiert.".formatted(pluginId));
+        super(HttpStatus.NOT_FOUND, LocalizedText.of("plugin.notFound.title"),
+                LocalizedText.of("plugin.notFound.detail").with("id", pluginId), null);
     }
 }

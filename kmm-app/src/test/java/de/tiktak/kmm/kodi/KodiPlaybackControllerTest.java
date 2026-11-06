@@ -16,10 +16,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
-import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = KodiPlaybackController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -38,7 +38,7 @@ class KodiPlaybackControllerTest {
     void startsTheImportOfASourceAsJob() {
         UUID jobId = UUID.randomUUID();
         when(playbackService.startSourceImport(3)).thenReturn(new JobSnapshot(jobId, "kodi-playback:3",
-                LocalizedText.literal("Gesehen-Status „Filme“ aus Kodi"), JobStatus.RUNNING, 0, 0, null, null, NOW, null));
+                LocalizedText.of("kodi.playback.jobTitle").with("source", "Filme"), JobStatus.RUNNING, 0, 0, null, null, NOW, null));
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/sources/3/playback").with(csrf()))
                 .hasStatus(HttpStatus.ACCEPTED).hasHeader("Location", "/api/v1/jobs/" + jobId);
@@ -47,9 +47,10 @@ class KodiPlaybackControllerTest {
     @Test
     void takesOverMoviesAndEpisodes() {
         when(playbackService.importMovie(5)).thenReturn(new KodiPlaybackResult("Wohnzimmer",
-                KodiPlaybackOutcome.UPDATED, "„Heat“ aus Kodi übernommen: 2× gesehen, Bewertung 8.", 2, NOW, 8));
+                KodiPlaybackOutcome.UPDATED, LocalizedText.of("kodi.playback.updated").with("label", "Heat"), 2, NOW, 8));
         when(playbackService.importEpisode(9)).thenReturn(new KodiPlaybackResult("Wohnzimmer",
-                KodiPlaybackOutcome.NOT_IN_KODI, "„Lost S01E01“ ist in Kodi nicht bekannt.", null, null, null));
+                KodiPlaybackOutcome.NOT_IN_KODI, LocalizedText.of("kodi.playback.notInKodi").with("label", "Lost S01E01"),
+                null, null, null));
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/5/playback").with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""

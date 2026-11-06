@@ -6,18 +6,18 @@ import java.util.Map;
 import java.util.SortedMap;
 
 /**
- * Inhalt einer {@code tvshow.nfo}.
+ * Content of a {@code tvshow.nfo}.
  *
- * @param premiered   Erstausstrahlung
- * @param runtime     typische Episodenlänge in Minuten
- * @param status      z. B. {@code Continuing} oder {@code Ended}
- * @param uniqueIds   IDs nach Anbieter ({@code tvdb}, {@code tmdb}, {@code imdb}); die erste gilt als Standard
- * @param seasonNames Staffeltitel nach Staffelnummer ({@code <namedseason>})
- * @param userRating  eigene Bewertung 1–10 oder {@code null}
- * @param trailer     Trailer-Link ({@code <trailer>}); {@link #NO_TRAILER}, wenn die NFO keinen hat, und {@code null},
- *                    wenn er unbekannt ist – dann bleibt ein vorhandener Eintrag beim Schreiben unverändert
- * @param language    Sprache ({@code <language>}, von Ember geschrieben) oder {@code null}; Schreiben übernimmt der
- *                    {@link LanguageNfoWriter}, sonst bleibt ein vorhandener Eintrag unverändert
+ * @param premiered   first aired date
+ * @param runtime     typical episode length in minutes
+ * @param status      e.g. {@code Continuing} or {@code Ended}
+ * @param uniqueIds   IDs by provider ({@code tvdb}, {@code tmdb}, {@code imdb}); the first one is the default
+ * @param seasonNames season titles by season number ({@code <namedseason>})
+ * @param userRating  own rating 1–10 or {@code null}
+ * @param trailer     trailer link ({@code <trailer>}); {@link #NO_TRAILER} if the NFO has none, and {@code null} if
+ *                    it is unknown – an existing entry then stays unchanged when writing
+ * @param language    language ({@code <language>}, written by Ember) or {@code null}; the {@link LanguageNfoWriter}
+ *                    writes it, otherwise an existing entry stays unchanged
  */
 public record TvShowNfo(
         String title,
@@ -40,7 +40,7 @@ public record TvShowNfo(
         String language) {
 
     public static final String TVDB = "tvdb";
-    /** Kein Trailer; beim Schreiben wird ein vorhandener Eintrag entfernt. */
+    /** No trailer; writing removes an existing entry. */
     public static final String NO_TRAILER = MovieNfoSupplement.NO_TRAILER;
 
     public TvShowNfo {
@@ -54,7 +54,7 @@ public record TvShowNfo(
         trailer = trailer == null ? null : trailer.strip();
     }
 
-    /** Angaben ohne Angabe der Sprache. */
+    /** Details without a language. */
     public TvShowNfo(String title, String originalTitle, String sortTitle, LocalDate premiered, String plot,
             Integer runtime, String mpaa, String status, List<String> genres, List<String> studios, List<String> tags,
             Map<String, String> uniqueIds, List<NfoRating> ratings, List<NfoActor> actors,
@@ -63,7 +63,7 @@ public record TvShowNfo(
                 ratings, actors, seasonNames, userRating, trailer, null);
     }
 
-    /** Angaben mit unbekanntem Trailer; ein vorhandener Eintrag bleibt beim Schreiben unverändert. */
+    /** Details with an unknown trailer; an existing entry stays unchanged when writing. */
     public TvShowNfo(String title, String originalTitle, String sortTitle, LocalDate premiered, String plot,
             Integer runtime, String mpaa, String status, List<String> genres, List<String> studios, List<String> tags,
             Map<String, String> uniqueIds, List<NfoRating> ratings, List<NfoActor> actors,
@@ -72,7 +72,7 @@ public record TvShowNfo(
                 ratings, actors, seasonNames, userRating, null);
     }
 
-    /** Kopie mit anderem Trailer-Link; {@link #NO_TRAILER} oder {@code null} wie beim Konstruktor. */
+    /** Copy with a different trailer link; {@link #NO_TRAILER} or {@code null} as for the constructor. */
     public TvShowNfo withTrailer(String newTrailer) {
         return new TvShowNfo(title, originalTitle, sortTitle, premiered, plot, runtime, mpaa, status, genres, studios,
                 tags, uniqueIds, ratings, actors, seasonNames, userRating, newTrailer, language);

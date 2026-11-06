@@ -19,8 +19,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Ein gespeicherter Filter. Die Bedingungen stehen als JSON in {@link #definition}; ihre Bedeutung kennt die
- * jeweilige Liste (Filme oder Serien).
+ * A saved filter. The conditions are stored as JSON in {@link #definition}; their meaning is known by the
+ * respective list (movies or TV shows).
  */
 @Entity
 @Table(name = "saved_filter")

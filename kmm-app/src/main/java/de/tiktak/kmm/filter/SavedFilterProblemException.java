@@ -1,31 +1,31 @@
 package de.tiktak.kmm.filter;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Ein gespeicherter Filter existiert nicht, sein Name ist vergeben oder seine Bedingungen sind zu lang.
+ * A saved filter does not exist, its name is taken or its conditions are too long.
  */
-public class SavedFilterProblemException extends ErrorResponseException {
+public class SavedFilterProblemException extends LocalizedProblemException {
 
-    private SavedFilterProblemException(HttpStatus status, String title, String detail) {
-        super(status);
-        getBody().setTitle(title);
-        getBody().setDetail(detail);
+    private SavedFilterProblemException(HttpStatus status, String key, LocalizedText detail) {
+        super(status, LocalizedText.of(key + ".title"), detail, null);
     }
 
     static SavedFilterProblemException notFound(long id) {
-        return new SavedFilterProblemException(HttpStatus.NOT_FOUND, "Filter nicht gefunden",
-                "Es gibt keinen gespeicherten Filter mit der ID %d.".formatted(id));
+        return new SavedFilterProblemException(HttpStatus.NOT_FOUND, "filter.saved.notFound",
+                LocalizedText.of("filter.saved.notFound.detail").with("id", id));
     }
 
     static SavedFilterProblemException nameTaken(String name) {
-        return new SavedFilterProblemException(HttpStatus.CONFLICT, "Name vergeben",
-                "Es gibt schon einen Filter „%s“.".formatted(name));
+        return new SavedFilterProblemException(HttpStatus.CONFLICT, "filter.saved.nameTaken",
+                LocalizedText.of("filter.saved.nameTaken.detail").with("name", name));
     }
 
     static SavedFilterProblemException tooLong() {
-        return new SavedFilterProblemException(HttpStatus.BAD_REQUEST, "Filter zu groß",
-                "Der Filter hat zu viele oder zu lange Bedingungen.");
+        return new SavedFilterProblemException(HttpStatus.BAD_REQUEST, "filter.saved.tooLong",
+                LocalizedText.of("filter.saved.tooLong.detail"));
     }
 }

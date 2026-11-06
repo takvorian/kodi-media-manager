@@ -4,12 +4,14 @@ import java.net.URI;
 import java.util.List;
 import java.util.Objects;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Standbilder einer Episode bei den Serien-Scrapern.
+ * Stills of an episode at the TV show scrapers.
  *
- * @param warnings Hinweise zu Scrapern, die nicht eingerichtet sind, die Serie nicht kennen oder einen Fehler melden
+ * @param warnings notes about scrapers that are not set up, do not know the TV show or report an error
  */
-public record EpisodeThumbs(List<Thumb> thumbs, List<String> warnings) {
+public record EpisodeThumbs(List<Thumb> thumbs, List<LocalizedText> warnings) {
 
     public EpisodeThumbs {
         thumbs = List.copyOf(thumbs);
@@ -17,7 +19,7 @@ public record EpisodeThumbs(List<Thumb> thumbs, List<String> warnings) {
     }
 
     /**
-     * Ein Standbild eines Anbieters.
+     * A still of a provider.
      */
     public record Thumb(String scraperId, String scraperName, URI url) {
 

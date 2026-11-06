@@ -10,6 +10,7 @@ import { EpisodeDetail } from './episode-detail';
 import { EpisodeDetails } from './tvshow';
 import { flushWhenRequested } from '../shared/testing';
 import { EPISODES_URL } from './tvshow.service';
+import { literal } from '../i18n/localized-text';
 
 describe('EpisodeDetail', () => {
   const actors = Array.from({ length: 20 }, (_, index) => ({
@@ -193,7 +194,7 @@ describe('EpisodeDetail', () => {
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/playback' }).flush({
       host: 'Wohnzimmer',
       outcome: 'UPDATED',
-      message: '„ALF S01E16“ aus Kodi übernommen: 3× gesehen.',
+      message: literal('„ALF S01E16“ aus Kodi übernommen: 3× gesehen.'),
       playCount: 3,
       lastPlayedAt: '2025-04-03T21:14:16Z',
       userRating: 8,

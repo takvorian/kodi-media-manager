@@ -8,6 +8,7 @@ import { CONFIRM } from './confirm';
 import { switchLanguage } from './testing';
 import { TrailerOption, WithTrailer } from './trailer';
 import { TrailerEditor } from './trailer-editor';
+import { literal } from '../i18n/localized-text';
 
 describe('TrailerEditor', () => {
   const trailerUrl = '/api/v1/tvshows/5/trailer';
@@ -111,7 +112,7 @@ describe('TrailerEditor', () => {
     button('.find-trailers-button').click();
     httpTesting
       .expectOne({ method: 'GET', url: `${trailerUrl}/candidates` })
-      .flush({ candidates: [german, teaser], warnings: ['YouTube: Key fehlt'] });
+      .flush({ candidates: [german, teaser], warnings: [literal('YouTube: Key fehlt')] });
     await fixture.whenStable();
 
     const candidates = element().querySelectorAll('.trailer-candidate');

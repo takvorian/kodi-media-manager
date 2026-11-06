@@ -3,7 +3,7 @@ package de.tiktak.kmm.system;
 import java.util.List;
 
 /**
- * Basisinformationen über die laufende Instanz.
+ * Basic information about the running instance.
  */
 public record SystemInfo(
         String applicationName,

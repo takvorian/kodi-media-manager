@@ -21,8 +21,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Holt Ergänzungen (Bewertungen, Angaben für leere Felder) bei den Ergänzungs-Scrapern, etwa Trakt und OMDb. Nicht
- * eingerichtete oder nicht erreichbare Anbieter werden übergangen.
+ * Fetches supplements (ratings, details for empty fields) from the supplementing scrapers, such as Trakt and
+ * OMDb. Providers that are not set up or not reachable are skipped.
  */
 @Slf4j
 @Service
@@ -32,9 +32,9 @@ public class EnrichmentFinder {
     private final ScraperRegistry scraperRegistry;
 
     /**
-     * @param uniqueIds bekannte IDs je Anbieter; ohne IDs wird nicht gesucht
-     * @param wanted    welche Anbieter gefragt werden, etwa nur die mit fehlenden Bewertungen
-     * @return die Ergänzungen in der Reihenfolge der Anbieter
+     * @param uniqueIds known IDs per provider; without IDs nothing is searched
+     * @param wanted    which providers are asked, e.g. only those with missing ratings
+     * @return the supplements in the order of the providers
      */
     public List<Enrichment> find(MediaType mediaType, String title, Integer year, Map<String, String> uniqueIds,
             Predicate<EnrichmentScraper> wanted) {
@@ -58,11 +58,11 @@ public class EnrichmentFinder {
     }
 
     /**
-     * Ob ein Anbieter etwas beitragen kann.
+     * Whether a provider can contribute anything.
      *
-     * @param refresh        vorhandene Bewertungen werden aktualisiert; dann zählt jeder Anbieter mit Bewertungen
-     * @param presentRatings Kennungen der vorhandenen Bewertungen
-     * @param emptyFields    ob Felder leer sind, die Anbieter mit Angaben füllen können
+     * @param refresh        existing ratings are updated; then every provider with ratings counts
+     * @param presentRatings identifiers of the existing ratings
+     * @param emptyFields    whether fields are empty that providers can fill with details
      */
     public static Predicate<EnrichmentScraper> contributes(boolean refresh, Set<String> presentRatings,
             boolean emptyFields) {
@@ -71,11 +71,11 @@ public class EnrichmentFinder {
     }
 
     /**
-     * Führt Bewertungen zusammen: Neue kommen hinten dazu, die erste wird Standard, wenn es noch keine gab. Vorhandene
-     * Bewertungen derselben Kennung bleiben, außer {@code replace} ist gesetzt; dann bekommen sie die neuen Werte und
-     * behalten ihre Standard-Markierung.
+     * Merges ratings: new ones are appended, the first becomes the default if there was none yet. Existing
+     * ratings with the same identifier stay, unless {@code replace} is set; then they get the new values and
+     * keep their default flag.
      *
-     * @param <T> Bewertungstyp von Film oder Serie
+     * @param <T> rating type of movie or TV show
      */
     public static <T> List<T> mergeRatings(List<T> current, List<Enrichment> enrichments, boolean replace,
             RatingAdapter<T> adapter) {
@@ -102,7 +102,7 @@ public class EnrichmentFinder {
         return -1;
     }
 
-    /** Erster nicht leerer Wert der Ergänzungen. */
+    /** First non-empty value of the supplements. */
     public static <V> V first(List<Enrichment> enrichments, Function<Enrichment, V> value) {
         return enrichments.stream().map(value)
                 .filter(candidate -> candidate != null && !(candidate instanceof List<?> list && list.isEmpty()))
@@ -110,9 +110,9 @@ public class EnrichmentFinder {
     }
 
     /**
-     * Übersetzt zwischen Anbieter-Bewertungen und den Bewertungen von Film bzw. Serie.
+     * Translates between provider ratings and the ratings of a movie or TV show.
      *
-     * @param <T> Bewertungstyp von Film oder Serie
+     * @param <T> rating type of movie or TV show
      */
     public interface RatingAdapter<T> {
 

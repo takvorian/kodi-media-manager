@@ -7,6 +7,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
 import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
@@ -17,7 +18,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verwaltet die Kodi-Geräte. Öffentliche Schnittstelle des Moduls für andere Module.
+ * Manages the Kodi devices. Public interface of the module for other modules.
  */
 @Slf4j
 @Service
@@ -35,7 +36,7 @@ public class KodiHostService {
         return repository.findAll(BY_NAME).stream().map(this::toResponse).toList();
     }
 
-    /** Stand aller Geräte für einen Abgleich. */
+    /** State of all devices for a sync. */
     List<KodiTarget> targets() {
         return repository.findAll(BY_NAME).stream().map(KodiTarget::of).toList();
     }
@@ -66,10 +67,9 @@ public class KodiHostService {
     }
 
     /**
-     * Übernimmt ein Kodi-Gerät aus einer Migration. Ein vorhandenes Gerät mit demselben Namen wird
-     * aktualisiert.
+     * Imports a Kodi device from a migration. An existing device with the same name is updated.
      *
-     * @return ob das Gerät neu angelegt wurde
+     * @return whether the device was newly created
      */
     @Transactional
     public boolean importHost(KodiHostSettings settings) {
@@ -84,9 +84,9 @@ public class KodiHostService {
     }
 
     /**
-     * Prüft die Verbindung zum Gerät.
+     * Checks the connection to the device.
      *
-     * @throws KodiProblemException wenn Kodi nicht erreichbar ist oder die Anmeldung ablehnt
+     * @throws KodiProblemException if Kodi cannot be reached or rejects the login
      */
     public KodiVersion testConnection(long hostId) {
         KodiEndpoint endpoint = require(hostId).endpoint();
@@ -98,12 +98,12 @@ public class KodiHostService {
     }
 
     /**
-     * Prüft die Pfad-Zuordnung gegen die Quellen des Geräts. Kann KMM die Quellen nicht lesen, gibt es keine Warnung:
-     * Der Verbindungstest selbst meldet dann, ob Kodi erreichbar ist.
+     * Checks the path mapping against the sources of the device. If KMM cannot read the sources, there is no
+     * warning: the connection test itself then reports whether Kodi can be reached.
      *
-     * @return Warnung, wenn Kodi-Pfade der Zuordnung außerhalb aller Quellen liegen
+     * @return warning if Kodi paths of the mapping lie outside all sources
      */
-    public Optional<String> pathMappingWarning(long hostId) {
+    public Optional<LocalizedText> pathMappingWarning(long hostId) {
         KodiHost host = require(hostId);
         KodiSources sources;
         try {
@@ -119,8 +119,9 @@ public class KodiHostService {
         if (unknown.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of("Kodi hat keine Quelle für %s. Prüfe die Pfad-Zuordnung. Quellen in Kodi: %s."
-                .formatted(String.join(", ", unknown), sources));
+        return Optional.of(LocalizedText.of("kodi.host.noSourceWarning")
+                .with("paths", String.join(", ", unknown))
+                .with("sources", sources.describe()));
     }
 
     private KodiHostResponse toResponse(KodiHost host) {

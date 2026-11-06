@@ -5,24 +5,26 @@ import java.util.Set;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.scanner.naming.NamePattern;
 import de.tiktak.kmm.scanner.naming.NamePatternException;
 import de.tiktak.kmm.scanner.naming.NamePlaceholders;
+import de.tiktak.kmm.web.LocalizedTexts;
 
 /**
- * Muster und Auslöser für das Umbenennen, wie Embers Addon „Bulk Rename“. Die automatischen Auslöser sind
- * wie in Ember anfangs aus.
+ * Patterns and triggers for renaming, like Ember's add-on "Bulk Rename". As in Ember, the automatic triggers are
+ * off at first.
  *
- * @param movieFolder    Ordner eines Films, z. B. {@code {title}[ ({year})]}
- * @param movieFile      Dateien eines Films, z. B. {@code {title}[.{source}]}
- * @param tvShowFolder   Ordner einer Serie
- * @param seasonFolder   Ordner einer Staffel
- * @param episodeFile    Dateien einer Episode
- * @param movieOnEdit    Filme nach dem Speichern der Metadaten umbenennen
- * @param movieOnScrape  Filme nach dem Scrapen umbenennen
- * @param tvOnEdit       Serien nach dem Speichern der Metadaten einer Serie oder Episode umbenennen
- * @param tvOnScrape     Serien und Episoden nach dem Scrapen umbenennen
- * @param episodesOnScan neue Episoden beim Scan umbenennen
+ * @param movieFolder    folder of a movie, e.g. {@code {title}[ ({year})]}
+ * @param movieFile      files of a movie, e.g. {@code {title}[.{source}]}
+ * @param tvShowFolder   folder of a TV show
+ * @param seasonFolder   folder of a season
+ * @param episodeFile    files of an episode
+ * @param movieOnEdit    rename movies after their metadata was saved
+ * @param movieOnScrape  rename movies after scraping
+ * @param tvOnEdit       rename TV shows after the metadata of a show or episode was saved
+ * @param tvOnScrape     rename TV shows and episodes after scraping
+ * @param episodesOnScan rename new episodes during the scan
  */
 public record RenameSettings(
         @NotBlank @Size(max = MAX_PATTERN_LENGTH) String movieFolder,
@@ -42,6 +44,8 @@ public record RenameSettings(
             "{show}", "Season {season:2}", "{show} - S{season:2}E{episode:2}[ - {title}]", false, false, false, false,
             false);
 
+    private static final String PATTERN_KEY = "settings.rename.pattern.";
+
     public RenameSettings {
         movieFolder = strip(movieFolder);
         movieFile = strip(movieFile);
@@ -51,23 +55,27 @@ public record RenameSettings(
     }
 
     /**
-     * @throws InvalidSettingsException wenn ein Muster ungültig ist oder ein Dateimuster Ordner enthält
+     * @throws InvalidSettingsException if a pattern is invalid or a file pattern contains folders
      */
     void validate() {
-        check(movieFolder, NamePlaceholders.MOVIE, "Filmordner", true);
-        check(movieFile, NamePlaceholders.MOVIE, "Filmdateien", false);
-        check(tvShowFolder, NamePlaceholders.TV_SHOW, "Serienordner", false);
-        check(seasonFolder, NamePlaceholders.SEASON_FOLDER, "Staffelordner", false);
-        check(episodeFile, NamePlaceholders.EPISODE_FILE, "Episodendateien", false);
+        check(movieFolder, NamePlaceholders.MOVIE, "movieFolder", true);
+        check(movieFile, NamePlaceholders.MOVIE, "movieFile", false);
+        check(tvShowFolder, NamePlaceholders.TV_SHOW, "tvShowFolder", false);
+        check(seasonFolder, NamePlaceholders.SEASON_FOLDER, "seasonFolder", false);
+        check(episodeFile, NamePlaceholders.EPISODE_FILE, "episodeFile", false);
     }
 
-    private static void check(String pattern, Set<String> placeholders, String label, boolean foldersAllowed) {
+    private static void check(String pattern, Set<String> placeholders, String name, boolean foldersAllowed) {
+        LocalizedText label = LocalizedText.of(PATTERN_KEY + name);
         try {
             if (NamePattern.parse(pattern, placeholders).hasFolders() && !foldersAllowed) {
-                throw new InvalidSettingsException("Muster für %s: Ordner (/) sind hier nicht erlaubt.".formatted(label));
+                throw new InvalidSettingsException(
+                        LocalizedText.of("settings.rename.foldersNotAllowed").with("pattern", label));
             }
         } catch (NamePatternException e) {
-            throw new InvalidSettingsException("Muster für %s: %s".formatted(label, e.getMessage()));
+            throw new InvalidSettingsException(LocalizedText.of("settings.rename.invalidPattern")
+                    .with("pattern", label)
+                    .with("reason", LocalizedTexts.of(e)));
         }
     }
 

@@ -9,6 +9,8 @@ import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.web.access.AccessDeniedHandler;
 import org.springframework.security.web.csrf.CsrfException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblems;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -16,17 +18,16 @@ import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Beantwortet abgelehnte Anfragen wie die übrige API als Problem mit verständlichem Text und hält sie
- * im Log fest. Ohne das sähe man in der Oberfläche nur „Unknown Error“ und im Log gar nichts.
+ * Answers rejected requests like the rest of the API as a problem with an understandable text and records them in
+ * the log. Without it the user interface would only show "Unknown Error" and the log nothing at all.
  */
 @Slf4j
 @RequiredArgsConstructor
 class ProblemAccessDeniedHandler implements AccessDeniedHandler {
 
-    static final String CSRF_DETAIL = "Der Server hat die Anfrage abgelehnt, weil das Sicherheits-Cookie fehlt oder "
-            + "nicht passt. Lade die Seite neu. Hilft das nicht, lösche die Cookies dieser Adresse im Browser.";
-    static final String DENIED_DETAIL = "Für diese Aktion fehlt die Berechtigung.";
-    private static final String TITLE = "Anfrage abgelehnt";
+    static final LocalizedText CSRF_DETAIL = LocalizedText.of("security.denied.csrf");
+    static final LocalizedText DENIED_DETAIL = LocalizedText.of("security.denied.permission");
+    private static final LocalizedText TITLE = LocalizedText.of("security.denied.title");
 
     private final ObjectMapper objectMapper;
 
@@ -37,9 +38,8 @@ class ProblemAccessDeniedHandler implements AccessDeniedHandler {
         if (response.isCommitted()) {
             return;
         }
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN,
+        ProblemDetail problem = LocalizedProblems.problem(HttpStatus.FORBIDDEN, TITLE,
                 exception instanceof CsrfException ? CSRF_DETAIL : DENIED_DETAIL);
-        problem.setTitle(TITLE);
         response.setStatus(HttpStatus.FORBIDDEN.value());
         response.setContentType(MediaType.APPLICATION_PROBLEM_JSON_VALUE);
         response.setCharacterEncoding("UTF-8");

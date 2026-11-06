@@ -13,7 +13,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Startet das ffprobe-Programm und liest nur die Angaben, die KMM für die Stream-Details braucht.
+ * Starts the ffprobe program and reads only the details KMM needs for the stream details.
  */
 public class FfprobeRunner implements ProbeRunner {
 
@@ -29,8 +29,8 @@ public class FfprobeRunner implements ProbeRunner {
     private final Duration timeout;
 
     /**
-     * @param executable Pfad zu ffprobe oder nur {@code ffprobe}, wenn es auf dem PATH liegt
-     * @param timeout    höchste Laufzeit je Aufruf; auf Netzlaufwerken braucht ffprobe Sekunden
+     * @param executable path to ffprobe, or just {@code ffprobe} if it is on the PATH
+     * @param timeout    maximum runtime per call; on network drives ffprobe needs seconds
      */
     public FfprobeRunner(String executable, Duration timeout) {
         this.executable = Objects.requireNonNull(executable, "executable must not be null");

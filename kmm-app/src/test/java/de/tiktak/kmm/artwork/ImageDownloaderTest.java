@@ -19,6 +19,8 @@ import org.springframework.util.unit.DataSize;
 
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 class ImageDownloaderTest {
 
     private static final byte[] JPEG = {(byte) 0xFF, (byte) 0xD8, (byte) 0xFF, 1, 2, 3};
@@ -62,7 +64,8 @@ class ImageDownloaderTest {
         assertThatThrownBy(() -> downloader.download(url("/page.html")))
                 .isInstanceOfSatisfying(ArtworkProblemException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
-                    assertThat(exception.getBody().getDetail()).contains("text/html");
+                    assertThat(exception.localizedText().args().get("contentType"))
+                            .isEqualTo(LocalizedText.literal("text/html"));
                 });
     }
 
@@ -70,7 +73,7 @@ class ImageDownloaderTest {
     void rejectsTooLargeImage() {
         assertThatThrownBy(() -> downloader.download(url("/huge.jpg")))
                 .isInstanceOfSatisfying(ArtworkProblemException.class,
-                        exception -> assertThat(exception.getBody().getTitle()).isEqualTo("Bild zu groß"));
+                        exception -> assertThat(exception.getBody().getTitle()).isEqualTo("Image too large"));
     }
 
     @Test
@@ -78,7 +81,8 @@ class ImageDownloaderTest {
         assertThatThrownBy(() -> downloader.download(url("/missing.jpg")))
                 .isInstanceOfSatisfying(ArtworkProblemException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.BAD_GATEWAY);
-                    assertThat(exception.getBody().getDetail()).contains("HTTP 404");
+                    assertThat(exception.localizedText().args().get("reason"))
+                            .isEqualTo(LocalizedText.of("artwork.download.httpStatus").with("status", 404));
                 });
     }
 

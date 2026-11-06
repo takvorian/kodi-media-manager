@@ -2,15 +2,17 @@ package de.tiktak.kmm.kodi;
 
 import java.time.Instant;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis der Übernahme von Gesehen-Status und eigener Bewertung eines Films oder einer Episode.
+ * Result of taking over the watched status and the user rating of a movie or an episode.
  *
- * @param host         Name des befragten Kodi-Geräts
- * @param message      lesbare Beschreibung für die Oberfläche
- * @param playCount    Anzahl der Wiedergaben in KMM danach oder {@code null}
- * @param lastPlayedAt letzte Wiedergabe in KMM danach oder {@code null}
- * @param userRating   eigene Bewertung in KMM danach oder {@code null}
+ * @param host         name of the Kodi device that was asked
+ * @param message      readable description for the user interface
+ * @param playCount    number of plays in KMM afterwards, or {@code null}
+ * @param lastPlayedAt last play in KMM afterwards, or {@code null}
+ * @param userRating   user rating in KMM afterwards, or {@code null}
  */
-public record KodiPlaybackResult(String host, KodiPlaybackOutcome outcome, String message, Integer playCount,
+public record KodiPlaybackResult(String host, KodiPlaybackOutcome outcome, LocalizedText message, Integer playCount,
                                  Instant lastPlayedAt, Integer userRating) {
 }

@@ -9,11 +9,11 @@ import jakarta.validation.constraints.Size;
 import de.tiktak.kmm.filter.FilterOperator;
 
 /**
- * Filter der Filmliste aus einzelnen Bedingungen.
+ * Filter of the movie list made of individual conditions.
  *
- * @param search     Teil des Titels zusätzlich zu den Bedingungen oder {@code null}
- * @param matchAll   ob alle Bedingungen gelten müssen ({@code true}) oder eine genügt
- * @param conditions Bedingungen; ohne Bedingung gelten alle Filme
+ * @param search     part of the title in addition to the conditions, or {@code null}
+ * @param matchAll   whether all conditions must apply ({@code true}) or one is enough
+ * @param conditions conditions; without a condition, all movies apply
  */
 public record MovieFilter(
         @Size(max = MovieFilter.MAX_VALUE_LENGTH) String search,
@@ -31,7 +31,7 @@ public record MovieFilter(
     }
 
     /**
-     * @param value Vergleichswert; bei {@link FilterOperator#EMPTY} und {@link FilterOperator#NOT_EMPTY} ohne Bedeutung
+     * @param value comparison value; irrelevant for {@link FilterOperator#EMPTY} and {@link FilterOperator#NOT_EMPTY}
      */
     public record Condition(
             @NotNull MovieFilterField field,

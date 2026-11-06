@@ -48,8 +48,8 @@ import tools.jackson.databind.node.ArrayNode;
 import tools.jackson.databind.node.ObjectNode;
 
 /**
- * Import der Sicherung Ende zu Ende: Rundlauf über eine echt gescannte Bibliothek, beide Importarten, Pfade,
- * Zugangsdaten und unbrauchbare Dateien.
+ * Backup import end to end: round trip over a really scanned library, both import modes, paths, credentials and
+ * unusable files.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -184,7 +184,7 @@ class BackupImportIntegrationTest {
                 "to", library.resolve("gibt-es-nicht").toString())), false);
 
         assertThat(report.get("unmappedPaths").asInt()).isPositive();
-        assertThat(report.get("warnings").toString()).contains("gibt-es-nicht", "nicht erreichbar");
+        assertThat(report.get("warnings").toString()).contains("gibt-es-nicht", "backup.warning.sourceUnreachable");
     }
 
     @Test
@@ -195,7 +195,7 @@ class BackupImportIntegrationTest {
                 false);
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result.getResponse().getContentAsString(StandardCharsets.UTF_8)).contains("kein absoluter Pfad");
+        assertThat(result.getResponse().getContentAsString(StandardCharsets.UTF_8)).contains("is not an absolute path", "backup.pathNotAbsolute");
         assertThat(count("movie")).isEqualTo(1);
     }
 
@@ -338,7 +338,7 @@ class BackupImportIntegrationTest {
 
         assertThat(result(report, "media_source").get("skipped").asInt()).isEqualTo(1);
         assertThat(result(report, "movie").get("skipped").asInt()).isEqualTo(1);
-        assertThat(report.get("warnings").toString()).contains("Teilmenge", "überschneidet");
+        assertThat(report.get("warnings").toString()).contains("Teilmenge", "backup.warning.sourceOverlaps");
         assertThat(count("movie")).isEqualTo(1);
         assertThat(jdbcClient.sql("SELECT title FROM movie").query(String.class).single()).isEqualTo("Heat");
     }
@@ -393,7 +393,7 @@ class BackupImportIntegrationTest {
         MvcTestResult result = upload(backup);
 
         assertThat(result).hasStatus(HttpStatus.BAD_REQUEST);
-        assertThat(result.getResponse().getContentAsString(StandardCharsets.UTF_8)).contains("neueren KMM-Version");
+        assertThat(result.getResponse().getContentAsString(StandardCharsets.UTF_8)).contains("newer KMM version", "backup.newerVersion");
     }
 
     @Test
@@ -417,7 +417,7 @@ class BackupImportIntegrationTest {
         JsonNode job = awaitJob(start("REPLACE", List.of(), false));
 
         assertThat(job.get("status").asString()).isEqualTo("FAILED");
-        assertThat(job.get("message").get("args").get("text").asString()).contains("ungültigen Wert");
+        assertThat(job.get("message").get("key").asString()).isEqualTo("backup.invalidValue");
         assertThat(jdbcClient.sql("SELECT title FROM movie").query(String.class).single()).isEqualTo("Vorher");
     }
 
@@ -450,7 +450,7 @@ class BackupImportIntegrationTest {
         return result.getResponse().getContentAsByteArray();
     }
 
-    /** Die Datei ohne IDs, Fremdschlüssel und Kopfdaten, sortiert, damit sich zwei Stände fachlich vergleichen lassen. */
+    /** The file without IDs, foreign keys and header, sorted so that two states can be compared by content. */
     private JsonNode comparable(byte[] backup) throws IOException {
         ObjectNode tables = (ObjectNode) objectMapper.readTree(gunzip(backup)).get(BackupFormat.TABLES);
         ObjectNode result = objectMapper.createObjectNode();

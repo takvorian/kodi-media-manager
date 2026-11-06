@@ -13,10 +13,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest Wiedergabestand und eigene Bewertung von Filmen und übernimmt neue, etwa aus Kodi. Der Stand wird in die
- * vorhandene NFO und in die Datenbank geschrieben; ohne NFO nur in die Datenbank. Anders als beim
- * Speichern der Metadaten wird kein {@link MovieFilesChangedEvent} veröffentlicht: Der Stand kommt von
- * Kodi, Kodi muss den Film deshalb nicht neu einlesen.
+ * Reads the playback state and own rating of movies and takes over new ones, for example from Kodi. The state is
+ * written to the
+ * existing NFO and to the database; without an NFO only to the database. Unlike when
+ * saving the metadata, no {@link MovieFilesChangedEvent} is published: the state comes from
+ * Kodi, so Kodi does not need to rescan the movie.
  */
 @Slf4j
 @Service
@@ -37,11 +38,11 @@ public class MoviePlaybackService {
     }
 
     /**
-     * @param playCount    Anzahl der Wiedergaben oder {@code null}
-     * @param lastPlayedAt letzte Wiedergabe oder {@code null}
-     * @param userRating   eigene Bewertung 1–10 oder {@code null}
-     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann; die Datenbank bleibt
-     *                                 dann unverändert
+     * @param playCount    number of playbacks or {@code null}
+     * @param lastPlayedAt last playback or {@code null}
+     * @param userRating   own rating 1-10 or {@code null}
+     * @throws NfoNotWritableException if the NFO cannot be written; the database
+     *                                 then stays unchanged
      */
     @Transactional
     public void changePlayback(long movieId, Integer playCount, Instant lastPlayedAt, Integer userRating) {

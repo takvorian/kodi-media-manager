@@ -25,10 +25,14 @@ describe('batchSummary', () => {
         job({
           title: literal(title),
           status: 'SUCCEEDED',
-          result: { ...result, failed: 1, failures: ['Heat: NFO gesperrt.'] },
+          result: {
+            ...result,
+            failed: 1,
+            failures: [{ key: 'movie.failure', args: { id: 3, reason: literal('NFO gesperrt.') } }],
+          },
         }),
       ),
-    ).toBe(`${title}: 2 geändert, 1 unverändert, 1 Fehler: Heat: NFO gesperrt.`);
+    ).toBe(`${title}: 2 geändert, 1 unverändert, 1 Fehler: Film 3: NFO gesperrt.`);
   });
 
   it('reports cancelled and failed jobs', () => {
@@ -51,7 +55,7 @@ describe('batchSummary', () => {
         job({
           title: literal(title),
           status: 'SUCCEEDED',
-          result: { ...result, failed: 2, failures: ['Heat', 'Ronin'] },
+          result: { ...result, failed: 2, failures: [literal('Heat'), literal('Ronin')] },
         }),
       ),
     ).toBe(`${title}: 2 changed, 1 unchanged, 2 errors: Heat; Ronin.`);

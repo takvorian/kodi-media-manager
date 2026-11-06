@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- * Vorhandene Werte je Filterfeld für Auswahllisten, sortiert.
+ * Existing values per filter field for selection lists, sorted.
  *
- * @param resolutions Zeilen der Auflösungsstufen, z. B. 720, 1080, 2160
+ * @param resolutions lines of the resolution tiers, e.g. 720, 1080, 2160
  */
 public record MovieFilterValues(
         List<String> genres,

@@ -11,14 +11,14 @@ import de.tiktak.kmm.nfo.IsoLanguages;
 import de.tiktak.kmm.nfo.StreamDetails;
 
 /**
- * Übersetzt die Spuren von ffprobe in Kodis Stream-Details mit den Namen, die Kodi und Ember verwenden
- * ({@code dca} statt {@code dts}, {@code deu} statt {@code ger}).
+ * Translates the streams from ffprobe into Kodi's stream details with the names Kodi and Ember use ({@code dca}
+ * instead of {@code dts}, {@code deu} instead of {@code ger}).
  */
 final class KodiStreams {
 
     private static final Set<String> INTERLACED = Set.of("tt", "bb", "tb", "bt");
     private static final Map<String, String> HDR_TRANSFERS = Map.of("smpte2084", "hdr10", "arib-std-b67", "hlg");
-    /** MPEG-4-Part-2-Videos nennt Kodi nach ihrem FourCC, etwa {@code xvid} oder {@code divx}. */
+    /** Kodi names MPEG-4 Part 2 videos after their FourCC, such as {@code xvid} or {@code divx}. */
     private static final Pattern FOUR_CC = Pattern.compile("[A-Za-z0-9]{4}");
     private static final String MPEG4 = "mpeg4";
     private static final String PROGRESSIVE = "progressive";
@@ -32,8 +32,8 @@ final class KodiStreams {
     }
 
     /**
-     * @param durationSeconds gesamte Laufzeit, bei mehrteiligen Filmen aller Teile
-     * @param fileSize        gesamte Größe in Byte
+     * @param durationSeconds total runtime, for multi-part movies of all parts
+     * @param fileSize        total size in bytes
      */
     static StreamDetails toStreamDetails(ProbedMedia media, Double durationSeconds, Long fileSize) {
         List<ProbedMedia.Stream> audios = media.streams().stream().filter(stream -> stream.is(ProbedMedia.Stream.AUDIO))
@@ -76,7 +76,7 @@ final class KodiStreams {
         return stream.codec();
     }
 
-    /** Kodi unterscheidet DTS-HD Master Audio und High Resolution Audio. */
+    /** Kodi distinguishes DTS-HD Master Audio and High Resolution Audio. */
     private static String audioCodec(ProbedMedia.Stream stream) {
         String profile = stream.profile() == null ? "" : stream.profile();
         if ("dts".equals(stream.codec()) && profile.contains("DTS-HD MA")) {
@@ -88,7 +88,7 @@ final class KodiStreams {
         return CodecNames.audio(stream.codec());
     }
 
-    /** Matroska-Dateien enthalten die Videobitrate oft nicht; dann bleibt die Gesamtbitrate ohne Ton. */
+    /** Matroska files often lack the video bit rate; then the overall bit rate without audio remains. */
     private static Long videoBitRate(ProbedMedia.Stream stream, ProbedMedia media, long audioBitRate) {
         if (stream.bitRate() != null) {
             return stream.bitRate();
@@ -111,7 +111,7 @@ final class KodiStreams {
         return rounded((double) stream.width() / stream.height() * (sample == null ? 1 : sample));
     }
 
-    /** @return der Wert eines Verhältnisses wie {@code 16:9} oder {@code null} für {@code 0:1} und Unbekanntes */
+    /** @return the value of a ratio such as {@code 16:9}, or {@code null} for {@code 0:1} and unknown values */
     private static Double ratio(String ratio) {
         if (ratio == null) {
             return null;

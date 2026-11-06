@@ -19,8 +19,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Ein Filmset (Sammlung zusammengehöriger Filme, z. B. eine Filmreihe). Kodi ordnet Filme über den
- * Namen zu, deshalb ist er eindeutig.
+ * A movie set (a collection of related movies, e.g. a film series). Kodi assigns movies via the
+ * name, which is why it is unique.
  */
 @Entity
 @Table(name = "movie_set")
@@ -50,7 +50,7 @@ class MovieSet {
         this.name = Objects.requireNonNull(name, "name must not be null");
     }
 
-    /** Übernimmt die Beschreibung, sofern eine bekannt ist; eine vorhandene wird nicht gelöscht. */
+    /** Takes over the description if one is known; an existing one is not deleted. */
     void describe(String newOverview) {
         if (newOverview != null) {
             this.overview = newOverview;
@@ -63,7 +63,7 @@ class MovieSet {
         }
     }
 
-    /** Übernimmt bearbeitete Angaben; leere Beschreibung und ID werden gelöscht. */
+    /** Takes over edited details; an empty description and ID are deleted. */
     void change(MovieSetData data) {
         this.name = data.name();
         this.overview = data.overview();

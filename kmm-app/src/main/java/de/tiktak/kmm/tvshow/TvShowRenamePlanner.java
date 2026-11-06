@@ -13,22 +13,23 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.scanner.naming.NamePattern;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.EpisodeFile;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.FileRename;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.Status;
 
 /**
- * Berechnet, wie eine Serie nach den Mustern heißen würde, ohne etwas zu ändern. Wie Ember:
+ * Computes what a TV show would be named after the patterns, without changing anything. Like Ember:
  * <ul>
- * <li>Jede Episodendatei wandert mit ihren Begleitdateien (NFO, Vorschaubild, Untertitel …) in den Staffelordner
- * nach Muster unterhalb des Serienordners; ergibt das Muster nichts, in den Serienordner selbst.</li>
- * <li>Begleitdateien sind die Dateien im selben Ordner, deren Name mit dem der Videodatei beginnt, gefolgt von
- * Punkt, Bindestrich, Unterstrich oder Leerzeichen.</li>
- * <li>Der Serienordner wird umbenannt, sofern er nicht die Quelle selbst ist; ein Muster ohne {@code /} benennt
- * ihn an Ort und Stelle um, eines mit {@code /} legt ihn relativ zur Quelle ab.</li>
- * <li>Staffelbilder liegen nach Kodi-Konvention im Serienordner und bleiben, wo sie sind.</li>
- * <li>Belegte Ziele sind Konflikte: beim Serienordner für die ganze Serie, sonst für die Episodendatei.</li>
+ * <li>Each episode file moves with its companion files (NFO, thumbnail, subtitles …) into the season folder
+ * of the pattern below the show folder; if the pattern yields nothing, into the show folder itself.</li>
+ * <li>Companion files are the files in the same folder whose name starts with that of the video file, followed by
+ * a dot, hyphen, underscore or space.</li>
+ * <li>The show folder is renamed unless it is the source itself; a pattern without {@code /} renames it in place,
+ * one with {@code /} puts it relative to the source.</li>
+ * <li>Season artwork lives in the show folder by Kodi convention and stays where it is.</li>
+ * <li>Taken targets are conflicts: for the show folder for the whole show, otherwise for the episode file.</li>
  * </ul>
  */
 final class TvShowRenamePlanner {
@@ -45,7 +46,8 @@ final class TvShowRenamePlanner {
         if (candidate.ownsFolder()) {
             List<String> segments = patterns.showFolder().render(candidate.values()::value);
             if (segments.isEmpty()) {
-                return candidate.result(target, List.of(), Status.FAILED, "Das Muster für Serienordner ergibt keinen Namen.");
+                return candidate.result(target, List.of(), Status.FAILED,
+                        LocalizedText.of("tvShow.rename.showFolderEmpty"));
             }
             Path base = patterns.showFolder().hasFolders() ? candidate.sourceRoot() : showDirectory.getParent();
             target = resolve(base, segments);
@@ -55,9 +57,9 @@ final class TvShowRenamePlanner {
             files = withSharedTargetsAsConflicts(episodeFiles(candidate, patterns));
         } catch (UncheckedIOException e) {
             return candidate.result(showDirectory, List.of(), Status.FAILED,
-                    "Ein Ordner der Serie ist nicht lesbar: " + e.getCause().getMessage());
+                    LocalizedText.of("tvShow.rename.folderUnreadable").with("reason", e.getCause().getMessage()));
         }
-        String folderConflict = folderConflict(showDirectory, target);
+        LocalizedText folderConflict = folderConflict(showDirectory, target);
         if (folderConflict != null) {
             return candidate.result(target, files, Status.CONFLICT, folderConflict);
         }
@@ -67,7 +69,7 @@ final class TvShowRenamePlanner {
             return candidate.result(target, files, Status.RENAME, null);
         }
         return files.isEmpty() ? candidate.result(target, files, Status.UNCHANGED, null)
-                : candidate.result(target, files, Status.CONFLICT, "Keine Episodendatei lässt sich umbenennen.");
+                : candidate.result(target, files, Status.CONFLICT, LocalizedText.of("tvShow.rename.noEpisodeFile"));
     }
 
     private static List<EpisodeFile> episodeFiles(Candidate candidate, Patterns patterns) {
@@ -87,7 +89,7 @@ final class TvShowRenamePlanner {
             List<String> name = patterns.episodeFile().render(values::value);
             if (name.size() != 1) {
                 plans.add(new EpisodeFile(label, currentFolder, targetFolder, List.of(), Status.FAILED,
-                        "Das Muster für Episodendateien ergibt keinen gültigen Dateinamen."));
+                        LocalizedText.of("tvShow.rename.episodeFileInvalid")));
                 continue;
             }
             String base = baseName(file.file());
@@ -108,7 +110,7 @@ final class TvShowRenamePlanner {
         return plans;
     }
 
-    /** Ein Ziel ist frei, wenn es nicht existiert oder selbst umbenannt wird (auch nur in der Schreibweise). */
+    /** A target is free if it does not exist or is renamed itself (even if only in its case). */
     private static EpisodeFile withConflicts(EpisodeFile file, Path showDirectory, Map<Path, List<String>> listings) {
         Path source = showDirectory.resolve(file.currentFolder());
         Path target = showDirectory.resolve(file.targetFolder());
@@ -119,13 +121,13 @@ final class TvShowRenamePlanner {
             Path targetFile = target.resolve(rename.targetName());
             if (!moving.contains(targetFile.toString().toLowerCase(Locale.ROOT)) && Files.exists(targetFile)) {
                 return new EpisodeFile(file.episodes(), file.currentFolder(), file.targetFolder(), file.renames(),
-                        Status.CONFLICT, "Die Datei „%s“ existiert bereits.".formatted(rename.targetName()));
+                        Status.CONFLICT, LocalizedText.of("tvShow.rename.fileExists").with("file", rename.targetName()));
             }
         }
         return file;
     }
 
-    /** Zwei Episodendateien dürfen nicht denselben Namen bekommen. */
+    /** Two episode files must not get the same name. */
     private static List<EpisodeFile> withSharedTargetsAsConflicts(List<EpisodeFile> files) {
         Map<String, Long> counts = files.stream()
                 .filter(file -> file.status() == Status.RENAME)
@@ -136,20 +138,20 @@ final class TvShowRenamePlanner {
                 .anyMatch(rename -> counts.get((file.targetFolder() + "/" + rename.targetName())
                         .toLowerCase(Locale.ROOT)) > 1)
                 ? new EpisodeFile(file.episodes(), file.currentFolder(), file.targetFolder(), file.renames(),
-                        Status.CONFLICT, "Mehrere Episodendateien bekämen denselben Namen.")
+                        Status.CONFLICT, LocalizedText.of("tvShow.rename.sameName"))
                 : file).toList();
     }
 
-    private static String folderConflict(Path current, Path target) {
+    private static LocalizedText folderConflict(Path current, Path target) {
         boolean sameIgnoringCase = target.toString().toLowerCase(Locale.ROOT)
                 .equals(current.toString().toLowerCase(Locale.ROOT));
         if (sameIgnoringCase) {
             return null;
         }
         if (Files.exists(target)) {
-            return "Der Ordner „%s“ existiert bereits.".formatted(target);
+            return LocalizedText.of("tvShow.rename.folderExists").with("folder", target);
         }
-        return target.startsWith(current) ? "Der neue Ordner liegt im bisherigen." : null;
+        return target.startsWith(current) ? LocalizedText.of("tvShow.rename.folderInside") : null;
     }
 
     private static List<String> listing(Map<Path, List<String>> listings, Path folder) {
@@ -195,15 +197,15 @@ final class TvShowRenamePlanner {
     }
 
     /**
-     * Eine Serie, wie sie der Planer braucht.
+     * A TV show as the planner needs it.
      *
-     * @param ownsFolder ob der Serienordner nicht die Quelle selbst ist
-     * @param files      die Episodendateien mit ihren Episoden in Reihenfolge
+     * @param ownsFolder whether the show folder is not the source itself
+     * @param files      the episode files with their episodes in order
      */
     record Candidate(long showId, String title, Path showDirectory, Path sourceRoot, boolean ownsFolder,
                      TvNameValues values, List<CandidateFile> files) {
 
-        TvShowRenamePlan result(Path target, List<EpisodeFile> files, Status status, String message) {
+        TvShowRenamePlan result(Path target, List<EpisodeFile> files, Status status, LocalizedText message) {
             return new TvShowRenamePlan(showId, title, showDirectory.toString(), target.toString(), files, status,
                     message);
         }

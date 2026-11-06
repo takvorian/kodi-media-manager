@@ -1,7 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
-import { localize } from '../i18n/localized-text';
+import { localize, LocalizedText } from '../i18n/localized-text';
 
 /** Prefix of the job key when renaming; must match TvShowRenameService.JOB_KEY_PREFIX. */
 export const TV_RENAME_JOB_KEY_PREFIX = 'tv-rename:';
@@ -31,7 +31,7 @@ export interface TvEpisodeFilePlan {
   readonly targetFolder: string;
   readonly renames: readonly TvFileRename[];
   readonly status: TvRenameStatus;
-  readonly message: string | null;
+  readonly message: LocalizedText | null;
 }
 
 /** What renaming a TV show would change or has changed. */
@@ -42,7 +42,7 @@ export interface TvShowRenamePlan {
   readonly targetDirectory: string;
   readonly files: readonly TvEpisodeFilePlan[];
   readonly status: TvRenameStatus;
-  readonly message: string | null;
+  readonly message: LocalizedText | null;
 }
 
 export interface TvRenameResult {
@@ -51,7 +51,7 @@ export interface TvRenameResult {
   readonly unchanged: number;
   readonly skipped: number;
   readonly failed: number;
-  readonly problems: readonly string[];
+  readonly problems: readonly LocalizedText[];
 }
 
 /** Translation key of the label per status. */

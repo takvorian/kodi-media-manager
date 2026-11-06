@@ -41,7 +41,7 @@
     </form>
 
     @if (scraper.missingConfiguration) {
-      <p class="hint missing-configuration">{{ scraper.missingConfiguration }}</p>
+      <p class="hint missing-configuration">{{ scraper.missingConfiguration | localized }}</p>
     }
     @if (error()) {
       <p class="error">{{ error() }}</p>

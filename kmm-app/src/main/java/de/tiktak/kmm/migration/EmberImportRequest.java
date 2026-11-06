@@ -8,13 +8,13 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * Auftrag für den Ember-Import.
+ * Request for the Ember import.
  *
- * @param pathMappings   Zuordnung der Ember-Pfade zu Pfaden in KMM; ohne Zuordnung bleiben Pfade unverändert
- * @param importSettings  ob Embers Einstellungen übernommen werden
- * @param importKodiHosts ob Embers Kodi-Geräte samt Zugangsdaten übernommen werden
- * @param importTvShows   ob Embers Serien und Episoden übernommen werden
- * @param dryRun         Probelauf: alles prüfen und berichten, aber nichts speichern
+ * @param pathMappings    mapping of the Ember paths to paths in KMM; without a mapping paths stay unchanged
+ * @param importSettings  whether Ember's settings are imported
+ * @param importKodiHosts whether Ember's Kodi devices are imported including credentials
+ * @param importTvShows   whether Ember's TV shows and episodes are imported
+ * @param dryRun          dry run: check and report everything, but save nothing
  */
 public record EmberImportRequest(
         @NotNull @Size(max = MAX_MAPPINGS) List<@Valid PathMapping> pathMappings,
@@ -30,8 +30,8 @@ public record EmberImportRequest(
     }
 
     /**
-     * @param emberPath Pfad-Präfix, wie Ember ihn gespeichert hat, z. B. {@code a:\medien\filme}
-     * @param kmmPath   derselbe Ort aus Sicht von KMM, z. B. {@code /media/filme}
+     * @param emberPath path prefix as Ember stored it, e.g. {@code a:\medien\filme}
+     * @param kmmPath   the same place as KMM sees it, e.g. {@code /media/filme}
      */
     public record PathMapping(@NotBlank String emberPath, @NotBlank String kmmPath) {
     }

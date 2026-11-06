@@ -32,7 +32,7 @@
         <h3>{{ 'sources.scrapeReport.failures' | transloco }}</h3>
         <ul class="failures">
           @for (failure of details.failures; track $index) {
-            <li>{{ failure }}</li>
+            <li>{{ failure | localized }}</li>
           }
         </ul>
       }
@@ -40,7 +40,7 @@
         <h3>{{ 'common.notes' | transloco }}</h3>
         <ul class="warnings">
           @for (warning of details.warnings; track $index) {
-            <li>{{ warning }}</li>
+            <li>{{ warning | localized }}</li>
           }
         </ul>
       }

@@ -15,9 +15,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Kopiert die mit KMM ausgelieferten Plugins ({@code classpath:bundled-plugins/*.jar}) in das
- * Plugin-Verzeichnis. So funktioniert die Auslieferung im Fat-JAR wie im Docker-Image gleich.
- * Eine geänderte Datei (z. B. nach einem Update) wird ersetzt, eine gleiche bleibt unberührt.
+ * Copies the plugins shipped with KMM ({@code classpath:bundled-plugins/*.jar}) into the
+ * plugin directory. This way delivery works the same in the fat JAR as in the Docker image.
+ * A changed file (e.g. after an update) is replaced, an identical one is left untouched.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -28,7 +28,7 @@ class BundledPluginInstaller {
     private final ResourcePatternResolver resources;
 
     /**
-     * @return Anzahl der neu installierten oder aktualisierten Plugins
+     * @return number of newly installed or updated plugins
      */
     int installInto(Path pluginDirectory) {
         try {

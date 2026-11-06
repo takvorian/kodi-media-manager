@@ -4,22 +4,22 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Vergleicht Dateipfade so, wie Kodi sie in seiner Bibliothek speichert. Kodi verwendet je nach
- * Quelle {@code /} (smb://, nfs://, Linux) oder {@code \} (Windows-Laufwerke).
+ * Compares file paths the way Kodi stores them in its library. Depending on the source, Kodi uses {@code /}
+ * (smb://, nfs://, Linux) or {@code \} (Windows drives).
  */
 final class KodiFiles {
 
-    /** Kodi fasst mehrteilige Filme als {@code stack://teil1 , teil2} zusammen. */
+    /** Kodi combines multi-part movies as {@code stack://part1 , part2}. */
     private static final String STACK_PREFIX = "stack://";
     private static final String STACK_SEPARATOR = " , ";
-    /** Kommas im Dateinamen verdoppelt Kodi innerhalb eines Stapels. */
+    /** Kodi doubles commas in file names within a stack. */
     private static final String ESCAPED_COMMA = ",,";
 
     private KodiFiles() {
     }
 
     /**
-     * @return das Verzeichnis der Datei mit abschließendem Trennzeichen, wie Kodi es als Pfad speichert
+     * @return the directory of the file with a trailing separator, as Kodi stores it as path
      */
     static String directoryOf(String file) {
         int separator = Math.max(file.lastIndexOf('/'), file.lastIndexOf('\\'));
@@ -30,8 +30,8 @@ final class KodiFiles {
     }
 
     /**
-     * @param kodiFile Datei aus Kodis Bibliothek, ggf. ein Stapel
-     * @return die einzelnen Dateien, bei einem Stapel alle Teile
+     * @param kodiFile file from Kodi's library, possibly a stack
+     * @return the individual files, all parts for a stack
      */
     static List<String> parts(String kodiFile) {
         if (kodiFile.regionMatches(true, 0, STACK_PREFIX, 0, STACK_PREFIX.length())) {
@@ -43,8 +43,8 @@ final class KodiFiles {
     }
 
     /**
-     * @param kodiFile Datei aus Kodis Bibliothek, ggf. ein Stapel
-     * @param file     gesuchte Datei; bei mehrteiligen Filmen der erste Teil
+     * @param kodiFile file from Kodi's library, possibly a stack
+     * @param file     the file looked for; for multi-part movies the first part
      */
     static boolean matches(String kodiFile, String file) {
         return parts(kodiFile).stream().anyMatch(part -> part.equalsIgnoreCase(file));

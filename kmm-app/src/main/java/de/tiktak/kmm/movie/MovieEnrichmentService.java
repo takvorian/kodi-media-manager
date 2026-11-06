@@ -19,8 +19,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Ergänzt Filme über die Ergänzungs-Scraper (etwa Trakt, OMDb) um Bewertungen und füllt leere Felder. Vorhandene
- * Angaben bleiben; vorhandene Bewertungen ändern sich nur beim Aktualisieren.
+ * Supplements movies with ratings and fills empty fields via the supplementing scrapers (such as Trakt, OMDb).
+ * Existing
+ * details stay; existing ratings change only when updating.
  */
 @Slf4j
 @Service
@@ -55,18 +56,18 @@ public class MovieEnrichmentService {
     private final EnrichmentFinder finder;
 
     /**
-     * Ergänzt fehlende Bewertungen und leere Felder.
+     * Adds missing ratings and empty fields.
      *
-     * @return ob sich etwas geändert hat
-     * @throws MovieNotFoundException  wenn es den Film nicht gibt
-     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann
+     * @return whether anything changed
+     * @throws MovieNotFoundException  if the movie does not exist
+     * @throws NfoNotWritableException if the NFO cannot be written
      */
     @Transactional
     public boolean fillMissing(long movieId) {
         return enrich(movieId, false);
     }
 
-    /** Wie {@link #fillMissing}, aktualisiert aber auch vorhandene Bewertungen der Anbieter. */
+    /** Like {@link #fillMissing}, but also updates existing ratings from the providers. */
     @Transactional
     public boolean refresh(long movieId) {
         return enrich(movieId, true);

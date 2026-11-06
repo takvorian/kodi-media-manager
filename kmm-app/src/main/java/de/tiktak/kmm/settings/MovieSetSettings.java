@@ -2,17 +2,19 @@ package de.tiktak.kmm.settings;
 
 import jakarta.validation.constraints.Size;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Einstellungen für Filmsets. Set-Bilder liegen außerhalb der Filmordner, wahlweise in Embers flachem Schema
- * ({@code <Ordner>/<Settitel>-poster.jpg}) und in Kodis „Ordner für Filmset-Informationen“
- * ({@code <Ordner>/<Settitel>/poster.jpg}); beide sind einzeln abschaltbar.
+ * Settings for movie sets. Set artwork lives outside the movie folders, optionally in Ember's flat scheme
+ * ({@code <folder>/<set title>-poster.jpg}) and in Kodi's "movie set information folder"
+ * ({@code <folder>/<set title>/poster.jpg}); each of them can be switched off.
  *
- * @param flatImages       Set-Bilder im flachen Schema ablegen
- * @param flatImagesFolder Ordner für das flache Schema
- * @param kodiImages       Set-Bilder in Kodis Set-Ordnern ablegen
- * @param kodiImagesFolder Ordner, in dem Kodi je Set einen Unterordner erwartet
- * @param assignOnScrape   Filme beim Scrapen dem Set ihrer TMDB-Sammlung zuordnen, wie Embers
- *                         „CollectionsAuto“; ein anderes Set wird dabei ersetzt
+ * @param flatImages       store set artwork in the flat scheme
+ * @param flatImagesFolder folder for the flat scheme
+ * @param kodiImages       store set artwork in Kodi's set folders
+ * @param kodiImagesFolder folder in which Kodi expects a subfolder per set
+ * @param assignOnScrape   assign movies to the set of their TMDB collection when scraping, like Ember's
+ *                         "CollectionsAuto"; another set is replaced
  */
 public record MovieSetSettings(
         boolean flatImages,
@@ -29,14 +31,14 @@ public record MovieSetSettings(
     }
 
     /**
-     * @throws InvalidSettingsException wenn eine Ablage eingeschaltet ist, aber kein Ordner angegeben ist
+     * @throws InvalidSettingsException if a storage is switched on without a folder
      */
     void validate() {
         if (flatImages && flatImagesFolder == null) {
-            throw new InvalidSettingsException("Für Set-Bilder im flachen Schema fehlt der Ordner.");
+            throw new InvalidSettingsException(LocalizedText.of("settings.movieSets.flatFolderMissing"));
         }
         if (kodiImages && kodiImagesFolder == null) {
-            throw new InvalidSettingsException("Für Set-Bilder in Kodis Set-Ordnern fehlt der Ordner.");
+            throw new InvalidSettingsException(LocalizedText.of("settings.movieSets.kodiFolderMissing"));
         }
     }
 

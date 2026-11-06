@@ -63,10 +63,10 @@ describe('EmberImportPage', () => {
     },
     kodiHostsCreated: 2,
     kodiHostsUpdated: 0,
-    settingsChanges: ['Sprache der Metadaten: de-DE'],
-    skippedSources: ['serien: keine Zuordnung'],
+    settingsChanges: [literal('Sprache der Metadaten: de-DE')],
+    skippedSources: [literal('serien: keine Zuordnung')],
     missingFiles: ['Heat'],
-    warnings: ['Verzeichnis nicht erreichbar'],
+    warnings: [literal('Verzeichnis nicht erreichbar')],
   };
   const importJob = (overrides: Partial<Job> = {}): Job =>
     job({

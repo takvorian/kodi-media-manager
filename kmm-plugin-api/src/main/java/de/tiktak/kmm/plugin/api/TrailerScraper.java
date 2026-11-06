@@ -3,14 +3,14 @@ package de.tiktak.kmm.plugin.api;
 import java.util.List;
 
 /**
- * Liefert Trailer zu einem Film oder einer Serie als Links, die Kodi abspielen kann. Gesucht wird über bekannte IDs
+ * Supplies trailers for a movie or TV show as links Kodi can play. The search uses known IDs
  * ({@link ScrapeRequest#uniqueIds()}).
  */
 public interface TrailerScraper extends Scraper {
 
     /**
-     * @return gefundene Trailer in der Reihenfolge des Anbieters; leer, wenn der Eintrag unbekannt ist
-     * @throws ScraperException wenn der Anbieter nicht erreichbar ist oder die Anfrage ablehnt
+     * @return found trailers in the order of the provider; empty if the entry is unknown
+     * @throws ScraperException if the provider cannot be reached or rejects the request
      */
     List<TrailerCandidate> findTrailers(ScrapeRequest request);
 }

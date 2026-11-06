@@ -1,9 +1,9 @@
 package de.tiktak.kmm.source;
 
 /**
- * Ergebnis der Übernahme einer Quelle aus einer Migration.
+ * Result of taking over a source from a migration.
  *
- * @param created ob die Quelle neu angelegt wurde ({@code false}: vorhandene Quelle mit demselben Verzeichnis)
+ * @param created whether the source was newly created ({@code false}: existing source with the same directory)
  */
 public record ImportedSource(MediaSource source, boolean created) {
 }

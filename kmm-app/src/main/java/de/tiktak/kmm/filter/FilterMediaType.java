@@ -1,7 +1,7 @@
 package de.tiktak.kmm.filter;
 
 /**
- * Wofür ein gespeicherter Filter gilt.
+ * What a saved filter applies to.
  */
 public enum FilterMediaType {
     MOVIE, TV_SHOW

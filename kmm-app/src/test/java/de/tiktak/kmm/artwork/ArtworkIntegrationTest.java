@@ -33,8 +33,8 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import com.sun.net.httpserver.HttpServer;
 
 /**
- * Bildsuche und -übernahme über die REST-API mit den echten Plugin-JARs von TMDB und fanart.tv.
- * Beide Dienste und die Bilddateien liefert ein lokaler HTTP-Server.
+ * Image search and adoption via the REST API with the real plugin JARs of TMDB and fanart.tv.
+ * Both services and the image files are served by a local HTTP server.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

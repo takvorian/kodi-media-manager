@@ -15,7 +15,7 @@ interface TvShowRepository extends JpaRepository<TvShow, Long>, JpaSpecification
 
     List<TvShow> findByDirectoryPathHashIn(Collection<String> directoryPathHashes);
 
-    /** Ordner und Änderungszeit der eingelesenen {@code tvshow.nfo} je Serie einer Quelle. */
+    /** Folder and modification time of the read {@code tvshow.nfo} per TV show of a source. */
     @Query("SELECT s.directoryPath, s.nfoModifiedAt FROM TvShow s WHERE s.sourceId = :sourceId")
     List<Object[]> findNfoTimestampsBySourceId(long sourceId);
 
@@ -24,7 +24,7 @@ interface TvShowRepository extends JpaRepository<TvShow, Long>, JpaSpecification
 
     Page<TvShow> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
-    /** Je Tag die Anzahl der Serien. */
+    /** Number of TV shows per day. */
     @Query("SELECT t, COUNT(s) FROM TvShow s JOIN s.tags t GROUP BY t")
     List<Object[]> countByTag();
 

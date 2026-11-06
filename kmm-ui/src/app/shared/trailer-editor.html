@@ -32,8 +32,8 @@
 
 @let found = options();
 @if (found) {
-  @for (warning of found.warnings; track warning) {
-    <p class="hint trailer-warning">{{ warning }}</p>
+  @for (warning of found.warnings; track $index) {
+    <p class="hint trailer-warning">{{ warning | localized }}</p>
   }
   @if (found.candidates.length === 0) {
     <p class="hint no-candidates">{{ 'shared.trailer.noneFound' | transloco }}</p>

@@ -24,6 +24,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CollectionReference;
@@ -140,13 +141,13 @@ class MovieScrapeServiceTest {
     @Test
     void rejectsScraperWithMissingConfigurationWithoutCallingIt() {
         when(scraperRegistry.metadataScraper("tmdb")).thenReturn(Optional.of(tmdb));
-        when(tmdb.missingConfiguration()).thenReturn(Optional.of("API-Key fehlt"));
+        when(tmdb.missingConfiguration()).thenReturn(Optional.of(LocalizedText.literal("API-Key fehlt")));
 
         assertThatThrownBy(() -> service.search(MOVIE_ID, "tmdb", null, null))
                 .isInstanceOfSatisfying(ScraperProblemException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
                     assertThat(exception.getBody().getDetail()).isEqualTo("API-Key fehlt");
-                    assertThat(exception.getBody().getTitle()).isEqualTo("TMDB ist nicht eingerichtet");
+                    assertThat(exception.getBody().getTitle()).isEqualTo("TMDB is not set up");
                 });
         verify(tmdb, never()).search(any());
     }
@@ -227,7 +228,7 @@ class MovieScrapeServiceTest {
         givenMovie(new MovieMetadata("Heat", null, null, 1995, null, null, null, null, null, null, List.of(),
                 "tt0113277", null, null, null));
         MetadataScraper unconfigured = readyScraper("tmdb");
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Key fehlt"));
+        when(unconfigured.missingConfiguration()).thenReturn(Optional.of(LocalizedText.literal("Key fehlt")));
         MetadataScraper other = readyScraper("other");
         when(scraperRegistry.metadataScrapersFor(MediaType.MOVIE)).thenReturn(List.of(unconfigured, other));
         when(other.scrape(new ScrapeRequest(MediaType.MOVIE, "Heat", 1995, Map.of("imdb", "tt0113277"))))

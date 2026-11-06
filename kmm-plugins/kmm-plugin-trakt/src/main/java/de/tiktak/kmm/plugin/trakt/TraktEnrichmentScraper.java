@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.EnrichmentScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -17,8 +18,8 @@ import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Öffentliche Community-Bewertung von Trakt.tv als Bewertung {@code trakt}, wie Embers Trakt-Scraper. Gefunden wird
- * der Eintrag über die IMDb-ID, sonst über TMDB- bzw. TVDB-ID.
+ * Public community rating from Trakt.tv as rating {@code trakt}, like Ember's Trakt scraper. The entry is found via
+ * the IMDb ID, otherwise via the TMDB or TVDB ID.
  */
 @Extension
 public class TraktEnrichmentScraper implements EnrichmentScraper {
@@ -26,7 +27,9 @@ public class TraktEnrichmentScraper implements EnrichmentScraper {
     static final String ID = "trakt";
     static final String RATING_SOURCE = "trakt";
     static final int MAX_RATING = 10;
-    static final String MISSING_CLIENT_ID = "Trakt: Client-ID fehlt (Einstellungen → API-Keys).";
+    /** Name of the provider in messages for the user. */
+    static final String PROVIDER = "Trakt";
+    static final LocalizedText MISSING_CLIENT_ID = LocalizedText.of("scraper.trakt.clientIdMissing");
     private static final Pattern IMDB_ID = Pattern.compile("tt[0-9]{7,10}");
     private static final Pattern NUMERIC_ID = Pattern.compile("[0-9]{1,10}");
 
@@ -60,7 +63,7 @@ public class TraktEnrichmentScraper implements EnrichmentScraper {
     }
 
     @Override
-    public Optional<String> missingConfiguration() {
+    public Optional<LocalizedText> missingConfiguration() {
         return settings != null && settings.hasClientId() ? Optional.empty() : Optional.of(MISSING_CLIENT_ID);
     }
 
@@ -79,7 +82,7 @@ public class TraktEnrichmentScraper implements EnrichmentScraper {
                 .map(rating -> Enrichment.ofRatings(List.of(rating)));
     }
 
-    /** Trakt nimmt die IMDb-ID direkt; TMDB- und TVDB-IDs werden über die Suche in die Trakt-ID übersetzt. */
+    /** Trakt takes the IMDb ID directly; TMDB and TVDB IDs are translated into the Trakt ID via the search. */
     private Optional<String> traktId(ScrapeRequest request) {
         Map<String, String> ids = request.uniqueIds();
         String imdb = ids.get("imdb");

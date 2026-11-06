@@ -5,14 +5,14 @@ import java.util.function.Predicate;
 import de.tiktak.kmm.settings.RenameSettings;
 
 /**
- * Wann Serien automatisch umbenannt werden; ob, steht in den Einstellungen.
+ * When TV shows are renamed automatically; whether they are is set in the settings.
  */
 public enum TvRenameTrigger {
-    /** Nach dem Speichern bearbeiteter Metadaten einer Serie oder Episode. */
+    /** After saving edited metadata of a TV show or episode. */
     EDIT(RenameSettings::tvOnEdit),
-    /** Nach dem automatischen Scrapen. */
+    /** After automatic scraping. */
     SCRAPE(RenameSettings::tvOnScrape),
-    /** Nach einem Scan, der neue Episoden gefunden hat. */
+    /** After a scan that found new episodes. */
     SCAN(RenameSettings::episodesOnScan);
 
     private final Predicate<RenameSettings> enabled;

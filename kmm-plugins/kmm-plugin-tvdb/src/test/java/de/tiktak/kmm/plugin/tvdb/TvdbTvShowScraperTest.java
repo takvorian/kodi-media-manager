@@ -20,6 +20,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.api.CastMember;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -64,7 +66,8 @@ class TvdbTvShowScraperTest {
         assertThat(scraper.supportedMediaTypes()).containsExactly(MediaType.TV_SHOW);
         assertThat(scraper.missingConfiguration()).isEmpty();
         assertThat(scraper.attribution()).hasValueSatisfying(attribution -> {
-            assertThat(attribution.text()).startsWith("Metadata provided by TheTVDB.");
+            assertThat(attribution.text()).isEqualTo(LocalizedText.of("scraper.tvdb.attribution"));
+            assertThat(Messages.english(attribution.text())).startsWith("Metadata provided by TheTVDB.");
             assertThat(attribution.link()).isEqualTo(URI.create("https://www.thetvdb.com"));
         });
     }
@@ -145,7 +148,7 @@ class TvdbTvShowScraperTest {
         assertThat(second.plot()).isNull();
         assertThat(second.aired()).isNull();
         assertThat(second.runtime()).isNull();
-        assertThat(lost.episodes().get(2).thumb()).as("relative Pfade sind keine Bild-URL").isNull();
+        assertThat(lost.episodes().get(2).thumb()).as("relative paths are no image URL").isNull();
     }
 
     @Test
@@ -214,7 +217,7 @@ class TvdbTvShowScraperTest {
     void scrapesByKnownIdsOrTheUniqueSearchMatch() {
         assertThat(scraper.scrape(request("egal", null, Map.of("tvdb", "73739")))).isPresent();
         assertThat(scraper.scrape(request("egal", null, Map.of("imdb", "tt0411008")))).isPresent();
-        assertThat(scraper.scrape(request("Lost", 2004, Map.of("tmdb", "4607")))).as("Suche als Rückfall").isPresent();
+        assertThat(scraper.scrape(request("Lost", 2004, Map.of("tmdb", "4607")))).as("search as fallback").isPresent();
         assertThat(scraper.scrape(request("Lost", 1999, Map.of()))).isEmpty();
         assertThat(scraper.scrape(new ScrapeRequest(MediaType.MOVIE, "Lost", null, Map.of()))).isEmpty();
         assertThat(scraper.search(new SearchQuery(MediaType.MOVIE, "Lost", null))).isEmpty();
@@ -225,7 +228,9 @@ class TvdbTvShowScraperTest {
         TvdbTvShowScraper withoutKey = initialized(new TestPluginContext(), Clock.systemUTC());
 
         assertThat(withoutKey.missingConfiguration()).contains(TvdbTvShowScraper.MISSING_API_KEY);
-        assertThatThrownBy(() -> withoutKey.fetch("73739")).isInstanceOf(ScraperException.class);
+        assertThatThrownBy(() -> withoutKey.fetch("73739")).isInstanceOfSatisfying(ScraperException.class, e ->
+                assertThat(e.localizedText()).isEqualTo(LocalizedText.of("scraper.apiKeyMissing")
+                        .with("provider", "TVDB")));
         assertThat(new TvdbTvShowScraper().missingConfiguration()).isPresent();
         assertThatIllegalStateException().isThrownBy(() -> new TvdbTvShowScraper().fetch("73739"));
     }
@@ -235,8 +240,8 @@ class TvdbTvShowScraperTest {
         tvdb.respondWithStatus("/v4/login", 401);
 
         assertThatThrownBy(() -> scraper.fetch("73739"))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("API-Key oder die PIN");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.tvdb.credentialsRejected")));
     }
 
     @Test
@@ -245,33 +250,40 @@ class TvdbTvShowScraperTest {
         tvdb.respondWithStatus("/v4/search", 401);
 
         assertThatThrownBy(() -> scraper.search(new SearchQuery(MediaType.TV_SHOW, "Lost", null)))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("API-Key oder die PIN");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.tvdb.credentialsRejected")));
         assertThat(tvdb.requestsTo("/v4/login")).isEqualTo(2);
     }
 
     @ParameterizedTest(name = "HTTP {0}")
     @CsvSource(delimiter = '|', value = {
-            "429 | Anfragelimit",
-            "500 | Fehler 500"})
-    void translatesErrorResponses(int status, String expectedMessage) {
+            "429 | scraper.rateLimitReached",
+            "500 | scraper.httpError"})
+    void translatesErrorResponses(int status, String expectedKey) {
         tvdb.respondWithStatus(SERIES + "/extended", status);
 
         assertThatThrownBy(() -> scraper.fetch("73739"))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining(expectedMessage);
+                .isInstanceOfSatisfying(ScraperException.class, e -> {
+                    assertThat(e.localizedText().key()).isEqualTo(expectedKey);
+                    assertThat(e.localizedText().args()).containsEntry("provider", "TVDB");
+                });
     }
 
     @Test
     void reportsFailedLoginAndUnexpectedResponses() {
         tvdb.respondWithStatus("/v4/login", 503);
-        assertThatThrownBy(() -> scraper.fetch("73739")).hasMessageContaining("Anmeldung bei TVDB");
+        assertThatThrownBy(() -> scraper.fetch("73739")).isInstanceOfSatisfying(ScraperException.class, e ->
+                assertThat(e.localizedText()).isEqualTo(LocalizedText.of("scraper.tvdb.loginFailed")
+                        .with("status", 503)));
 
         tvdb.respond("/v4/login", "remoteid-empty.json");
-        assertThatThrownBy(() -> scraper.fetch("73739")).hasMessageContaining("kein Token");
+        assertThatThrownBy(() -> scraper.fetch("73739")).isInstanceOfSatisfying(ScraperException.class, e ->
+                assertThat(e.localizedText()).isEqualTo(LocalizedText.of("scraper.tvdb.noToken")));
 
         tvdb.respond("/v4/login", "invalid.json");
-        assertThatThrownBy(() -> scraper.fetch("73739")).hasMessageContaining("unerwartete Antwort");
+        assertThatThrownBy(() -> scraper.fetch("73739")).isInstanceOfSatisfying(ScraperException.class, e ->
+                assertThat(e.localizedText()).isEqualTo(LocalizedText.of("scraper.unexpectedResponse")
+                        .with("provider", "TVDB")));
     }
 
     @Test
@@ -281,8 +293,9 @@ class TvdbTvShowScraperTest {
         TvdbTvShowScraper offline = initialized(context().with("base-url", unreachable.toString()), Clock.systemUTC());
 
         assertThatThrownBy(() -> offline.fetch("73739"))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("TVDB cannot be reached");
     }
 
     private TestPluginContext context() {

@@ -4,20 +4,19 @@ import java.net.http.HttpClient;
 import java.util.Optional;
 
 /**
- * Dienste, die KMM einem Plugin bereitstellt. Plugins sehen bewusst keinen Spring-Kontext,
- * sondern nur diese schmale Schnittstelle.
+ * Services KMM provides to a plugin. Plugins deliberately see no Spring context, only this narrow interface.
  */
 public interface PluginContext {
 
     /**
-     * Einstellung des Plugins, z. B. {@code api-key} oder {@code language}. Konfiguriert über
+     * Setting of the plugin, e.g. {@code api-key} or {@code language}. Configured via
      * {@code kmm.plugins.settings.<plugin-id>.<name>}.
      */
     Optional<String> setting(String name);
 
-    /** Gemeinsamer HTTP-Client der Anwendung (Timeouts, später auch Proxy). */
+    /** Shared HTTP client of the application (timeouts, later also a proxy). */
     HttpClient httpClient();
 
-    /** User-Agent, mit dem Plugins sich bei Anbietern melden. */
+    /** User agent plugins identify themselves with at providers. */
     String userAgent();
 }

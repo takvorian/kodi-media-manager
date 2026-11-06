@@ -287,7 +287,12 @@ describe('MovieSetManager', () => {
       movieSetJobSummary({
         ...job('Alle Sets ergänzen'),
         status: 'SUCCEEDED',
-        result: { overviews: 2, images: 5, withoutCollection: 1, problems: ['fanart.tv: aus'] },
+        result: {
+          overviews: 2,
+          images: 5,
+          withoutCollection: 1,
+          problems: [literal('fanart.tv: aus')],
+        },
       } as Job),
     ).toBe(
       'Alle Sets ergänzen: 2 Beschreibungen und 5 Bilder geholt, 1 Sets ohne TMDB-ID übersprungen. Hinweise: fanart.tv: aus',
@@ -360,7 +365,7 @@ describe('MovieSetManager', () => {
     expect(
       movieSetJobSummary({
         ...done,
-        result: { changed: 1, unchanged: 0, failed: 1, failures: ['Film 5: x'] },
+        result: { changed: 1, unchanged: 0, failed: 1, failures: [literal('Film 5: x')] },
       }),
     ).toBe('Filmset löschen: 1 Film geändert, 1 Fehler: Film 5: x.');
     expect(movieSetJobSummary({ ...done, status: 'CANCELLED' })).toBe(

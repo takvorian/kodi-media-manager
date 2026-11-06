@@ -8,19 +8,19 @@ import java.util.function.UnaryOperator;
 import java.util.regex.Pattern;
 
 /**
- * Formate eines Platzhalters, mehrere hintereinander durch {@code :} getrennt ({@code {title:sort:first}}):
+ * Formats of a placeholder, several in a row separated by {@code :} ({@code {title:sort:first}}):
  * <ul>
- * <li>eine Zahl: Ziffernfolgen auf so viele Stellen mit Nullen auffüllen ({@code {season:2}} → {@code 01})</li>
- * <li>{@code first}: erster Buchstabe groß, Ziffern und Zeichen als {@code #}</li>
- * <li>{@code sort}: führenden Artikel nach hinten ({@code The Matrix} → {@code Matrix, The})</li>
- * <li>{@code lower}, {@code upper}: Klein- bzw. Großschreibung</li>
+ * <li>a number: pads digit sequences with zeros to that many digits ({@code {season:2}} → {@code 01})</li>
+ * <li>{@code first}: first letter in upper case, digits and symbols as {@code #}</li>
+ * <li>{@code sort}: moves a leading article to the end ({@code The Matrix} → {@code Matrix, The})</li>
+ * <li>{@code lower}, {@code upper}: lower or upper case</li>
  * </ul>
  */
 final class NameFormat {
 
     static final NameFormat NONE = new NameFormat(List.of());
 
-    /** Artikel wie Embers Standard-Sortierwörter. */
+    /** Articles like Ember's default sort tokens. */
     private static final List<String> ARTICLES = List.of("the", "a", "an", "der", "die", "das");
     private static final Pattern PADDING = Pattern.compile("[1-9]");
     private static final Pattern DIGITS = Pattern.compile("\\d+");
@@ -33,7 +33,7 @@ final class NameFormat {
         this.steps = steps;
     }
 
-    /** @return das Format oder leer, wenn ein Teil unbekannt ist; ohne Text kein Format */
+    /** @return the format, or empty if a part is unknown; no text means no format */
     static Optional<NameFormat> parse(String text) {
         if (text == null || text.isBlank()) {
             return Optional.of(NONE);

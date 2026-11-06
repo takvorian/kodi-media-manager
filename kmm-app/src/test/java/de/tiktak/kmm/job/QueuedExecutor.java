@@ -7,8 +7,8 @@ import java.util.concurrent.AbstractExecutorService;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Executor für Tests: sammelt Aufgaben und führt sie erst auf Aufruf im Test-Thread aus. So lässt
- * sich der Zustand „Job läuft“ deterministisch prüfen.
+ * Executor for tests: collects tasks and only runs them on request in the test thread. This makes
+ * the "job running" state deterministically testable.
  */
 final class QueuedExecutor extends AbstractExecutorService {
 

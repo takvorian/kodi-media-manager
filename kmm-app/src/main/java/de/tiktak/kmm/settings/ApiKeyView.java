@@ -1,10 +1,13 @@
 package de.tiktak.kmm.settings;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Zustand eines API-Keys für die Oberfläche; der Key selbst wird nie ausgegeben.
+ * State of an API key for the user interface; the key itself is never returned.
  *
- * @param set  ob ein Key gespeichert ist
- * @param hint die letzten Zeichen des Keys zum Wiedererkennen oder {@code null}
+ * @param label name of the key for the user
+ * @param set   whether a key is stored
+ * @param hint  the last characters of the key for recognizing it, or {@code null}
  */
-public record ApiKeyView(ApiKey key, String pluginId, String label, boolean set, String hint) {
+public record ApiKeyView(ApiKey key, String pluginId, LocalizedText label, boolean set, String hint) {
 }

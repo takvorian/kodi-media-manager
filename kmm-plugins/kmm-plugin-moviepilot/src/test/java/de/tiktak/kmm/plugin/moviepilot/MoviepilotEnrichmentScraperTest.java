@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
@@ -97,7 +98,7 @@ class MoviepilotEnrichmentScraperTest {
         assertThat(enrichment.runtime()).isEqualTo(175);
         assertThat(enrichment.premiered()).isEqualTo(LocalDate.of(1972, 8, 24));
         assertThat(enrichment.certification()).isEqualTo("FSK 16");
-        assertThat(enrichment.genres()).as("Schlagwörter statt Genres").isEmpty();
+        assertThat(enrichment.genres()).as("keywords instead of genres").isEmpty();
         assertThat(enrichment.countries()).containsExactly("USA");
         assertThat(enrichment.directors()).containsExactly("Francis Ford Coppola");
         assertThat(enrichment.writers()).containsExactly("Mario Puzo");
@@ -149,11 +150,15 @@ class MoviepilotEnrichmentScraperTest {
         responses.put("/movies/kaputt", new Response(200, "<script id=\"__NEXT_DATA__\">{kein json</script>"));
 
         assertThatThrownBy(() -> scraper.findEnrichment(request("Gesperrt", "tt0068646")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("403");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.httpError").with("provider", "Moviepilot")
+                                .with("status", 403)));
         assertThatThrownBy(() -> scraper.findEnrichment(request("Umgebaut", "tt0068646")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("unbekanntes Format");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.moviepilot.unknownPageFormat")));
         assertThatThrownBy(() -> scraper.findEnrichment(request("Kaputt", "tt0068646")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("unbekanntes Format");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.moviepilot.unknownPageFormat")));
     }
 
     @Test
@@ -161,7 +166,9 @@ class MoviepilotEnrichmentScraperTest {
         server.stop(0);
 
         assertThatThrownBy(() -> scraper.findEnrichment(request("Der Pate", "tt0068646")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("Moviepilot cannot be reached");
     }
 
     @Test

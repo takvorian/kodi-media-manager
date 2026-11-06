@@ -1,7 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
-import { localize } from '../i18n/localized-text';
+import { LocalizedText, localize } from '../i18n/localized-text';
 
 /** Job key of the tag changes; must match TagService.JOB_KEY. */
 export const TAG_JOB_KEY = 'tags';
@@ -33,7 +33,7 @@ export interface TagChangeResult {
   readonly changed: number;
   readonly unchanged: number;
   readonly failed: number;
-  readonly failures: readonly string[];
+  readonly failures: readonly LocalizedText[];
 }
 
 /** Summarizes a finished tag job for a snackbar message. */
@@ -46,7 +46,7 @@ export function tagJobSummary(job: Job): string {
       changed: result.changed,
       unchanged: result.unchanged,
       failed: result.failed,
-      failures: result.failures.join('; '),
+      failures: result.failures.map(localize).join('; '),
     });
   }
   return job.status === 'CANCELLED'

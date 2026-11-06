@@ -8,9 +8,9 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 /**
- * @param mode         was mit den vorhandenen Daten geschieht
- * @param pathMappings Pfad-Zuordnung, leer, wenn die Pfade gleich bleiben
- * @param dryRun       ob der Import am Ende zurückgerollt wird
+ * @param mode         what happens to the existing data
+ * @param pathMappings path mapping, empty if the paths stay the same
+ * @param dryRun       whether the import is rolled back at the end
  */
 public record BackupImportRequest(
         @NotNull Mode mode,
@@ -20,9 +20,9 @@ public record BackupImportRequest(
     static final int MAX_MAPPINGS = 100;
 
     public enum Mode {
-        /** Die Datenbank hat danach den Stand der Datei. */
+        /** Afterwards the database has the state of the file. */
         REPLACE,
-        /** Vorhandenes bleibt; bei gleichen Einträgen gewinnt die Datei. */
+        /** Existing data stays; for equal entries the file wins. */
         MERGE
     }
 

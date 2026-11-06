@@ -4,10 +4,10 @@ import java.util.Objects;
 import java.util.Optional;
 
 /**
- * Inhalt einer NFO, gelesen außerhalb der Datenbanktransaktion.
+ * Content of an NFO, read outside the database transaction.
  *
- * @param state   die gelesene Datei und ihre Änderungszeit
- * @param content der Inhalt oder leer, wenn die Datei unlesbar ist
+ * @param state   the file read and its modification time
+ * @param content the content, or empty if the file is unreadable
  */
 record LoadedNfo<T>(TvNfoState state, Optional<T> content) {
 
@@ -16,7 +16,7 @@ record LoadedNfo<T>(TvNfoState state, Optional<T> content) {
         Objects.requireNonNull(content, "content must not be null");
     }
 
-    /** Ist die NFO seit dem Lesen unverändert geblieben? */
+    /** Has the NFO remained unchanged since it was read? */
     boolean isOf(TvNfoState nfo) {
         return state.equals(nfo);
     }

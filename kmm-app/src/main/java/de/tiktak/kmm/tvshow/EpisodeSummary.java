@@ -3,9 +3,9 @@ package de.tiktak.kmm.tvshow;
 import java.time.LocalDate;
 
 /**
- * Episode in der Staffelübersicht einer Serie.
+ * Episode in the season overview of a TV show.
  *
- * @param playCount Anzahl der Wiedergaben oder {@code null}
+ * @param playCount number of plays or {@code null}
  */
 public record EpisodeSummary(
         long id,

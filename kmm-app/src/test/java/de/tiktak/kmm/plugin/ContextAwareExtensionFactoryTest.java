@@ -51,7 +51,7 @@ class ContextAwareExtensionFactoryTest {
         assertThat(factory.create(StringBuilder.class)).isNotNull();
     }
 
-    /** Merkt sich den übergebenen Kontext. */
+    /** Remembers the context passed to it. */
     public static class RecordingScraper implements Scraper {
 
         private PluginContext context;

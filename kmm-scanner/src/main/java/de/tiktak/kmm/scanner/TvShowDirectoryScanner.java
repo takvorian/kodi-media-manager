@@ -19,9 +19,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Durchsucht eine Serienquelle wie Kodi: Jeder Ordner direkt unterhalb der Quelle ist eine Serie,
- * ihre Episoden liegen beliebig tief darin (z. B. in {@code Staffel 1}). Staffel und Episode stehen
- * im Dateinamen; Staffelordner werden nicht ausgewertet.
+ * Searches a TV show source like Kodi: each folder directly below the source is a TV show, its episodes lie at any
+ * depth inside it (e.g. in {@code Staffel 1}). Season and episode are taken from the file name; season folders are
+ * not evaluated.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -35,7 +35,7 @@ public class TvShowDirectoryScanner {
     private final EpisodeNameParser episodeParser;
 
     /**
-     * @throws UncheckedIOException wenn das Quellverzeichnis nicht gelesen werden kann
+     * @throws UncheckedIOException if the source directory cannot be read
      */
     public List<TvShowCandidate> scan(Path root) {
         return showDirectories(root).stream()
@@ -45,9 +45,9 @@ public class TvShowDirectoryScanner {
     }
 
     /**
-     * @return die möglichen Serienordner der Quelle, sortiert; ob sie Episoden enthalten, prüft erst
+     * @return the possible TV show folders of the source, sorted; whether they contain episodes is only checked by
      *         {@link #scanShow(Path)}
-     * @throws UncheckedIOException wenn das Quellverzeichnis nicht gelesen werden kann
+     * @throws UncheckedIOException if the source directory cannot be read
      */
     public List<Path> showDirectories(Path root) {
         Objects.requireNonNull(root, "root must not be null");
@@ -64,9 +64,9 @@ public class TvShowDirectoryScanner {
     }
 
     /**
-     * Durchsucht einen Serienordner. Ordner ohne Videodateien sind keine Serie.
+     * Searches a TV show folder. Folders without video files are not a TV show.
      *
-     * @return die Serie oder leer, wenn der Ordner keine Videodateien enthält oder unlesbar ist
+     * @return the TV show, or empty if the folder contains no video files or cannot be read
      */
     public Optional<TvShowCandidate> scanShow(Path directory) {
         EpisodeVisitor visitor = new EpisodeVisitor(directory);

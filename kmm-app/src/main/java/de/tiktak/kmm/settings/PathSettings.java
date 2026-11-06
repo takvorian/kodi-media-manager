@@ -6,7 +6,7 @@ import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 
 /**
- * Kennt die Einträge des Einstellungsspeichers, die Pfade enthalten, damit sie sich beim Umzug umschreiben lassen.
+ * Knows the entries of the settings store that contain paths so that they can be rewritten on a move.
  */
 public final class PathSettings {
 
@@ -18,7 +18,7 @@ public final class PathSettings {
     }
 
     /**
-     * @return den Wert mit umgeschriebenen Pfaden; Einträge ohne Pfad und leere Werte bleiben unverändert
+     * @return the value with rewritten paths; entries without a path and empty values remain unchanged
      */
     public static String mapPaths(String settingKey, String value, UnaryOperator<String> mapper) {
         if (value == null || value.isEmpty()) {

@@ -3,11 +3,11 @@ package de.tiktak.kmm.plugin.api;
 import java.util.Objects;
 
 /**
- * Eine Bewertung beim Anbieter.
+ * A rating at the provider.
  *
- * @param source Kennung für die NFO, z. B. {@code themoviedb} oder {@code tvdb}
- * @param max    Höchstwert der Skala
- * @param votes  Anzahl der Stimmen oder {@code null}
+ * @param source identifier for the NFO, e.g. {@code themoviedb} or {@code tvdb}
+ * @param max    maximum of the scale
+ * @param votes  number of votes or {@code null}
  */
 public record ProviderRating(String source, double value, int max, Integer votes) {
 

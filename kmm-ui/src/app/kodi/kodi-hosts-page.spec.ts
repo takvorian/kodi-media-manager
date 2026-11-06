@@ -12,6 +12,7 @@ import { SOURCES_URL } from '../sources/media-source.service';
 import { KodiHost } from './kodi';
 import { KodiHostsPage } from './kodi-hosts-page';
 import { KODI_HOSTS_URL } from './kodi.service';
+import { literal } from '../i18n/localized-text';
 
 describe('KodiHostsPage', () => {
   const livingRoom: KodiHost = {
@@ -27,7 +28,7 @@ describe('KodiHostsPage', () => {
       hostId: 3,
       host: 'Wohnzimmer',
       outcome: 'REFRESHED',
-      message: '„Heat“ aktualisiert.',
+      message: literal('„Heat“ aktualisiert.'),
       at: '2026-10-25T20:00:00Z',
     },
   };
@@ -43,7 +44,7 @@ describe('KodiHostsPage', () => {
       hostId: 4,
       host: 'Schlafzimmer',
       outcome: 'FAILED',
-      message: 'nicht erreichbar.',
+      message: literal('nicht erreichbar.'),
       at: '2026-10-25T20:00:00Z',
     },
   };
@@ -295,7 +296,7 @@ describe('KodiHostsPage', () => {
     buttons('.test-button')[0].click();
     httpTesting.expectOne(`${KODI_HOSTS_URL}/3/test`).flush({
       version: 'Kodi 21.2',
-      warning: 'Kodi hat keine Quelle für a:\\filme.',
+      warning: literal('Kodi hat keine Quelle für a:\\filme.'),
     });
     await fixture.whenStable();
 

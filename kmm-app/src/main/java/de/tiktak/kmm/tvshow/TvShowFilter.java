@@ -9,11 +9,11 @@ import jakarta.validation.constraints.Size;
 import de.tiktak.kmm.filter.FilterOperator;
 
 /**
- * Filter der Serienliste aus einzelnen Bedingungen.
+ * Filter of the TV show list made of individual conditions.
  *
- * @param search     Teil des Titels zusätzlich zu den Bedingungen oder {@code null}
- * @param matchAll   ob alle Bedingungen gelten müssen ({@code true}) oder eine genügt
- * @param conditions Bedingungen; ohne Bedingung gelten alle Serien
+ * @param search     part of the title in addition to the conditions, or {@code null}
+ * @param matchAll   whether all conditions must apply ({@code true}) or one is enough
+ * @param conditions conditions; without any condition all TV shows match
  */
 public record TvShowFilter(
         @Size(max = TvShowFilter.MAX_VALUE_LENGTH) String search,
@@ -29,7 +29,7 @@ public record TvShowFilter(
     }
 
     /**
-     * @param value Vergleichswert; bei {@link FilterOperator#EMPTY} und {@link FilterOperator#NOT_EMPTY} ohne Bedeutung
+     * @param value comparison value; irrelevant for {@link FilterOperator#EMPTY} and {@link FilterOperator#NOT_EMPTY}
      */
     public record Condition(
             @NotNull TvShowFilterField field,

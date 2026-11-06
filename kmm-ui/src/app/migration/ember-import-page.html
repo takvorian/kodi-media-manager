@@ -228,7 +228,7 @@
         <h3>{{ 'migration.settings' | transloco }}</h3>
         <ul class="settings-changes">
           @for (change of result.settingsChanges; track $index) {
-            <li>{{ change }}</li>
+            <li>{{ change | localized }}</li>
           }
         </ul>
       }
@@ -236,7 +236,7 @@
         <h3>{{ 'migration.report.skippedSources' | transloco }}</h3>
         <ul class="skipped-sources">
           @for (source of result.skippedSources; track $index) {
-            <li>{{ source }}</li>
+            <li>{{ source | localized }}</li>
           }
         </ul>
       }
@@ -244,7 +244,7 @@
         <h3>{{ 'common.notes' | transloco }}</h3>
         <ul class="warnings">
           @for (warning of result.warnings; track $index) {
-            <li>{{ warning }}</li>
+            <li>{{ warning | localized }}</li>
           }
         </ul>
       }

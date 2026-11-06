@@ -60,6 +60,7 @@ import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TVSHOW_BATCH_JOB_KEY, tvShowScrapeJobKey } from './tvshow-batch';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
+import { localize } from '../i18n/localized-text';
 import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 5000;
@@ -465,7 +466,7 @@ export class TvShowDetail {
         this.notify(
           this.transloco.translate('tvshows.detail.notRenamed', {
             title: plan.title,
-            message: plan.message,
+            message: localize(plan.message),
           }),
         );
     }

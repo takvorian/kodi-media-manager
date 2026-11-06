@@ -1,5 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
+import { LocalizedText } from '../i18n/localized-text';
+
 /** Key of the import job as the backend assigns it. */
 export const BACKUP_IMPORT_JOB_KEY = 'backup-import';
 
@@ -46,7 +48,7 @@ export interface BackupImportReport {
   readonly unmappedPaths: number;
   readonly credentialsKept: boolean;
   readonly safetyCopy: string | null;
-  readonly warnings: readonly string[];
+  readonly warnings: readonly LocalizedText[];
 }
 
 /** Translation keys of the table labels. */

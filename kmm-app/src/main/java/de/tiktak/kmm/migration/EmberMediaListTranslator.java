@@ -13,8 +13,8 @@ import de.tiktak.kmm.movie.MovieFilter;
 import de.tiktak.kmm.movie.MovieFilterField;
 
 /**
- * Übersetzt eigene Filmlisten aus Embers Filter-Editor in Filter. Ember speichert freies SQL; übersetzt werden nur
- * einfache, mit {@code AND} verknüpfte Bedingungen, die KMM genauso abfragen kann. Alles andere bleibt unübersetzt.
+ * Translates custom movie lists from Ember's filter editor into filters. Ember stores free SQL; only simple conditions
+ * joined with {@code AND} that KMM can query the same way are translated. Everything else stays untranslated.
  */
 final class EmberMediaListTranslator {
 
@@ -27,14 +27,14 @@ final class EmberMediaListTranslator {
     private static final String PLAY_COUNT = "playcount";
     private static final String WATCHED = "true";
     private static final String UNWATCHED = "false";
-    /** Vergleiche der Wiedergaben, die „gesehen“ bzw. „nicht gesehen“ bedeuten. */
+    /** Comparisons of the play count that mean "watched" or "not watched". */
     private static final Map<String, String> PLAY_COUNT_COMPARISONS = Map.of(
             "=0", UNWATCHED, "<1", UNWATCHED, "<=0", UNWATCHED, ">0", WATCHED, ">=1", WATCHED);
 
     private EmberMediaListTranslator() {
     }
 
-    /** @return der Filter oder leer, wenn die Liste Bedingungen enthält, die KMM nicht übersetzen kann */
+    /** @return the filter, or empty if the list contains conditions KMM cannot translate */
     static Optional<MovieFilter> translate(String sql) {
         Matcher where = WHERE.matcher(sql.strip().replaceAll(";\\s*$", ""));
         if (!where.find()) {

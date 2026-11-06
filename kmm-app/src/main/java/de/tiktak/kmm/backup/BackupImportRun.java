@@ -23,20 +23,20 @@ import org.springframework.jdbc.core.BatchPreparedStatementSetter;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.movie.FilePathHash;
 import de.tiktak.kmm.settings.CredentialSettings;
 import de.tiktak.kmm.settings.PathSettings;
 
 /**
- * Ein einzelner Importlauf. Ersetzen löscht zuerst alles und führt dann in die leere Datenbank zusammen; es gibt also
- * nur einen Importweg. IDs vergibt die Datenbank neu, die Fremdschlüssel werden umgeschrieben. Läuft in der Transaktion
- * des Aufrufers.
+ * A single import run. Replacing first deletes everything and then merges into the empty database; so there is only
+ * one import path. The database assigns new IDs, the foreign keys are rewritten. Runs in the caller's transaction.
  */
 final class BackupImportRun {
 
     private static final int BATCH_SIZE = 500;
-    private static final String PROGRESS_MESSAGE = "Daten werden übernommen";
+    private static final LocalizedText PROGRESS_MESSAGE = LocalizedText.of("backup.import.progress");
     private static final String NAME_COLUMN = "name";
     private static final Pattern COMBINING_MARKS = Pattern.compile("\\p{M}");
     private static final String PATH_COLUMN = "path";
@@ -59,7 +59,7 @@ final class BackupImportRun {
     private final Map<String, Map<List<String>, Long>> existingKeys = new HashMap<>();
     private final Map<String, int[]> counters = new LinkedHashMap<>();
     private final List<ExistingSource> sources = new ArrayList<>();
-    private final List<String> warnings = new ArrayList<>();
+    private final List<LocalizedText> warnings = new ArrayList<>();
     private final Map<String, String> keptSettings = new LinkedHashMap<>();
     private final Map<String, String> keptKodiPasswords = new HashMap<>();
     private final List<Object[]> batch = new ArrayList<>();
@@ -94,7 +94,7 @@ final class BackupImportRun {
         });
     }
 
-    /** Verarbeitet eine Zeile der Datei. */
+    /** Processes one row of the file. */
     void accept(String tableName, Map<String, Object> fileRow) {
         context.throwIfCancellationRequested();
         if (done++ % BATCH_SIZE == 0) {
@@ -159,8 +159,8 @@ final class BackupImportRun {
     }
 
     /**
-     * MariaDB behandelt Namen ohne Rücksicht auf Groß-/Kleinschreibung und Akzente als gleich. Hier gilt das auf allen
-     * Datenbanken, sonst scheitert der Umzug von H2 an zwei Filmsets, die sich nur darin unterscheiden.
+     * MariaDB treats names as equal regardless of case and accents. Here this applies to all databases, otherwise the
+     * move from H2 fails on two movie sets that differ only in that.
      */
     private static String keyPart(String column, Object value) {
         String text = String.valueOf(value);
@@ -172,7 +172,7 @@ final class BackupImportRun {
         return withoutMarks.toLowerCase(Locale.ROOT).replace("ß", "ss").strip();
     }
 
-    /** Nur Spalten, die das Schema kennt, gelangen in SQL; was eine neuere oder fremde Datei mitbringt, entfällt. */
+    /** Only columns known to the schema get into SQL; whatever a newer or foreign file brings along is dropped. */
     private Map<String, Object> withKnownColumns(BackupTable table, Map<String, Object> fileRow) {
         Map<String, Integer> types = columnTypes(table);
         Map<String, Object> row = new LinkedHashMap<>();
@@ -198,7 +198,7 @@ final class BackupImportRun {
     }
 
     /**
-     * @return {@code false}, wenn der Eltern-Eintrag nicht übernommen wurde
+     * @return {@code false} if the parent entry was not imported
      */
     private boolean remapParents(BackupTable table, Map<String, Object> row) {
         for (Map.Entry<String, String> parent : table.parents().entrySet()) {
@@ -218,7 +218,7 @@ final class BackupImportRun {
         if (fileId instanceof Number number) {
             return number.longValue();
         }
-        throw new BackupFileException("Die Sicherung enthält eine ungültige ID: " + fileId);
+        throw new BackupFileException(LocalizedText.of("backup.invalidId").with("id", String.valueOf(fileId)));
     }
 
     private void mapPaths(BackupTable table, Map<String, Object> row) {
@@ -270,22 +270,20 @@ final class BackupImportRun {
     }
 
     /**
-     * Gleiche Regel wie beim Anlegen einer Quelle: Name eindeutig, Verzeichnisse überschneiden sich nicht.
+     * Same rule as when creating a source: unique name, directories do not overlap.
      *
-     * @return ob die Quelle übernommen wird
+     * @return whether the source is imported
      */
     private boolean acceptSource(Map<String, Object> row) {
         String name = String.valueOf(row.get(NAME_COLUMN));
         String path = String.valueOf(row.get(PATH_COLUMN));
         for (ExistingSource source : sources) {
             if (source.name().equalsIgnoreCase(name)) {
-                warnings.add("Die Quelle „%s“ (%s) wurde mit ihrem Inhalt übersprungen: Der Name ist schon vergeben."
-                        .formatted(name, path));
+                warnings.add(sourceWarning("backup.warning.sourceNameTaken", name, path));
                 return false;
             }
             if (source.overlaps(path)) {
-                warnings.add("Die Quelle „%s“ (%s) wurde mit ihrem Inhalt übersprungen: Sie überschneidet sich mit „%s“."
-                        .formatted(name, path, source.name()));
+                warnings.add(sourceWarning("backup.warning.sourceOverlaps", name, path).with("other", source.name()));
                 return false;
             }
         }
@@ -300,13 +298,17 @@ final class BackupImportRun {
                 return;
             }
         } catch (InvalidPathException e) {
-            warnings.add("Der Pfad %s der Quelle „%s“ ist auf diesem System ungültig.".formatted(path, name));
+            warnings.add(sourceWarning("backup.warning.sourcePathInvalid", name, path));
             return;
         }
-        warnings.add("Das Verzeichnis %s der Quelle „%s“ ist derzeit nicht erreichbar.".formatted(path, name));
+        warnings.add(sourceWarning("backup.warning.sourceUnreachable", name, path));
     }
 
-    /** Eine Datei ohne Zugangsdaten überschreibt die vorhandenen Passwörter nicht. */
+    private static LocalizedText sourceWarning(String key, String name, String path) {
+        return LocalizedText.of(key).with("name", name).with("path", path);
+    }
+
+    /** A file without credentials does not overwrite the existing passwords. */
     private void applyKeptKodiPassword(Map<String, Object> row, boolean exists) {
         if (header.credentials()) {
             return;
@@ -352,7 +354,7 @@ final class BackupImportRun {
         }
     }
 
-    /** Die Listen eines vorhandenen Eintrags ersetzt die Datei vollständig. */
+    /** The file completely replaces the lists of an existing entry. */
     private void deleteLists(BackupTable table, long id) {
         BackupTables.ALL.stream().filter(BackupTable::isList).forEach(list -> list.parents().forEach((column, owner) -> {
             if (owner.equals(table.name())) {
@@ -417,7 +419,7 @@ final class BackupImportRun {
         }
     }
 
-    /** Vergleicht Verzeichnisse als Text, denn die Pfade einer Datei gehören womöglich zu einem anderen System. */
+    /** Compares directories as text, because the paths of a file may belong to another system. */
     private record ExistingSource(String name, String path) {
 
         boolean overlaps(String other) {

@@ -34,8 +34,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Echtzeit-Sync Ende zu Ende gegen einen Fake-Kodi: Nach einem Scan mit neuen Filmen durchsucht
- * Kodi die Quelle, nach dem Speichern von Metadaten liest Kodi den Film neu ein.
+ * Realtime sync end to end against a fake Kodi: after a scan with new movies Kodi scans the source, after saving
+ * metadata Kodi reads the movie again.
  */
 @SpringBootTest(properties = "kmm.kodi.sync-delay=50ms")
 @AutoConfigureMockMvc
@@ -93,7 +93,8 @@ class KodiSyncIntegrationTest {
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/{id}/refresh", movieId).with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
-                        [{"host": "Wohnzimmer", "outcome": "REFRESHED", "message": "„Heat“ aktualisiert."}]
+                        [{"host": "Wohnzimmer", "outcome": "REFRESHED",
+                          "message": {"key": "kodi.sync.refreshed", "args": {"title": "Heat"}}}]
                         """);
         assertThat(mockMvc.get().uri(KodiHostController.BASE_PATH))
                 .bodyJson().extractingPath("$[0].lastSync.outcome").isEqualTo("REFRESHED");
@@ -131,7 +132,8 @@ class KodiSyncIntegrationTest {
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/{id}/refresh", episodeId)
                 .with(csrf())).hasStatusOk().bodyJson().isLenientlyEqualTo("""
-                        [{"host": "Wohnzimmer", "outcome": "REFRESHED", "message": "„Lost S01E01“ aktualisiert."}]
+                        [{"host": "Wohnzimmer", "outcome": "REFRESHED",
+                          "message": {"key": "kodi.sync.refreshed", "args": {"title": "Lost S01E01"}}}]
                         """);
     }
 

@@ -10,8 +10,8 @@ import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 
 /**
- * Bearbeitbare Metadaten einer Episode. Staffel und Episode stehen im Dateinamen und sind hier
- * nicht änderbar. Die Videoquelle (z. B. {@code dvd}) stammt aus Ember und dient etwa dem Umbenennen.
+ * Editable metadata of an episode. Season and episode are part of the file name and cannot be
+ * changed here. The video source (e.g. {@code dvd}) comes from Ember and is used for renaming, among other things.
  */
 public record EpisodeMetadata(
         @NotBlank @Size(max = TvTexts.MAX_TITLE_LENGTH) String title,
@@ -35,7 +35,7 @@ public record EpisodeMetadata(
         videoSource = TvTexts.clean(videoSource, Integer.MAX_VALUE);
     }
 
-    /** Kopie, die die Grenzen der Datenbank einhält (für Daten aus Dateien und Fremdquellen). */
+    /** Copy that respects the database limits (for data from files and third-party sources). */
     public EpisodeMetadata withinLimits() {
         return new EpisodeMetadata(
                 TvTexts.clean(title, TvTexts.MAX_TITLE_LENGTH),

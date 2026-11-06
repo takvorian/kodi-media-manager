@@ -16,7 +16,7 @@ import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Subquery;
 
 /**
- * Übersetzt einen {@link MovieFilter} in eine Datenbankabfrage.
+ * Translates a {@link MovieFilter} into a database query.
  */
 final class MovieFilterSpecification {
 
@@ -24,8 +24,8 @@ final class MovieFilterSpecification {
     }
 
     /**
-     * @throws InvalidFilterException wenn eine Bedingung den Vergleich nicht erlaubt oder der Wert fehlt oder
-     *                                nicht passt
+     * @throws InvalidFilterException if a condition does not allow the comparison, or the value is missing or
+     *                                does not fit
      */
     static Specification<Movie> of(MovieFilter filter, Clock clock) {
         filter.conditions().forEach(condition ->
@@ -38,7 +38,7 @@ final class MovieFilterSpecification {
         };
     }
 
-    /** Baut die Bedingung einer Zeile der Abfrage. */
+    /** Builds the condition for one row of the query. */
     private record Builder(Root<Movie> root, CriteriaQuery<?> query, FilterPredicates predicates) {
 
         Predicate predicate(MovieFilter.Condition condition) {
@@ -88,7 +88,7 @@ final class MovieFilterSpecification {
             return predicates.token(path, condition.operator(), condition.value());
         }
 
-        /** Listen wie Genres: „ist“ heißt, ein Eintrag passt; „ist nicht“, keiner passt. */
+        /** Lists such as genres: "is" means one entry matches; "is not" means none matches. */
         private Predicate collection(String attribute, MovieFilter.Condition condition) {
             var cb = predicates.cb();
             return switch (condition.operator()) {

@@ -16,8 +16,8 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 /**
- * Kleiner HTTP-Server, der feste TVDB-Antworten ausliefert und die Anfragen mitschreibt. Antworten
- * werden über Pfad und optional die Seite ({@code page}) zugeordnet; {@code /login} liefert ein Token.
+ * Small HTTP server that serves fixed TVDB responses and records the requests. Responses are assigned by path and
+ * optionally the page ({@code page}); {@code /login} returns a token.
  */
 final class FakeTvdbServer implements AutoCloseable {
 
@@ -94,7 +94,7 @@ final class FakeTvdbServer implements AutoCloseable {
     private record Response(int status, String body) {
     }
 
-    /** Mitgeschriebene Anfrage. */
+    /** Recorded request. */
     record Request(String method, String path, String query, String body, String authorization) {
     }
 }

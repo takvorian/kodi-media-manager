@@ -1,7 +1,7 @@
 package de.tiktak.kmm.filter;
 
 /**
- * Vergleich einer Filterbedingung. {@link #EMPTY} und {@link #NOT_EMPTY} brauchen keinen Wert.
+ * Comparison of a filter condition. {@link #EMPTY} and {@link #NOT_EMPTY} need no value.
  */
 public enum FilterOperator {
     IS, IS_NOT, CONTAINS, AT_LEAST, AT_MOST, EMPTY, NOT_EMPTY;

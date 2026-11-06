@@ -7,6 +7,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.HtmlText;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -16,7 +17,7 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Liest die Daten einer Filmseite von Moviepilot aus dem eingebetteten JSON der Seite.
+ * Reads the data of a Moviepilot movie page from the JSON embedded in the page.
  */
 final class MoviepilotPage {
 
@@ -28,6 +29,7 @@ final class MoviepilotPage {
     private static final String COUNTRY_GROUP = "Produktionsland";
     private static final String DIRECTOR = "director";
     private static final String WRITER_ROLE = "Drehbuch";
+    private static final LocalizedText UNKNOWN_FORMAT = LocalizedText.of("scraper.moviepilot.unknownPageFormat");
 
     private final JsonNode data;
 
@@ -35,17 +37,17 @@ final class MoviepilotPage {
         this.data = data;
     }
 
-    /** @throws ScraperException wenn die Seite die erwarteten Daten nicht enthält, sie also umgebaut wurde */
+    /** @throws ScraperException if the page does not contain the expected data, i.e. it was rebuilt */
     static MoviepilotPage parse(String html) {
         Matcher matcher = PAGE_DATA.matcher(html);
         if (!matcher.find()) {
-            throw new ScraperException("Moviepilot: Die Filmseite hat ein unbekanntes Format.");
+            throw new ScraperException(UNKNOWN_FORMAT);
         }
         try {
             return new MoviepilotPage(JSON.readTree(matcher.group(1)).path("props").path("initialProps")
                     .path("pageProps"));
         } catch (JacksonException e) {
-            throw new ScraperException("Moviepilot: Die Filmseite hat ein unbekanntes Format.", e);
+            throw new ScraperException(UNKNOWN_FORMAT, e);
         }
     }
 
@@ -53,7 +55,7 @@ final class MoviepilotPage {
         return data.path("imdbId").asString("");
     }
 
-    /** Ohne Genres: Moviepilot führt unter „Genre“ Schlagwörter wie „Hard SF“ oder „Mafiafilm“. */
+    /** Without genres: under "Genre" Moviepilot lists keywords such as "Hard SF" or "Mafiafilm". */
     Enrichment enrichment() {
         JsonNode item = data.path("listOfLists").path("item");
         return new Enrichment(List.of(), plot(), positive(item.path("runtime")), premiered(item), certification(item),
@@ -62,7 +64,7 @@ final class MoviepilotPage {
                 people("cast", person -> true), tags(COUNTRY_GROUP));
     }
 
-    /** Nur der Abschnitt „Handlung“: Danach folgen auf der Seite redaktionelle Hintergründe. */
+    /** Only the section "Handlung" (plot): editorial background follows on the page. */
     private String plot() {
         String description = data.path("description").asString("");
         String text = PLOT_HEADING.matcher(description).replaceFirst("");

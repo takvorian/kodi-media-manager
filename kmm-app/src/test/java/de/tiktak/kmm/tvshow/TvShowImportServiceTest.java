@@ -94,7 +94,7 @@ class TvShowImportServiceTest {
 
         assertThat(show.result().created()).isFalse();
         assertThat(known.getTitle()).isEqualTo("Lost – Verschollen");
-        assertThat(known.isNfoRead()).as("Angaben stammen aus Ember, nicht aus der NFO").isFalse();
+        assertThat(known.isNfoRead()).as("values come from Ember, not from the NFO").isFalse();
         assertThat(result).isEqualTo(new TvImportResult(false, false));
         assertThat(knownEpisode.getTitle()).isEqualTo("Pilot (1)");
         assertThat(knownEpisode.isNfoRead()).isFalse();

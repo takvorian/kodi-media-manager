@@ -13,7 +13,7 @@
     <artifactId>kmm-plugins</artifactId>
     <packaging>pom</packaging>
     <name>KMM Plugins</name>
-    <description>Mitgelieferte PF4J-Plugins. Jedes Plugin ist ein eigenständiges JAR mit PF4J-Manifest.</description>
+    <description>Bundled PF4J plugins. Every plugin is a standalone JAR with a PF4J manifest.</description>
 
     <modules>
         <module>kmm-plugin-testdata</module>
@@ -33,7 +33,7 @@
     </properties>
 
     <dependencies>
-        <!-- provided: Die API kommt zur Laufzeit aus der Anwendung, nicht aus dem Plugin-JAR. -->
+        <!-- provided: the API comes from the application at runtime, not from the plugin JAR. -->
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
             <artifactId>kmm-plugin-api</artifactId>
@@ -54,7 +54,7 @@
                     <artifactId>maven-compiler-plugin</artifactId>
                     <configuration>
                         <annotationProcessorPaths combine.children="append">
-                            <!-- Erzeugt META-INF/extensions.idx aus den @Extension-Annotationen. -->
+                            <!-- Generates META-INF/extensions.idx from the @Extension annotations. -->
                             <path>
                                 <groupId>org.pf4j</groupId>
                                 <artifactId>pf4j</artifactId>

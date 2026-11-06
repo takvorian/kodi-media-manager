@@ -1,11 +1,11 @@
 package de.tiktak.kmm.tvshow;
 
 /**
- * Serienordner, Staffelordner oder Episodendateien einer Serie wurden umbenannt. Kodi kennt danach nur noch die
- * alten Pfade.
+ * TV show folder, season folders or episode files of a TV show were renamed. Kodi afterwards only knows the
+ * old paths.
  *
- * @param previousDirectory Serienordner vorher
- * @param directory         Serienordner jetzt; gleich {@code previousDirectory}, wenn er blieb
+ * @param previousDirectory TV show folder before
+ * @param directory         TV show folder now; equal to {@code previousDirectory} if it stayed
  */
 public record TvShowRenamedEvent(long showId, long sourceId, String previousDirectory, String directory) {
 }

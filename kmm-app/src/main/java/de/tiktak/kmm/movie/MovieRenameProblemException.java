@@ -1,33 +1,36 @@
 package de.tiktak.kmm.movie;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.scanner.naming.NamePatternException;
 import de.tiktak.kmm.source.MediaSource;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Umbenennen ist so nicht möglich. Wird als HTTP 422 beantwortet.
+ * Renaming is not possible like this. Answered as HTTP 422.
  */
-public class MovieRenameProblemException extends ErrorResponseException {
+public class MovieRenameProblemException extends LocalizedProblemException {
 
-    private static final String TITLE = "Umbenennen nicht möglich";
+    private static final LocalizedText TITLE = LocalizedText.of("movie.rename.impossible.title");
 
-    private MovieRenameProblemException(String detail) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT);
-        getBody().setTitle(TITLE);
-        getBody().setDetail(detail);
+    private MovieRenameProblemException(LocalizedText detail) {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, TITLE, detail, null);
     }
 
-    static MovieRenameProblemException invalidPattern(String label, NamePatternException e) {
-        return new MovieRenameProblemException("%s: %s".formatted(label, e.getMessage()));
+    /** @param pattern which pattern is invalid, e.g. {@code movie.rename.pattern.folder} */
+    static MovieRenameProblemException invalidPattern(LocalizedText pattern, NamePatternException e) {
+        return new MovieRenameProblemException(LocalizedText.of("movie.rename.invalidPattern.detail")
+                .with("pattern", pattern)
+                .with("reason", e.localizedText()));
     }
 
     static MovieRenameProblemException folderInFilePattern() {
-        return new MovieRenameProblemException("Das Dateimuster darf keine Ordner (/) enthalten.");
+        return new MovieRenameProblemException(LocalizedText.of("movie.rename.folderInFilePattern.detail"));
     }
 
     static MovieRenameProblemException notAMovieSource(MediaSource source) {
-        return new MovieRenameProblemException("Die Quelle '%s' enthält keine Filme.".formatted(source.getName()));
+        return new MovieRenameProblemException(LocalizedText.of("movie.rename.notAMovieSource.detail")
+                .with("source", source.getName()));
     }
 }

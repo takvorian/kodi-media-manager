@@ -106,7 +106,7 @@ class EmberSettingsReaderTest {
         assertThatThrownBy(() -> reader.read(settingsFile))
                 .isInstanceOf(EmberSettingsException.class)
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("können nicht gelesen werden");
+                .hasMessageContaining("cannot be read");
     }
 
     @Test

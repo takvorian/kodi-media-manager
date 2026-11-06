@@ -11,6 +11,7 @@ import org.springframework.web.ErrorResponseException;
 
 import de.tiktak.kmm.artwork.ArtworkFillResult;
 import de.tiktak.kmm.artwork.TvShowArtworkService;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
@@ -27,12 +28,13 @@ import de.tiktak.kmm.tvshow.TvShowTrailerService;
 import de.tiktak.kmm.tvshow.TvRenameTrigger;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan;
 import de.tiktak.kmm.tvshow.TvShowRenameService;
+import de.tiktak.kmm.web.LocalizedTexts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Scrapt Serien nacheinander, alle einer Quelle oder eine Auswahl: Zuordnung (nur bei sicherem Treffer), leere
- * Episodenfelder, fehlende Bilder und fehlende Trailer-Links. Vorhandene Daten und Bilder bleiben unverändert.
+ * Scrapes TV shows one after the other, all of a source or a selection: identification (only with a certain match),
+ * empty episode fields, missing images and missing trailer links. Existing data and images stay unchanged.
  */
 @Slf4j
 @Component
@@ -40,11 +42,7 @@ import lombok.extern.slf4j.Slf4j;
 class TvAutoScrapeRunner {
 
     static final int MAX_LISTED_ENTRIES = 100;
-    static final String NO_TV_SHOW_SCRAPER = "Kein Serien-Scraper ist eingerichtet; es werden nur Bilder geholt.";
-    static final String UNKNOWN_SHOW = "Serie %d";
-    static final String SEASON_LABEL = "Staffel %d von „%s“";
     private static final int SEASON_STEPS = 4;
-    private static final String UNEXPECTED_ERROR = "unerwarteter Fehler";
 
     private final TvShowQueryService queryService;
     private final TvShowMetadataService metadataService;
@@ -65,8 +63,8 @@ class TvAutoScrapeRunner {
     }
 
     /**
-     * @return der Titel der Serie
-     * @throws AutoScrapeNotPossibleException wenn die Staffel keine Episoden hat
+     * @return the title of the TV show
+     * @throws AutoScrapeNotPossibleException if the season has no episodes
      */
     String requireSeason(long showId, int season) {
         TvShowDetails show = metadataService.findShow(showId);
@@ -97,41 +95,42 @@ class TvAutoScrapeRunner {
     }
 
     /**
-     * Scrapt eine Staffel: ihre Episoden, die Bilder der Staffel und die Standbilder ihrer Episoden, technische
-     * Angaben und Umbenennen. Was die ganze Serie betrifft (Trailer, Titelmusik, Bewertungen), bleibt weg.
+     * Scrapes a season: its episodes, the images of the season and the stills of its episodes, technical details and
+     * renaming. What concerns the whole TV show (trailer, theme music, ratings) is left out.
      *
-     * @param overwrite ob Titel und Texte der Episoden durch die des Anbieters ersetzt werden
+     * @param overwrite whether titles and texts of the episodes are replaced by those of the provider
      */
     TvAutoScrapeResult runSeason(long showId, int season, boolean overwrite, JobContext context) {
         Progress progress = new Progress();
         String title = title(showId);
-        context.reportProgress(0, SEASON_STEPS, SEASON_LABEL.formatted(season, title));
+        LocalizedText label = AutoScrapeTexts.season(season, title);
+        context.reportProgress(0, SEASON_STEPS, label);
         try {
             TvShowAutoScrapeOutcome outcome = overwrite ? scrapeService.refetchSeason(showId, season)
                     : scrapeService.scrapeSeasonMissing(showId, season);
             if (count(outcome, showId, title, progress)) {
                 context.throwIfCancellationRequested();
-                context.reportProgress(1, SEASON_STEPS, SEASON_LABEL.formatted(season, title));
+                context.reportProgress(1, SEASON_STEPS, label);
                 streamDetails.probeSeasonAfterScrape(showId, season).forEach(
-                        failure -> progress.failed(title, AutoScrapeService.TECHNICAL_DETAILS + failure));
+                        failure -> progress.failed(title, AutoScrapeTexts.technicalDetails(failure)));
             }
             context.throwIfCancellationRequested();
-            context.reportProgress(2, SEASON_STEPS, SEASON_LABEL.formatted(season, title));
+            context.reportProgress(2, SEASON_STEPS, label);
             ArtworkFillResult artwork = artworkService.fillMissingSeason(showId, season);
             progress.imagesSaved += artwork.saved();
             artwork.warnings().forEach(progress::warn);
             context.throwIfCancellationRequested();
-            context.reportProgress(3, SEASON_STEPS, SEASON_LABEL.formatted(season, title));
+            context.reportProgress(3, SEASON_STEPS, label);
             renameService.renameSeasonIfEnabled(showId, season, TvRenameTrigger.SCRAPE)
                     .filter(TvAutoScrapeRunner::notRenamed)
-                    .ifPresent(plan -> progress.warn(AutoScrapeService.NOT_RENAMED.formatted(title, plan.message())));
+                    .ifPresent(plan -> progress.warn(AutoScrapeTexts.notRenamed(title, plan.message())));
         } catch (ErrorResponseException e) {
-            progress.failed(title, e.getBody().getDetail());
+            progress.failed(title, LocalizedTexts.of(e));
         } catch (JobCancelledException e) {
             throw e;
         } catch (RuntimeException e) {
             log.warn("Auto-scraping season {} of TV show {} failed", season, showId, e);
-            progress.failed(title, UNEXPECTED_ERROR);
+            progress.failed(title, AutoScrapeTexts.UNEXPECTED_ERROR);
         }
         context.reportProgress(SEASON_STEPS, SEASON_STEPS);
         TvAutoScrapeResult result = progress.toResult(1);
@@ -140,18 +139,18 @@ class TvAutoScrapeRunner {
         return result;
     }
 
-    /** @return ob sich an Serie oder Episoden etwas geändert hat */
+    /** @return whether something changed in the TV show or its episodes */
     private static boolean count(TvShowAutoScrapeOutcome outcome, long showId, String title, Progress progress) {
         switch (outcome.status()) {
             case SCRAPED -> progress.scraped++;
             case NO_MATCH -> progress.unmatched(showId, title);
-            case NO_SCRAPER -> progress.warn(NO_TV_SHOW_SCRAPER);
+            case NO_SCRAPER -> progress.warn(AutoScrapeTexts.NO_TV_SHOW_SCRAPER);
             case ALREADY_IDENTIFIED -> {
-                // Gepflegte Metadaten der Serie bleiben unverändert.
+                // Maintained metadata of the TV show stays unchanged.
             }
         }
         progress.episodesUpdated += outcome.episodesUpdated();
-        outcome.failedFiles().forEach(file -> progress.failed(title, "NFO nicht geschrieben: " + file));
+        outcome.failedFiles().forEach(file -> progress.failed(title, AutoScrapeTexts.nfoNotWritten(file)));
         return outcome.status() == TvShowAutoScrapeOutcome.Status.SCRAPED || outcome.episodesUpdated() > 0;
     }
 
@@ -159,12 +158,12 @@ class TvAutoScrapeRunner {
         return plan.status() == TvShowRenamePlan.Status.CONFLICT || plan.status() == TvShowRenamePlan.Status.FAILED;
     }
 
-    /** Ein Eintrag der Auswahl kann inzwischen entfernt worden sein; das hält die übrigen nicht auf. */
+    /** An entry of the selection may have been removed in the meantime; that does not stop the others. */
     private Optional<String> findTitle(long showId, Progress progress) {
         try {
             return Optional.of(title(showId));
         } catch (ErrorResponseException e) {
-            progress.failed(UNKNOWN_SHOW.formatted(showId), e.getBody().getDetail());
+            progress.failed(AutoScrapeTexts.unknownShow(showId), LocalizedTexts.of(e));
             return Optional.empty();
         }
     }
@@ -174,7 +173,7 @@ class TvAutoScrapeRunner {
             TvShowAutoScrapeOutcome outcome = scrapeService.scrapeMissing(showId);
             if (count(outcome, showId, title, progress)) {
                 streamDetails.probeEpisodesAfterScrape(showId).forEach(
-                        failure -> progress.failed(title, AutoScrapeService.TECHNICAL_DETAILS + failure));
+                        failure -> progress.failed(title, AutoScrapeTexts.technicalDetails(failure)));
             }
             ArtworkFillResult artwork = artworkService.fillMissing(showId);
             progress.imagesSaved += artwork.saved();
@@ -186,38 +185,38 @@ class TvAutoScrapeRunner {
             enrich(showId, title, progress);
             renameService.renameIfEnabled(showId, TvRenameTrigger.SCRAPE)
                     .filter(TvAutoScrapeRunner::notRenamed)
-                    .ifPresent(plan -> progress.warn(AutoScrapeService.NOT_RENAMED.formatted(title, plan.message())));
+                    .ifPresent(plan -> progress.warn(AutoScrapeTexts.notRenamed(title, plan.message())));
         } catch (ErrorResponseException e) {
-            progress.failed(title, e.getBody().getDetail());
+            progress.failed(title, LocalizedTexts.of(e));
         } catch (RuntimeException e) {
             log.warn("Auto-scraping TV show {} failed", showId, e);
-            progress.failed(title, UNEXPECTED_ERROR);
+            progress.failed(title, AutoScrapeTexts.UNEXPECTED_ERROR);
         }
     }
 
-    /** Fehlende Bewertungen und leere Felder (etwa Trakt, OMDb); ein Fehler dabei hält den Rest nicht auf. */
+    /** Missing ratings and empty fields (e.g. Trakt, OMDb); an error there does not stop the rest. */
     private void enrich(long showId, String title, Progress progress) {
         try {
             if (enrichmentService.fillMissing(showId)) {
                 progress.enriched++;
             }
         } catch (ErrorResponseException e) {
-            progress.failed(title, AutoScrapeService.ENRICHMENT + e.getBody().getDetail());
+            progress.failed(title, AutoScrapeTexts.enrichment(e));
         }
     }
 
-    /** Fehlende Titelmusik bei sicherem Treffer; ein Fehler dabei hält den Rest nicht auf. */
+    /** Missing theme music with a certain match; an error there does not stop the rest. */
     private void fillTheme(long showId, String title, Progress progress) {
         try {
             if (themeService.fillShow(showId)) {
                 progress.themesSaved++;
             }
         } catch (ErrorResponseException e) {
-            progress.failed(title, AutoScrapeService.THEME + e.getBody().getDetail());
+            progress.failed(title, AutoScrapeTexts.theme(e));
         }
     }
 
-    /** Sammelt das Ergebnis; Listen werden gekürzt, damit der Job-Zustand klein bleibt. */
+    /** Collects the result; lists are truncated so the job state stays small. */
     private static final class Progress {
 
         private int scraped;
@@ -228,19 +227,23 @@ class TvAutoScrapeRunner {
         private int themesSaved;
         private int enriched;
         private final List<ScanEntry> unmatchedEntries = new ArrayList<>();
-        private final List<String> failures = new ArrayList<>();
-        private final Set<String> warnings = new LinkedHashSet<>();
+        private final List<LocalizedText> failures = new ArrayList<>();
+        private final Set<LocalizedText> warnings = new LinkedHashSet<>();
 
         void unmatched(long showId, String title) {
             unmatched++;
             addLimited(unmatchedEntries, new ScanEntry(MediaType.TV_SHOW, showId, title));
         }
 
-        void failed(String title, String message) {
-            addLimited(failures, "%s: %s".formatted(title, message));
+        void failed(String title, LocalizedText message) {
+            failed(LocalizedText.literal(title), message);
         }
 
-        void warn(String warning) {
+        void failed(LocalizedText entry, LocalizedText message) {
+            addLimited(failures, AutoScrapeTexts.failure(entry, message));
+        }
+
+        void warn(LocalizedText warning) {
             if (warnings.size() < MAX_LISTED_ENTRIES) {
                 warnings.add(warning);
             }

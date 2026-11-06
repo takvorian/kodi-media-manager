@@ -1,7 +1,7 @@
 package de.tiktak.kmm.plugin.api;
 
 /**
- * Medienarten, die KMM verwaltet und für die Plugins Daten liefern können.
+ * Media types KMM manages and plugins can supply data for.
  */
 public enum MediaType {
     MOVIE,

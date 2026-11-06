@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Legt beim Start die abfragbare Kurzform der technischen Angaben für Episoden an, die sie noch nicht haben, und
- * übersetzt dabei Codec-Namen. Neue Angaben bekommen sie sofort beim Speichern.
+ * Creates the queryable short form of the technical details at startup for episodes that do not have it yet, and
+ * translates codec names along the way. New details get it immediately when saved.
  */
 @Slf4j
 @Component

@@ -2,33 +2,35 @@ package de.tiktak.kmm.movie;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Was das Umbenennen eines Films ändern würde.
+ * What renaming a movie would change.
  *
- * @param currentDirectory Ordner des Films
- * @param targetDirectory  Ordner danach; gleich {@code currentDirectory}, wenn er bleibt
- * @param renames          die Dateien, deren Name sich ändert, Namen ohne Ordner
- * @param message          Grund bei {@link Status#CONFLICT} und {@link Status#FAILED}, sonst {@code null}
+ * @param currentDirectory folder of the movie
+ * @param targetDirectory  folder afterwards; equal to {@code currentDirectory} if it stays
+ * @param renames          the files whose name changes, names without folder
+ * @param message          reason for {@link Status#CONFLICT} and {@link Status#FAILED}, otherwise {@code null}
  */
 public record MovieRenamePlan(long movieId, String title, String currentDirectory, String targetDirectory,
-                              List<FileRename> renames, Status status, String message) {
+                              List<FileRename> renames, Status status, LocalizedText message) {
 
     public MovieRenamePlan {
         renames = List.copyOf(renames);
     }
 
     public enum Status {
-        /** Ordner und Dateien heißen schon so. */
+        /** Folder and files already have these names. */
         UNCHANGED,
-        /** Ordner oder Dateien bekommen neue Namen. */
+        /** Folder or files get new names. */
         RENAME,
-        /** Ein Ziel ist schon belegt; der Film wird übersprungen. */
+        /** A target is taken already; the movie is skipped. */
         CONFLICT,
-        /** Das Muster ergibt keinen Namen oder der Ordner ist nicht lesbar. */
+        /** The pattern yields no name or the folder cannot be read. */
         FAILED
     }
 
-    /** Eine Datei im Ordner des Films, vorher und nachher. */
+    /** A file in the folder of the movie, before and after. */
     public record FileRename(String currentName, String targetName) {
     }
 }

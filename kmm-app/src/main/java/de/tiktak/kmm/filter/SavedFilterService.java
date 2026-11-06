@@ -12,8 +12,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Gespeicherte Filter für Film- und Serienlisten. Namen sind je Liste eindeutig, ohne Rücksicht auf Groß- und
- * Kleinschreibung.
+ * Saved filters for movie and TV show lists. Names are unique per list,
+ * ignoring case.
  */
 @Slf4j
 @Service
@@ -25,7 +25,7 @@ public class SavedFilterService {
     private final SavedFilterRepository repository;
     private final ObjectMapper objectMapper;
 
-    /** @return die Filter der Liste, nach Name sortiert */
+    /** @return the filters of the list, sorted by name */
     @Transactional(readOnly = true)
     public List<SavedFilterView> findAll(FilterMediaType mediaType) {
         return repository.findByMediaType(mediaType).stream()
@@ -35,7 +35,7 @@ public class SavedFilterService {
     }
 
     /**
-     * @throws SavedFilterProblemException wenn der Name vergeben oder der Filter zu groß ist
+     * @throws SavedFilterProblemException if the name is taken or the filter is too large
      */
     @Transactional
     public SavedFilterView create(SavedFilterData data) {
@@ -46,8 +46,8 @@ public class SavedFilterService {
     }
 
     /**
-     * @throws SavedFilterProblemException wenn es den Filter für diese Liste nicht gibt, der Name vergeben oder der
-     *                                     Filter zu groß ist
+     * @throws SavedFilterProblemException if the filter does not exist for this list, the name is taken or the
+     *                                     filter is too large
      */
     @Transactional
     public SavedFilterView update(long id, SavedFilterData data) {
@@ -65,7 +65,7 @@ public class SavedFilterService {
         repository.delete(require(id));
     }
 
-    /** Übernimmt einen Filter aus einer Migration; ein gleichnamiger wird ersetzt. */
+    /** Takes over a filter from a migration; one with the same name is replaced. */
     @Transactional
     public void importFilter(SavedFilterData data) {
         repository.findByMediaTypeAndNameIgnoreCase(data.mediaType(), data.name()).ifPresentOrElse(

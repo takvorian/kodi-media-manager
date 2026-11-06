@@ -32,7 +32,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Umbenennen von Serien Ende zu Ende: Vorschau mit Werten aus den NFOs, ohne etwas zu ändern.
+ * Renaming of TV shows end to end: preview with values from the NFOs, without changing anything.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -182,7 +182,10 @@ class TvShowRenameIntegrationTest {
 
         assertThat(result.get("renamed").asInt()).isEqualTo(1);
         assertThat(result.get("skipped").asInt()).isEqualTo(1);
-        assertThat(result.get("problems").get(0).asString()).startsWith("„Lost“: Der Ordner");
+        JsonNode problem = result.get("problems").get(0);
+        assertThat(problem.get("key").asString()).isEqualTo("tvShow.rename.showProblem");
+        assertThat(problem.get("args").get("title").asString()).isEqualTo("Lost");
+        assertThat(problem.get("args").get("message").get("key").asString()).isEqualTo("tvShow.rename.folderExists");
         try (var files = Files.list(serien.resolve("ALF (1986)/Staffel 1"))) {
             assertThat(files.map(file -> file.getFileName().toString())).singleElement().asString()
                     .startsWith("ALF - S01E01").endsWith(".mkv");
@@ -199,7 +202,7 @@ class TvShowRenameIntegrationTest {
                         {"showFolder": "{show}", "seasonFolder": "{show}/{season}", "episodeFile": "{title}"}""")
                 .exchange())
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson().extractingPath("$.detail")
-                .isEqualTo("Muster für Staffelordner: Ordner (/) sind hier nicht erlaubt.");
+                .isEqualTo("Pattern for season folders: folders (/) are not allowed here.");
         assertThat(mockMvc.post().uri(TvShowRenameController.SOURCE_PREVIEW_PATH, sourceId).with(csrf())
                 .contentType(JSON).content("""
                         {"showFolder": "{title}", "seasonFolder": "x", "episodeFile": "x"}""").exchange())

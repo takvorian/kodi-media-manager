@@ -13,7 +13,12 @@ import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
-import { KodiPlaybackResult, kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
+import {
+  KodiPlaybackResult,
+  kodiPlaybackMessage,
+  kodiSyncSnackBarConfig,
+  kodiSyncSummary,
+} from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
@@ -41,6 +46,7 @@ import { MovieSupplementView } from './movie-supplement';
 import { MOVIES_URL, MovieService } from './movie.service';
 import { MovieRenamePlan, renameConfirmation } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
+import { localize } from '../i18n/localized-text';
 import { CollectionReference } from './scraper';
 import { HelpLink } from '../shared/help-link';
 
@@ -255,7 +261,7 @@ export class MovieDetail {
       next: (result) => {
         this.importingPlayback.set(false);
         this.showPlayback(result);
-        this.notify(`${result.host}: ${result.message}`);
+        this.notify(kodiPlaybackMessage(result));
       },
       error: (error: unknown) => {
         this.importingPlayback.set(false);
@@ -408,7 +414,7 @@ export class MovieDetail {
       default:
         this.notifyTranslated('movies.detail.notRenamed', {
           title: plan.title,
-          reason: plan.message,
+          reason: localize(plan.message),
         });
     }
   }

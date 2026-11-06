@@ -45,7 +45,7 @@ class TvShowResultCacheTest {
         assertThat(cache.get("tvdb", "neu")).contains(LOST);
     }
 
-    /** Uhr, die der Test vorstellen kann. */
+    /** Clock that the test can set. */
     private final class AdjustableClock extends Clock {
 
         @Override

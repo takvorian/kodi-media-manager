@@ -19,6 +19,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MovieSetResult;
 import de.tiktak.kmm.plugin.api.MovieSetScraper;
@@ -42,7 +43,7 @@ class MovieSetScrapeServiceTest {
 
     @Test
     void searchesCollectionsWithTheFirstReadyScraper() {
-        MovieSetScraper unconfigured = scraper(Optional.of("Key fehlt"));
+        MovieSetScraper unconfigured = scraper(Optional.of(LocalizedText.literal("Key fehlt")));
         MovieSetScraper tmdb = scraper(Optional.empty());
         when(scraperRegistry.movieSetScrapers()).thenReturn(List.of(unconfigured, tmdb));
         when(tmdb.searchSets("Matrix")).thenReturn(List.of(
@@ -86,9 +87,9 @@ class MovieSetScrapeServiceTest {
     void reportsMissingOrUnconfiguredScrapers() {
         when(scraperRegistry.movieSetScrapers()).thenReturn(List.of());
         assertThatThrownBy(() -> service.search("Matrix")).isInstanceOfSatisfying(ScraperProblemException.class,
-                e -> assertThat(e.getBody().getTitle()).isEqualTo("Kein Scraper für Filmsets"));
+                e -> assertThat(e.getBody().getTitle()).isEqualTo("No scraper for movie sets"));
 
-        MovieSetScraper unconfigured = scraper(Optional.of("Bitte den TMDB-API-Key eintragen."));
+        MovieSetScraper unconfigured = scraper(Optional.of(LocalizedText.literal("Bitte den TMDB-API-Key eintragen.")));
         when(scraperRegistry.movieSetScrapers()).thenReturn(List.of(unconfigured));
         assertThatThrownBy(() -> service.search("Matrix")).isInstanceOfSatisfying(ScraperProblemException.class,
                 e -> assertThat(e.getBody().getDetail()).isEqualTo("Bitte den TMDB-API-Key eintragen."));
@@ -114,7 +115,7 @@ class MovieSetScrapeServiceTest {
         return tmdb;
     }
 
-    private static MovieSetScraper scraper(Optional<String> missingConfiguration) {
+    private static MovieSetScraper scraper(Optional<LocalizedText> missingConfiguration) {
         MovieSetScraper scraper = mock(MovieSetScraper.class);
         lenient().when(scraper.displayName()).thenReturn("TMDB");
         lenient().when(scraper.missingConfiguration()).thenReturn(missingConfiguration);

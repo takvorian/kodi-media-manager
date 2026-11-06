@@ -10,7 +10,7 @@ import de.tiktak.kmm.plugin.api.Scraper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Erzeugt Extensions wie PF4J und übergibt Scrapern danach den {@link PluginContext} ihres Plugins.
+ * Creates extensions like PF4J and then hands scrapers the {@link PluginContext} of their plugin.
  */
 @Slf4j
 class ContextAwareExtensionFactory extends DefaultExtensionFactory {

@@ -12,8 +12,8 @@ import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Schützt REST-API, Actuator und API-Dokumentation. Die Oberfläche selbst, der Health-Check und die
- * System-Info bleiben öffentlich, damit die UI ihren Status auch vor der Anmeldung anzeigen kann.
+ * Protects the REST API, Actuator and API documentation. The user interface itself, the health check and the
+ * system info stay public so that the UI can show its status even before login.
  */
 @Slf4j
 @Configuration(proxyBeanMethods = false)
@@ -23,8 +23,8 @@ public class SecurityConfiguration {
     static final String[] PROTECTED_ENDPOINTS = {
             "/api/**", "/actuator/**", "/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html"};
     /**
-     * Eigene Namen, muss zu {@code app.config.ts} passen: Cookies gelten über alle Ports einer Adresse hinweg, ein
-     * {@code XSRF-TOKEN} einer anderen App auf demselben Rechner ließe sonst alle ändernden Anfragen scheitern.
+     * Own names, must match {@code app.config.ts}: cookies apply across all ports of an address, so an
+     * {@code XSRF-TOKEN} of another app on the same machine would otherwise make all modifying requests fail.
      */
     static final String CSRF_COOKIE = "KMM-XSRF-TOKEN";
     static final String CSRF_HEADER = "X-KMM-XSRF-TOKEN";

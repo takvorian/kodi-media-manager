@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
@@ -122,16 +123,20 @@ class OmdbEnrichmentScraperTest {
 
         answers.put("tt0113277", "{\"Response\": \"False\", \"Error\": \"Invalid API key!\"}");
         assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("API-Key");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.apiKeyRejected").with("provider", "OMDb")));
         answers.put("tt0113277", "{\"Response\": \"False\", \"Error\": \"Request limit reached!\"}");
         assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("Tageslimit");
-        answers.put("tt0113277", "kein JSON");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.omdb.dailyLimitReached")));
+        answers.put("tt0113277", "no JSON");
         assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("unerwartete");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.unexpectedResponse").with("provider", "OMDb")));
         answers.remove("tt0113277");
         assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("500");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.httpError").with("provider", "OMDb").with("status", 500)));
     }
 
     @Test
@@ -140,7 +145,9 @@ class OmdbEnrichmentScraperTest {
         offline.initialize(context(Map.of("api-key", API_KEY, "base-url", "http://127.0.0.1:1")));
 
         assertThatThrownBy(() -> offline.findEnrichment(request(MediaType.MOVIE, "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("OMDb cannot be reached");
     }
 
     private OmdbEnrichmentScraper scraper(String apiKey) {

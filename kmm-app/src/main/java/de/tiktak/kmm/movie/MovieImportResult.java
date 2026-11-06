@@ -1,10 +1,10 @@
 package de.tiktak.kmm.movie;
 
 /**
- * Ergebnis der Übernahme eines Films.
+ * Result of taking over a movie.
  *
- * @param created    ob der Film neu angelegt wurde ({@code false}: vorhandener Film mit derselben Datei)
- * @param nfoPresent ob neben der Datei eine NFO liegt
+ * @param created    whether the movie was newly created ({@code false}: existing movie with the same file)
+ * @param nfoPresent whether an NFO lies next to the file
  */
 public record MovieImportResult(boolean created, boolean nfoPresent) {
 }

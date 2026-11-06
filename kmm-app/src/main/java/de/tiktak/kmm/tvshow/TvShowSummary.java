@@ -3,9 +3,9 @@ package de.tiktak.kmm.tvshow;
 import java.time.Instant;
 
 /**
- * Serie in der Listenansicht.
+ * TV show in the list view.
  *
- * @param episodeCount Anzahl der Episoden mit Datei
+ * @param episodeCount number of episodes with a file
  */
 public record TvShowSummary(
         long id,

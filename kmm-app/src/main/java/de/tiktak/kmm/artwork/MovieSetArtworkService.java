@@ -9,6 +9,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieSetArtworkFiller;
 import de.tiktak.kmm.movie.MovieSetChangedEvent;
 import de.tiktak.kmm.movie.MovieSetData;
@@ -21,9 +22,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Bilder eines Filmsets: anzeigen, über die TMDB-ID der Sammlung online suchen, übernehmen und entfernen. Wo die
- * Bilder liegen, legen die Einstellungen fest ({@link MovieSetSettings}). Jede Änderung wird als
- * {@link MovieSetChangedEvent} veröffentlicht, damit Kodi sie übernimmt.
+ * Images of a movie set: show, search online via the TMDB ID of the collection, apply and remove. Where the
+ * images are stored is determined by the settings ({@link MovieSetSettings}). Every change is published as a
+ * {@link MovieSetChangedEvent} so that Kodi picks it up.
  */
 @Slf4j
 @Service
@@ -39,7 +40,7 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
     private final ImageDownloader downloader;
     private final ApplicationEventPublisher events;
 
-    /** Ohne eingeschaltete Ablage gilt jedes Bild als fehlend. */
+    /** Without an enabled storage location every image counts as missing. */
     public List<ArtworkInfo> artwork(long setId) {
         String title = data(setId).name();
         MovieSetSettings settings = settings();
@@ -66,7 +67,7 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
     }
 
     /**
-     * Lädt das Bild und speichert es in jeder eingeschalteten Ablage.
+     * Downloads the image and saves it in every enabled storage location.
      */
     public ArtworkInfo apply(long setId, ImageType type, String url) {
         requireSupported(type);
@@ -79,9 +80,9 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
     }
 
     /**
-     * Holt für jede fehlende Bildart den besten Treffer; vorhandene Bilder bleiben unverändert.
+     * Fetches the best match for each missing image type; existing images stay unchanged.
      *
-     * @return Anzahl gespeicherter Bilder und Hinweise; ohne Ablage oder TMDB-ID wird nichts gesucht
+     * @return number of saved images and notices; without a storage location or TMDB ID nothing is searched
      */
     public ArtworkFillResult fillMissing(long setId) {
         MovieSetSettings settings = settings();
@@ -97,7 +98,7 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
         }
         ArtworkSearch search = candidateFinder.findAll(MediaType.MOVIE_SET, data.name(), null,
                 Map.of(TMDB, data.tmdbCollectionId()));
-        List<String> warnings = new ArrayList<>(search.warnings());
+        List<LocalizedText> warnings = new ArrayList<>(search.warnings());
         int saved = 0;
         for (ImageType type : missing) {
             if (ArtworkDownloads.saveFirstLoadable(downloader, type, search.candidatesOf(type),
@@ -126,10 +127,10 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
     }
 
     /**
-     * Die Bilder des Sets für Kodi, je verwalteter Bildart die vorhandene Datei oder {@code null} für ein fehlendes
-     * Bild.
+     * The images of the set for Kodi, per managed image type the existing file or {@code null} for a missing
+     * image.
      *
-     * @return leer, wenn keine Ablage eingeschaltet ist; dann verwaltet KMM keine Set-Bilder
+     * @return empty if no storage location is enabled; then KMM manages no set images
      */
     public Optional<List<MovieSetImage>> imagesForKodi(long setId) {
         MovieSetSettings settings = settings();
@@ -143,7 +144,7 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
                 .toList());
     }
 
-    /** Verschiebt die Bilder eines umbenannten Sets in allen Ablagen auf den neuen Titel. */
+    /** Moves the images of a renamed set to the new title in all storage locations. */
     void moveToNewTitle(long setId, String previousTitle) {
         MovieSetSettings settings = settings();
         String title = data(setId).name();
@@ -178,7 +179,7 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
 
     private static void requireSupported(ImageType type) {
         if (!ArtworkTypes.MOVIE_SET_TYPES.contains(type)) {
-            throw ArtworkProblemException.unsupportedTvType(type, "Filmsets");
+            throw ArtworkProblemException.unsupportedTvType(type, ArtworkProblemException.Target.MOVIE_SET);
         }
     }
 }

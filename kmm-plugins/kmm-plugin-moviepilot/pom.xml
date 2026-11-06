@@ -12,14 +12,14 @@
 
     <artifactId>kmm-plugin-moviepilot</artifactId>
     <name>KMM Plugin Moviepilot</name>
-    <description>Deutsche Angaben für leere Felder von Filmen aus den Filmseiten von Moviepilot.de, nur nach Prüfung der IMDb-ID. Kein API, kann bei Änderungen der Seite ausfallen.</description>
+    <description>German details for empty fields of movies from the movie pages of Moviepilot.de, only after checking the IMDb ID. No API, may fail when the site changes.</description>
 
     <properties>
         <plugin.id>moviepilot</plugin.id>
     </properties>
 
     <dependencies>
-        <!-- provided: Jackson und SLF4J stellt die Anwendung zur Laufzeit bereit. -->
+        <!-- provided: the application supplies Jackson and SLF4J at runtime. -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
