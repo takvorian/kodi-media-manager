@@ -1,0 +1,50 @@
+{
+  "app": {
+    "versionTitle": "Version and changes",
+    "pageHelp": "Help for this page",
+    "pageHelpTitle": "Help for this page (new tab)"
+  },
+  "language": {
+    "switch": "Interface language"
+  },
+  "nav": {
+    "movies": "Movies",
+    "tvshows": "TV shows",
+    "moviesets": "Movie sets",
+    "tags": "Tags",
+    "sources": "Sources",
+    "kodi": "Kodi",
+    "settings": "Settings",
+    "migration": "Ember import",
+    "backup": "Backup",
+    "system": "System",
+    "help": "Help"
+  },
+  "pageTitle": {
+    "movies": "Movies",
+    "movie": "Movie",
+    "tvshows": "TV shows",
+    "tvshow": "TV show",
+    "episode": "Episode",
+    "moviesets": "Movie sets",
+    "tags": "Tags",
+    "sources": "Sources",
+    "movieRename": "Rename movies",
+    "tvRename": "Rename TV shows",
+    "kodi": "Kodi",
+    "settings": "Settings",
+    "migration": "Ember import",
+    "backup": "Backup",
+    "system": "System",
+    "help": "Help"
+  },
+  "paginator": {
+    "itemsPerPage": "Items per page:",
+    "firstPage": "First page",
+    "previousPage": "Previous page",
+    "nextPage": "Next page",
+    "lastPage": "Last page",
+    "range": "{first} – {last} of {length}",
+    "emptyRange": "0 of 0"
+  }
+}

@@ -6,6 +6,8 @@ import { Subject, of, throwError, Observable } from 'rxjs';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { App } from './app';
+import { provideI18nTesting } from './i18n/testing';
+import { LanguageService } from './i18n/language.service';
 import { FakeJobEvents } from './jobs/fake-job-events';
 import { routes } from './app.routes';
 import { SystemInfoService } from './system/system-info.service';
@@ -20,6 +22,7 @@ describe('App', () => {
         provideRouter(routes),
         provideHttpClient(),
         provideHttpClientTesting(),
+        provideI18nTesting(),
         new FakeJobEvents().provider(),
         { provide: SystemInfoService, useValue: { load: () => systemInfo$ } },
       ],
@@ -47,6 +50,21 @@ describe('App', () => {
       'System',
       'Hilfe',
     ]);
+  });
+
+  it('switches the navigation language at runtime', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+
+    await TestBed.inject(LanguageService).use('en');
+    await fixture.whenStable();
+
+    expect(element.querySelector('nav a')?.textContent?.trim()).toBe('Movies');
+    expect(element.querySelector('.page-help')?.getAttribute('aria-label')).toBe(
+      'Help for this page',
+    );
+    expect(element.querySelector('.language-switch')?.textContent?.trim()).toBe('EN');
   });
 
   it('shows the version as a link to the system page', async () => {
