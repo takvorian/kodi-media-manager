@@ -2,7 +2,9 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { ApiKeyView, SettingsView } from './settings';
 import { SettingsPage } from './settings-page';
 import { SETTINGS_URL } from './settings.service';
@@ -52,6 +54,7 @@ describe('SettingsPage', () => {
     TestBed.configureTestingModule({
       imports: [SettingsPage],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -74,7 +77,7 @@ describe('SettingsPage', () => {
     await fixture.whenStable();
   }
 
-  /** Rendert, bis die API-Key-Karte nach dem Laden der Einstellungen ihre Anfrage gestellt hat. */
+  /** Renders until the API key card has sent its request after the settings were loaded. */
   async function renderPendingChanges(): Promise<void> {
     const renderPasses = 2;
     for (let pass = 0; pass < renderPasses; pass++) {
@@ -110,6 +113,20 @@ describe('SettingsPage', () => {
     expect(field('proxyHost').value).toBe('proxy.local');
     expect(field('proxyPassword').placeholder).toBe('unverändert');
     expect(button('.save-button').disabled).toBe(true);
+  });
+
+  it('switches the texts to English at runtime and keeps the metadata language', async () => {
+    await load(stored);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.page-title')?.textContent).toBe('Settings');
+    expect(field('proxyPassword').placeholder).toBe('unchanged');
+    expect(field('TMDB_API_KEY').placeholder).toBe('stored …cdef');
+    expect(field('metadataLanguage').value).toBe('de-DE');
+    expect(element().querySelector('.hint code')?.textContent).toBe('{ }');
+    expect(element().querySelector('.save-keys-button')?.textContent?.trim()).toBe('Save keys');
   });
 
   it('saves changes and keeps the password when it is left empty', async () => {

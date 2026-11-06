@@ -1,13 +1,15 @@
 export type MediaType = 'MOVIE' | 'MOVIE_SET' | 'TV_SHOW' | 'TV_SEASON' | 'TV_EPISODE';
 
-/** Medienarten, für die eine Quelle angelegt werden kann. */
-export const SOURCE_MEDIA_TYPES: readonly { readonly value: MediaType; readonly label: string }[] =
-  [
-    { value: 'MOVIE', label: 'Filme' },
-    { value: 'TV_SHOW', label: 'Serien' },
-  ];
+/** Media types a source can be created for; the label is a translation key. */
+export const SOURCE_MEDIA_TYPES: readonly {
+  readonly value: MediaType;
+  readonly labelKey: string;
+}[] = [
+  { value: 'MOVIE', labelKey: 'sources.mediaType.MOVIE' },
+  { value: 'TV_SHOW', labelKey: 'sources.mediaType.TV_SHOW' },
+];
 
-/** Antwort von GET /api/v1/sources. */
+/** Response of GET /api/v1/sources. */
 export interface MediaSource {
   readonly id: number;
   readonly name: string;
@@ -15,7 +17,7 @@ export interface MediaSource {
   readonly mediaType: MediaType;
   readonly createdAt: string;
   readonly lastScannedAt: string | null;
-  /** Sprache der Einträge beim Scrapen; ohne Angabe gelten die Einstellungen. */
+  /** Language of the entries when scraping; without one the settings apply. */
   readonly metadataLanguage: string | null;
 }
 
@@ -26,21 +28,21 @@ export interface CreateMediaSource {
   readonly metadataLanguage: string | null;
 }
 
-/** Präfix des Job-Schlüssels eines Scans; muss zu MediaSourceService.SCAN_JOB_KEY_PREFIX passen. */
+/** Prefix of the job key of a scan; must match MediaSourceService.SCAN_JOB_KEY_PREFIX. */
 export const SCAN_JOB_KEY_PREFIX = 'scan:';
 
 export function scanJobKey(sourceId: number): string {
   return `${SCAN_JOB_KEY_PREFIX}${sourceId}`;
 }
 
-/** Ein Eintrag im Bericht eines Scans; ohne ID, wenn er nicht mehr in der Bibliothek steht. */
+/** An entry in the report of a scan; without ID if it is no longer in the library. */
 export interface ScanEntry {
   readonly type: MediaType;
   readonly id: number | null;
   readonly label: string;
 }
 
-/** Was ein Scan geändert hat; die Listen sind serverseitig gekürzt. */
+/** What a scan changed; the lists are truncated by the server. */
 export interface ScanDetails {
   readonly added: readonly ScanEntry[];
   readonly updated: readonly ScanEntry[];
@@ -50,8 +52,7 @@ export interface ScanDetails {
   readonly unreadableNfos: readonly string[];
 }
 
-/** Ergebnis eines erfolgreichen Scan-Jobs. */
-/** Ergebnis eines Scans; bei Serienquellen zählen die Felder Episoden. */
+/** Result of a successful scan job; for TV show sources the fields count episodes. */
 export interface ScanResult {
   readonly sourceId: number;
   readonly added: number;
@@ -60,39 +61,39 @@ export interface ScanResult {
   readonly unchanged: number;
   readonly nfoErrors: number;
   readonly details?: ScanDetails;
-  /** Nur bei Serien: neu gefundene Serien. */
+  /** TV shows only: newly found shows. */
   readonly showsAdded?: number;
-  /** Nur bei Serien: verschwundene Serien. */
+  /** TV shows only: shows that disappeared. */
   readonly showsRemoved?: number;
-  /** Nur bei Serien: Videodateien ohne erkennbare Staffel und Episode. */
+  /** TV shows only: video files without a recognizable season and episode. */
   readonly unrecognizedFiles?: readonly string[];
 }
 
-/** Präfix des Job-Schlüssels beim automatischen Scrapen; muss zu AutoScrapeService.JOB_KEY_PREFIX passen. */
+/** Prefix of the job key of auto-scraping; must match AutoScrapeService.JOB_KEY_PREFIX. */
 export const AUTO_SCRAPE_JOB_KEY_PREFIX = 'auto-scrape:';
 
 export function autoScrapeJobKey(sourceId: number): string {
   return `${AUTO_SCRAPE_JOB_KEY_PREFIX}${sourceId}`;
 }
 
-/** Ergebnis des automatischen Scrapens von Filmen oder Serien; die Listen sind serverseitig gekürzt. */
+/** Result of auto-scraping movies or TV shows; the lists are truncated by the server. */
 export interface AutoScrapeResult {
-  /** Bearbeitete Filme (nur bei Filmen). */
+  /** Processed movies (movies only). */
   readonly movies?: number;
-  /** Bearbeitete Serien (nur bei Serien). */
+  /** Processed TV shows (TV shows only). */
   readonly shows?: number;
-  /** Episoden mit ergänzten Angaben (nur bei Serien). */
+  /** Episodes with completed details (TV shows only). */
   readonly episodesUpdated?: number;
   readonly scraped: number;
   readonly unmatched: number;
   readonly imagesSaved: number;
-  /** Neu eingetragene Trailer-Links. */
+  /** Newly added trailer links. */
   readonly trailersSaved?: number;
-  /** Neu gespeicherte Titelmusik (theme.mp3). */
+  /** Newly saved theme music (theme.mp3). */
   readonly themesSaved?: number;
-  /** Einträge mit ergänzten Bewertungen oder Feldern (etwa Trakt, OMDb). */
+  /** Entries with completed ratings or fields (e.g. Trakt, OMDb). */
   readonly enriched?: number;
-  /** Einträge ohne eindeutigen Treffer; kann kürzer sein als {@link unmatched}. */
+  /** Entries without a unique match; may be shorter than {@link unmatched}. */
   readonly unmatchedEntries: readonly ScanEntry[];
   readonly failures: readonly string[];
   readonly warnings: readonly string[];

@@ -2,8 +2,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { TranslocoService } from '@jsverse/transloco';
 import { vi } from 'vitest';
 
+import { LanguageService } from '../i18n/language.service';
+import { provideI18nTesting } from '../i18n/testing';
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
 import { Job } from '../jobs/job';
 import { CONFIRM } from '../shared/confirm';
@@ -48,6 +51,7 @@ describe('BackupPage', () => {
     TestBed.configureTestingModule({
       imports: [BackupPage],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -81,6 +85,16 @@ describe('BackupPage', () => {
     input.value = value;
     input.dispatchEvent(new Event('input'));
     fixture.detectChanges();
+  }
+
+  /**
+   * Switches like the language menu does. Without `init()` the service still holds its fallback language, so it is
+   * first set to the German of the test setup; otherwise the switch to English would not be a change.
+   */
+  async function switchToEnglish(): Promise<void> {
+    const language = TestBed.inject(LanguageService);
+    await language.use('de');
+    await language.use('en');
   }
 
   async function uploaded(contents: BackupHeader = header): Promise<void> {
@@ -150,6 +164,25 @@ describe('BackupPage', () => {
     expect(query('.contents').textContent).not.toContain('movie_credit');
     expect(query('.credentials').textContent).toContain('nicht enthalten');
     expect(element().querySelectorAll('.mapping')).toHaveLength(2);
+  });
+
+  it('switches the texts, the date format and the confirmation word at runtime', async () => {
+    await uploaded();
+
+    await switchToEnglish();
+    await fixture.whenStable();
+
+    expect(query('.page-title').textContent).toBe('Backup');
+    expect(query('.contents').textContent).toContain('1170 Movies');
+    expect(query('.created').textContent).toContain(
+      new Date(header.createdAt!).toLocaleString('en-US'),
+    );
+    expect(query('.replace-confirmation mat-label').textContent).toContain('Enter REPLACE');
+    type('.replace-confirmation input', 'ERSETZEN');
+    expect(query('.import-button').disabled).toBe(true);
+    type('.replace-confirmation input', 'REPLACE');
+    expect(query('.import-button').disabled).toBe(false);
+    expect(TestBed.inject(TranslocoService).getActiveLang()).toBe('en');
   });
 
   it('forgets the file when the upload is refused', async () => {

@@ -12,8 +12,10 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
+import { translate, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Observable, filter } from 'rxjs';
 
+import { LanguageService } from '../i18n/language.service';
 import { Job, isRunning, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import {
@@ -51,12 +53,14 @@ import {
   autoScrapeJobKey,
   scanJobKey,
 } from './media-source';
+import { finishedJobSummary, joinParts, unsuccessfulJobSummary } from './job-summary';
 import { MediaSourceService } from './media-source.service';
 import { scanReportSections } from './scan-report';
 import { ScrapeReport, autoScrapeSummary, hasScrapeDetails } from './scrape-report';
 import { HelpLink } from '../shared/help-link';
 
 const SNACKBAR_DURATION_MS = 5000;
+const SCAN_COUNTS = 'sources.scanCounts';
 
 @Component({
   selector: 'app-source-list',
@@ -75,6 +79,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatSelectModule,
     MatSortModule,
     MatTableModule,
+    TranslocoPipe,
   ],
   templateUrl: './source-list.html',
   styleUrl: './source-list.scss',
@@ -86,6 +91,8 @@ export class SourceList {
   private readonly mediaInfoService = inject(MediaInfoService);
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
+  private readonly transloco = inject(TranslocoService);
+  private readonly language = inject(LanguageService);
 
   protected readonly mediaTypes = SOURCE_MEDIA_TYPES;
   protected readonly columns = [
@@ -98,20 +105,23 @@ export class SourceList {
   ];
   protected readonly sources = rxResource({ stream: () => this.sourceService.findAll() });
   protected readonly sort = signal<ListSort>({ active: 'name', direction: 'asc' });
-  protected readonly sortedSources = computed(() =>
-    this.sources.hasValue()
+  /** Depends on the UI language, because the content column sorts by its translated label. */
+  protected readonly sortedSources = computed(() => {
+    this.language.current();
+    return this.sources.hasValue()
       ? sortedBy(this.sources.value(), this.sort(), (source, column) =>
           this.sortValue(source, column),
         )
-      : [],
-  );
+      : [];
+  });
   protected readonly saving = signal(false);
   protected readonly newLanguage = signal<string | null>(null);
-  /** Letzter Scrape-Lauf, solange er Titel ohne Treffer, Fehler oder Hinweise enthält. */
+  /** Last scrape run, as long as it contains titles without a match, errors or notes. */
   protected readonly scrapeReport = signal<Job | null>(null);
   private readonly reportedScanId = signal<string | null>(null);
-  /** Geöffneter Bericht eines Scans; er kommt aus dem Job-Verlauf des Servers. */
+  /** Open report of a scan; it comes from the job history of the server and follows the UI language. */
   protected readonly scanReport = computed(() => {
+    this.language.current();
     const job = this.jobStore.jobs().find((candidate) => candidate.id === this.reportedScanId());
     return job ? { title: job.title, sections: scanReportSections(job) } : null;
   });
@@ -159,22 +169,23 @@ export class SourceList {
   }
 
   protected mediaTypeLabel(mediaType: MediaType): string {
-    return this.mediaTypes.find((type) => type.value === mediaType)?.label ?? mediaType;
+    const labelKey = this.mediaTypes.find((type) => type.value === mediaType)?.labelKey;
+    return labelKey ? this.transloco.translate(labelKey) : mediaType;
   }
 
-  /** Film- und Serienquellen lassen sich scannen. */
+  /** Movie and TV show sources can be scanned. */
   protected canScan(source: MediaSource): boolean {
     return source.mediaType === 'MOVIE' || source.mediaType === 'TV_SHOW';
   }
 
-  /** Film- und Serienquellen lassen sich automatisch scrapen. */
+  /** Movie and TV show sources can be auto-scraped. */
   protected canScrape(source: MediaSource): boolean {
     return this.canScan(source);
   }
 
   /**
-   * Laufender Job der Quelle (Scan, Scrapen, Gesehen-Status, technische Angaben, Umbenennen); sie schließen sich in der
-   * Oberfläche aus.
+   * Running job of the source (scan, scrape, watched status, technical details, rename); they exclude each other in
+   * the UI.
    */
   protected runningJob(source: MediaSource): Job | undefined {
     return (
@@ -192,20 +203,28 @@ export class SourceList {
     return progressPercent(job);
   }
 
+  /** Progress appended to the job message, e.g. " (25 %)"; empty without a known total. */
+  protected percentSuffix(job: Job): string {
+    const percent = progressPercent(job);
+    return percent === null ? '' : ` (${percent} %)`;
+  }
+
   protected lastScannedAt(source: MediaSource): string {
     return localDateTime(source.lastScannedAt);
   }
 
-  /** Ergebnis des letzten beendeten Scans; bleibt sichtbar, bis der Server neu startet. */
+  /** Result of the last finished scan; stays visible until the server restarts. */
   protected lastScanResult(source: MediaSource): string | null {
     const lastScan = this.lastScan(source);
     if (!lastScan) {
       return null;
     }
-    return lastScan.status === 'SUCCEEDED' ? scanCounts(lastScan) : unsuccessfulSummary(lastScan);
+    return lastScan.status === 'SUCCEEDED'
+      ? joinParts(scanCounts(lastScan))
+      : unsuccessfulJobSummary(lastScan);
   }
 
-  /** Ob der letzte Scan etwas geändert oder gemeldet hat, das sich einzeln ansehen lässt. */
+  /** Whether the last scan changed or reported something that can be looked at one by one. */
   protected hasScanReport(source: MediaSource): boolean {
     const lastScan = this.lastScan(source);
     return !!lastScan && scanReportSections(lastScan).length > 0;
@@ -230,7 +249,7 @@ export class SourceList {
         this.saving.set(false);
         this.form.reset();
         this.newLanguage.set(null);
-        this.notify(`Quelle „${source.name}“ angelegt.`);
+        this.notify(this.transloco.translate('sources.created', { name: source.name }));
         this.sources.reload();
       },
       error: (error: unknown) => {
@@ -240,7 +259,7 @@ export class SourceList {
     });
   }
 
-  /** Gilt für künftiges Scrapen; vorhandene Texte bleiben. */
+  /** Applies to future scraping; existing texts stay. */
   protected changeLanguage(source: MediaSource, language: string | null): void {
     this.sourceService.changeLanguage(source.id, language).subscribe({
       next: () => this.sources.reload(),
@@ -256,7 +275,7 @@ export class SourceList {
     this.track(this.sourceService.autoScrape(source.id));
   }
 
-  /** Lässt alle Kodi-Geräte das Verzeichnis der Quelle nach neuen Filmen durchsuchen. */
+  /** Lets all Kodi devices scan the directory of the source for new movies. */
   protected scanInKodi(source: MediaSource): void {
     this.kodiService.scanSource(source.id).subscribe({
       next: (results) =>
@@ -265,12 +284,12 @@ export class SourceList {
     });
   }
 
-  /** Holt den Gesehen-Status aller Filme bzw. Episoden der Quelle aus Kodi. */
+  /** Fetches the watched status of all movies or episodes of the source from Kodi. */
   protected importPlayback(source: MediaSource): void {
     this.track(this.kodiService.importSourcePlayback(source.id));
   }
 
-  /** Liest die technischen Angaben der Filme bzw. Episoden mit ffprobe aus. */
+  /** Reads the technical details of the movies or episodes with ffprobe. */
   protected probeStreams(source: MediaSource, scope: StreamDetailsScope): void {
     this.track(this.mediaInfoService.probeSource(source.id, scope));
   }
@@ -287,14 +306,12 @@ export class SourceList {
   }
 
   protected delete(source: MediaSource): void {
-    if (
-      !this.confirm(`Quelle „${source.name}“ und alle ihre Filme aus der Bibliothek entfernen?`)
-    ) {
+    if (!this.confirm(this.transloco.translate('sources.deleteConfirm', { name: source.name }))) {
       return;
     }
     this.sourceService.delete(source.id).subscribe({
       next: () => {
-        this.notify(`Quelle „${source.name}“ entfernt.`);
+        this.notify(this.transloco.translate('sources.deleted', { name: source.name }));
         this.sources.reload();
       },
       error: (error: unknown) => this.notify(problemMessage(error)),
@@ -344,26 +361,27 @@ export class SourceList {
 
 function scanSummary(job: Job): string {
   return job.status === 'SUCCEEDED'
-    ? `${job.title} abgeschlossen: ${scanCounts(job)}.`
-    : unsuccessfulSummary(job);
+    ? finishedJobSummary(job, scanCounts(job))
+    : unsuccessfulJobSummary(job);
 }
 
-function scanCounts(job: Job): string {
+/** The counts of a successful scan in the active language; the optional ones only if they are not zero. */
+function scanCounts(job: Job): string[] {
   const result = job.result as ScanResult;
-  const errors = result.nfoErrors > 0 ? `, ${result.nfoErrors} NFO-Fehler` : '';
-  const unrecognizedCount = result.unrecognizedFiles?.length ?? 0;
-  const unrecognized = unrecognizedCount
-    ? `, ${unrecognizedCount} ${unrecognizedCount === 1 ? 'Datei' : 'Dateien'} ohne erkennbare Episode`
-    : '';
-  const newShows = result.showsAdded ? `, ${result.showsAdded} neue Serien` : '';
-  return (
-    `${result.added} neu, ${result.updated} aktualisiert, ` +
-    `${result.removed} entfernt, ${result.unchanged} unverändert${newShows}${errors}${unrecognized}`
-  );
+  const unrecognized = result.unrecognizedFiles?.length ?? 0;
+  return [
+    translate(`${SCAN_COUNTS}.counts`, {
+      added: result.added,
+      updated: result.updated,
+      removed: result.removed,
+      unchanged: result.unchanged,
+    }),
+    ...optionalCount('newShows', result.showsAdded ?? 0),
+    ...optionalCount('nfoErrors', result.nfoErrors),
+    ...optionalCount('unrecognized', unrecognized),
+  ];
 }
 
-function unsuccessfulSummary(job: Job): string {
-  return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+function optionalCount(key: string, count: number): string[] {
+  return count > 0 ? [translate(`${SCAN_COUNTS}.${key}`, { count })] : [];
 }

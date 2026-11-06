@@ -19,7 +19,7 @@ export class MediaSourceService {
     return this.http.post<MediaSource>(SOURCES_URL, source);
   }
 
-  /** @param language Sprache oder {@code null}, dann gelten die Einstellungen. */
+  /** @param language the language, or {@code null} to use the settings */
   changeLanguage(sourceId: number, language: string | null): Observable<MediaSource> {
     return this.http.put<MediaSource>(`${SOURCES_URL}/${sourceId}/language`, { language });
   }
@@ -28,12 +28,12 @@ export class MediaSourceService {
     return this.http.delete<void>(`${SOURCES_URL}/${sourceId}`);
   }
 
-  /** Startet den Scan im Hintergrund und liefert den gestarteten Job. */
+  /** Starts the scan in the background and returns the started job. */
   scan(sourceId: number): Observable<Job> {
     return this.http.post<Job>(`${SOURCES_URL}/${sourceId}/scan`, null);
   }
 
-  /** Startet das automatische Scrapen fehlender Daten im Hintergrund und liefert den gestarteten Job. */
+  /** Starts auto-scraping of missing data in the background and returns the started job. */
   autoScrape(sourceId: number): Observable<Job> {
     return this.http.post<Job>(`${SOURCES_URL}/${sourceId}/auto-scrape`, null);
   }

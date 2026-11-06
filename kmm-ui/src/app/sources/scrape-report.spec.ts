@@ -1,6 +1,10 @@
-import { autoScrapeSummary, hasScrapeDetails } from './scrape-report';
-import { AutoScrapeResult } from './media-source';
+import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
+
+import { provideI18nTesting } from '../i18n/testing';
 import { job } from '../jobs/fake-job-events';
+import { AutoScrapeResult } from './media-source';
+import { autoScrapeSummary, hasScrapeDetails } from './scrape-report';
 
 describe('scrape report', () => {
   const empty: AutoScrapeResult = {
@@ -12,6 +16,11 @@ describe('scrape report', () => {
     failures: [],
     warnings: [],
   };
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideI18nTesting()] });
+    TestBed.inject(TranslocoService);
+  });
 
   it('uses the singular for a single entry', () => {
     expect(
@@ -28,6 +37,24 @@ describe('scrape report', () => {
         }),
       ),
     ).toContain('1 Serie, 1 Episode ergänzt,');
+  });
+
+  it('summarizes in the active UI language with plurals', () => {
+    TestBed.inject(TranslocoService).setActiveLang('en');
+
+    expect(
+      autoScrapeSummary(
+        job({
+          title: 'Scrape',
+          status: 'SUCCEEDED',
+          result: { ...empty, imagesSaved: 1, themesSaved: 2, failures: ['x'] },
+        }),
+      ),
+    ).toBe(
+      'Scrape finished: 1 movie, 0 newly matched, 0 without a match, 1 artwork saved, ' +
+        '2 theme music files saved, 1 error.',
+    );
+    expect(autoScrapeSummary(job({ title: 'X', status: 'CANCELLED' }))).toBe('X cancelled.');
   });
 
   it('reports cancelled and failed runs', () => {

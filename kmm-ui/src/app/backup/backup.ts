@@ -1,4 +1,6 @@
-/** Schlüssel des Import-Jobs, wie ihn das Backend vergibt. */
+import { translate } from '@jsverse/transloco';
+
+/** Key of the import job as the backend assigns it. */
 export const BACKUP_IMPORT_JOB_KEY = 'backup-import';
 
 export type BackupImportMode = 'REPLACE' | 'MERGE';
@@ -9,7 +11,7 @@ export interface BackupSource {
   readonly mediaType: string;
 }
 
-/** Was eine hochgeladene Sicherung enthält. */
+/** What an uploaded backup contains. */
 export interface BackupHeader {
   readonly schemaVersion: string;
   readonly applicationVersion: string | null;
@@ -47,20 +49,23 @@ export interface BackupImportReport {
   readonly warnings: readonly string[];
 }
 
+/** Translation keys of the table labels. */
 const TABLE_LABELS: Readonly<Record<string, string>> = {
-  media_source: 'Quellen',
-  movie_set: 'Filmsets',
-  movie: 'Filme',
-  tv_show: 'Serien',
-  episode: 'Episoden',
-  kodi_host: 'Kodi-Geräte',
-  saved_filter: 'Filter',
-  app_setting: 'Einstellungen',
+  media_source: 'backup.table.mediaSource',
+  movie_set: 'backup.table.movieSet',
+  movie: 'backup.table.movie',
+  tv_show: 'backup.table.tvShow',
+  episode: 'backup.table.episode',
+  kodi_host: 'backup.table.kodiHost',
+  saved_filter: 'backup.table.savedFilter',
+  app_setting: 'backup.table.appSetting',
 };
 
-/** Die Tabellen, die der Benutzer als Einträge kennt; abhängige Listen zählen zu ihnen. */
+/** The tables the user knows as entries; dependent lists count towards them. */
 export const VISIBLE_TABLES = Object.keys(TABLE_LABELS);
 
+/** Label of a table in the active language; an unknown table keeps its name. */
 export function tableLabel(table: string): string {
-  return TABLE_LABELS[table] ?? table;
+  const key = TABLE_LABELS[table];
+  return key ? translate(key) : table;
 }

@@ -5,6 +5,9 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
 import { Job } from '../jobs/job';
+import { TranslocoService } from '@jsverse/transloco';
+
+import { provideI18nTesting } from '../i18n/testing';
 import { CONFIRM } from '../shared/confirm';
 import { EmberImportReport, EmberInspection } from './ember-migration';
 import { EmberImportPage } from './ember-import-page';
@@ -82,6 +85,7 @@ describe('EmberImportPage', () => {
     TestBed.configureTestingModule({
       imports: [EmberImportPage],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -261,6 +265,24 @@ describe('EmberImportPage', () => {
     button('.dry-run-button').click();
 
     httpTesting.expectNone({ method: 'POST' });
+  });
+
+  it('switches the texts to English at runtime', async () => {
+    await analyze();
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+    confirmAnswer = false;
+    button('.import-button').click();
+
+    expect(element().querySelector('.page-title')?.textContent).toBe('Ember import');
+    expect(element().querySelector('.library')?.textContent?.trim()).toBe(
+      '1,169 movies, 222 movie sets, 183 TV shows with 9,516 episodes',
+    );
+    expect(texts('.dry-run-button')).toEqual(['Dry run']);
+    expect(confirmQuestions).toEqual([
+      'Import 1,169 movies and 183 TV shows from Ember into the library?',
+    ]);
   });
 
   it('asks before the real import and can be declined', async () => {

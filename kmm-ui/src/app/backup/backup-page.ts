@@ -15,8 +15,11 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatRadioModule } from '@angular/material/radio';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { translate, TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 
+import { LanguageService } from '../i18n/language.service';
+import { UI_LOCALES } from '../i18n/ui-language';
 import { Job, progressPercent } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
@@ -34,16 +37,14 @@ import {
 import { BackupService } from './backup.service';
 
 const SNACKBAR_DURATION_MS = 8000;
+/** Part of the job title the server gives a dry run; it is German until the server delivers keys. */
 const DRY_RUN_TITLE = 'Probelauf';
+/** Only used if the server sends no file name. */
 const FALLBACK_FILE_NAME = 'kmm-sicherung.json.gz';
-const MERGE_QUESTION =
-  'Sicherung einspielen? Gleiche Einträge werden mit den Angaben aus der Datei überschrieben, alles andere bleibt.';
-
-export const REPLACE_WORD = 'ERSETZEN';
 
 type MappingForm = FormGroup<{ from: FormControl<string>; to: FormControl<string> }>;
 
-/** Exportiert die KMM-Daten als Datei und spielt eine Sicherung wieder ein. */
+/** Exports the KMM data as a file and restores a backup. */
 @Component({
   selector: 'app-backup-page',
   imports: [
@@ -56,6 +57,7 @@ type MappingForm = FormGroup<{ from: FormControl<string>; to: FormControl<string
     MatInputModule,
     MatProgressBarModule,
     MatRadioModule,
+    TranslocoPipe,
   ],
   templateUrl: './backup-page.html',
   styleUrl: './backup-page.scss',
@@ -66,9 +68,14 @@ export class BackupPage {
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
   private readonly formBuilder = inject(NonNullableFormBuilder);
+  private readonly language = inject(LanguageService);
 
   protected readonly tableLabel = tableLabel;
-  protected readonly replaceWord = REPLACE_WORD;
+  /** The confirmation word for replacing everything, in the active language. */
+  protected readonly replaceWord = computed(() => {
+    this.language.current();
+    return translate('backup.import.replaceWord');
+  });
   protected readonly includeCredentials = this.formBuilder.control(false);
   protected readonly mode = this.formBuilder.control<BackupImportMode>('REPLACE');
   protected readonly credentialsChosen = toSignal(this.includeCredentials.valueChanges, {
@@ -83,11 +90,12 @@ export class BackupPage {
   protected readonly uploading = signal(false);
   protected readonly header = signal<BackupHeader | null>(null);
   protected readonly report = signal<BackupImportReport | null>(null);
-  /** Das Einspielen lässt sich nur mit dem Bestätigungswort starten, wenn es alles ersetzt. */
+  /** Restoring can only be started with the confirmation word if it replaces everything. */
   protected readonly canImport = computed(
-    () => this.chosenMode() !== 'REPLACE' || this.confirmation() === REPLACE_WORD,
+    () => this.chosenMode() !== 'REPLACE' || this.confirmation() === this.replaceWord(),
   );
   protected readonly contents = computed(() => {
+    this.language.current();
     const counts = this.header()?.counts ?? {};
     return VISIBLE_TABLES.map((table) => `${counts[table] ?? 0} ${tableLabel(table)}`).join(', ');
   });
@@ -127,7 +135,7 @@ export class BackupPage {
   protected upload(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
-    // Sonst löst dieselbe Auswahl beim nächsten Mal kein Ereignis aus.
+    // Otherwise the same selection triggers no event next time.
     input.value = '';
     if (!file) {
       return;
@@ -160,7 +168,11 @@ export class BackupPage {
       this.mappings.markAllAsTouched();
       return;
     }
-    if (!dryRun && this.mode.value === 'MERGE' && !this.confirm(MERGE_QUESTION)) {
+    if (
+      !dryRun &&
+      this.mode.value === 'MERGE' &&
+      !this.confirm(translate('backup.import.mergeQuestion'))
+    ) {
       return;
     }
     this.report.set(null);
@@ -179,11 +191,14 @@ export class BackupPage {
     });
   }
 
+  /** Date and time in the locale of the UI language. */
   protected formatted(timestamp: string | null): string {
-    return timestamp ? new Date(timestamp).toLocaleString('de-DE') : 'unbekannt';
+    return timestamp
+      ? new Date(timestamp).toLocaleString(UI_LOCALES[this.language.current()])
+      : translate('common.unknown');
   }
 
-  /** Vorschlag: jede Quelle mit unverändertem Pfad; unter Docker z. B. /media/filme. */
+  /** Suggestion: every source with an unchanged path; under Docker e.g. /media/filme. */
   private showMappings(header: BackupHeader): void {
     this.mappings.clear();
     this.confirmation.set('');
@@ -197,7 +212,7 @@ export class BackupPage {
     }
   }
 
-  /** Unveränderte Pfade brauchen keine Regel, auf einem anderen System wären sie auch keine gültigen Ziele. */
+  /** Unchanged paths need no rule; on another system they would not be valid targets either. */
   private changedMappings(): { from: string; to: string }[] {
     return this.mappings
       .getRawValue()
@@ -213,16 +228,21 @@ export class BackupPage {
 
   private onImportFinished(job: Job): void {
     if (!job.title.includes(DRY_RUN_TITLE)) {
-      // Nach dem echten Import löscht der Server die hochgeladene Datei.
+      // After the real import the server deletes the uploaded file.
       this.forgetUpload();
     }
     if (job.status === 'SUCCEEDED') {
       this.report.set(job.result as BackupImportReport);
-      this.notify(`${job.title}: fertig.`);
+      this.notify(translate('backup.job.finished', { title: job.title }));
     } else if (job.status === 'CANCELLED') {
-      this.notify(`${job.title} abgebrochen – es wurde nichts geändert.`);
+      this.notify(translate('backup.job.cancelled', { title: job.title }));
     } else {
-      this.notify(`${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`);
+      this.notify(
+        translate('backup.job.failed', {
+          title: job.title,
+          message: job.message ?? translate('backup.job.unknownError'),
+        }),
+      );
     }
   }
 

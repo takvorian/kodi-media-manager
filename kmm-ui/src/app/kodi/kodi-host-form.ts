@@ -1,13 +1,22 @@
-import { FormArray, FormControl, FormGroup, NonNullableFormBuilder, Validators } from '@angular/forms';
+import {
+  FormArray,
+  FormControl,
+  FormGroup,
+  NonNullableFormBuilder,
+  Validators,
+} from '@angular/forms';
 
 import { KodiHost, KodiHostCommand, KodiPathMapping } from './kodi';
 
 export const DEFAULT_KODI_PORT = 8080;
 const MAX_PORT = 65535;
-/** Rechnername oder IP-Adresse ohne Schema, Pfad oder Leerzeichen. */
+/** Host name or IP address without scheme, path or spaces. */
 const ADDRESS_PATTERN = /^\s*[^\s/]+\s*$/;
 
-export type PathMappingForm = FormGroup<{ localPath: FormControl<string>; kodiPath: FormControl<string> }>;
+export type PathMappingForm = FormGroup<{
+  localPath: FormControl<string>;
+  kodiPath: FormControl<string>;
+}>;
 
 export type KodiHostForm = FormGroup<{
   name: FormControl<string>;
@@ -31,14 +40,17 @@ export function createKodiHostForm(formBuilder: NonNullableFormBuilder): KodiHos
   });
 }
 
-export function createPathMappingForm(formBuilder: NonNullableFormBuilder, mapping?: KodiPathMapping): PathMappingForm {
+export function createPathMappingForm(
+  formBuilder: NonNullableFormBuilder,
+  mapping?: KodiPathMapping,
+): PathMappingForm {
   return formBuilder.group({
     localPath: [mapping?.localPath ?? '', Validators.required],
     kodiPath: [mapping?.kodiPath ?? '', Validators.required],
   });
 }
 
-/** Füllt das Formular mit einem vorhandenen Gerät oder, ohne Gerät, mit Vorschlägen für ein neues. */
+/** Fills the form with an existing device or, without one, with suggestions for a new one. */
 export function fillKodiHostForm(
   form: KodiHostForm,
   formBuilder: NonNullableFormBuilder,
@@ -46,7 +58,9 @@ export function fillKodiHostForm(
   suggestedLocalPaths: readonly string[],
 ): void {
   form.controls.pathMappings.clear();
-  const mappings = host ? host.pathMappings : suggestedLocalPaths.map((localPath) => ({ localPath, kodiPath: '' }));
+  const mappings = host
+    ? host.pathMappings
+    : suggestedLocalPaths.map((localPath) => ({ localPath, kodiPath: '' }));
   for (const mapping of mappings) {
     form.controls.pathMappings.push(createPathMappingForm(formBuilder, mapping));
   }
@@ -60,7 +74,7 @@ export function fillKodiHostForm(
   });
 }
 
-/** Ein leeres Passwortfeld lässt das gespeicherte Passwort unverändert. */
+/** An empty password field leaves the stored password unchanged. */
 export function toKodiHostCommand(form: KodiHostForm): KodiHostCommand {
   const value = form.getRawValue();
   return {

@@ -1,4 +1,4 @@
-/** Einstellungen, die durch die Server-Konfiguration festgelegt sein können. */
+/** Settings that may be fixed by the server configuration. */
 export type SettingsField = 'METADATA_LANGUAGE' | 'ARTWORK_LANGUAGE' | 'PROXY';
 
 export interface ProxyView {
@@ -10,23 +10,23 @@ export interface ProxyView {
 
 export type EpisodeOrdering = 'AIRED' | 'DVD' | 'ABSOLUTE';
 
-/** Einstellungen für Serien, getrennt von denen für Filme. */
+/** Settings for TV shows, separate from those for movies. */
 export interface TvSettings {
   readonly metadataLanguage: string;
   readonly artworkLanguage: string;
   readonly episodeOrdering: EpisodeOrdering;
 }
 
-/** Einstellungen für ffprobe, das die technischen Angaben ausliest. */
+/** Settings for ffprobe, which reads the technical details. */
 export interface MediaInfoSettings {
   readonly ffprobePath: string;
-  /** Nach dem automatischen Scrapen auslesen, wie Embers „MetaDataScan“. */
+  /** Read after auto-scraping, like Ember's "MetaDataScan". */
   readonly probeOnScrape: boolean;
-  /** Neue Dateien ohne Angaben in der NFO nach dem Scan auslesen. */
+  /** Read new files without details in the NFO after the scan. */
   readonly probeNewFiles: boolean;
 }
 
-/** Muster und Auslöser für das Umbenennen, z. B. `{title}[ ({year})]`. */
+/** Patterns and triggers for renaming, e.g. `{title}[ ({year})]`. */
 export interface RenameSettings {
   readonly movieFolder: string;
   readonly movieFile: string;
@@ -40,13 +40,13 @@ export interface RenameSettings {
   readonly episodesOnScan: boolean;
 }
 
-/** Ablage der Set-Bilder (flaches Schema und Kodis Set-Ordner) und Zuordnung beim Scrapen. */
+/** Storage of the movie set artwork (flat scheme and Kodi's set folders) and assignment when scraping. */
 export interface MovieSetSettings {
   readonly flatImages: boolean;
   readonly flatImagesFolder: string | null;
   readonly kodiImages: boolean;
   readonly kodiImagesFolder: string | null;
-  /** Filme beim Scrapen dem Set ihrer TMDB-Sammlung zuordnen. */
+  /** Assign movies to the set of their TMDB collection when scraping. */
   readonly assignOnScrape: boolean;
 }
 
@@ -59,7 +59,7 @@ export type ApiKeyName =
   | 'TRAKT_CLIENT_ID'
   | 'OMDB_API_KEY';
 
-/** Zustand eines API-Keys; der Key selbst wird nie ausgeliefert. */
+/** State of an API key; the key itself is never delivered. */
 export interface ApiKeyView {
   readonly key: ApiKeyName;
   readonly pluginId: string;
@@ -68,7 +68,7 @@ export interface ApiKeyView {
   readonly hint: string | null;
 }
 
-/** Antwort von GET /api/v1/settings. */
+/** Response of GET /api/v1/settings. */
 export interface SettingsView {
   readonly metadataLanguage: string;
   readonly artworkLanguage: string;
@@ -82,7 +82,7 @@ export interface SettingsView {
   readonly overridden: readonly SettingsField[];
 }
 
-/** Proxy in einer Änderung; ein Passwort von `null` lässt das gespeicherte unverändert. */
+/** Proxy in a change; a password of `null` leaves the stored one unchanged. */
 export interface ProxySettings {
   readonly host: string;
   readonly port: number;
@@ -90,7 +90,7 @@ export interface ProxySettings {
   readonly password: string | null;
 }
 
-/** Inhalt von PUT /api/v1/settings. */
+/** Body of PUT /api/v1/settings. */
 export interface KmmSettings {
   readonly metadataLanguage: string;
   readonly artworkLanguage: string;
