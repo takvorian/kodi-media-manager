@@ -12,10 +12,10 @@
 
     <artifactId>kmm-ui</artifactId>
     <name>KMM UI</name>
-    <description>Angular-Oberfläche. Der Build landet unter static/ im JAR und wird von kmm-app ausgeliefert.</description>
+    <description>Angular user interface. The build ends up under static/ in the JAR and is served by kmm-app.</description>
 
     <properties>
-        <!-- Überspringt npm-Tests zusammen mit den Java-Tests (-DskipTests). -->
+        <!-- Skips the npm tests together with the Java tests (-DskipTests). -->
         <skipTests>false</skipTests>
     </properties>
 

@@ -42,7 +42,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Export von Film- und Serienliste Ende zu Ende.
+ * End-to-end export of the movie and TV show lists.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

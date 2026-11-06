@@ -37,6 +37,7 @@ import de.tiktak.kmm.settings.ApiKeyService;
 import de.tiktak.kmm.system.DatabaseResetService;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 /**
  * Backup export end to end.
@@ -170,7 +171,7 @@ class BackupExportIntegrationTest {
     @Test
     void refusesWhileAJobIsRunningAndLeavesNoFile() throws IOException {
         CountDownLatch finish = new CountDownLatch(1);
-        jobService.submit("test", "Testjob", context -> {
+        jobService.submit("test", LocalizedText.literal("Testjob"), context -> {
             try {
                 finish.await();
             } catch (InterruptedException e) {

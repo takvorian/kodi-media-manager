@@ -35,7 +35,7 @@ class JobServiceTest {
 
     @Test
     void startsJobInBackgroundAndReportsItAsRunning() {
-        JobSnapshot started = service.submit("scan:1", "Scan Filme", context -> "fertig");
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> "fertig");
 
         assertThat(started.status()).isEqualTo(JobStatus.RUNNING);
         assertThat(service.find(started.id())).isEqualTo(started);
@@ -45,7 +45,7 @@ class JobServiceTest {
 
     @Test
     void storesResultOfSuccessfulJob() {
-        JobSnapshot started = service.submit("scan:1", "Scan Filme", context -> {
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> {
             context.reportProgress(3, 3, "fast fertig");
             return "fertig";
         });
@@ -61,7 +61,7 @@ class JobServiceTest {
 
     @Test
     void recordsFailureMessage() {
-        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan"), context -> {
             throw new IllegalStateException("Verzeichnis weg");
         });
 
@@ -75,7 +75,7 @@ class JobServiceTest {
 
     @Test
     void recordsTheReadableDetailOfProblemExceptions() {
-        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan"), context -> {
             ErrorResponseException problem = new ErrorResponseException(HttpStatus.BAD_GATEWAY);
             problem.getBody().setDetail("Kodi ist nicht erreichbar.");
             throw problem;
@@ -88,7 +88,7 @@ class JobServiceTest {
 
     @Test
     void usesGenericMessageForExceptionsWithoutMessage() {
-        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan"), context -> {
             throw new IllegalStateException();
         });
 
@@ -100,7 +100,7 @@ class JobServiceTest {
     @Test
     void recordsTheTranslatableTextOfLocalizedExceptions() {
         LocalizedText reason = LocalizedText.of("kodi.unreachable").with("host", "wohnzimmer");
-        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan"), context -> {
             throw new LocalizedException(reason);
         });
 
@@ -111,7 +111,7 @@ class JobServiceTest {
 
     @Test
     void cancelsRunningJobOnRequest() {
-        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan"), context -> {
             context.throwIfCancellationRequested();
             return "nicht erreicht";
         });
@@ -124,7 +124,7 @@ class JobServiceTest {
 
     @Test
     void returnsFinishedJobUnchangedWhenCancelledLate() {
-        JobSnapshot started = service.submit("scan:1", "Scan", context -> "fertig");
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan"), context -> "fertig");
         runSubmittedTasks();
 
         assertThat(service.cancel(started.id()).status()).isEqualTo(JobStatus.SUCCEEDED);
@@ -141,7 +141,7 @@ class JobServiceTest {
 
     @Test
     void refusesActionWhileAJobIsRunning() {
-        JobSnapshot running = service.submit("scan:1", "Scan Filme", context -> "fertig");
+        JobSnapshot running = service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> "fertig");
         List<String> calls = new ArrayList<>();
 
         assertThatThrownBy(() -> service.runWhileIdle(() -> calls.add("leeren")))
@@ -152,29 +152,29 @@ class JobServiceTest {
 
     @Test
     void startsAnExclusiveJobOnlyWhileNoOtherJobIsRunning() {
-        service.submit("scan:1", "Scan Filme", context -> "fertig");
+        service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> "fertig");
 
-        assertThatThrownBy(() -> service.submitExclusive("import", "Import", context -> "fertig"))
+        assertThatThrownBy(() -> service.submitExclusive("import", LocalizedText.literal("Import"), context -> "fertig"))
                 .isInstanceOf(JobAlreadyRunningException.class);
     }
 
     @Test
     void startsNoOtherJobWhileAnExclusiveJobIsRunning() {
-        JobSnapshot exclusive = service.submitExclusive("import", "Import", context -> "fertig");
+        JobSnapshot exclusive = service.submitExclusive("import", LocalizedText.literal("Import"), context -> "fertig");
 
-        assertThatThrownBy(() -> service.submit("scan:1", "Scan Filme", context -> "fertig"))
+        assertThatThrownBy(() -> service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> "fertig"))
                 .isInstanceOfSatisfying(JobAlreadyRunningException.class, exception ->
                         assertThat(exception.getBody().getProperties()).containsEntry("jobId", exclusive.id()));
 
         executor.runAll();
-        assertThat(service.submit("scan:1", "Scan Filme", context -> "fertig").status()).isEqualTo(JobStatus.RUNNING);
+        assertThat(service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> "fertig").status()).isEqualTo(JobStatus.RUNNING);
     }
 
     @Test
     void rejectsSecondJobWithSameKeyWhileFirstIsRunning() {
-        JobSnapshot first = service.submit("scan:1", "Scan Filme", context -> "fertig");
+        JobSnapshot first = service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> "fertig");
 
-        assertThatThrownBy(() -> service.submit("scan:1", "Scan Filme", context -> "fertig"))
+        assertThatThrownBy(() -> service.submit("scan:1", LocalizedText.literal("Scan Filme"), context -> "fertig"))
                 .isInstanceOfSatisfying(JobAlreadyRunningException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.CONFLICT);
                     assertThat(exception.getBody().getProperties()).containsEntry("jobId", first.id());
@@ -183,21 +183,21 @@ class JobServiceTest {
 
     @Test
     void allowsSameKeyAgainAfterJobFinished() {
-        service.submit("scan:1", "Scan", context -> "fertig");
+        service.submit("scan:1", LocalizedText.literal("Scan"), context -> "fertig");
         runSubmittedTasks();
 
-        assertThat(service.submit("scan:1", "Scan", context -> "fertig").status()).isEqualTo(JobStatus.RUNNING);
+        assertThat(service.submit("scan:1", LocalizedText.literal("Scan"), context -> "fertig").status()).isEqualTo(JobStatus.RUNNING);
     }
 
     @Test
     void listsRunningJobsBeforeFinishedOnesAndLimitsHistory() {
-        JobSnapshot oldest = service.submit("a", "A", context -> "a");
+        JobSnapshot oldest = service.submit("a", LocalizedText.literal("A"), context -> "a");
         clock.advance(Duration.ofSeconds(1));
-        JobSnapshot middle = service.submit("b", "B", context -> "b");
+        JobSnapshot middle = service.submit("b", LocalizedText.literal("B"), context -> "b");
         clock.advance(Duration.ofSeconds(1));
-        JobSnapshot newest = service.submit("c", "C", context -> "c");
+        JobSnapshot newest = service.submit("c", LocalizedText.literal("C"), context -> "c");
         runSubmittedTasks();
-        JobSnapshot running = service.submit("d", "D", context -> "d");
+        JobSnapshot running = service.submit("d", LocalizedText.literal("D"), context -> "d");
 
         assertThat(service.findAll()).extracting(JobSnapshot::id)
                 .containsExactly(running.id(), newest.id(), middle.id());
@@ -216,7 +216,7 @@ class JobServiceTest {
 
     @Test
     void requestsCancellationOfAllJobsOnShutdown() {
-        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+        JobSnapshot started = service.submit("scan:1", LocalizedText.literal("Scan"), context -> {
             context.throwIfCancellationRequested();
             return "nicht erreicht";
         });

@@ -12,7 +12,7 @@
 
     <artifactId>kmm-app</artifactId>
     <name>KMM App</name>
-    <description>Spring-Boot-Anwendung: REST-API, Plugin-Verwaltung, Persistenz und Auslieferung der UI.</description>
+    <description>Spring Boot application: REST API, plugin management, persistence and delivery of the UI.</description>
 
     <properties>
         <test-plugins.directory>${project.build.directory}/test-plugins</test-plugins.directory>
@@ -188,8 +188,8 @@
             <scope>test</scope>
         </dependency>
         <!--
-            Das Test-Plugin wird nur in target/test-plugins kopiert und dort von PF4J geladen. Auf dem
-            Test-Classpath darf es nicht liegen, sonst fände PF4J die Extension doppelt.
+            The test plugin is only copied to target/test-plugins and loaded there by PF4J. It must not be on
+            the test classpath, otherwise PF4J would find the extension twice.
         -->
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
@@ -197,8 +197,8 @@
             <scope>test</scope>
         </dependency>
         <!--
-            Mitgelieferte Plugins: werden als Datei unter bundled-plugins/ ins JAR gelegt und beim Start
-            ins Plugin-Verzeichnis installiert. Der Scope test sorgt nur für die Build-Reihenfolge.
+            Bundled plugins: put into the JAR as files under bundled-plugins/ and installed into the plugin
+            directory on start. The test scope only ensures the build order.
         -->
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
@@ -317,9 +317,9 @@
 
     <profiles>
         <!--
-            Windows-Installer: ./mvnw -Pinstaller -DskipTests package legt die MSI unter kmm-app/target/installer ab.
-            jpackage braucht WiX 3 auf dem PATH. Die Upgrade-ID darf sich nie ändern, sonst ersetzt eine neue
-            Version die alte nicht.
+            Windows installer: ./mvnw -Pinstaller -DskipTests package puts the MSI under kmm-app/target/installer.
+            jpackage needs WiX 3 on the PATH. The upgrade ID must never change, otherwise a new version does not
+            replace the old one.
         -->
         <profile>
             <id>installer</id>
@@ -327,7 +327,7 @@
                 <installer.name>Kodi Media Manager</installer.name>
                 <installer.upgrade-uuid>6cff534d-eb86-5f8d-b555-4ad792b82bec</installer.upgrade-uuid>
                 <installer.input>${project.build.directory}/installer-input</installer.input>
-                <!-- Die CI setzt den neuesten Git-Tag ein: Nur mit steigender Version ersetzt eine MSI die alte. -->
+                <!-- CI fills in the newest git tag: an MSI only replaces the old one with a rising version. -->
                 <installer.app-version>${parsedVersion.majorVersion}.${parsedVersion.minorVersion}.${parsedVersion.incrementalVersion}</installer.app-version>
             </properties>
             <build>
@@ -390,7 +390,7 @@
                                         <argument>--vendor</argument>
                                         <argument>tiktak</argument>
                                         <argument>--description</argument>
-                                        <argument>Medienverwaltung für Kodi</argument>
+                                        <argument>Media manager for Kodi</argument>
                                         <argument>--about-url</argument>
                                         <argument>https://github.com/takvorian/kodi-media-manager</argument>
                                         <argument>--license-file</argument>

@@ -64,17 +64,6 @@ public class MovieBatchService {
                 context -> apply(distinct, change, context));
     }
 
-    /**
-     * @param title title of the job with {@code %d} for the number of movies, shown as is
-     * @deprecated use {@link #startFill(LocalizedText, List, LongPredicate)} with a translatable title
-     */
-    @Deprecated(forRemoval = true)
-    public JobSnapshot startFill(String title, List<Long> movieIds, LongPredicate change) {
-        List<Long> distinct = List.copyOf(new LinkedHashSet<>(movieIds));
-        return jobService.submit(JOB_KEY, LocalizedText.literal(title.formatted(distinct.size())),
-                context -> apply(distinct, change, context));
-    }
-
     MovieBatchResult apply(MovieBatchEdit edit, JobContext context) {
         return apply(edit.movieIds(), movieId -> change(movieId, edit), context);
     }

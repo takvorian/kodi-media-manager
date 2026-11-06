@@ -64,26 +64,6 @@ public class JobService {
     }
 
     /**
-     * Transitional overload until every caller passes a translatable title.
-     *
-     * @deprecated use {@link #submit(String, LocalizedText, JobTask)}
-     */
-    @Deprecated(forRemoval = true)
-    public JobSnapshot submit(String key, String title, JobTask<?> task) {
-        return submit(key, LocalizedText.literal(title), task);
-    }
-
-    /**
-     * Transitional overload until every caller passes a translatable title.
-     *
-     * @deprecated use {@link #submitExclusive(String, LocalizedText, JobTask)}
-     */
-    @Deprecated(forRemoval = true)
-    public JobSnapshot submitExclusive(String key, String title, JobTask<?> task) {
-        return submitExclusive(key, LocalizedText.literal(title), task);
-    }
-
-    /**
      * Starts a job that runs alone: it only starts if no job is running, and no other job starts until it ends.
      *
      * @throws JobAlreadyRunningException if a job is running

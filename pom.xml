@@ -17,7 +17,7 @@
     <packaging>pom</packaging>
 
     <name>Kodi Media Manager</name>
-    <description>Java-Port von Ember Media Manager – Medienverwaltung für Kodi</description>
+    <description>Java port of Ember Media Manager – media management for Kodi</description>
 
     <licenses>
         <license>
