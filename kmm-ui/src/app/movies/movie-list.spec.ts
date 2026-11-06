@@ -24,6 +24,7 @@ import { MoviePage, MovieSummary } from './movie';
 import { localDateTime } from '../shared/date-time';
 import { DEFAULT_PAGE_SIZE, MovieList, SEARCH_DEBOUNCE_MS } from './movie-list';
 import { MOVIES_URL } from './movie.service';
+import { literal } from '../i18n/localized-text';
 
 const DEBOUNCE_SAFETY_MARGIN_MS = 50;
 
@@ -67,11 +68,11 @@ describe('MovieList', () => {
   const scrapeJob = {
     id: 's',
     key: 'movies-scrape',
-    title: '2 Filme scrapen',
+    title: literal('2 Filme scrapen'),
     status: 'RUNNING',
     done: 1,
     total: 2,
-    message: 'Heat',
+    message: literal('Heat'),
   } as Job;
   const finishedScrape = {
     ...scrapeJob,
@@ -371,7 +372,7 @@ describe('MovieList', () => {
     const job = {
       id: 'b',
       key: 'movies-batch',
-      title: '3 Filme bearbeiten',
+      title: literal('3 Filme bearbeiten'),
       status: 'RUNNING',
     } as Job;
     batch.flush(job);
@@ -463,7 +464,7 @@ describe('MovieList', () => {
     const job = {
       id: 't',
       key: 'movies-batch',
-      title: 'Fehlende Trailer für 1 Filme holen',
+      title: literal('Fehlende Trailer für 1 Filme holen'),
       status: 'RUNNING',
     } as Job;
     fill.flush(job);
@@ -485,7 +486,12 @@ describe('MovieList', () => {
       language: 'fr-FR',
       refetchTexts: true,
     });
-    const job = { id: 'l', key: 'movies-batch', title: 'Sprache', status: 'RUNNING' } as Job;
+    const job = {
+      id: 'l',
+      key: 'movies-batch',
+      title: literal('Sprache'),
+      status: 'RUNNING',
+    } as Job;
     change.flush(job);
 
     expect(updated).toEqual([job]);
@@ -502,7 +508,7 @@ describe('MovieList', () => {
     const job = {
       id: 'k',
       key: 'movies-batch',
-      title: '1 Film in Kodi aktualisieren',
+      title: literal('1 Film in Kodi aktualisieren'),
       status: 'RUNNING',
     } as Job;
     refresh.flush(job);
@@ -521,7 +527,7 @@ describe('MovieList', () => {
     const job = {
       id: 'r',
       key: 'movies-batch',
-      title: 'Bewertungen aktualisieren',
+      title: literal('Bewertungen aktualisieren'),
       status: 'RUNNING',
     } as Job;
     fill.flush(job);
@@ -540,7 +546,7 @@ describe('MovieList', () => {
     const job = {
       id: 't',
       key: 'movies-batch',
-      title: 'Fehlende Titelmusik',
+      title: literal('Fehlende Titelmusik'),
       status: 'RUNNING',
     } as Job;
     fill.flush(job);

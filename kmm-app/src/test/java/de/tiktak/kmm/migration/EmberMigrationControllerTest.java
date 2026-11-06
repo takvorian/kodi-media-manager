@@ -37,6 +37,7 @@ import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = EmberMigrationController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -147,7 +148,7 @@ class EmberMigrationControllerTest {
         var request = new EmberImportRequest(
                 List.of(new EmberImportRequest.PathMapping("a:\\medien\\filme", "/media/filme")), true, true, true, true);
         when(importService.start(request)).thenReturn(new JobSnapshot(jobId, EmberImportService.JOB_KEY,
-                "Ember-Import (Probelauf)", JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null));
+                LocalizedText.literal("Ember-Import (Probelauf)"), JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null));
 
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                 {"pathMappings": [{"emberPath": "a:\\\\medien\\\\filme", "kmmPath": "/media/filme"}],

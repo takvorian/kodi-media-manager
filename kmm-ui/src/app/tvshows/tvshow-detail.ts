@@ -60,6 +60,7 @@ import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TVSHOW_BATCH_JOB_KEY, tvShowScrapeJobKey } from './tvshow-batch';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -72,6 +73,7 @@ export interface SeasonWithEpisodes {
 @Component({
   selector: 'app-tvshow-detail',
   imports: [
+    LocalizedPipe,
     LanguageSelect,
     ReactiveFormsModule,
     RouterLink,

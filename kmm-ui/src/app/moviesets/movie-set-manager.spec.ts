@@ -15,6 +15,7 @@ import { flushWhenRequested } from '../shared/testing';
 import { MovieSetDetails, MovieSetSummary, movieSetJobSummary } from './movie-set';
 import { MovieSetManager } from './movie-set-manager';
 import { MOVIE_SETS_URL } from './movie-set.service';
+import { literal } from '../i18n/localized-text';
 
 describe('MovieSetManager', () => {
   const sets: MovieSetSummary[] = [
@@ -139,7 +140,7 @@ describe('MovieSetManager', () => {
   }
 
   function job(title: string): Job {
-    return { id: 'j', key: 'moviesets', title, status: 'RUNNING' } as Job;
+    return { id: 'j', key: 'moviesets', title: literal(title), status: 'RUNNING' } as Job;
   }
 
   it('switches to English at runtime', async () => {
@@ -280,7 +281,7 @@ describe('MovieSetManager', () => {
     httpTesting
       .expectOne({ method: 'POST', url: `${MOVIE_SETS_URL}/complete` })
       .flush(job('Alle Sets ergänzen'));
-    expect(updated.map((started) => started.title)).toEqual(['Alle Sets ergänzen']);
+    expect(updated.map((started) => started.title)).toEqual([literal('Alle Sets ergänzen')]);
 
     expect(
       movieSetJobSummary({
@@ -351,7 +352,7 @@ describe('MovieSetManager', () => {
   });
 
   it('summarizes jobs and shows a running one', async () => {
-    running = { ...job('Filmset löschen'), message: 'Film 5' } as Job;
+    running = { ...job('Filmset löschen'), message: literal('Film 5') } as Job;
     await load();
     expect(texts('.job-progress')).toEqual(['Filmset löschen – Film 5']);
 

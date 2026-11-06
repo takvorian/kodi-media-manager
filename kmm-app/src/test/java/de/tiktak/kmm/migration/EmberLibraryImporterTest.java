@@ -52,6 +52,8 @@ import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceConflictException;
 import de.tiktak.kmm.source.MediaSourceService;
 import tools.jackson.databind.json.JsonMapper;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 
 @ExtendWith(MockitoExtension.class)
 class EmberLibraryImporterTest {
@@ -271,7 +273,8 @@ class EmberLibraryImporterTest {
         }
 
         @Override
-        public void reportProgress(int done, int total, String message) {
+        public void reportProgress(int done, int total, LocalizedText text) {
+            String message = text == null ? null : Messages.english(text);
             progress.add(done + "/" + total + " " + message);
         }
 

@@ -1,6 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
+import { localize } from '../i18n/localized-text';
 
 /** Prefix of the job key for renaming; must match MovieRenameService.JOB_KEY_PREFIX. */
 export const MOVIE_RENAME_JOB_KEY_PREFIX = 'movie-rename:';
@@ -84,7 +85,7 @@ export function movieRenameSummary(job: Job): string {
         ? 'movies.rename.summary.succeededWithFailures'
         : 'movies.rename.summary.succeeded';
     return translate(key, {
-      title: job.title,
+      title: localize(job.title),
       renamed: result.renamed,
       unchanged: result.unchanged,
       skipped: result.skipped,
@@ -92,9 +93,11 @@ export function movieRenameSummary(job: Job): string {
     });
   }
   return job.status === 'CANCELLED'
-    ? translate('movies.rename.summary.cancelled', { title: job.title })
+    ? translate('movies.rename.summary.cancelled', { title: localize(job.title) })
     : translate('movies.rename.summary.failed', {
-        title: job.title,
-        reason: job.message ?? translate('movies.rename.summary.unknownError'),
+        title: localize(job.title),
+        reason: job.message
+          ? localize(job.message)
+          : translate('movies.rename.summary.unknownError'),
       });
 }

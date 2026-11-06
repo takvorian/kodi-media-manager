@@ -4,7 +4,7 @@
 @if (job) {
   <div class="job-progress">
     <mat-progress-bar mode="indeterminate" />
-    <span>{{ job.title }} – {{ job.message }}</span>
+    <span>{{ job.title | localized }} – {{ job.message | localized }}</span>
   </div>
 }
 

@@ -84,7 +84,7 @@ public class MovieBatchService {
                 }
             }
         }
-        context.reportProgress(movieIds.size(), movieIds.size(), null);
+        context.reportProgress(movieIds.size(), movieIds.size());
         log.info("Batch edit: {} changed, {} unchanged, {} failed", changed, unchanged, failed);
         return new MovieBatchResult(changed, unchanged, failed, failures);
     }

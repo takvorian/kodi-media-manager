@@ -1,17 +1,18 @@
 package de.tiktak.kmm.job;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Für denselben Schlüssel läuft bereits ein Job. Wird als HTTP 409 beantwortet.
+ * A job is already running for the same key. Answered as HTTP 409.
  */
-public class JobAlreadyRunningException extends ErrorResponseException {
+public class JobAlreadyRunningException extends LocalizedProblemException {
 
     public JobAlreadyRunningException(JobSnapshot running) {
-        super(HttpStatus.CONFLICT);
-        getBody().setTitle("Job läuft bereits");
-        getBody().setDetail("%s läuft bereits.".formatted(running.title()));
+        super(HttpStatus.CONFLICT, LocalizedText.of("job.alreadyRunning.title"),
+                LocalizedText.of("job.alreadyRunning.detail").with("job", running.title()), null);
         getBody().setProperty("jobId", running.id());
     }
 }

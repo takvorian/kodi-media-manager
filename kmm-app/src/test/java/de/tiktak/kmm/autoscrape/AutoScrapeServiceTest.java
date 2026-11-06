@@ -55,6 +55,8 @@ import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.source.ScanEntry;
 import de.tiktak.kmm.theme.ThemeService;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 
 @ExtendWith(MockitoExtension.class)
 class AutoScrapeServiceTest {
@@ -103,7 +105,7 @@ class AutoScrapeServiceTest {
     @Test
     void startsJobKeyedBySourceAndRunsTheScrape() {
         givenSource(MediaType.MOVIE);
-        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "auto-scrape:3", "Scrapen „Filme“", JobStatus.RUNNING,
+        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "auto-scrape:3", LocalizedText.literal("Scrapen „Filme“"), JobStatus.RUNNING,
                 0, 0, null, null, Instant.now(), null);
         when(jobService.submit(eq("auto-scrape:3"), eq("Scrapen „Filme“"), any())).thenReturn(started);
         when(queryService.findMovieIds(SOURCE_ID)).thenReturn(List.of());
@@ -341,7 +343,8 @@ class AutoScrapeServiceTest {
         }
 
         @Override
-        public void reportProgress(int done, int total, String message) {
+        public void reportProgress(int done, int total, LocalizedText text) {
+            String message = text == null ? null : Messages.english(text);
             progress.add(done + "/" + total + " " + message);
         }
 

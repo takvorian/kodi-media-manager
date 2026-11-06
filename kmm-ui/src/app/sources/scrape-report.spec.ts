@@ -5,6 +5,7 @@ import { provideI18nTesting } from '../i18n/testing';
 import { job } from '../jobs/fake-job-events';
 import { AutoScrapeResult } from './media-source';
 import { autoScrapeSummary, hasScrapeDetails } from './scrape-report';
+import { literal } from '../i18n/localized-text';
 
 describe('scrape report', () => {
   const empty: AutoScrapeResult = {
@@ -24,14 +25,16 @@ describe('scrape report', () => {
 
   it('uses the singular for a single entry', () => {
     expect(
-      autoScrapeSummary(job({ title: 'Scrapen „Heat“', status: 'SUCCEEDED', result: empty })),
+      autoScrapeSummary(
+        job({ title: literal('Scrapen „Heat“'), status: 'SUCCEEDED', result: empty }),
+      ),
     ).toBe(
       'Scrapen „Heat“ abgeschlossen: 1 Film, 0 neu zugeordnet, 0 ohne Treffer, 0 Bilder gespeichert.',
     );
     expect(
       autoScrapeSummary(
         job({
-          title: 'Scrapen „Lost“',
+          title: literal('Scrapen „Lost“'),
           status: 'SUCCEEDED',
           result: { ...empty, movies: undefined, shows: 1, episodesUpdated: 1 },
         }),
@@ -45,7 +48,7 @@ describe('scrape report', () => {
     expect(
       autoScrapeSummary(
         job({
-          title: 'Scrape',
+          title: literal('Scrape'),
           status: 'SUCCEEDED',
           result: { ...empty, imagesSaved: 1, themesSaved: 2, failures: ['x'] },
         }),
@@ -54,14 +57,18 @@ describe('scrape report', () => {
       'Scrape finished: 1 movie, 0 newly matched, 0 without a match, 1 artwork saved, ' +
         '2 theme music files saved, 1 error.',
     );
-    expect(autoScrapeSummary(job({ title: 'X', status: 'CANCELLED' }))).toBe('X cancelled.');
+    expect(autoScrapeSummary(job({ title: literal('X'), status: 'CANCELLED' }))).toBe(
+      'X cancelled.',
+    );
   });
 
   it('reports cancelled and failed runs', () => {
-    expect(autoScrapeSummary(job({ title: 'X', status: 'CANCELLED' }))).toBe('X abgebrochen.');
-    expect(autoScrapeSummary(job({ title: 'X', status: 'FAILED', message: 'kaputt' }))).toBe(
-      'X fehlgeschlagen: kaputt',
+    expect(autoScrapeSummary(job({ title: literal('X'), status: 'CANCELLED' }))).toBe(
+      'X abgebrochen.',
     );
+    expect(
+      autoScrapeSummary(job({ title: literal('X'), status: 'FAILED', message: literal('kaputt') })),
+    ).toBe('X fehlgeschlagen: kaputt');
   });
 
   it('has details when entries beyond the listed ones stayed unmatched', () => {

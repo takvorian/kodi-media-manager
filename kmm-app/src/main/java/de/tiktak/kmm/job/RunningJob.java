@@ -6,10 +6,11 @@ import java.time.Instant;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Zustand eines laufenden Jobs. Fortschrittsmeldungen werden gedrosselt weitergegeben, damit
- * schnelle Jobs die Oberfläche nicht mit Tausenden Ereignissen überfluten; der Endzustand wird
- * immer gemeldet.
+ * State of a running job. Progress reports are passed on throttled so fast jobs do not flood the user interface
+ * with thousands of events; the final state is always reported.
  */
 final class RunningJob implements JobContext {
 
@@ -32,7 +33,7 @@ final class RunningJob implements JobContext {
     }
 
     @Override
-    public void reportProgress(int done, int total, String message) {
+    public void reportProgress(int done, int total, LocalizedText message) {
         JobSnapshot updated = snapshot.updateAndGet(current -> current.withProgress(done, total, message));
         publishThrottled(updated);
     }
@@ -50,7 +51,7 @@ final class RunningJob implements JobContext {
         return finish(snapshot.updateAndGet(current -> current.succeeded(result, clock.instant())));
     }
 
-    JobSnapshot fail(String error) {
+    JobSnapshot fail(LocalizedText error) {
         return finish(snapshot.updateAndGet(current -> current.failed(error, clock.instant())));
     }
 

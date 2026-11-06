@@ -87,7 +87,7 @@ class TvAutoScrapeRunner {
             context.reportProgress(index, showIds.size(), title.orElse(null));
             title.ifPresent(existing -> scrapeShow(showId, existing, progress));
         }
-        context.reportProgress(showIds.size(), showIds.size(), null);
+        context.reportProgress(showIds.size(), showIds.size());
         TvAutoScrapeResult result = progress.toResult(showIds.size());
         log.info("Auto-scraped {} TV shows: {} scraped, {} unmatched, {} episodes, {} images, {} trailers, "
                 + "{} themes, {} failures", result.shows(), result.scraped(), result.unmatched(),
@@ -133,7 +133,7 @@ class TvAutoScrapeRunner {
             log.warn("Auto-scraping season {} of TV show {} failed", season, showId, e);
             progress.failed(title, UNEXPECTED_ERROR);
         }
-        context.reportProgress(SEASON_STEPS, SEASON_STEPS, null);
+        context.reportProgress(SEASON_STEPS, SEASON_STEPS);
         TvAutoScrapeResult result = progress.toResult(1);
         log.info("Auto-scraped season {} of TV show {}: {} episodes, {} images, {} failures", season, showId,
                 result.episodesUpdated(), result.imagesSaved(), result.failures().size());

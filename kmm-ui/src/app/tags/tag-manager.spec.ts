@@ -14,6 +14,7 @@ import { flushWhenRequested } from '../shared/testing';
 import { TagSummary, TaggedItems, tagJobSummary } from './tag';
 import { TagManager } from './tag-manager';
 import { TAGS_URL } from './tag.service';
+import { literal } from '../i18n/localized-text';
 
 describe('TagManager', () => {
   const tags: TagSummary[] = [
@@ -103,7 +104,7 @@ describe('TagManager', () => {
   }
 
   function job(title: string): Job {
-    return { id: 'j', key: 'tags', title, status: 'RUNNING' } as Job;
+    return { id: 'j', key: 'tags', title: literal(title), status: 'RUNNING' } as Job;
   }
 
   it('switches to English at runtime', async () => {
@@ -245,7 +246,12 @@ describe('TagManager', () => {
   });
 
   it('summarizes jobs', () => {
-    const done = { id: 'j', key: 'tags', title: 'Tag löschen', status: 'SUCCEEDED' } as Job;
+    const done = {
+      id: 'j',
+      key: 'tags',
+      title: literal('Tag löschen'),
+      status: 'SUCCEEDED',
+    } as Job;
 
     expect(
       tagJobSummary({
@@ -260,7 +266,7 @@ describe('TagManager', () => {
   });
 
   it('shows a running job', async () => {
-    running = { ...job('Tag zuweisen'), message: 'Film 3' } as Job;
+    running = { ...job('Tag zuweisen'), message: literal('Film 3') } as Job;
     await load();
 
     expect(texts('.job-progress')).toEqual(['Tag zuweisen – Film 3']);

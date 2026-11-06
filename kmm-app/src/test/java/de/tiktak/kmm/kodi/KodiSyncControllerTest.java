@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = KodiSyncController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -74,7 +75,7 @@ class KodiSyncControllerTest {
     }
 
     private static JobSnapshot job(String id) {
-        return new JobSnapshot(UUID.fromString(id), "movies-batch", "Kodi", JobStatus.RUNNING, 0, 0, null, null, NOW, null);
+        return new JobSnapshot(UUID.fromString(id), "movies-batch", LocalizedText.literal("Kodi"), JobStatus.RUNNING, 0, 0, null, null, NOW, null);
     }
 
     @Test

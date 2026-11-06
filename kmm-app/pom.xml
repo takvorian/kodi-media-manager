@@ -25,6 +25,10 @@
         <!-- KMM -->
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-i18n</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
             <artifactId>kmm-plugin-api</artifactId>
         </dependency>
         <dependency>

@@ -417,7 +417,7 @@ class BackupImportIntegrationTest {
         JsonNode job = awaitJob(start("REPLACE", List.of(), false));
 
         assertThat(job.get("status").asString()).isEqualTo("FAILED");
-        assertThat(job.get("message").asString()).contains("ungültigen Wert");
+        assertThat(job.get("message").get("args").get("text").asString()).contains("ungültigen Wert");
         assertThat(jdbcClient.sql("SELECT title FROM movie").query(String.class).single()).isEqualTo("Vorher");
     }
 

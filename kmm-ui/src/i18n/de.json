@@ -1039,5 +1039,30 @@
       "failed": "{title} fehlgeschlagen: {reason}",
       "unknownError": "Unbekannter Fehler"
     }
+  },
+  "server": {
+    "backup": {
+      "import": {
+        "title": "Sicherung einspielen",
+        "dryRunTitle": "Sicherung einspielen (Probelauf)"
+      }
+    },
+    "migration": {
+      "import": {
+        "title": "Ember-Import",
+        "dryRunTitle": "Ember-Import (Probelauf)"
+      }
+    },
+    "job": {
+      "unexpectedError": "Unerwarteter Fehler",
+      "alreadyRunning": {
+        "title": "Job läuft bereits",
+        "detail": "{job} läuft bereits."
+      },
+      "notFound": {
+        "title": "Job nicht gefunden",
+        "detail": "Es gibt keinen Job mit der ID {id}."
+      }
+    }
   }
 }

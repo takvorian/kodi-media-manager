@@ -10,8 +10,9 @@ import { TranslocoService } from '@jsverse/transloco';
 import { provideI18nTesting } from '../i18n/testing';
 import { CONFIRM } from '../shared/confirm';
 import { EmberImportReport, EmberInspection } from './ember-migration';
-import { EmberImportPage } from './ember-import-page';
+import { EmberImportPage, DRY_RUN_TITLE_KEY } from './ember-import-page';
 import { EMBER_MIGRATION_URL } from './ember-migration.service';
+import { literal } from '../i18n/localized-text';
 
 describe('EmberImportPage', () => {
   const inspection: EmberInspection = {
@@ -68,7 +69,12 @@ describe('EmberImportPage', () => {
     warnings: ['Verzeichnis nicht erreichbar'],
   };
   const importJob = (overrides: Partial<Job> = {}): Job =>
-    job({ id: 'job-7', key: 'ember-import', title: 'Ember-Import (Probelauf)', ...overrides });
+    job({
+      id: 'job-7',
+      key: 'ember-import',
+      title: { key: DRY_RUN_TITLE_KEY, args: {} },
+      ...overrides,
+    });
 
   let fixture: ComponentFixture<EmberImportPage>;
   let httpTesting: HttpTestingController;
@@ -212,9 +218,14 @@ describe('EmberImportPage', () => {
     fixture.detectChanges();
     expect(element().querySelector('.import-button')).not.toBeNull();
 
-    events.emit(importJob({ id: 'job-8', title: 'Ember-Import' }));
+    events.emit(importJob({ id: 'job-8', title: { key: 'migration.import.title', args: {} } }));
     events.emit(
-      importJob({ id: 'job-8', title: 'Ember-Import', status: 'FAILED', message: 'kaputt' }),
+      importJob({
+        id: 'job-8',
+        title: { key: 'migration.import.title', args: {} },
+        status: 'FAILED',
+        message: literal('kaputt'),
+      }),
     );
     fixture.detectChanges();
     expect(element().querySelector('.import-button')).toBeNull();
@@ -306,7 +317,7 @@ describe('EmberImportPage', () => {
 
     button('.import-button').click();
     const request = httpTesting.expectOne({ method: 'POST', url: `${EMBER_MIGRATION_URL}/import` });
-    request.flush(importJob({ title: 'Ember-Import' }));
+    request.flush(importJob({ title: { key: 'migration.import.title', args: {} } }));
 
     expect(request.request.body.dryRun).toBe(false);
     expect(request.request.body.importSettings).toBe(false);
@@ -317,7 +328,7 @@ describe('EmberImportPage', () => {
 
   it('shows progress, can cancel and presents the report', async () => {
     await analyze();
-    events.emit(importJob({ done: 100, total: 1169, message: 'Heat' }));
+    events.emit(importJob({ done: 100, total: 1169, message: literal('Heat') }));
     fixture.detectChanges();
 
     expect(element().querySelector('.job-message')?.textContent).toContain('Heat (9 %)');
@@ -377,7 +388,7 @@ describe('EmberImportPage', () => {
   it('reports failed, cancelled and unstartable imports', async () => {
     await analyze();
     events.emit(importJob());
-    events.emit(importJob({ status: 'FAILED', message: 'Datenbank gesperrt' }));
+    events.emit(importJob({ status: 'FAILED', message: literal('Datenbank gesperrt') }));
     events.emit(importJob({ id: 'job-8' }));
     events.emit(importJob({ id: 'job-8', status: 'CANCELLED' }));
     fixture.detectChanges();

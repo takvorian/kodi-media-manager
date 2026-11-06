@@ -83,7 +83,7 @@ public class TvShowBatchService {
                 }
             }
         }
-        context.reportProgress(showIds.size(), showIds.size(), null);
+        context.reportProgress(showIds.size(), showIds.size());
         log.info("TV show batch edit: {} changed, {} unchanged, {} failed", changed, unchanged, failed);
         return new TvShowBatchResult(changed, unchanged, failed, failures);
     }

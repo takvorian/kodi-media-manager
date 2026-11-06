@@ -10,12 +10,13 @@ import {
   streamDetailsJobKey,
   streamDetailsSummary,
 } from './media-info';
+import { literal } from '../i18n/localized-text';
 
 describe('media info', () => {
   const job: Job = {
     id: 'j',
     key: 'stream-details:1',
-    title: 'Technische Angaben „Filme“',
+    title: literal('Technische Angaben „Filme“'),
     status: 'SUCCEEDED',
     done: 3,
     total: 3,
@@ -45,7 +46,7 @@ describe('media info', () => {
     expect(streamDetailsSummary({ ...job, status: 'CANCELLED' })).toBe(
       'Technische Angaben „Filme“ abgebrochen.',
     );
-    expect(streamDetailsSummary({ ...job, status: 'FAILED', message: 'weg' })).toBe(
+    expect(streamDetailsSummary({ ...job, status: 'FAILED', message: literal('weg') })).toBe(
       'Technische Angaben „Filme“ fehlgeschlagen: weg',
     );
   });

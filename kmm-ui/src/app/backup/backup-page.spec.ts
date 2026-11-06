@@ -11,8 +11,9 @@ import { FakeJobEvents, job } from '../jobs/fake-job-events';
 import { Job } from '../jobs/job';
 import { CONFIRM } from '../shared/confirm';
 import { BackupHeader, BackupImportReport } from './backup';
-import { BackupPage } from './backup-page';
+import { BackupPage, DRY_RUN_TITLE_KEY } from './backup-page';
 import { BACKUP_URL } from './backup.service';
+import { literal } from '../i18n/localized-text';
 
 describe('BackupPage', () => {
   const header: BackupHeader = {
@@ -36,7 +37,12 @@ describe('BackupPage', () => {
     warnings: ['Das Verzeichnis ist nicht erreichbar.'],
   };
   const importJob = (overrides: Partial<Job> = {}): Job =>
-    job({ id: 'job-9', key: 'backup-import', title: 'Sicherung einspielen', ...overrides });
+    job({
+      id: 'job-9',
+      key: 'backup-import',
+      title: { key: 'backup.import.title', args: {} },
+      ...overrides,
+    });
 
   let fixture: ComponentFixture<BackupPage>;
   let httpTesting: HttpTestingController;
@@ -234,7 +240,7 @@ describe('BackupPage', () => {
       pathMappings: [{ from: 'a:\\medien\\filme', to: '/media/filme' }],
       dryRun: true,
     });
-    request.flush(importJob({ title: 'Sicherung einspielen (Probelauf)' }));
+    request.flush(importJob({ title: { key: DRY_RUN_TITLE_KEY, args: {} } }));
   });
 
   it('refuses an empty target path', async () => {
@@ -285,7 +291,7 @@ describe('BackupPage', () => {
     events.emit(importJob());
     events.emit(
       importJob({
-        title: 'Sicherung einspielen (Probelauf)',
+        title: { key: DRY_RUN_TITLE_KEY, args: {} },
         status: 'SUCCEEDED',
         result: { ...report, dryRun: true, safetyCopy: null },
       }),
@@ -300,7 +306,7 @@ describe('BackupPage', () => {
   it('reports a failed import', async () => {
     await uploaded();
     events.emit(importJob());
-    events.emit(importJob({ status: 'FAILED', message: 'Der Import ist fehlgeschlagen' }));
+    events.emit(importJob({ status: 'FAILED', message: literal('Der Import ist fehlgeschlagen') }));
     fixture.detectChanges();
 
     expect(snackBarMessages.at(-1)).toContain('Der Import ist fehlgeschlagen');
@@ -310,7 +316,12 @@ describe('BackupPage', () => {
   it('shows the progress of a running import and can cancel it', async () => {
     await uploaded();
     events.emit(
-      importJob({ status: 'RUNNING', message: 'Daten werden übernommen', done: 1, total: 2 }),
+      importJob({
+        status: 'RUNNING',
+        message: literal('Daten werden übernommen'),
+        done: 1,
+        total: 2,
+      }),
     );
     fixture.detectChanges();
 

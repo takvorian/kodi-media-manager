@@ -50,6 +50,8 @@ import de.tiktak.kmm.scanner.MovieCandidate;
 import de.tiktak.kmm.scanner.MovieDirectoryScanner;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 
 @ExtendWith(MockitoExtension.class)
 class MovieScanServiceTest {
@@ -91,7 +93,7 @@ class MovieScanServiceTest {
     @Test
     void startsScanAsJobKeyedBySource() {
         givenSource(MediaType.MOVIE, directory);
-        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "scan:3", "Scan „Filme“", JobStatus.RUNNING,
+        JobSnapshot started = new JobSnapshot(UUID.randomUUID(), "scan:3", LocalizedText.literal("Scan „Filme“"), JobStatus.RUNNING,
                 0, 0, null, null, Instant.now(), null);
         when(jobService.submit(eq("scan:3"), eq("Scan „Filme“"), any())).thenReturn(started);
 
@@ -243,7 +245,8 @@ class MovieScanServiceTest {
         }
 
         @Override
-        public void reportProgress(int done, int total, String message) {
+        public void reportProgress(int done, int total, LocalizedText text) {
+            String message = text == null ? null : Messages.english(text);
             progress.add(done + "/" + total + " " + message);
         }
 

@@ -27,6 +27,7 @@ import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 import de.tiktak.kmm.trailer.TrailerOption;
 import de.tiktak.kmm.trailer.TrailerOptions;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = MovieTrailerController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -85,14 +86,14 @@ class MovieTrailerControllerTest {
     @Test
     void startsTheJobForMissingTrailers() {
         when(batchService.startTrailerFill(List.of(1L, 2L))).thenReturn(new JobSnapshot(JOB_ID, "movies-batch",
-                "Fehlende Trailer für 2 Filme holen", JobStatus.RUNNING, 0, 0, null, null,
+                LocalizedText.literal("Fehlende Trailer für 2 Filme holen"), JobStatus.RUNNING, 0, 0, null, null,
                 Instant.parse("2026-10-28T12:00:00Z"), null));
 
         assertThat(mockMvc.post().uri(MovieTrailerController.FILL_PATH).with(csrf())
                 .contentType(MediaType.APPLICATION_JSON).content("{\"movieIds\": [1, 2]}"))
                 .hasStatus(202)
                 .hasHeader("Location", "/api/v1/jobs/" + JOB_ID)
-                .bodyJson().extractingPath("$.title").isEqualTo("Fehlende Trailer für 2 Filme holen");
+                .bodyJson().extractingPath("$.title.args.text").isEqualTo("Fehlende Trailer für 2 Filme holen");
     }
 
     @Test

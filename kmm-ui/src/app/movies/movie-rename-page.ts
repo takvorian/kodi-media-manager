@@ -28,6 +28,7 @@ import {
 } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
 import { HelpLink } from '../shared/help-link';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 8000;
 
@@ -38,6 +39,7 @@ const SNACKBAR_DURATION_MS = 8000;
 @Component({
   selector: 'app-movie-rename-page',
   imports: [
+    LocalizedPipe,
     HelpLink,
     ReactiveFormsModule,
     RouterLink,

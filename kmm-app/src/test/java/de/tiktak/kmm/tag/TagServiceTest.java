@@ -32,6 +32,7 @@ import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobTask;
 import de.tiktak.kmm.movie.MovieTagService;
 import de.tiktak.kmm.tvshow.TvShowTagService;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @ExtendWith(MockitoExtension.class)
 class TagServiceTest {
@@ -109,7 +110,7 @@ class TagServiceTest {
                 .isInstanceOf(ErrorResponseException.class);
         assertThatThrownBy(() -> service.rename("a", "x".repeat(TagNames.MAX_LENGTH + 1)))
                 .isInstanceOf(ErrorResponseException.class);
-        verify(jobService, never()).submit(any(), any(), any());
+        verify(jobService, never()).submit(any(), any(LocalizedText.class), any());
     }
 
     @Test
@@ -134,7 +135,7 @@ class TagServiceTest {
     private UnaryOperator<List<String>> submitted(Runnable start) {
         ArgumentCaptor<JobTask<TagChangeResult>> task = ArgumentCaptor.forClass(JobTask.class);
         start.run();
-        verify(jobService, atLeastOnce()).submit(eq(TagService.JOB_KEY), any(), task.capture());
+        verify(jobService, atLeastOnce()).submit(eq(TagService.JOB_KEY), any(String.class), task.capture());
         List<UnaryOperator<List<String>>> changes = new ArrayList<>();
         lenient().when(movieTags.changeTags(anyLong(), any())).thenAnswer(invocation -> {
             changes.add(invocation.getArgument(1));

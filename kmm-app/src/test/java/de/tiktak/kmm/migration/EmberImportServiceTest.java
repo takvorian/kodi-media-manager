@@ -49,6 +49,7 @@ import de.tiktak.kmm.migration.ember.settings.EmberAdvancedSettingsReader;
 import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @ExtendWith(MockitoExtension.class)
 class EmberImportServiceTest {
@@ -297,7 +298,7 @@ class EmberImportServiceTest {
     @Test
     void leavesTheFilesOfARunningImportAlone() {
         when(jobService.findAll()).thenReturn(List.of(new JobSnapshot(UUID.randomUUID(), EmberImportService.JOB_KEY,
-                "Ember-Import", JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null)));
+                LocalizedText.literal("Ember-Import"), JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null)));
 
         assertThatThrownBy(() -> service().upload(List.of())).isInstanceOf(EmberProfileUploadException.class);
         assertThatThrownBy(() -> service().discardUpload()).isInstanceOf(EmberProfileUploadException.class);

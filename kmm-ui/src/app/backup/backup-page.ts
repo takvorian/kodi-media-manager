@@ -35,10 +35,12 @@ import {
   VISIBLE_TABLES,
 } from './backup';
 import { BackupService } from './backup.service';
+import { localize } from '../i18n/localized-text';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 8000;
-/** Part of the job title the server gives a dry run; it is German until the server delivers keys. */
-const DRY_RUN_TITLE = 'Probelauf';
+/** Key of the job title the server gives a dry run. */
+export const DRY_RUN_TITLE_KEY = 'backup.import.dryRunTitle';
 /** Only used if the server sends no file name. */
 const FALLBACK_FILE_NAME = 'kmm-sicherung.json.gz';
 
@@ -48,6 +50,7 @@ type MappingForm = FormGroup<{ from: FormControl<string>; to: FormControl<string
 @Component({
   selector: 'app-backup-page',
   imports: [
+    LocalizedPipe,
     HelpLink,
     ReactiveFormsModule,
     MatButtonModule,
@@ -227,20 +230,20 @@ export class BackupPage {
   }
 
   private onImportFinished(job: Job): void {
-    if (!job.title.includes(DRY_RUN_TITLE)) {
+    if (job.title.key !== DRY_RUN_TITLE_KEY) {
       // After the real import the server deletes the uploaded file.
       this.forgetUpload();
     }
     if (job.status === 'SUCCEEDED') {
       this.report.set(job.result as BackupImportReport);
-      this.notify(translate('backup.job.finished', { title: job.title }));
+      this.notify(translate('backup.job.finished', { title: localize(job.title) }));
     } else if (job.status === 'CANCELLED') {
-      this.notify(translate('backup.job.cancelled', { title: job.title }));
+      this.notify(translate('backup.job.cancelled', { title: localize(job.title) }));
     } else {
       this.notify(
         translate('backup.job.failed', {
-          title: job.title,
-          message: job.message ?? translate('backup.job.unknownError'),
+          title: localize(job.title),
+          message: job.message ? localize(job.message) : translate('backup.job.unknownError'),
         }),
       );
     }

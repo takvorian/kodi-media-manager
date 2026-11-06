@@ -20,6 +20,7 @@ import { TvShowDetail } from './tvshow-detail';
 import { TVSHOWS_URL, TV_SHOW_SCRAPERS_URL } from './tvshow.service';
 import { TvShowRenamePlan } from './tv-rename';
 import { CONFIRM } from '../shared/confirm';
+import { literal } from '../i18n/localized-text';
 
 describe('TvShowDetail', () => {
   const alf: TvShowDetails = {
@@ -603,7 +604,7 @@ describe('TvShowDetail', () => {
     const running = job({
       id: 's',
       key: 'tvshow-scrape:3',
-      title: 'Scrapen „ALF“',
+      title: literal('Scrapen „ALF“'),
       done: 0,
       total: 1,
     });
@@ -773,7 +774,7 @@ describe('TvShowDetail', () => {
       const probing = job({
         id: 'p',
         key: 'stream-details-season:3',
-        title: 'Technische Angaben Staffel 1 von „ALF“',
+        title: literal('Technische Angaben Staffel 1 von „ALF“'),
         done: 1,
         total: 2,
       });

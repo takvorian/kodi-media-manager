@@ -5,6 +5,7 @@ import { provideI18nTesting } from '../i18n/testing';
 import { job } from '../jobs/fake-job-events';
 import { switchLanguage } from '../shared/testing';
 import { BatchResult, batchSummary } from './batch';
+import { literal } from '../i18n/localized-text';
 
 describe('batchSummary', () => {
   const title = 'Stapel-Bearbeitung von 3 Filmen';
@@ -16,13 +17,13 @@ describe('batchSummary', () => {
   });
 
   it('sums up a finished job', () => {
-    expect(batchSummary(job({ title, status: 'SUCCEEDED', result }))).toBe(
+    expect(batchSummary(job({ title: literal(title), status: 'SUCCEEDED', result }))).toBe(
       `${title}: 2 geändert, 1 unverändert.`,
     );
     expect(
       batchSummary(
         job({
-          title,
+          title: literal(title),
           status: 'SUCCEEDED',
           result: { ...result, failed: 1, failures: ['Heat: NFO gesperrt.'] },
         }),
@@ -31,11 +32,13 @@ describe('batchSummary', () => {
   });
 
   it('reports cancelled and failed jobs', () => {
-    expect(batchSummary(job({ title, status: 'CANCELLED' }))).toBe(`${title} abgebrochen.`);
-    expect(batchSummary(job({ title, status: 'FAILED', message: 'weg' }))).toBe(
-      `${title} fehlgeschlagen: weg`,
+    expect(batchSummary(job({ title: literal(title), status: 'CANCELLED' }))).toBe(
+      `${title} abgebrochen.`,
     );
-    expect(batchSummary(job({ title, status: 'FAILED' }))).toBe(
+    expect(
+      batchSummary(job({ title: literal(title), status: 'FAILED', message: literal('weg') })),
+    ).toBe(`${title} fehlgeschlagen: weg`);
+    expect(batchSummary(job({ title: literal(title), status: 'FAILED' }))).toBe(
       `${title} fehlgeschlagen: Unbekannter Fehler`,
     );
   });
@@ -46,13 +49,17 @@ describe('batchSummary', () => {
     expect(
       batchSummary(
         job({
-          title,
+          title: literal(title),
           status: 'SUCCEEDED',
           result: { ...result, failed: 2, failures: ['Heat', 'Ronin'] },
         }),
       ),
     ).toBe(`${title}: 2 changed, 1 unchanged, 2 errors: Heat; Ronin.`);
-    expect(batchSummary(job({ title, status: 'CANCELLED' }))).toBe(`${title} cancelled.`);
-    expect(batchSummary(job({ title, status: 'FAILED' }))).toBe(`${title} failed: Unknown error`);
+    expect(batchSummary(job({ title: literal(title), status: 'CANCELLED' }))).toBe(
+      `${title} cancelled.`,
+    );
+    expect(batchSummary(job({ title: literal(title), status: 'FAILED' }))).toBe(
+      `${title} failed: Unknown error`,
+    );
   });
 });

@@ -36,6 +36,7 @@ import {
 } from './movie-set';
 import { MovieSetService } from './movie-set.service';
 import { HelpLink } from '../shared/help-link';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 8000;
 const SEARCH_SIZE = 20;
@@ -48,6 +49,7 @@ const TMDB_ID_PATTERN = /^\s*(\d{1,10})?\s*$/;
 @Component({
   selector: 'app-movie-set-manager',
   imports: [
+    LocalizedPipe,
     HelpLink,
     FormsModule,
     ReactiveFormsModule,

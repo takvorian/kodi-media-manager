@@ -1039,5 +1039,30 @@
       "failed": "{title} failed: {reason}",
       "unknownError": "Unknown error"
     }
+  },
+  "server": {
+    "backup": {
+      "import": {
+        "title": "Restore backup",
+        "dryRunTitle": "Restore backup (dry run)"
+      }
+    },
+    "migration": {
+      "import": {
+        "title": "Ember import",
+        "dryRunTitle": "Ember import (dry run)"
+      }
+    },
+    "job": {
+      "unexpectedError": "Unexpected error",
+      "alreadyRunning": {
+        "title": "Job already running",
+        "detail": "{job} is already running."
+      },
+      "notFound": {
+        "title": "Job not found",
+        "detail": "There is no job with the ID {id}."
+      }
+    }
   }
 }

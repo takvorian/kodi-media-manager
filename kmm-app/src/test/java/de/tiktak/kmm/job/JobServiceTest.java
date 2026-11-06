@@ -9,6 +9,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import de.tiktak.kmm.i18n.LocalizedException;
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.ApplicationEventPublisher;
@@ -67,7 +69,7 @@ class JobServiceTest {
 
         assertThat(service.find(started.id())).satisfies(job -> {
             assertThat(job.status()).isEqualTo(JobStatus.FAILED);
-            assertThat(job.message()).isEqualTo("Verzeichnis weg");
+            assertThat(job.message()).isEqualTo(LocalizedText.literal("Verzeichnis weg"));
         });
     }
 
@@ -81,7 +83,7 @@ class JobServiceTest {
 
         runSubmittedTasks();
 
-        assertThat(service.find(started.id()).message()).isEqualTo("Kodi ist nicht erreichbar.");
+        assertThat(service.find(started.id()).message()).isEqualTo(LocalizedText.literal("Kodi ist nicht erreichbar."));
     }
 
     @Test
@@ -92,7 +94,19 @@ class JobServiceTest {
 
         runSubmittedTasks();
 
-        assertThat(service.find(started.id()).message()).isEqualTo("Unerwarteter Fehler");
+        assertThat(service.find(started.id()).message()).isEqualTo(LocalizedText.of("job.unexpectedError"));
+    }
+
+    @Test
+    void recordsTheTranslatableTextOfLocalizedExceptions() {
+        LocalizedText reason = LocalizedText.of("kodi.unreachable").with("host", "wohnzimmer");
+        JobSnapshot started = service.submit("scan:1", "Scan", context -> {
+            throw new LocalizedException(reason);
+        });
+
+        runSubmittedTasks();
+
+        assertThat(service.find(started.id()).message()).isEqualTo(reason);
     }
 
     @Test

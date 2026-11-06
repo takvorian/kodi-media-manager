@@ -154,7 +154,7 @@ public class AutoScrapeService {
             context.reportProgress(index, movieIds.size(), title.orElse(null));
             title.ifPresent(existing -> scrapeMovie(movieId, existing, progress));
         }
-        context.reportProgress(movieIds.size(), movieIds.size(), null);
+        context.reportProgress(movieIds.size(), movieIds.size());
         AutoScrapeResult result = progress.toResult();
         log.info("Auto-scraped {} movies: {} scraped, {} unmatched, {} images, {} trailers, {} themes, "
                 + "{} failures", result.movies(), result.scraped(), result.unmatched(), result.imagesSaved(),

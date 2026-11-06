@@ -116,7 +116,7 @@
               [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
               [value]="percent(job) ?? 0"
             />
-            <span class="job-message">{{ job.message }}{{ percentSuffix(job) }}</span>
+            <span class="job-message">{{ job.message | localized }}{{ percentSuffix(job) }}</span>
           </div>
           <button matButton class="cancel-button" (click)="cancelJob(job)">
             {{ 'common.stop' | transloco }}

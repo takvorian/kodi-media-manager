@@ -12,6 +12,21 @@ describe('problemMessage', () => {
     TestBed.inject(TranslocoService);
   });
 
+  it('translates the translatable detail and follows a language switch', async () => {
+    const error = new HttpErrorResponse({
+      status: 409,
+      error: {
+        title: 'Conflict',
+        detail: 'Restore backup',
+        detailText: { key: 'backup.import.title', args: {} },
+      },
+    });
+
+    expect(problemMessage(error)).toBe('Sicherung einspielen');
+    await switchLanguage('en');
+    expect(problemMessage(error)).toBe('Restore backup');
+  });
+
   it('prefers the problem detail', () => {
     const error = new HttpErrorResponse({
       status: 409,

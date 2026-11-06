@@ -11,6 +11,7 @@ import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { MovieRenamePlan } from './movie-rename';
 import { MovieRenamePage } from './movie-rename-page';
+import { literal } from '../i18n/localized-text';
 
 describe('MovieRenamePage', () => {
   const plans: MovieRenamePlan[] = [
@@ -217,7 +218,7 @@ describe('MovieRenamePage', () => {
     const job = {
       id: 'j',
       key: 'movie-rename:7',
-      title: 'Filme umbenennen „Filme“',
+      title: literal('Filme umbenennen „Filme“'),
       status: 'RUNNING',
     } as Job;
     request.flush(job);
@@ -253,9 +254,9 @@ describe('MovieRenamePage', () => {
     running = {
       id: 'j',
       key: 'movie-rename:7',
-      title: 'x',
+      title: literal('x'),
       status: 'RUNNING',
-      message: 'Heat',
+      message: literal('Heat'),
     } as Job;
     await load();
 

@@ -41,6 +41,7 @@ import { ScrapeReport } from '../sources/scrape-report';
 import { DiscFormat } from './movie';
 import { MOVIES_SCRAPE_JOB_KEY, MOVIE_BATCH_FIELDS, MOVIE_BATCH_JOB_KEY } from './movie-batch';
 import { MOVIES_URL, MovieService } from './movie.service';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 export const DEFAULT_PAGE_SIZE = 50;
@@ -63,6 +64,7 @@ const SAVED = 'saved:';
 @Component({
   selector: 'app-movie-list',
   imports: [
+    LocalizedPipe,
     LanguageSelect,
     MatButtonModule,
     MatFormFieldModule,

@@ -13,6 +13,7 @@ import {
   tvRenameSummary,
 } from './tv-rename';
 import { TvRenameService } from './tv-rename.service';
+import { literal } from '../i18n/localized-text';
 
 describe('tv rename', () => {
   const plan: TvShowRenamePlan = {
@@ -63,7 +64,7 @@ describe('tv rename', () => {
       tvRenameSummary({
         id: 'j',
         key: tvRenameJobKey(8),
-        title: 'Rename TV shows',
+        title: literal('Rename TV shows'),
         status: 'SUCCEEDED',
         result: { sourceId: 8, renamed: 2, unchanged: 1, skipped: 0, failed: 0, problems: [] },
       } as Job),
@@ -74,7 +75,7 @@ describe('tv rename', () => {
     const job = {
       id: 'j',
       key: tvRenameJobKey(8),
-      title: 'Serien umbenennen',
+      title: literal('Serien umbenennen'),
       status: 'SUCCEEDED',
     } as Job;
 

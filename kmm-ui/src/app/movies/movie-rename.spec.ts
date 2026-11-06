@@ -12,6 +12,7 @@ import {
   renameConfirmation,
 } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
+import { literal } from '../i18n/localized-text';
 
 describe('movie rename', () => {
   const plan: MovieRenamePlan = {
@@ -50,7 +51,7 @@ describe('movie rename', () => {
       movieRenameSummary({
         id: 'j',
         key: movieRenameJobKey(3),
-        title: 'Rename movies',
+        title: literal('Rename movies'),
         status: 'FAILED',
         message: null,
       } as Job),
@@ -61,7 +62,7 @@ describe('movie rename', () => {
     const job = {
       id: 'j',
       key: movieRenameJobKey(3),
-      title: 'Filme umbenennen',
+      title: literal('Filme umbenennen'),
       status: 'SUCCEEDED',
     } as Job;
 
@@ -76,7 +77,7 @@ describe('movie rename', () => {
     expect(movieRenameSummary({ ...job, status: 'CANCELLED' })).toBe(
       'Filme umbenennen abgebrochen.',
     );
-    expect(movieRenameSummary({ ...job, status: 'FAILED', message: 'kaputt' })).toBe(
+    expect(movieRenameSummary({ ...job, status: 'FAILED', message: literal('kaputt') })).toBe(
       'Filme umbenennen fehlgeschlagen: kaputt',
     );
     expect(movieRenameSummary({ ...job, status: 'FAILED', message: null })).toBe(

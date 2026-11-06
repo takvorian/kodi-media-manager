@@ -68,7 +68,7 @@ class EmberTvImporter {
         }
         episodes.values().forEach(skipped -> skipped.forEach(episode -> progress.episodeSkipped()));
         progress.episodesMissing(library.episodesWithoutFile());
-        context.reportProgress(directories.size(), directories.size(), null);
+        context.reportProgress(directories.size(), directories.size());
     }
 
     private Map<Long, Long> importSources(List<EmberTvShowSource> sources, EmberPathTranslator paths,

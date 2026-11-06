@@ -143,7 +143,7 @@ class ThemeIntegrationTest {
         JsonNode movies = awaitJob(mockMvc.post().uri(MovieThemeController.FILL_PATH).with(csrf()).contentType(JSON)
                 .content("{\"movieIds\": [%d, %d]}".formatted(heatId, heatId)).exchange());
 
-        assertThat(shows.get("title").asString()).isEqualTo("Fehlende Titelmusik für 1 Serien holen");
+        assertThat(shows.get("title").get("args").get("text").asString()).isEqualTo("Fehlende Titelmusik für 1 Serien holen");
         assertThat(shows.get("result").get("unchanged").asInt()).isEqualTo(1);
         assertThat(Files.readString(library.resolve("serien/ALF/theme.mp3"))).isEqualTo("eigene");
         assertThat(movies.get("result").get("changed").asInt()).as(movies.toString()).isEqualTo(1);

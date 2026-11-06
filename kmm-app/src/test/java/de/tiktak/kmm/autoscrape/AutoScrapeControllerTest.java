@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = AutoScrapeController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -36,7 +37,7 @@ class AutoScrapeControllerTest {
 
     @Test
     void startsAutoScrapeAsJob() {
-        when(autoScrapeService.start(3L)).thenReturn(new JobSnapshot(JOB_ID, "auto-scrape:3", "Scrapen „Filme“",
+        when(autoScrapeService.start(3L)).thenReturn(new JobSnapshot(JOB_ID, "auto-scrape:3", LocalizedText.literal("Scrapen „Filme“"),
                 JobStatus.RUNNING, 0, 0, null, null, Instant.parse("2026-10-25T12:00:00Z"), null));
 
         assertThat(mockMvc.post().uri(AutoScrapeController.AUTO_SCRAPE_PATH, 3L).with(csrf()))
@@ -97,7 +98,7 @@ class AutoScrapeControllerTest {
     }
 
     private static JobSnapshot job(String key) {
-        return new JobSnapshot(JOB_ID, key, "Scrapen", JobStatus.RUNNING, 0, 0, null, null,
+        return new JobSnapshot(JOB_ID, key, LocalizedText.literal("Scrapen"), JobStatus.RUNNING, 0, 0, null, null,
                 Instant.parse("2026-10-25T12:00:00Z"), null);
     }
 

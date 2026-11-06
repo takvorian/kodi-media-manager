@@ -12,6 +12,7 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 class RunningJobTest {
 
@@ -24,7 +25,7 @@ class RunningJobTest {
 
     @BeforeEach
     void setUp() {
-        JobSnapshot initial = JobSnapshot.started(UUID.randomUUID(), "key", "Scan", START);
+        JobSnapshot initial = JobSnapshot.started(UUID.randomUUID(), "key", LocalizedText.literal("Scan"), START);
         job = new RunningJob(initial, published::add, clock, INTERVAL);
     }
 
@@ -49,7 +50,7 @@ class RunningJobTest {
         job.reportProgress(3, 10, "drei");
 
         assertThat(published).extracting(JobSnapshot::done).containsExactly(0, 3);
-        assertThat(job.snapshot().message()).isEqualTo("drei");
+        assertThat(job.snapshot().message()).isEqualTo(LocalizedText.literal("drei"));
     }
 
     @Test
@@ -68,10 +69,10 @@ class RunningJobTest {
     void recordsFailureWithMessageAndKeepsProgress() {
         job.reportProgress(2, 5, "läuft");
 
-        JobSnapshot failed = job.fail("kaputt");
+        JobSnapshot failed = job.fail(LocalizedText.literal("kaputt"));
 
         assertThat(failed.status()).isEqualTo(JobStatus.FAILED);
-        assertThat(failed.message()).isEqualTo("kaputt");
+        assertThat(failed.message()).isEqualTo(LocalizedText.literal("kaputt"));
         assertThat(failed.done()).isEqualTo(2);
     }
 

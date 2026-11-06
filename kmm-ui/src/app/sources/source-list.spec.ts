@@ -19,6 +19,7 @@ import { CONFIRM } from '../shared/confirm';
 import { AutoScrapeResult, MediaSource } from './media-source';
 import { SOURCES_URL } from './media-source.service';
 import { SourceList } from './source-list';
+import { literal } from '../i18n/localized-text';
 
 describe('SourceList', () => {
   const films: MediaSource = {
@@ -152,12 +153,12 @@ describe('SourceList', () => {
 
   it('reports episodes without recognizable number after a TV scan', async () => {
     await loadSources([series]);
-    events.emit(job({ key: 'scan:2', title: 'Scan „Serien“' }));
+    events.emit(job({ key: 'scan:2', title: literal('Scan „Serien“') }));
 
     events.emit(
       job({
         key: 'scan:2',
-        title: 'Scan „Serien“',
+        title: literal('Scan „Serien“'),
         status: 'SUCCEEDED',
         result: {
           sourceId: 2,
@@ -207,7 +208,7 @@ describe('SourceList', () => {
     const playbackJob = job({
       id: 'job-7',
       key: 'kodi-playback:1',
-      title: 'Gesehen-Status „Filme“ aus Kodi',
+      title: literal('Gesehen-Status „Filme“ aus Kodi'),
     });
 
     button('.kodi-playback-button').click();
@@ -242,7 +243,7 @@ describe('SourceList', () => {
     const probeJob = job({
       id: 'job-8',
       key: 'stream-details:1',
-      title: 'Technische Angaben „Filme“',
+      title: literal('Technische Angaben „Filme“'),
     });
 
     button('.stream-details-button').click();
@@ -387,7 +388,7 @@ describe('SourceList', () => {
 
     button('.scan-button').click();
     httpTesting.expectOne({ method: 'POST', url: `${SOURCES_URL}/1/scan` }).flush(job());
-    events.emit(job({ done: 1, total: 4, message: 'NFOs werden geprüft' }));
+    events.emit(job({ done: 1, total: 4, message: literal('NFOs werden geprüft') }));
     fixture.detectChanges();
 
     expect(element().querySelector('.scan-button')).toBeNull();
@@ -446,7 +447,7 @@ describe('SourceList', () => {
   describe('report of the last scan', () => {
     const scanJob = job({
       key: 'scan:2',
-      title: 'Scan „Serien“',
+      title: literal('Scan „Serien“'),
       status: 'SUCCEEDED',
       result: {
         sourceId: 2,
@@ -609,7 +610,7 @@ describe('SourceList', () => {
     it('shows a failed scan', async () => {
       await loadSources([films]);
 
-      events.emit(job({ status: 'FAILED', message: 'Verzeichnis weg' }));
+      events.emit(job({ status: 'FAILED', message: literal('Verzeichnis weg') }));
       await fixture.whenStable();
 
       expect(lastScanResults()).toEqual(['Scan „Filme“ fehlgeschlagen: Verzeichnis weg']);
@@ -619,7 +620,7 @@ describe('SourceList', () => {
   it('reports failed and cancelled scans', async () => {
     await loadSources([films]);
     events.emit(job());
-    events.emit(job({ status: 'FAILED', message: 'Verzeichnis weg' }));
+    events.emit(job({ status: 'FAILED', message: literal('Verzeichnis weg') }));
     await answerReload([films]);
     events.emit(job({ id: 'job-2' }));
     events.emit(job({ id: 'job-2', status: 'CANCELLED' }));
@@ -707,7 +708,7 @@ describe('SourceList', () => {
 
   describe('auto-scrape', () => {
     const scrapeJob = (overrides: Partial<Job> = {}): Job =>
-      job({ id: 'job-9', key: 'auto-scrape:1', title: 'Scrapen „Filme“', ...overrides });
+      job({ id: 'job-9', key: 'auto-scrape:1', title: literal('Scrapen „Filme“'), ...overrides });
     const result: AutoScrapeResult = {
       movies: 4,
       scraped: 1,
@@ -733,13 +734,17 @@ describe('SourceList', () => {
       button('.scrape-button').click();
       httpTesting
         .expectOne({ method: 'POST', url: `${SOURCES_URL}/2/auto-scrape` })
-        .flush(scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: 'Scrapen „Serien“' }));
-      events.emit(scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: 'Scrapen „Serien“' }));
+        .flush(
+          scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: literal('Scrapen „Serien“') }),
+        );
+      events.emit(
+        scrapeJob({ id: 'job-10', key: 'auto-scrape:2', title: literal('Scrapen „Serien“') }),
+      );
       events.emit(
         scrapeJob({
           id: 'job-10',
           key: 'auto-scrape:2',
-          title: 'Scrapen „Serien“',
+          title: literal('Scrapen „Serien“'),
           status: 'SUCCEEDED',
           result: {
             shows: 3,
@@ -768,7 +773,7 @@ describe('SourceList', () => {
       httpTesting
         .expectOne({ method: 'POST', url: `${SOURCES_URL}/1/auto-scrape` })
         .flush(scrapeJob());
-      events.emit(scrapeJob({ done: 1, total: 4, message: 'Heat' }));
+      events.emit(scrapeJob({ done: 1, total: 4, message: literal('Heat') }));
       fixture.detectChanges();
 
       expect(element().querySelector('.scrape-button')).toBeNull();
@@ -850,7 +855,7 @@ describe('SourceList', () => {
       await loadSources([films]);
       events.emit(scrapeJob());
 
-      events.emit(scrapeJob({ status: 'FAILED', message: 'Quelle fehlt' }));
+      events.emit(scrapeJob({ status: 'FAILED', message: literal('Quelle fehlt') }));
       fixture.detectChanges();
 
       expect(snackBarMessages).toEqual(['Scrapen „Filme“ fehlgeschlagen: Quelle fehlt']);

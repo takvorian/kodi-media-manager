@@ -1,6 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job, unsuccessfulJobSummary } from '../jobs/job';
+import { localize } from '../i18n/localized-text';
 
 /** Which entries of a source are read; must match StreamDetailsScope. */
 export type StreamDetailsScope = 'MISSING' | 'ALL';
@@ -63,7 +64,9 @@ export function streamDetailsSummary(job: Job): string {
     return unsuccessfulJobSummary(job);
   }
   const result = job.result as StreamDetailsJobResult;
-  const parts = [translate('mediaInfo.jobDone', { title: job.title, updated: result.updated })];
+  const parts = [
+    translate('mediaInfo.jobDone', { title: localize(job.title), updated: result.updated }),
+  ];
   if (result.skipped > 0) {
     parts.push(translate('mediaInfo.skipped', { skipped: result.skipped }));
   }

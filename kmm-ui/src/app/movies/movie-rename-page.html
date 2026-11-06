@@ -40,7 +40,7 @@
           [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
           [value]="percent(job) ?? 0"
         />
-        <span>{{ job.message }}</span>
+        <span>{{ job.message | localized }}</span>
       </div>
     }
   </mat-card-content>

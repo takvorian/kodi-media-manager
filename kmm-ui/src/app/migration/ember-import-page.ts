@@ -30,10 +30,12 @@ import {
 } from './ember-migration';
 import { EmberMigrationService } from './ember-migration.service';
 import { HelpLink } from '../shared/help-link';
+import { localize } from '../i18n/localized-text';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 8000;
-/** Part of the job title the server gives a dry run; it is German until the server delivers keys. */
-const DRY_RUN_TITLE = 'Probelauf';
+/** Key of the job title the server gives a dry run. */
+export const DRY_RUN_TITLE_KEY = 'migration.import.dryRunTitle';
 
 type MappingForm = FormGroup<{ emberPath: FormControl<string>; kmmPath: FormControl<string> }>;
 
@@ -41,6 +43,7 @@ type MappingForm = FormGroup<{ emberPath: FormControl<string>; kmmPath: FormCont
 @Component({
   selector: 'app-ember-import-page',
   imports: [
+    LocalizedPipe,
     HelpLink,
     ReactiveFormsModule,
     MatButtonModule,
@@ -187,21 +190,21 @@ export class EmberImportPage {
   }
 
   private onImportFinished(job: Job): void {
-    if (!job.title.includes(DRY_RUN_TITLE)) {
+    if (job.title.key !== DRY_RUN_TITLE_KEY) {
       // After the real import the server deletes the uploaded profile.
       this.forgetProfile();
     }
     if (job.status === 'SUCCEEDED') {
       const report = job.result as EmberImportReport;
       this.report.set(report);
-      this.notify(summary(job.title, report));
+      this.notify(summary(localize(job.title), report));
     } else if (job.status === 'CANCELLED') {
-      this.notify(translate('migration.cancelled', { title: job.title }));
+      this.notify(translate('migration.cancelled', { title: localize(job.title) }));
     } else {
       this.notify(
         translate('migration.failed', {
-          title: job.title,
-          message: job.message ?? translate('migration.unknownError'),
+          title: localize(job.title),
+          message: job.message ? localize(job.message) : translate('migration.unknownError'),
         }),
       );
     }

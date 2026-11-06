@@ -1,4 +1,5 @@
 import { Provider } from '@angular/core';
+import { literal } from '../i18n/localized-text';
 
 import { Job } from './job';
 import { JOB_EVENT_SOURCE_FACTORY, JobEventSource } from './job-events';
@@ -38,7 +39,7 @@ export function job(overrides: Partial<Job> = {}): Job {
   return {
     id: 'job-1',
     key: 'scan:1',
-    title: 'Scan „Filme“',
+    title: literal('Scan „Filme“'),
     status: 'RUNNING',
     done: 0,
     total: 0,

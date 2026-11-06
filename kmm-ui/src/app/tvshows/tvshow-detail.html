@@ -154,7 +154,7 @@
         <p class="hint season-streams-progress">
           {{
             'tvshows.detail.seasonStreamsProgress'
-              | transloco: { title: job.title, done: job.done, total: job.total }
+              | transloco: { title: (job.title | localized), done: job.done, total: job.total }
           }}
         </p>
       }

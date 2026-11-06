@@ -8,10 +8,11 @@ import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 class JobEventBroadcasterTest {
 
-    private static final JobSnapshot JOB = JobSnapshot.started(UUID.randomUUID(), "scan:1", "Scan",
+    private static final JobSnapshot JOB = JobSnapshot.started(UUID.randomUUID(), "scan:1", LocalizedText.literal("Scan"),
             Instant.parse("2026-10-25T12:00:00Z"));
 
     private final JobEventBroadcaster broadcaster = new JobEventBroadcaster();

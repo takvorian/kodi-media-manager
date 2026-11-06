@@ -6,9 +6,9 @@
       [value]="percent() ?? 0"
     />
     <span class="job-text">
-      {{ job.title }}
+      {{ job.title | localized }}
       @if (job.message) {
-        – {{ job.message }}
+        – {{ job.message | localized }}
       }
       @if (percent() !== null) {
         ({{ percent() }} %)

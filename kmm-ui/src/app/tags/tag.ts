@@ -1,6 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
+import { localize } from '../i18n/localized-text';
 
 /** Job key of the tag changes; must match TagService.JOB_KEY. */
 export const TAG_JOB_KEY = 'tags';
@@ -41,7 +42,7 @@ export function tagJobSummary(job: Job): string {
     const result = job.result as TagChangeResult;
     const key = result.failed > 0 ? 'tags.summary.succeededWithFailures' : 'tags.summary.succeeded';
     return translate(key, {
-      title: job.title,
+      title: localize(job.title),
       changed: result.changed,
       unchanged: result.unchanged,
       failed: result.failed,
@@ -49,9 +50,9 @@ export function tagJobSummary(job: Job): string {
     });
   }
   return job.status === 'CANCELLED'
-    ? translate('tags.summary.cancelled', { title: job.title })
+    ? translate('tags.summary.cancelled', { title: localize(job.title) })
     : translate('tags.summary.failed', {
-        title: job.title,
-        reason: job.message ?? translate('tags.summary.unknownError'),
+        title: localize(job.title),
+        reason: job.message ? localize(job.message) : translate('tags.summary.unknownError'),
       });
 }

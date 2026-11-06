@@ -11,6 +11,7 @@ import {
   kodiSyncSummary,
   syncFailed,
 } from './kodi';
+import { literal } from '../i18n/localized-text';
 
 describe('kodi', () => {
   beforeEach(() => {
@@ -62,21 +63,29 @@ describe('kodi', () => {
     };
 
     expect(kodiPlaybackJobKey(1)).toBe('kodi-playback:1');
-    expect(kodiPlaybackSummary(job({ title, status: 'SUCCEEDED', result }))).toBe(
+    expect(kodiPlaybackSummary(job({ title: literal(title), status: 'SUCCEEDED', result }))).toBe(
       'Gesehen-Status „Filme“ aus Kodi (Wohnzimmer) abgeschlossen: 3 übernommen, 10 unverändert, 2 in Kodi unbekannt.',
     );
     expect(
       kodiPlaybackSummary(
-        job({ title, status: 'SUCCEEDED', result: { ...result, kept: 16, failed: 1 } }),
+        job({
+          title: literal(title),
+          status: 'SUCCEEDED',
+          result: { ...result, kept: 16, failed: 1 },
+        }),
       ),
     ).toContain(', 16 abweichend (KMM-Stand behalten), 1 Fehler.');
-    expect(kodiPlaybackSummary(job({ title, status: 'CANCELLED' }))).toBe(`${title} abgebrochen.`);
-    expect(
-      kodiPlaybackSummary(job({ title, status: 'FAILED', message: 'Kodi nicht erreichbar' })),
-    ).toBe(`${title} fehlgeschlagen: Kodi nicht erreichbar`);
-    expect(kodiPlaybackSummary(job({ title, status: 'FAILED', message: null }))).toContain(
-      'Unbekannter Fehler',
+    expect(kodiPlaybackSummary(job({ title: literal(title), status: 'CANCELLED' }))).toBe(
+      `${title} abgebrochen.`,
     );
+    expect(
+      kodiPlaybackSummary(
+        job({ title: literal(title), status: 'FAILED', message: literal('Kodi nicht erreichbar') }),
+      ),
+    ).toBe(`${title} fehlgeschlagen: Kodi nicht erreichbar`);
+    expect(
+      kodiPlaybackSummary(job({ title: literal(title), status: 'FAILED', message: null })),
+    ).toContain('Unbekannter Fehler');
   });
 
   it('summarizes in the active UI language', () => {
@@ -93,11 +102,13 @@ describe('kodi', () => {
     };
 
     expect(kodiSyncSummary([])).toBe('No Kodi device set up – add one under “Kodi”.');
-    expect(kodiPlaybackSummary(job({ title: 'Watched status', status: 'SUCCEEDED', result }))).toBe(
+    expect(
+      kodiPlaybackSummary(job({ title: literal('Watched status'), status: 'SUCCEEDED', result })),
+    ).toBe(
       'Watched status (Living room) finished: 3 taken over, 10 unchanged, 0 unknown in Kodi, ' +
         '2 different (KMM state kept), 1 error.',
     );
-    expect(kodiPlaybackSummary(job({ title: 'X', status: 'FAILED', message: null }))).toBe(
+    expect(kodiPlaybackSummary(job({ title: literal('X'), status: 'FAILED', message: null }))).toBe(
       'X failed: Unknown error',
     );
   });

@@ -159,7 +159,8 @@
   <div class="job-progress">
     <mat-progress-bar mode="determinate" [value]="job.total ? (100 * job.done) / job.total : 0" />
     <span>{{
-      'tvshows.list.jobProgress' | transloco: { title: job.title, done: job.done, total: job.total }
+      'tvshows.list.jobProgress'
+        | transloco: { title: (job.title | localized), done: job.done, total: job.total }
     }}</span>
   </div>
 }

@@ -196,7 +196,7 @@ class TvShowFilterIntegrationTest {
         MvcTestResult started = post(TvShowTrailerController.FILL_PATH,
                 "{\"showIds\": [%d, %d, %d]}".formatted(showId("ALF"), showId("Lost"), showId("ALF")));
         assertThat(started).hasStatus(HttpStatus.ACCEPTED);
-        assertThat(read(started).get("title").asString()).isEqualTo("Fehlende Trailer für 2 Serien holen");
+        assertThat(read(started).get("title").get("args").get("text").asString()).isEqualTo("Fehlende Trailer für 2 Serien holen");
         String jobId = read(started).get("id").asString();
         JsonNode job = await().atMost(TIMEOUT).pollInSameThread()
                 .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),

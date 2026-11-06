@@ -58,6 +58,8 @@ import { MediaSourceService } from './media-source.service';
 import { scanReportSections } from './scan-report';
 import { ScrapeReport, autoScrapeSummary, hasScrapeDetails } from './scrape-report';
 import { HelpLink } from '../shared/help-link';
+import { localize } from '../i18n/localized-text';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 5000;
 const SCAN_COUNTS = 'sources.scanCounts';
@@ -65,6 +67,7 @@ const SCAN_COUNTS = 'sources.scanCounts';
 @Component({
   selector: 'app-source-list',
   imports: [
+    LocalizedPipe,
     HelpLink,
     LanguageSelect,
     ReactiveFormsModule,
@@ -123,7 +126,7 @@ export class SourceList {
   protected readonly scanReport = computed(() => {
     this.language.current();
     const job = this.jobStore.jobs().find((candidate) => candidate.id === this.reportedScanId());
-    return job ? { title: job.title, sections: scanReportSections(job) } : null;
+    return job ? { title: localize(job.title), sections: scanReportSections(job) } : null;
   });
 
   protected readonly form = inject(NonNullableFormBuilder).group({

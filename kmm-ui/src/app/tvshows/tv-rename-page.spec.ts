@@ -11,6 +11,7 @@ import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { TvShowRenamePlan } from './tv-rename';
 import { TvRenamePage } from './tv-rename-page';
+import { literal } from '../i18n/localized-text';
 
 describe('TvRenamePage', () => {
   const patterns = {
@@ -204,7 +205,7 @@ describe('TvRenamePage', () => {
     const job = {
       id: 'j',
       key: 'tv-rename:8',
-      title: 'Serien umbenennen „Serien“',
+      title: literal('Serien umbenennen „Serien“'),
       status: 'RUNNING',
     } as Job;
     request.flush(job);
@@ -238,9 +239,9 @@ describe('TvRenamePage', () => {
     running = {
       id: 'j',
       key: 'tv-rename:8',
-      title: 'x',
+      title: literal('x'),
       status: 'RUNNING',
-      message: 'Lost',
+      message: literal('Lost'),
     } as Job;
     await load();
 

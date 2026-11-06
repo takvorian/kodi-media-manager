@@ -19,6 +19,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 /**
  * Set-Scraping im Filmset-Manager; die Verwaltung prüft {@link MovieSetIntegrationTest}.
@@ -79,7 +80,7 @@ class MovieSetControllerTest {
 
     @Test
     void startsTheCompletionOfAllSetsAsJob() {
-        when(jobService.completeAll()).thenReturn(new JobSnapshot(JOB_ID, "moviesets", "Alle Sets ergänzen",
+        when(jobService.completeAll()).thenReturn(new JobSnapshot(JOB_ID, "moviesets", LocalizedText.literal("Alle Sets ergänzen"),
                 JobStatus.RUNNING, 0, 0, null, null, Instant.parse("2026-10-28T12:00:00Z"), null));
 
         assertThat(mockMvc.post().uri(MovieSetController.BASE_PATH + MovieSetController.COMPLETE_PATH).with(csrf()))

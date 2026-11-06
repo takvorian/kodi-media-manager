@@ -24,6 +24,7 @@ import { TvShowPage, TvShowSummary } from './tvshow';
 import { localDateTime } from '../shared/date-time';
 import { DEFAULT_PAGE_SIZE, SEARCH_DEBOUNCE_MS, TvShowList } from './tvshow-list';
 import { TVSHOWS_URL } from './tvshow.service';
+import { literal } from '../i18n/localized-text';
 
 const DEBOUNCE_SAFETY_MARGIN_MS = 50;
 
@@ -49,11 +50,11 @@ describe('TvShowList', () => {
   const scrapeJob = {
     id: 's',
     key: 'tvshows-scrape',
-    title: '2 Serien scrapen',
+    title: literal('2 Serien scrapen'),
     status: 'RUNNING',
     done: 1,
     total: 2,
-    message: 'Heat',
+    message: literal('Heat'),
   } as Job;
   const finishedScrape = {
     ...scrapeJob,
@@ -320,7 +321,7 @@ describe('TvShowList', () => {
     const job = {
       id: 't',
       key: 'tvshows-batch',
-      title: '2 Serien bearbeiten',
+      title: literal('2 Serien bearbeiten'),
       status: 'RUNNING',
     } as Job;
     batch.flush(job);
@@ -414,7 +415,12 @@ describe('TvShowList', () => {
 
     const change = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/language` });
     expect(change.request.body).toEqual({ showIds: [1, 4], language: null, refetchTexts: true });
-    const job = { id: 'l', key: 'tvshows-batch', title: 'Sprache', status: 'RUNNING' } as Job;
+    const job = {
+      id: 'l',
+      key: 'tvshows-batch',
+      title: literal('Sprache'),
+      status: 'RUNNING',
+    } as Job;
     change.flush(job);
 
     expect(updated).toEqual([job]);
@@ -432,7 +438,7 @@ describe('TvShowList', () => {
     const job = {
       id: 'k',
       key: 'tvshows-batch',
-      title: '2 Serien in Kodi aktualisieren',
+      title: literal('2 Serien in Kodi aktualisieren'),
       status: 'RUNNING',
     } as Job;
     refresh.flush(job);
@@ -452,7 +458,7 @@ describe('TvShowList', () => {
     const job = {
       id: 't',
       key: 'tvshows-batch',
-      title: 'Fehlende Trailer für 2 Serien holen',
+      title: literal('Fehlende Trailer für 2 Serien holen'),
       status: 'RUNNING',
     } as Job;
     fill.flush(job);
@@ -472,7 +478,7 @@ describe('TvShowList', () => {
     const job = {
       id: 'r',
       key: 'tvshows-batch',
-      title: 'Bewertungen aktualisieren',
+      title: literal('Bewertungen aktualisieren'),
       status: 'RUNNING',
     } as Job;
     fill.flush(job);
@@ -492,7 +498,7 @@ describe('TvShowList', () => {
     const job = {
       id: 't',
       key: 'tvshows-batch',
-      title: 'Fehlende Titelmusik',
+      title: literal('Fehlende Titelmusik'),
       status: 'RUNNING',
     } as Job;
     fill.flush(job);

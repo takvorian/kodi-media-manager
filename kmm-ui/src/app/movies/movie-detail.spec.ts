@@ -23,6 +23,7 @@ import { CollectionReference } from './scraper';
 import { CONFIRM } from '../shared/confirm';
 import { NO_THEME, flushWhenRequested } from '../shared/testing';
 import { ThemeService } from '../shared/theme';
+import { literal } from '../i18n/localized-text';
 
 describe('MovieDetail', () => {
   const heat: MovieDetails = {
@@ -641,7 +642,7 @@ describe('MovieDetail', () => {
     const running = job({
       id: 's',
       key: 'movie-scrape:5',
-      title: 'Scrapen „Heat“',
+      title: literal('Scrapen „Heat“'),
       done: 0,
       total: 1,
     });

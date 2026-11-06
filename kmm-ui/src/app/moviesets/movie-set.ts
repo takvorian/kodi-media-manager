@@ -1,6 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
+import { localize } from '../i18n/localized-text';
 
 /** Job key of the set changes; must match MovieSetJobService.JOB_KEY. */
 export const MOVIE_SET_JOB_KEY = 'moviesets';
@@ -70,7 +71,7 @@ export function movieSetJobSummary(job: Job): string {
         ? 'moviesets.summary.completedWithNotes'
         : 'moviesets.summary.completed';
     return translate(key, {
-      title: job.title,
+      title: localize(job.title),
       overviews: result.overviews,
       images: result.images,
       skipped: result.withoutCollection,
@@ -82,17 +83,17 @@ export function movieSetJobSummary(job: Job): string {
     const key =
       result.failed > 0 ? 'moviesets.summary.changedWithFailures' : 'moviesets.summary.changed';
     return translate(key, {
-      title: job.title,
+      title: localize(job.title),
       changed: result.changed,
       failed: result.failed,
       failures: result.failures.join('; '),
     });
   }
   return job.status === 'CANCELLED'
-    ? translate('moviesets.summary.cancelled', { title: job.title })
+    ? translate('moviesets.summary.cancelled', { title: localize(job.title) })
     : translate('moviesets.summary.failed', {
-        title: job.title,
-        reason: job.message ?? translate('moviesets.summary.unknownError'),
+        title: localize(job.title),
+        reason: job.message ? localize(job.message) : translate('moviesets.summary.unknownError'),
       });
 }
 

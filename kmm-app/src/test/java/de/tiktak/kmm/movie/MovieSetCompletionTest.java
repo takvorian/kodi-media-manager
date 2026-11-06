@@ -70,7 +70,7 @@ class MovieSetCompletionTest {
         verify(membership).rewrite(11L);
         verify(scrapeService, never()).fetch("1234");
         verify(artworkFiller, never()).fillMissingArtwork(3L);
-        verify(context).reportProgress(3, 3, null);
+        verify(context).reportProgress(3, 3);
     }
 
     @Test

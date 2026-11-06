@@ -17,6 +17,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobAlreadyRunningException;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
@@ -73,7 +74,9 @@ class LibraryScanControllerTest {
         when(movieScanService.startScan(1)).thenThrow(new JobAlreadyRunningException(job("Scan „Filme“")));
 
         assertThat(mockMvc.post().uri(LibraryScanController.SCAN_PATH, 1L).with(csrf()))
-                .hasStatus(409).bodyJson().extractingPath("$.detail").isEqualTo("Scan „Filme“ läuft bereits.");
+                .hasStatus(409).bodyJson().satisfies(
+                        body -> assertThat(body).extractingPath("$.detail").isEqualTo("Scan „Filme“ is already running."),
+                        body -> assertThat(body).extractingPath("$.detailText.key").isEqualTo("job.alreadyRunning.detail"));
     }
 
     @Test
@@ -83,7 +86,7 @@ class LibraryScanControllerTest {
     }
 
     private static JobSnapshot job(String title) {
-        return new JobSnapshot(JOB_ID, "scan:1", title, JobStatus.RUNNING, 0, 0, null, null,
+        return new JobSnapshot(JOB_ID, "scan:1", LocalizedText.literal(title), JobStatus.RUNNING, 0, 0, null, null,
                 Instant.parse("2026-10-26T12:00:00Z"), null);
     }
 }

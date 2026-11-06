@@ -43,6 +43,7 @@ import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.tvshow.EpisodeMedia;
 import de.tiktak.kmm.tvshow.EpisodeStreamDetailsService;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @ExtendWith(MockitoExtension.class)
 class StreamDetailsServiceTest {
@@ -107,7 +108,7 @@ class StreamDetailsServiceTest {
 
         when(probes.probeNewFiles()).thenReturn(true);
         MediaSource source = givenSource(MediaType.MOVIE);
-        JobSnapshot running = new JobSnapshot(UUID.randomUUID(), "stream-details-new:7", "Technische Angaben",
+        JobSnapshot running = new JobSnapshot(UUID.randomUUID(), "stream-details-new:7", LocalizedText.literal("Technische Angaben"),
                 JobStatus.RUNNING, 0, 0, null, null, Instant.now(), null);
         when(jobService.submit(anyString(), anyString(), any())).thenThrow(new JobAlreadyRunningException(running));
 

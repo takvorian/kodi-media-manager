@@ -107,7 +107,7 @@ public class MovieSetJobService {
                 problems.add("%s: %s".formatted(set.name(), e.getBody().getDetail()));
             }
         }
-        context.reportProgress(sets.size(), sets.size(), null);
+        context.reportProgress(sets.size(), sets.size());
         log.info("Movie sets completed: {} overviews, {} images, {} without collection", overviews, images,
                 withoutCollection);
         return new MovieSetCompletionResult(overviews, images, withoutCollection,

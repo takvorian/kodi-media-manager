@@ -122,7 +122,7 @@ class EnrichmentIntegrationTest {
 
         JsonNode job = awaitJob(post(MovieEnrichmentController.REFRESH_PATH, "{\"movieIds\": [%d]}".formatted(heatId)));
 
-        assertThat(job.get("title").asString()).isEqualTo("Bewertungen für 1 Filme aktualisieren");
+        assertThat(job.get("title").get("args").get("text").asString()).isEqualTo("Bewertungen für 1 Filme aktualisieren");
         assertThat(job.get("result").get("changed").asInt()).as(job.toString()).isEqualTo(1);
         String nfo = Files.readString(library.resolve("filme/Heat/Heat.nfo"));
         assertThat(nfo).contains("<plot>A group of professional thieves.</plot>", "<runtime>170</runtime>",

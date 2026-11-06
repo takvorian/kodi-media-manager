@@ -1,6 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job, unsuccessfulJobSummary } from '../jobs/job';
+import { localize } from '../i18n/localized-text';
 
 export interface ListChange {
   readonly add: readonly string[];
@@ -43,7 +44,7 @@ export function batchSummary(job: Job): string {
   const result = job.result as BatchResult;
   const parts = [
     translate('filters.batch.summary', {
-      title: job.title,
+      title: localize(job.title),
       changed: result.changed,
       unchanged: result.unchanged,
     }),

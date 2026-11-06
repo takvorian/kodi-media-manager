@@ -3,16 +3,17 @@ package de.tiktak.kmm.job;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
+
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Ein Job mit der angefragten ID ist nicht (mehr) bekannt. Wird als HTTP 404 beantwortet.
+ * A job with the requested ID is not known (any more). Answered as HTTP 404.
  */
-public class JobNotFoundException extends ErrorResponseException {
+public class JobNotFoundException extends LocalizedProblemException {
 
     JobNotFoundException(UUID jobId) {
-        super(HttpStatus.NOT_FOUND);
-        getBody().setTitle("Job nicht gefunden");
-        getBody().setDetail("Es gibt keinen Job mit der ID %s.".formatted(jobId));
+        super(HttpStatus.NOT_FOUND, LocalizedText.of("job.notFound.title"),
+                LocalizedText.of("job.notFound.detail").with("id", jobId), null);
     }
 }

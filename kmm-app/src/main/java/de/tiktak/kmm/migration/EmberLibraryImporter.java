@@ -116,7 +116,7 @@ class EmberLibraryImporter {
                         .formatted(EmberMovieMapper.displayName(movie)));
             }
         }
-        context.reportProgress(filePaths.size(), filePaths.size(), null);
+        context.reportProgress(filePaths.size(), filePaths.size());
     }
 
     /** Alle Sets, auch solche ohne Filme, mit Beschreibung, TMDB-ID und Sortierung. */

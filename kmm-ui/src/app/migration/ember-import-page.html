@@ -138,7 +138,8 @@
             [value]="percent(job) ?? 0"
           />
           <span class="job-message"
-            >{{ job.title }}: {{ job.message }}{{ percentSuffix(job) }}</span
+            >{{ job.title | localized }}: {{ job.message | localized
+            }}{{ percentSuffix(job) }}</span
           >
         </div>
         <button matButton class="cancel-button" (click)="cancel(job)">

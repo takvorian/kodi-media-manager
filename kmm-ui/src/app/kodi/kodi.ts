@@ -3,6 +3,7 @@ import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
 import { finishedJobSummary, unsuccessfulJobSummary } from '../sources/job-summary';
+import { literal, localize } from '../i18n/localized-text';
 
 const SYNC_MESSAGE_DURATION_MS = 5000;
 const PLAYBACK = 'kodi.playback';
@@ -122,7 +123,7 @@ export function kodiPlaybackSummary(job: Job): string {
     return unsuccessfulJobSummary(job);
   }
   const result = job.result as KodiPlaybackImportResult;
-  return finishedJobSummary({ ...job, title: `${job.title} (${result.host})` }, [
+  return finishedJobSummary({ ...job, title: literal(`${localize(job.title)} (${result.host})`) }, [
     translate(`${PLAYBACK}.updated`, { count: result.updated }),
     translate(`${PLAYBACK}.unchanged`, { count: result.unchanged }),
     translate(`${PLAYBACK}.notInKodi`, { count: result.notInKodi }),

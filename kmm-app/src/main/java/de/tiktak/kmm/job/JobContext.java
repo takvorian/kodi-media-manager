@@ -1,23 +1,39 @@
 package de.tiktak.kmm.job;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Schnittstelle eines laufenden Jobs zur Job-Verwaltung: Fortschritt melden und auf Abbruch prüfen.
+ * Interface of a running job to the job management: report progress and check for cancellation.
  */
 public interface JobContext {
 
     /**
-     * @param done    erledigte Schritte
-     * @param total   Gesamtzahl der Schritte oder 0, wenn unbekannt
-     * @param message aktueller Arbeitsschritt
+     * @param done    completed steps
+     * @param total   total number of steps, or 0 if unknown
+     * @param message current step
      */
-    void reportProgress(int done, int total, String message);
+    void reportProgress(int done, int total, LocalizedText message);
+
+    /**
+     * Reports a step that is shown as is, such as the name of the file being processed.
+     *
+     * @param literal text that is not translated
+     */
+    default void reportProgress(int done, int total, String literal) {
+        reportProgress(done, total, LocalizedText.literal(literal));
+    }
+
+    /** Reports progress without a current step. */
+    default void reportProgress(int done, int total) {
+        reportProgress(done, total, (LocalizedText) null);
+    }
 
     boolean isCancellationRequested();
 
     /**
-     * Beendet den Job, falls ein Abbruch angefordert wurde. Lange Jobs rufen das regelmäßig auf.
+     * Ends the job if a cancellation was requested. Long jobs call this regularly.
      *
-     * @throws JobCancelledException wenn der Job abgebrochen werden soll
+     * @throws JobCancelledException if the job is to be cancelled
      */
     default void throwIfCancellationRequested() {
         if (isCancellationRequested()) {

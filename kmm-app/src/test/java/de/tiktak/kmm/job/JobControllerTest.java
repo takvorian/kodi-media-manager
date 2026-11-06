@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.web.servlet.mvc.method.annotation.SseEmitter;
 
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = JobController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -27,8 +28,8 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 class JobControllerTest {
 
     private static final UUID JOB_ID = UUID.fromString("7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f00");
-    private static final JobSnapshot JOB = JobSnapshot.started(JOB_ID, "scan:1", "Scan „Filme“",
-            Instant.parse("2026-10-25T12:00:00Z")).withProgress(3, 10, "NFOs werden geprüft");
+    private static final JobSnapshot JOB = JobSnapshot.started(JOB_ID, "scan:1", LocalizedText.literal("Scan „Filme“"),
+            Instant.parse("2026-10-25T12:00:00Z")).withProgress(3, 10, LocalizedText.literal("NFOs werden geprüft"));
 
     @Autowired
     private MockMvcTester mockMvc;
@@ -48,7 +49,8 @@ class JobControllerTest {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"id": "7d0f6c9e-1b57-4a8e-9a3f-0e6c7b0a1f00", "key": "scan:1", "status": "RUNNING",
-                          "done": 3, "total": 10, "message": "NFOs werden geprüft"}]
+                          "done": 3, "total": 10,
+                          "message": {"key": "literal", "args": {"text": "NFOs werden geprüft"}}}]
                         """);
     }
 
@@ -59,7 +61,7 @@ class JobControllerTest {
         assertThat(mockMvc.get().uri(JobController.BASE_PATH + "/" + JOB_ID))
                 .hasStatusOk()
                 .bodyJson()
-                .extractingPath("$.title").isEqualTo("Scan „Filme“");
+                .extractingPath("$.title.args.text").isEqualTo("Scan „Filme“");
     }
 
     @Test

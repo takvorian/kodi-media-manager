@@ -40,6 +40,7 @@ import { ScrapeProgress } from '../sources/scrape-progress';
 import { ScrapeReport } from '../sources/scrape-report';
 import { TVSHOWS_SCRAPE_JOB_KEY, TVSHOW_BATCH_FIELDS, TVSHOW_BATCH_JOB_KEY } from './tvshow-batch';
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 export const SEARCH_DEBOUNCE_MS = 300;
 export const DEFAULT_PAGE_SIZE = 50;
@@ -53,6 +54,7 @@ const SAVED = 'saved:';
 @Component({
   selector: 'app-tvshow-list',
   imports: [
+    LocalizedPipe,
     LanguageSelect,
     BatchEditor,
     ExportMenu,

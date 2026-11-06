@@ -28,6 +28,7 @@
     </licenses>
 
     <modules>
+        <module>kmm-i18n</module>
         <module>kmm-plugin-api</module>
         <module>kmm-scanner</module>
         <module>kmm-nfo</module>
@@ -63,6 +64,11 @@
                 <version>${spring-modulith.version}</version>
                 <type>pom</type>
                 <scope>import</scope>
+            </dependency>
+            <dependency>
+                <groupId>de.tiktak.kmm</groupId>
+                <artifactId>kmm-i18n</artifactId>
+                <version>${project.version}</version>
             </dependency>
             <dependency>
                 <groupId>de.tiktak.kmm</groupId>

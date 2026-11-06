@@ -16,21 +16,24 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.Localized;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
+
 import jakarta.annotation.PreDestroy;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Startet Hintergrund-Jobs und hält ihren Zustand. Laufende Jobs und die letzten beendeten Jobs
- * werden im Speicher gehalten; nach einem Neustart beginnt die Liste leer. Pro fachlichem
- * Schlüssel läuft höchstens ein Job gleichzeitig.
+ * Starts background jobs and keeps their state. Running jobs and the most recently finished ones are kept in memory;
+ * after a restart the list starts empty. At most one job runs per business key at a time.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class JobService {
 
-    private static final String UNEXPECTED_ERROR = "Unerwarteter Fehler";
+    private static final LocalizedText UNEXPECTED_ERROR = LocalizedText.of("job.unexpectedError");
 
     private final ExecutorService jobExecutor;
     private final ApplicationEventPublisher events;
@@ -41,11 +44,11 @@ public class JobService {
     private UUID exclusiveJob;
 
     /**
-     * Startet einen Job im Hintergrund.
+     * Starts a job in the background.
      *
-     * @throws JobAlreadyRunningException wenn für den Schlüssel bereits ein Job läuft
+     * @throws JobAlreadyRunningException if a job is already running for the key
      */
-    public synchronized JobSnapshot submit(String key, String title, JobTask<?> task) {
+    public synchronized JobSnapshot submit(String key, LocalizedText title, JobTask<?> task) {
         rejectWhileExclusiveJobRuns();
         findRunning(key).ifPresent(job -> {
             throw new JobAlreadyRunningException(job.snapshot());
@@ -56,16 +59,36 @@ public class JobService {
         running.put(id, job);
         job.publishStart();
         jobExecutor.execute(() -> execute(job, task));
-        log.info("Job '{}' started ({})", title, id);
+        log.info("Job '{}' started ({})", Messages.english(title), id);
         return job.snapshot();
     }
 
     /**
-     * Startet einen Job, der allein läuft: Er startet nur, wenn gerade keiner läuft, und bis er endet, startet keiner.
+     * Transitional overload until every caller passes a translatable title.
      *
-     * @throws JobAlreadyRunningException wenn gerade ein Job läuft
+     * @deprecated use {@link #submit(String, LocalizedText, JobTask)}
      */
-    public synchronized JobSnapshot submitExclusive(String key, String title, JobTask<?> task) {
+    @Deprecated(forRemoval = true)
+    public JobSnapshot submit(String key, String title, JobTask<?> task) {
+        return submit(key, LocalizedText.literal(title), task);
+    }
+
+    /**
+     * Transitional overload until every caller passes a translatable title.
+     *
+     * @deprecated use {@link #submitExclusive(String, LocalizedText, JobTask)}
+     */
+    @Deprecated(forRemoval = true)
+    public JobSnapshot submitExclusive(String key, String title, JobTask<?> task) {
+        return submitExclusive(key, LocalizedText.literal(title), task);
+    }
+
+    /**
+     * Starts a job that runs alone: it only starts if no job is running, and no other job starts until it ends.
+     *
+     * @throws JobAlreadyRunningException if a job is running
+     */
+    public synchronized JobSnapshot submitExclusive(String key, LocalizedText title, JobTask<?> task) {
         rejectWhileAnyJobRuns();
         JobSnapshot started = submit(key, title, task);
         exclusiveJob = started.id();
@@ -73,16 +96,16 @@ public class JobService {
     }
 
     /**
-     * Führt eine Aktion aus, wenn kein Job läuft. Bis sie fertig ist, startet auch keiner.
+     * Runs an action if no job is running. No job starts until it is done.
      *
-     * @throws JobAlreadyRunningException wenn gerade ein Job läuft
+     * @throws JobAlreadyRunningException if a job is running
      */
     public synchronized void runWhileIdle(Runnable action) {
         rejectWhileAnyJobRuns();
         action.run();
     }
 
-    /** Laufende Jobs zuerst, danach die beendeten, jeweils die neuesten oben. */
+    /** Running jobs first, then the finished ones, newest on top in each group. */
     public synchronized List<JobSnapshot> findAll() {
         Stream<JobSnapshot> active = running.values().stream()
                 .map(RunningJob::snapshot)
@@ -102,8 +125,8 @@ public class JobService {
     }
 
     /**
-     * Fordert den Abbruch an. Der Job endet, sobald er das nächste Mal auf Abbruch prüft; ein bereits
-     * beendeter Job bleibt unverändert.
+     * Requests cancellation. The job ends the next time it checks for cancellation; a job that has already finished
+     * stays unchanged.
      */
     public JobSnapshot cancel(UUID jobId) {
         RunningJob job = running.get(jobId);
@@ -126,11 +149,11 @@ public class JobService {
         } catch (JobCancelledException e) {
             finished = job.cancel();
         } catch (RuntimeException e) {
-            log.warn("Job '{}' failed", job.snapshot().title(), e);
+            log.warn("Job '{}' failed", Messages.english(job.snapshot().title()), e);
             finished = job.fail(errorMessage(e));
         }
         archive(job, finished);
-        log.info("Job '{}' finished with {}", finished.title(), finished.status());
+        log.info("Job '{}' finished with {}", Messages.english(finished.title()), finished.status());
     }
 
     private synchronized void archive(RunningJob job, JobSnapshot finished) {
@@ -166,11 +189,17 @@ public class JobService {
         events.publishEvent(new JobChangedEvent(snapshot));
     }
 
-    /** Fachliche Fehler bringen eine lesbare Beschreibung mit; die technische Meldung wäre nur der HTTP-Status. */
-    private static String errorMessage(RuntimeException exception) {
+    /**
+     * Business errors bring a translatable description; the technical message of a problem would only be the HTTP
+     * status. Other messages are shown as they are.
+     */
+    private static LocalizedText errorMessage(RuntimeException exception) {
+        if (exception instanceof Localized localized) {
+            return localized.localizedText();
+        }
         String message = exception instanceof ErrorResponseException problem && problem.getBody().getDetail() != null
                 ? problem.getBody().getDetail()
                 : exception.getMessage();
-        return message == null || message.isBlank() ? UNEXPECTED_ERROR : message;
+        return message == null || message.isBlank() ? UNEXPECTED_ERROR : LocalizedText.literal(message);
     }
 }

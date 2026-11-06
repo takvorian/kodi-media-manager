@@ -4,11 +4,12 @@ import { TranslocoPipe } from '@jsverse/transloco';
 
 import { progressPercent } from './job';
 import { JobStore } from './job-store';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 /** Shows below the toolbar which job is running and how far it has got. */
 @Component({
   selector: 'app-job-indicator',
-  imports: [MatProgressBarModule, TranslocoPipe],
+  imports: [LocalizedPipe, MatProgressBarModule, TranslocoPipe],
   templateUrl: './job-indicator.html',
   styleUrl: './job-indicator.scss',
 })

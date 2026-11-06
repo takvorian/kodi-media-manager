@@ -20,6 +20,7 @@ import { problemMessage } from '../shared/problem-message';
 import { TvShowService } from '../tvshows/tvshow.service';
 import { TAG_JOB_KEY, TagSummary, TaggedItem, tagJobSummary } from './tag';
 import { TagService } from './tag.service';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 8000;
 const SEARCH_SIZE = 20;
@@ -39,6 +40,7 @@ interface Candidate {
 @Component({
   selector: 'app-tag-manager',
   imports: [
+    LocalizedPipe,
     FormsModule,
     RouterLink,
     MatButtonModule,

@@ -47,6 +47,7 @@ import de.tiktak.kmm.scanner.TvShowCandidate;
 import de.tiktak.kmm.scanner.TvShowDirectoryScanner;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
+import de.tiktak.kmm.i18n.LocalizedText;
 
 @ExtendWith(MockitoExtension.class)
 class TvShowScanServiceTest {
@@ -95,7 +96,7 @@ class TvShowScanServiceTest {
 
         givenSource(MediaType.TV_SHOW, directory.resolve("fehlt"));
         assertThatThrownBy(() -> service.startScan(3)).isInstanceOf(TvShowProblemException.class);
-        verify(jobService, never()).submit(any(), any(), any());
+        verify(jobService, never()).submit(any(), any(LocalizedText.class), any());
     }
 
     @Test

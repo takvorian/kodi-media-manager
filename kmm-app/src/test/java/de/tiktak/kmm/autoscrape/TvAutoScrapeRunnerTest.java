@@ -140,7 +140,7 @@ class TvAutoScrapeRunnerTest {
         assertThat(result.failures()).contains("Lost: Titelmusik: null");
         assertThat(result.failures()).contains("Lost: Ergänzen: null");
         assertThat(result.failures().get(5)).isEqualTo("Defekt: unerwarteter Fehler");
-        verify(context).reportProgress(4, 4, null);
+        verify(context).reportProgress(4, 4);
     }
 
     @Test
@@ -171,7 +171,7 @@ class TvAutoScrapeRunnerTest {
                 "Lost: Technische Angaben: ffprobe fehlt");
         assertThat(result.warnings()).containsExactly("POSTER: 404", "„Lost“ nicht umbenannt: gesperrt");
         verify(context).reportProgress(0, 4, "Staffel 3 von „Lost“");
-        verify(context).reportProgress(4, 4, null);
+        verify(context).reportProgress(4, 4);
         verify(trailerService, never()).fillMissing(anyLong());
         verify(themeService, never()).fillShow(anyLong());
         verify(enrichmentService, never()).fillMissing(anyLong());

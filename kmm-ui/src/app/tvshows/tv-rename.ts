@@ -1,6 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
+import { localize } from '../i18n/localized-text';
 
 /** Prefix of the job key when renaming; must match TvShowRenameService.JOB_KEY_PREFIX. */
 export const TV_RENAME_JOB_KEY_PREFIX = 'tv-rename:';
@@ -92,7 +93,7 @@ export function tvRenameSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as TvRenameResult;
     return translate('tvshows.rename.succeeded', {
-      title: job.title,
+      title: localize(job.title),
       renamed: result.renamed,
       unchanged: result.unchanged,
       skipped: result.skipped,
@@ -100,9 +101,9 @@ export function tvRenameSummary(job: Job): string {
     });
   }
   return job.status === 'CANCELLED'
-    ? translate('tvshows.rename.cancelled', { title: job.title })
+    ? translate('tvshows.rename.cancelled', { title: localize(job.title) })
     : translate('tvshows.rename.failed', {
-        title: job.title,
-        message: job.message ?? translate('tvshows.rename.unknownError'),
+        title: localize(job.title),
+        message: job.message ? localize(job.message) : translate('tvshows.rename.unknownError'),
       });
 }
