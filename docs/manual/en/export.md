@@ -16,6 +16,6 @@ In the movie and TV show lists, **Export** downloads the current list. It export
 
 **Movies:** title, original title, year, genres, runtime, certification, rating, user rating, watched, resolution, video codec, audio tracks, subtitles, movie set, tags, IMDb, TMDB, file, added.
 
-**TV shows:** title, original title, year, status, genres, network, seasons, episodes, unwatched episodes, ratings, tags, TVDB, TMDB, IMDb, folder, added.
+**TV shows:** title, original title, year, status, genres, network, seasons, episodes, unwatched episodes, rating, user rating, tags, TVDB, TMDB, IMDb, folder, added.
 
 The **File** and **Folder** columns contain your paths. Keep this in mind if you pass an export on.

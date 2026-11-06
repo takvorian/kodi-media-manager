@@ -30,7 +30,7 @@ Then click **Add**.
 | **Scrape** | Fills in missing metadata and artwork for all entries of the source, old ones included. For individual entries, see [Scraping](scraping.md#automatic-scraping). |
 | **Kodi scan** | Makes all Kodi devices scan this source, see [Kodi](kodi.md). |
 | **Watched status** | Fetches play counts and your own ratings from Kodi. |
-| **Technical details** | Uses ffprobe to read the missing details, or all of them again. |
+| **Technical details** | Reads the details with ffprobe: **Read missing** or **Read all again**. |
 | **Rename** | Opens the preview for [renaming](renaming.md). |
 | **Remove** | Removes the source and all its entries from KMM, after asking you. Your files stay where they are. |
 

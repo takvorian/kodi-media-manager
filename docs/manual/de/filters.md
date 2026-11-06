@@ -4,7 +4,7 @@ Film- und Serienliste lassen sich filtern, und alles, was du gefiltert hast, kan
 
 ## Filter wählen
 
-Das Feld **Filter** bietet „Alle“, mitgelieferte und deine gespeicherten Filter.
+Das Feld **Filter** bietet „Alle Filme“ bzw. „Alle Serien“, mitgelieferte und deine gespeicherten Filter.
 
 **Mitgeliefert bei Filmen:** Ungesehen, Neu (letzte 30 Tage), Unter 720p, 4K, Ohne TMDB-ID, Ohne technische Angaben, Ohne NFO, Ohne Trailer.
 

@@ -30,7 +30,7 @@ Klicke dann auf **Hinzufügen**.
 | **Scrapen** | Ergänzt fehlende Metadaten und Bilder aller Einträge der Quelle, auch der alten. Für einzelne Einträge siehe [Scrapen](scraping.md#automatisches-scrapen). |
 | **Kodi-Scan** | Lässt alle Kodi-Geräte diese Quelle durchsuchen, siehe [Kodi](kodi.md). |
 | **Gesehen-Status** | Holt Wiedergaben und eigene Bewertungen aus Kodi. |
-| **Technische Angaben** | Liest mit ffprobe die fehlenden oder alle Angaben neu aus. |
+| **Technische Angaben** | Liest mit ffprobe aus: **Fehlende auslesen** oder **Alle neu auslesen**. |
 | **Umbenennen** | Öffnet die Vorschau zum [Umbenennen](renaming.md). |
 | **Entfernen** | Entfernt die Quelle und alle ihre Einträge aus KMM, nach einer Rückfrage. Deine Dateien bleiben liegen. |
 
