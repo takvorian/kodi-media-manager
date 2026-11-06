@@ -7,10 +7,9 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Schreibt Kodi-Film-NFOs. Ist bereits eine NFO vorhanden, werden nur die von KMM verwalteten
- * Elemente ersetzt; alles andere (Trailer, Bild-URLs …) bleibt erhalten. Ohne bekannte weitere Angaben
- * ({@link MovieNfo#supplement()}) bleiben auch Darsteller, Bewertungen und Stream-Details unverändert;
- * Stream-Details ersetzt KMM nur, wenn es welche kennt.
+ * Writes Kodi movie NFOs. If an NFO already exists, only the elements managed by KMM are replaced; everything else
+ * (trailer, image URLs …) is kept. Without known further details ({@link MovieNfo#supplement()}) actors, ratings
+ * and stream details stay unchanged as well; KMM only replaces stream details if it knows any.
  */
 public class NfoWriter {
 

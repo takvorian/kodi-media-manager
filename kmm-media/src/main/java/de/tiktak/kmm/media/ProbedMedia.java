@@ -8,10 +8,10 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Die Ausgabe von ffprobe für eine Eingabe, beschränkt auf die Felder aus {@link FfprobeRunner#ENTRIES}.
+ * The output of ffprobe for an input, limited to the fields from {@link FfprobeRunner#ENTRIES}.
  *
- * @param durationSeconds Laufzeit oder {@code null}, wenn ffprobe keine kennt
- * @param bitRate         Gesamtbitrate in bit/s oder {@code null}
+ * @param durationSeconds runtime, or {@code null} if ffprobe knows none
+ * @param bitRate         overall bit rate in bit/s or {@code null}
  */
 record ProbedMedia(List<Stream> streams, Double durationSeconds, Long bitRate) {
 
@@ -23,14 +23,14 @@ record ProbedMedia(List<Stream> streams, Double durationSeconds, Long bitRate) {
     }
 
     /**
-     * @throws MediaProbeException wenn die Ausgabe kein JSON von ffprobe ist
+     * @throws MediaProbeException if the output is not JSON from ffprobe
      */
     static ProbedMedia parse(String input, String json) {
         JsonNode root;
         try {
             root = JSON.readTree(json);
         } catch (JacksonException e) {
-            throw MediaProbeException.failed(input, "unverständliche Ausgabe");
+            throw MediaProbeException.unintelligibleOutput(input);
         }
         List<Stream> streams = new ArrayList<>();
         root.path("streams").forEach(stream -> streams.add(stream(stream)));
@@ -83,7 +83,7 @@ record ProbedMedia(List<Stream> streams, Double durationSeconds, Long bitRate) {
         return value == null ? null : Math.toIntExact(value);
     }
 
-    /** ffprobe liefert Zahlen teils als Text, unbekannte Werte als {@code N/A}. */
+    /** ffprobe returns numbers partly as text, unknown values as {@code N/A}. */
     private static Long number(JsonNode node) {
         Double value = decimal(node);
         return value == null ? null : Math.round(value);
@@ -102,7 +102,7 @@ record ProbedMedia(List<Stream> streams, Double durationSeconds, Long bitRate) {
         }
     }
 
-    /** Eine Spur, wie ffprobe sie beschreibt. */
+    /** A stream as ffprobe describes it. */
     record Stream(String type, String codec, String codecTag, String profile, Integer width, Integer height,
             String displayAspectRatio, String sampleAspectRatio, String fieldOrder, Integer channels, Long bitRate,
             String colorTransfer, String language, String title, String stereoMode, boolean forced,

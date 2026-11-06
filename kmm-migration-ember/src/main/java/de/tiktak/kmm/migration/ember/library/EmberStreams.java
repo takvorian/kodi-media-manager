@@ -3,7 +3,7 @@ package de.tiktak.kmm.migration.ember.library;
 import java.util.List;
 
 /**
- * Video-, Ton- und Untertitelspuren eines Films oder einer Episode aus Embers Stream-Tabellen.
+ * Video, audio and subtitle streams of a movie or an episode from Ember's stream tables.
  */
 public record EmberStreams(List<Video> videos, List<Audio> audios, List<Subtitle> subtitles) {
 
@@ -16,10 +16,10 @@ public record EmberStreams(List<Video> videos, List<Audio> audios, List<Subtitle
     }
 
     /**
-     * @param aspect          Seitenverhältnis als Text, z. B. {@code 1.778}
-     * @param durationSeconds Laufzeit in Sekunden oder {@code null}
-     * @param bitrate         Bitrate in kbit/s oder {@code null}
-     * @param fileSize        Größe in Byte oder {@code null}
+     * @param aspect          aspect ratio as text, e.g. {@code 1.778}
+     * @param durationSeconds runtime in seconds or {@code null}
+     * @param bitrate         bit rate in kbit/s or {@code null}
+     * @param fileSize        size in bytes or {@code null}
      */
     public record Video(String codec, Integer width, Integer height, String aspect, Integer durationSeconds,
             Integer bitrate, String scanType, String stereoMode, String language, String multiViewCount,
@@ -27,15 +27,15 @@ public record EmberStreams(List<Video> videos, List<Audio> audios, List<Subtitle
     }
 
     /**
-     * @param channels Anzahl der Kanäle oder {@code null}
-     * @param bitrate  Bitrate in kbit/s oder {@code null}
+     * @param channels number of channels or {@code null}
+     * @param bitrate  bit rate in kbit/s or {@code null}
      */
     public record Audio(String codec, String language, Integer channels, Integer bitrate) {
     }
 
     /**
-     * @param external ob es eine separate Untertiteldatei ist
-     * @param path     Pfad der Untertiteldatei in Ember oder {@code null}
+     * @param external whether it is a separate subtitle file
+     * @param path     path of the subtitle file in Ember or {@code null}
      */
     public record Subtitle(String language, boolean forced, boolean external, String path) {
     }

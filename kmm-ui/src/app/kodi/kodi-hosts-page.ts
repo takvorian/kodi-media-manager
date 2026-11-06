@@ -10,6 +10,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 
+import { LocalizedText } from '../i18n/localized-text';
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { MediaSourceService } from '../sources/media-source.service';
@@ -27,7 +29,7 @@ const SNACKBAR_DURATION_MS = 5000;
 
 /** Result of the last connection test of a device; the message and warning come from the server. */
 export type ConnectionResult =
-  | { readonly ok: true; readonly version: string; readonly warning: string | null }
+  | { readonly ok: true; readonly version: string; readonly warning: LocalizedText | null }
   | { readonly ok: false; readonly message: string };
 
 /** Either an existing device or a new one (`'new'`) is being edited. */
@@ -37,6 +39,7 @@ type Editing = KodiHost | 'new' | null;
   selector: 'app-kodi-hosts-page',
   imports: [
     HelpLink,
+    LocalizedPipe,
     TranslocoDatePipe,
     TranslocoPipe,
     ReactiveFormsModule,

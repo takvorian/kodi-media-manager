@@ -4,11 +4,11 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Eine gefundene Episodendatei.
+ * A found episode file.
  *
- * @param file   Videodatei
- * @param number Staffel und Episode(n) laut Dateiname
- * @param title  Titelvorschlag aus dem Dateinamen oder {@code null}
+ * @param file   video file
+ * @param number season and episode(s) according to the file name
+ * @param title  suggested title from the file name or {@code null}
  */
 public record EpisodeCandidate(Path file, EpisodeNumber number, String title) {
 

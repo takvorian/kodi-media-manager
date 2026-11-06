@@ -1,13 +1,13 @@
 package de.tiktak.kmm.scanner;
 
 /**
- * Speicherform eines Films.
+ * Storage format of a movie.
  */
 public enum DiscFormat {
-    /** Einzelne Videodatei (oder mehrteiliger Stapel), z. B. MKV oder ISO. */
+    /** Single video file (or multi-part stack), e.g. MKV or ISO. */
     FILE,
-    /** DVD-Ordnerstruktur ({@code VIDEO_TS/VIDEO_TS.IFO}). */
+    /** DVD folder structure ({@code VIDEO_TS/VIDEO_TS.IFO}). */
     DVD,
-    /** Blu-ray-Ordnerstruktur ({@code BDMV/index.bdmv}). */
+    /** Blu-ray folder structure ({@code BDMV/index.bdmv}). */
     BLURAY
 }

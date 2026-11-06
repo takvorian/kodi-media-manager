@@ -16,10 +16,10 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
-import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = KodiSyncController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -42,11 +42,12 @@ class KodiSyncControllerTest {
     @Test
     void refreshesAMovie() {
         when(syncService.refreshMovie(5)).thenReturn(List.of(
-                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, "„Heat“ aktualisiert.", NOW)));
+                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, refreshed("Heat"), NOW)));
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/5/refresh").with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
-                        [{"host": "Wohnzimmer", "outcome": "REFRESHED", "message": "„Heat“ aktualisiert."}]
+                        [{"host": "Wohnzimmer", "outcome": "REFRESHED",
+                          "message": {"key": "kodi.sync.refreshed", "args": {"title": "Heat"}}}]
                         """);
     }
 
@@ -74,6 +75,10 @@ class KodiSyncControllerTest {
                 .contentType("application/json").content("{\"movieIds\": []}")).hasStatus(400);
     }
 
+    private static LocalizedText refreshed(String title) {
+        return LocalizedText.of("kodi.sync.refreshed").with("title", title);
+    }
+
     private static JobSnapshot job(String id) {
         return new JobSnapshot(UUID.fromString(id), "movies-batch", LocalizedText.literal("Kodi"), JobStatus.RUNNING, 0, 0, null, null, NOW, null);
     }
@@ -81,11 +86,11 @@ class KodiSyncControllerTest {
     @Test
     void refreshesTvShowsAndEpisodes() {
         when(syncService.refreshTvShow(7)).thenReturn(List.of(
-                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, "„Lost“ aktualisiert.", NOW)));
+                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, refreshed("Lost"), NOW)));
         when(syncService.refreshEpisode(12)).thenReturn(List.of());
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/refresh").with(csrf()))
-                .hasStatusOk().bodyJson().extractingPath("$[0].message").isEqualTo("„Lost“ aktualisiert.");
+                .hasStatusOk().bodyJson().extractingPath("$[0].message.args.title").isEqualTo("Lost");
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/12/refresh").with(csrf()))
                 .hasStatusOk().bodyJson().isEqualTo("[]");
     }

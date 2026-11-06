@@ -11,13 +11,13 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
- * Liest Episoden-NFOs. Bei Mehrfachepisoden enthält die Datei mehrere {@code <episodedetails>}.
+ * Reads episode NFOs. For multi-episode files the file contains several {@code <episodedetails>}.
  */
 public class EpisodeNfoReader {
 
     /**
-     * @return die Episoden der Datei in ihrer Reihenfolge, mindestens eine
-     * @throws NfoException wenn die Datei nicht gelesen werden kann oder keine Episoden-NFO ist
+     * @return the episodes of the file in their order, at least one
+     * @throws NfoException if the file cannot be read or is not an episode NFO
      */
     public List<EpisodeNfo> read(Path nfoFile) {
         try {

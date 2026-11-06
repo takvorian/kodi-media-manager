@@ -11,8 +11,8 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Prüft eine Ember-Datenbank und ermittelt den Umfang der Bibliothek. Die Datenbank wird
- * ausschließlich lesend geöffnet, das Ember-Profil bleibt unverändert.
+ * Checks an Ember database and determines the size of the library. The database is opened read-only, the Ember
+ * profile stays unchanged.
  */
 public class EmberDatabaseInspector {
 
@@ -57,7 +57,7 @@ public class EmberDatabaseInspector {
     }
 
     private long count(Connection connection, EmberTable table) throws SQLException {
-        // Tabellenname stammt aus dem Enum, nicht aus Benutzereingaben.
+        // The table name comes from the enum, not from user input.
         try (Statement statement = connection.createStatement();
              ResultSet resultSet = statement.executeQuery(COUNT_QUERY_TEMPLATE.formatted(table.getTableName()))) {
             resultSet.next();

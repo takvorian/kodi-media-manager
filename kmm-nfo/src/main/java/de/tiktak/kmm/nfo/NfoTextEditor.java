@@ -9,9 +9,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Ändert einfache Elemente direkt im Text einer NFO. Einrückung, Zeilenenden, Kopfzeile, Kommentare und
- * die Reihenfolge der Attribute bleiben Zeichen für Zeichen erhalten; geänderte Dateien unterscheiden
- * sich im Zeilenvergleich nur in den betroffenen Zeilen.
+ * Changes simple elements directly in the text of an NFO. Indentation, line endings, header, comments and the order
+ * of attributes are kept character for character; in a line diff, changed files only differ in the affected lines.
  */
 final class NfoTextEditor {
 
@@ -29,7 +28,7 @@ final class NfoTextEditor {
     }
 
     /**
-     * @return leer, wenn die Datei nicht als UTF-8 gelesen werden kann; wie alle NFOs in KMM
+     * @return empty if the file cannot be read as UTF-8, like all NFOs in KMM
      */
     static Optional<NfoTextEditor> open(Path nfoFile) {
         try {
@@ -44,21 +43,21 @@ final class NfoTextEditor {
     }
 
     /**
-     * Setzt den Text eines direkten Kindelements des {@code index}-ten Wurzelelements {@code rootName};
-     * ein vorhandenes Element wird ersetzt, ein fehlendes vor dem schließenden Tag eingefügt.
+     * Sets the text of a direct child element of the {@code index}-th root element {@code rootName}; an existing
+     * element is replaced, a missing one is inserted before the closing tag.
      *
-     * @param value neuer Text oder {@code null}, um das Element zu entfernen
-     * @return {@code false}, wenn das Wurzelelement im Text nicht eindeutig zu finden ist
+     * @param value new text, or {@code null} to remove the element
+     * @return {@code false} if the root element cannot be found unambiguously in the text
      */
     boolean setChildText(String rootName, int index, String childName, String value) {
         return setChild(rootName, index, childName, value == null ? null : tag(childName, value));
     }
 
     /**
-     * Wie {@link #setChildText}, aber mit einem fertigen Element samt Kindern.
+     * Like {@link #setChildText}, but with a complete element including its children.
      *
-     * @param element das Element als Text, ohne Einrückung vor der ersten und Zeilenende nach der letzten
-     *                Zeile, oder {@code null}, um das Element zu entfernen
+     * @param element the element as text, without indentation before the first line and line ending after the last
+     *                line, or {@code null} to remove the element
      */
     boolean setChild(String rootName, int index, String childName, String element) {
         Optional<Span> root = rootElement(rootName, index);
@@ -68,7 +67,7 @@ final class NfoTextEditor {
         return root.isPresent();
     }
 
-    /** @return die Einrückung der Kindelemente des Wurzelelements, notfalls zwei Leerzeichen */
+    /** @return the indentation of the child elements of the root element, two spaces if in doubt */
     Optional<String> childIndent(String rootName, int index) {
         return rootElement(rootName, index).map(span -> indentOf(text.substring(span.start(), span.end())));
     }
@@ -81,7 +80,7 @@ final class NfoTextEditor {
         NfoFileWriter.writeBytes(nfoFile, text.getBytes(StandardCharsets.UTF_8));
     }
 
-    /** @return das Element einschließlich seines schließenden Tags */
+    /** @return the element including its closing tag */
     private Optional<Span> rootElement(String rootName, int index) {
         Matcher open = Pattern.compile("<" + rootName + "(?:\\s[^>]*)?(?<!/)>").matcher(text);
         Pattern closing = Pattern.compile("</" + rootName + "\\s*>");
@@ -139,7 +138,7 @@ final class NfoTextEditor {
         return "<%s>%s</%s>".formatted(name, escaped, name);
     }
 
-    /** Abschnitt im Text; {@code end} ist exklusiv. */
+    /** Section of the text; {@code end} is exclusive. */
     private record Span(int start, int end) {
     }
 }

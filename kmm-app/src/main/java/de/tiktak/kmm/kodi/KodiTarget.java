@@ -4,7 +4,7 @@ import de.tiktak.kmm.kodi.path.KodiPathMapper;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 
 /**
- * Unveränderlicher Stand eines Kodi-Geräts für einen Abgleich außerhalb der Datenbanktransaktion.
+ * Immutable state of a Kodi device for a sync outside the database transaction.
  */
 record KodiTarget(long id, String name, KodiEndpoint endpoint, KodiPathMapper pathMapper, boolean realtimeSync) {
 

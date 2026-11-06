@@ -12,8 +12,8 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * Hilfen zum Lesen der Ember-Datenbank: verknüpfte Angaben werden je Tabelle mit einer Abfrage
- * gelesen und über eine ID-Spalte zugeordnet.
+ * Helpers for reading the Ember database: linked data is read with one query per table and assigned via an ID
+ * column.
  */
 final class EmberQueries {
 
@@ -26,7 +26,7 @@ final class EmberQueries {
         return values;
     }
 
-    /** Ordnet die Zeilen über die Spalte {@code idColumn} zu; Zeilen, für die der Mapper {@code null} liefert, entfallen. */
+    /** Assigns the rows via the column {@code idColumn}; rows for which the mapper returns {@code null} are dropped. */
     static <T> Map<Long, List<T>> grouped(Connection connection, String sql, String idColumn, RowMapper<T> mapper)
             throws SQLException {
         Map<Long, List<T>> grouped = new HashMap<>();
@@ -43,7 +43,7 @@ final class EmberQueries {
         return grouped(connection, sql, idColumn, row -> EmberValues.text(row, "name"));
     }
 
-    /** IDs je Eintrag als {@code typ -> wert}; die Standard-ID zuerst, je Typ gilt der erste Wert. */
+    /** IDs per entry as {@code type -> value}; the default ID first, the first value per type wins. */
     static Map<Long, Map<String, String>> uniqueIds(Connection connection, String sql, String idColumn)
             throws SQLException {
         Map<Long, Map<String, String>> ids = new HashMap<>();

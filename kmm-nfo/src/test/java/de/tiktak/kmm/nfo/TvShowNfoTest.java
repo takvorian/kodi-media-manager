@@ -73,7 +73,7 @@ class TvShowNfoTest {
                 "<url cache=\"78020.xml\">https://example.org/guide/78020</url>")
                 .doesNotContain("<originaltitle>", "<id>78020</id>", "<imdb>", "<ratings>", "Benji Gregory");
         TvShowNfo read = reader.read(nfoFile);
-        assertThat(read.language()).as("Embers Sprache bleibt beim Schreiben erhalten").isEqualTo("de-DE");
+        assertThat(read.language()).as("Ember's language is kept when writing").isEqualTo("de-DE");
         assertThat(read).usingRecursiveComparison().ignoringFields("language").isEqualTo(changed);
     }
 

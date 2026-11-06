@@ -22,13 +22,12 @@ import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.StackedFiles;
 
 /**
- * Liest die technischen Angaben eines Films oder einer Episode mit ffprobe. Mehrteilige Filme
- * zählen mit der Laufzeit und Größe aller Teile; bei DVDs wird der längste Titel untersucht, bei
- * Blu-rays die größte Videodatei.
+ * Reads the technical details of a movie or an episode with ffprobe. Multi-part movies count with the runtime and
+ * size of all parts; for DVDs the longest title is examined, for Blu-rays the largest video file.
  */
 public class MediaProbe {
 
-    /** Dateien eines DVD-Titels: {@code VTS_01_1.VOB}; Teil 0 ist das Menü. */
+    /** Files of a DVD title: {@code VTS_01_1.VOB}; part 0 is the menu. */
     private static final Pattern DVD_TITLE_PART = Pattern.compile("(?i)VTS_(\\d{2})_([1-9]\\d*)\\.VOB");
     private static final String BLURAY_STREAMS = "STREAM";
     private static final String BLURAY_VIDEO_EXTENSION = ".m2ts";
@@ -42,9 +41,9 @@ public class MediaProbe {
     }
 
     /**
-     * @param mainFile die Videodatei, bei mehrteiligen Filmen der erste Teil, bei DVDs die
-     *                 {@code VIDEO_TS.IFO} und bei Blu-rays die {@code index.bdmv}
-     * @throws MediaProbeException wenn die Datei nicht gelesen werden kann oder keine Spuren enthält
+     * @param mainFile the video file; for multi-part movies the first part, for DVDs the {@code VIDEO_TS.IFO} and
+     *                 for Blu-rays the {@code index.bdmv}
+     * @throws MediaProbeException if the file cannot be read or contains no streams
      */
     public StreamDetails probe(Path mainFile, DiscFormat format) {
         Objects.requireNonNull(mainFile, "mainFile must not be null");
@@ -68,7 +67,7 @@ public class MediaProbe {
         return new StreamDetails(streams.videos(), streams.audios(), subtitles);
     }
 
-    /** Mehrere Dateien eines Titels liest ffprobe am Stück, damit die Laufzeit für den ganzen Titel gilt. */
+    /** ffprobe reads several files of a title in one go so the runtime covers the whole title. */
     private StreamDetails probeInput(List<Path> files) {
         String input = files.size() == 1 ? files.getFirst().toString()
                 : CONCAT + files.stream().map(Path::toString).collect(Collectors.joining(CONCAT_SEPARATOR));
@@ -92,7 +91,7 @@ public class MediaProbe {
         }
     }
 
-    /** @return die Teile des Titels mit der größten Datenmenge, in ihrer Reihenfolge */
+    /** @return the parts of the title with the largest amount of data, in their order */
     private static List<Path> dvdTitle(Path ifoFile) {
         Path directory = ifoFile.toAbsolutePath().getParent();
         Map<String, List<Path>> titles = new TreeMap<>();

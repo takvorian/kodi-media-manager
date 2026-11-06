@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Kurze Bezeichnungen einer Videospur, etwa für Dateinamen: Auflösungsstufe wie Kodi und 3D wie Ember.
+ * Short labels of a video stream, e.g. for file names: resolution tier as in Kodi and 3D as in Ember.
  */
 public final class StreamLabels {
 
@@ -12,8 +12,8 @@ public final class StreamLabels {
     private static final String MULTIPLE_VIEWS = "[2-9]|\\d{2,}";
 
     /**
-     * Auflösungsstufen wie Kodi ({@code CStreamDetails::COMMON_RESOLUTIONS}): die erste, in die das Bild
-     * in beiden Richtungen passt.
+     * Resolution tiers as in Kodi ({@code CStreamDetails::COMMON_RESOLUTIONS}): the first one the picture fits into
+     * in both directions.
      */
     private static final List<Resolution> RESOLUTIONS = List.of(
             new Resolution(854, 480, "480p", 480),
@@ -27,12 +27,12 @@ public final class StreamLabels {
     private StreamLabels() {
     }
 
-    /** @return z. B. {@code 1080p} oder leer ohne Abmessungen und bei Bildern über 8K */
+    /** @return e.g. {@code 1080p}, or empty without dimensions and for pictures above 8K */
     public static Optional<String> resolution(StreamDetails.Video video) {
         return level(video).map(Resolution::label);
     }
 
-    /** @return Zeilenzahl der Auflösungsstufe, z. B. {@code 1080} oder {@code 2160} für 4K, zum Vergleichen */
+    /** @return number of lines of the resolution tier, e.g. {@code 1080} or {@code 2160} for 4K, for comparisons */
     public static Optional<Integer> resolutionLines(StreamDetails.Video video) {
         return level(video).map(Resolution::lines);
     }
@@ -46,7 +46,7 @@ public final class StreamLabels {
                 .findFirst();
     }
 
-    /** Wie Ember: {@code 3d} bei Stereo-Modus oder mehr als einer Ansicht. */
+    /** Like Ember: {@code 3d} for a stereo mode or more than one view. */
     public static Optional<String> threeD(StreamDetails.Video video) {
         boolean stereo = video.stereoMode() != null && !video.stereoMode().isBlank();
         boolean views = video.multiViewCount() != null && video.multiViewCount().strip().matches(MULTIPLE_VIEWS);

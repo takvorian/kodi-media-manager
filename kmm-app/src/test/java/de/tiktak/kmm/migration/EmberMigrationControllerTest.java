@@ -25,6 +25,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.job.JobStatus;
 import de.tiktak.kmm.migration.ember.EmberLibraryStatistics;
@@ -37,7 +38,6 @@ import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
-import de.tiktak.kmm.i18n.LocalizedText;
 
 @WebMvcTest(controllers = EmberMigrationController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -105,22 +105,29 @@ class EmberMigrationControllerTest {
 
     @Test
     void answersInvalidProfileWithUnprocessableContent() {
-        when(importService.upload(any())).thenThrow(new InvalidProfileException("Keine Ember-Datenbank gefunden."));
+        when(importService.upload(any())).thenThrow(new InvalidProfileException(
+                LocalizedText.of("ember.databaseNotFound").with("directory", "ember")));
 
         assertThat(upload())
                 .hasStatus(422)
                 .bodyJson()
-                .extractingPath("$.detail").isEqualTo("Keine Ember-Datenbank gefunden.");
+                .satisfies(body -> assertThat(body).extractingPath("$.detailText.key")
+                        .isEqualTo("ember.databaseNotFound"))
+                .extractingPath("$.detail")
+                .isEqualTo("No Ember database (MyVideos*.emm) was found in the directory “ember”.");
     }
 
     @Test
     void answersAnUnusableUploadWithUnprocessableContent() {
-        when(importService.upload(any())).thenThrow(new EmberProfileUploadException("Keine Datenbank."));
+        when(importService.upload(any())).thenThrow(
+                new EmberProfileUploadException(LocalizedText.of("migration.upload.noDatabase")));
 
         assertThat(upload())
                 .hasStatus(422)
                 .bodyJson()
-                .extractingPath("$.title").isEqualTo(EmberMigrationController.INVALID_PROFILE_TITLE);
+                .satisfies(body -> assertThat(body).extractingPath("$.titleText.key")
+                        .isEqualTo("migration.invalidProfile.title"))
+                .extractingPath("$.detailText.key").isEqualTo("migration.upload.noDatabase");
     }
 
     @Test
@@ -169,7 +176,7 @@ class EmberMigrationControllerTest {
 
     @Test
     void answersImportOfInvalidProfileWithUnprocessableContent() {
-        when(importService.start(any())).thenThrow(new InvalidProfileException("Keine Ember-Datenbank gefunden."));
+        when(importService.start(any())).thenThrow(new InvalidProfileException(LocalizedText.literal("x")));
 
         assertThat(mockMvc.post().uri(IMPORT_PATH).with(csrf()).contentType(MediaType.APPLICATION_JSON).content("""
                 {"pathMappings": [], "importSettings": false, "importKodiHosts": false,
@@ -182,10 +189,10 @@ class EmberMigrationControllerTest {
         return mockMvc.post().uri(UPLOAD_PATH).with(csrf()).multipart().file(DATABASE).exchange();
     }
 
-    /** Macht den geschützten Konstruktor für Testfälle zugänglich. */
+    /** Makes the protected constructor accessible for test cases. */
     private static final class InvalidProfileException extends EmberProfileException {
 
-        InvalidProfileException(String message) {
+        InvalidProfileException(LocalizedText message) {
             super(message);
         }
     }

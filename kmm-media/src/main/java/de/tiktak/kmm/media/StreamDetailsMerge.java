@@ -7,9 +7,9 @@ import java.util.function.BinaryOperator;
 import de.tiktak.kmm.nfo.StreamDetails;
 
 /**
- * Übernimmt neu ausgelesene Stream-Details, behält aber Angaben, die ffprobe nicht liefert: Sprachen
- * (wie Embers „LockLanguage“), den Bildaufbau (bei AVI kennt ffprobe ihn nicht) und Embers 3D-Angaben. Zugeordnet wird je Spurart nach Position; externe
- * Untertitel werden nur mit externen verglichen.
+ * Takes over newly read stream details but keeps details ffprobe does not provide: languages (like Ember's
+ * "LockLanguage"), the scan type (ffprobe does not know it for AVI) and Ember's 3D details. Streams are matched per
+ * stream type by position; external subtitles are only compared with external ones.
  */
 public final class StreamDetailsMerge {
 

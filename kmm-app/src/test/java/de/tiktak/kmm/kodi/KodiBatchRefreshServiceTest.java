@@ -23,6 +23,7 @@ import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieBatchService;
 import de.tiktak.kmm.tvshow.TvShowBatchService;
 
@@ -61,7 +62,7 @@ class KodiBatchRefreshServiceTest {
 
         assertThatExceptionOfType(KodiProblemException.class)
                 .isThrownBy(() -> service.startMovies(List.of(5L)))
-                .satisfies(e -> assertThat(e.getBody().getDetail()).isEqualTo("Es ist kein Kodi-Gerät eingerichtet."));
+                .satisfies(e -> assertThat(e.localizedText()).isEqualTo(LocalizedText.of("kodi.noHosts.detail")));
         verify(movieBatch, never()).startFill(anyString(), anyList(), any());
     }
 
@@ -120,7 +121,7 @@ class KodiBatchRefreshServiceTest {
 
         assertThatExceptionOfType(KodiProblemException.class).isThrownBy(() -> refresh.test(6))
                 .satisfies(e -> assertThat(e.getBody().getDetail())
-                        .isEqualTo("Übersprungen, weil kein Kodi-Gerät mehr antwortet."));
+                        .isEqualTo("Skipped because no Kodi device answers any more."));
         verify(syncService, never()).refreshMovie(eq(6L), anyList());
     }
 
@@ -156,6 +157,6 @@ class KodiBatchRefreshServiceTest {
     }
 
     private static KodiSyncResult result(KodiTarget target, KodiSyncOutcome outcome) {
-        return new KodiSyncResult(target.id(), target.name(), outcome, outcome.name(), NOW);
+        return new KodiSyncResult(target.id(), target.name(), outcome, LocalizedText.literal(outcome.name()), NOW);
     }
 }

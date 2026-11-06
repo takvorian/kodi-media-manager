@@ -11,8 +11,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 /**
- * Findet ein Ember-Profil in einem Verzeichnis und prüft, ob seine Datenbank-Version unterstützt wird.
- * Akzeptiert sowohl das Profilverzeichnis selbst als auch das Ember-Installationsverzeichnis.
+ * Finds an Ember profile in a directory and checks whether its database version is supported. Accepts both the
+ * profile directory itself and the Ember installation directory.
  */
 public class EmberProfileDetector {
 

@@ -6,13 +6,12 @@ import java.util.Map;
 import java.util.MissingResourceException;
 
 /**
- * Sprachcodes nach ISO 639. Kodi und Ember verwenden die dreibuchstabigen Codes der
- * Terminologie-Variante ({@code deu}); Videodateien enthalten oft die bibliografische ({@code ger})
- * oder zweibuchstabige ({@code de}).
+ * Language codes according to ISO 639. Kodi and Ember use the three-letter codes of the terminology variant
+ * ({@code deu}); video files often contain the bibliographic one ({@code ger}) or the two-letter one ({@code de}).
  */
 public final class IsoLanguages {
 
-    /** Bibliografische Codes, die von der Terminologie-Variante abweichen. */
+    /** Bibliographic codes that differ from the terminology variant. */
     private static final Map<String, String> BIBLIOGRAPHIC = Map.ofEntries(
             Map.entry("alb", "sqi"), Map.entry("arm", "hye"), Map.entry("baq", "eus"), Map.entry("bur", "mya"),
             Map.entry("chi", "zho"), Map.entry("cze", "ces"), Map.entry("dut", "nld"), Map.entry("fre", "fra"),
@@ -27,8 +26,8 @@ public final class IsoLanguages {
     }
 
     /**
-     * @return der dreibuchstabige Code der Terminologie-Variante oder {@code null}, wenn der Code
-     *         keine bekannte Sprache bezeichnet (etwa {@code und})
+     * @return the three-letter code of the terminology variant, or {@code null} if the code does not denote a known
+     *         language (such as {@code und})
      */
     public static String toTerminology(String code) {
         if (code == null) {
@@ -43,7 +42,7 @@ public final class IsoLanguages {
         return terminology != null && BY_THREE_LETTERS.containsKey(terminology) ? terminology : null;
     }
 
-    /** @return der englische Name der Sprache wie bei Ember ({@code German}) oder {@code null} */
+    /** @return the English name of the language as in Ember ({@code German}) or {@code null} */
     public static String englishName(String code) {
         String terminology = toTerminology(code);
         return terminology == null ? null : BY_THREE_LETTERS.get(terminology).getDisplayLanguage(Locale.ENGLISH);

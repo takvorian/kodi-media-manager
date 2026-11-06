@@ -13,6 +13,7 @@ import org.springframework.stereotype.Component;
 import de.tiktak.kmm.filter.FilterMediaType;
 import de.tiktak.kmm.filter.SavedFilterData;
 import de.tiktak.kmm.filter.SavedFilterService;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.migration.ember.library.EmberLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberMediaList;
@@ -33,9 +34,8 @@ import lombok.extern.slf4j.Slf4j;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Überträgt einen gelesenen Ember-Bestand in die KMM-Datenbank: Quellen, Filme mit allen Angaben,
- * Sets und auf Wunsch Serien und die Einstellungen. Läuft in der Transaktion des Aufrufers, damit ein Probelauf
- * sie zurückrollen kann.
+ * Transfers a read Ember library into the KMM database: sources, movies with all details, sets and, on request,
+ * TV shows and the settings. Runs in the caller's transaction so that a dry run can roll it back.
  */
 @Slf4j
 @Component
@@ -54,7 +54,7 @@ class EmberLibraryImporter {
     private final Clock clock;
 
     /**
-     * @param tvLibrary Serienbestand; leer, wenn keine Serien übernommen werden sollen
+     * @param tvLibrary TV show library; empty if no TV shows are to be imported
      */
     void importLibrary(EmberLibrary library, Optional<EmberTvLibrary> tvLibrary, Optional<EmberSettings> settings,
             EmberImportRequest request, EmberImportProgress progress, JobContext context) {
@@ -103,8 +103,8 @@ class EmberLibraryImporter {
                                 clock.getZone()));
             } catch (InvalidPathException e) {
                 progress.movieSkipped();
-                progress.warn("„%s“ wurde übersprungen, der Pfad ist auf diesem System ungültig: %s"
-                        .formatted(EmberMovieMapper.displayName(movie), entry.getValue()));
+                progress.warn(LocalizedText.of("migration.warning.invalidPath")
+                        .with("title", EmberMovieMapper.displayName(movie)).with("path", entry.getValue()));
                 continue;
             }
             progress.movieImported(result.created());
@@ -112,14 +112,14 @@ class EmberLibraryImporter {
                 progress.nfoMissing(EmberMovieMapper.displayName(movie));
             }
             if (EmberMovieMapper.belongsToSeveralSets(movie)) {
-                progress.warn("„%s“ gehört in Ember zu mehreren Sets; übernommen wurde das erste."
-                        .formatted(EmberMovieMapper.displayName(movie)));
+                progress.warn(LocalizedText.of("migration.warning.severalSets")
+                        .with("title", EmberMovieMapper.displayName(movie)));
             }
         }
         context.reportProgress(filePaths.size(), filePaths.size());
     }
 
-    /** Alle Sets, auch solche ohne Filme, mit Beschreibung, TMDB-ID und Sortierung. */
+    /** All sets, including those without movies, with overview, TMDB ID and sort order. */
     private void importSets(List<EmberMovieSet> sets) {
         sets.stream()
                 .filter(set -> set.title() != null)
@@ -127,17 +127,18 @@ class EmberLibraryImporter {
                         set.sortedByTitle() ? SetSortMethod.TITLE : SetSortMethod.YEAR));
     }
 
-    /** Eigene Filmlisten aus Embers Filter-Editor als gespeicherte Filter, soweit übersetzbar. */
+    /** Custom movie lists from Ember's filter editor as saved filters, as far as they can be translated. */
     private void importMovieLists(List<EmberMediaList> lists, EmberImportProgress progress) {
         for (EmberMediaList list : lists) {
             EmberMediaListTranslator.translate(list.sql()).ifPresentOrElse(
                     filter -> {
                         savedFilterService.importFilter(new SavedFilterData(FilterMediaType.MOVIE, list.name(),
                                 objectMapper.valueToTree(filter)));
-                        progress.settingsChanged(List.of("Filmliste „%s“ als Filter übernommen".formatted(list.name())));
+                        progress.settingsChanged(List.of(
+                                LocalizedText.of("migration.settings.movieList").with("name", list.name())));
                     },
-                    () -> progress.warn("Die Ember-Filmliste „%s“ wurde nicht übernommen, ihre Bedingungen lassen "
-                            .formatted(list.name()) + "sich nicht übersetzen: " + list.sql()));
+                    () -> progress.warn(LocalizedText.of("migration.warning.movieListNotTranslated")
+                            .with("name", list.name()).with("conditions", list.sql())));
         }
     }
 

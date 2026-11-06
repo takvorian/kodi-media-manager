@@ -1,7 +1,7 @@
 package de.tiktak.kmm.nfo;
 
 /**
- * Element- und Attributnamen des Kodi-NFO-Formats für Filme, Serien und Episoden (Kodi 19–21).
+ * Element and attribute names of the Kodi NFO format for movies, TV shows and episodes (Kodi 19–21).
  */
 final class NfoElements {
 
@@ -56,11 +56,11 @@ final class NfoElements {
     static final String EPISODE = "episode";
     static final String AIRED = "aired";
 
-    /** Ältere Schreibweisen, die nur gelesen werden. */
+    /** Older spellings that are only read. */
     static final String LEGACY_ID = "id";
     static final String LEGACY_IMDB_ID = "imdbid";
     static final String LEGACY_TMDB_ID = "tmdbid";
-    /** Ember und ältere Scraper schreiben in die {@code tvshow.nfo} {@code <id>} (TVDB), {@code <imdb>}, {@code <tmdb>}. */
+    /** Ember and older scrapers write {@code <id>} (TVDB), {@code <imdb>}, {@code <tmdb>} into {@code tvshow.nfo}. */
     static final String LEGACY_IMDB = "imdb";
     static final String LEGACY_TMDB = "tmdb";
 

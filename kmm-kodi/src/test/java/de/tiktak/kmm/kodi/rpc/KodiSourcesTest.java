@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.junit.jupiter.api.Test;
 
 class KodiSourcesTest {
@@ -20,7 +21,7 @@ class KodiSourcesTest {
     void doesNotContainOtherPaths() {
         assertThat(sources.contain("a:\\medien\\filme\\S\\Sliver (1993)\\")).isFalse();
         assertThat(sources.contain("smb://yggdrasil/medien/")).isFalse();
-        assertThat(sources.contain("smb://yggdrasil/medien/filme2/")).as("nur ähnlicher Name").isFalse();
+        assertThat(sources.contain("smb://yggdrasil/medien/filme2/")).as("only a similar name").isFalse();
     }
 
     @Test
@@ -59,6 +60,7 @@ class KodiSourcesTest {
     @Test
     void namesTheSourcesForAMessage() {
         assertThat(sources).hasToString("smb://yggdrasil/medien/filme/");
-        assertThat(KodiSources.of(List.of())).hasToString("keine");
+        assertThat(sources.describe()).isEqualTo(LocalizedText.literal("smb://yggdrasil/medien/filme/"));
+        assertThat(KodiSources.of(List.of()).describe()).isEqualTo(LocalizedText.of("kodiRpc.noSources"));
     }
 }

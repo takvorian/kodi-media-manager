@@ -13,7 +13,7 @@ import de.tiktak.kmm.migration.ember.settings.EmberAdvancedSettingsReader;
 import de.tiktak.kmm.migration.ember.settings.EmberSettingsReader;
 
 /**
- * Verdrahtet die frameworkfreie Ember-Bibliothek ({@code kmm-migration-ember}) als Spring-Beans.
+ * Wires the framework-free Ember library ({@code kmm-migration-ember}) as Spring beans.
  */
 @Configuration(proxyBeanMethods = false)
 class EmberMigrationConfiguration {

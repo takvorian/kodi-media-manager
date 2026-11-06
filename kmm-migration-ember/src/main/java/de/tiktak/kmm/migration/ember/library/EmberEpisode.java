@@ -10,12 +10,12 @@ import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
 import lombok.Builder;
 
 /**
- * Eine Episode aus der Ember-Datenbank, zu der eine Datei gehört. Mehrfachepisoden
- * ({@code S01E01E02}) sind mehrere Episoden mit derselben Datei.
+ * An episode from the Ember database that has a file. Multi-episode files ({@code S01E01E02}) are several
+ * episodes with the same file.
  *
- * @param path      Pfad der Episodendatei, wie Ember ihn gespeichert hat (Windows)
- * @param uniqueIds IDs je Anbieter, Schlüssel klein geschrieben
- * @param actors    Darsteller, danach die Gaststars
+ * @param path      path of the episode file as Ember stored it (Windows)
+ * @param uniqueIds IDs per provider, keys in lower case
+ * @param actors    actors, followed by the guest stars
  */
 @Builder
 public record EmberEpisode(

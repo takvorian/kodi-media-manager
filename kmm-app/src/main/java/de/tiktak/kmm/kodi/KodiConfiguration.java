@@ -9,8 +9,8 @@ import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiLibraryScheduler;
 
 /**
- * Verdrahtet den frameworkfreien Kodi-Client ({@code kmm-kodi}). Kodi läuft im lokalen Netz und
- * wird deshalb ohne den Proxy aus den Einstellungen angesprochen.
+ * Wires the framework-free Kodi client ({@code kmm-kodi}). Kodi runs in the local network and is therefore contacted
+ * without the proxy from the settings.
  */
 @Configuration(proxyBeanMethods = false)
 class KodiConfiguration {

@@ -6,17 +6,17 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Übersetzt Embers Muster ({@code $T {($Y)}}) in die Muster von KMM ({@code {title}[ ({year})]}). Embers
- * Steuerzeichen ohne Gegenstück (etwa {@code $D}, {@code $F}, {@code $X.}, {@code $?a?b?}) lassen sich nicht
- * übersetzen; dann bleibt das bisherige Muster.
+ * Translates Ember's patterns ({@code $T {($Y)}}) into KMM's patterns ({@code {title}[ ({year})]}). Ember's control
+ * codes without a counterpart (e.g. {@code $D}, {@code $F}, {@code $X.}, {@code $?a?b?}) cannot be translated; then
+ * the previous pattern stays.
  */
 final class EmberRenamePatterns {
 
-    /** {@code $W2_S?2E?}: Staffel und Episode mit Stellenzahl, Trenner bei mehreren Staffeln und Präfixen. */
+    /** {@code $W2_S?2E?}: season and episode with number of digits, separator for several seasons, and prefixes. */
     private static final Pattern SEASON_AND_EPISODE = Pattern.compile("^\\$W(\\d)[._x]?([^?$\\d]*)\\?(\\d)([^?$]*)\\?");
-    /** {@code $K2_?}: Staffel mit Stellenzahl, Trenner bei mehreren Staffeln und Präfix. */
+    /** {@code $K2_?}: season with number of digits, separator for several seasons, and prefix. */
     private static final Pattern SEASON = Pattern.compile("^\\$K(\\d)[._x]?([^?$]*)\\?");
-    /** {@code $Q2E?}: Episode wie {@code $K}. */
+    /** {@code $Q2E?}: episode like {@code $K}. */
     private static final Pattern EPISODE = Pattern.compile("^\\$Q(\\d)[._x]?([^?$]*)\\?");
 
     private static final Map<String, String> SIMPLE = Map.ofEntries(
@@ -48,7 +48,7 @@ final class EmberRenamePatterns {
     private EmberRenamePatterns() {
     }
 
-    /** @return das übersetzte Muster oder leer, wenn es Teile ohne Gegenstück enthält */
+    /** @return the translated pattern, or empty if it contains parts without a counterpart */
     static Optional<String> translate(String ember) {
         if (ember == null || ember.isBlank()) {
             return Optional.empty();

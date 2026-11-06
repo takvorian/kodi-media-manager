@@ -11,11 +11,11 @@ import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 
 /**
- * Antwort der Profil-Analyse. Pfade werden als Text ausgegeben, fehlende Einstellungen als {@code null}.
+ * Answer of the profile analysis. Paths are returned as text, missing settings as {@code null}.
  *
- * @param sources   Filmquellen aus Ember, z. B. als Vorschlag für Pfad-Zuordnungen
- * @param tvSources Serienquellen aus Ember
- * @param kodiHosts Kodi-Geräte aus Ember, ohne Zugangsdaten
+ * @param sources   movie sources from Ember, e.g. as suggestion for path mappings
+ * @param tvSources TV show sources from Ember
+ * @param kodiHosts Kodi devices from Ember, without credentials
  */
 public record EmberInspectionResponse(
         String profileDirectory,
@@ -42,7 +42,7 @@ public record EmberInspectionResponse(
     }
 
     /**
-     * @param pathMappings Anzahl der Pfad-Zuordnungen
+     * @param pathMappings number of path mappings
      */
     public record KodiHost(String name, String address, int port, int pathMappings) {
 

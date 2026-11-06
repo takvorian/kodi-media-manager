@@ -17,7 +17,7 @@ import de.tiktak.kmm.nfo.StreamDetails;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 /**
- * Die Tests mit echtem ffprobe laufen nur, wenn ffprobe und ffmpeg auf dem PATH liegen (in der CI immer).
+ * The tests with a real ffprobe only run if ffprobe and ffmpeg are on the PATH (always in CI).
  */
 class FfprobeRunnerTest {
 
@@ -30,8 +30,9 @@ class FfprobeRunnerTest {
     void reportsAMissingProgram() {
         FfprobeRunner runner = new FfprobeRunner(directory.resolve("ffprobe-fehlt").toString(), TIMEOUT);
 
-        assertThatThrownBy(() -> runner.run("film.mkv")).isInstanceOf(MediaProbeException.class)
-                .hasMessageContaining("kann nicht gestartet werden");
+        assertThatThrownBy(() -> runner.run("film.mkv"))
+                .isInstanceOfSatisfying(MediaProbeException.class,
+                        e -> assertThat(e.localizedText().key()).isEqualTo("media.ffprobe.notStartable"));
     }
 
     @Test
@@ -39,7 +40,10 @@ class FfprobeRunnerTest {
         String java = ProcessHandle.current().info().command().orElseThrow();
 
         assertThatThrownBy(() -> new FfprobeRunner(java, TIMEOUT).run("film.mkv"))
-                .isInstanceOf(MediaProbeException.class).hasMessageContaining("kann 'film.mkv' nicht lesen");
+                .isInstanceOfSatisfying(MediaProbeException.class, e -> {
+                    assertThat(e.localizedText().key()).isEqualTo("media.ffprobe.failed");
+                    assertThat(e.localizedText().args()).containsEntry("input", "film.mkv");
+                });
     }
 
     @Test
@@ -70,8 +74,9 @@ class FfprobeRunnerTest {
         assumeTrue(available("ffprobe"), "ffprobe not on PATH");
         FfprobeRunner runner = new FfprobeRunner("ffprobe", Duration.ofMillis(500));
 
-        assertThatThrownBy(() -> runner.run("pipe:0")).isInstanceOf(MediaProbeException.class)
-                .hasMessageContaining("zu lange");
+        assertThatThrownBy(() -> runner.run("pipe:0"))
+                .isInstanceOfSatisfying(MediaProbeException.class,
+                        e -> assertThat(e.localizedText().key()).isEqualTo("media.ffprobe.timedOut"));
     }
 
     private static boolean available(String program) {

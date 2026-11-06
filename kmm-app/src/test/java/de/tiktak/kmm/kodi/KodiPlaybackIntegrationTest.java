@@ -32,8 +32,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Gesehen-Status aus Kodi Ende zu Ende gegen einen Fake-Kodi: Der Stand landet in NFO und Datenbank,
- * Kodi wird danach nicht erneut zum Einlesen aufgefordert, und der nächste Scan hält die NFOs für aktuell.
+ * Watched status from Kodi end to end against a fake Kodi: the state ends up in NFO and database, Kodi is not asked to
+ * scan again afterwards, and the next scan considers the NFOs up to date.
  */
 @SpringBootTest(properties = "kmm.kodi.sync-delay=50ms")
 @AutoConfigureMockMvc
@@ -98,7 +98,7 @@ class KodiPlaybackIntegrationTest {
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/{id}/playback", alienId).with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
                         {"host": "Wohnzimmer", "outcome": "NOT_IN_KODI",
-                         "message": "„Alien (1979)“ ist in Kodi nicht bekannt."}
+                         "message": {"key": "kodi.playback.notInKodi", "args": {"label": "Alien (1979)"}}}
                         """);
 
         JsonNode again = runJob(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/sources/{id}/playback",
@@ -129,8 +129,8 @@ class KodiPlaybackIntegrationTest {
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/{id}/playback", first).with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
-                        {"outcome": "UPDATED", "message": "„Lost S01E01“ aus Kodi übernommen: 1× gesehen.",
-                         "playCount": 1}
+                        {"outcome": "UPDATED", "message": {"key": "kodi.playback.updated",
+                         "args": {"label": "Lost S01E01", "playCount": 1, "rating": "none"}}, "playCount": 1}
                         """);
 
         List<String> lines = Files.readAllLines(nfo);
@@ -167,7 +167,7 @@ class KodiPlaybackIntegrationTest {
         return runJob(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange());
     }
 
-    /** @return das Ergebnis des erfolgreich beendeten Jobs */
+    /** @return the result of the successfully finished job */
     private JsonNode runJob(MvcTestResult started) {
         assertThat(started).hasStatus(HttpStatus.ACCEPTED);
         String jobId = read(started).get("id").asString();

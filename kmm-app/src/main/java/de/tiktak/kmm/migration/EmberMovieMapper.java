@@ -16,7 +16,7 @@ import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.scanner.StackedFiles;
 
 /**
- * Übersetzt einen Ember-Film in einen KMM-Import.
+ * Translates an Ember movie into a KMM import.
  */
 final class EmberMovieMapper {
 
@@ -31,9 +31,9 @@ final class EmberMovieMapper {
     }
 
     /**
-     * @param filePath Pfad der Filmdatei im Zielsystem
-     * @param sets     Filmsets aus Ember nach ID
-     * @param zone     Zeitzone, in der Ember lief; Ember speichert Zeitpunkte als lokale Uhrzeit
+     * @param filePath path of the movie file on the target system
+     * @param sets     movie sets from Ember by ID
+     * @param zone     time zone Ember ran in; Ember stores points in time as local time
      */
     static MovieImport toImport(EmberMovie movie, long sourceId, String filePath, Map<Long, EmberMovieSet> sets,
             ZoneId zone) {
@@ -54,7 +54,7 @@ final class EmberMovieMapper {
                 EmberMappings.language(movie.language()));
     }
 
-    /** Filme in mehreren Sets kennt Kodi nicht; übernommen wird das erste. */
+    /** Kodi does not know movies in several sets; the first one is imported. */
     static boolean belongsToSeveralSets(EmberMovie movie) {
         return movie.sets().size() > 1;
     }
@@ -113,7 +113,7 @@ final class EmberMovieMapper {
                 .findFirst();
     }
 
-    /** Ohne Titel in Ember: Dateiname ohne Endung, bei Discs der Name des Filmordners. */
+    /** Without a title in Ember: file name without extension, for discs the name of the movie folder. */
     private static String titleFromPath(String filePath, DiscFormat format) {
         Path file = Path.of(filePath);
         if (format != DiscFormat.FILE && file.getParent() != null && file.getParent().getParent() != null) {
@@ -136,7 +136,7 @@ final class EmberMovieMapper {
         }
     }
 
-    /** Name eines Films für Berichte. */
+    /** Name of a movie for reports. */
     static String displayName(EmberMovie movie) {
         return movie.title() != null ? movie.title() : movie.path();
     }

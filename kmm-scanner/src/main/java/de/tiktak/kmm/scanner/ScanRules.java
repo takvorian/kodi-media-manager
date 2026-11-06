@@ -6,11 +6,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
- * Regeln, welche Dateien als Filme gelten und welche Ordner übersprungen werden.
+ * Rules for which files count as movies and which folders are skipped.
  *
- * @param videoExtensions       Dateiendungen ohne Punkt, Groß-/Kleinschreibung egal
- * @param ignoredDirectoryNames Ordner, die samt Inhalt ignoriert werden (Extras, Trailer, Kodi-Artwork …)
- * @param excludedDirectories   absolute Ordner, die samt Inhalt ignoriert werden
+ * @param videoExtensions       file extensions without dot, case-insensitive
+ * @param ignoredDirectoryNames folders that are ignored with their content (extras, trailers, Kodi artwork …)
+ * @param excludedDirectories   absolute folders that are ignored with their content
  */
 public record ScanRules(Set<String> videoExtensions, Set<String> ignoredDirectoryNames,
         Set<Path> excludedDirectories) {
@@ -48,7 +48,7 @@ public record ScanRules(Set<String> videoExtensions, Set<String> ignoredDirector
         return ignoredDirectoryNames.contains(directoryName.toLowerCase(Locale.ROOT));
     }
 
-    /** Ob der Ordner ein ausgeschlossener Ordner ist oder in einem liegt. */
+    /** Whether the folder is an excluded folder or lies in one. */
     public boolean isExcludedDirectory(Path directory) {
         Path normalized = directory.toAbsolutePath().normalize();
         return excludedDirectories.stream().anyMatch(normalized::startsWith);

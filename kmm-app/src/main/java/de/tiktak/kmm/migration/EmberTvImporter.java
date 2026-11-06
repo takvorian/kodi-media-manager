@@ -12,6 +12,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.migration.ember.library.EmberEpisode;
 import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
@@ -27,14 +28,16 @@ import de.tiktak.kmm.tvshow.TvShowImportService.TvShowImportSession;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Überträgt den Serienbestand aus Ember in die KMM-Datenbank: Serienquellen, Serien mit Staffeltiteln
- * und Episoden mit Datei. Episoden, deren Nummer nicht zum Dateinamen passt, werden übersprungen. Läuft in der Transaktion des Aufrufers, damit ein Probelauf sie zurückrollen kann.
+ * Transfers the TV show library from Ember into the KMM database: TV show sources, TV shows with season titles and
+ * episodes with a file. Episodes whose number does not match the file name are skipped. Runs in the caller's
+ * transaction so that a dry run can roll it back.
  */
 @Component
 @RequiredArgsConstructor
 class EmberTvImporter {
 
     static final String DEFAULT_SOURCE_NAME = "Serien";
+    private static final String EPISODE_CODE = "S%02dE%02d";
     private static final char EXTENSION_SEPARATOR = '.';
 
     private final EmberSourceImporter sourceImporter;
@@ -90,8 +93,8 @@ class EmberTvImporter {
             return Optional.of(imported);
         } catch (InvalidPathException e) {
             progress.showSkipped();
-            progress.warn("„%s“ wurde übersprungen, der Pfad ist auf diesem System ungültig: %s"
-                    .formatted(EmberTvShowMapper.displayName(show), directory));
+            progress.warn(LocalizedText.of("migration.warning.invalidPath")
+                    .with("title", EmberTvShowMapper.displayName(show)).with("path", directory));
             return Optional.empty();
         }
     }
@@ -107,9 +110,10 @@ class EmberTvImporter {
             Optional<EpisodeNumber> fromFileName = numberInFileName(filePath.get());
             if (fromFileName.isPresent() && !describes(fromFileName.get(), episode)) {
                 progress.episodeSkipped();
-                progress.warn("%s wurde übersprungen: Ember nennt S%02dE%02d, der Dateiname aber S%02dE%02d."
-                        .formatted(episode.path(), episode.season(), episode.episode(), fromFileName.get().season(),
-                                fromFileName.get().episodes().getFirst()));
+                progress.warn(LocalizedText.of("migration.warning.episodeMismatch").with("path", episode.path())
+                        .with("ember", EPISODE_CODE.formatted(episode.season(), episode.episode()))
+                        .with("file", EPISODE_CODE.formatted(fromFileName.get().season(),
+                                fromFileName.get().episodes().getFirst())));
                 continue;
             }
             try {
@@ -122,7 +126,7 @@ class EmberTvImporter {
         }
     }
 
-    /** Ember hat manche Dateinamen falsch gelesen, z. B. Episode 720 aus {@code s01e02-720p}. */
+    /** Ember misread some file names, e.g. episode 720 from {@code s01e02-720p}. */
     private Optional<EpisodeNumber> numberInFileName(String filePath) {
         String fileName = Path.of(filePath).getFileName().toString();
         int extensionStart = fileName.lastIndexOf(EXTENSION_SEPARATOR);

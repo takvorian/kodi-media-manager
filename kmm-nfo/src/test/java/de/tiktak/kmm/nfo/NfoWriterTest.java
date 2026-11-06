@@ -192,7 +192,7 @@ class NfoWriterTest {
 
         assertThatThrownBy(() -> writer.write(nfoFile, heat("Heat")))
                 .isInstanceOf(NfoException.class)
-                .hasMessageContaining("kann nicht geschrieben werden");
+                .hasMessageContaining("cannot be written");
     }
 
     private static MovieNfo heat(String title) {

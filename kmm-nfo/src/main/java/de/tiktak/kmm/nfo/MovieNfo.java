@@ -7,16 +7,16 @@ import java.util.Map;
 import java.util.Optional;
 
 /**
- * Die Felder einer Kodi-Film-NFO, die KMM verwaltet. Nicht gesetzte Werte sind {@code null}.
+ * The fields of a Kodi movie NFO that KMM manages. Values that are not set are {@code null}.
  *
- * @param runtime   Laufzeit in Minuten
- * @param edition   Fassung, z. B. „Director's Cut“ (wie Ember)
- * @param videoSource Videoquelle, z. B. {@code bluray} (wie Ember)
- * @param uniqueIds IDs je Anbieter in Reihenfolge, Schlüssel klein geschrieben (z. B. {@code imdb}, {@code tmdb})
- * @param supplement weitere Angaben; {@code null} heißt „unbekannt“: Beim Schreiben bleiben die
- *                   entsprechenden Elemente einer vorhandenen NFO dann unverändert
- * @param language   Sprache ({@code <language>}, von Ember geschrieben) oder {@code null}; Schreiben übernimmt der
- *                   {@link LanguageNfoWriter}, sonst bleibt ein vorhandener Eintrag unverändert
+ * @param runtime   runtime in minutes
+ * @param edition   edition, e.g. "Director's Cut" (like Ember)
+ * @param videoSource video source, e.g. {@code bluray} (like Ember)
+ * @param uniqueIds IDs per provider in order, keys in lower case (e.g. {@code imdb}, {@code tmdb})
+ * @param supplement further details; {@code null} means "unknown": when writing, the corresponding elements of an
+ *                   existing NFO then stay unchanged
+ * @param language   language ({@code <language>}, written by Ember) or {@code null}; the {@link LanguageNfoWriter}
+ *                   writes it, otherwise an existing entry stays unchanged
  */
 public record MovieNfo(
         String title,
@@ -44,7 +44,7 @@ public record MovieNfo(
         uniqueIds = NfoCollections.orderedIds(uniqueIds);
     }
 
-    /** NFO-Inhalt ohne Angabe der Sprache. */
+    /** NFO content without a language. */
     public MovieNfo(String title, String originalTitle, String sortTitle, Integer year, LocalDate premiered,
             String plot, String outline, String tagline, Integer runtime, String mpaa, String edition,
             String videoSource, List<String> genres, Map<String, String> uniqueIds, MovieNfoSupplement supplement) {
@@ -52,7 +52,7 @@ public record MovieNfo(
                 videoSource, genres, uniqueIds, supplement, null);
     }
 
-    /** NFO-Inhalt ohne bekannte weitere Angaben. */
+    /** NFO content without known further details. */
     public MovieNfo(String title, String originalTitle, String sortTitle, Integer year, LocalDate premiered,
             String plot, String outline, String tagline, Integer runtime, String mpaa, String edition,
             String videoSource, List<String> genres, Map<String, String> uniqueIds) {
@@ -65,8 +65,7 @@ public record MovieNfo(
     }
 
     /**
-     * Erscheinungsjahr, notfalls aus dem Datum der Erstaufführung abgeleitet (Kodi 19+ schreibt
-     * nur noch {@code premiered}).
+     * Release year, derived from the premiere date if necessary (Kodi 19+ only writes {@code premiered}).
      */
     public Integer effectiveYear() {
         if (year != null) {

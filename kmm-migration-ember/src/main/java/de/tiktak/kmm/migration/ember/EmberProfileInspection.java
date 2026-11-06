@@ -5,7 +5,7 @@ import java.util.Optional;
 import de.tiktak.kmm.migration.ember.settings.EmberSettings;
 
 /**
- * Ergebnis der Analyse eines Ember-Profils vor der eigentlichen Migration.
+ * Result of analysing an Ember profile before the actual migration.
  */
 public record EmberProfileInspection(
         EmberProfile profile,

@@ -137,9 +137,11 @@ class MediaProbeTest {
         assertThatThrownBy(() -> probe(HALLOWEEN).probe(index, DiscFormat.BLURAY))
                 .isInstanceOf(MediaProbeException.class);
         assertThatThrownBy(() -> probe("{\"streams\": []}").probe(movie, DiscFormat.FILE))
-                .isInstanceOf(MediaProbeException.class).hasMessageContaining("keine erkennbaren Spuren");
+                .isInstanceOfSatisfying(MediaProbeException.class,
+                        e -> assertThat(e.localizedText().key()).isEqualTo("media.noStreams"));
         assertThatThrownBy(() -> probe("kein json").probe(movie, DiscFormat.FILE))
-                .isInstanceOf(MediaProbeException.class).hasMessageContaining("unverständliche Ausgabe");
+                .isInstanceOfSatisfying(MediaProbeException.class,
+                        e -> assertThat(e.localizedText().key()).isEqualTo("media.ffprobe.unintelligibleOutput"));
         assertThatThrownBy(() -> probe(HALLOWEEN).probe(directory.resolve("fehlt/Heat cd1.avi"), DiscFormat.FILE))
                 .isInstanceOf(MediaProbeException.class);
     }

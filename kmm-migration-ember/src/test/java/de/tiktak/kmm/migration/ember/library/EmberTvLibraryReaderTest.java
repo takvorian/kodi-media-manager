@@ -57,7 +57,7 @@ class EmberTvLibraryReaderTest {
         assertThat(lost.premiered()).isEqualTo(LocalDate.of(2004, 9, 22));
         assertThat(lost.plot()).isEqualTo("Überlebende eines Flugzeugabsturzes.");
         assertThat(lost.runtime()).isEqualTo(45);
-        assertThat(lost.mpaa()).as("Certification als Ersatz").isEqualTo("Germany:16");
+        assertThat(lost.mpaa()).as("Certification as fallback").isEqualTo("Germany:16");
         assertThat(lost.status()).isEqualTo("Ended");
         assertThat(lost.uniqueIds()).containsExactlyInAnyOrderEntriesOf(
                 Map.of("tmdb", "4607", "tvdb", "73739", "imdb", "tt0411008"));
@@ -66,7 +66,7 @@ class EmberTvLibraryReaderTest {
         assertThat(lost.tags()).containsExactly("Heist");
         assertThat(lost.actors()).containsExactly(new EmberActor("Matthew Fox", "Jack Shephard", null));
         assertThat(lost.ratings()).containsExactly(new EmberRating("imdb", 9.9, 10, 1, true));
-        assertThat(lost.seasonTitles()).as("Platzhalter -1 und leere Titel entfallen")
+        assertThat(lost.seasonTitles()).as("placeholder -1 and empty titles are dropped")
                 .containsExactlyEntriesOf(Map.of(0, "Specials"));
         assertThat(lost.userRating()).isEqualTo(8);
     }
@@ -85,7 +85,7 @@ class EmberTvLibraryReaderTest {
         assertThat(pilot.runtime()).isEqualTo(42);
         assertThat(pilot.uniqueIds()).containsExactlyInAnyOrderEntriesOf(
                 Map.of("tvdb", "127131", "tmdb", "64465", "imdb", "tt0636289"));
-        assertThat(pilot.actors()).as("Gaststars nach den Darstellern").containsExactly(
+        assertThat(pilot.actors()).as("guest stars after the actors").containsExactly(
                 new EmberActor("Matthew Fox", "Jack Shephard", null),
                 new EmberActor("Kevin Tighe", "Anthony Cooper", null));
         assertThat(pilot.directors()).containsExactly("Jack Bender");
@@ -124,7 +124,7 @@ class EmberTvLibraryReaderTest {
 
         assertThatThrownBy(() -> reader.read(notADatabase))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("kann nicht gelesen werden");
+                .hasMessageContaining("cannot be read");
         assertThatThrownBy(() -> reader.readSources(notADatabase)).isInstanceOf(EmberProfileException.class);
     }
 

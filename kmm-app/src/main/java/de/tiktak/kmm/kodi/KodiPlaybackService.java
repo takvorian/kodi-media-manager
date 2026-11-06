@@ -10,6 +10,9 @@ import java.util.function.BiFunction;
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.Localized;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -29,11 +32,10 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Holt den Gesehen-Status (Wiedergaben und letzte Wiedergabe) und die eigene Bewertung aus Kodi und
- * übernimmt sie in NFO und Datenbank. In der NFO überlebt die Bewertung, wenn Kodi den Eintrag neu
- * einliest. Kodi ergänzt nur, es setzt nichts zurück (siehe {@link KodiPlaybacks}); Einträge, die Kodi
- * nicht kennt, bleiben unverändert. Alle Kodi-Geräte nutzen dieselbe Kodi-Datenbank, deshalb genügt das
- * erste erreichbare Gerät mit passender Pfad-Zuordnung.
+ * Fetches the watched status (plays and last play) and the user rating from Kodi and takes them over into NFO and
+ * database. In the NFO the rating survives when Kodi reads the entry again. Kodi only adds, it does not reset anything
+ * (see {@link KodiPlaybacks}); entries that Kodi does not know stay unchanged. All Kodi devices use the same Kodi
+ * database, so the first reachable device with a matching path mapping is enough.
  */
 @Slf4j
 @Service
@@ -41,10 +43,12 @@ import lombok.extern.slf4j.Slf4j;
 public class KodiPlaybackService {
 
     static final String JOB_KEY_PREFIX = "kodi-playback:";
-    static final String QUERYING_MESSAGE = "Kodi wird abgefragt";
+    static final LocalizedText QUERYING_MESSAGE = LocalizedText.of("kodi.playback.querying");
     static final int MAX_LISTED_FAILURES = 20;
     private static final String EPISODE_LABEL = "%s S%02dE%02d";
     private static final int UNKNOWN_TOTAL = 0;
+    /** Value of the argument {@code rating} without a user rating. */
+    private static final String NO_RATING = "none";
 
     private final KodiHostService hostService;
     private final MediaSourceService sourceService;
@@ -54,22 +58,22 @@ public class KodiPlaybackService {
     private final JobService jobService;
     private final Clock clock;
 
-    /** Übernimmt den Gesehen-Status aller Filme bzw. Episoden der Quelle als Hintergrund-Job. */
+    /** Takes over the watched status of all movies or episodes of the source as a background job. */
     public JobSnapshot startSourceImport(long sourceId) {
         MediaSource source = sourceService.require(sourceId);
-        String title = "Gesehen-Status „%s“ aus Kodi".formatted(source.getName());
+        LocalizedText title = LocalizedText.of("kodi.playback.jobTitle").with("source", source.getName());
         return jobService.submit(JOB_KEY_PREFIX + sourceId, title, context -> importSource(source, context));
     }
 
     /**
-     * @throws KodiProblemException wenn kein Kodi-Gerät den Film zuordnen kann oder keines erreichbar ist
+     * @throws KodiProblemException if no Kodi device can map the movie or none can be reached
      */
     public KodiPlaybackResult importMovie(long movieId) {
         return importSingle(movieEntry(moviePlaybacks.find(movieId)), kodiClient::moviePlaybacks);
     }
 
     /**
-     * @throws KodiProblemException wenn kein Kodi-Gerät die Episode zuordnen kann oder keines erreichbar ist
+     * @throws KodiProblemException if no Kodi device can map the episode or none can be reached
      */
     public KodiPlaybackResult importEpisode(long episodeId) {
         return importSingle(episodeEntry(episodePlaybacks.find(episodeId)), kodiClient::episodePlaybacks);
@@ -99,13 +103,13 @@ public class KodiPlaybackService {
     private KodiPlaybackResult importSingle(Entry entry, BiFunction<KodiEndpoint, String, List<KodiPlayback>> query) {
         Fetched fetched = fetch(Path.of(entry.filePath()).getParent().toString(), query);
         Applied applied = apply(entry, fetched);
-        log.info("Playback from Kodi '{}': {}", fetched.target().name(), applied.message());
+        log.info("Playback from Kodi '{}': {}", fetched.target().name(), Messages.english(applied.message()));
         Playback playback = applied.playback();
         return new KodiPlaybackResult(fetched.target().name(), applied.outcome(), applied.message(),
                 playback.playCount(), playback.lastPlayedAt(), playback.userRating());
     }
 
-    /** Fragt das erste erreichbare Kodi-Gerät, das das Verzeichnis zuordnen kann. */
+    /** Asks the first reachable Kodi device that can map the directory. */
     private Fetched fetch(String localDirectory, BiFunction<KodiEndpoint, String, List<KodiPlayback>> query) {
         KodiException lastFailure = null;
         for (KodiTarget target : hostService.targets()) {
@@ -130,29 +134,30 @@ public class KodiPlaybackService {
         Optional<KodiPlayback> kodi = fetched.target().pathMapper().toKodiPath(entry.filePath())
                 .flatMap(kodiFile -> fetched.index().find(kodiFile, playback -> entry.matches(playback, kodiFile)));
         if (kodi.isEmpty()) {
-            return entry.unchanged(KodiPlaybackOutcome.NOT_IN_KODI,
-                    "„%s“ ist in Kodi nicht bekannt.".formatted(entry.label()));
+            return entry.unchanged(KodiPlaybackOutcome.NOT_IN_KODI, entry.text("kodi.playback.notInKodi"));
         }
         if (KodiPlaybacks.isCurrent(entry.playback(), kodi.get(), clock.getZone())) {
-            return entry.unchanged(KodiPlaybackOutcome.UNCHANGED,
-                    "„%s“ ist bereits auf dem Stand von Kodi.".formatted(entry.label()));
+            return entry.unchanged(KodiPlaybackOutcome.UNCHANGED, entry.text("kodi.playback.unchanged"));
         }
         Playback merged = KodiPlaybacks.merge(entry.playback(), kodi.get(), clock.getZone());
         if (merged.equals(entry.playback())) {
-            return entry.unchanged(KodiPlaybackOutcome.KEPT,
-                    "„%s“: KMM weiß mehr als Kodi, der Stand bleibt.".formatted(entry.label()));
+            return entry.unchanged(KodiPlaybackOutcome.KEPT, entry.text("kodi.playback.kept"));
         }
         try {
             entry.change().accept(merged);
         } catch (ErrorResponseException e) {
             return entry.unchanged(KodiPlaybackOutcome.FAILED,
-                    "„%s“: %s".formatted(entry.label(), e.getBody().getDetail()));
+                    entry.text("kodi.playback.failed").with("reason", reason(e)));
         }
-        String state = merged.playCount() == null || merged.playCount() == 0 ? "ungesehen"
-                : "%d× gesehen".formatted(merged.playCount());
-        String rating = merged.userRating() == null ? "" : ", Bewertung %d".formatted(merged.userRating());
-        return new Applied(KodiPlaybackOutcome.UPDATED, "„%s“ aus Kodi übernommen: %s%s.".formatted(entry.label(),
-                state, rating), merged);
+        LocalizedText updated = entry.text("kodi.playback.updated")
+                .with("playCount", merged.playCount() == null ? 0 : merged.playCount())
+                .with("rating", merged.userRating() == null ? NO_RATING : merged.userRating());
+        return new Applied(KodiPlaybackOutcome.UPDATED, updated, merged);
+    }
+
+    private static LocalizedText reason(ErrorResponseException e) {
+        return e instanceof Localized localized ? localized.localizedText()
+                : LocalizedText.literal(e.getBody().getDetail());
     }
 
     private Entry movieEntry(MoviePlayback movie) {
@@ -174,10 +179,10 @@ public class KodiPlaybackService {
     }
 
     /**
-     * Ein Film oder eine Episode mit ihrem Stand in KMM.
+     * A movie or an episode with its state in KMM.
      *
-     * @param season  Staffel oder {@code null} bei Filmen
-     * @param episode Episode oder {@code null} bei Filmen
+     * @param season  season, or {@code null} for movies
+     * @param episode episode, or {@code null} for movies
      */
     private record Entry(String label, String filePath, Playback playback, Integer season, Integer episode,
                          PlaybackChange change) {
@@ -186,9 +191,14 @@ public class KodiPlaybackService {
             return season == null ? playback.isMovie(kodiFile) : playback.isEpisode(kodiFile, season, episode);
         }
 
-        /** Ergebnis ohne Änderung: KMM behält seinen bisherigen Stand. */
-        Applied unchanged(KodiPlaybackOutcome outcome, String message) {
+        /** Result without change: KMM keeps its previous state. */
+        Applied unchanged(KodiPlaybackOutcome outcome, LocalizedText message) {
             return new Applied(outcome, message, playback);
+        }
+
+        /** A message about this entry. */
+        LocalizedText text(String key) {
+            return LocalizedText.of(key).with("label", label);
         }
     }
 
@@ -197,12 +207,12 @@ public class KodiPlaybackService {
         void accept(Playback merged);
     }
 
-    private record Applied(KodiPlaybackOutcome outcome, String message, Playback playback) {
+    private record Applied(KodiPlaybackOutcome outcome, LocalizedText message, Playback playback) {
     }
 
     private static final class Tally {
 
-        private final List<String> failures = new ArrayList<>();
+        private final List<LocalizedText> failures = new ArrayList<>();
         private int updated;
         private int unchanged;
         private int kept;

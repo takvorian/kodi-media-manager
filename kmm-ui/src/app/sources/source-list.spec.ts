@@ -188,7 +188,7 @@ describe('SourceList', () => {
         hostId: 1,
         host: 'Wohnzimmer',
         outcome: 'SCAN_STARTED',
-        message: 'Kodi sucht nach neuen Filmen.',
+        message: literal('Kodi sucht nach neuen Filmen.'),
         at: '',
       },
     ]);

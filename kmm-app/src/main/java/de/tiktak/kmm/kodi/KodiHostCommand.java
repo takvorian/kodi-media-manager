@@ -13,10 +13,10 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Anlegen oder Ändern eines Kodi-Geräts über die REST-API.
+ * Creating or changing a Kodi device via the REST API.
  *
- * @param address  Rechnername oder IP-Adresse ohne {@code http://}
- * @param password neues Passwort; {@code null} behält das gespeicherte
+ * @param address  host name or IP address without {@code http://}
+ * @param password new password; {@code null} keeps the stored one
  */
 public record KodiHostCommand(
         @NotBlank @Size(max = KodiHostSettings.MAX_NAME_LENGTH) String name,
@@ -28,7 +28,7 @@ public record KodiHostCommand(
         @NotNull @Size(max = MAX_MAPPINGS) List<@Valid @NotNull PathMapping> pathMappings) {
 
     static final int MAX_MAPPINGS = 20;
-    /** Ohne Schema, Pfad oder Leerzeichen. */
+    /** Without scheme, path or spaces. */
     private static final String ADDRESS_PATTERN = "\\s*[^\\s/]+\\s*";
 
     KodiHostSettings toSettings() {
@@ -37,8 +37,8 @@ public record KodiHostCommand(
     }
 
     /**
-     * @param localPath Verzeichnis aus Sicht von KMM, z. B. {@code /media/filme}
-     * @param kodiPath  dasselbe Verzeichnis aus Sicht von Kodi, z. B. {@code smb://nas/filme/}
+     * @param localPath directory as KMM sees it, e.g. {@code /media/filme}
+     * @param kodiPath  the same directory as Kodi sees it, e.g. {@code smb://nas/filme/}
      */
     public record PathMapping(
             @NotBlank @Size(max = KodiHostSettings.MAX_PATH_LENGTH) String localPath,

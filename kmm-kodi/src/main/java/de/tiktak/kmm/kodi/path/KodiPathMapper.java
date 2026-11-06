@@ -6,9 +6,8 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 /**
- * Übersetzt Pfade aus Sicht von KMM in Pfade aus Sicht von Kodi. Windows-Pfade werden ohne
- * Beachtung der Groß-/Kleinschreibung verglichen, POSIX-Pfade exakt. Bei mehreren passenden
- * Zuordnungen gewinnt die mit dem längsten Präfix.
+ * Translates paths as KMM sees them into paths as Kodi sees them. Windows paths are compared case-insensitively,
+ * POSIX paths exactly. If several mappings match, the one with the longest prefix wins.
  */
 public class KodiPathMapper {
 
@@ -26,7 +25,7 @@ public class KodiPathMapper {
     }
 
     /**
-     * @return den Pfad aus Sicht von Kodi oder leer, wenn keine Zuordnung passt
+     * @return the path as Kodi sees it, or empty if no mapping matches
      */
     public Optional<String> toKodiPath(String localPath) {
         String normalized = normalize(localPath);
@@ -37,7 +36,7 @@ public class KodiPathMapper {
     }
 
     /**
-     * @return das Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen, wie Kodi es erwartet
+     * @return the directory as Kodi sees it with a trailing separator, as Kodi expects it
      */
     public Optional<String> toKodiDirectory(String localDirectory) {
         return toKodiPath(localDirectory).map(path -> {

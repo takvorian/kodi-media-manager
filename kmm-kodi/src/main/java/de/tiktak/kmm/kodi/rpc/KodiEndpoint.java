@@ -4,13 +4,13 @@ import java.net.URI;
 import java.util.Objects;
 
 /**
- * Zugang zur JSON-RPC-Schnittstelle eines Kodi-Geräts. In Kodi muss dafür unter Einstellungen →
- * Dienste → Steuerung „Steuerung über HTTP erlauben“ aktiviert sein.
+ * Access to the JSON-RPC interface of a Kodi device. In Kodi, Settings → Services → Control → "Allow remote
+ * control via HTTP" must be enabled for this.
  *
- * @param address  Rechnername oder IP-Adresse, z. B. {@code firetv.fritz.box}
- * @param port     Port des Kodi-Webservers, standardmäßig 8080
- * @param username Benutzername oder {@code null}, wenn Kodi keine Anmeldung verlangt
- * @param password Passwort oder {@code null}
+ * @param address  host name or IP address, e.g. {@code firetv.fritz.box}
+ * @param port     port of the Kodi web server, 8080 by default
+ * @param username user name, or {@code null} if Kodi requires no login
+ * @param password password or {@code null}
  */
 public record KodiEndpoint(String address, int port, String username, String password) {
 
@@ -38,7 +38,7 @@ public record KodiEndpoint(String address, int port, String username, String pas
         return username != null && !username.isBlank();
     }
 
-    /** Ohne Passwort, damit es nicht in Logs landet. */
+    /** Without the password so it does not end up in logs. */
     @Override
     public String toString() {
         return "KodiEndpoint[%s:%d]".formatted(address, port);

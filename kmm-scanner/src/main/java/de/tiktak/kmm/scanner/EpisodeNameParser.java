@@ -7,12 +7,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Erkennt Staffel und Episode im Dateinamen wie Kodis Standardregeln:
+ * Recognizes season and episode in the file name like Kodi's default rules:
  * <ul>
- * <li>{@code S01E02}, {@code s1e2}, {@code S1970E01}, mehrfach {@code S01E01E02} oder {@code S01E01-E02}</li>
- * <li>{@code 1x02}, mehrfach {@code 1x02x03}</li>
- * <li>Kurzform am Ende {@code …-102} (Staffel 1, Episode 2) bzw. {@code …-1012} (Staffel 10, Episode 12);
- * vierstellige Zahlen, die wie ein Jahr aussehen, gelten nicht als Episode</li>
+ * <li>{@code S01E02}, {@code s1e2}, {@code S1970E01}, multiple {@code S01E01E02} or {@code S01E01-E02}</li>
+ * <li>{@code 1x02}, multiple {@code 1x02x03}</li>
+ * <li>short form at the end {@code …-102} (season 1, episode 2) or {@code …-1012} (season 10, episode 12);
+ * four-digit numbers that look like a year do not count as an episode</li>
  * </ul>
  */
 public class EpisodeNameParser {
@@ -33,10 +33,10 @@ public class EpisodeNameParser {
     }
 
     /**
-     * Text nach der Episodenangabe als Titelvorschlag, z. B. „Der Fremde“ aus
-     * {@code ALF - S01E02 - Der Fremde}; nur bei {@code S01E02} und {@code 1x02}.
+     * Text after the episode number as suggested title, e.g. "Der Fremde" from {@code ALF - S01E02 - Der Fremde};
+     * only for {@code S01E02} and {@code 1x02}.
      *
-     * @return leer, wenn hinter der Angabe kein Text steht
+     * @return empty if there is no text after the number
      */
     public Optional<String> titleAfterNumber(String nameWithoutExtension) {
         for (Pattern pattern : List.of(SEASON_EPISODE, CROSS)) {
@@ -66,7 +66,7 @@ public class EpisodeNameParser {
         return Optional.of(new EpisodeNumber(Integer.parseInt(matcher.group(1)), episodes));
     }
 
-    /** Die letzte passende Zahl gewinnt, weil Release-Namen vorne oft Codecs wie {@code x264} enthalten. */
+    /** The last matching number wins because release names often contain codecs like {@code x264} at the front. */
     private static Optional<EpisodeNumber> shortForm(String name) {
         Matcher matcher = SHORT_FORM.matcher(name);
         EpisodeNumber found = null;

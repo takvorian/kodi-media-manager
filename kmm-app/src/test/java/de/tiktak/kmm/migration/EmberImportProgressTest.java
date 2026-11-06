@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.junit.jupiter.api.Test;
 
 class EmberImportProgressTest {
@@ -14,13 +15,13 @@ class EmberImportProgressTest {
         for (int index = 0; index < 150; index++) {
             progress.movieImported(index % 2 == 0);
             progress.nfoMissing("Film " + index);
-            progress.sourceSkipped("Quelle " + index);
-            progress.warn("Hinweis " + index);
+            progress.sourceSkipped(LocalizedText.literal("Quelle " + index));
+            progress.warn(LocalizedText.literal("Hinweis " + index));
         }
         progress.sourceImported(true);
         progress.sourceImported(false);
         progress.movieSkipped();
-        progress.settingsChanged(List.of("Sprache"));
+        progress.settingsChanged(List.of(LocalizedText.literal("Sprache")));
         progress.kodiHostImported(true);
         progress.kodiHostImported(false);
         progress.kodiHostImported(false);
@@ -39,7 +40,7 @@ class EmberImportProgressTest {
         assertThat(report.missingFiles()).hasSize(EmberImportProgress.MAX_LISTED_ENTRIES);
         assertThat(report.skippedSources()).hasSize(EmberImportProgress.MAX_LISTED_ENTRIES);
         assertThat(report.warnings()).hasSize(EmberImportProgress.MAX_LISTED_ENTRIES);
-        assertThat(report.settingsChanges()).containsExactly("Sprache");
+        assertThat(report.settingsChanges()).containsExactly(LocalizedText.literal("Sprache"));
     }
 
     @Test
@@ -60,9 +61,10 @@ class EmberImportProgressTest {
     @Test
     void listsEachWarningOnlyOnce() {
         var progress = new EmberImportProgress(false);
-        progress.warn("Verzeichnis nicht erreichbar");
-        progress.warn("Verzeichnis nicht erreichbar");
+        LocalizedText unreachable = LocalizedText.of("migration.warning.sourceUnreachable").with("name", "Filme");
+        progress.warn(unreachable);
+        progress.warn(LocalizedText.of("migration.warning.sourceUnreachable").with("name", "Filme"));
 
-        assertThat(progress.toReport().warnings()).containsExactly("Verzeichnis nicht erreichbar");
+        assertThat(progress.toReport().warnings()).containsExactly(unreachable);
     }
 }

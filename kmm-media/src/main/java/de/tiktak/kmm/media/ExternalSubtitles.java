@@ -14,26 +14,26 @@ import de.tiktak.kmm.nfo.StreamDetails;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Findet Untertiteldateien neben einer Videodatei, etwa {@code Heat.de.forced.srt} oder
- * {@code Heat-eng.idx} zu {@code Heat.mkv}, und liest Sprache und „forced“ aus dem Dateinamen.
+ * Finds subtitle files next to a video file, such as {@code Heat.de.forced.srt} or {@code Heat-eng.idx} for
+ * {@code Heat.mkv}, and reads the language and "forced" from the file name.
  */
 @Slf4j
 final class ExternalSubtitles {
 
     private static final Set<String> EXTENSIONS = Set.of("srt", "ass", "ssa", "sub", "idx", "sup", "vtt", "smi");
-    /** VobSub besteht aus {@code .idx} und {@code .sub}; gezählt wird nur die {@code .idx}. */
+    /** VobSub consists of {@code .idx} and {@code .sub}; only the {@code .idx} is counted. */
     private static final String VOBSUB_INDEX = "idx";
     private static final String VOBSUB_DATA = "sub";
     private static final String FORCED = "forced";
     private static final char SEPARATOR = '.';
-    /** Zeichen, die wie bei Kodi den Videonamen vom Rest des Untertitel-Dateinamens trennen. */
+    /** Characters that separate the video name from the rest of the subtitle file name, as in Kodi. */
     private static final String NAME_SEPARATORS = "._ -";
     private static final String TOKEN_SEPARATORS = "[._ -]+";
 
     private ExternalSubtitles() {
     }
 
-    /** @return die Untertitel in der Reihenfolge ihrer Dateinamen; leer, wenn der Ordner nicht lesbar ist */
+    /** @return the subtitles in the order of their file names; empty if the folder cannot be read */
     static List<StreamDetails.Subtitle> of(Path videoFile) {
         String fileName = videoFile.getFileName().toString();
         int extensionStart = fileName.lastIndexOf(SEPARATOR);

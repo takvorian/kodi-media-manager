@@ -4,15 +4,15 @@ import java.nio.file.Path;
 import java.util.Objects;
 
 /**
- * Ein beim Scan gefundener Film.
+ * A movie found during a scan.
  *
- * @param file      Hauptdatei: Videodatei, erster Teil eines Stapels, {@code VIDEO_TS.IFO} oder {@code index.bdmv}
- * @param title     Titel: der unveränderte Name des Verzeichnisses, wenn der Film allein darin liegt
- * @param year      abgeleitetes Jahr oder {@code null}
- * @param imdbId    abgeleitete IMDb-ID oder {@code null}
- * @param format    Speicherform
- * @param partCount Anzahl der Teile (größer 1 bei {@code cd1}/{@code cd2} usw.)
- * @param fileTitle Titel laut Dateiname; so hießen bereits gescannte Filme bisher
+ * @param file      main file: video file, first part of a stack, {@code VIDEO_TS.IFO} or {@code index.bdmv}
+ * @param title     title: the unchanged name of the directory if the movie is the only one in it
+ * @param year      derived year or {@code null}
+ * @param imdbId    derived IMDb ID or {@code null}
+ * @param format    storage format
+ * @param partCount number of parts (greater than 1 for {@code cd1}/{@code cd2} etc.)
+ * @param fileTitle title according to the file name; already scanned movies used to be called that
  */
 public record MovieCandidate(Path file, String title, Integer year, String imdbId, DiscFormat format, int partCount,
         String fileTitle) {
@@ -26,16 +26,16 @@ public record MovieCandidate(Path file, String title, Integer year, String imdbI
         }
     }
 
-    /** Ein Film, dessen Titel aus dem Dateinamen stammt. */
+    /** A movie whose title comes from the file name. */
     public MovieCandidate(Path file, String title, Integer year, String imdbId, DiscFormat format, int partCount) {
         this(file, title, year, imdbId, format, partCount, title);
     }
 
     /**
-     * Übernimmt den Namen des Verzeichnisses als Titel und ergänzt daraus Jahr und ID; bekannte Werte bleiben. Bei DVD
-     * und Blu-ray ist das Verzeichnis {@code VIDEO_TS} bzw. {@code BDMV}; dort steht der Titel schon fest.
+     * Takes the name of the directory as title and adds year and ID from it; known values are kept. For DVD and
+     * Blu-ray the directory is {@code VIDEO_TS} or {@code BDMV}; there the title is already settled.
      *
-     * @param name der aus dem Verzeichnisnamen abgeleitete Name
+     * @param name the name derived from the directory name
      */
     MovieCandidate withDirectoryName(String directoryName, ParsedMovieName name) {
         return new MovieCandidate(file, format == DiscFormat.FILE ? directoryName : title,

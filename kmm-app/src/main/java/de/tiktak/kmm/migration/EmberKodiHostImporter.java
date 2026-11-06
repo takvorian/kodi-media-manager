@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.kodi.KodiHostService;
 import de.tiktak.kmm.kodi.KodiHostSettings;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
@@ -14,8 +15,8 @@ import de.tiktak.kmm.migration.ember.kodi.EmberKodiHost;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Übernimmt Embers Kodi-Geräte mit Zugangsdaten. Embers lokale Pfade werden über die Pfad-Zuordnung
- * des Imports zu KMM-Pfaden; Kodis Pfade bleiben unverändert. Läuft in der Transaktion des Aufrufers.
+ * Imports Ember's Kodi devices with credentials. Ember's local paths become KMM paths via the path mapping of the
+ * import; Kodi's paths stay unchanged. Runs in the caller's transaction.
  */
 @Component
 @RequiredArgsConstructor
@@ -29,7 +30,7 @@ class EmberKodiHostImporter {
     void importHosts(List<EmberKodiHost> hosts, EmberPathTranslator paths, EmberImportProgress progress) {
         for (EmberKodiHost host : hosts) {
             if (host.address() == null) {
-                progress.warn("Ein Kodi-Gerät ohne Adresse wurde nicht übernommen.");
+                progress.warn(LocalizedText.of("migration.warning.kodiHostWithoutAddress"));
                 continue;
             }
             String name = name(host);
@@ -48,8 +49,8 @@ class EmberKodiHostImporter {
             }
             Optional<String> localPath = paths.translate(source.localPath());
             if (localPath.isEmpty()) {
-                progress.warn("Kodi-Gerät „%s“: Für %s gibt es keine Pfad-Zuordnung; diese Zuordnung zu %s fehlt."
-                        .formatted(name, source.localPath(), source.remotePath()));
+                progress.warn(LocalizedText.of("migration.warning.kodiMappingMissing").with("host", name)
+                        .with("local", source.localPath()).with("remote", source.remotePath()));
                 continue;
             }
             mappings.putIfAbsent(localPath.get(), new KodiPathMapping(localPath.get(), source.remotePath()));
