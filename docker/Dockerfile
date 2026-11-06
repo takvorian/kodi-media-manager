@@ -6,6 +6,7 @@ WORKDIR /workspace
 
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml lombok.config ./
+COPY kmm-i18n/ kmm-i18n/
 COPY kmm-plugin-api/ kmm-plugin-api/
 COPY kmm-scanner/ kmm-scanner/
 COPY kmm-nfo/ kmm-nfo/
@@ -14,7 +15,7 @@ COPY kmm-kodi/ kmm-kodi/
 COPY kmm-media/ kmm-media/
 COPY kmm-plugins/ kmm-plugins/
 COPY kmm-ui/ kmm-ui/
-COPY docs/handbuch/ docs/handbuch/
+COPY docs/manual/ docs/manual/
 COPY kmm-app/ kmm-app/
 
 # Tests run in CI; the image only builds the artifact.
