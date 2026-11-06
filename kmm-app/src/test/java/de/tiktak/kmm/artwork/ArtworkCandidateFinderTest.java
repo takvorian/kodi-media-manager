@@ -85,7 +85,8 @@ class ArtworkCandidateFinderTest {
     void reportsUnconfiguredAndFailingScrapersWithoutLosingOtherResults() {
         ImageScraper working = scraper("tmdb", "TMDB", List.of(image(ImageType.POSTER, "de", 5.0, "ok")));
         ImageScraper unconfigured = scraper("fanarttv", "fanart.tv", List.of());
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Für fanart.tv fehlt ein API-Key."));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("Für fanart.tv fehlt ein API-Key.")));
         ImageScraper failing = scraper("broken", "Kaputt", List.of());
         when(failing.findImages(any())).thenThrow(new ScraperException("nicht erreichbar"));
         ImageScraper crashing = scraper("crash", "Absturz", List.of());

@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Optional;
 import java.util.regex.Pattern;
 
 import org.springframework.stereotype.Service;
@@ -39,9 +40,9 @@ public class TrailerFinder {
         List<LocalizedText> warnings = new ArrayList<>();
         List<TrailerOption> options = new ArrayList<>();
         for (TrailerScraper scraper : scraperRegistry.trailerScrapersFor(request.mediaType())) {
-            var missing = scraper.missingConfiguration();
+            Optional<LocalizedText> missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
-                warnings.add(hint(missing.get()));
+                warnings.add(missing.get());
                 continue;
             }
             try {
@@ -55,11 +56,6 @@ public class TrailerFinder {
         }
         options.sort(preference(preferredLanguage));
         return new TrailerOptions(options, warnings);
-    }
-
-    /** Plugins word the hint as a translatable text or as plain text. */
-    private static LocalizedText hint(Object hint) {
-        return hint instanceof LocalizedText text ? text : LocalizedText.literal(String.valueOf(hint));
     }
 
     /** Whether Kodi can play the link: {@code plugin://}, {@code http(s)://}, {@code smb://} or {@code nfs://}. */

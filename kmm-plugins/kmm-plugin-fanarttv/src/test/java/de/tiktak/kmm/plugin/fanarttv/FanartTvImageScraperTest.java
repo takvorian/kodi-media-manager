@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ImageCandidate;
 import de.tiktak.kmm.plugin.api.ImageType;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -133,11 +134,11 @@ class FanartTvImageScraperTest {
                         tuple(ImageType.CHARACTERART, null, "en"),
                         tuple(ImageType.POSTER, 1, "en"),
                         tuple(ImageType.LANDSCAPE, 0, "en"));
-        assertThat(images.get(4).url()).as("Leerzeichen werden kodiert")
+        assertThat(images.get(4).url()).as("spaces are encoded")
                 .hasToString("https://assets.fanart.tv/fanart/A_78020%20(0).png");
         assertThat(images.get(4).previewUrl()).hasToString("https://assets.fanart.tv/preview/A_78020%20(0).png");
         assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "ALF", null, Map.of("tmdb", "4658"))))
-                .as("Serien nur über die TVDB-ID").isEmpty();
+                .as("TV shows only via the TVDB ID").isEmpty();
         assertThat(scraper.findImages(new ScrapeRequest(MediaType.TV_SHOW, "ALF", null, Map.of("tvdb", "x"))))
                 .isEmpty();
     }
@@ -148,8 +149,8 @@ class FanartTvImageScraperTest {
 
         assertThat(scraper.missingConfiguration()).contains(FanartTvImageScraper.MISSING_API_KEY);
         assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("Einstellungen");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.apiKeyMissing").with("provider", "fanart.tv")));
     }
 
     @Test
@@ -161,13 +162,16 @@ class FanartTvImageScraperTest {
     }
 
     @ParameterizedTest(name = "HTTP {0}")
-    @CsvSource(delimiter = '|', value = {"401 | API-Key", "403 | API-Key", "500 | Fehler 500"})
-    void translatesErrorResponses(int status, String expectedMessage) {
+    @CsvSource(delimiter = '|', value = {"401 | scraper.apiKeyRejected", "403 | scraper.apiKeyRejected",
+            "500 | scraper.httpError"})
+    void translatesErrorResponses(int status, String expectedKey) {
         fanart.respondWithStatus("/v3/movies/949", status);
 
         assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining(expectedMessage);
+                .isInstanceOfSatisfying(ScraperException.class, e -> {
+                    assertThat(e.localizedText().key()).isEqualTo(expectedKey);
+                    assertThat(e.localizedText().args()).containsEntry("provider", "fanart.tv");
+                });
     }
 
     @Test
@@ -175,8 +179,8 @@ class FanartTvImageScraperTest {
         fanart.respond("/v3/movies/949", "invalid.json");
 
         assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("unerwartete Antwort");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.unexpectedResponse").with("provider", "fanart.tv")));
     }
 
     @Test
@@ -186,8 +190,9 @@ class FanartTvImageScraperTest {
         scraper = initialized(new TestPluginContext().with("api-key", API_KEY).with("base-url", unreachable.toString()));
 
         assertThatThrownBy(() -> scraper.findImages(request(Map.of("tmdb", "949"))))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("fanart.tv cannot be reached");
     }
 
     private FanartTvImageScraper initialized(TestPluginContext context) {

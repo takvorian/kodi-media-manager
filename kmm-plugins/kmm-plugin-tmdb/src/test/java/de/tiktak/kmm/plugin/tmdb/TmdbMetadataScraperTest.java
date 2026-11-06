@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -187,8 +188,8 @@ class TmdbMetadataScraperTest {
 
         assertThat(scraper.missingConfiguration()).contains(AbstractTmdbScraper.MISSING_API_KEY);
         assertThatThrownBy(() -> scraper.search(new SearchQuery(MediaType.MOVIE, "Heat", null)))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("Einstellungen");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.apiKeyMissing").with("provider", "TMDB")));
         assertThat(tmdb.requests()).isEmpty();
     }
 
@@ -202,15 +203,17 @@ class TmdbMetadataScraperTest {
 
     @ParameterizedTest(name = "HTTP {0}")
     @CsvSource(delimiter = '|', value = {
-            "401 | API-Key",
-            "429 | Anfragelimit",
-            "500 | Fehler 500"})
-    void translatesErrorResponses(int status, String expectedMessage) {
+            "401 | scraper.apiKeyRejected",
+            "429 | scraper.rateLimitReached",
+            "500 | scraper.httpError"})
+    void translatesErrorResponses(int status, String expectedKey) {
         tmdb.respondWithStatus("/3/movie/949", status);
 
         assertThatThrownBy(() -> scraper.fetch("949"))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining(expectedMessage);
+                .isInstanceOfSatisfying(ScraperException.class, e -> {
+                    assertThat(e.localizedText().key()).isEqualTo(expectedKey);
+                    assertThat(e.localizedText().args()).containsEntry("provider", "TMDB");
+                });
     }
 
     @Test
@@ -221,8 +224,9 @@ class TmdbMetadataScraperTest {
                 .with("base-url", unreachable.toString()));
 
         assertThatThrownBy(() -> scraper.fetch("949"))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("TMDB cannot be reached");
     }
 
     @Test
@@ -230,8 +234,8 @@ class TmdbMetadataScraperTest {
         tmdb.respond("/3/movie/949", "invalid.json");
 
         assertThatThrownBy(() -> scraper.fetch("949"))
-                .isInstanceOf(ScraperException.class)
-                .hasMessageContaining("unerwartete Antwort");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.unexpectedResponse").with("provider", "TMDB")));
     }
 
     private TmdbMetadataScraper initializedScraper(String apiKey) {

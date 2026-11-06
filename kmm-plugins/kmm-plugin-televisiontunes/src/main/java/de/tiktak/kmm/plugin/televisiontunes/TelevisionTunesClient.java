@@ -13,17 +13,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 import lombok.RequiredArgsConstructor;
 
 /**
- * HTTP-Zugriff auf TelevisionTunes: Suche, Serienseiten und MP3-Dateien. Fehler werden zu verständlichen
+ * HTTP access to TelevisionTunes: search, show pages and MP3 files. Errors become understandable
  * {@link ScraperException}s.
  */
 @RequiredArgsConstructor
 class TelevisionTunesClient {
 
-    /** Titelmusik ist selten länger als ein paar Minuten; größere Dateien sind keine. */
+    /** Name of the provider in messages for the user. */
+    static final String PROVIDER = "TelevisionTunes";
+    /** Theme music is rarely longer than a few minutes; larger files are none. */
     static final long MAX_AUDIO_BYTES = 30L * 1024 * 1024;
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(30);
     private static final int OK = 200;
@@ -38,28 +42,28 @@ class TelevisionTunesClient {
         return page("/search.php?q=" + URLEncoder.encode(query, StandardCharsets.UTF_8));
     }
 
-    /** @param path Pfad der Serienseite, z. B. {@code /show/ALF} */
+    /** @param path path of the show page, e.g. {@code /show/ALF} */
     String show(String path) {
         return page(path);
     }
 
     /**
-     * Lädt eine MP3-Datei nach {@code target}.
+     * Downloads an MP3 file to {@code target}.
      *
-     * @throws ScraperException wenn die Antwort keine Audiodatei ist oder zu groß
+     * @throws ScraperException if the response is no audio file or too large
      */
     void download(URI audio, Path target) {
         HttpResponse<InputStream> response = send(request(audio), HttpResponse.BodyHandlers.ofInputStream());
         try (InputStream body = response.body()) {
             String contentType = response.headers().firstValue("Content-Type").orElse("");
             if (response.statusCode() != OK || !contentType.startsWith(AUDIO_CONTENT_TYPE)) {
-                throw new ScraperException("TelevisionTunes liefert unter %s keine Audiodatei (%d, %s)."
-                        .formatted(audio, response.statusCode(), contentType));
+                throw new ScraperException(LocalizedText.of("scraper.televisiontunes.noAudioFile")
+                        .with("url", audio).with("status", response.statusCode()).with("contentType", contentType));
             }
             copyLimited(body, target);
         } catch (IOException e) {
-            throw new ScraperException("Die Titelmusik von TelevisionTunes konnte nicht geladen werden: "
-                    + e.getMessage(), e);
+            throw new ScraperException(LocalizedText.of("scraper.televisiontunes.downloadFailed")
+                    .with("reason", e.getMessage()), e);
         }
     }
 
@@ -69,8 +73,7 @@ class TelevisionTunesClient {
         return switch (response.statusCode()) {
             case OK -> response.body();
             case NOT_FOUND -> "";
-            default -> throw new ScraperException("TelevisionTunes antwortet mit Fehler %d."
-                    .formatted(response.statusCode()));
+            default -> throw new ScraperException(ScraperTexts.httpError(PROVIDER, response.statusCode()));
         };
     }
 
@@ -86,10 +89,10 @@ class TelevisionTunesClient {
         try {
             return httpClient.send(request, handler);
         } catch (IOException e) {
-            throw new ScraperException("TelevisionTunes ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an TelevisionTunes wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(PROVIDER), e);
         }
     }
 
@@ -100,7 +103,7 @@ class TelevisionTunesClient {
             for (int read = body.read(buffer); read >= 0; read = body.read(buffer)) {
                 total += read;
                 if (total > MAX_AUDIO_BYTES) {
-                    throw new IOException("Datei größer als %d MB".formatted(MAX_AUDIO_BYTES / 1024 / 1024));
+                    throw new IOException("File larger than %d MB".formatted(MAX_AUDIO_BYTES / 1024 / 1024));
                 }
                 output.write(buffer, 0, read);
             }

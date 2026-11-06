@@ -14,16 +14,16 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 
 /**
- * Deutsche Angaben für leere Felder von Filmen von OFDb.de: Handlung, FSK, Genres, Länder, Regie und Darsteller. Die
- * Suche der Seite ist für Programme gesperrt, deshalb findet das Plugin Filme über die Sitemaps und übernimmt eine
- * Seite nur, wenn ihre IMDb-ID stimmt. Nicht jeder Film wird so gefunden; falsche Treffer gibt es nicht.
+ * German details for empty fields of movies from OFDb.de: plot, FSK, genres, countries, directors and actors. The
+ * search of the site is closed to programs, so the plugin finds movies via the sitemaps and only uses a page if its
+ * IMDb ID matches. Not every movie is found this way; there are no wrong matches.
  */
 @Extension
 public class OfdbEnrichmentScraper implements EnrichmentScraper {
 
     static final String ID = "ofdb";
     static final String IMDB = "imdb";
-    /** Nach Moviepilot, vor OMDb, das nur englische Angaben hat. */
+    /** After Moviepilot, before OMDb, which only has English details. */
     static final int ORDER = 20;
     private static final Pattern IMDB_ID = Pattern.compile("tt[0-9]{7,10}");
 

@@ -62,8 +62,7 @@ class ArtworkCandidateFinder {
         List<LocalizedText> warnings = new ArrayList<>();
         List<ImageScraper> ready = new ArrayList<>();
         for (ImageScraper scraper : scraperRegistry.imageScrapersFor(mediaType)) {
-            scraper.missingConfiguration().ifPresentOrElse(hint -> warnings.add(ArtworkWarnings.of(hint)),
-                    () -> ready.add(scraper));
+            scraper.missingConfiguration().ifPresentOrElse(warnings::add, () -> ready.add(scraper));
         }
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<List<ArtworkCandidate>>> results = ready.stream()

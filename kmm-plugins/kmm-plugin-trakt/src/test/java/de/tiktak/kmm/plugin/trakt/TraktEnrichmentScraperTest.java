@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
@@ -106,13 +107,17 @@ class TraktEnrichmentScraperTest {
 
         answers.put("/movies/tt0113277/ratings", new Answer(401, "{}"));
         assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("Client-ID");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.trakt.clientIdRejected")));
         answers.put("/movies/tt0113277/ratings", new Answer(503, "{}"));
         assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("503");
-        answers.put("/movies/tt0113277/ratings", new Answer(200, "kein JSON"));
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.httpError").with("provider", "Trakt")
+                                .with("status", 503)));
+        answers.put("/movies/tt0113277/ratings", new Answer(200, "no JSON"));
         assertThatThrownBy(() -> scraper.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("unerwartete");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.unexpectedResponse").with("provider", "Trakt")));
     }
 
     @Test
@@ -121,7 +126,9 @@ class TraktEnrichmentScraperTest {
         offline.initialize(context(Map.of("client-id", CLIENT_ID, "base-url", "http://127.0.0.1:1")));
 
         assertThatThrownBy(() -> offline.findEnrichment(request(MediaType.MOVIE, Map.of("imdb", "tt0113277"))))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("Trakt cannot be reached");
     }
 
     private TraktEnrichmentScraper scraper(String clientId) {

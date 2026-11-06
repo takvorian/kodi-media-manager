@@ -35,9 +35,9 @@ class ThemeFinder {
         List<LocalizedText> warnings = new ArrayList<>();
         Map<String, ThemeOption> options = new LinkedHashMap<>();
         for (ThemeScraper scraper : scraperRegistry.themeScrapersFor(target.mediaType())) {
-            var missing = scraper.missingConfiguration();
+            Optional<LocalizedText> missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
-                warnings.add(hint(missing.get()));
+                warnings.add(missing.get());
                 continue;
             }
             for (String title : searchTitles(target)) {
@@ -57,11 +57,6 @@ class ThemeFinder {
                 .sorted(Comparator.comparing(option -> !option.sameTitle()))
                 .toList();
         return new ThemeOptions(sorted, warnings);
-    }
-
-    /** Plugins word the hint as a translatable text or as plain text. */
-    private static LocalizedText hint(Object hint) {
-        return hint instanceof LocalizedText text ? text : LocalizedText.literal(String.valueOf(hint));
     }
 
     /** The first match with the same title; only this one KMM takes over without asking. */

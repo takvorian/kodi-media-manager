@@ -13,8 +13,8 @@ import de.tiktak.kmm.plugin.api.SearchResult;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Filmsets als Sammlungen von The Movie Database (TMDB). Fehlt die Beschreibung in der eingestellten Sprache,
- * kommt sie wie bei Ember auf Englisch.
+ * Movie sets as collections from The Movie Database (TMDB). If the description is missing in the configured
+ * language, it comes in English as in Ember.
  */
 @Extension
 public class TmdbMovieSetScraper extends AbstractTmdbScraper implements MovieSetScraper {

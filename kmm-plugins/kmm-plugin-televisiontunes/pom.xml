@@ -12,14 +12,14 @@
 
     <artifactId>kmm-plugin-televisiontunes</artifactId>
     <name>KMM Plugin TelevisionTunes</name>
-    <description>Titelmusik von TelevisionTunes.com als theme.mp3, vor allem für Serien. Ohne API-Key.</description>
+    <description>Theme music from TelevisionTunes.com as theme.mp3, mainly for TV shows. No API key needed.</description>
 
     <properties>
         <plugin.id>televisiontunes</plugin.id>
     </properties>
 
     <dependencies>
-        <!-- provided: SLF4J stellt die Anwendung zur Laufzeit bereit. -->
+        <!-- provided: the application supplies SLF4J at runtime. -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-api</artifactId>

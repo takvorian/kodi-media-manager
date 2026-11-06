@@ -16,7 +16,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 /**
- * Kleiner HTTP-Server, der feste fanart.tv-Antworten ausliefert und die Anfragen mitschreibt.
+ * Small HTTP server that serves fixed fanart.tv responses and records the requests.
  */
 final class FakeFanartTvServer implements AutoCloseable {
 
@@ -85,7 +85,7 @@ final class FakeFanartTvServer implements AutoCloseable {
     private record Response(int status, String body) {
     }
 
-    /** Mitgeschriebene Anfrage. */
+    /** Recorded request. */
     record HttpExchangeRecord(String path, String query, String authorization, String userAgent) {
     }
 }

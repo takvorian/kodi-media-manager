@@ -1,3 +1,4 @@
+import { literal } from '../i18n/localized-text';
 import { ScraperInfo } from '../movies/scraper';
 import { defaultTvShowScraper } from './tv-scrapers';
 
@@ -14,7 +15,7 @@ describe('defaultTvShowScraper', () => {
     mediaTypes: ['TV_SHOW'],
     missingConfiguration: null,
   };
-  const unconfiguredTvdb: ScraperInfo = { ...tvdb, missingConfiguration: 'Key fehlt' };
+  const unconfiguredTvdb: ScraperInfo = { ...tvdb, missingConfiguration: literal('Key fehlt') };
 
   it('prefers a ready TVDB scraper', () => {
     expect(defaultTvShowScraper([tmdb, tvdb])).toBe(tvdb);
@@ -25,7 +26,7 @@ describe('defaultTvShowScraper', () => {
   });
 
   it('keeps TVDB when no scraper is ready', () => {
-    const unconfiguredTmdb = { ...tmdb, missingConfiguration: 'Key fehlt' };
+    const unconfiguredTmdb = { ...tmdb, missingConfiguration: literal('Key fehlt') };
     expect(defaultTvShowScraper([unconfiguredTmdb, unconfiguredTvdb])).toBe(unconfiguredTvdb);
     expect(defaultTvShowScraper([unconfiguredTmdb])).toBe(unconfiguredTmdb);
     expect(defaultTvShowScraper([])).toBeUndefined();

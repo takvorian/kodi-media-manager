@@ -12,6 +12,8 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 class TvShowResultTest {
 
     @Test
@@ -59,7 +61,7 @@ class TvShowResultTest {
         assertThatNullPointerException().isThrownBy(() -> new CastMember(null, "Jack", null));
         assertThatNullPointerException().isThrownBy(() -> new ProviderRating(null, 8.1, 10, null));
         assertThatNullPointerException().isThrownBy(() -> new Attribution(null, URI.create("https://thetvdb.com")));
-        assertThatNullPointerException().isThrownBy(() -> new Attribution("TheTVDB", null));
+        assertThatNullPointerException().isThrownBy(() -> new Attribution(LocalizedText.literal("TheTVDB"), null));
     }
 
     @Test

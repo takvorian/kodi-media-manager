@@ -83,7 +83,8 @@ class ThemeFinderTest {
     @Test
     void reportsUnconfiguredAndFailingScrapers() {
         ThemeScraper unconfigured = mock(ThemeScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("YouTube: yt-dlp fehlt"));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("YouTube: yt-dlp fehlt")));
         when(scraperRegistry.themeScrapersFor(MediaType.TV_SHOW)).thenReturn(List.of(unconfigured, scraper));
         when(scraper.findThemes(any())).thenThrow(new ScraperException("nicht erreichbar"));
 

@@ -1365,6 +1365,51 @@
           "detail": "The filter has too many or too long conditions."
         }
       }
+    },
+    "scraper": {
+      "httpError": "{provider} responded with error {status}.",
+      "unreachable": "{provider} cannot be reached: {reason}",
+      "interrupted": "The request to {provider} was interrupted.",
+      "requestInterrupted": "The request was interrupted.",
+      "unexpectedResponse": "{provider} returned an unexpected response.",
+      "apiKeyRejected": "{provider} rejects the API key. Please check it under Settings → API keys.",
+      "rateLimitReached": "The request limit of {provider} has been reached. Please try again later.",
+      "apiKeyMissing": "An API key for {provider} is missing (Settings → API keys).",
+      "tvdb": {
+        "credentialsRejected": "TVDB rejects the API key or the PIN. Please check them under Settings → API keys.",
+        "loginFailed": "Logging in to TVDB failed (error {status}).",
+        "noToken": "TVDB returned no token when logging in.",
+        "attribution": "Metadata provided by TheTVDB. Please consider adding missing information or subscribing."
+      },
+      "trakt": {
+        "clientIdRejected": "Trakt rejects the client ID. Please check it under Settings → API keys.",
+        "clientIdMissing": "The client ID for Trakt is missing (Settings → API keys)."
+      },
+      "omdb": {
+        "dailyLimitReached": "The daily limit of the OMDb API key has been reached; it continues tomorrow."
+      },
+      "moviepilot": {
+        "unknownPageFormat": "Moviepilot: The movie page has an unknown format."
+      },
+      "ofdb": {
+        "sitemapMissing": "OFDb: The sitemap {path} is missing.",
+        "noMovies": "OFDb: The sitemaps no longer contain any movies."
+      },
+      "televisiontunes": {
+        "noAudioFile": "TelevisionTunes delivers no audio file at {url} ({status}, {contentType}).",
+        "downloadFailed": "The theme music from TelevisionTunes could not be loaded: {reason}",
+        "foreignTheme": "“{source}” is not a theme music from TelevisionTunes."
+      },
+      "youtube": {
+        "notInitialized": "YouTube: plugin not initialized.",
+        "ytDlpNotFound": "YouTube: yt-dlp not found ({command}). Please install yt-dlp or configure it under kmm.plugins.settings.youtube.yt-dlp.",
+        "notAVideo": "“{source}” is not a YouTube video.",
+        "noMp3": "yt-dlp did not create an MP3. Is ffmpeg installed?",
+        "saveFailed": "The theme music could not be saved: {reason}",
+        "ytDlpFailed": "yt-dlp reports an error: {errors}",
+        "ytDlpNotRunning": "yt-dlp does not run: {reason}",
+        "noTempDirectory": "No temporary folder for the download: {reason}"
+      }
     }
   }
 }

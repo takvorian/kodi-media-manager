@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
@@ -298,7 +299,7 @@ public class TvShowScrapeService {
         List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
         List<String> warnings = new ArrayList<>();
         for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
-            Optional<String> missing = scraper.missingConfiguration();
+            Optional<String> missing = scraper.missingConfiguration().map(Messages::english);
             if (missing.isPresent()) {
                 warnings.add(missing.get());
                 continue;
@@ -450,7 +451,7 @@ public class TvShowScrapeService {
         TvShowScraper scraper = scraperRegistry.tvShowScraper(scraperId)
                 .orElseThrow(() -> TvShowProblemException.unknownScraper(scraperId));
         scraper.missingConfiguration().ifPresent(hint -> {
-            throw TvShowProblemException.scraperNotConfigured(scraper, hint);
+            throw TvShowProblemException.scraperNotConfigured(scraper, Messages.english(hint));
         });
         return scraper;
     }

@@ -12,14 +12,14 @@
 
     <artifactId>kmm-plugin-youtube</artifactId>
     <name>KMM Plugin YouTube</name>
-    <description>Titelmusik von YouTube als theme.mp3 über yt-dlp und ffmpeg; nur zur Auswahl, nie automatisch.</description>
+    <description>Theme music from YouTube as theme.mp3 via yt-dlp and ffmpeg; only for manual selection, never automatic.</description>
 
     <properties>
         <plugin.id>youtube</plugin.id>
     </properties>
 
     <dependencies>
-        <!-- provided: Jackson und SLF4J stellt die Anwendung zur Laufzeit bereit. -->
+        <!-- provided: the application supplies Jackson and SLF4J at runtime. -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

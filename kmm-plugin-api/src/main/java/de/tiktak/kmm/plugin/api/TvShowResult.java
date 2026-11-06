@@ -8,14 +8,14 @@ import java.util.Objects;
 import lombok.Builder;
 
 /**
- * Ergebnis eines Serien-Scrapers: die Serie mit allen Staffeln und Episoden, die der Anbieter kennt.
- * Felder, die der Scraper nicht kennt, sind {@code null} bzw. leer.
+ * Result of a TV show scraper: the TV show with all seasons and episodes the provider knows. Fields the scraper does
+ * not know are {@code null} or empty.
  *
- * @param premiered     Erstausstrahlung
- * @param runtime       übliche Episodenlänge in Minuten
- * @param certification Altersfreigabe in der Schreibweise für die NFO, z. B. {@code FSK 12}
- * @param status        z. B. {@code Continuing} oder {@code Ended}
- * @param uniqueIds     IDs je Anbieter, z. B. {@code tvdb -> 73739}, {@code imdb -> tt0411008}
+ * @param premiered     first air date
+ * @param runtime       usual episode length in minutes
+ * @param certification age rating as written in the NFO, e.g. {@code FSK 12}
+ * @param status        e.g. {@code Continuing} or {@code Ended}
+ * @param uniqueIds     IDs per provider, e.g. {@code tvdb -> 73739}, {@code imdb -> tt0411008}
  */
 @Builder
 public record TvShowResult(

@@ -25,10 +25,10 @@ class ProcessCommandRunnerTest {
 
     @Test
     void reportsFailuresMissingProgramsAndTimeouts() throws IOException {
-        assertThat(runner.run(List.of(JAVA, "--unbekannte-option"), Duration.ofSeconds(30)).succeeded()).isFalse();
-        assertThatThrownBy(() -> runner.run(List.of("kmm-gibt-es-nicht"), Duration.ofSeconds(5)))
+        assertThat(runner.run(List.of(JAVA, "--unknown-option"), Duration.ofSeconds(30)).succeeded()).isFalse();
+        assertThatThrownBy(() -> runner.run(List.of("kmm-does-not-exist"), Duration.ofSeconds(5)))
                 .isInstanceOf(IOException.class);
         assertThatThrownBy(() -> runner.run(List.of(JAVA, "-version"), Duration.ZERO))
-                .isInstanceOf(IOException.class).hasMessageContaining("nicht geantwortet");
+                .isInstanceOf(IOException.class).hasMessageContaining("did not respond");
     }
 }

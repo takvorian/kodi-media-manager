@@ -16,8 +16,8 @@ import de.tiktak.kmm.plugin.api.TvShowScraper;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Serien-Scraper auf Basis von TMDB. TMDB kennt nur die Reihenfolge der Ausstrahlung; die
- * Einstellung für DVD- oder absolute Reihenfolge wirkt hier nicht.
+ * TV show scraper based on TMDB. TMDB only knows the aired order; the setting for DVD or absolute order has no effect
+ * here.
  */
 @Extension
 public class TmdbTvShowScraper extends AbstractTmdbScraper implements TvShowScraper {
@@ -54,7 +54,7 @@ public class TmdbTvShowScraper extends AbstractTmdbScraper implements TvShowScra
         return tmdbId(api, request).flatMap(this::fetch);
     }
 
-    /** Über bekannte TMDB-, TVDB- oder IMDb-ID, sonst der eindeutig passende Suchtreffer. */
+    /** Via a known TMDB, TVDB or IMDb ID, otherwise the unambiguously matching search result. */
     private Optional<String> tmdbId(TmdbApi api, ScrapeRequest request) {
         Optional<String> known = api.tvShowIdOf(request.uniqueIds());
         if (known.isPresent()) {

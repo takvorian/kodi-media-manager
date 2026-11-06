@@ -5,7 +5,7 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 
 /**
- * Vergleich von Titeln über Anbieter hinweg, etwa um sichere Treffer zu erkennen.
+ * Compares titles across providers, e.g. to recognize safe matches.
  */
 public final class Titles {
 
@@ -16,7 +16,7 @@ public final class Titles {
     private Titles() {
     }
 
-    /** Vergleichbare Form: ohne Groß-/Kleinschreibung, Akzente, Artikel am Anfang und Satzzeichen. */
+    /** Comparable form: without case, accents, leading articles and punctuation. */
     public static String normalize(String title) {
         if (title == null) {
             return "";
@@ -26,7 +26,7 @@ public final class Titles {
         return NOT_ALPHANUMERIC.matcher(LEADING_ARTICLE.matcher(plain).replaceFirst("")).replaceAll("");
     }
 
-    /** Ob beide Titel in vergleichbarer Form gleich und nicht leer sind. */
+    /** Whether both titles are equal and not empty in comparable form. */
     public static boolean same(String first, String second) {
         String normalized = normalize(first);
         return !normalized.isEmpty() && normalized.equals(normalize(second));

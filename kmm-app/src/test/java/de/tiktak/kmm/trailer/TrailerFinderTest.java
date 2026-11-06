@@ -81,7 +81,8 @@ class TrailerFinderTest {
     @Test
     void reportsUnconfiguredAndFailingScrapersAsWarnings() {
         TrailerScraper unconfigured = mock(TrailerScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("YouTube: API-Key fehlt"));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("YouTube: API-Key fehlt")));
         when(scraperRegistry.trailerScrapersFor(MediaType.TV_SHOW)).thenReturn(List.of(unconfigured, scraper));
         when(scraper.findTrailers(any())).thenThrow(new ScraperException("nicht erreichbar"));
 

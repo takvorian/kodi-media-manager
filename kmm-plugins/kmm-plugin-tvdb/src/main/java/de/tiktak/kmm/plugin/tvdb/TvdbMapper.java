@@ -20,8 +20,8 @@ import de.tiktak.kmm.plugin.api.TvShowResult;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Übersetzt TVDB-Antworten in die Typen der Plugin-API. Texte kommen bevorzugt aus der Übersetzung
- * in der eingestellten Sprache, sonst in der Originalsprache.
+ * Turns TVDB responses into the types of the plugin API. Texts preferably come from the translation into the
+ * configured language, otherwise in the original language.
  */
 class TvdbMapper {
 
@@ -85,8 +85,8 @@ class TvdbMapper {
     }
 
     /**
-     * Ergänzt eine Episode um Regie, Drehbuch und Gaststars aus {@code /episodes/{id}/extended};
-     * vorhandene Angaben bleiben.
+     * Adds directors, writers and guest stars from {@code /episodes/{id}/extended} to an episode; existing details
+     * stay.
      */
     EpisodeResult withCrew(EpisodeResult episode, JsonNode details) {
         List<JsonNode> people = JsonNodes.elements(details.path("characters"))
@@ -140,7 +140,7 @@ class TvdbMapper {
                 .build();
     }
 
-    /** Staffeln der eingestellten Reihenfolge; Staffeltitel nur, wenn TVDB einen kennt. */
+    /** Seasons of the configured order; season titles only if TVDB knows one. */
     private List<SeasonResult> seasons(JsonNode series) {
         return JsonNodes.elements(series.path("seasons"))
                 .filter(season -> settings.seasonType().equals(season.path("type").path("type").asString()))
@@ -177,12 +177,12 @@ class TvdbMapper {
                 .map(rating -> settings.certificationPrefix() + stripSuffix(rating));
     }
 
-    /** TVDB schreibt deutsche Freigaben teils als „16+“; in der NFO steht „FSK 16“. */
+    /** TVDB partly writes German age ratings as "16+"; the NFO holds "FSK 16". */
     private static String stripSuffix(String rating) {
         return rating.endsWith(AGE_SUFFIX) ? rating.substring(0, rating.length() - AGE_SUFFIX.length()) : rating;
     }
 
-    /** Kodi kennt nur „Continuing“ und „Ended“; angekündigte Serien gelten als fortlaufend. */
+    /** Kodi only knows "Continuing" and "Ended"; announced TV shows count as continuing. */
     private static Optional<String> status(JsonNode series) {
         return JsonNodes.text(series.path("status"), "name").map(status -> ENDED.equalsIgnoreCase(status) ? ENDED
                 : CONTINUING);

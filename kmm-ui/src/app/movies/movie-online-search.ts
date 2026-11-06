@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { problemMessage } from '../shared/problem-message';
 import { MovieMetadata } from './movie';
 import { MovieService } from './movie.service';
@@ -27,6 +28,7 @@ export interface ScrapedProposal {
 @Component({
   selector: 'app-movie-online-search',
   imports: [
+    LocalizedPipe,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,

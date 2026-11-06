@@ -5,10 +5,10 @@ import java.net.URI;
 import de.tiktak.kmm.plugin.api.PluginContext;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.omdb.*}).
+ * Settings of the plugin ({@code kmm.plugins.settings.omdb.*}).
  *
- * @param apiKey  OMDb-API-Key; leer, wenn nicht eingerichtet
- * @param baseUrl Basis-URL der API
+ * @param apiKey  OMDb API key; empty if not set up
+ * @param baseUrl base URL of the API
  */
 record OmdbSettings(String apiKey, URI baseUrl) {
 

@@ -18,11 +18,6 @@ final class LocalizedReasons {
                 : LocalizedText.literal(failure.getMessage());
     }
 
-    /** A hint of a plugin, which is a translatable text or plain text. */
-    static LocalizedText hint(Object hint) {
-        return hint instanceof LocalizedText text ? text : LocalizedText.literal(String.valueOf(hint));
-    }
-
     /** Like {@link #of(Throwable)}, but falls back to the detail of the problem. */
     static LocalizedText of(ErrorResponseException problem) {
         return problem instanceof Localized localized ? localized.localizedText()

@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.regex.Pattern;
 
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -19,12 +20,12 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * HTTP-Client für die fanart.tv-API v3. Übersetzt Fehler in verständliche {@link ScraperException}s.
+ * HTTP client for the fanart.tv API v3. Turns errors into understandable {@link ScraperException}s.
  */
 @RequiredArgsConstructor
 class FanartTvClient {
 
-    /** fanart.tv akzeptiert für Filme TMDB- und IMDb-IDs; sie landen im URL-Pfad. */
+    /** fanart.tv accepts TMDB and IMDb IDs for movies; they end up in the URL path. */
     private static final Pattern MOVIE_ID = Pattern.compile("[0-9]{1,10}|tt[0-9]{7,10}");
     private static final Pattern TVDB_ID = Pattern.compile("[0-9]{1,10}");
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(20);
@@ -39,7 +40,7 @@ class FanartTvClient {
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     /**
-     * @return die Bilder des Films oder leer, wenn fanart.tv ihn nicht kennt
+     * @return the images of the movie, or empty if fanart.tv does not know it
      */
     Optional<JsonNode> movie(String movieId) {
         if (!MOVIE_ID.matcher(movieId).matches()) {
@@ -49,7 +50,7 @@ class FanartTvClient {
     }
 
     /**
-     * @return die Bilder der Serie oder leer, wenn fanart.tv sie nicht kennt
+     * @return the images of the TV show, or empty if fanart.tv does not know it
      */
     Optional<JsonNode> tvShow(String tvdbId) {
         if (!TVDB_ID.matcher(tvdbId).matches()) {
@@ -64,8 +65,9 @@ class FanartTvClient {
             case OK -> Optional.of(parse(response.body()));
             case NOT_FOUND -> Optional.empty();
             case UNAUTHORIZED, FORBIDDEN -> throw new ScraperException(
-                    "fanart.tv lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.");
-            default -> throw new ScraperException("fanart.tv antwortet mit Fehler %d.".formatted(response.statusCode()));
+                    ScraperTexts.apiKeyRejected(FanartTvImageScraper.PROVIDER));
+            default -> throw new ScraperException(
+                    ScraperTexts.httpError(FanartTvImageScraper.PROVIDER, response.statusCode()));
         };
     }
 
@@ -87,10 +89,10 @@ class FanartTvClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ScraperException("fanart.tv ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(FanartTvImageScraper.PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an fanart.tv wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(FanartTvImageScraper.PROVIDER), e);
         }
     }
 
@@ -98,7 +100,7 @@ class FanartTvClient {
         try {
             return objectMapper.readTree(body);
         } catch (JacksonException e) {
-            throw new ScraperException("fanart.tv hat eine unerwartete Antwort geliefert.", e);
+            throw new ScraperException(ScraperTexts.unexpectedResponse(FanartTvImageScraper.PROVIDER), e);
         }
     }
 

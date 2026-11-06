@@ -38,6 +38,7 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.plugin.ScraperRegistry;
@@ -210,7 +211,8 @@ class TvShowScrapeIntegrationTest {
     void reportsScraperProblems() {
         TvShowScraper unconfigured = mock(TvShowScraper.class);
         when(unconfigured.displayName()).thenReturn("TheTVDB");
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Für TVDB fehlt ein API-Key."));
+        when(unconfigured.missingConfiguration())
+                .thenReturn(Optional.of(LocalizedText.literal("Für TVDB fehlt ein API-Key.")));
         when(scraperRegistry.tvShowScraper("tvdb")).thenReturn(Optional.of(unconfigured));
         when(scraper.fetch("404")).thenReturn(Optional.empty());
         when(scraper.fetch("502")).thenThrow(new ScraperException("Anbieter nicht erreichbar"));

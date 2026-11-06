@@ -6,14 +6,14 @@ import java.util.Objects;
 import lombok.Builder;
 
 /**
- * Ein von einem Image-Scraper gefundenes Bild.
+ * An image found by an image scraper.
  *
- * @param url        Bild in voller Auflösung; wird beim Übernehmen heruntergeladen
- * @param previewUrl kleine Vorschau für die Auswahl; ohne eigene Vorschau gleich {@code url}
- * @param language   ISO-639-1-Sprachcode oder {@code null} für sprachneutrale Bilder
- * @param rating     Beliebtheit beim Anbieter (größer ist besser) oder {@code null}
- * @param season     Staffel, zu der das Bild gehört (0 für Specials), oder {@code null} für Bilder des ganzen
- *                   Films bzw. der ganzen Serie
+ * @param url        image in full resolution; downloaded when it is applied
+ * @param previewUrl small preview for the selection; equal to {@code url} without a preview of its own
+ * @param language   ISO 639-1 language code or {@code null} for language-neutral images
+ * @param rating     popularity at the provider (greater is better) or {@code null}
+ * @param season     season the image belongs to (0 for specials), or {@code null} for images of the whole movie
+ *                   or TV show
  */
 @Builder
 public record ImageCandidate(

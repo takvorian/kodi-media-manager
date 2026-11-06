@@ -6,23 +6,27 @@ import java.util.Set;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ImageCandidate;
 import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 
 /**
- * Bilder von fanart.tv: Poster, Fanart, Clearlogo, Clearart, Disc-Art, Banner und Landscape für Filme,
- * für Serien zusätzlich Characterart und Staffelbilder.
+ * Images from fanart.tv: poster, fanart, clearlogo, clearart, disc art, banner and landscape for movies, for TV shows
+ * also character art and season images.
  */
 @Extension
 public class FanartTvImageScraper implements ImageScraper {
 
     static final String ID = "fanarttv";
     static final String DISPLAY_NAME = "fanart.tv";
-    static final String MISSING_API_KEY = "Für fanart.tv fehlt ein API-Key (Einstellungen → API-Keys).";
+    /** Name of the provider in messages for the user. */
+    static final String PROVIDER = "fanart.tv";
+    static final LocalizedText MISSING_API_KEY = ScraperTexts.apiKeyMissing(PROVIDER);
     private static final String TMDB = "tmdb";
     private static final String IMDB = "imdb";
     private static final String TVDB = "tvdb";
@@ -53,13 +57,13 @@ public class FanartTvImageScraper implements ImageScraper {
     }
 
     @Override
-    public Optional<String> missingConfiguration() {
+    public Optional<LocalizedText> missingConfiguration() {
         return settings != null && settings.hasApiKey() ? Optional.empty() : Optional.of(MISSING_API_KEY);
     }
 
     /**
-     * fanart.tv findet Filme über die TMDB-ID, ersatzweise über die IMDb-ID, Filmsets über die TMDB-ID der Sammlung
-     * (gleicher Endpunkt) und Serien über die TVDB-ID.
+     * fanart.tv finds movies via the TMDB ID, alternatively via the IMDb ID, movie sets via the TMDB ID of the
+     * collection (same endpoint) and TV shows via the TVDB ID.
      */
     @Override
     public List<ImageCandidate> findImages(ScrapeRequest request) {

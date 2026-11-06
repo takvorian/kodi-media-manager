@@ -8,7 +8,7 @@ import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.SearchResult;
 
 /**
- * Wählt beim automatischen Scrapen den Suchtreffer aus.
+ * Picks the search result when scraping automatically.
  */
 final class SearchMatches {
 
@@ -16,8 +16,8 @@ final class SearchMatches {
     }
 
     /**
-     * Nur ein Treffer mit gleichem Titel (bzw. Originaltitel) und passendem Jahr gilt als sicher;
-     * lieber kein Ergebnis als ein falsches.
+     * Only a result with the same title (or original title) and a matching year counts as safe; better no result
+     * than a wrong one.
      */
     static Optional<SearchResult> bestMatch(List<SearchResult> results, ScrapeRequest request) {
         String title = normalize(request.title());

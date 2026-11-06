@@ -25,11 +25,11 @@ public class ScraperProblemException extends LocalizedProblemException {
                 LocalizedText.of("movie.scraper.unknown.detail").with("id", scraperId));
     }
 
-    /** @param hint what is missing, as the plugin words it: a translatable text or plain text */
-    static ScraperProblemException notConfigured(Scraper scraper, Object hint) {
+    /** @param hint what is missing, as the plugin words it */
+    static ScraperProblemException notConfigured(Scraper scraper, LocalizedText hint) {
         return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT,
                 LocalizedText.of("movie.scraper.notConfigured.title").with("scraper", scraper.displayName()),
-                LocalizedReasons.hint(hint), null);
+                hint, null);
     }
 
     /** The provider cannot be reached or refuses: from KMM's point of view a gateway error. */

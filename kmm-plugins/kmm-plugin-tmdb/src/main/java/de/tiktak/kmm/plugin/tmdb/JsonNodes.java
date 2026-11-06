@@ -6,14 +6,14 @@ import java.util.stream.StreamSupport;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Hilfen für den Umgang mit JSON-Antworten.
+ * Helpers for handling JSON responses.
  */
 final class JsonNodes {
 
     private JsonNodes() {
     }
 
-    /** Elemente eines JSON-Arrays; leer, wenn der Knoten fehlt oder kein Array ist. */
+    /** Elements of a JSON array; empty if the node is missing or not an array. */
     static Stream<JsonNode> elements(JsonNode array) {
         return StreamSupport.stream(array.spliterator(), false);
     }

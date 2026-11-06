@@ -12,14 +12,14 @@
 
     <artifactId>kmm-plugin-trakt</artifactId>
     <name>KMM Plugin Trakt</name>
-    <description>Öffentliche Community-Bewertung von Trakt.tv für Filme und Serien. Benötigt die Client-ID einer Trakt-App.</description>
+    <description>Public community rating from Trakt.tv for movies and TV shows. Needs the client ID of a Trakt app.</description>
 
     <properties>
         <plugin.id>trakt</plugin.id>
     </properties>
 
     <dependencies>
-        <!-- provided: Jackson und SLF4J stellt die Anwendung zur Laufzeit bereit. -->
+        <!-- provided: the application supplies Jackson and SLF4J at runtime. -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

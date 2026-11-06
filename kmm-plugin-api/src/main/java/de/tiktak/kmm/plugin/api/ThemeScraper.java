@@ -4,21 +4,22 @@ import java.nio.file.Path;
 import java.util.List;
 
 /**
- * Sucht Titelmusik zu einem Film oder einer Serie und lädt sie als MP3, die KMM als {@code theme.mp3} ablegt. Gesucht
- * wird über den Titel ({@link ScrapeRequest#title()}).
+ * Searches theme music for a movie or TV show and downloads it as an MP3 that KMM stores as {@code theme.mp3}. The
+ * search uses the title ({@link ScrapeRequest#title()}).
  */
 public interface ThemeScraper extends Scraper {
 
     /**
-     * @return gefundene Titelmusik in der Reihenfolge des Anbieters; leer, wenn nichts passt
-     * @throws ScraperException wenn der Anbieter nicht erreichbar ist oder die Anfrage ablehnt
+     * @return found theme music in the order of the provider; empty if nothing matches
+     * @throws ScraperException if the provider cannot be reached or rejects the request
      */
     List<ThemeCandidate> findThemes(ScrapeRequest request);
 
     /**
-     * Lädt die Musik eines eigenen Vorschlags als MP3 nach {@code target}; eine vorhandene Datei wird ersetzt.
+     * Downloads the music of one of this scraper's candidates as an MP3 to {@code target}; an existing file is
+     * replaced.
      *
-     * @throws ScraperException wenn der Vorschlag nicht von diesem Scraper stammt oder nicht geladen werden kann
+     * @throws ScraperException if the candidate does not come from this scraper or cannot be loaded
      */
     void download(ThemeCandidate candidate, Path target);
 }

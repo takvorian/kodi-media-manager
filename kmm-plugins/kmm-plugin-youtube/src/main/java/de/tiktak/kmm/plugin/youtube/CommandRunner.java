@@ -5,19 +5,19 @@ import java.time.Duration;
 import java.util.List;
 
 /**
- * Führt ein Programm aus; in Tests durch eine Attrappe ersetzbar.
+ * Runs a program; can be replaced by a stub in tests.
  */
 interface CommandRunner {
 
     /**
-     * @return Ausgabe und Rückgabewert
-     * @throws IOException wenn das Programm nicht startet oder die Zeit überschreitet
+     * @return output and exit code
+     * @throws IOException if the program does not start or exceeds the time
      */
     Result run(List<String> command, Duration timeout) throws IOException;
 
     /**
-     * @param output Standardausgabe
-     * @param errors Fehlerausgabe
+     * @param output standard output
+     * @param errors error output
      */
     record Result(int exitCode, String output, String errors) {
 

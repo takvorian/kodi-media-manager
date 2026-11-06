@@ -12,7 +12,7 @@
 
     <artifactId>kmm-plugin-api</artifactId>
     <name>KMM Plugin API</name>
-    <description>Stabile Schnittstelle für KMM-Plugins (Scraper). Einzige Abhängigkeit, die Plugins benötigen.</description>
+    <description>Stable interface for KMM plugins (scrapers). The only dependency plugins need.</description>
 
     <dependencies>
         <dependency>

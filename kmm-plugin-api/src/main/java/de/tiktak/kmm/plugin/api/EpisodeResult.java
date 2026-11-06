@@ -8,12 +8,12 @@ import java.util.Map;
 import lombok.Builder;
 
 /**
- * Eine Episode beim Anbieter in der eingestellten Episodenreihenfolge.
+ * An episode at the provider in the configured episode order.
  *
- * @param runtime    Laufzeit in Minuten oder {@code null}
- * @param guestStars Gaststars der Episode
- * @param uniqueIds  IDs der Episode je Anbieter, z. B. {@code tvdb -> 127131}
- * @param thumb      Standbild der Episode oder {@code null}
+ * @param runtime    runtime in minutes or {@code null}
+ * @param guestStars guest stars of the episode
+ * @param uniqueIds  IDs of the episode per provider, e.g. {@code tvdb -> 127131}
+ * @param thumb      still image of the episode or {@code null}
  */
 @Builder
 public record EpisodeResult(

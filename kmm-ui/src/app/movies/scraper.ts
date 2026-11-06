@@ -1,17 +1,19 @@
+import { LocalizedText } from '../i18n/localized-text';
+
 /** Response of GET /api/v1/scrapers/metadata. */
 export interface ScraperInfo {
   readonly id: string;
   readonly displayName: string;
   readonly mediaTypes: readonly string[];
   /** Note on what is missing for use, or {@code null} if the scraper is ready. */
-  readonly missingConfiguration: string | null;
+  readonly missingConfiguration: LocalizedText | null;
   /** Attribution of the data source required by the provider. */
   readonly attribution?: Attribution | null;
 }
 
 /** Attribution of the data source with a link, e.g. for TheTVDB. */
 export interface Attribution {
-  readonly text: string;
+  readonly text: LocalizedText;
   readonly link: string;
 }
 
