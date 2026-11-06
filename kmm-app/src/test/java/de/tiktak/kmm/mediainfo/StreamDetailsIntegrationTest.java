@@ -186,7 +186,7 @@ class StreamDetailsIntegrationTest {
 
         assertThat(mockMvc.post().uri("/api/v1/movies/{id}/stream-details", heat).with(csrf()))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson()
-                .extractingPath("$.detail").asString().startsWith("ffprobe kann nicht gestartet werden");
+                .extractingPath("$.detailText.key").isEqualTo("media.ffprobe.notStartable");
         JsonNode result = runJob(mockMvc.post().uri("/api/v1/sources/{id}/stream-details", sourceId)
                 .with(csrf()).exchange());
         assertThat(result.toString()).contains("\"updated\":0", "\"failed\":1",

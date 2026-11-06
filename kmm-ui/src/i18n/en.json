@@ -1588,6 +1588,9 @@
         "kept": "“{label}”: KMM knows more than Kodi, its state is kept.",
         "failed": "“{label}”: {reason}",
         "updated": "“{label}” taken over from Kodi: {playCount, plural, =0 {not watched} other {watched #×}}{rating, select, none {} other {, rating {rating}}}."
+      },
+      "batch": {
+        "refreshMovies": "{count, plural, one {Update # movie in Kodi} other {Update # movies in Kodi}}"
       }
     }
   }

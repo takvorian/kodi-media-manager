@@ -1588,6 +1588,9 @@
         "kept": "„{label}“: KMM weiß mehr als Kodi, der Stand bleibt.",
         "failed": "„{label}“: {reason}",
         "updated": "„{label}“ aus Kodi übernommen: {playCount, plural, =0 {nicht gesehen} other {#× gesehen}}{rating, select, none {} other {, Bewertung {rating}}}."
+      },
+      "batch": {
+        "refreshMovies": "{count, plural, one {# Film} other {# Filme}} in Kodi aktualisieren"
       }
     }
   }

@@ -18,7 +18,7 @@ public class NfoChangedOutsideException extends LocalizedProblemException {
         super(HttpStatus.CONFLICT, LocalizedText.of("movie.nfo.changedOutside.title"),
                 LocalizedText.of("movie.nfo.changedOutside.detail")
                         .with("file", file)
-                        .with("reason", LocalizedReasons.of(cause)),
+                        .with("reason", cause.localizedText()),
                 cause);
     }
 }

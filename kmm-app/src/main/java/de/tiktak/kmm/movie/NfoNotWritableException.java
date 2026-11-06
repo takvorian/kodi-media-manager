@@ -14,7 +14,7 @@ public class NfoNotWritableException extends LocalizedProblemException {
 
     NfoNotWritableException(NfoException cause) {
         super(HttpStatus.UNPROCESSABLE_CONTENT, LocalizedText.of("movie.nfo.notWritable.title"),
-                LocalizedText.of("movie.nfo.notWritable.detail").with("reason", LocalizedReasons.of(cause)),
+                LocalizedText.of("movie.nfo.notWritable.detail").with("reason", cause.localizedText()),
                 cause);
     }
 }

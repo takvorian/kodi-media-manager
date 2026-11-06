@@ -30,6 +30,7 @@ import de.tiktak.kmm.tvshow.TvShowBatchService;
 @ExtendWith(MockitoExtension.class)
 class KodiBatchRefreshServiceTest {
 
+    private static final LocalizedText MOVIES_TITLE = LocalizedText.of("kodi.batch.refreshMovies");
     private static final Instant NOW = Instant.parse("2026-11-01T12:00:00Z");
     private static final KodiTarget LIVING_ROOM = new KodiTarget(1, "Wohnzimmer", null, null, false);
     private static final KodiTarget KITCHEN = new KodiTarget(2, "Küche", null, null, false);
@@ -63,7 +64,7 @@ class KodiBatchRefreshServiceTest {
         assertThatExceptionOfType(KodiProblemException.class)
                 .isThrownBy(() -> service.startMovies(List.of(5L)))
                 .satisfies(e -> assertThat(e.localizedText()).isEqualTo(LocalizedText.of("kodi.noHosts.detail")));
-        verify(movieBatch, never()).startFill(anyString(), anyList(), any());
+        verify(movieBatch, never()).startFill(any(LocalizedText.class), anyList(), any());
     }
 
     @Test
@@ -144,15 +145,15 @@ class KodiBatchRefreshServiceTest {
         service.startMovies(List.of(5L));
         service.startTvShows(List.of(7L, 8L));
 
-        verify(movieBatch).startFill(eq("%d Filme in Kodi aktualisieren"), eq(List.of(5L, 6L)), any());
-        verify(movieBatch).startFill(eq("1 Film in Kodi aktualisieren"), eq(List.of(5L)), any());
+        verify(movieBatch).startFill(eq(MOVIES_TITLE), eq(List.of(5L, 6L)), any());
+        verify(movieBatch).startFill(eq(MOVIES_TITLE), eq(List.of(5L)), any());
         verify(showBatch).startFill(eq("%d Serien in Kodi aktualisieren"), eq(List.of(7L, 8L)), any());
     }
 
     private LongPredicate movieChange(KodiTarget... targets) {
         when(hostService.targets()).thenReturn(List.of(targets));
         service.startMovies(List.of(5L, 6L));
-        verify(movieBatch).startFill(anyString(), anyList(), change.capture());
+        verify(movieBatch).startFill(any(LocalizedText.class), anyList(), change.capture());
         return change.getValue();
     }
 

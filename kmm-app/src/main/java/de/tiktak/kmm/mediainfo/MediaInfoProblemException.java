@@ -2,7 +2,6 @@ package de.tiktak.kmm.mediainfo;
 
 import org.springframework.http.HttpStatus;
 
-import de.tiktak.kmm.i18n.Localized;
 import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.media.MediaProbeException;
 import de.tiktak.kmm.web.LocalizedProblemException;
@@ -13,7 +12,7 @@ import de.tiktak.kmm.web.LocalizedProblemException;
 public class MediaInfoProblemException extends LocalizedProblemException {
 
     MediaInfoProblemException(MediaProbeException cause) {
-        this("mediaInfo.unreadable", reason(cause), cause);
+        this("mediaInfo.unreadable", cause.localizedText(), cause);
     }
 
     private MediaInfoProblemException(String key, LocalizedText detail, Throwable cause) {
@@ -25,10 +24,5 @@ public class MediaInfoProblemException extends LocalizedProblemException {
                 LocalizedText.of("mediaInfo.seasonWithoutEpisodes.detail")
                         .with("show", showTitle)
                         .with("season", season), null);
-    }
-
-    private static LocalizedText reason(Throwable cause) {
-        return cause instanceof Localized localized ? localized.localizedText()
-                : LocalizedText.literal(cause.getMessage());
     }
 }

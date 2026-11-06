@@ -22,7 +22,7 @@ public class MovieRenameProblemException extends LocalizedProblemException {
     static MovieRenameProblemException invalidPattern(LocalizedText pattern, NamePatternException e) {
         return new MovieRenameProblemException(LocalizedText.of("movie.rename.invalidPattern.detail")
                 .with("pattern", pattern)
-                .with("reason", LocalizedReasons.of(e)));
+                .with("reason", e.localizedText()));
     }
 
     static MovieRenameProblemException folderInFilePattern() {

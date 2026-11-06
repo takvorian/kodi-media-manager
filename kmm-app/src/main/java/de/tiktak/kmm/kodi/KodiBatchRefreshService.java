@@ -29,8 +29,7 @@ public class KodiBatchRefreshService {
     /** @throws KodiProblemException if no Kodi device is set up */
     public JobSnapshot startMovies(List<Long> movieIds) {
         Run run = new Run(requireTargets());
-        String title = movieIds.size() == 1 ? "1 Film in Kodi aktualisieren" : "%d Filme in Kodi aktualisieren";
-        return movieBatch.startFill(title, movieIds,
+        return movieBatch.startFill(LocalizedText.of("kodi.batch.refreshMovies"), movieIds,
                 movieId -> run.refresh(targets -> syncService.refreshMovie(movieId, targets)));
     }
 
