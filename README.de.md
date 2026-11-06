@@ -1,9 +1,11 @@
 # Kodi Media Manager (KMM)
 
+English version: [README.md](README.md)
+
 Medienverwaltung für [Kodi](https://kodi.tv) als Java-Nachfolger von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper).
 KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter H2-Datenbank) und bringt eine Weboberfläche mit.
 
-> **Status:** Filme und erste Serienfunktionen – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten), Filme, Sets, Serien mit Episoden, Stream-Details, Einstellungen und Kodi-Geräte aus Ember Media Manager übernehmen (mit Probelauf) sowie Kodi nach Änderungen automatisch aktualisieren funktionieren. Serienquellen lassen sich scannen; Serien, Staffeln und Episoden (auch Mehrfachepisoden) werden aus den NFOs gelesen, angezeigt und bearbeitet. Konzept und Roadmap: [docs/KONZEPT.md](docs/KONZEPT.md).
+> **Status:** Filme und erste Serienfunktionen – Quellen anlegen und im Hintergrund scannen (mit Live-Fortschritt), Filmliste, Kodi-NFOs lesen, bearbeiten und schreiben, Metadaten von TMDB sowie Bilder von TMDB und fanart.tv suchen und übernehmen alle Filme einer Quelle automatisch scrapen (nur fehlende Daten), Filme, Sets, Serien mit Episoden, Stream-Details, Einstellungen und Kodi-Geräte aus Ember Media Manager übernehmen (mit Probelauf) sowie Kodi nach Änderungen automatisch aktualisieren funktionieren. Serienquellen lassen sich scannen; Serien, Staffeln und Episoden (auch Mehrfachepisoden) werden aus den NFOs gelesen, angezeigt und bearbeitet. Konzept und Roadmap: [docs/CONCEPT.md](docs/CONCEPT.md).
 
 ## Technik
 
@@ -27,7 +29,7 @@ KMM läuft als Docker-Container (mit MariaDB) oder standalone (mit eingebetteter
 
 ## Handbuch
 
-Das [Handbuch](docs/handbuch/einfuehrung.md) beschreibt die Bedienung; die Kapitel stehen in `docs/handbuch/kapitel.json`. Dieselben Texte zeigt die Anwendung auf der Seite **Hilfe**, das Fragezeichen in der Kopfleiste öffnet das Kapitel zur aktuellen Seite. `npm run handbuch:pdf` in `kmm-ui` baut daraus ein PDF und prüft dabei alle Links und Bilder (braucht Chrome); die CI hebt das PDF als Artefakt `handbuch` auf.
+Das [Handbuch](docs/manual/de/introduction.md) beschreibt die Bedienung; die Kapitel stehen in `docs/manual/chapters.json`. Dieselben Texte zeigt die Anwendung auf der Seite **Hilfe**, das Fragezeichen in der Kopfleiste öffnet das Kapitel zur aktuellen Seite. `npm run manual:pdf` in `kmm-ui` baut daraus `kmm-ui/target/manual/KMM-Handbuch.pdf` (und die englische Fassung `KMM-Manual.pdf`) und prüft dabei alle Links, Anker und Bilder (braucht Chrome); die CI hebt die PDFs als Artefakt `manual` auf.
 
 ## Bauen
 
