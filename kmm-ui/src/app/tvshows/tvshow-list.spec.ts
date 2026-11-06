@@ -155,7 +155,7 @@ describe('TvShowList', () => {
     expect(element().querySelectorAll('mat-paginator')).toHaveLength(2);
   });
 
-  it('shows when a show was added in the language of the browser', async () => {
+  it('shows when a show was added in the language of the interface', async () => {
     await respond(page([alf]));
 
     expect(element().querySelector('.added-at')?.textContent?.trim()).toBe(

@@ -430,14 +430,14 @@ describe('SourceList', () => {
     expect(names()).toEqual(['Serien', 'Filme']);
   });
 
-  it('shows the time of the last scan in the language of the browser', async () => {
+  it('shows the time of the last scan in the language of the interface', async () => {
     const lastScannedAt = '2026-10-25T12:30:00Z';
     await loadSources([films, { ...series, lastScannedAt }]);
 
     const cells = element().querySelectorAll('.last-scanned-at');
     expect(cells[0].textContent).toBe('–');
     expect(cells[1].textContent).toBe(
-      new Date(lastScannedAt).toLocaleString(undefined, {
+      new Date(lastScannedAt).toLocaleString('de-DE', {
         dateStyle: 'medium',
         timeStyle: 'short',
       }),

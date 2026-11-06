@@ -188,7 +188,7 @@ describe('MovieList', () => {
     expect(element().querySelectorAll('mat-paginator')).toHaveLength(2);
   });
 
-  it('shows when a movie was added in the language of the browser', async () => {
+  it('shows when a movie was added in the language of the interface', async () => {
     await respond(page([heat]));
 
     expect(element().querySelector('.added-at')?.textContent?.trim()).toBe(
