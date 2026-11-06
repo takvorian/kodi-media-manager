@@ -9,15 +9,15 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.tvdb.*} und die gemeinsamen Einstellungen).
+ * Settings of the plugin ({@code kmm.plugins.settings.tvdb.*} and the shared settings).
  *
- * @param apiKey               Projekt-Key der API v4; leer, wenn nicht konfiguriert
- * @param pin                  PIN eines Abonnements oder leer
- * @param language             Sprache der Texte als ISO-639-2-Code, wie TVDB sie erwartet, z. B. {@code deu}
- * @param seasonType           Episodenreihenfolge bei TVDB: {@code official}, {@code dvd} oder {@code absolute}
- * @param certificationCountry Land der Altersfreigabe als ISO-3166-alpha-3-Code, z. B. {@code deu}
- * @param certificationPrefix  Präfix der Altersfreigabe in der NFO, z. B. {@code FSK }
- * @param baseUrl              Basis-URL der API
+ * @param apiKey               project key of the API v4; empty if not configured
+ * @param pin                  PIN of a subscription or empty
+ * @param language             language of the texts as ISO 639-2 code, as TVDB expects it, e.g. {@code deu}
+ * @param seasonType           episode order at TVDB: {@code official}, {@code dvd} or {@code absolute}
+ * @param certificationCountry country of the age rating as ISO 3166 alpha-3 code, e.g. {@code deu}
+ * @param certificationPrefix  prefix of the age rating in the NFO, e.g. {@code FSK }
+ * @param baseUrl              base URL of the API
  */
 record TvdbSettings(
         String apiKey,
@@ -60,7 +60,7 @@ record TvdbSettings(
         return !apiKey.isEmpty();
     }
 
-    /** {@code AIRED} entspricht bei TVDB der offiziellen Reihenfolge. */
+    /** {@code AIRED} corresponds to the official order at TVDB. */
     private static String seasonType(String ordering) {
         return switch (ordering) {
             case "DVD" -> "dvd";

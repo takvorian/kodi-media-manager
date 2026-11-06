@@ -1063,6 +1063,51 @@
         "title": "Job nicht gefunden",
         "detail": "Es gibt keinen Job mit der ID {id}."
       }
+    },
+    "scraper": {
+      "httpError": "{provider} antwortet mit Fehler {status}.",
+      "unreachable": "{provider} ist nicht erreichbar: {reason}",
+      "interrupted": "Die Anfrage an {provider} wurde unterbrochen.",
+      "requestInterrupted": "Die Anfrage wurde unterbrochen.",
+      "unexpectedResponse": "{provider} hat eine unerwartete Antwort geliefert.",
+      "apiKeyRejected": "{provider} lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.",
+      "rateLimitReached": "Das Anfragelimit von {provider} ist erreicht. Bitte später erneut versuchen.",
+      "apiKeyMissing": "Für {provider} fehlt ein API-Key (Einstellungen → API-Keys).",
+      "tvdb": {
+        "credentialsRejected": "TVDB lehnt den API-Key oder die PIN ab. Bitte unter Einstellungen → API-Keys prüfen.",
+        "loginFailed": "Die Anmeldung bei TVDB ist fehlgeschlagen (Fehler {status}).",
+        "noToken": "TVDB hat bei der Anmeldung kein Token geliefert.",
+        "attribution": "Metadata provided by TheTVDB. Please consider adding missing information or subscribing."
+      },
+      "trakt": {
+        "clientIdRejected": "Trakt lehnt die Client-ID ab. Bitte unter Einstellungen → API-Keys prüfen.",
+        "clientIdMissing": "Für Trakt fehlt die Client-ID (Einstellungen → API-Keys)."
+      },
+      "omdb": {
+        "dailyLimitReached": "Das Tageslimit des OMDb-API-Keys ist erreicht; morgen geht es weiter."
+      },
+      "moviepilot": {
+        "unknownPageFormat": "Moviepilot: Die Filmseite hat ein unbekanntes Format."
+      },
+      "ofdb": {
+        "sitemapMissing": "OFDb: Die Sitemap {path} fehlt.",
+        "noMovies": "OFDb: Die Sitemaps enthalten keine Filme mehr."
+      },
+      "televisiontunes": {
+        "noAudioFile": "TelevisionTunes liefert unter {url} keine Audiodatei ({status}, {contentType}).",
+        "downloadFailed": "Die Titelmusik von TelevisionTunes konnte nicht geladen werden: {reason}",
+        "foreignTheme": "„{source}“ ist keine Titelmusik von TelevisionTunes."
+      },
+      "youtube": {
+        "notInitialized": "YouTube: Plugin nicht initialisiert.",
+        "ytDlpNotFound": "YouTube: yt-dlp nicht gefunden ({command}). Bitte yt-dlp installieren oder unter kmm.plugins.settings.youtube.yt-dlp angeben.",
+        "notAVideo": "„{source}“ ist kein YouTube-Video.",
+        "noMp3": "yt-dlp hat keine MP3 erzeugt. Ist ffmpeg installiert?",
+        "saveFailed": "Die Titelmusik konnte nicht gespeichert werden: {reason}",
+        "ytDlpFailed": "yt-dlp meldet einen Fehler: {errors}",
+        "ytDlpNotRunning": "yt-dlp läuft nicht: {reason}",
+        "noTempDirectory": "Kein temporärer Ordner für den Download: {reason}"
+      }
     }
   }
 }

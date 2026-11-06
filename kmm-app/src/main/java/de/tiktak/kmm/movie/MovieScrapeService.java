@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CollectionReference;
@@ -156,7 +157,7 @@ public class MovieScrapeService {
         MetadataScraper scraper = scraperRegistry.metadataScraper(scraperId)
                 .orElseThrow(() -> ScraperProblemException.unknown(scraperId));
         scraper.missingConfiguration().ifPresent(hint -> {
-            throw ScraperProblemException.notConfigured(scraper, hint);
+            throw ScraperProblemException.notConfigured(scraper, Messages.english(hint));
         });
         return scraper;
     }

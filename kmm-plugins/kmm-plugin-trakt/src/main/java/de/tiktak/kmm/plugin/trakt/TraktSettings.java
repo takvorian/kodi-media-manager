@@ -5,10 +5,10 @@ import java.net.URI;
 import de.tiktak.kmm.plugin.api.PluginContext;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.trakt.*}).
+ * Settings of the plugin ({@code kmm.plugins.settings.trakt.*}).
  *
- * @param clientId Client-ID einer Trakt-App; leer, wenn nicht eingerichtet
- * @param baseUrl  Basis-URL der API
+ * @param clientId client ID of a Trakt app; empty if not set up
+ * @param baseUrl  base URL of the API
  */
 record TraktSettings(String clientId, URI baseUrl) {
 

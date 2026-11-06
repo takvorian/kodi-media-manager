@@ -4,15 +4,15 @@ import java.net.URI;
 import java.util.Objects;
 
 /**
- * Eine Titelmusik zur Auswahl.
+ * A theme music to choose from.
  *
- * @param name            Bezeichnung beim Anbieter, z. B. {@code Main Theme} oder der Titel eines Videos
- * @param subject         Serie bzw. Film, zu dem der Anbieter die Musik führt, z. B. {@code ALF}; daran erkennt KMM
- *                        sichere Treffer
- * @param source          Adresse, aus der der Scraper die Musik lädt (Audiodatei oder Video)
- * @param previewUrl      direkt abspielbare Audiodatei zum Anhören oder {@code null}
- * @param webUrl          Seite des Anbieters zum Ansehen im Browser
- * @param durationSeconds Länge in Sekunden oder {@code null}
+ * @param name            name at the provider, e.g. {@code Main Theme} or the title of a video
+ * @param subject         TV show or movie the provider lists the music for, e.g. {@code ALF}; KMM uses it to
+ *                        recognize safe matches
+ * @param source          address the scraper loads the music from (audio file or video)
+ * @param previewUrl      directly playable audio file for listening, or {@code null}
+ * @param webUrl          page of the provider to view in the browser
+ * @param durationSeconds length in seconds or {@code null}
  */
 public record ThemeCandidate(
         String name,

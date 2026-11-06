@@ -10,18 +10,22 @@ import java.time.Duration;
 import java.util.Optional;
 
 import de.tiktak.kmm.plugin.api.RequestThrottle;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 
 /**
- * Ruft Sitemaps und Filmseiten von OFDb ab, mit Abstand zwischen den Abrufen. Die Suche ist laut {@code robots.txt} für
- * Programme gesperrt und wird nicht benutzt.
+ * Fetches sitemaps and movie pages from OFDb, with a gap between the requests. According to {@code robots.txt} the
+ * search is closed to programs and is not used.
  */
 class OfdbClient {
 
     private static final Duration REQUEST_TIMEOUT = Duration.ofSeconds(60);
     private static final int OK = 200;
     private static final int NOT_FOUND = 404;
-    /** Der Adressname ist OFDb egal; es zählt die ID. */
+    /** Name of the provider in messages for the user. */
+    static final String PROVIDER = "OFDb";
+    /** OFDb does not care about the address name; the ID counts. */
     private static final String ANY_NAME = "x";
 
     private final HttpClient httpClient;
@@ -36,9 +40,10 @@ class OfdbClient {
         this.throttle = new RequestThrottle(settings.requestDelay());
     }
 
-    /** @param path Pfad der Sitemap, z. B. {@code /sitemap/sitemap1.xml} */
+    /** @param path path of the sitemap, e.g. {@code /sitemap/sitemap1.xml} */
     String sitemap(String path) {
-        return page(path).orElseThrow(() -> new ScraperException("OFDb: Die Sitemap %s fehlt.".formatted(path)));
+        return page(path).orElseThrow(() -> new ScraperException(LocalizedText.of("scraper.ofdb.sitemapMissing")
+                .with("path", path)));
     }
 
     Optional<String> film(int filmId) {
@@ -59,7 +64,7 @@ class OfdbClient {
         return switch (response.statusCode()) {
             case OK -> Optional.of(response.body());
             case NOT_FOUND -> Optional.empty();
-            default -> throw new ScraperException("OFDb antwortet mit Fehler %d.".formatted(response.statusCode()));
+            default -> throw new ScraperException(ScraperTexts.httpError(PROVIDER, response.statusCode()));
         };
     }
 
@@ -67,10 +72,10 @@ class OfdbClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ScraperException("OFDb ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an OFDb wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(PROVIDER), e);
         }
     }
 }

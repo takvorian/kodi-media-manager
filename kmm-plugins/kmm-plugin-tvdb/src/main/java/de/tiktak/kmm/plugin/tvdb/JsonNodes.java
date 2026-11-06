@@ -7,19 +7,19 @@ import java.util.stream.StreamSupport;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Hilfen für den Umgang mit JSON-Antworten.
+ * Helpers for handling JSON responses.
  */
 final class JsonNodes {
 
     private JsonNodes() {
     }
 
-    /** Elemente eines JSON-Arrays; leer, wenn der Knoten fehlt oder kein Array ist. */
+    /** Elements of a JSON array; empty if the node is missing or not an array. */
     static Stream<JsonNode> elements(JsonNode array) {
         return StreamSupport.stream(array.spliterator(), false);
     }
 
-    /** Text eines Feldes ohne Leerraum; leer, wenn das Feld fehlt, {@code null} oder leer ist. */
+    /** Text of a field without surrounding whitespace; empty if the field is missing, {@code null} or empty. */
     static Optional<String> text(JsonNode node, String field) {
         JsonNode value = node.path(field);
         if (value.isMissingNode() || value.isNull()) {

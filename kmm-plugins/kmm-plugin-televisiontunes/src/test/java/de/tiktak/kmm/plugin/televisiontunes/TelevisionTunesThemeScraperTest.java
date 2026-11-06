@@ -14,6 +14,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -118,11 +119,14 @@ class TelevisionTunesThemeScraperTest {
         Path target = directory.resolve("theme.mp3");
 
         assertThatThrownBy(() -> scraper.download(candidate(URI.create("http://example.org/uploads/audio/x.mp3")),
-                target)).isInstanceOf(ScraperException.class);
+                target)).isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                .isEqualTo(LocalizedText.of("scraper.televisiontunes.foreignTheme")
+                        .with("source", "http://example.org/uploads/audio/x.mp3")));
         assertThatThrownBy(() -> scraper.download(candidate(url("/uploads/audio/../secret.mp3")), target))
                 .isInstanceOf(ScraperException.class);
         assertThatThrownBy(() -> scraper.download(candidate(url("/uploads/audio/Page.mp3")), target))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("keine Audiodatei");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText().key())
+                        .isEqualTo("scraper.televisiontunes.noAudioFile"));
         assertThatThrownBy(() -> scraper.download(candidate(url("/uploads/audio/Fehlt.mp3")), target))
                 .isInstanceOf(ScraperException.class);
         assertThat(target).doesNotExist();
@@ -134,7 +138,9 @@ class TelevisionTunesThemeScraperTest {
         offline.initialize(new TestPluginContext().with("base-url", "http://127.0.0.1:1"));
 
         assertThatThrownBy(() -> offline.findThemes(request(MediaType.TV_SHOW, "ALF")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("TelevisionTunes cannot be reached");
         assertThatThrownBy(() -> new TelevisionTunesThemeScraper().findThemes(request(MediaType.TV_SHOW, "ALF")))
                 .isInstanceOf(IllegalStateException.class);
     }

@@ -4,12 +4,12 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Anfrage an einen Scraper.
+ * Request to a scraper.
  *
- * @param mediaType Art des gesuchten Mediums
- * @param title     Suchtitel
- * @param year      Erscheinungsjahr oder {@code null}, falls unbekannt
- * @param uniqueIds bekannte IDs je Anbieter, z. B. {@code imdb -> tt0133093}
+ * @param mediaType type of the medium looked for
+ * @param title     search title
+ * @param year      release year or {@code null} if unknown
+ * @param uniqueIds known IDs per provider, e.g. {@code imdb -> tt0133093}
  */
 public record ScrapeRequest(MediaType mediaType, String title, Integer year, Map<String, String> uniqueIds) {
 

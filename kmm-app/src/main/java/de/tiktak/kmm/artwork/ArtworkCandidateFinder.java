@@ -14,6 +14,7 @@ import java.util.concurrent.Future;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ImageScraper;
@@ -61,7 +62,8 @@ class ArtworkCandidateFinder {
         List<String> warnings = new ArrayList<>();
         List<ImageScraper> ready = new ArrayList<>();
         for (ImageScraper scraper : scraperRegistry.imageScrapersFor(mediaType)) {
-            scraper.missingConfiguration().ifPresentOrElse(warnings::add, () -> ready.add(scraper));
+            scraper.missingConfiguration().map(Messages::english)
+                    .ifPresentOrElse(warnings::add, () -> ready.add(scraper));
         }
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
             List<Future<List<ArtworkCandidate>>> results = ready.stream()

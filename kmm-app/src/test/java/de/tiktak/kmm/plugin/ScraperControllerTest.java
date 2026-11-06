@@ -17,6 +17,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Attribution;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
@@ -36,7 +37,8 @@ class ScraperControllerTest {
 
     @Test
     void listsMetadataScrapersSortedByNameWithConfigurationHint() {
-        MetadataScraper tmdb = scraper("tmdb", "The Movie Database", Optional.of("API-Key fehlt"));
+        LocalizedText missingKey = LocalizedText.of("scraper.apiKeyMissing").with("provider", "TMDB");
+        MetadataScraper tmdb = scraper("tmdb", "The Movie Database", Optional.of(missingKey));
         MetadataScraper imdb = scraper("imdb", "IMDb", Optional.empty());
         when(scraperRegistry.metadataScrapers()).thenReturn(List.of(tmdb, imdb));
 
@@ -45,7 +47,8 @@ class ScraperControllerTest {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"id": "imdb", "displayName": "IMDb", "mediaTypes": ["MOVIE"], "missingConfiguration": null},
-                         {"id": "tmdb", "missingConfiguration": "API-Key fehlt"}]
+                         {"id": "tmdb",
+                          "missingConfiguration": {"key": "scraper.apiKeyMissing", "args": {"provider": "TMDB"}}}]
                         """);
     }
 
@@ -56,7 +59,7 @@ class ScraperControllerTest {
         when(tvdb.displayName()).thenReturn("TheTVDB");
         when(tvdb.supportedMediaTypes()).thenReturn(Set.of(MediaType.TV_SHOW));
         when(tvdb.attribution()).thenReturn(Optional.of(
-                new Attribution("Metadata provided by TheTVDB.", URI.create("https://thetvdb.com"))));
+                new Attribution(LocalizedText.of("scraper.tvdb.attribution"), URI.create("https://thetvdb.com"))));
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(tvdb));
 
         assertThat(mockMvc.get().uri(ScraperController.TV_SHOW_SCRAPERS_PATH))
@@ -64,11 +67,12 @@ class ScraperControllerTest {
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         [{"id": "tvdb", "mediaTypes": ["TV_SHOW"], "missingConfiguration": null,
-                          "attribution": {"text": "Metadata provided by TheTVDB.", "link": "https://thetvdb.com"}}]
+                          "attribution": {"text": {"key": "scraper.tvdb.attribution", "args": {}},
+                                          "link": "https://thetvdb.com"}}]
                         """);
     }
 
-    private static MetadataScraper scraper(String id, String name, Optional<String> missing) {
+    private static MetadataScraper scraper(String id, String name, Optional<LocalizedText> missing) {
         MetadataScraper scraper = mock(MetadataScraper.class);
         when(scraper.id()).thenReturn(id);
         when(scraper.displayName()).thenReturn(name);

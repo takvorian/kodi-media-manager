@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
@@ -193,15 +194,19 @@ class OfdbEnrichmentScraperTest {
     void reportsMissingOrEmptySitemapsAndErrors() {
         responses.remove("/sitemap/sitemap_index.xml");
         assertThatThrownBy(() -> scraper.findEnrichment(request("Heat", "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("Sitemap");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.ofdb.sitemapMissing")
+                                .with("path", "/sitemap/sitemap_index.xml")));
 
         page("/sitemap/sitemap_index.xml", "<sitemapindex></sitemapindex>");
         assertThatThrownBy(() -> scraper.findEnrichment(request("Heat", "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("keine Filme");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.ofdb.noMovies")));
 
         responses.put("/sitemap/sitemap_index.xml", new Response(403, ""));
         assertThatThrownBy(() -> scraper.findEnrichment(request("Heat", "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("403");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.httpError").with("provider", "OFDb").with("status", 403)));
     }
 
     @Test
@@ -209,7 +214,9 @@ class OfdbEnrichmentScraperTest {
         server.stop(0);
 
         assertThatThrownBy(() -> scraper.findEnrichment(request("Heat", "tt0113277")))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("nicht erreichbar");
+                .isInstanceOfSatisfying(ScraperException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("scraper.unreachable"))
+                .hasMessageContaining("OFDb cannot be reached");
     }
 
     @Test

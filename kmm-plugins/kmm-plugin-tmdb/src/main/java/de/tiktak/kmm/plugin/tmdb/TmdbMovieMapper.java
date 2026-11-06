@@ -15,7 +15,7 @@ import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Übersetzt TMDB-Antworten in die Typen der Plugin-API.
+ * Turns TMDB responses into the types of the plugin API.
  */
 @RequiredArgsConstructor
 class TmdbMovieMapper {

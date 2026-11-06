@@ -20,7 +20,7 @@ import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Übersetzt TMDB-Antworten zu Serien, Staffeln und Episoden in die Typen der Plugin-API.
+ * Turns TMDB responses on TV shows, seasons and episodes into the types of the plugin API.
  */
 @RequiredArgsConstructor
 class TmdbTvMapper {
@@ -36,7 +36,7 @@ class TmdbTvMapper {
     private static final String WRITER = "Writer";
     private static final String RETURNING_SERIES = "Returning Series";
     private static final String IN_PRODUCTION = "In Production";
-    /** TMDB vergibt Staffeln ohne eigenen Namen „Staffel 2“, „Season 2“ oder „Specials“; das ist kein Titel. */
+    /** TMDB names seasons without a name of their own "Staffel 2", "Season 2" or "Specials"; that is no title. */
     private static final Pattern GENERIC_SEASON_NAME = Pattern.compile("(staffel|season|specials)( \\d+)?");
 
     private final TmdbSettings settings;
@@ -103,7 +103,7 @@ class TmdbTvMapper {
                 .build();
     }
 
-    /** Kodi kennt nur „Continuing“ und „Ended“. */
+    /** Kodi only knows "Continuing" and "Ended". */
     private static Optional<String> status(JsonNode show) {
         return text(show, "status").map(status -> RETURNING_SERIES.equals(status) || IN_PRODUCTION.equals(status)
                 ? CONTINUING : ENDED);

@@ -5,7 +5,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Macht aus HTML-Ausschnitten von Webseiten ohne API lesbaren Text.
+ * Turns HTML snippets of web pages without an API into readable text.
  */
 public final class HtmlText {
 
@@ -25,7 +25,7 @@ public final class HtmlText {
     private HtmlText() {
     }
 
-    /** Text ohne Tags und Entities; Absätze und Zeilenumbrüche werden zu Zeilen, leere Zeilen entfallen. */
+    /** Text without tags and entities; paragraphs and line breaks become lines, blank lines are dropped. */
     public static String plain(String html) {
         if (html == null) {
             return "";

@@ -12,14 +12,14 @@
 
     <artifactId>kmm-plugin-tmdb</artifactId>
     <name>KMM Plugin TMDB</name>
-    <description>Metadaten von The Movie Database (TMDB). Benötigt einen TMDB-API-Key.</description>
+    <description>Metadata from The Movie Database (TMDB). Needs a TMDB API key.</description>
 
     <properties>
         <plugin.id>tmdb</plugin.id>
     </properties>
 
     <dependencies>
-        <!-- provided: Jackson und SLF4J stellt die Anwendung zur Laufzeit bereit. -->
+        <!-- provided: the application supplies Jackson and SLF4J at runtime. -->
         <dependency>
             <groupId>tools.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>

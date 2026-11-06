@@ -8,7 +8,7 @@ import java.util.Optional;
 import de.tiktak.kmm.plugin.api.PluginContext;
 
 /**
- * {@link PluginContext} für Tests mit frei setzbaren Einstellungen.
+ * {@link PluginContext} for tests with freely settable settings.
  */
 final class TestPluginContext implements PluginContext {
 

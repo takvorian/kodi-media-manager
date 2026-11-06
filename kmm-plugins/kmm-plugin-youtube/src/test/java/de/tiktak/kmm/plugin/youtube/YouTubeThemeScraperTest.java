@@ -17,6 +17,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -28,7 +29,7 @@ class YouTubeThemeScraperTest {
     private static final String SEARCH_OUTPUT = """
             {"id": "KTu8iDynwNc", "title": "ALF Intro (HD)", "channel": "Retro TV", "duration": 31}
             {"id": "longEpisode1", "title": "ALF – ganze Folge", "channel": "", "duration": 1500}
-            kein JSON
+            no JSON
             {"id": "x", "title": "zu kurze ID"}
             {"id": "noDuration01", "title": "ALF Titellied"}
             """;
@@ -98,37 +99,44 @@ class YouTubeThemeScraperTest {
                 "https://www.youtube.com/playlist?list=PL1234567", "https://www.youtube.com/watch?v=;rm",
                 "https://www.youtube.com/watch"}) {
             assertThatThrownBy(() -> scraper.download(candidate(URI.create(source)), target))
-                    .as(source).isInstanceOf(ScraperException.class).hasMessageContaining("kein YouTube-Video");
+                    .as(source).isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                            .isEqualTo(LocalizedText.of("scraper.youtube.notAVideo").with("source", source)));
         }
 
         assertThatThrownBy(() -> scraper.download(candidate(ALF_INTRO), target))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("keine MP3");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.youtube.noMp3")));
 
         runner.exitCode = 1;
         runner.errors = "ERROR: Video unavailable";
         assertThatThrownBy(() -> scraper.download(candidate(ALF_INTRO), target))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("Video unavailable");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.youtube.ytDlpFailed")
+                                .with("errors", "ERROR: Video unavailable")));
 
-        runner.failure = new IOException("Programm nicht gefunden");
+        runner.failure = new IOException("program not found");
         assertThatThrownBy(() -> scraper.findThemes(new ScrapeRequest(MediaType.MOVIE, "Heat", null, Map.of())))
-                .isInstanceOf(ScraperException.class).hasMessageContaining("yt-dlp läuft nicht");
+                .isInstanceOfSatisfying(ScraperException.class, e -> assertThat(e.localizedText())
+                        .isEqualTo(LocalizedText.of("scraper.youtube.ytDlpNotRunning")
+                                .with("reason", "program not found")));
         assertThat(target).doesNotExist();
     }
 
     @Test
     void reportsAMissingYtDlpOnce() {
-        assertThat(new YouTubeThemeScraper(runner).missingConfiguration()).isPresent();
+        assertThat(new YouTubeThemeScraper(runner).missingConfiguration())
+                .contains(LocalizedText.of("scraper.youtube.notInitialized"));
         assertThatThrownBy(() -> new YouTubeThemeScraper(runner).findThemes(
                 new ScrapeRequest(MediaType.MOVIE, "Heat", null, Map.of()))).isInstanceOf(IllegalStateException.class);
 
         assertThat(scraper.missingConfiguration()).isEmpty();
 
-        runner.failure = new IOException("nicht gefunden");
+        runner.failure = new IOException("not found");
         scraper.initialize(context(Map.of()));
         assertThat(scraper.missingConfiguration()).hasValueSatisfying(message ->
-                assertThat(message).contains("yt-dlp nicht gefunden"));
+                assertThat(message.key()).isEqualTo("scraper.youtube.ytDlpNotFound"));
         runner.failure = null;
-        assertThat(scraper.missingConfiguration()).as("Ergebnis bleibt bis zum Neustart").isPresent();
+        assertThat(scraper.missingConfiguration()).as("the result holds until the next start").isPresent();
     }
 
     @Test
@@ -161,7 +169,7 @@ class YouTubeThemeScraperTest {
         };
     }
 
-    /** yt-dlp-Attrappe: liefert feste Ausgaben und legt beim Download die erwartete Datei an. */
+    /** yt-dlp stub: returns fixed outputs and creates the expected file when downloading. */
     private static final class FakeRunner implements CommandRunner {
 
         private final List<List<String>> commands = new ArrayList<>();

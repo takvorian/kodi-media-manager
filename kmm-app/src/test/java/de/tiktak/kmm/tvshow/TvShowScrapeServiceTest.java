@@ -18,6 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CastMember;
@@ -106,7 +107,7 @@ class TvShowScrapeServiceTest {
         ReflectionTestUtils.setField(show, "id", 7L);
         when(showRepository.findById(7L)).thenReturn(Optional.of(show));
         TvShowScraper unconfigured = mock(TvShowScraper.class);
-        when(unconfigured.missingConfiguration()).thenReturn(Optional.of("Key fehlt"));
+        when(unconfigured.missingConfiguration()).thenReturn(Optional.of(LocalizedText.literal("Key fehlt")));
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(unconfigured, scraper));
         when(scraper.id()).thenReturn("tmdb");
         when(scraper.scrape(any())).thenReturn(Optional.empty());

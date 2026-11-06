@@ -14,24 +14,24 @@ import de.tiktak.kmm.plugin.api.ImageType;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Übersetzt die Artworks einer Serie ({@code /series/{id}/extended}) in Bild-Kandidaten. Staffelbilder
- * sind bei TVDB über die ID der Staffel zugeordnet; KMM braucht die Staffelnummer.
+ * Turns the artworks of a TV show ({@code /series/{id}/extended}) into image candidates. TVDB assigns season images
+ * via the ID of the season; KMM needs the season number.
  */
 class TvdbImageMapper {
 
-    /** TVDB-Artwork-Typen (siehe {@code /artwork/types}) für die ganze Serie. */
+    /** TVDB artwork types (see {@code /artwork/types}) for the whole TV show. */
     private static final Map<Integer, ImageType> SERIES_TYPES = Map.of(
             1, ImageType.BANNER,
             2, ImageType.POSTER,
             3, ImageType.FANART,
             22, ImageType.CLEARART,
             23, ImageType.CLEARLOGO);
-    /** TVDB-Artwork-Typen für Staffeln. */
+    /** TVDB artwork types for seasons. */
     private static final Map<Integer, ImageType> SEASON_TYPES = Map.of(
             6, ImageType.BANNER,
             7, ImageType.POSTER,
             8, ImageType.FANART);
-    /** TVDB nennt Sprachen nach ISO 639-2 ({@code eng}), KMM nach ISO 639-1 ({@code en}). */
+    /** TVDB names languages by ISO 639-2 ({@code eng}), KMM by ISO 639-1 ({@code en}). */
     private static final Map<String, String> ISO1_BY_ISO3 = iso1ByIso3();
 
     List<ImageCandidate> toCandidates(JsonNode series) {
@@ -81,7 +81,7 @@ class TvdbImageMapper {
             try {
                 languages.put(Locale.of(iso1).getISO3Language(), iso1);
             } catch (MissingResourceException e) {
-                // Sprachen ohne dreistelligen Code kommen bei TVDB nicht vor.
+                // Languages without a three-letter code do not occur at TVDB.
             }
         }
         return Map.copyOf(languages);

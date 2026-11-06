@@ -15,8 +15,8 @@ import de.tiktak.kmm.plugin.api.SearchQuery;
 import de.tiktak.kmm.plugin.api.SearchResult;
 
 /**
- * Liefert für jeden Film den angefragten Titel als Ergebnis zurück. Dient nur dazu, den
- * Plugin-Lademechanismus Ende zu Ende zu testen.
+ * Returns the requested title as the result for every movie. Only serves to test the plugin loading mechanism
+ * end to end.
  */
 @Extension
 public class TestdataMetadataScraper implements MetadataScraper {
@@ -40,7 +40,7 @@ public class TestdataMetadataScraper implements MetadataScraper {
         return Set.of(MediaType.MOVIE);
     }
 
-    /** Der Titel dient zugleich als Anbieter-ID. */
+    /** The title also serves as the provider ID. */
     @Override
     public List<SearchResult> search(SearchQuery query) {
         if (!supports(query.mediaType())) {

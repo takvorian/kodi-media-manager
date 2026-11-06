@@ -15,7 +15,7 @@ class ImageCandidateTest {
     @Test
     void usesFullImageAsPreviewWhenNoneIsGiven() {
         var candidate = ImageCandidate.builder().type(ImageType.POSTER).url(POSTER_URL).build();
-        assertThat(candidate.season()).as("ohne Staffel gilt das Bild für das ganze Medium").isNull();
+        assertThat(candidate.season()).as("without a season the image applies to the whole medium").isNull();
 
         assertThat(candidate.previewUrl()).isEqualTo(POSTER_URL);
         assertThat(candidate.language()).isNull();

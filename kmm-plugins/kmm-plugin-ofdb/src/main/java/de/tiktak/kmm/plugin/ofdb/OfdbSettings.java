@@ -6,10 +6,10 @@ import java.time.Duration;
 import de.tiktak.kmm.plugin.api.PluginContext;
 
 /**
- * Einstellungen des Plugins ({@code kmm.plugins.settings.ofdb.*}).
+ * Settings of the plugin ({@code kmm.plugins.settings.ofdb.*}).
  *
- * @param baseUrl      Adresse der Seite
- * @param requestDelay Abstand zwischen zwei Abrufen
+ * @param baseUrl      address of the site
+ * @param requestDelay gap between two requests
  */
 record OfdbSettings(URI baseUrl, Duration requestDelay) {
 

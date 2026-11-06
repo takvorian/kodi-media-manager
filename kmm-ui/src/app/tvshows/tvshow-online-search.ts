@@ -8,6 +8,7 @@ import { MatSelectModule } from '@angular/material/select';
 import { TranslocoPipe } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import { problemMessage } from '../shared/problem-message';
 import { defaultTvShowScraper } from './tv-scrapers';
@@ -29,6 +30,7 @@ export interface TvShowScrapedProposal {
 @Component({
   selector: 'app-tvshow-online-search',
   imports: [
+    LocalizedPipe,
     ReactiveFormsModule,
     MatButtonModule,
     MatFormFieldModule,

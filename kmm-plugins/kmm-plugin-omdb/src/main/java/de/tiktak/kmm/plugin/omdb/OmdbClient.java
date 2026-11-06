@@ -10,7 +10,9 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.Optional;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 import lombok.RequiredArgsConstructor;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -18,8 +20,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * HTTP-Client für die OMDb-API. OMDb meldet Fehler meist mit Status 200 und {@code "Response": "False"}; sie werden zu
- * verständlichen {@link ScraperException}s, ein unbekannter Eintrag zu einer leeren Antwort.
+ * HTTP client for the OMDb API. OMDb mostly reports errors with status 200 and {@code "Response": "False"}; they
+ * become understandable {@link ScraperException}s, an unknown entry becomes an empty response.
  */
 @RequiredArgsConstructor
 class OmdbClient {
@@ -37,8 +39,8 @@ class OmdbClient {
     private final ObjectMapper objectMapper = JsonMapper.builder().build();
 
     /**
-     * @param imdbId geprüfte IMDb-ID
-     * @return die Angaben oder leer, wenn OMDb den Eintrag nicht kennt
+     * @param imdbId checked IMDb ID
+     * @return the details, or empty if OMDb does not know the entry
      */
     Optional<JsonNode> byImdbId(String imdbId) {
         URI uri = URI.create("%s/?i=%s&plot=full&apikey=%s".formatted(settings.baseUrl(), imdbId,
@@ -52,17 +54,15 @@ class OmdbClient {
         JsonNode body = response.statusCode() == OK || response.statusCode() == UNAUTHORIZED
                 ? parse(response.body()) : null;
         if (body == null) {
-            throw new ScraperException("OMDb antwortet mit Fehler %d.".formatted(response.statusCode()));
+            throw new ScraperException(ScraperTexts.httpError(OmdbEnrichmentScraper.PROVIDER, response.statusCode()));
         }
         if (TRUE.equals(body.path("Response").asString(""))) {
             return Optional.of(body);
         }
         String error = body.path("Error").asString("");
         return switch (error) {
-            case INVALID_KEY -> throw new ScraperException(
-                    "OMDb lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.");
-            case LIMIT_REACHED -> throw new ScraperException(
-                    "Das Tageslimit des OMDb-API-Keys ist erreicht; morgen geht es weiter.");
+            case INVALID_KEY -> throw new ScraperException(ScraperTexts.apiKeyRejected(OmdbEnrichmentScraper.PROVIDER));
+            case LIMIT_REACHED -> throw new ScraperException(LocalizedText.of("scraper.omdb.dailyLimitReached"));
             default -> Optional.empty();
         };
     }
@@ -71,10 +71,10 @@ class OmdbClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ScraperException("OMDb ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(OmdbEnrichmentScraper.PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an OMDb wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(OmdbEnrichmentScraper.PROVIDER), e);
         }
     }
 
@@ -82,7 +82,7 @@ class OmdbClient {
         try {
             return objectMapper.readTree(body);
         } catch (JacksonException e) {
-            throw new ScraperException("OMDb hat eine unerwartete Antwort geliefert.", e);
+            throw new ScraperException(ScraperTexts.unexpectedResponse(OmdbEnrichmentScraper.PROVIDER), e);
         }
     }
 }

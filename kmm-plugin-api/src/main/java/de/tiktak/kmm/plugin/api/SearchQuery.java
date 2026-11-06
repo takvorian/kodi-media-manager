@@ -3,9 +3,9 @@ package de.tiktak.kmm.plugin.api;
 import java.util.Objects;
 
 /**
- * Suche nach einem Medium beim Anbieter.
+ * Search for a medium at the provider.
  *
- * @param year Erscheinungsjahr zur Eingrenzung oder {@code null}
+ * @param year release year to narrow the search, or {@code null}
  */
 public record SearchQuery(MediaType mediaType, String title, Integer year) {
 

@@ -10,7 +10,7 @@ import java.util.stream.Collectors;
 import de.tiktak.kmm.plugin.api.HtmlText;
 
 /**
- * Liest die Angaben aus den HTML-Seiten von OFDb.
+ * Reads the details from the HTML pages of OFDb.
  */
 final class OfdbPage {
 
@@ -56,7 +56,7 @@ final class OfdbPage {
         return values(ACTOR, film);
     }
 
-    /** Die FSK der angebotenen Fassungen, aber nur wenn alle dieselbe haben: Geschnittene Fassungen weichen ab. */
+    /** The FSK rating of the offered versions, but only if all have the same: cut versions differ. */
     static String certification(String film) {
         Set<String> ages = RELEASE.matcher(film).results().map(release -> age(release.group(1)))
                 .flatMap(Optional::stream).collect(Collectors.toSet());
@@ -71,13 +71,13 @@ final class OfdbPage {
         return matcher.find() ? Optional.of(matcher.group()) : Optional.empty();
     }
 
-    /** @return ID der Inhaltsangabe, falls der Film eine hat */
+    /** @return ID of the plot summary, if the movie has one */
     static Optional<Integer> plotId(String film) {
         Matcher matcher = PLOT_LINK.matcher(film);
         return matcher.find() ? Optional.of(Integer.valueOf(matcher.group(2))) : Optional.empty();
     }
 
-    /** Die Inhaltsangabe; OFDb teilt ihren ersten Satz oft mit „…“ auf Überschrift und Text auf. */
+    /** The plot summary; OFDb often splits its first sentence with "…" between heading and text. */
     static String plot(String page) {
         Matcher matcher = PLOT.matcher(page);
         if (!matcher.find()) {

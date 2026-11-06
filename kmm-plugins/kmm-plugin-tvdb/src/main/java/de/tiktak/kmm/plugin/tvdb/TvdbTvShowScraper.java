@@ -15,8 +15,7 @@ import de.tiktak.kmm.plugin.api.TvShowResult;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 
 /**
- * Serien-Scraper auf Basis von TheTVDB (API v4) mit offizieller, DVD- oder absoluter
- * Episodenreihenfolge.
+ * TV show scraper based on TheTVDB (API v4) with official, DVD or absolute episode order.
  */
 @Extension
 public class TvdbTvShowScraper extends AbstractTvdbScraper implements TvShowScraper {
@@ -55,7 +54,7 @@ public class TvdbTvShowScraper extends AbstractTvdbScraper implements TvShowScra
         return tvdbId(tvdb, request).flatMap(this::fetch);
     }
 
-    /** TVDB liefert Regie, Drehbuch und Gaststars nur in den Details jeder einzelnen Episode. */
+    /** TVDB only supplies directors, writers and guest stars in the details of every single episode. */
     @Override
     public EpisodeResult episodeDetails(EpisodeResult episode) {
         String tvdbId = episode.uniqueIds().get(TvdbApi.TVDB);
@@ -66,7 +65,7 @@ public class TvdbTvShowScraper extends AbstractTvdbScraper implements TvShowScra
                 .orElse(episode);
     }
 
-    /** Über bekannte TVDB-, IMDb- oder TMDB-ID, sonst der eindeutig passende Suchtreffer. */
+    /** Via a known TVDB, IMDb or TMDB ID, otherwise the unambiguously matching search result. */
     private Optional<String> tvdbId(TvdbApi tvdb, ScrapeRequest request) {
         Optional<String> known = tvdb.seriesIdOf(request.uniqueIds());
         if (known.isPresent()) {

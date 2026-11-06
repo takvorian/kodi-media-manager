@@ -15,8 +15,8 @@ import de.tiktak.kmm.plugin.api.TrailerScraper;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Trailer von Filmen und Serien von The Movie Database (TMDB). TMDB verweist auf YouTube-Videos; Kodi spielt sie über das YouTube-Addon
- * ab, wie Embers „Kodi-Trailer-Format“. Andere Seiten (z. B. Vimeo) werden übergangen.
+ * Trailers of movies and TV shows from The Movie Database (TMDB). TMDB refers to YouTube videos; Kodi plays them via
+ * the YouTube add-on, like Ember's "Kodi trailer format". Other sites (e.g. Vimeo) are skipped.
  */
 @Extension
 public class TmdbTrailerScraper extends AbstractTmdbScraper implements TrailerScraper {
@@ -25,7 +25,7 @@ public class TmdbTrailerScraper extends AbstractTmdbScraper implements TrailerSc
     private static final String YOUTUBE = "YouTube";
     private static final String WATCH = "https://www.youtube.com/watch?v=";
     private static final String THUMBNAIL = "https://img.youtube.com/vi/%s/mqdefault.jpg";
-    /** YouTube-IDs bestehen aus Buchstaben, Ziffern, {@code -} und {@code _}. */
+    /** YouTube IDs consist of letters, digits, {@code -} and {@code _}. */
     private static final Pattern VIDEO_ID = Pattern.compile("[A-Za-z0-9_-]{6,20}");
     private static final int DATE_LENGTH = 10;
 

@@ -16,7 +16,7 @@ import com.sun.net.httpserver.HttpExchange;
 import com.sun.net.httpserver.HttpServer;
 
 /**
- * Kleiner HTTP-Server, der feste TMDB-Antworten ausliefert und die Anfragen mitschreibt.
+ * Small HTTP server that serves fixed TMDB responses and records the requests.
  */
 final class FakeTmdbServer implements AutoCloseable {
 
@@ -85,7 +85,7 @@ final class FakeTmdbServer implements AutoCloseable {
     private record Response(int status, String body) {
     }
 
-    /** Mitgeschriebene Anfrage. */
+    /** Recorded request. */
     record HttpExchangeRecord(String path, String query, String authorization, String userAgent) {
     }
 }

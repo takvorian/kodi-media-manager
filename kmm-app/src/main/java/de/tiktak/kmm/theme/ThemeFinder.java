@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -34,7 +35,7 @@ class ThemeFinder {
         List<String> warnings = new ArrayList<>();
         Map<String, ThemeOption> options = new LinkedHashMap<>();
         for (ThemeScraper scraper : scraperRegistry.themeScrapersFor(target.mediaType())) {
-            Optional<String> missing = scraper.missingConfiguration();
+            Optional<String> missing = scraper.missingConfiguration().map(Messages::english);
             if (missing.isPresent()) {
                 warnings.add(missing.get());
                 continue;

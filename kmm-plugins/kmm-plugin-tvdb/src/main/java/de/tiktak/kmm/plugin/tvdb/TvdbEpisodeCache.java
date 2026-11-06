@@ -10,9 +10,8 @@ import java.util.Optional;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Hält Episodendetails einen Tag lang vor, damit wiederholte Übernahmen TVDB nicht erneut je Episode
- * fragen. PF4J erzeugt die Erweiterung bei jeder Abfrage neu, deshalb ist der Speicher statisch; er
- * vergisst die ältesten Einträge, sobald er voll ist.
+ * Keeps episode details for one day so repeated scrapes do not ask TVDB per episode again. PF4J creates the extension
+ * anew for every request, so the cache is static; it forgets the oldest entries once it is full.
  */
 final class TvdbEpisodeCache {
 

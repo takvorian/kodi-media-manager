@@ -3,9 +3,9 @@ package de.tiktak.kmm.plugin.api;
 import java.time.LocalDate;
 
 /**
- * Eine Staffel einer Serie beim Anbieter; Staffel 0 enthält die Specials.
+ * A season of a TV show at the provider; season 0 holds the specials.
  *
- * @param title Staffeltitel oder {@code null}, wenn der Anbieter nur die Nummer kennt
+ * @param title season title or {@code null} if the provider only knows the number
  */
 public record SeasonResult(int number, String title, String plot, LocalDate aired) {
 }

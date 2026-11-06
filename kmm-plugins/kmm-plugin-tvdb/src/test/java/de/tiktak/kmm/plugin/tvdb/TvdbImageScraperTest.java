@@ -57,7 +57,7 @@ class TvdbImageScraperTest {
             assertThat(poster.width()).isEqualTo(680);
             assertThat(poster.rating()).isEqualTo(100006.0);
         });
-        assertThat(images.get(1).previewUrl()).as("ohne Vorschau das Bild selbst").isEqualTo(images.get(1).url());
+        assertThat(images.get(1).previewUrl()).as("without a preview the image itself").isEqualTo(images.get(1).url());
     }
 
     @Test

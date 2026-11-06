@@ -9,7 +9,7 @@ import lombok.RequiredArgsConstructor;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Die von KMM genutzten TMDB-Endpunkte. Prüft IDs streng, bevor sie im URL-Pfad landen.
+ * The TMDB endpoints KMM uses. Checks IDs strictly before they end up in the URL path.
  */
 @RequiredArgsConstructor
 class TmdbApi {
@@ -45,7 +45,7 @@ class TmdbApi {
                 "append_to_response", "release_dates"));
     }
 
-    /** Bilder in der eingestellten Sprache, auf Englisch und ohne Sprache (z. B. Hintergründe). */
+    /** Images in the configured language, in English and without language (e.g. backdrops). */
     Optional<JsonNode> movieImages(String tmdbId) {
         if (!isTmdbId(tmdbId)) {
             return Optional.empty();
@@ -53,7 +53,7 @@ class TmdbApi {
         return client.get("/movie/" + tmdbId + "/images", Map.of("include_image_language", imageLanguages()));
     }
 
-    /** Videos in der Bildsprache, auf Englisch und ohne Sprache; die Sprache der Metadaten gilt nur für Namen. */
+    /** Videos in the image language, in English and without language; the metadata language only applies to names. */
     Optional<JsonNode> movieVideos(String tmdbId) {
         if (!isTmdbId(tmdbId)) {
             return Optional.empty();
@@ -71,7 +71,7 @@ class TmdbApi {
         return client.get("/search/collection", Map.of("query", title, "language", settings.language()));
     }
 
-    /** @param language Sprache, z. B. {@code de-DE}; Ember greift für fehlende Beschreibungen auf Englisch zurück */
+    /** @param language language, e.g. {@code de-DE}; Ember falls back to English for missing descriptions */
     Optional<JsonNode> collection(String collectionId, String language) {
         if (!isTmdbId(collectionId)) {
             return Optional.empty();
@@ -79,7 +79,7 @@ class TmdbApi {
         return client.get("/collection/" + collectionId, Map.of("language", language));
     }
 
-    /** Bilder einer Sammlung in der eingestellten Sprache, auf Englisch und ohne Sprache. */
+    /** Images of a collection in the configured language, in English and without language. */
     Optional<JsonNode> collectionImages(String collectionId) {
         if (!isTmdbId(collectionId)) {
             return Optional.empty();
@@ -115,7 +115,7 @@ class TmdbApi {
         return client.get("/tv/" + tmdbId + "/season/" + season, Map.of("language", settings.tvLanguage()));
     }
 
-    /** Bilder einer Serie in der eingestellten Sprache, auf Englisch und ohne Sprache. */
+    /** Images of a TV show in the configured language, in English and without language. */
     Optional<JsonNode> tvImages(String tmdbId) {
         if (!isTmdbId(tmdbId)) {
             return Optional.empty();
@@ -123,7 +123,7 @@ class TmdbApi {
         return client.get("/tv/" + tmdbId + "/images", Map.of("include_image_language", imageLanguages()));
     }
 
-    /** Videos einer Serie in der Bildsprache, auf Englisch und ohne Sprache; Namen in der Seriensprache. */
+    /** Videos of a TV show in the image language, in English and without language; names in the TV language. */
     Optional<JsonNode> tvVideos(String tmdbId) {
         if (!isTmdbId(tmdbId)) {
             return Optional.empty();
@@ -141,7 +141,7 @@ class TmdbApi {
                 Map.of("include_image_language", imageLanguages()));
     }
 
-    /** TMDB-ID einer Serie aus bekannten IDs: direkt, über die TVDB- oder die IMDb-ID. */
+    /** TMDB ID of a TV show from known IDs: directly, via the TVDB or the IMDb ID. */
     Optional<String> tvShowIdOf(Map<String, String> uniqueIds) {
         Optional<String> known = Optional.ofNullable(uniqueIds.get(TMDB));
         if (known.isPresent()) {
@@ -164,7 +164,7 @@ class TmdbApi {
                 .map(show -> show.path("id").asString());
     }
 
-    /** TMDB-ID aus bekannten IDs: direkt oder über die IMDb-ID. */
+    /** TMDB ID from known IDs: directly or via the IMDb ID. */
     Optional<String> tmdbIdOf(Map<String, String> uniqueIds) {
         Optional<String> known = Optional.ofNullable(uniqueIds.get(TMDB));
         if (known.isPresent()) {

@@ -14,15 +14,17 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Minimaler HTTP-Client für die TVDB-API v4: meldet sich mit API-Key und PIN an und übersetzt Fehler in
- * verständliche {@link ScraperException}s für die Oberfläche.
+ * Minimal HTTP client for the TVDB API v4: logs in with API key and PIN and turns errors into understandable
+ * {@link ScraperException}s for the user interface.
  */
 class TvdbClient {
 
@@ -31,8 +33,8 @@ class TvdbClient {
     private static final int UNAUTHORIZED = 401;
     private static final int NOT_FOUND = 404;
     private static final int TOO_MANY_REQUESTS = 429;
-    private static final String REJECTED_KEY =
-            "TVDB lehnt den API-Key oder die PIN ab. Bitte unter Einstellungen → API-Keys prüfen.";
+    private static final String PROVIDER = AbstractTvdbScraper.PROVIDER;
+    private static final LocalizedText REJECTED_KEY = LocalizedText.of("scraper.tvdb.credentialsRejected");
 
     private final HttpClient httpClient;
     private final TvdbSettings settings;
@@ -48,13 +50,13 @@ class TvdbClient {
     }
 
     /**
-     * @return die Antwort (Inhalt unter {@code data}) oder leer, wenn TVDB den Eintrag nicht kennt (HTTP 404)
-     * @throws ScraperException bei ungültigem Key, Anfragelimit, Server- oder Netzwerkfehlern
+     * @return the response (content under {@code data}), or empty if TVDB does not know the entry (HTTP 404)
+     * @throws ScraperException on an invalid key, the request limit, server or network errors
      */
     Optional<JsonNode> get(String path, Map<String, String> parameters) {
         HttpResponse<String> response = send(request(path, parameters, token()));
         if (response.statusCode() == UNAUTHORIZED) {
-            // Ein abgelaufenes oder widerrufenes Token: einmal neu anmelden.
+            // An expired or revoked token: log in again once.
             TvdbTokens.forget(tokenKey());
             response = send(request(path, parameters, token()));
         }
@@ -62,9 +64,8 @@ class TvdbClient {
             case OK -> Optional.of(parse(response.body()));
             case NOT_FOUND -> Optional.empty();
             case UNAUTHORIZED -> throw new ScraperException(REJECTED_KEY);
-            case TOO_MANY_REQUESTS -> throw new ScraperException(
-                    "Das Anfragelimit von TVDB ist erreicht. Bitte später erneut versuchen.");
-            default -> throw new ScraperException("TVDB antwortet mit Fehler %d.".formatted(response.statusCode()));
+            case TOO_MANY_REQUESTS -> throw new ScraperException(ScraperTexts.rateLimitReached(PROVIDER));
+            default -> throw new ScraperException(ScraperTexts.httpError(PROVIDER, response.statusCode()));
         };
     }
 
@@ -87,16 +88,16 @@ class TvdbClient {
             throw new ScraperException(REJECTED_KEY);
         }
         if (response.statusCode() != OK) {
-            throw new ScraperException("Die Anmeldung bei TVDB ist fehlgeschlagen (Fehler %d)."
-                    .formatted(response.statusCode()));
+            throw new ScraperException(LocalizedText.of("scraper.tvdb.loginFailed")
+                    .with("status", response.statusCode()));
         }
         String token = JsonNodes.text(parse(response.body()).path("data"), "token")
-                .orElseThrow(() -> new ScraperException("TVDB hat bei der Anmeldung kein Token geliefert."));
+                .orElseThrow(() -> new ScraperException(LocalizedText.of("scraper.tvdb.noToken")));
         TvdbTokens.remember(tokenKey(), token, clock);
         return token;
     }
 
-    /** Je Key, PIN und Server ein Token. */
+    /** One token per key, PIN and server. */
     private String tokenKey() {
         return settings.baseUrl() + "|" + settings.apiKey() + "|" + settings.pin();
     }
@@ -124,10 +125,10 @@ class TvdbClient {
         try {
             return httpClient.send(request, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new ScraperException("TVDB ist nicht erreichbar: " + e.getMessage(), e);
+            throw new ScraperException(ScraperTexts.unreachable(PROVIDER, e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new ScraperException("Die Anfrage an TVDB wurde unterbrochen.", e);
+            throw new ScraperException(ScraperTexts.interrupted(PROVIDER), e);
         }
     }
 
@@ -135,7 +136,7 @@ class TvdbClient {
         try {
             return objectMapper.readTree(body);
         } catch (JacksonException e) {
-            throw new ScraperException("TVDB hat eine unerwartete Antwort geliefert.", e);
+            throw new ScraperException(ScraperTexts.unexpectedResponse(PROVIDER), e);
         }
     }
 

@@ -5,23 +5,26 @@ import java.time.Clock;
 import java.util.Optional;
 import java.util.Set;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Attribution;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.ScraperTexts;
 
 /**
- * Gemeinsame Grundlage der TVDB-Scraper: Kennung, Einrichtung, Prüfung des API-Keys und der Hinweis
- * auf die Datenquelle, den TVDB verlangt.
+ * Common base of the TVDB scrapers: identifier, setup, check of the API key and the attribution of the data source
+ * that TVDB requires.
  */
 abstract class AbstractTvdbScraper implements Scraper {
 
     static final String ID = "tvdb";
     static final String DISPLAY_NAME = "TheTVDB";
-    static final String MISSING_API_KEY = "Für TVDB fehlt ein API-Key (Einstellungen → API-Keys).";
-    static final Attribution ATTRIBUTION = new Attribution(
-            "Metadata provided by TheTVDB. Please consider adding missing information or subscribing.",
+    /** Name of the provider in messages for the user. */
+    static final String PROVIDER = "TVDB";
+    static final LocalizedText MISSING_API_KEY = ScraperTexts.apiKeyMissing(PROVIDER);
+    static final Attribution ATTRIBUTION = new Attribution(LocalizedText.of("scraper.tvdb.attribution"),
             URI.create("https://www.thetvdb.com"));
 
     private final Clock clock;
@@ -55,7 +58,7 @@ abstract class AbstractTvdbScraper implements Scraper {
     }
 
     @Override
-    public Optional<String> missingConfiguration() {
+    public Optional<LocalizedText> missingConfiguration() {
         return settings != null && settings.hasApiKey() ? Optional.empty() : Optional.of(MISSING_API_KEY);
     }
 
@@ -65,7 +68,7 @@ abstract class AbstractTvdbScraper implements Scraper {
     }
 
     /**
-     * @throws ScraperException wenn der API-Key fehlt
+     * @throws ScraperException if the API key is missing
      */
     protected TvdbApi api() {
         if (api == null) {

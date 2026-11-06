@@ -4,18 +4,18 @@ import java.net.URI;
 import java.util.Objects;
 
 /**
- * Ein Trailer zur Auswahl.
+ * A trailer to choose from.
  *
- * @param name       Titel des Videos
- * @param kodiUrl    Link, den Kodi abspielt und der in die NFO kommt, z. B.
+ * @param name       title of the video
+ * @param kodiUrl    link Kodi plays and that goes into the NFO, e.g.
  *                   {@code plugin://plugin.video.youtube/?action=play_video&videoid=…}
- * @param webUrl     Adresse zum Ansehen im Browser
- * @param previewUrl Vorschaubild oder {@code null}
- * @param language   Sprache (ISO 639-1) oder {@code null}
- * @param type       Art laut Anbieter, z. B. {@code Trailer} oder {@code Teaser}
- * @param official   ob der Anbieter das Video als offiziell kennzeichnet
- * @param height     Bildhöhe, z. B. 1080, oder {@code null}
- * @param published  Veröffentlichung als ISO-Datum oder {@code null}
+ * @param webUrl     address to watch it in the browser
+ * @param previewUrl preview image or {@code null}
+ * @param language   language (ISO 639-1) or {@code null}
+ * @param type       type according to the provider, e.g. {@code Trailer} or {@code Teaser}
+ * @param official   whether the provider marks the video as official
+ * @param height     picture height, e.g. 1080, or {@code null}
+ * @param published  publication as ISO date or {@code null}
  */
 public record TrailerCandidate(
         String name,

@@ -11,14 +11,14 @@ import java.util.regex.Pattern;
 import tools.jackson.databind.JsonNode;
 
 /**
- * Die von KMM genutzten TVDB-Endpunkte. Prüft IDs streng, bevor sie im URL-Pfad landen.
+ * The TVDB endpoints KMM uses. Checks IDs strictly before they end up in the URL path.
  */
 class TvdbApi {
 
     static final String TVDB = "tvdb";
     static final String TMDB = "tmdb";
     static final String IMDB = "imdb";
-    /** Schutz vor endlosem Blättern bei fehlerhaften Antworten; 50 Seiten à 500 Episoden reichen für jede Serie. */
+    /** Guards against endless paging on faulty responses; 50 pages of 500 episodes are enough for any TV show. */
     static final int MAX_EPISODE_PAGES = 50;
     private static final Pattern NUMERIC_ID = Pattern.compile("[0-9]{1,10}");
     private static final Pattern IMDB_ID = Pattern.compile("tt[0-9]{7,10}");
@@ -47,18 +47,18 @@ class TvdbApi {
         if (!isNumericId(tvdbId)) {
             return Optional.empty();
         }
-        // Ohne "short", denn nur die vollständige Antwort enthält die Darsteller.
+        // Without "short" because only the full response contains the actors.
         return client.get("/series/" + tvdbId + "/extended", Map.of())
                 .map(response -> response.path("data"));
     }
 
-    /** Name und Beschreibung in der eingestellten Sprache; leer, wenn es keine Übersetzung gibt. */
+    /** Name and description in the configured language; empty if there is no translation. */
     Optional<JsonNode> seriesTranslation(String tvdbId) {
         return client.get("/series/" + tvdbId + "/translations/" + settings.language(), Map.of())
                 .map(response -> response.path("data"));
     }
 
-    /** Alle Episoden in der eingestellten Reihenfolge, ohne bzw. mit Übersetzung. */
+    /** All episodes in the configured order, without or with translation. */
     List<JsonNode> episodes(String tvdbId, boolean translated) {
         String path = "/series/" + tvdbId + "/episodes/" + settings.seasonType()
                 + (translated ? "/" + settings.language() : "");
@@ -76,7 +76,7 @@ class TvdbApi {
         return episodes;
     }
 
-    /** Details einer Episode mit Regie, Drehbuch und Gaststars; zwischengespeichert. */
+    /** Details of an episode with directors, writers and guest stars; cached. */
     Optional<JsonNode> episode(String tvdbId) {
         if (!isNumericId(tvdbId)) {
             return Optional.empty();
@@ -92,7 +92,7 @@ class TvdbApi {
         return details;
     }
 
-    /** TVDB-ID einer Serie aus bekannten IDs: direkt, über die IMDb- oder die TMDB-ID. */
+    /** TVDB ID of a TV show from known IDs: directly, via the IMDb or the TMDB ID. */
     Optional<String> seriesIdOf(Map<String, String> uniqueIds) {
         Optional<String> known = Optional.ofNullable(uniqueIds.get(TVDB)).filter(TvdbApi::isNumericId);
         if (known.isPresent()) {
