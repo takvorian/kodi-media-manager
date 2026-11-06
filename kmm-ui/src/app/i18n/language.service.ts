@@ -1,5 +1,5 @@
 import { DOCUMENT } from '@angular/common';
-import { inject, Injectable, signal } from '@angular/core';
+import { computed, inject, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { firstValueFrom } from 'rxjs';
@@ -22,8 +22,10 @@ export class LanguageService {
   private readonly router = inject(Router);
   private readonly document = inject(DOCUMENT);
 
-  private readonly active = signal<UiLanguage>(FALLBACK_LANGUAGE);
-  readonly current = this.active.asReadonly();
+  /** Follows Transloco, so a language set elsewhere (e.g. in tests) is reflected as well. */
+  readonly current = computed<UiLanguage>(
+    () => normalizeLanguage(this.transloco.activeLang()) ?? FALLBACK_LANGUAGE,
+  );
 
   /** Activates the start language; runs before the first rendering. */
   async init(): Promise<void> {
@@ -45,7 +47,6 @@ export class LanguageService {
     await firstValueFrom(this.transloco.load(language));
     this.transloco.setActiveLang(language);
     this.document.documentElement.lang = language;
-    this.active.set(language);
     this.store(language);
   }
 

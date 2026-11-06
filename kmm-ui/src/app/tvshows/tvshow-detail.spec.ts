@@ -847,7 +847,7 @@ describe('TvShowDetail', () => {
 
       languageSelect().chosen.emit('fr-FR');
 
-      expect(confirmMessages.at(-1)).toContain('auf fr-FR');
+      expect(confirmMessages.at(-1)).toContain('auf Französisch (fr-FR)');
       const change = request();
       expect(change.request.body).toEqual({ showIds: [3], language: 'fr-FR', refetchTexts: true });
       const running = job({ id: 'lang', key: 'tvshows-batch', status: 'RUNNING' });

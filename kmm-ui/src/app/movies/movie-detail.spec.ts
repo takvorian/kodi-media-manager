@@ -770,7 +770,7 @@ describe('MovieDetail', () => {
 
       languageSelect().chosen.emit('fr-FR');
 
-      expect(confirmMessages.at(-1)).toContain('auf fr-FR');
+      expect(confirmMessages.at(-1)).toContain('auf Französisch (fr-FR)');
       const change = request();
       expect(change.request.body).toEqual({ movieIds: [5], language: 'fr-FR', refetchTexts: true });
       const running = job({ id: 'lang', key: 'movies-batch', status: 'RUNNING' });
