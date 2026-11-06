@@ -1,23 +1,35 @@
-import { BatchField, FieldChange, ListChange } from '../filters/batch';
+import { translate } from '@jsverse/transloco';
 
-/** Job-Schlüssel der Stapel-Bearbeitung; muss zu TvShowBatchService.JOB_KEY passen. */
+import { BatchField, BatchFieldKey, FieldChange, ListChange } from '../filters/batch';
+
+/** Job key of the batch edit; must match TvShowBatchService.JOB_KEY. */
 export const TVSHOW_BATCH_JOB_KEY = 'tvshows-batch';
 
-/** Job-Schlüssel für das Scrapen einer Auswahl; muss zu AutoScrapeService.TV_SHOWS_JOB_KEY passen. */
+/** Job key for scraping a selection; must match AutoScrapeService.TV_SHOWS_JOB_KEY. */
 export const TVSHOWS_SCRAPE_JOB_KEY = 'tvshows-scrape';
 
-/** Job-Schlüssel für das Scrapen einer Serie; muss zu AutoScrapeService.TV_SHOW_JOB_KEY_PREFIX passen. */
+/** Job key for scraping one TV show; must match AutoScrapeService.TV_SHOW_JOB_KEY_PREFIX. */
 export function tvShowScrapeJobKey(showId: number): string {
   return `tvshow-scrape:${showId}`;
 }
 
-/** Einzelne Felder, die die Stapel-Bearbeitung von Serien setzen oder leeren kann. */
+/** A batch field whose label is translated whenever it is read, so it follows the active language. */
+function translatedField(key: BatchFieldKey, labelKey: string): BatchField {
+  return {
+    key,
+    get label() {
+      return translate(labelKey);
+    },
+  };
+}
+
+/** Single fields the batch edit of TV shows can set or clear. */
 export const TVSHOW_BATCH_FIELDS: readonly BatchField[] = [
-  { key: 'mpaa', label: 'Altersfreigabe' },
-  { key: 'status', label: 'Status' },
+  translatedField('mpaa', 'fields.certification'),
+  translatedField('status', 'common.status'),
 ];
 
-/** Inhalt von POST /api/v1/tvshows/batch. */
+/** Body of POST /api/v1/tvshows/batch. */
 export interface TvShowBatchEdit {
   readonly showIds: readonly number[];
   readonly genres: ListChange;

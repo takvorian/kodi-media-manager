@@ -1,4 +1,5 @@
 import { By } from '@angular/platform-browser';
+import { provideI18nTesting } from '../i18n/testing';
 import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
@@ -10,6 +11,7 @@ import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { Subject, of } from 'rxjs';
 
 import { FILTERS_URL } from '../filters/saved-filter.service';
@@ -39,6 +41,7 @@ describe('TvShowList', () => {
   let fixture: ComponentFixture<TvShowList>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
+  let confirmMessages: string[];
   const completed = new Subject<Job>();
   const updated: Job[] = [];
   const running = signal<Job | undefined>(undefined);
@@ -71,10 +74,12 @@ describe('TvShowList', () => {
     running.set(undefined);
     history.set([]);
     snackBarMessages = [];
+    confirmMessages = [];
     updated.length = 0;
     TestBed.configureTestingModule({
       imports: [TvShowList],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
@@ -82,7 +87,10 @@ describe('TvShowList', () => {
           provide: MatSnackBar,
           useValue: { open: (message: string) => snackBarMessages.push(message) },
         },
-        { provide: CONFIRM, useValue: () => true },
+        {
+          provide: CONFIRM,
+          useValue: (message: string) => confirmMessages.push(message) > 0,
+        },
         {
           provide: JobStore,
           useValue: {
@@ -169,6 +177,42 @@ describe('TvShowList', () => {
       Array.from(element().querySelectorAll('.episode-count')).map((cell) => cell.textContent),
     ).toEqual(['99', '26']);
     expect(element().textContent).toContain('–');
+  });
+
+  it('switches the texts to English at runtime', async () => {
+    await respond(page([alf]));
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.page-title')?.textContent).toBe('TV shows');
+    expect(element().querySelector('th.mat-column-episodeCount')?.textContent?.trim()).toBe(
+      'Episodes',
+    );
+    expect(element().querySelector('.selection span')?.textContent).toBe('0 selected');
+    expect(element().querySelector('.edit-filter-button')?.textContent?.trim()).toBe('Edit filter');
+  });
+
+  it('asks in English after a language switch', async () => {
+    await respond(page([alf]));
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    const list = fixture.componentInstance as unknown as {
+      chosen: { set(ids: ReadonlySet<number>): void };
+      scrapeChosen(): void;
+      refreshChosenInKodi(): void;
+    };
+
+    list.chosen.set(new Set([1]));
+    list.scrapeChosen();
+    httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/auto-scrape` }).flush(scrapeJob);
+    list.chosen.set(new Set([1, 2]));
+    list.refreshChosenInKodi();
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/refresh' }).flush(scrapeJob);
+
+    expect(confirmMessages[0]).toMatch(/^Scrape 1 TV show\? KMM adds missing metadata/);
+    expect(confirmMessages[1]).toBe(
+      'Refresh 2 TV shows on all Kodi devices? Their episodes stay untouched.',
+    );
   });
 
   it('points to the sources page when there are no shows', async () => {

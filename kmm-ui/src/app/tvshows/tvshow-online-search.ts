@@ -5,6 +5,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSelectModule } from '@angular/material/select';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
@@ -13,7 +14,7 @@ import { defaultTvShowScraper } from './tv-scrapers';
 import { TvShowProposal } from './tvshow';
 import { TvShowService } from './tvshow.service';
 
-/** Übernommener Treffer samt Herkunft; die Episoden werden beim Speichern ergänzt. */
+/** Adopted match with its origin; the episodes are completed on saving. */
 export interface TvShowScrapedProposal {
   readonly proposal: TvShowProposal;
   readonly scraperId: string;
@@ -22,12 +23,19 @@ export interface TvShowScrapedProposal {
 }
 
 /**
- * Sucht eine Serie bei einem Serien-Scraper und liefert die Daten des gewählten Treffers. Es wird
- * nichts gespeichert; der Vorschlag landet im Formular der Detailseite.
+ * Searches a TV show with a TV show scraper and delivers the data of the chosen match. Nothing is
+ * saved; the proposal ends up in the form of the detail page.
  */
 @Component({
   selector: 'app-tvshow-online-search',
-  imports: [ReactiveFormsModule, MatButtonModule, MatFormFieldModule, MatInputModule, MatSelectModule],
+  imports: [
+    ReactiveFormsModule,
+    MatButtonModule,
+    MatFormFieldModule,
+    MatInputModule,
+    MatSelectModule,
+    TranslocoPipe,
+  ],
   templateUrl: './tvshow-online-search.html',
   styleUrl: './tvshow-online-search.scss',
 })
@@ -49,12 +57,17 @@ export class TvShowOnlineSearch {
     year: [null as number | null],
   });
 
-  private readonly chosenScraperId = toSignal(this.form.controls.scraper.valueChanges, { initialValue: '' });
+  private readonly chosenScraperId = toSignal(this.form.controls.scraper.valueChanges, {
+    initialValue: '',
+  });
 
-  /** Gewählter Scraper, sonst die Vorgabe. */
+  /** Chosen scraper, otherwise the default. */
   protected readonly selectedScraper = computed<ScraperInfo | undefined>(() => {
     const scrapers = this.scrapers.hasValue() ? this.scrapers.value() : [];
-    return scrapers.find((scraper) => scraper.id === this.chosenScraperId()) ?? defaultTvShowScraper(scrapers);
+    return (
+      scrapers.find((scraper) => scraper.id === this.chosenScraperId()) ??
+      defaultTvShowScraper(scrapers)
+    );
   });
 
   protected search(): void {
@@ -66,8 +79,9 @@ export class TvShowOnlineSearch {
     const title = query.trim() || this.title();
     const searchYear = query.trim() ? year : this.year();
     this.candidates.set(null);
-    this.run(this.tvShowService.searchOnline(this.showId(), scraper.id, title, searchYear), (results) =>
-      this.candidates.set(results),
+    this.run(
+      this.tvShowService.searchOnline(this.showId(), scraper.id, title, searchYear),
+      (results) => this.candidates.set(results),
     );
   }
 
@@ -76,13 +90,15 @@ export class TvShowOnlineSearch {
     if (!scraper) {
       return;
     }
-    this.run(this.tvShowService.proposal(this.showId(), scraper.id, candidate.providerId), (proposal) =>
-      this.proposed.emit({
-        proposal,
-        scraperId: scraper.id,
-        scraperName: scraper.displayName,
-        providerId: candidate.providerId,
-      }),
+    this.run(
+      this.tvShowService.proposal(this.showId(), scraper.id, candidate.providerId),
+      (proposal) =>
+        this.proposed.emit({
+          proposal,
+          scraperId: scraper.id,
+          scraperName: scraper.displayName,
+          providerId: candidate.providerId,
+        }),
     );
   }
 

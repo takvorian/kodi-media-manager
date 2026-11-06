@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { rxResource } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -8,6 +7,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 
 import { KodiPlaybackResult, kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
@@ -18,6 +19,7 @@ import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
 import { TvPeople } from './tv-people';
 import { EpisodeDetails, episodeCode } from './tvshow';
 import { createEpisodeMetadataForm, toEpisodeFormValue, toEpisodeMetadata } from './tvshow-forms';
+import { SHORT_DATE_TIME } from './tv-date-formats';
 import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TvShowService } from './tvshow.service';
 
@@ -27,7 +29,6 @@ const SNACKBAR_DURATION_MS = 5000;
   selector: 'app-episode-detail',
   imports: [
     ArtworkGallery,
-    DatePipe,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -35,6 +36,8 @@ const SNACKBAR_DURATION_MS = 5000;
     MatFormFieldModule,
     MatInputModule,
     StreamDetailsView,
+    TranslocoDatePipe,
+    TranslocoPipe,
     TvPeople,
   ],
   templateUrl: './episode-detail.html',
@@ -46,10 +49,12 @@ export class EpisodeDetail {
   private readonly artworkService = inject(TvShowArtworkService);
   private readonly kodiService = inject(KodiService);
   private readonly mediaInfoService = inject(MediaInfoService);
+  private readonly transloco = inject(TranslocoService);
 
-  /** Episoden-ID aus der Route `/episodes/:id`. */
+  /** Episode ID from the route `/episodes/:id`. */
   readonly id = input.required({ transform: numberAttribute });
 
+  protected readonly shortDateTime = SHORT_DATE_TIME;
   protected readonly form = createEpisodeMetadataForm(inject(NonNullableFormBuilder));
   protected readonly saving = signal(false);
   protected readonly refreshingKodi = signal(false);
@@ -61,7 +66,7 @@ export class EpisodeDetail {
     stream: ({ params }) => this.tvShowService.findEpisode(params),
   });
 
-  /** Eigenes Signal, damit Änderungen außerhalb der Metadaten (Gesehen-Status) das Formular nicht zurücksetzen. */
+  /** Own signal, so changes outside the metadata (watched status) do not reset the form. */
   private readonly metadata = computed(() =>
     this.episode.hasValue() ? this.episode.value().metadata : null,
   );
@@ -89,7 +94,7 @@ export class EpisodeDetail {
       next: (details) => {
         this.saving.set(false);
         this.episode.set(details);
-        this.notify(`Gespeichert und in ${details.nfo.path} geschrieben.`);
+        this.notify(this.transloco.translate('tvshows.savedTo', { path: details.nfo.path }));
       },
       error: (error: unknown) => {
         this.saving.set(false);
@@ -98,14 +103,14 @@ export class EpisodeDetail {
     });
   }
 
-  /** Liest Codecs, Auflösung und Spuren mit ffprobe aus und schreibt sie in NFO und Bibliothek. */
+  /** Reads codecs, resolution and tracks with ffprobe and writes them to the NFO and the library. */
   protected probeStreams(): void {
     this.probingStreams.set(true);
     this.mediaInfoService.probeEpisode(this.id()).subscribe({
       next: (streams) => {
         this.probingStreams.set(false);
         this.showStreams(streams);
-        this.notify('Technische Angaben ausgelesen.');
+        this.notify(this.transloco.translate('tvshows.episode.probed'));
       },
       error: (error: unknown) => {
         this.probingStreams.set(false);
@@ -120,7 +125,7 @@ export class EpisodeDetail {
     }
   }
 
-  /** Lässt Kodi NFO und Standbild der Episode neu einlesen, unabhängig vom Echtzeit-Sync. */
+  /** Makes Kodi re-read the NFO and thumbnail of the episode, independent of the real-time sync. */
   protected refreshInKodi(): void {
     this.refreshingKodi.set(true);
     this.kodiService.refreshEpisode(this.id()).subscribe({
@@ -135,7 +140,7 @@ export class EpisodeDetail {
     });
   }
 
-  /** Holt Wiedergaben und letzte Wiedergabe aus Kodi und schreibt sie in NFO und Bibliothek. */
+  /** Gets the play count and last playback from Kodi and writes them to the NFO and the library. */
   protected importPlayback(): void {
     this.importingPlayback.set(true);
     this.kodiService.importEpisodePlayback(this.id()).subscribe({
@@ -163,7 +168,7 @@ export class EpisodeDetail {
           },
         },
     );
-    // Nur das Feld setzen: Neue Metadaten würden das Formular samt ungespeicherter Änderungen zurücksetzen.
+    // Set only the field: new metadata would reset the form including unsaved changes.
     this.form.controls.userRating.setValue(result.userRating);
   }
 

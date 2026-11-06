@@ -1,13 +1,15 @@
+import { translate } from '@jsverse/transloco';
+
 import { Job } from '../jobs/job';
 
-/** Präfix des Job-Schlüssels beim Umbenennen; muss zu TvShowRenameService.JOB_KEY_PREFIX passen. */
+/** Prefix of the job key when renaming; must match TvShowRenameService.JOB_KEY_PREFIX. */
 export const TV_RENAME_JOB_KEY_PREFIX = 'tv-rename:';
 
 export function tvRenameJobKey(sourceId: number): string {
   return `${TV_RENAME_JOB_KEY_PREFIX}${sourceId}`;
 }
 
-/** Muster für Serienordner, Staffelordner und Episodendateien. */
+/** Patterns for show folders, season folders and episode files. */
 export interface TvRenamePatterns {
   readonly showFolder: string;
   readonly seasonFolder: string;
@@ -21,7 +23,7 @@ export interface TvFileRename {
   readonly targetName: string;
 }
 
-/** Eine Episodendatei samt Begleitdateien; Ordner relativ zum Serienordner. */
+/** An episode file with its companion files; folders relative to the show folder. */
 export interface TvEpisodeFilePlan {
   readonly episodes: string;
   readonly currentFolder: string;
@@ -31,7 +33,7 @@ export interface TvEpisodeFilePlan {
   readonly message: string | null;
 }
 
-/** Was das Umbenennen einer Serie ändern würde bzw. geändert hat. */
+/** What renaming a TV show would change or has changed. */
 export interface TvShowRenamePlan {
   readonly showId: number;
   readonly title: string;
@@ -51,46 +53,56 @@ export interface TvRenameResult {
   readonly problems: readonly string[];
 }
 
-export const TV_RENAME_STATUS_LABELS: Record<TvRenameStatus, string> = {
-  UNCHANGED: 'unverändert',
-  RENAME: 'wird umbenannt',
-  CONFLICT: 'Konflikt',
-  FAILED: 'nicht möglich',
+/** Translation key of the label per status. */
+export const TV_RENAME_STATUS_KEYS: Record<TvRenameStatus, string> = {
+  UNCHANGED: 'tvshows.rename.status.UNCHANGED',
+  RENAME: 'tvshows.rename.status.RENAME',
+  CONFLICT: 'tvshows.rename.status.CONFLICT',
+  FAILED: 'tvshows.rename.status.FAILED',
 };
 
-/** Ordner relativ zum Serienordner, lesbar. */
+/** Folder relative to the show folder, readable. */
 export function folderLabel(folder: string): string {
-  return folder === '' ? '(Serienordner)' : folder;
+  return folder === '' ? translate('tvshows.rename.showFolderLabel') : folder;
 }
 
-/** Text für die Bestätigung, bevor eine einzelne Serie umbenannt wird. */
+/** Text for the confirmation before a single TV show is renamed. */
 export function tvRenameConfirmation(plan: TvShowRenamePlan): string {
-  const lines = [`„${plan.title}“ umbenennen?`];
+  const lines = [translate('tvshows.rename.confirmQuestion', { title: plan.title })];
   if (plan.currentDirectory !== plan.targetDirectory) {
-    lines.push('', `Ordner: ${plan.currentDirectory}`, `→ ${plan.targetDirectory}`);
+    lines.push(
+      '',
+      translate('tvshows.rename.confirmFolder', { folder: plan.currentDirectory }),
+      `→ ${plan.targetDirectory}`,
+    );
   }
   const files = plan.files.filter((file) => file.status === 'RENAME');
   if (files.length > 0) {
-    lines.push('', `${files.length} Episodendateien bekommen neue Namen bzw. Staffelordner.`);
+    lines.push('', translate('tvshows.rename.confirmFiles', { count: files.length }));
   }
   const conflicts = plan.files.length - files.length;
   if (conflicts > 0) {
-    lines.push(`${conflicts} Episodendateien bleiben wegen Konflikten unverändert.`);
+    lines.push(translate('tvshows.rename.confirmConflicts', { count: conflicts }));
   }
   return lines.join('\n');
 }
 
-/** Fasst einen beendeten Job „Serien umbenennen“ für eine Snackbar-Meldung zusammen. */
+/** Summarizes a finished job “rename TV shows” for a snackbar; the job title comes from the backend. */
 export function tvRenameSummary(job: Job): string {
   if (job.status === 'SUCCEEDED') {
     const result = job.result as TvRenameResult;
-    const failed = result.failed > 0 ? `, ${result.failed} fehlgeschlagen` : '';
-    return (
-      `${job.title} abgeschlossen: ${result.renamed} umbenannt, ${result.unchanged} unverändert, ` +
-      `${result.skipped} übersprungen${failed}.`
-    );
+    return translate('tvshows.rename.succeeded', {
+      title: job.title,
+      renamed: result.renamed,
+      unchanged: result.unchanged,
+      skipped: result.skipped,
+      failed: result.failed,
+    });
   }
   return job.status === 'CANCELLED'
-    ? `${job.title} abgebrochen.`
-    : `${job.title} fehlgeschlagen: ${job.message ?? 'Unbekannter Fehler'}`;
+    ? translate('tvshows.rename.cancelled', { title: job.title })
+    : translate('tvshows.rename.failed', {
+        title: job.title,
+        message: job.message ?? translate('tvshows.rename.unknownError'),
+      });
 }

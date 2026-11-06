@@ -1,11 +1,13 @@
 import { TestRequest } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
+import { provideI18nTesting } from '../i18n/testing';
 import { LanguageSelect } from '../shared/language-select';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { of } from 'rxjs';
 
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
@@ -133,6 +135,7 @@ describe('TvShowDetail', () => {
     TestBed.configureTestingModule({
       imports: [TvShowDetail],
       providers: [
+        provideI18nTesting(),
         { provide: ThemeService, useValue: { info: () => of(NO_THEME) } },
         events.provider(),
         provideHttpClient(),
@@ -231,9 +234,28 @@ describe('TvShowDetail', () => {
     expect(element().querySelector('.episode a')?.getAttribute('href')).toBe('/episodes/10');
     expect(element().querySelectorAll('.watched')).toHaveLength(1);
     expect(element().textContent).toContain('Paul Fusco');
-    expect(element().textContent).toContain('TVDB 7.3/10');
+    expect(element().textContent).toContain('TVDB 7,3/10');
     expect(input('genres').value).toBe('Komödie, Familie');
     expect(input('tvdbId').value).toBe('78020');
+  });
+
+  it('switches the texts to English at runtime', async () => {
+    await load(alf);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(texts('.back-link')).toEqual(['← Back to TV shows']);
+    expect(texts('.season-title')).toEqual(['Specials', 'Season 1 – Ankunft']);
+    expect(texts('mat-panel-description')).toEqual(['1 episode', '2 episodes']);
+    expect(texts('.season-refetch-button')).toEqual(['Refetch season', 'Refetch season']);
+    expect(texts('.watched')).toEqual(['· watched']);
+    expect(element().textContent).toContain('Seasons and episodes');
+    expect(element().textContent).toContain('TVDB 7.3/10 (38 votes)');
+    expect(element().textContent).toContain('Paul Fusco as ALF');
+    expect(element().querySelector('.online-search-button')?.textContent?.trim()).toBe(
+      'Search online',
+    );
   });
 
   it('shows a new trailer without discarding unsaved changes', async () => {

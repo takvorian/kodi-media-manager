@@ -3,14 +3,20 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { EpisodeDetail } from './episode-detail';
 import { EpisodeDetails } from './tvshow';
 import { flushWhenRequested } from '../shared/testing';
 import { EPISODES_URL } from './tvshow.service';
 
 describe('EpisodeDetail', () => {
-  const actors = Array.from({ length: 20 }, (_, index) => ({ name: `Gast ${index}`, role: null, thumb: null }));
+  const actors = Array.from({ length: 20 }, (_, index) => ({
+    name: `Gast ${index}`,
+    role: null,
+    thumb: null,
+  }));
   const gestatten: EpisodeDetails = {
     id: 12,
     tvShowId: 3,
@@ -38,9 +44,17 @@ describe('EpisodeDetail', () => {
       ratings: [],
       playCount: 1,
       lastPlayed: '2014-05-24T23:21:47Z',
-      streams: { videos: [], audios: [{ codec: 'ac3', language: null, channels: 1, bitrate: null }], subtitles: [] },
+      streams: {
+        videos: [],
+        audios: [{ codec: 'ac3', language: null, channels: 1, bitrate: null }],
+        subtitles: [],
+      },
     },
-    nfo: { path: '/media/serien/ALF/S01E16E17.nfo', exists: true, modifiedAt: '2026-10-26T09:00:00Z' },
+    nfo: {
+      path: '/media/serien/ALF/S01E16E17.nfo',
+      exists: true,
+      modifiedAt: '2026-10-26T09:00:00Z',
+    },
   };
 
   let fixture: ComponentFixture<EpisodeDetail>;
@@ -52,10 +66,14 @@ describe('EpisodeDetail', () => {
     TestBed.configureTestingModule({
       imports: [EpisodeDetail],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
-        { provide: MatSnackBar, useValue: { open: (message: string) => snackBarMessages.push(message) } },
+        {
+          provide: MatSnackBar,
+          useValue: { open: (message: string) => snackBarMessages.push(message) },
+        },
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -83,7 +101,9 @@ describe('EpisodeDetail', () => {
   it('shows the episode with crew, viewing state and a shortened cast', async () => {
     await load(gestatten);
 
-    expect(element().querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('S01E16 Gestatten – Teil 1');
+    expect(element().querySelector('h2')?.textContent?.replace(/\s+/g, ' ').trim()).toBe(
+      'S01E16 Gestatten – Teil 1',
+    );
     expect(element().querySelector('.back-link')?.getAttribute('href')).toBe('/tvshows/3');
     expect(element().querySelector('.directors')?.textContent).toBe('Tom Patchett');
     expect(element().querySelector('.writers')?.textContent).toBe('Bob Bendetson');
@@ -96,6 +116,22 @@ describe('EpisodeDetail', () => {
     expect(element().querySelector('.audios')?.textContent?.trim()).toBe('Dolby Digital · Mono');
   });
 
+  it('switches the texts to English at runtime', async () => {
+    await load(gestatten);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.play-count')?.textContent).toContain('1×, last on');
+    expect(element().querySelector('.kodi-playback-button')?.textContent?.trim()).toBe(
+      'Watched status from Kodi',
+    );
+    expect(element().querySelector('.toggle-actors')?.textContent?.trim()).toBe('Show all 21');
+    expect(element().querySelector('.save-button')?.textContent?.trim()).toBe('Save');
+    expect(element().textContent).toContain('Technical details');
+    expect(element().textContent).toContain('Bill Daily as Dr. Larry Dykstra');
+  });
+
   it('refreshes the episode in Kodi on request', async () => {
     await load(gestatten);
 
@@ -106,19 +142,36 @@ describe('EpisodeDetail', () => {
       .expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/refresh' })
       .flush({ detail: 'Kodi nicht erreichbar' }, { status: 502, statusText: 'Bad Gateway' });
 
-    expect(snackBarMessages).toEqual(['Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.', 'Kodi nicht erreichbar']);
+    expect(snackBarMessages).toEqual([
+      'Kein Kodi-Gerät eingerichtet – unter „Kodi“ anlegen.',
+      'Kodi nicht erreichbar',
+    ]);
   });
 
   it('reads the technical details with ffprobe', async () => {
     await load(gestatten);
 
     element().querySelector<HTMLButtonElement>('.stream-details-button')!.click();
-    httpTesting.expectOne({ method: 'POST', url: `/api/v1/episodes/${gestatten.id}/stream-details` }).flush({
-      videos: [{ codec: 'hevc', aspect: 1.78, width: 3840, height: 2160, durationSeconds: null, bitrate: null,
-        scanType: null, stereoMode: null, language: null, hdrType: 'dolbyvision' }],
-      audios: [],
-      subtitles: [],
-    });
+    httpTesting
+      .expectOne({ method: 'POST', url: `/api/v1/episodes/${gestatten.id}/stream-details` })
+      .flush({
+        videos: [
+          {
+            codec: 'hevc',
+            aspect: 1.78,
+            width: 3840,
+            height: 2160,
+            durationSeconds: null,
+            bitrate: null,
+            scanType: null,
+            stereoMode: null,
+            language: null,
+            hdrType: 'dolbyvision',
+          },
+        ],
+        audios: [],
+        subtitles: [],
+      });
     await fixture.whenStable();
 
     expect(element().textContent).toContain('Dolby Vision');
@@ -155,7 +208,10 @@ describe('EpisodeDetail', () => {
       .expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/playback' })
       .flush({ detail: 'Kodi nicht erreichbar' }, { status: 502, statusText: 'Bad Gateway' });
 
-    expect(snackBarMessages).toEqual(['Wohnzimmer: „ALF S01E16“ aus Kodi übernommen: 3× gesehen.', 'Kodi nicht erreichbar']);
+    expect(snackBarMessages).toEqual([
+      'Wohnzimmer: „ALF S01E16“ aus Kodi übernommen: 3× gesehen.',
+      'Kodi nicht erreichbar',
+    ]);
   });
 
   it('saves the metadata', async () => {
@@ -170,11 +226,16 @@ describe('EpisodeDetail', () => {
     element().querySelector<HTMLButtonElement>('.save-button')!.click();
 
     const request = httpTesting.expectOne({ method: 'PUT', url: `${EPISODES_URL}/12/metadata` });
-    expect(request.request.body).toEqual({ ...gestatten.metadata, plot: 'Alf verliert sein Gedächtnis.' });
+    expect(request.request.body).toEqual({
+      ...gestatten.metadata,
+      plot: 'Alf verliert sein Gedächtnis.',
+    });
     request.flush(gestatten);
     await fixture.whenStable();
 
-    expect(snackBarMessages).toEqual(['Gespeichert und in /media/serien/ALF/S01E16E17.nfo geschrieben.']);
+    expect(snackBarMessages).toEqual([
+      'Gespeichert und in /media/serien/ALF/S01E16E17.nfo geschrieben.',
+    ]);
   });
 
   it('validates, discards and reports failures', async () => {
@@ -201,7 +262,9 @@ describe('EpisodeDetail', () => {
 
   it('shows an error when the episode cannot be loaded', async () => {
     fixture.detectChanges();
-    httpTesting.expectOne(`${EPISODES_URL}/12`).flush(null, { status: 404, statusText: 'Not Found' });
+    httpTesting
+      .expectOne(`${EPISODES_URL}/12`)
+      .flush(null, { status: 404, statusText: 'Not Found' });
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();

@@ -1,9 +1,9 @@
 import { ScraperInfo } from '../movies/scraper';
 
-/** Vorgabe für Serien ist TheTVDB, wie in Ember. */
+/** TheTVDB is the default for TV shows, as in Ember. */
 export const PREFERRED_TV_SHOW_SCRAPER = 'tvdb';
 
-/** Der bevorzugte Scraper, sonst der erste eingerichtete, sonst der erste überhaupt. */
+/** The preferred scraper, otherwise the first configured one, otherwise the very first. */
 export function defaultTvShowScraper(scrapers: readonly ScraperInfo[]): ScraperInfo | undefined {
   const ready = scrapers.filter((scraper) => !scraper.missingConfiguration);
   return (

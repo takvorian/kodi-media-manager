@@ -3,8 +3,10 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { provideRouter } from '@angular/router';
+import { TranslocoService } from '@jsverse/transloco';
 import { Subject } from 'rxjs';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { TvShowRenamePlan } from './tv-rename';
@@ -77,6 +79,7 @@ describe('TvRenamePage', () => {
     TestBed.configureTestingModule({
       imports: [TvRenamePage],
       providers: [
+        provideI18nTesting(),
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
@@ -157,6 +160,25 @@ describe('TvRenamePage', () => {
     element().querySelector<HTMLInputElement>('.only-changes input')!.click();
     await fixture.whenStable();
     expect(text('.show-title')).toEqual(['ALF', 'Lost', 'Monk']);
+  });
+
+  it('switches the preview to English at runtime', async () => {
+    await load();
+    await preview();
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(text('.summary span')).toEqual([
+      '1 to rename',
+      '1 unchanged',
+      '1 conflict',
+      '0 not possible',
+    ]);
+    expect(text('.status')).toEqual(['will be renamed', 'conflict']);
+    expect(text('.files .season')).toEqual(['(show folder) → Staffel 1', 'Season 1']);
+    expect(button('.rename-button').textContent?.trim()).toBe('Rename 1');
+    expect(text('mat-card-title')).toEqual(['Rename TV shows']);
   });
 
   it('says when all shows are named right already', async () => {
