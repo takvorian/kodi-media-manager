@@ -1,240 +1,240 @@
-# Konzept: Kodi Media Manager (KMM)
+# Concept: Kodi Media Manager (KMM)
 
-Java-Port von [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper) (VB.NET/WinForms, nicht mehr gepflegt).
+Java port of [Ember Media Manager](https://github.com/DanCooper/Ember-MM-Newscraper) (VB.NET/WinForms, no longer maintained).
 
-| | Entscheidung |
+| | Decision |
 |---|---|
-| Sprache / Framework | Java 25 (LTS), Spring Boot 4.1 (Spring Framework 7, Hibernate 7, Jakarta EE 11) |
-| Betrieb | Docker-Container (MariaDB) **und** Standalone (H2 oder beliebige DB über JPA/Flyway) |
-| Backend | **B2** – modularer Monolith (Spring Modulith) + externe Scraper-Plugins über PF4J |
-| Frontend | **Angular-SPA** mit REST-API, ins JAR gebündelt |
-| Migration | Bestehende Ember-Daten (Datenbank + Einstellungen) werden übernommen |
-| Base-Package | `de.tiktak.kmm` |
+| Language / framework | Java 25 (LTS), Spring Boot 4.1 (Spring Framework 7, Hibernate 7, Jakarta EE 11) |
+| Operation | Docker container (MariaDB) **and** standalone (H2 or any database via JPA/Flyway) |
+| Backend | **B2** – modular monolith (Spring Modulith) + external scraper plugins via PF4J |
+| Frontend | **Angular SPA** with REST API, bundled into the JAR |
+| Migration | Existing Ember data (database + settings) is taken over |
+| Base package | `de.tiktak.kmm` |
 
-Neu gebaut wird die **Funktionalität**, der Code wird nicht 1:1 übersetzt. Die WinForms-UI und VB-spezifische Teile lassen sich nicht sinnvoll portieren.
+What is rebuilt is the **functionality**; the code is not translated 1:1. The WinForms UI and VB-specific parts cannot be ported sensibly.
 
 ---
 
-## 1. Funktionsumfang des Originals
+## 1. Scope of the original
 
-| Bereich | Ember-Komponenten | Übernahme |
+| Area | Ember components | Adoption |
 |---|---|---|
-| Kern-API | `EmberAPI/clsAPIScanner, clsAPINFO, clsAPIDatabase, clsAPIImages, clsAPIMediaInfo, clsAPIFFmpeg, clsAPITaskManager, clsAPISettings` | ja, neu in Java |
-| Medientypen | Filme, Filmsets, Serien/Staffeln/Episoden | MVP: Filme, danach TV |
-| Daten-Scraper (sequenziell, füllen leere Felder) | TMDB, IMDB, OMDb, TVDB, Trakt, OFDB, MoviepilotDE, XML | TMDB, TVDB, OMDb, Trakt; als HTML-Scraper Moviepilot und OFDb. IMDB entfällt (Roadmap, Erweiterungen) |
-| Bild-Scraper (parallel) | TMDB Poster, FanartTV, TVDB Poster | ja |
-| Trailer/Themes | TMDB/YouTube/Apple/Davestrailer/Videobuster, TelevisionTunes | Trailer als Link von TMDB für Filme und Serien (umgesetzt), kein Download; Titelmusik als `theme.mp3` von TelevisionTunes und YouTube (umgesetzt) |
-| Generische Addons | BulkRename, MediaFileManager, TagManager, FilterEditor, MetadataEditor, MovieExport, VideoSourceMapping | schrittweise |
-| Interfaces | Kodi JSON-RPC, Trakt.tv | Kodi: ja. Trakt: nein, das Trakt-Plugin in Kodi gleicht Gesehen-Status, Sammlung und eigene Bewertungen ab; KMM holt den Gesehen-Status aus Kodi. Nur Trakts Community-Bewertung als Bewertungs-Scraper |
-| Datei-Output | Kodi-NFO, Artwork nach Kodi-Namenskonvention, extrafanart, Trailer | ja, Kern-Feature |
-| Medien-Info | MediaInfo/FFprobe | ja, über `ffprobe` (im Docker-Image enthalten) |
+| Core API | `EmberAPI/clsAPIScanner, clsAPINFO, clsAPIDatabase, clsAPIImages, clsAPIMediaInfo, clsAPIFFmpeg, clsAPITaskManager, clsAPISettings` | yes, rebuilt in Java |
+| Media types | Movies, movie sets, TV shows/seasons/episodes | MVP: movies, then TV |
+| Data scrapers (sequential, fill empty fields) | TMDB, IMDB, OMDb, TVDB, Trakt, OFDB, MoviepilotDE, XML | TMDB, TVDB, OMDb, Trakt; Moviepilot and OFDb as HTML scrapers. IMDB is dropped (roadmap, extensions) |
+| Image scrapers (parallel) | TMDB Poster, FanartTV, TVDB Poster | yes |
+| Trailers/themes | TMDB/YouTube/Apple/Davestrailer/Videobuster, TelevisionTunes | Trailers as a link from TMDB for movies and TV shows (implemented), no download; theme music as `theme.mp3` from TelevisionTunes and YouTube (implemented) |
+| Generic addons | BulkRename, MediaFileManager, TagManager, FilterEditor, MetadataEditor, MovieExport, VideoSourceMapping | step by step |
+| Interfaces | Kodi JSON-RPC, Trakt.tv | Kodi: yes. Trakt: no, the Trakt plugin in Kodi syncs watched status, collection and personal ratings; KMM fetches the watched status from Kodi. Only Trakt’s community rating as a rating scraper |
+| File output | Kodi NFO, artwork following Kodi’s naming convention, extrafanart, trailers | yes, core feature |
+| Media info | MediaInfo/FFprobe | yes, via `ffprobe` (included in the Docker image) |
 
-**NFO-Regeln (umgesetzt):**
-- Dateiname: `Film.mkv` → `Film.nfo`; Stapel `Film-cd1.avi` → `Film.nfo`; DVD → `VIDEO_TS/VIDEO_TS.nfo`; Blu-ray → `BDMV/index.nfo`. Eine vorhandene `movie.nfo` im Filmordner wird gelesen und an Ort und Stelle aktualisiert.
-- KMM verwaltet Titel, Original-/Sortiertitel, Jahr, Erstaufführung, Handlung, Kurzinhalt, Tagline, Laufzeit, Altersfreigabe, Genres, IMDb-/TMDB-IDs sowie – wie Ember, für Kodi ohne Bedeutung – Fassung (`<edition>`) und Videoquelle (`<videosource>`, auch bei Episoden) (bearbeitbar).
-- Außerdem liest und schreibt KMM die weiteren Angaben (derzeit nur angezeigt): Darsteller mit Rolle, Reihenfolge und Bild, Regie (`director`), Drehbuch (`credits`), Studios, Länder, Tags, Bewertungen (`ratings`), Filmset (`set` mit `name`/`overview`, Sets sind über den Namen eindeutig), eigene Bewertung, Wiedergaben, zuletzt gesehen und Hinzugefügt-Datum (`dateadded`, lokale Zeit).
-- Den Trailer-Link (`<trailer>` in Film-NFO und `tvshow.nfo`) liest und schreibt KMM ebenfalls; für Filme und Serien aus älteren Versionen liest es ihn beim Start aus der NFO nach.
-- Alle anderen Elemente (`fileinfo`, Bild-URLs, IDs weiterer Anbieter …) bleiben beim Schreiben unverändert. Sind die weiteren Angaben eines Films noch nicht eingelesen (z. B. vor dem ersten Scan nach einem Update), lässt KMM auch diese Elemente unverändert.
-- Beim Speichern wird zuerst die NFO geschrieben (atomar über eine temporäre Datei); scheitert das, bleibt auch die Datenbank unverändert.
-- Ein erneuter Scan liest eine NFO nur ein, wenn sich ihre Änderungszeit geändert hat. Unlesbare NFOs werden gezählt und gemeldet, der Film bleibt erhalten.
+**NFO rules (implemented):**
+- File name: `Film.mkv` → `Film.nfo`; stack `Film-cd1.avi` → `Film.nfo`; DVD → `VIDEO_TS/VIDEO_TS.nfo`; Blu-ray → `BDMV/index.nfo`. An existing `movie.nfo` in the movie folder is read and updated in place.
+- KMM manages title, original/sort title, year, premiere date, plot, outline, tagline, runtime, certification, genres, IMDb/TMDB IDs and – like Ember, meaningless to Kodi – edition (`<edition>`) and video source (`<videosource>`, also for episodes) (editable).
+- KMM also reads and writes the further details (currently display only): cast with role, order and image, director (`director`), writer (`credits`), studios, countries, tags, ratings (`ratings`), movie set (`set` with `name`/`overview`; sets are unique by name), user rating, play count, last played and date added (`dateadded`, local time).
+- KMM also reads and writes the trailer link (`<trailer>` in movie NFOs and `tvshow.nfo`); for movies and TV shows from older versions it reads it from the NFO at startup.
+- All other elements (`fileinfo`, image URLs, IDs of other providers …) stay unchanged when writing. If the further details of a movie have not been read yet (e.g. before the first scan after an update), KMM leaves these elements unchanged as well.
+- When saving, the NFO is written first (atomically via a temporary file); if that fails, the database stays unchanged too.
+- A repeated scan only reads an NFO if its modification time has changed. Unreadable NFOs are counted and reported; the movie is kept.
 
-**Bild-Regeln (umgesetzt):**
-- Verwaltete Bildarten: Poster, Fanart, Clearlogo, Clearart, Disc, Banner, Landscape.
-- Dateinamen: `Film-poster.jpg`, `Film-clearlogo.png` …; bei DVD-/Blu-ray-Ordnern `poster.jpg` … im Filmordner. Ein neues Bild ersetzt Varianten mit anderer Endung.
-- Die Bildsuche fragt alle Bild-Scraper parallel über TMDB- bzw. IMDb-ID ab; Ausfälle einzelner Anbieter erscheinen als Hinweis. Sortierung: bevorzugte Sprache (Standard `de`), dann sprachneutral, Englisch, Rest; bei Fanart sprachneutrale (textlose) Bilder zuerst; innerhalb der Gruppen nach Beliebtheit.
-- Download nur über http(s), nur JPEG/PNG, höchstens 25 MB, atomar gespeichert.
+**Image rules (implemented):**
+- Managed artwork types: poster, fanart, clearlogo, clearart, disc, banner, landscape.
+- File names: `Film-poster.jpg`, `Film-clearlogo.png` …; for DVD/Blu-ray folders `poster.jpg` … in the movie folder. A new image replaces variants with a different extension.
+- The image search queries all image scrapers in parallel via TMDB or IMDb ID; failures of individual providers appear as notes. Sort order: preferred language (default `de`), then language-neutral, English, rest; for fanart, language-neutral (textless) images first; within the groups by popularity.
+- Download only via http(s), only JPEG/PNG, at most 25 MB, stored atomically.
 
-**Automatisches Scrapen (umgesetzt):**
-- Läuft pro Filmquelle als Hintergrund-Job (`auto-scrape:<quelle>`) und füllt nur **fehlende** Daten; Gepflegtes bleibt unangetastet.
-- Metadaten nur für Filme ohne TMDB-ID, über den bevorzugten Scraper (`kmm.scraping.preferred-metadata-scraper`, Standard `tmdb`). Übernommen wird nur ein sicherer Treffer (bekannte IMDb-ID oder genau passender Titel/Originaltitel mit Jahr); sonst landet der Film in der Liste „ohne Treffer“ zur Handsuche.
-- Danach alle sieben Bildarten, soweit sie fehlen: eine Kandidatensuche je Film, je Art der beste Kandidat (Sortierung wie bei der Bildsuche). Scheitert ein Download, werden bis zu drei Kandidaten probiert.
-- Fehler einzelner Filme brechen den Lauf nicht ab. Das Ergebnis enthält Zähler, Titel ohne Treffer, Fehler und Hinweise (z. B. nicht eingerichtete Anbieter).
+**Automatic scraping (implemented):**
+- Runs per movie source as a background job (`auto-scrape:<source>`) and only fills **missing** data; curated data stays untouched.
+- Metadata only for movies without a TMDB ID, via the preferred scraper (`kmm.scraping.preferred-metadata-scraper`, default `tmdb`). Only a reliable match is applied (known IMDb ID or exactly matching title/original title with year); otherwise the movie ends up in the “no match” list for manual search.
+- Then all seven artwork types, as far as they are missing: one candidate search per movie, the best candidate per type (sorted as in the image search). If a download fails, up to three candidates are tried.
+- Errors for individual movies do not abort the run. The result contains counters, titles without a match, errors and notes (e.g. providers not set up).
 
-**Einstellungen (umgesetzt):**
-- Benutzereinstellungen liegen in der Tabelle `app_setting` (Schlüssel/Wert): Sprache der Metadaten (an Plugins als gemeinsame Einstellung `language`), bevorzugte Bildsprache, Video-Dateiendungen, ausgeschlossene Ordner, Proxy.
-- Wirksam ist zuerst die Konfiguration (`kmm.settings.*` bzw. Umgebungsvariablen, in der UI gesperrt), dann der gespeicherte Wert, dann der Standard.
-- Änderungen wirken ohne Neustart: PF4J erzeugt Extensions bei jeder Abfrage neu (mit aktuellem Plugin-Kontext), der HTTP-Client wählt den Proxy pro Verbindung, der Scanner wird pro Scan erzeugt.
+**Settings (implemented):**
+- User settings live in the `app_setting` table (key/value): metadata language (passed to plugins as the shared setting `language`), preferred artwork language, video file extensions, excluded folders, proxy.
+- The configuration takes effect first (`kmm.settings.*` or environment variables, locked in the UI), then the stored value, then the default.
+- Changes take effect without a restart: PF4J creates extensions anew for every request (with the current plugin context), the HTTP client chooses the proxy per connection, the scanner is created per scan.
 
-**Kernprinzip:** Die Wahrheit liegt im Dateisystem (NFO + Bilder neben der Mediendatei). Die Datenbank ist Index, Cache und Arbeitszustand und lässt sich per Rescan neu aufbauen. Deshalb ist die Wahl der Datenbank unkritisch.
+**Core principle:** the truth lives in the file system (NFO + artwork next to the media file). The database is index, cache and working state and can be rebuilt by rescanning. That is why the choice of database is not critical.
 
 ---
 
-## 2. Backend-Basis
+## 2. Backend foundation
 
-- **Virtual Threads** für parallele Scraper-Aufrufe und Datei-I/O. Deshalb Spring MVC, kein WebFlux.
-- **Persistenz:** Spring Data JPA + Hibernate 7, Schema über **Flyway** mit herstellerspezifischen Ordnern (`db/migration/{vendor}`: `h2`, `mariadb`, `postgresql`). `ddl-auto=validate`.
-- **Profile:**
-  - `standalone` (Default): H2 im File-Mode unter `~/.kodi-media-manager`, nur an `127.0.0.1` gebunden, ohne Anmeldung
-  - `docker`: MariaDB 11, Anmeldung per HTTP Basic, Konfiguration über Umgebungsvariablen
-  - beliebige andere Datenbank über `spring.datasource.*`
-- **HTTP-Clients:** Spring `RestClient` / `@HttpExchange`, Resilience4j (Rate-Limits, Retry), Caffeine-Cache.
-- **Bausteine:**
+- **Virtual threads** for parallel scraper calls and file I/O. Hence Spring MVC, not WebFlux.
+- **Persistence:** Spring Data JPA + Hibernate 7, schema via **Flyway** with vendor-specific folders (`db/migration/{vendor}`: `h2`, `mariadb`, `postgresql`). `ddl-auto=validate`.
+- **Profiles:**
+  - `standalone` (default): H2 in file mode under `~/.kodi-media-manager`, bound to `127.0.0.1` only, without login
+  - `docker`: MariaDB 11, login via HTTP Basic, configuration via environment variables
+  - any other database via `spring.datasource.*`
+- **HTTP clients:** Spring `RestClient` / `@HttpExchange`, Resilience4j (rate limits, retry), Caffeine cache.
+- **Building blocks:**
   - NFO: Jackson XML
-  - Bilder: ImageIO/TwelveMonkeys
+  - Images: ImageIO/TwelveMonkeys
   - Scanner: `java.nio.file`
-  - Jobs: eigene Job-Verwaltung auf virtuellen Threads, Fortschritt und Ergebnis per REST (`/api/v1/jobs`) und SSE (`/api/v1/jobs/events`), gedrosselt auf höchstens eine Meldung je 250 ms und Job, ein Job je fachlichem Schlüssel (z. B. ein Scan pro Quelle). Laufende und die letzten 50 beendeten Jobs werden im Speicher gehalten.
-- **Kodi:** JSON-RPC über HTTP (`kmm-kodi`, ohne Proxy): `VideoLibrary.GetMovies` (Suche über Verzeichnis und Datei, auch Stapel), `RefreshMovie`, `Scan`; Pfad-Zuordnung je Gerät (Container/KMM ↔ Kodi). Echtzeit-Sync über Ereignisse (`MovieFilesChangedEvent`, `MovieSourceScannedEvent`) nach dem Commit, verzögert und je Film entprellt auf einem eigenen virtuellen Thread.
-- **Security:** Spring Security, CSRF für die SPA (Cookie `KMM-XSRF-TOKEN`, eigener Name, weil Cookies über alle Ports einer Adresse gelten).
-- **Betrieb:** Actuator (Health/Probes), OpenAPI (springdoc, `/swagger-ui.html`).
+  - Jobs: custom job management on virtual threads, progress and result via REST (`/api/v1/jobs`) and SSE (`/api/v1/jobs/events`), throttled to at most one message per 250 ms and job, one job per business key (e.g. one scan per source). Running jobs and the last 50 finished ones are kept in memory.
+- **Kodi:** JSON-RPC over HTTP (`kmm-kodi`, without proxy): `VideoLibrary.GetMovies` (search by directory and file, also stacks), `RefreshMovie`, `Scan`; path mapping per device (container/KMM ↔ Kodi). Real-time sync via events (`MovieFilesChangedEvent`, `MovieSourceScannedEvent`) after commit, delayed and debounced per movie on a dedicated virtual thread.
+- **Security:** Spring Security, CSRF for the SPA (cookie `KMM-XSRF-TOKEN`, a custom name because cookies apply to all ports of an address).
+- **Operations:** Actuator (health/probes), OpenAPI (springdoc, `/swagger-ui.html`).
 
 ### Deployment
-- **Docker:** Multi-Stage-Build (Temurin 25 JDK → JRE + ffmpeg), Layered JAR, `docker/docker-compose.yml` mit App + MariaDB. Veröffentlicht auf Docker Hub als `takvorian/kodi-media-manager` (nur `linux/amd64`), Tags `<version>` und `latest`; `release.sh` zählt `v0.x` aus den Git-Tags weiter, erzeugt das Changelog aus den Commit-Betreffs und baut per `build-push.sh` aus einem Worktree des Tags. Es bricht ab, wenn die CI für den Commit nicht grün ist, weil der Image-Build die Tests überspringt. Version und Changelog zeigt die App in der Kopfleiste und auf der Seite System (`ReleaseInfoService`). Volumes: `/config`, `/media`. Berechtigungen über `PUID`/`PGID`: Der Container startet als root, gibt `/config` diesem Benutzer und wechselt per `setpriv` zu ihm (`docker/entrypoint.sh`), weil Docker ein fehlendes Verzeichnis auf dem Host als root anlegt. `/media` bleibt unangetastet.
-- **Standalone:** Fat-JAR `java -jar kmm-app.jar` oder Windows-Installer (MSI per `jpackage`, Maven-Profil `installer`, enthält Java).
-- **Sicherung und Umzug:** Paket `backup`, Seite „Sicherung“. Gzip-JSON aller Tabellen, generisch über JDBC und damit zwischen H2, MariaDB und PostgreSQL austauschbar; `BackupTables` kennt Reihenfolge, Fremdschlüssel und Schlüssel, ein Test prüft die Vollständigkeit gegen das Schema. Der Import ersetzt oder führt zusammen, schreibt Pfade samt Hashes um, läuft als exklusiver Job in einer Transaktion und sichert vorher den bisherigen Stand. Zeitstempel müssen exakt erhalten bleiben, sonst liest der nächste Scan alle NFOs neu.
+- **Docker:** multi-stage build (Temurin 25 JDK → JRE + ffmpeg), layered JAR, `docker/docker-compose.yml` with app + MariaDB. Published on Docker Hub as `takvorian/kodi-media-manager` (only `linux/amd64`), tags `<version>` and `latest`; `release.sh` increments `v0.x` from the Git tags, generates the changelog from the commit subjects and builds via `build-push.sh` from a worktree of the tag. It aborts if CI is not green for the commit, because the image build skips the tests. The app shows version and changelog in the header and on the System page (`ReleaseInfoService`). Volumes: `/config`, `/media`. Permissions via `PUID`/`PGID`: the container starts as root, hands `/config` over to this user and switches to it via `setpriv` (`docker/entrypoint.sh`), because Docker creates a missing directory on the host as root. `/media` stays untouched.
+- **Standalone:** fat JAR `java -jar kmm-app.jar` or Windows installer (MSI via `jpackage`, Maven profile `installer`, includes Java).
+- **Backup and moving:** package `backup`, “Backup” page. Gzip JSON of all tables, generic via JDBC and therefore interchangeable between H2, MariaDB and PostgreSQL; `BackupTables` knows the order, foreign keys and keys, and a test checks completeness against the schema. The import replaces or merges, rewrites paths including hashes, runs as an exclusive job in one transaction and saves the previous state beforehand. Timestamps must be preserved exactly, otherwise the next scan reads all NFOs again.
 
 ---
 
-## 3. Backend-Varianten (Entscheidungsgrundlage)
+## 3. Backend variants (basis for the decision)
 
-| | B1: Modularer Monolith | **B2: Monolith + PF4J-Plugins (gewählt)** | B3: Microservices |
+| | B1: Modular monolith | **B2: Monolith + PF4J plugins (chosen)** | B3: Microservices |
 |---|---|---|---|
-| Beschreibung | ein Deployable, fachliche Module mit verifizierten Grenzen | wie B1, Scraper werden zur Laufzeit als JARs geladen | getrennte Services + Broker |
-| + | einfach zu betreiben, ein Artefakt | Scraper ohne Rebuild austauschbar und nachrüstbar (wie Embers Addons) | unabhängige Skalierung |
-| − | Plugins nur per Rebuild | Classloader-Komplexität | für eine Single-User-App überdimensioniert, standalone kaum machbar |
+| Description | one deployable, business modules with verified boundaries | like B1, scrapers are loaded as JARs at runtime | separate services + broker |
+| + | easy to operate, one artifact | scrapers replaceable and addable without a rebuild (like Ember’s addons) | independent scaling |
+| − | plugins only via rebuild | class loader complexity | oversized for a single-user app, hardly feasible standalone |
 
-### Plugin-Architektur (B2)
-- `kmm-plugin-api` ist die **einzige** Abhängigkeit für Plugins: Extension Points `MetadataScraper` und `ImageScraper` (erweitern `org.pf4j.ExtensionPoint`) plus Value Objects. Keine Spring-Abhängigkeit.
-- `kmm-app` bindet PF4J direkt ein, nicht über das veraltete `pf4j-spring`:
-  - `PluginManagerConfiguration` und `PluginLifecycle`: Laden und Entladen sind an den Spring-Lifecycle gebunden
-  - `ScraperRegistry`: kapselt PF4J vor dem Rest der Anwendung
-  - `PluginService` und `PluginController`: `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`. Der Zustand übersteht Neustarts.
-- Plugins sehen den Spring-Context nicht. Dienste reicht die App über das schmale `PluginContext`-Interface herein: Einstellungen (`kmm.plugins.settings.<plugin-id>.<name>`), gemeinsamer `HttpClient`, User-Agent. Eine eigene `ExtensionFactory` ruft dafür `Scraper.initialize(context)` auf.
-- Laufzeit-Plattform für Plugins: Plugin-API, PF4J, SLF4J und Jackson 3 stellt die App bereit (im Plugin `provided`); weitere Bibliotheken müssen Plugins selbst mitbringen.
-- Mitgelieferte Plugins (aktuell TMDB) liegen als Datei unter `bundled-plugins/` im JAR und werden beim Start ins Plugin-Verzeichnis kopiert bzw. aktualisiert (`kmm.plugins.install-bundled`).
-- Mitgelieferte Plugins liegen unter `kmm-plugins/`. Plugin-Verzeichnis: `/config/plugins` (Docker) bzw. `~/.kodi-media-manager/plugins` (Standalone).
+### Plugin architecture (B2)
+- `kmm-plugin-api` is the **only** dependency for plugins: extension points `MetadataScraper` and `ImageScraper` (extending `org.pf4j.ExtensionPoint`) plus value objects. No Spring dependency.
+- `kmm-app` integrates PF4J directly, not via the outdated `pf4j-spring`:
+  - `PluginManagerConfiguration` and `PluginLifecycle`: loading and unloading are tied to the Spring lifecycle
+  - `ScraperRegistry`: shields the rest of the application from PF4J
+  - `PluginService` and `PluginController`: `GET /api/v1/plugins`, `POST /api/v1/plugins/{id}/enable|disable`. The state survives restarts.
+- Plugins do not see the Spring context. The app passes services in through the narrow `PluginContext` interface: settings (`kmm.plugins.settings.<plugin-id>.<name>`), shared `HttpClient`, user agent. A custom `ExtensionFactory` calls `Scraper.initialize(context)` for this.
+- Runtime platform for plugins: the app provides the plugin API, PF4J, SLF4J and Jackson 3 (`provided` in the plugin); plugins must bring any further libraries themselves.
+- Bundled plugins (currently TMDB) are stored as files under `bundled-plugins/` in the JAR and are copied or updated into the plugin directory at startup (`kmm.plugins.install-bundled`).
+- Bundled plugins live under `kmm-plugins/`. Plugin directory: `/config/plugins` (Docker) or `~/.kodi-media-manager/plugins` (standalone).
 
 ---
 
-## 4. Frontend-Varianten (Entscheidungsgrundlage)
+## 4. Frontend variants (basis for the decision)
 
-| Kriterium | Thymeleaf + htmx | Vaadin Flow | **SPA + REST (gewählt: Angular)** | JavaFX | Hybrid (Web-UI + Desktop-Hülle) |
+| Criterion | Thymeleaf + htmx | Vaadin Flow | **SPA + REST (chosen: Angular)** | JavaFX | Hybrid (web UI + desktop shell) |
 |---|---|---|---|---|---|
-| Docker-tauglich | ++ | ++ | ++ | −− | ++ |
-| Standalone-tauglich | ++ | ++ | ++ | ++ | ++ |
-| Initialaufwand | gering | gering–mittel | hoch | mittel | +Packaging |
-| Komplexe UI (Bildauswahl, Grids) | o | + | ++ | + | wie Basis |
-| Tech-Stacks | 1 | 1 | 2 | 1 | 2–3 |
-| Offene API (Kodi-Addon, Mobile, Skripte) | − | − | ++ | − | wie Basis |
-| Wartbarkeit / Zukunftssicherheit | + | o (Lock-in) | ++ | o | wie Basis |
+| Suitable for Docker | ++ | ++ | ++ | −− | ++ |
+| Suitable for standalone | ++ | ++ | ++ | ++ | ++ |
+| Initial effort | low | low–medium | high | medium | +packaging |
+| Complex UI (image selection, grids) | o | + | ++ | + | as base |
+| Tech stacks | 1 | 1 | 2 | 1 | 2–3 |
+| Open API (Kodi addon, mobile, scripts) | − | − | ++ | − | as base |
+| Maintainability / future-proofing | + | o (lock-in) | ++ | o | as base |
 
-**Begründung:** Embers Kern-UX (gefilterte Medienlisten, Bildauswahl über mehrere Scraper, Bulk-Operationen, Live-Fortschritt) profitiert am stärksten von einer SPA. Die REST-API ist ein Mehrwert gegenüber dem Original. Im Standalone-Betrieb öffnet sich später der System-Browser (optional mit Tray-Icon).
+**Rationale:** Ember’s core UX (filtered media lists, image selection across several scrapers, bulk operations, live progress) benefits most from an SPA. The REST API is an added value compared to the original. In standalone mode, the system browser will open later (optionally with a tray icon).
 
 ---
 
-## 5. Modulstruktur
+## 5. Module structure
 
 ```
 kodi-media-manager/            groupId de.tiktak.kmm
-├─ kmm-plugin-api              Plugin-Schnittstelle (PF4J Extension Points)
-├─ kmm-scanner                 Film- und Seriensuche: Stapel (cd1/cd2), DVD/Blu-ray-Ordner, Titel/Jahr aus Namen,
-│                              Staffel/Episode nach Kodis Regeln (S01E02, 1x02, …-102, Mehrfachepisoden),
-│                              Kodi-Namen für Begleitdateien (NFO, später Artwork)
-├─ kmm-nfo                     Kodi-NFO für Filme, Serien und Episoden lesen/schreiben (DOM, unbekannte Elemente
-│                              bleiben erhalten, XXE-sicher, mehrere <episodedetails> je Datei)
-├─ kmm-migration-ember         Lesen von Ember-Profilen (SQLite, Settings.xml, Interface.Kodi.xml), Pfad-Mapping
-├─ kmm-kodi                    JSON-RPC-Client für Kodi (Version, Film suchen, RefreshMovie, Scan),
-│                              Zuordnung KMM-Pfad → Kodi-Pfad (smb://, nfs://, Windows, POSIX)
-├─ kmm-media                   Stream-Details mit ffprobe (Kodi-/Ember-Namen, Stapel, DVD-Titel, Blu-ray,
-│                              externe Untertitel, HDR) und Zusammenführen mit vorhandenen Angaben
-├─ kmm-plugins/                mitgelieferte Plugins: kmm-plugin-tmdb (Metadaten + Bilder), kmm-plugin-fanarttv (Bilder);
-│                              kmm-plugin-testdata nur für Tests
-├─ kmm-ui                      Angular-SPA → static/ im JAR
-├─ kmm-app                     Spring Boot: REST, Security, Plugins, Persistenz, Profile
+├─ kmm-plugin-api              plugin interface (PF4J extension points)
+├─ kmm-scanner                 finding movies and TV shows: stacks (cd1/cd2), DVD/Blu-ray folders, title/year from names,
+│                              season/episode following Kodi's rules (S01E02, 1x02, …-102, multi-episode files),
+│                              Kodi names for companion files (NFO, later artwork)
+├─ kmm-nfo                     reading/writing Kodi NFOs for movies, TV shows and episodes (DOM, unknown elements
+│                              are preserved, XXE-safe, several <episodedetails> per file)
+├─ kmm-migration-ember         reading Ember profiles (SQLite, Settings.xml, Interface.Kodi.xml), path mapping
+├─ kmm-kodi                    JSON-RPC client for Kodi (version, find movie, RefreshMovie, Scan),
+│                              mapping KMM path → Kodi path (smb://, nfs://, Windows, POSIX)
+├─ kmm-media                   stream details with ffprobe (Kodi/Ember names, stacks, DVD titles, Blu-ray,
+│                              external subtitles, HDR) and merging with existing details
+├─ kmm-plugins/                bundled plugins: kmm-plugin-tmdb (metadata + artwork), kmm-plugin-fanarttv (artwork);
+│                              kmm-plugin-testdata for tests only
+├─ kmm-ui                      Angular SPA → static/ in the JAR
+├─ kmm-app                     Spring Boot: REST, security, plugins, persistence, profiles
 └─ docker/                     Dockerfile, docker-compose.yml
-geplant: kmm-core; Scraper-Plugins omdb
+planned: kmm-core; scraper plugins omdb
 ```
 
-Module werden erst angelegt, wenn sie Inhalt bekommen. Die Grenzen innerhalb von `kmm-app` prüft Spring Modulith (`ModularityTests`).
+Modules are only created once they get content. Spring Modulith checks the boundaries within `kmm-app` (`ModularityTests`).
 
 ---
 
-## 6. Ember-Migration (Datenbank + Einstellungen)
+## 6. Ember migration (database + settings)
 
-**Quelle** (aus dem Ember-Code analysiert):
-- Profilordner `<Ember>\Profiles\Default\`.
-- **SQLite**-Datenbank `MyVideos48.emm` (Schema-Version 48). Ältere Versionen (`MyVideos2..47.emm`) patcht Ember beim Öffnen selbst.
-- Relevante Tabellen:
-  - Medien: `movie`, `sets`/`setlinkmovie`, `tvshow`, `seasons`, `episode`, `files`
-  - Quellen: `moviesource`, `tvshowsource`
-  - Personen und Verknüpfungen: `actors` + `*link*`
-  - Klassifizierung: `genre`/`country`/`studio`/`tag`
-  - Sonstiges: `rating`, `uniqueid`, `art`, Stream-Tabellen
-- `Settings.xml`: .NET-`XmlSerializer`, `<Settings version="1">`. Listen werden als `<Name><string>…</string></Name>` serialisiert.
+**Source** (analyzed from the Ember code):
+- Profile folder `<Ember>\Profiles\Default\`.
+- **SQLite** database `MyVideos48.emm` (schema version 48). Ember patches older versions (`MyVideos2..47.emm`) itself when opening them.
+- Relevant tables:
+  - Media: `movie`, `sets`/`setlinkmovie`, `tvshow`, `seasons`, `episode`, `files`
+  - Sources: `moviesource`, `tvshowsource`
+  - People and links: `actors` + `*link*`
+  - Classification: `genre`/`country`/`studio`/`tag`
+  - Other: `rating`, `uniqueid`, `art`, stream tables
+- `Settings.xml`: .NET `XmlSerializer`, `<Settings version="1">`. Lists are serialized as `<Name><string>…</string></Name>`.
 
-**Umsetzung** (`kmm-migration-ember`, frameworkfrei, in `kmm-app` verdrahtet):
-- `EmberProfileDetector`: findet das Profil (auch über das Installationsverzeichnis), prüft die Schema-Version und gibt verständliche Fehlermeldungen aus.
-- `EmberDatabaseInspector`: öffnet die Datenbank **read-only** (das Ember-Profil bleibt unverändert), prüft die Tabellen und zählt die Bibliothek.
-- `EmberSettingsReader`: liest `Settings.xml` in ein Teil-Modell. Unbekannte Elemente werden ignoriert. Das Proxy-Passwort wird bewusst nicht übernommen.
-- `PathMapper`: übersetzt Windows- und UNC-Pfade (`D:\Filme`, `\\nas\serien`) per Präfix-Regel (längster Präfix gewinnt) in Zielpfade (`/media/filme`).
-- `EmberLibraryReader`: liest Quellen, Filme mit allen Verknüpfungen (IDs, Genres, Darsteller mit Rolle und Bild, Regie, Drehbuch, Studios, Länder, Tags, Bewertungen, Sets mit Reihenfolge, Nutzerdaten) und ausgeschlossene Ordner, je Tabelle mit einer Abfrage (1169 Filme in unter einer Sekunde).
-- `EmberTvLibraryReader`: liest Serienquellen, Serien (IDs, Genres, Studios, Tags, Darsteller, Bewertungen, Staffeltitel), Episoden mit Datei (Pfad über `files`; Darsteller und Gaststars, Regie, Drehbuch, Bewertungen, Nutzerdaten) und zählt Embers Episoden ohne Datei. Stream-Details kommen für Filme und Episoden aus den Tabellen `MoviesVStreams`/`TVVStreams` usw.
-- `POST /api/v1/migrations/ember/upload`: Ember läuft meist auf einem anderen Rechner als KMM (PC und NAS), deshalb wählt der Browser den Ember-Ordner und lädt nur die neueste `MyVideosNN.emm`, `Settings.xml`, `AdvancedSettings.xml` und `Interface.Kodi.xml` hoch. `EmberProfileUpload` hält sie unter `${kmm.home}/ember-upload` und lässt nur diese Namen zu; ein neues Profil ersetzt das alte. Sie enthalten Zugangsdaten und werden gelöscht: nach dem echten Import (auch bei Fehler oder Abbruch), bei einem unbrauchbaren Profil, auf Wunsch (`DELETE …/upload`) und beim nächsten Start. Der Probelauf behält sie für den Import danach. Die Antwort ist die Analyse ohne Import (Version, Umfang, Film- und Serienquellen, Einstellungen).
+**Implementation** (`kmm-migration-ember`, framework-free, wired up in `kmm-app`):
+- `EmberProfileDetector`: finds the profile (also via the installation directory), checks the schema version and produces understandable error messages.
+- `EmberDatabaseInspector`: opens the database **read-only** (the Ember profile stays unchanged), checks the tables and counts the library.
+- `EmberSettingsReader`: reads `Settings.xml` into a partial model. Unknown elements are ignored. The proxy password is deliberately not taken over.
+- `PathMapper`: translates Windows and UNC paths (`D:\Filme`, `\\nas\serien`) into target paths (`/media/filme`) by prefix rule (longest prefix wins).
+- `EmberLibraryReader`: reads sources, movies with all links (IDs, genres, cast with role and image, director, writer, studios, countries, tags, ratings, sets with order, user data) and excluded folders, with one query per table (1169 movies in under a second).
+- `EmberTvLibraryReader`: reads TV show sources, TV shows (IDs, genres, studios, tags, cast, ratings, season titles), episodes with a file (path via `files`; cast and guest stars, director, writer, ratings, user data) and counts Ember’s episodes without a file. Stream details for movies and episodes come from the tables `MoviesVStreams`/`TVVStreams` etc.
+- `POST /api/v1/migrations/ember/upload`: Ember usually runs on a different computer than KMM (PC and NAS), so the browser chooses the Ember folder and uploads only the newest `MyVideosNN.emm`, `Settings.xml`, `AdvancedSettings.xml` and `Interface.Kodi.xml`. `EmberProfileUpload` keeps them under `${kmm.home}/ember-upload` and only allows these names; a new profile replaces the old one. They contain credentials and are deleted: after the real import (also on error or cancellation), for an unusable profile, on request (`DELETE …/upload`) and at the next start. The dry run keeps them for the import that follows. The response is the analysis without import (version, size, movie and TV show sources, settings).
 
-**Import (Ember-Migration I, umgesetzt):**
-- `POST /api/v1/migrations/ember/import` startet einen Hintergrund-Job (`ember-import`) mit Live-Fortschritt; Assistent in der UI: Profil hochladen → Pfade zuordnen → Probelauf → Import → Bericht.
-- **Ember-DB gewinnt, Dateien bleiben:** Metadaten und weitere Angaben kommen aus der Ember-Datenbank; NFOs und Bilder werden nicht verändert. Die NFO gilt nach dem Import als eingelesen, damit der nächste Scan die Ember-Daten nicht mit dem Datei-Inhalt überschreibt.
-- **Quellen:** Embers Filmquellen werden über die Pfad-Zuordnung übernommen (ohne Regeln unverändert, z. B. bei KMM auf demselben Rechner). Das Verzeichnis muss nicht erreichbar sein (Hinweis im Bericht); vorhandene Quellen mit demselben Verzeichnis werden verwendet.
-- **Idempotent:** Filme werden über den Dateipfad erkannt, Sets über den Namen; ein erneuter Import aktualisiert statt zu duplizieren. Kodi kennt nur ein Set je Film, übernommen wird das erste (Hinweis im Bericht).
-- **Probelauf:** führt den Import vollständig in einer Transaktion aus und rollt sie zurück; Einstellungen werden nur berechnet. Der Bericht zeigt also genau, was der Import ändern würde.
-- **Umrechnungen:** `Germany:16` → `FSK 16`; leere Bewertungen (0 ohne Stimmen) und eigene Bewertung 0 entfallen; Embers Zeitstempel (Sekunden seit 1970, aber aus der lokalen Uhrzeit berechnet) werden in der Zeitzone von KMM zu Hinzugefügt-Datum und „zuletzt gesehen“; Pfade, die auf dem Zielsystem ungültig sind, werden übersprungen und gemeldet.
-- **Einstellungen:** Sprache der Film-Metadaten, erzwungene Bildsprache, Video-Dateiendungen, ausgeschlossene Ordner (über die Pfad-Zuordnung) und Proxy (ohne Passwort) gehen in den KMM-Einstellungsspeicher; durch die Konfiguration festgelegte Werte bleiben unverändert.
-- **Kodi-Geräte** (`Interface.Kodi.xml`): Name, Adresse, Port, Zugangsdaten, Echtzeit-Sync und Pfad-Zuordnungen; Embers lokale Pfade laufen über die Pfad-Zuordnung des Imports, Zuordnungen ohne passende Regel entfallen mit Hinweis. Geräte werden über den Namen erkannt.
+**Import (Ember migration I, implemented):**
+- `POST /api/v1/migrations/ember/import` starts a background job (`ember-import`) with live progress; wizard in the UI: upload profile → map paths → dry run → import → report.
+- **Ember DB wins, files stay:** metadata and further details come from the Ember database; NFOs and artwork are not changed. After the import the NFO counts as read, so that the next scan does not overwrite the Ember data with the file content.
+- **Sources:** Ember’s movie sources are taken over via the path mapping (unchanged without rules, e.g. with KMM on the same computer). The directory does not have to be reachable (note in the report); existing sources with the same directory are reused.
+- **Idempotent:** movies are recognized by file path, sets by name; importing again updates instead of duplicating. Kodi only knows one set per movie; the first one is taken (note in the report).
+- **Dry run:** runs the import completely in one transaction and rolls it back; settings are only computed. So the report shows exactly what the import would change.
+- **Conversions:** `Germany:16` → `FSK 16`; empty ratings (0 without votes) and user rating 0 are dropped; Ember’s timestamps (seconds since 1970, but computed from local time) become date added and “last played” in KMM’s time zone; paths that are invalid on the target system are skipped and reported.
+- **Settings:** language of movie metadata, forced artwork language, video file extensions, excluded folders (via the path mapping) and proxy (without password) go into KMM’s settings store; values fixed by the configuration stay unchanged.
+- **Kodi devices** (`Interface.Kodi.xml`): name, address, port, credentials, real-time sync and path mappings; Ember’s local paths go through the import’s path mapping, mappings without a matching rule are dropped with a note. Devices are recognized by name.
 
-**Import (Ember-Migration II, umgesetzt):**
-- **Serien** (abwählbar): Serienquellen über dieselbe Pfad-Zuordnung, Serien über den Ordner, Episoden über Datei, Staffel und Nummer erkannt; Mehrfachepisoden bleiben mehrere Episoden mit derselben Datei. Embers Platzhalter-Staffel −1 und leere Staffeltitel entfallen; Episoden ohne Datei werden nur gezählt. Wie bei Filmen gewinnt die Ember-DB, `tvshow.nfo` und Episoden-NFOs gelten danach als eingelesen.
-- **Stream-Details** für Filme und Episoden, mit Dateigröße, 3D-Angaben und externen Untertiteln (Pfad neben der Videodatei im Zielsystem). Liefert Ember keine Spuren, bleiben die in KMM bekannten erhalten.
-- **Einstellungen:** Sprache der Serien-Metadaten und -Bilder, die Episodenreihenfolge und ob beim Scrapen die Mediendaten ausgelesen werden (`MovieScraperMetaDataScan`/`TVScraperMetaDataScan`). API-Keys werden bewusst nicht übernommen; sie werden in KMM unter „Einstellungen → API-Keys“ gepflegt.
-- **Nicht übernommen:** Embers Artwork-Pfade (KMM findet Bilder über die Kodi-Namen neben den Dateien), Sperren/Markierungen, Scraper-Keys, Kodi-Optionen zum Gesehen-Status.
+**Import (Ember migration II, implemented):**
+- **TV shows** (can be deselected): TV show sources via the same path mapping, TV shows recognized by folder, episodes by file, season and number; multi-episode files stay several episodes with the same file. Ember’s placeholder season −1 and empty season titles are dropped; episodes without a file are only counted. As with movies, the Ember DB wins; `tvshow.nfo` and episode NFOs then count as read.
+- **Stream details** for movies and episodes, with file size, 3D details and external subtitles (path next to the video file on the target system). If Ember has no tracks, the ones known in KMM are kept.
+- **Settings:** language of TV show metadata and artwork, the episode order, and whether media data is read during scraping (`MovieScraperMetaDataScan`/`TVScraperMetaDataScan`). API keys are deliberately not taken over; they are managed in KMM under “Settings → API keys”.
+- **Not taken over:** Ember’s artwork paths (KMM finds artwork via the Kodi names next to the files), locks/markers, scraper keys, Kodi options for the watched status.
 
-**Schema-Versionen:** Direkt unterstützt wird v48. Ältere Profile werden einmal mit der letzten Ember-Version geöffnet, die sie selbst aktualisiert.
+**Schema versions:** v48 is supported directly. Older profiles are opened once with the latest Ember version, which updates them itself.
 
 ---
 
 ## 7. Roadmap
 
-1. **Fundament** ✅: Projektgerüst, Profile H2/MariaDB, Flyway, Docker, Security, Plugin-Mechanismus, Analyse von Ember-Profilen.
-2. **Filme MVP** (in Inkrementen):
-   1. Quellen, Scan, Filmliste ✅
-   2. NFO lesen/schreiben ✅ (`<dateiname>.nfo`, Kodi 19–21; Scan übernimmt NFO-Inhalte, Detailseite bearbeitet und schreibt sie zurück)
-   3. Job-Framework + Fortschritt per SSE ✅ (Scan läuft als Hintergrund-Job, Abbruch möglich, Live-Fortschritt in der UI)
-   4. TMDB-Plugin ✅ (API-Key aus `KMM_TMDB_API_KEY`; Online-Suche auf der Detailseite, Übernahme ins Formular)
-   5. Bild-Plugins TMDB/FanartTV, Bildauswahl, Kodi-Bildnamen ✅ (`<dateiname>-poster.jpg` …, bei DVD/Blu-ray `poster.jpg` im Filmordner)
-   6. Automatisches Scrapen aller Filme einer Quelle ✅ (nur fehlende Metadaten und Bilder, Bericht mit Titeln ohne Treffer)
-   - **2a. Ember-Migration I** ✅: erweitertes Filmmodell (Personen, Sets, Studios, Länder, Tags, Bewertungen, Nutzerdaten), Einstellungsspeicher, Import von Quellen, Filmen, Sets und Einstellungen mit Probelauf und Bericht.
-3. **Kodi-Integration** ✅: Kodi-Geräte mit Pfad-Zuordnung und Verbindungstest, Echtzeit-Sync wie in Ember (RefreshMovie bzw. Scan des Ordners, entprellt im Hintergrund), manueller Abgleich je Film und Quelle, Übernahme der Kodi-Geräte aus Ember. Gesehen-Status aus Kodi holen ✅ (je Quelle als Job oder je Film/Episode; Wiedergaben, letzte Wiedergabe und eigene Bewertung gehen in NFO und Datenbank, damit Kodi die Bewertung beim Neueinlesen nicht verliert; Kodi ergänzt nur mehr Wiedergaben, neuere Daten bzw. eine Bewertung und setzt nichts zurück; ein Gerät genügt, weil alle Geräte dieselbe Kodi-Datenbank nutzen). Später: Bibliothek bereinigen (`VideoLibrary.Clean`).
-4. **Serien** (in Inkrementen):
-   1. Modell, Scan, NFOs, Liste und Detailseiten ✅ (jeder Ordner unter der Quelle ist eine Serie, Episoden beliebig tief; Staffel/Episode aus dem Dateinamen; Mehrfachepisoden als mehrere Episoden mit derselben Datei; `tvshow.nfo` und Episoden-NFOs werden gelesen und beim Bearbeiten geschrieben)
-   2. **Ember-Migration II** ✅: Serien, Staffeln, Episoden, Stream-Details (Filme und Episoden), Serien-Einstellungen, API-Keys im Einstellungsspeicher; Embers fehlende Episoden ohne Datei werden nicht übernommen
-   3. Scraper und Bilder (Vorgabe TVDB, TMDB-TV wählbar; Episoden bekommen beim Übernehmen nur leere Felder gefüllt; fehlende Episoden werden nur angezeigt; Bilder von TMDB, TVDB und fanart.tv):
-      - 3a ✅ Plugin-Schnittstelle `TvShowScraper` (Serie mit Staffeln und Episoden, Attribution je Scraper) und TMDB-TV-Scraper (nur Ausstrahlungsreihenfolge)
-      - 3b ✅ TVDB-v4-Plugin (Login mit Key/PIN, Token-Cache, Übersetzungen, offizielle/DVD/absolute Reihenfolge, Attribution); Regie, Drehbuch und Gaststars liefert TVDB nur je Episode – KMM fragt sie nur für Episoden ab, denen Regie oder Drehbuch fehlen (Zwischenspeicher einen Tag)
-      - 3c ✅ Online-Suche auf der Seriendetailseite (Vorgabe TVDB): Vorschlag ins Formular, beim Speichern bekommen Episoden leere Felder gefüllt (Titel nur ohne NFO), Darsteller/Bewertungen/Staffeltitel werden ergänzt, NFOs geschrieben; fehlende Episoden auf Knopfdruck; TVDB-Hinweis bei Serien mit TVDB-ID und in der Suche; geladene Serien 15 Minuten zwischengespeichert
-      - 3d1 ✅ Bild-Scraper für Serien: Bildkandidaten tragen die Staffelnummer; TMDB (Serie und Staffelposter), TVDB (Artworks inkl. Staffelposter/-banner/-fanart, Sprachen nach ISO 639-1) und fanart.tv (über die TVDB-ID, inkl. Characterart und Staffelbilder)
-      - 3d2 ✅ Bilder in App und Oberfläche: Serie (Poster, Fanart, Banner, Clearlogo, Clearart, Landscape, Characterart → `poster.jpg` … im Serienordner), Staffeln (Poster, Banner, Fanart, Landscape → `season01-poster.jpg`, `season-specials-poster.jpg`) und Episoden (Standbild der Serien-Scraper → `<episode>-thumb.jpg`); gemeinsame Bildergalerie und Dateiablage für Filme und Serien
-      - 3e ✅ automatisches Scrapen einer Serienquelle: nicht zugeordnete Serien nur bei eindeutigem Treffer des bevorzugten Scrapers (`kmm.scraping.preferred-tv-show-scraper`, Vorgabe `tvdb`), leere Episodenfelder, fehlende Bilder von Serie, Staffeln mit Episoden und Standbilder; vorhandene Daten und Bilder bleiben
-   4. Kodi-Sync für Serien ✅: Echtzeit-Sync wie bei Filmen – geänderte Serie → `VideoLibrary.RefreshTVShow` (ohne Episoden), geänderte Episode → `RefreshEpisode`, in Kodi unbekannt → `Scan` des Serienordners, neue Serien/Episoden nach dem Scan → `Scan` der Quelle; Knöpfe „In Kodi aktualisieren“ für Serie und Episode, „Kodi-Scan“ für Serienquellen
-5. **Komfort** (in Inkrementen):
-   1. Technische Angaben mit ffprobe ✅: Video (Codec, Auflösung, Seitenverhältnis, Laufzeit, Bitrate, Bildaufbau, 3D, HDR-Typ), Ton und Untertitel (eingebettet und als Dateien daneben, etwa `Film.de.srt` oder `Film-eng-forced.idx`) in Kodis bzw. Embers Namen (`dca`, `dtshd_ma`, `deu` …). Auslöser: je Film/Episode, je Quelle als Job (nur fehlende oder alle), nach dem automatischen Scrapen und nach dem Speichern einer Online-Suche (Filme; bei Serien Episoden ohne Angaben) und für neue Dateien ohne Angaben nach dem Scan – beides abschaltbar, ffprobe-Pfad einstellbar. Vorhandene Angaben werden ersetzt, Sprachen und Embers 3D-Angaben bleiben, wenn ffprobe keine liefert. In der NFO wird nur `<fileinfo>` im Format von Ember ersetzt (alphabetisch, mit `longlanguage`, `filesize`, Untertiteltyp); der Rest der Datei bleibt Zeichen für Zeichen erhalten. Mehrfachepisoden bekommen die Angaben in jedes `<episodedetails>`.
-   2. Umbenennen wie Embers „Bulk Rename“, Filme und Serien ✅: Muster wie `{title}[ ({year})]` mit Formaten (`{season:2}`, `:first`, `:sort`, `:lower`, `:upper`), optionalen Teilen in `[ ]` und Unterordnern (`/`, relativ zur Quelle); Vorschau je Quelle mit Auswahl, dann Job, oder einzeln aus der Filmansicht. Umbenannt werden der Ordner (nur wenn er allein dem Film gehört), Video, Stapelteile und alle Begleitdateien mit dem Namen des Films; Discs nur den Ordner. Konflikte werden übersprungen, Fehler zurückgerollt, leere alte Ordner entfernt; Pfade in Datenbank sowie Untertitelpfade in Datenbank und NFO werden nachgezogen. Muster und Auslöser stehen in den Einstellungen; der Ember-Import übersetzt Embers Muster aus `AdvancedSettings.xml`. Automatisch (abschaltbar, anfangs aus) nach dem Speichern der Metadaten und nach dem automatischen Scrapen. Mit Echtzeit-Sync liest Kodi danach den neuen Ordner ein und bereinigt nur den alten (`VideoLibrary.Clean` mit Verzeichnis); Gesehen-Status und Bewertung kommen aus der NFO zurück. Serien: Episodendateien wandern mit NFO, Vorschaubild und Untertiteln in Staffelordner nach Muster (`Staffel {season}`), Mehrfachepisoden heißen `S01E01E02` mit allen Titeln, danach wird der Serienordner umbenannt; Staffelbilder bleiben nach Kodi-Konvention im Serienordner. Konflikte gelten beim Serienordner für die ganze Serie, sonst je Episodendatei. Automatisch (abschaltbar) nach dem Speichern einer Serie oder Episode, nach dem automatischen Scrapen und für Serien mit neuen Episoden nach dem Scan; Kodi-Abgleich wie bei Filmen.
-   3. Tag-Manager ✅ wie in Ember (Filme und Serien): Tags mit Anzahl, umbenennen (gleichnamige werden zusammengeführt), löschen, zuweisen (auch neue Tags) und entfernen über eine Suche; Änderungen schreiben die NFOs der betroffenen Einträge als Hintergrund-Job, Kodi liest sie per Echtzeit-Sync neu ein.
-   4. Filmset-Manager, Teil 1 ✅: Sets mit Anzahl der Filme, anlegen (Name eindeutig), Name/Beschreibung/TMDB-Sammlung/Reihenfolge (Jahr oder Titel wie Ember) bearbeiten, Filme hinzufügen (sie verlassen ihr bisheriges Set) und entfernen, löschen; Film-NFOs werden als Job neu geschrieben. Mit Echtzeit-Sync übernimmt Kodi Titel und Beschreibung per `SetMovieSetDetails` (Set über den bisherigen Titel oder einen enthaltenen Film gefunden). Der Ember-Import übernimmt alle Sets samt leeren und Sortierung.
-   5. Filmset-Manager, Set-Bilder und Set-Scraping ✅: Einstellungen „Filmsets“ mit zwei einzeln abschaltbaren Ablagen – Embers flaches Schema `<Ordner>/<Settitel>-poster.jpg` (Dateiname wie Ember: unzulässige Zeichen → `-`) und Kodis „Ordner für Filmset-Informationen“ `<Ordner>/<Settitel>/poster.jpg` (Ordnername wie Kodis `MakeLegalFileName`); der Ember-Import übernimmt `MovieSetUseExtended`/`MovieSetPathExtended`, `MovieSetUseMatrix`/`MovieSetPathMatrix` und `MovieScraperCollectionsAuto`. Bildarten Poster, Fanart, Banner, Clearlogo, Clearart, Disc, Keyart, Landscape: anzeigen, bei TMDB und fanart.tv über die TMDB-ID der Sammlung suchen, in alle eingeschalteten Ablagen speichern, entfernen; beim Umbenennen eines Sets wandern die Bilder mit. Set-Scraping im Set-Manager: TMDB-Sammlungen suchen, ein Treffer übernimmt Titel, Beschreibung (englischer Rückfall) und ID ins Formular. Job „Alle Sets ergänzen“: fehlende Beschreibungen und Bilder für Sets mit TMDB-ID, vorhandene bleiben. „Filme beim Scrapen ihrem Filmset zuordnen“ (automatisch und nach dem Speichern eines Online-Vorschlags): Set über TMDB-ID, sonst Name, sonst neu; ein anderes Set wird ersetzt. Kodi bekommt per `SetMovieSetDetails` auch die Bilder (fehlende werden entfernt, Bild-Cache wird geleert); ohne Ablage bleiben Kodis Set-Bilder unberührt.
-   6. Filter- und Metadaten-Editor ✅: Film- und Serienliste mit Filter-Baukasten statt Embers freiem SQL – Bedingungen aus Feld, Vergleich und Wert (Auswahl aus vorhandenen Werten), „alle“ oder „eine“; Serienfilter auch über Episoden (ungesehen, Auflösung, Codecs, Sprachen, fehlende technische Angaben). Mitgelieferte und gespeicherte Filter (Tabelle `saved_filter`); der Ember-Import übernimmt eigene Filmlisten (Views `movie-*`), soweit übersetzbar. Technische Angaben haben eine abfragbare Kurzform (Auflösungsstufe wie Kodi, Codecs, HDR, Sprachen). Statt Embers Codec-Tabelle übersetzt KMM Codec-Namen fest in Kodis Namen (MediaInfo-Rohnamen, Embers Standardzuordnungen). Stapel-Bearbeitung gefilterter Filme (Genres, Tags, Altersfreigabe, Fassung, Videoquelle) und Serien (Genres, Tags, Altersfreigabe, Status) als Job mit NFO-Schutz, ohne Umbenennen.
-6. **Erweiterungen:**
-   1. Trailer ✅ (Filme und Serien): nur als Link in der NFO, den Kodi über das YouTube-Addon abspielt (`plugin://plugin.video.youtube/?action=play_video&videoid=…`), kein Download. Neuer Plugin-Typ `TrailerScraper`; TMDB liefert die YouTube-Videos des Films in bevorzugter Sprache, Englisch und ohne Sprache. Reihenfolge: bevorzugte Sprache, Englisch, Trailer vor Teaser, offizielle, höhere Auflösung, neuere. Filmansicht: Vorschläge mit Vorschaubild ansehen und übernehmen, eigenen Link eintragen (`plugin://`, `http(s)://`, `smb://`, `nfs://`), entfernen. Das automatische Scrapen trägt bei Filmen ohne Trailer den besten Vorschlag ein; Job „Fehlende Trailer holen“ für die Auswahl der Filmliste; Filterfeld „Trailer“. Vorhandene Links bleiben; der Ember-Import übernimmt Embers Trailer-Spalte. Serien genauso: Trailer-Karte in der Serienansicht, automatisches Scrapen, Job „Fehlende Trailer holen“ in der Serienliste, Filterfeld „Trailer“; TMDB findet die Serie auch über TVDB- oder IMDb-ID (`/tv/{id}/videos`). Ember kennt keine Serien-Trailer. Suche und Reihenfolge teilen sich Filme und Serien (`TrailerFinder`). Beim Ändern des Trailers bearbeitet KMM in einer vorhandenen NFO nur die Zeile `<trailer>` als Text (`TrailerNfoWriter`); alles andere bleibt Zeichen für Zeichen. Serien aus dem Ember-Import tragen Embers Datenbankwerte (z. B. `FSK 16` statt `Germany:16`); vor dem ersten Schreiben ihrer `tvshow.nfo` liest KMM deshalb die NFO ein (`nfo_read`). Für Filme aus dem Ember-Import gilt dasselbe (`movie.nfo_read`, V20); Darsteller, technische Angaben und Trailer, die nur Ember kennt, bleiben dabei erhalten, wenn sie in der NFO fehlen. Für Episoden aus dem Ember-Import gilt dasselbe vor dem ersten Neuschreiben ihrer NFO (Metadaten speichern, Episoden ergänzen); hat die NFO keine technischen Angaben, bleiben die aus Ember erhalten. Darsteller, die nur in Embers Daten stehen (etwa Gaststars), hängt KMM beim ersten Einlesen hinter die der NFO an; bei Serien ebenso. Damit Film-, Serien- und Episodenansicht keine veralteten Werte zeigen und beim Speichern zurückschreiben, liest KMM beim Öffnen eine außerhalb geänderte NFO ein, bei Serien und Episoden aus Ember auch eine noch nicht eingelesene. Beim Neuschreiben von NFOs bleiben Angaben an Darstellern erhalten, die KMM nicht kennt (z. B. Embers `<tmdbid>`). Titelmusik (TvTunes) vorerst nicht.
-   2. Titelmusik ✅ (Filme und Serien): `theme.mp3` im Film- bzw. Serienordner, wie TvTunes es erwartet; Kodi spielt sie nur mit einem Add-on (TvTunes, Themerr) ab. Neuer Plugin-Typ `ThemeScraper` (Suche über den Titel, Laden als MP3). `kmm-plugin-televisiontunes` liest Suche und Serienseiten von TelevisionTunes.com (kein API, nur HTTP) und lädt nur MP3s der Seite selbst. `kmm-plugin-youtube` sucht und lädt über yt-dlp (Audio per ffmpeg als MP3; im Docker-Image enthalten, sonst `kmm.plugins.settings.youtube.yt-dlp`). Gesucht wird mit Titel und Originaltitel. Ansicht: Vorschläge anhören und übernehmen, vorhandene `theme.mp3` anhören und löschen. Job „Fehlende Titelmusik holen“ für die Auswahl der Listen und das automatische Scrapen übernehmen nur sichere Treffer: gleicher Titel beim Anbieter (`Titles.same`); YouTube-Videos gelten nie als sicher. Geladen wird über eine temporäre Datei; eine vorhandene `theme.mp3` bleibt beim Job und beim automatischen Scrapen unberührt.
-   3. Trakt.tv: keine eigene Anbindung (Gesehen-Status, Sammlung, eigene Bewertungen), weil das Trakt-Plugin in Kodi sie mit Kodi abgleicht und KMM den Gesehen-Status aus Kodi holt. Embers Trakt-Anmeldung gehört zu Embers App und wird nicht übernommen. Übernommen wird nur Trakts öffentliche Community-Bewertung als Bewertung `trakt`.
-   4. Ergänzungs-Scraper ✅: neuer Plugin-Typ `EnrichmentScraper` liefert in einem Abruf Bewertungen und, falls der Anbieter es kann, Angaben für leere Felder (über bekannte IDs). `kmm-plugin-trakt`: Trakts Community-Bewertung (`trakt`) über IMDb-, TMDB- oder TVDB-ID, mit der Client-ID einer eigenen Trakt-App, ohne Anmeldung. `kmm-plugin-omdb`: über die IMDb-ID die Bewertungen IMDb (`imdb`, mit Stimmen), Rotten Tomatoes (`tomatometerallcritics`, 0–100) und Metacritic (`metacritic`, 0–100) sowie englische Angaben für leere Felder: Handlung, Laufzeit, Erstaufführung, Freigabe, Genres, Regie, Drehbuch, Darsteller (ohne Rollen) und Länder; Serien ohne Regie, Drehbuch und Länder. Der kostenlose OMDb-Key erlaubt 1.000 Abfragen am Tag, deshalb ein Abruf je Eintrag und nur, wenn der Anbieter etwas beitragen kann. Das automatische Scrapen ergänzt nur Fehlendes; der Job „Bewertungen aktualisieren“ der Film- und Serienliste aktualisiert auch vorhandene Bewertungen (die Standard-Markierung bleibt). Vorhandene Felder bleiben immer. Episoden werden nicht ergänzt (eine Anfrage je Episode).
-   5. Export ✅ (Filme und Serien): Knopf „Exportieren“ in Film- und Serienliste, exportiert wird der gerade gewählte Filter samt Suche als Download im Browser. Formate: CSV für Excel (UTF-8 mit BOM, `;`, Dezimalkomma, ja/nein), JSON (Schlüssel und Typen, Listen als Arrays) und eine eigenständige HTML-Liste mit Suchfeld als ZIP mit verkleinerten Postern (`posters/<id>.jpg`, 160 px breit). Spalten Filme: Titel, Originaltitel, Jahr, Genres, Laufzeit, Freigabe, Bewertung, eigene Bewertung, Gesehen, Auflösung, Videocodec, Tonspuren, Untertitel, Filmset, Tags, IMDb, TMDB, Datei, Hinzugefügt; Serien: Titel, Originaltitel, Jahr, Status, Genres, Sender, Staffeln, Episoden, ungesehene Episoden, Bewertungen, Tags, TVDB, TMDB, IMDb, Ordner, Hinzugefügt. Der Export entsteht in einer temporären Datei, die nach dem Senden gelöscht wird. Embers „MovieExport“ mit eigenen Vorlagen wird nicht nachgebaut.
-   6. HTML-Scraper ✅ (nur Filme) als Ergänzungs-Scraper für leere Felder, ohne Bewertungen; deutsche Anbieter kommen vor OMDb (`EnrichmentScraper.order`). Beide gehen ausschließlich über Seiten, die die `robots.txt` erlaubt, melden sich als KMM und halten eine Sekunde Abstand zwischen den Abrufen (`request-delay-ms`). Übernommen wird eine Seite nur, wenn ihre IMDb-ID stimmt; ohne IMDb-ID wird nicht gesucht. Falsche Treffer sind damit ausgeschlossen, dafür findet nicht jeder Film einen Eintrag. `kmm-plugin-moviepilot` leitet die Adresse aus dem Titel ab (`/movies/2001-odyssee-im-weltraum`), die Suche der Seite ist gesperrt; liefert Handlung, Laufzeit, Kinostart, FSK, Länder, Regie, Drehbuch, Darsteller. Moviepilots „Genres“ sind Schlagwörter und werden nicht übernommen. `kmm-plugin-ofdb` findet Filme über die Sitemaps der Seite (rund 400.000 Adressen, beim ersten Bedarf geladen, höchstens eine Woche alt, im Speicher nur Prüfsumme und ID), die Suche ist auch hier gesperrt; liefert Handlung, FSK (nur wenn alle Fassungen dieselbe haben), Genres, Länder, Regie, Darsteller. **IMDb entfällt:** Die Seite antwortet auf automatische Abrufe mit einer Bot-Prüfung (`x-amzn-waf-action: challenge`) und verbietet Scraping ohne Erlaubnis; die Prüfung wird nicht umgangen. Die IMDb-Bewertung kommt von OMDb, verloren geht nur die Top-250-Platzierung. Die offiziellen IMDb-Datensätze brächten kaum Zusätzliches.
-   7. Windows-Installer ✅: MSI per `jpackage` und WiX 3 (Maven-Profil `installer`), mit eigenem Java, Startmenü-Eintrag und Desktop-Verknüpfung. Die Installation gilt nur für den angemeldeten Benutzer und braucht keine Administratorrechte. KMM läuft im Konsolenfenster und endet mit dessen Schließen. Eine neue Version ersetzt die alte (feste Upgrade-ID); Daten unter `~/.kodi-media-manager` bleiben auch beim Deinstallieren erhalten. Die CI baut die MSI auf einem Windows-Runner und hebt sie 7 Tage als Artefakt auf. Nur Windows, weil der Betrieb unter Linux über Docker läuft.
-   8. Handbuch und Hilfe ✅: eine Quelle in `docs/handbuch/` (Markdown, Reihenfolge und Zuordnung zu den Seiten in `kapitel.json`), auf GitHub direkt lesbar. Die Seite „Hilfe“ zeigt die Kapitel mit Inhaltsverzeichnis und Suche über alle Kapitel; das Fragezeichen in der Kopfleiste öffnet das Kapitel zur aktuellen Seite in einem neuen Tab, damit Eingaben erhalten bleiben. Das Skript `copy-help.mjs` kopiert die Texte vor dem Build in die Oberfläche, Angular liefert nur Dateien innerhalb von `kmm-ui` aus; `marked` wird nur mit der Hilfeseite geladen. Kurze Erklärungen an Feldern und Links in die passenden Abschnitte (`HelpLink`). `handbuch-pdf.mjs` baut per Chrome ein PDF, bricht bei toten Links oder fehlenden Bildern ab und läuft in der CI. Screenshots stammen aus einer Testinstanz mit erfundenen Titeln und selbst gezeichneten Postern, ohne echte Pfade.
+1. **Foundation** ✅: project skeleton, H2/MariaDB profiles, Flyway, Docker, security, plugin mechanism, analysis of Ember profiles.
+2. **Movies MVP** (in increments):
+   1. Sources, scan, movie list ✅
+   2. Reading/writing NFOs ✅ (`<filename>.nfo`, Kodi 19–21; the scan takes over NFO contents, the detail page edits them and writes them back)
+   3. Job framework + progress via SSE ✅ (the scan runs as a background job, can be cancelled, live progress in the UI)
+   4. TMDB plugin ✅ (API key from `KMM_TMDB_API_KEY`; online search on the detail page, applied to the form)
+   5. Image plugins TMDB/FanartTV, image selection, Kodi image names ✅ (`<filename>-poster.jpg` …, for DVD/Blu-ray `poster.jpg` in the movie folder)
+   6. Automatic scraping of all movies of a source ✅ (only missing metadata and artwork, report with titles without a match)
+   - **2a. Ember migration I** ✅: extended movie model (people, sets, studios, countries, tags, ratings, user data), settings store, import of sources, movies, sets and settings with dry run and report.
+3. **Kodi integration** ✅: Kodi devices with path mapping and connection test, real-time sync as in Ember (RefreshMovie or scan of the folder, debounced in the background), manual sync per movie and source, import of the Kodi devices from Ember. Fetching the watched status from Kodi ✅ (per source as a job or per movie/episode; play count, last played and user rating go into the NFO and the database so that Kodi does not lose the rating when it reads the entry again; Kodi only adds higher play counts, more recent dates or a rating and never resets anything; one device is enough because all devices use the same Kodi database). Later: cleaning the library (`VideoLibrary.Clean`).
+4. **TV shows** (in increments):
+   1. Model, scan, NFOs, list and detail pages ✅ (every folder below the source is a TV show, episodes at any depth; season/episode from the file name; multi-episode files as several episodes with the same file; `tvshow.nfo` and episode NFOs are read and written when editing)
+   2. **Ember migration II** ✅: TV shows, seasons, episodes, stream details (movies and episodes), TV show settings, API keys in the settings store; Ember’s missing episodes without a file are not taken over
+   3. Scrapers and artwork (default TVDB, TMDB TV selectable; episodes only get empty fields filled when applying; missing episodes are only displayed; artwork from TMDB, TVDB and fanart.tv):
+      - 3a ✅ plugin interface `TvShowScraper` (TV show with seasons and episodes, attribution per scraper) and TMDB TV scraper (aired order only)
+      - 3b ✅ TVDB v4 plugin (login with key/PIN, token cache, translations, official/DVD/absolute order, attribution); TVDB only delivers director, writer and guest stars per episode – KMM only requests them for episodes that lack director or writer (cached for one day)
+      - 3c ✅ online search on the TV show detail page (default TVDB): proposal into the form, on saving episodes get empty fields filled (title only without NFO), cast/ratings/season titles are completed, NFOs written; missing episodes at the push of a button; TVDB notice for TV shows with a TVDB ID and in the search; loaded TV shows cached for 15 minutes
+      - 3d1 ✅ image scrapers for TV shows: image candidates carry the season number; TMDB (TV show and season posters), TVDB (artworks incl. season posters/banners/fanart, languages per ISO 639-1) and fanart.tv (via the TVDB ID, incl. characterart and season artwork)
+      - 3d2 ✅ artwork in app and interface: TV show (poster, fanart, banner, clearlogo, clearart, landscape, characterart → `poster.jpg` … in the show folder), seasons (poster, banner, fanart, landscape → `season01-poster.jpg`, `season-specials-poster.jpg`) and episodes (thumbnail from the TV show scrapers → `<episode>-thumb.jpg`); shared artwork gallery and file storage for movies and TV shows
+      - 3e ✅ automatic scraping of a TV show source: unmatched TV shows only on a unique match of the preferred scraper (`kmm.scraping.preferred-tv-show-scraper`, default `tvdb`), empty episode fields, missing artwork of the TV show, seasons with episodes and thumbnails; existing data and artwork stay
+   4. Kodi sync for TV shows ✅: real-time sync as for movies – changed TV show → `VideoLibrary.RefreshTVShow` (without episodes), changed episode → `RefreshEpisode`, unknown in Kodi → `Scan` of the show folder, new TV shows/episodes after the scan → `Scan` of the source; “Refresh in Kodi” buttons for TV show and episode, “Kodi scan” for TV show sources
+5. **Convenience** (in increments):
+   1. Technical details with ffprobe ✅: video (codec, resolution, aspect ratio, runtime, bit rate, scan type, 3D, HDR type), audio and subtitles (embedded and as files next to the video, such as `Film.de.srt` or `Film-eng-forced.idx`) in Kodi’s or Ember’s names (`dca`, `dtshd_ma`, `deu` …). Triggers: per movie/episode, per source as a job (only missing or all), after automatic scraping and after saving an online search (movies; for TV shows, episodes without details), and for new files without details after the scan – both can be turned off, ffprobe path configurable. Existing details are replaced; languages and Ember’s 3D details are kept if ffprobe does not deliver any. In the NFO only `<fileinfo>` is replaced, in Ember’s format (alphabetical, with `longlanguage`, `filesize`, subtitle type); the rest of the file is preserved character for character. Multi-episode files get the details in every `<episodedetails>`.
+   2. Renaming like Ember’s “Bulk Rename”, movies and TV shows ✅: patterns such as `{title}[ ({year})]` with formats (`{season:2}`, `:first`, `:sort`, `:lower`, `:upper`), optional parts in `[ ]` and subfolders (`/`, relative to the source); preview per source with selection, then a job, or individually from the movie view. What gets renamed: the folder (only if it belongs to the movie alone), video, stack parts and all companion files with the movie’s name; for discs only the folder. Conflicts are skipped, errors rolled back, empty old folders removed; paths in the database and subtitle paths in the database and NFO are updated. Patterns and triggers are in the settings; the Ember import translates Ember’s patterns from `AdvancedSettings.xml`. Automatically (can be turned off, off at first) after saving the metadata and after automatic scraping. With real-time sync, Kodi then reads the new folder and cleans up only the old one (`VideoLibrary.Clean` with directory); watched status and rating come back from the NFO. TV shows: episode files move together with NFO, thumbnail and subtitles into season folders according to a pattern (`Staffel {season}`), multi-episode files are named `S01E01E02` with all titles, then the show folder is renamed; season artwork stays in the show folder following Kodi’s convention. Conflicts apply to the whole TV show for the show folder, otherwise per episode file. Automatically (can be turned off) after saving a TV show or episode, after automatic scraping, and for TV shows with new episodes after the scan; Kodi sync as for movies.
+   3. Tag manager ✅ as in Ember (movies and TV shows): tags with count, rename (tags with the same name are merged), delete, assign (also new tags) and remove via a search; changes write the NFOs of the affected entries as a background job, Kodi reads them again via real-time sync.
+   4. Movie set manager, part 1 ✅: sets with the number of movies, create (unique name), edit name/description/TMDB collection/order (year or title as in Ember), add movies (they leave their previous set) and remove them, delete; movie NFOs are rewritten as a job. With real-time sync, Kodi takes over title and description via `SetMovieSetDetails` (set found via the previous title or a contained movie). The Ember import takes over all sets, including empty ones and sort order.
+   5. Movie set manager, set artwork and set scraping ✅: “Movie sets” settings with two locations that can be turned off individually – Ember’s flat scheme `<folder>/<set title>-poster.jpg` (file name as in Ember: invalid characters → `-`) and Kodi’s “Movie set information folder” `<folder>/<set title>/poster.jpg` (folder name as Kodi’s `MakeLegalFileName`); the Ember import takes over `MovieSetUseExtended`/`MovieSetPathExtended`, `MovieSetUseMatrix`/`MovieSetPathMatrix` and `MovieScraperCollectionsAuto`. Artwork types poster, fanart, banner, clearlogo, clearart, disc, keyart, landscape: display, search at TMDB and fanart.tv via the collection’s TMDB ID, save to all enabled locations, remove; when a set is renamed, its artwork moves along. Set scraping in the set manager: search TMDB collections; a match puts title, description (English fallback) and ID into the form. Job “Complete all sets”: missing descriptions and artwork for sets with a TMDB ID; existing ones stay. “Assign movies to their movie set when scraping” (automatically and after saving an online proposal): set via TMDB ID, otherwise name, otherwise new; another set is replaced. Kodi also gets the artwork via `SetMovieSetDetails` (missing ones are removed, the image cache is cleared); without a location, Kodi’s set artwork stays untouched.
+   6. Filter and metadata editor ✅: movie and TV show list with a filter builder instead of Ember’s free-form SQL – conditions made of field, comparison and value (chosen from existing values), “all” or “any”; TV show filters also via episodes (unwatched, resolution, codecs, languages, missing technical details). Built-in and saved filters (table `saved_filter`); the Ember import takes over custom movie lists (views `movie-*`) as far as they can be translated. Technical details have a queryable short form (resolution tier as in Kodi, codecs, HDR, languages). Instead of Ember’s codec table, KMM translates codec names into Kodi’s names in code (MediaInfo raw names, Ember’s default mappings). Batch edit of filtered movies (genres, tags, certification, edition, video source) and TV shows (genres, tags, certification, status) as a job with NFO protection, without renaming.
+6. **Extensions:**
+   1. Trailers ✅ (movies and TV shows): only as a link in the NFO, which Kodi plays via the YouTube add-on (`plugin://plugin.video.youtube/?action=play_video&videoid=…`), no download. New plugin type `TrailerScraper`; TMDB delivers the movie’s YouTube videos in the preferred language, English and without language. Order: preferred language, English, trailer before teaser, official, higher resolution, newer. Movie view: view suggestions with a thumbnail and apply them, enter a custom link (`plugin://`, `http(s)://`, `smb://`, `nfs://`), remove. Automatic scraping adds the best suggestion for movies without a trailer; job “Fetch missing trailers” for the selection of the movie list; filter field “Trailer”. Existing links stay; the Ember import takes over Ember’s trailer column. TV shows likewise: trailer card in the TV show view, automatic scraping, job “Fetch missing trailers” in the TV show list, filter field “Trailer”; TMDB also finds the TV show via TVDB or IMDb ID (`/tv/{id}/videos`). Ember has no TV show trailers. Movies and TV shows share search and order (`TrailerFinder`). When the trailer changes, KMM only edits the `<trailer>` line as text in an existing NFO (`TrailerNfoWriter`); everything else stays character for character. TV shows from the Ember import carry Ember’s database values (e.g. `FSK 16` instead of `Germany:16`); before writing their `tvshow.nfo` for the first time, KMM therefore reads the NFO (`nfo_read`). The same applies to movies from the Ember import (`movie.nfo_read`, V20); cast, technical details and trailers known only to Ember are kept if they are missing in the NFO. The same applies to episodes from the Ember import before their NFO is rewritten for the first time (saving metadata, completing episodes); if the NFO has no technical details, those from Ember are kept. Cast members that exist only in Ember’s data (such as guest stars) are appended after those of the NFO when reading for the first time; likewise for TV shows. So that the movie, TV show and episode views do not show outdated values and write them back on saving, KMM reads an NFO changed outside KMM when opening the entry, and for TV shows and episodes from Ember also one that has not been read yet. When rewriting NFOs, details on cast members that KMM does not know (e.g. Ember’s `<tmdbid>`) are preserved. Theme music (TvTunes) not for now.
+   2. Theme music ✅ (movies and TV shows): `theme.mp3` in the movie or show folder, as TvTunes expects it; Kodi only plays it with an add-on (TvTunes, Themerr). New plugin type `ThemeScraper` (search by title, download as MP3). `kmm-plugin-televisiontunes` reads search and show pages from TelevisionTunes.com (no API, HTTP only) and only downloads MP3s from the site itself. `kmm-plugin-youtube` searches and downloads via yt-dlp (audio via ffmpeg as MP3; included in the Docker image, otherwise `kmm.plugins.settings.youtube.yt-dlp`). The search uses title and original title. View: listen to suggestions and apply them, listen to and delete an existing `theme.mp3`. The job “Fetch missing theme music” for the selection of the lists and automatic scraping only apply reliable matches: the same title at the provider (`Titles.same`); YouTube videos never count as reliable. Downloads go through a temporary file; an existing `theme.mp3` stays untouched by the job and by automatic scraping.
+   3. Trakt.tv: no dedicated integration (watched status, collection, personal ratings), because the Trakt plugin in Kodi syncs them with Kodi and KMM fetches the watched status from Kodi. Ember’s Trakt login belongs to Ember’s app and is not taken over. Only Trakt’s public community rating is taken over, as rating `trakt`.
+   4. Enrichment scrapers ✅: the new plugin type `EnrichmentScraper` delivers ratings in one request and, if the provider can, details for empty fields (via known IDs). `kmm-plugin-trakt`: Trakt’s community rating (`trakt`) via IMDb, TMDB or TVDB ID, with the client ID of your own Trakt app, without login. `kmm-plugin-omdb`: via the IMDb ID the ratings IMDb (`imdb`, with votes), Rotten Tomatoes (`tomatometerallcritics`, 0–100) and Metacritic (`metacritic`, 0–100) as well as English details for empty fields: plot, runtime, premiere date, certification, genres, director, writer, cast (without roles) and countries; TV shows without director, writer and countries. The free OMDb key allows 1,000 requests per day, hence one request per entry and only if the provider can contribute something. Automatic scraping only adds what is missing; the job “Refresh ratings” of the movie and TV show lists also updates existing ratings (the default flag stays). Existing fields always stay. Episodes are not enriched (one request per episode).
+   5. Export ✅ (movies and TV shows): “Export” button in the movie and TV show lists; the currently selected filter including the search is exported as a download in the browser. Formats: CSV for Excel (UTF-8 with BOM, `;`, decimal comma, ja/nein), JSON (keys and types, lists as arrays) and a standalone HTML list with a search field as a ZIP with scaled-down posters (`posters/<id>.jpg`, 160 px wide). Movie columns: title, original title, year, genres, runtime, certification, rating, user rating, watched, resolution, video codec, audio tracks, subtitles, movie set, tags, IMDb, TMDB, file, added; TV shows: title, original title, year, status, genres, network, seasons, episodes, unwatched episodes, ratings, tags, TVDB, TMDB, IMDb, folder, added. The export is created in a temporary file that is deleted after sending. Ember’s “MovieExport” with custom templates is not rebuilt.
+   6. HTML scrapers ✅ (movies only) as enrichment scrapers for empty fields, without ratings; the German providers come before OMDb (`EnrichmentScraper.order`). Both only use pages that `robots.txt` allows, identify themselves as KMM and keep one second between requests (`request-delay-ms`). A page is only applied if its IMDb ID matches; without an IMDb ID there is no search. This rules out wrong matches, but not every movie finds an entry. `kmm-plugin-moviepilot` derives the address from the title (`/movies/2001-odyssee-im-weltraum`), the site’s search is blocked; it delivers plot, runtime, cinema release, FSK, countries, director, writer, cast. Moviepilot’s “genres” are keywords and are not taken over. `kmm-plugin-ofdb` finds movies via the site’s sitemaps (around 400,000 addresses, loaded on first use, at most one week old, only checksum and ID kept in memory); the search is blocked here too; it delivers plot, FSK (only if all editions have the same one), genres, countries, director, cast. **IMDb is dropped:** the site answers automated requests with a bot check (`x-amzn-waf-action: challenge`) and prohibits scraping without permission; the check is not circumvented. The IMDb rating comes from OMDb; only the Top 250 ranking is lost. The official IMDb datasets would add hardly anything.
+   7. Windows installer ✅: MSI via `jpackage` and WiX 3 (Maven profile `installer`), with its own Java, Start menu entry and desktop shortcut. The installation is for the logged-in user only and does not need administrator rights. KMM runs in the console window and ends when it is closed. A new version replaces the old one (fixed upgrade ID); data under `~/.kodi-media-manager` is kept, even when uninstalling. CI builds the MSI on a Windows runner and keeps it as an artifact for 7 days. Windows only, because operation on Linux is via Docker.
+   8. Manual and help ✅: one source in `docs/manual/<language>/` (Markdown, order and assignment to the pages in `docs/manual/chapters.json`), directly readable on GitHub. The “Help” page shows the chapters with a table of contents and a search across all chapters; the question mark in the header opens the chapter for the current page in a new tab so that input is preserved. The script `copy-help.mjs` copies the texts into the interface before the build, since Angular only serves files inside `kmm-ui`; `marked` is only loaded with the help page. Short explanations on fields and links to the matching sections (`HelpLink`). `manual-pdf.mjs` builds one PDF per language with Chrome, aborts on dead links, missing anchors or missing images, and runs in CI. Screenshots come from a test instance with made-up titles and hand-drawn posters, without real paths.
 
-## 8. Offene Punkte / Risiken
+## 8. Open issues / risks
 
-- **API-Keys:** TMDB, TVDB v4 (kostenpflichtig bzw. Projekt-Key), FanartTV, OMDb.
-- **Installer** ist nicht signiert: Windows SmartScreen warnt beim Ausführen der MSI.
-- **HTML-Scraper** sind technisch fragil: Bauen Moviepilot oder OFDb ihre Seiten um, fallen sie aus (Warnung im Log, sonst keine Folgen); abschaltbar über die Plugin-Verwaltung.
-- **Docker:** Dateirechte (`PUID`/`PGID`) und Pfad-Mapping Container ↔ Kodi (SMB/NFS).
-- **Lizenz** ✅: GPL-3.0 wie Ember, aus dem KMM Logik übernimmt (`LICENSE`).
-- **Schriftarten** ✅: Roboto kommt als Paket `@fontsource/roboto` (SIL Open Font License) mit; die UI lädt nichts mehr von Google Fonts und funktioniert offline.
+- **API keys:** TMDB, TVDB v4 (paid or project key), FanartTV, OMDb.
+- **Installer** is not signed: Windows SmartScreen warns when running the MSI.
+- **HTML scrapers** are technically fragile: if Moviepilot or OFDb change their pages, they stop working (warning in the log, no other consequences); can be turned off via the plugin management.
+- **Docker:** file permissions (`PUID`/`PGID`) and path mapping container ↔ Kodi (SMB/NFS).
+- **License** ✅: GPL-3.0 like Ember, from which KMM takes over logic (`LICENSE`).
+- **Fonts** ✅: Roboto ships as the package `@fontsource/roboto` (SIL Open Font License); the UI no longer loads anything from Google Fonts and works offline.
