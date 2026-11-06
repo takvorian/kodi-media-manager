@@ -8,14 +8,14 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
 /**
- * Schreibt Episoden-NFOs. Jede übergebene Episode ersetzt das {@code <episodedetails>} mit derselben
- * Staffel und Episode oder wird angehängt; andere Episoden einer Mehrfachepisode und nicht von KMM
- * verwaltete Elemente (Bild-URLs …) bleiben erhalten. Stream-Details ersetzt KMM, sofern es welche kennt.
+ * Writes episode NFOs. Each given episode replaces the {@code <episodedetails>} with the same season and episode or
+ * is appended; other episodes of a multi-episode file and elements not managed by KMM (image URLs …) are kept.
+ * KMM replaces stream details if it knows any.
  */
 public class EpisodeNfoWriter {
 
     /**
-     * @param episodes zu schreibende Episoden; jede braucht Staffel und Episode
+     * @param episodes episodes to write; each needs a season and an episode
      */
     public void write(Path nfoFile, List<EpisodeNfo> episodes) {
         if (episodes.stream().anyMatch(episode -> episode.season() == null || episode.episode() == null)) {
@@ -32,7 +32,7 @@ public class EpisodeNfoWriter {
         NfoFileWriter.write(nfoFile, NfoDocuments.children(container, NfoElements.EPISODE_DETAILS));
     }
 
-    /** Das {@code <episodedetails>} der Episode innerhalb einer gelesenen NFO. */
+    /** The {@code <episodedetails>} of the episode within a read NFO. */
     static Optional<Element> existing(Element container, int season, int episode) {
         List<Element> elements = NfoDocuments.children(container, NfoElements.EPISODE_DETAILS);
         Optional<Element> matching = elements.stream()
@@ -41,7 +41,7 @@ public class EpisodeNfoWriter {
         if (matching.isPresent()) {
             return matching;
         }
-        // Eine einzelne NFO ohne Staffel und Episode gehört zu der Episode der Datei.
+        // A single NFO without season and episode belongs to the episode of the file.
         boolean singleWithoutNumbers = elements.size() == 1
                 && EpisodeNfoReader.fromXml(elements.getFirst()).episode() == null;
         return singleWithoutNumbers ? Optional.of(elements.getFirst()) : Optional.empty();

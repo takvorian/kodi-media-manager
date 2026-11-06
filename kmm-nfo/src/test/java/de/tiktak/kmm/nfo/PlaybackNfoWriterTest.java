@@ -119,7 +119,7 @@ class PlaybackNfoWriterTest {
                 "<episodedetails><title>Eins</title><season>1</season><episode>1</episode></episodedetails>");
 
         assertThatThrownBy(() -> writer.writeEpisode(nfo, 1, 5, playback(1, null))).isInstanceOf(NfoException.class)
-                .hasMessageContaining("enthält den Eintrag nicht");
+                .hasMessageContaining("does not contain the entry");
         assertThatThrownBy(() -> writer.writeMovie(directory.resolve("fehlt.nfo"), playback(1, null)))
                 .isInstanceOf(NfoException.class);
         assertThat(directory.resolve("fehlt.nfo")).doesNotExist();

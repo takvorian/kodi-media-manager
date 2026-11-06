@@ -8,7 +8,7 @@ import org.sqlite.SQLiteConfig;
 import org.sqlite.SQLiteOpenMode;
 
 /**
- * Öffnet Ember-Datenbanken ausschließlich lesend, damit das Ember-Profil unverändert bleibt.
+ * Opens Ember databases read-only so the Ember profile stays unchanged.
  */
 public final class EmberDatabases {
 

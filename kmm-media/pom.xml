@@ -12,9 +12,13 @@
 
     <artifactId>kmm-media</artifactId>
     <name>KMM Media</name>
-    <description>Liest mit ffprobe die technischen Angaben von Videodateien (Codecs, Auflösung, Spuren).</description>
+    <description>Reads the technical details of video files with ffprobe (codecs, resolution, streams).</description>
 
     <dependencies>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-i18n</artifactId>
+        </dependency>
         <dependency>
             <groupId>de.tiktak.kmm</groupId>
             <artifactId>kmm-nfo</artifactId>

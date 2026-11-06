@@ -1,7 +1,7 @@
 package de.tiktak.kmm.kodi.path;
 
 /**
- * Ordnet ein Verzeichnis aus Sicht von KMM demselben Verzeichnis aus Sicht von Kodi zu, z. B.
+ * Maps a directory as KMM sees it to the same directory as Kodi sees it, e.g.
  * {@code /media/filme -> smb://nas/medien/filme/}.
  */
 public record KodiPathMapping(String localPath, String kodiPath) {

@@ -11,8 +11,8 @@ import java.util.function.Predicate;
 import de.tiktak.kmm.kodi.rpc.KodiPlayback;
 
 /**
- * Findet den Wiedergabestand einer Datei unter tausenden aus Kodi, ohne alle zu durchsuchen. Kodi
- * vergleicht Pfade ohne Rücksicht auf Groß- und Kleinschreibung, der Index ebenso.
+ * Finds the playback state of a file among thousands from Kodi without searching all of them. Kodi compares paths
+ * case-insensitively, and so does the index.
  */
 final class KodiPlaybackIndex {
 
@@ -24,8 +24,8 @@ final class KodiPlaybackIndex {
     }
 
     /**
-     * @param kodiFile Datei aus Sicht von Kodi
-     * @param matches  Prüfung, die den Eintrag eindeutig macht, z. B. Staffel und Episode
+     * @param kodiFile file as Kodi sees it
+     * @param matches  check that makes the entry unique, e.g. season and episode
      */
     Optional<KodiPlayback> find(String kodiFile, Predicate<KodiPlayback> matches) {
         return byFile.getOrDefault(key(kodiFile), List.of()).stream().filter(matches).findFirst();

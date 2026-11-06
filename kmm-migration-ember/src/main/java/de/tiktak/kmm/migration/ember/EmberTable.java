@@ -4,7 +4,7 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Tabellen der Ember-Datenbank (Schema v48), die KMM liest.
+ * Tables of the Ember database (schema v48) that KMM reads.
  */
 @Getter
 @RequiredArgsConstructor

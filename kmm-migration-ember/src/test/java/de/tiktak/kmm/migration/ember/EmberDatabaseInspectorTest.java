@@ -55,7 +55,7 @@ class EmberDatabaseInspectorTest {
 
         assertThatThrownBy(() -> inspector.inspect(databaseFile))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("keine gültige Ember-Datenbank")
+                .hasMessageContaining("is not a valid Ember database")
                 .hasMessageEndingWith("sets, tvshow, episode, moviesource, tvshowsource.");
     }
 
@@ -65,7 +65,7 @@ class EmberDatabaseInspectorTest {
 
         assertThatThrownBy(() -> inspector.inspect(databaseFile))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("kann nicht gelesen werden");
+                .hasMessageContaining("cannot be read");
     }
 
     @Test

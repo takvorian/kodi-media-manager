@@ -75,7 +75,7 @@ class KodiLibrarySchedulerTest {
 
         assertThatThrownBy(() -> scheduler.scan(kodi.endpoint(), DIRECTORY, Duration.ofMillis(20)))
                 .isInstanceOf(KodiException.class)
-                .hasMessage("Kodi liest gerade seine Bibliothek ein. Versuche es danach noch einmal.");
+                .hasMessage("Kodi is currently updating its library. Try again afterwards.");
         assertThat(kodi.methods()).containsOnly(IS_SCANNING);
     }
 
@@ -94,7 +94,7 @@ class KodiLibrarySchedulerTest {
         awaitRepeatedQuestions();
         waiting.interrupt();
 
-        // Die Unterbrechung trifft die Pause oder eine gerade laufende Nachfrage; beide beenden das Warten.
+        // The interrupt hits the pause or a request in progress; both end the waiting.
         assertThat(failure.get(5, TimeUnit.SECONDS)).isInstanceOf(KodiException.class);
         waiting.join(Duration.ofSeconds(5));
         assertThat(waiting.isAlive()).isFalse();
@@ -109,7 +109,7 @@ class KodiLibrarySchedulerTest {
         assertThat(kodi.methods()).doesNotContain("VideoLibrary.Scan");
     }
 
-    /** Eigene Threads: Der gemeinsame Pool hat auf kleinen CI-Rechnern nur einen, den der erste Wartende belegt. */
+    /** Own threads: on small CI machines the common pool has only one, which the first waiter occupies. */
     private CompletableFuture<Void> inBackground(Runnable task) {
         return CompletableFuture.runAsync(task, threads);
     }
@@ -117,7 +117,7 @@ class KodiLibrarySchedulerTest {
     private void awaitRepeatedQuestions() throws InterruptedException {
         long deadline = System.nanoTime() + LONG.toNanos();
         while (kodi.methods().stream().filter(IS_SCANNING::equals).count() < 3) {
-            assertThat(System.nanoTime()).as("Kodi wird wiederholt gefragt").isLessThan(deadline);
+            assertThat(System.nanoTime()).as("Kodi is asked repeatedly").isLessThan(deadline);
             Thread.sleep(5);
         }
     }

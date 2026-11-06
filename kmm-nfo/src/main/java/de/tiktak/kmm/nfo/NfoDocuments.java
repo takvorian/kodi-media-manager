@@ -14,27 +14,27 @@ import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
 /**
- * Gemeinsame DOM-Hilfen für Lesen und Schreiben von NFOs.
+ * Shared DOM helpers for reading and writing NFOs.
  */
 final class NfoDocuments {
 
-    /** Künstliches Element, unter dem mehrere Wurzelelemente einer NFO geparst werden. */
+    /** Artificial element under which several root elements of an NFO are parsed. */
     static final String CONTAINER = "kmm-nfo";
 
     private NfoDocuments() {
     }
 
     /**
-     * Schneidet das {@code <movie>}-Element aus dem Dateiinhalt. Kodi erlaubt davor eine
-     * XML-Deklaration und danach eine URL, die beim Parsen sonst stören würden.
+     * Cuts the {@code <movie>} element out of the file content. Kodi allows an XML declaration before it and a URL
+     * after it, which would otherwise disturb parsing.
      */
     static Optional<String> movieXml(String content) {
         return rootXml(content, NfoElements.MOVIE);
     }
 
     /**
-     * Schneidet alle Elemente des Namens aus dem Dateiinhalt, vom ersten Anfang bis zum letzten Ende.
-     * Mehrfachepisoden enthalten mehrere {@code <episodedetails>} hintereinander.
+     * Cuts all elements of the name out of the file content, from the first start to the last end. Multi-episode
+     * files contain several {@code <episodedetails>} in a row.
      */
     static Optional<String> rootXml(String content, String rootName) {
         String startTag = "<" + rootName;
@@ -47,7 +47,7 @@ final class NfoDocuments {
         return Optional.of(content.substring(start, end + endTag.length()));
     }
 
-    /** Dateiinhalt ohne das {@code <movie>}-Element, z. B. eine angehängte URL. */
+    /** File content without the {@code <movie>} element, e.g. an appended URL. */
     static String outsideMovieXml(String content) {
         return movieXml(content).map(xml -> content.replace(xml, " ")).orElse(content);
     }
@@ -56,12 +56,12 @@ final class NfoDocuments {
         return SecureXml.documentBuilder().parse(new InputSource(new StringReader(xml)));
     }
 
-    /** Parst ein oder mehrere aufeinanderfolgende Elemente unter dem {@link #CONTAINER}. */
+    /** Parses one or more consecutive elements under the {@link #CONTAINER}. */
     static Document parseAll(String xml) throws IOException, SAXException {
         return parse("<" + CONTAINER + ">" + xml + "</" + CONTAINER + ">");
     }
 
-    /** Getrimmter Text des ersten Kind-Elements oder {@code null}, wenn es fehlt oder leer ist. */
+    /** Trimmed text of the first child element, or {@code null} if it is missing or empty. */
     static String text(Element parent, String name) {
         List<Element> elements = children(parent, name);
         if (elements.isEmpty()) {
@@ -71,7 +71,7 @@ final class NfoDocuments {
         return value.isEmpty() ? null : value;
     }
 
-    /** Getrimmte, nicht leere Texte aller Kind-Elemente des Namens. */
+    /** Trimmed, non-empty texts of all child elements of the name. */
     static List<String> texts(Element parent, String name) {
         return children(parent, name).stream()
                 .map(element -> element.getTextContent().strip())
@@ -79,7 +79,7 @@ final class NfoDocuments {
                 .toList();
     }
 
-    /** Direkte Kind-Elemente mit dem Namen, ohne Beachtung der Groß-/Kleinschreibung. */
+    /** Direct child elements with the name, ignoring case. */
     static List<Element> children(Element parent, String name) {
         List<Element> elements = new ArrayList<>();
         NodeList nodes = parent.getChildNodes();

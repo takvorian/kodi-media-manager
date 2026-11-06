@@ -205,7 +205,7 @@
         <h3>{{ 'common.notes' | transloco }}</h3>
         <ul class="warnings">
           @for (warning of result.warnings; track $index) {
-            <li>{{ warning }}</li>
+            <li>{{ warning | localized }}</li>
           }
         </ul>
       }

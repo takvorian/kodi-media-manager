@@ -6,10 +6,10 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Der Filmbestand einer Ember-Datenbank.
+ * The movies of an Ember database.
  *
- * @param excludedDirectories Ordner, die Ember beim Scan überspringt (Windows-Pfade)
- * @param movieLists          eigene Filmlisten aus Embers Filter-Editor
+ * @param excludedDirectories folders Ember skips when scanning (Windows paths)
+ * @param movieLists          custom movie lists from Ember's filter editor
  */
 public record EmberLibrary(
         List<EmberMovieSource> sources,
@@ -26,7 +26,7 @@ public record EmberLibrary(
         movieLists = movieLists == null ? List.of() : List.copyOf(movieLists);
     }
 
-    /** Ein Bestand ohne eigene Filmlisten. */
+    /** A library without custom movie lists. */
     public EmberLibrary(List<EmberMovieSource> sources, List<EmberMovie> movies, List<EmberMovieSet> sets,
             List<String> excludedDirectories) {
         this(sources, movies, sets, excludedDirectories, null);

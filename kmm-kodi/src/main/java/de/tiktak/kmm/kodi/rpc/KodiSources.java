@@ -9,9 +9,11 @@ import java.util.Locale;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Die Videoquellen eines Kodi-Geräts. Ein Scan außerhalb dieser Quellen endet in Kodi ohne Ergebnis und ohne Fehler.
- * Zugangsdaten in den Adressen der Quellen fallen weg, weil die Pfade in Meldungen und im Log erscheinen.
+ * The video sources of a Kodi device. A scan outside these sources ends in Kodi without result and without error.
+ * Credentials in the addresses of the sources are dropped because the paths appear in messages and in the log.
  */
 public final class KodiSources {
 
@@ -25,7 +27,7 @@ public final class KodiSources {
         this.paths = paths;
     }
 
-    /** @param files Quellen, wie Kodi sie liefert, auch zusammengesetzte ({@code multipath://}) und Add-ons */
+    /** @param files sources as Kodi returns them, including combined ones ({@code multipath://}) and add-ons */
     static KodiSources of(Collection<String> files) {
         return new KodiSources(files.stream()
                 .flatMap(KodiSources::singlePaths)
@@ -34,22 +36,27 @@ public final class KodiSources {
                 .toList());
     }
 
-    /** @return ob das Verzeichnis in oder unterhalb einer Quelle liegt */
+    /** @return whether the directory lies in or below a source */
     public boolean contain(String directory) {
         String wanted = comparable(directory);
         return paths.stream().map(KodiSources::comparable).anyMatch(wanted::startsWith);
     }
 
-    /** @return ob der Pfad in einer Quelle liegt oder eine Quelle enthält; eine Pfad-Zuordnung darf breiter sein */
+    /** @return whether the path lies in a source or contains one; a path mapping may be wider */
     public boolean overlap(String path) {
         String wanted = comparable(path);
         return contain(path) || paths.stream().map(KodiSources::comparable).anyMatch(source -> source.startsWith(wanted));
     }
 
-    /** @return die Quellen für eine Meldung */
+    /** @return the sources for a message, a translatable "none" if there are none */
+    public LocalizedText describe() {
+        return paths.isEmpty() ? LocalizedText.of("kodiRpc.noSources") : LocalizedText.literal(toString());
+    }
+
+    /** @return the sources separated by commas, empty if there are none */
     @Override
     public String toString() {
-        return paths.isEmpty() ? "keine" : String.join(", ", paths);
+        return String.join(", ", paths);
     }
 
     private static Stream<String> singlePaths(String file) {
@@ -61,7 +68,7 @@ public final class KodiSources {
                 .map(part -> URLDecoder.decode(part, StandardCharsets.UTF_8));
     }
 
-    /** Kodi vergleicht Pfade nicht einheitlich; die Prüfung soll nur eindeutig falsche Pfade melden. */
+    /** Kodi does not compare paths consistently; the check is only meant to report clearly wrong paths. */
     private static String comparable(String path) {
         String normalized = CREDENTIALS.matcher(path).replaceFirst("$1").replace('\\', '/').toLowerCase(Locale.ROOT);
         return normalized.endsWith("/") ? normalized : normalized + "/";

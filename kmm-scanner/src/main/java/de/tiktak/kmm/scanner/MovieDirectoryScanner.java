@@ -24,8 +24,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Durchsucht ein Quellverzeichnis rekursiv nach Filmen. Erkennt Einzeldateien, mehrteilige Filme
- * ({@code cd1}/{@code cd2}), DVD- und Blu-ray-Ordner und überspringt Extras, Trailer und Samples.
+ * Searches a source directory recursively for movies. Recognizes single files, multi-part movies
+ * ({@code cd1}/{@code cd2}), DVD and Blu-ray folders and skips extras, trailers and samples.
  */
 @Slf4j
 @RequiredArgsConstructor
@@ -46,18 +46,18 @@ public class MovieDirectoryScanner {
     private final MovieNameParser nameParser;
 
     /**
-     * @throws UncheckedIOException wenn das Verzeichnis nicht gelesen werden kann
+     * @throws UncheckedIOException if the directory cannot be read
      */
     public List<MovieCandidate> scan(Path root) {
         return scan(root, (directories, scan) -> directories.stream().map(scan).toList());
     }
 
     /**
-     * Durchsucht die Dateien direkt in der Wurzel selbst und jeden Unterordner der Wurzel mit
-     * {@code subtrees}, z. B. parallel. Ein Unterordner liefert dasselbe wie im Durchlauf über alles,
-     * denn mehrteilige Filme liegen immer in einem Ordner.
+     * Searches the files directly in the root itself and each subfolder of the root with {@code subtrees}, e.g. in
+     * parallel. A subfolder yields the same as in a pass over everything, because multi-part movies always lie in
+     * one folder.
      *
-     * @throws UncheckedIOException wenn das Verzeichnis nicht gelesen werden kann
+     * @throws UncheckedIOException if the directory cannot be read
      */
     public List<MovieCandidate> scan(Path root, SubtreeScanner subtrees) {
         Objects.requireNonNull(root, "root must not be null");
@@ -79,11 +79,11 @@ public class MovieDirectoryScanner {
         return visitor;
     }
 
-    /** Strategie, mit der die Unterordner der Wurzel durchsucht werden. */
+    /** Strategy used to search the subfolders of the root. */
     @FunctionalInterface
     public interface SubtreeScanner {
 
-        /** @return die Ergebnisse von {@code scan} für jeden Ordner, in beliebiger Reihenfolge */
+        /** @return the results of {@code scan} for each folder, in any order */
         List<List<MovieCandidate>> scanAll(List<Path> directories, Function<Path, List<MovieCandidate>> scan);
     }
 
@@ -93,7 +93,7 @@ public class MovieDirectoryScanner {
         private final List<MovieCandidate> discs = new ArrayList<>();
         private final List<MovieCandidate> singleFiles = new ArrayList<>();
         private final Map<String, List<StackPart>> stacks = new LinkedHashMap<>();
-        /** Ordner unterhalb der größten Tiefe; bei Tiefe 1 die Unterordner der Wurzel. */
+        /** Folders below the maximum depth; for depth 1 the subfolders of the root. */
         private final List<Path> subdirectories = new ArrayList<>();
 
         private CollectingVisitor(Path root) {
@@ -180,7 +180,7 @@ public class MovieDirectoryScanner {
                     .toList();
         }
 
-        /** Nur für den einzigen Film eines Ordners: Bei mehreren wäre unklar, zu welchem der Name gehört. */
+        /** Only for the single movie of a folder: with several it would be unclear which one the name belongs to. */
         private MovieCandidate withDirectoryName(MovieCandidate candidate) {
             Path directory = candidate.file().getParent();
             if (directory.equals(root)) {

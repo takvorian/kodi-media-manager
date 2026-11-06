@@ -1044,13 +1044,94 @@
     "backup": {
       "import": {
         "title": "Restore backup",
-        "dryRunTitle": "Restore backup (dry run)"
+        "dryRunTitle": "Restore backup (dry run)",
+        "progress": "Taking over data",
+        "safetyCopy": "Backing up the current state"
+      },
+      "unusable": {
+        "title": "Backup not usable"
+      },
+      "uploadMissing": "Please upload a backup first.",
+      "invalidFile": "The file is not a valid KMM backup.",
+      "invalidId": "The backup contains an invalid ID: {id}",
+      "invalidValue": "The backup contains an invalid value: {value}",
+      "newerVersion": "The backup comes from a newer KMM version. Please update KMM first.",
+      "newerVersionOf": "The backup comes from a newer KMM version ({version}). Please update KMM first.",
+      "importFailed": "The import failed, nothing was changed: {reason}",
+      "pathInvalid": "“{path}” is not a valid path on this system.",
+      "pathNotAbsolute": "“{path}” is not an absolute path on this system. Under Docker it starts with /media, for example.",
+      "warning": {
+        "sourceNameTaken": "The source “{name}” ({path}) was skipped with its content: the name is already taken.",
+        "sourceOverlaps": "The source “{name}” ({path}) was skipped with its content: it overlaps with “{other}”.",
+        "sourcePathInvalid": "The path {path} of the source “{name}” is invalid on this system.",
+        "sourceUnreachable": "The directory {path} of the source “{name}” cannot be reached at the moment."
       }
     },
     "migration": {
       "import": {
         "title": "Ember import",
-        "dryRunTitle": "Ember import (dry run)"
+        "dryRunTitle": "Ember import (dry run)",
+        "reading": "Reading the Ember database"
+      },
+      "invalidProfile": {
+        "title": "Invalid Ember profile"
+      },
+      "upload": {
+        "importRunning": "An Ember import is running. Please wait until it has finished.",
+        "noDatabase": "The uploaded files contain no Ember database.",
+        "missing": "Please upload the Ember profile first.",
+        "foreignFile": "“{name}” does not belong to an Ember profile."
+      },
+      "warning": {
+        "kodiHostsUnreadable": "The Kodi devices could not be read: {reason}",
+        "settingsUnreadable": "The Ember settings could not be read: {reason}",
+        "renameSettingsUnreadable": "The settings for renaming could not be read: {reason}",
+        "kodiHostWithoutAddress": "A Kodi device without an address was not imported.",
+        "kodiMappingMissing": "Kodi device “{host}”: there is no path mapping for {local}; this mapping to {remote} is missing.",
+        "invalidPath": "“{title}” was skipped, the path is invalid on this system: {path}",
+        "severalSets": "“{title}” belongs to several sets in Ember; the first one was imported.",
+        "movieListNotTranslated": "The Ember movie list “{name}” was not imported, its conditions cannot be translated: {conditions}",
+        "sourceUnreachable": "The directory {directory} of the source “{name}” cannot be reached at the moment.",
+        "episodeMismatch": "{path} was skipped: Ember says {ember}, but the file name says {file}."
+      },
+      "sourceSkipped": {
+        "notMapped": "{name} ({path}): no valid path mapping on this system",
+        "conflict": "{name} ({path}): {reason}"
+      },
+      "settings": {
+        "movieList": "Movie list “{name}” imported as filter",
+        "metadataLanguage": "Language of the metadata: {value}",
+        "artworkLanguage": "Preferred image language: {value}",
+        "videoExtensions": "Video file extensions: {value}",
+        "excludedPaths": "Excluded folders: {value}",
+        "tvMetadataLanguage": "Language of the TV show metadata: {value}",
+        "tvArtworkLanguage": "Preferred image language for TV shows: {value}",
+        "episodeOrdering": "Episode order: {value}",
+        "proxy": "Proxy: {host}:{port}{withUser, select, true { (please enter the password in the settings)} other {}}",
+        "folderNotMapped": "Folder for “{label}” not imported: “{ember}” matches no path mapping.",
+        "folder": "Folder for “{label}”: {folder}",
+        "storageOff": "“{label}” stays off because the folder is missing.",
+        "patternNotTranslated": "Pattern for “{label}” not imported: “{ember}” cannot be translated, “{current}” remains.",
+        "pattern": "Pattern for “{label}”: {pattern} (Ember: {ember})",
+        "flag": "{label}: {value}",
+        "yes": "yes",
+        "no": "no",
+        "label": {
+          "movieFolder": "Movie folders",
+          "movieFile": "Movie files",
+          "tvShowFolder": "TV show folders",
+          "seasonFolder": "Season folders",
+          "episodeFile": "Episode files",
+          "movieOnEdit": "Rename movies after editing",
+          "movieOnScrape": "Rename movies after scraping",
+          "tvOnEdit": "Rename episodes after editing",
+          "tvOnScrape": "Rename TV shows after scraping",
+          "episodesOnScan": "Rename new episodes when scanning",
+          "flatImages": "Set images in the flat scheme",
+          "kodiImages": "Set images in Kodi's set folders",
+          "assignOnScrape": "Assign movies to their movie set when scraping",
+          "metaDataScan": "Read technical details when scraping"
+        }
       }
     },
     "job": {
@@ -1062,6 +1143,104 @@
       "notFound": {
         "title": "Job not found",
         "detail": "There is no job with the ID {id}."
+      }
+    },
+    "kodiRpc": {
+      "unauthorized": "Kodi at {address} rejects the user name or password.",
+      "httpStatus": "Kodi at {address} answers with HTTP status {status}.",
+      "error": "Kodi reports an error for {method}: {message} ({code}).",
+      "timeout": "Kodi at {address} does not answer in time.",
+      "interrupted": "The request to Kodi was interrupted.",
+      "unreachable": "Kodi at {address}:{port} cannot be reached. Is Kodi running, and is “Allow remote control via HTTP” enabled?",
+      "invalidResponse": "The answer from {address} is not a valid Kodi response.",
+      "libraryBusy": "Kodi is currently updating its library. Try again afterwards.",
+      "waitInterrupted": "Waiting for Kodi was cancelled.",
+      "noSources": "none"
+    },
+    "ember": {
+      "directoryNotFound": "The directory “{directory}” does not exist.",
+      "databaseNotFound": "No Ember database (MyVideos*.emm) was found in the directory “{directory}”.",
+      "unsupportedSchemaVersion": "The Ember database has schema version {found}, only version {supported} is supported. Please open the profile once with the latest Ember version so that Ember updates the database.",
+      "missingTables": "The file “{file}” is not a valid Ember database, these tables are missing: {tables}.",
+      "databaseUnreadable": "The Ember database “{file}” cannot be read.",
+      "kodiSettingsUnreadable": "The Ember settings for Kodi “{file}” cannot be read.",
+      "settingsUnreadable": "The Ember settings “{file}” cannot be read."
+    },
+    "media": {
+      "ffprobe": {
+        "notStartable": "ffprobe cannot be started (“{executable}”). Is it installed and is the path set correctly?",
+        "failed": "ffprobe cannot read “{input}”: {detail}",
+        "unintelligibleOutput": "ffprobe cannot read “{input}”: unintelligible output",
+        "timedOut": "ffprobe took too long for “{input}”."
+      },
+      "unreadable": "“{path}” cannot be read.",
+      "noStreams": "“{input}” contains no recognizable streams."
+    },
+    "nfo": {
+      "unreadable": "The NFO file “{file}” cannot be read.",
+      "missingEntry": "The NFO file “{file}” is missing or does not contain the entry.",
+      "unwritable": "The NFO file “{file}” cannot be written."
+    },
+    "scanner": {
+      "pattern": {
+        "empty": "The pattern is empty.",
+        "invalid": "{problem} (position {position}).",
+        "unmatched": "“{found}” without matching “{missing}”",
+        "nestedOptional": "Optional parts cannot be nested",
+        "unknownPlaceholder": "Unknown placeholder “{placeholder}”",
+        "unknownFormat": "Unknown format “{format}” for “{placeholder}”"
+      },
+      "folderExists": "The folder “{folder}” already exists."
+    },
+    "kodi": {
+      "hostNotFound": {
+        "title": "Kodi device not found",
+        "detail": "There is no Kodi device with the ID {id}."
+      },
+      "nameTaken": {
+        "title": "Name already taken",
+        "detail": "There already is a Kodi device named “{name}”."
+      },
+      "noHostFor": {
+        "title": "No matching Kodi device",
+        "detail": "No Kodi device has a path mapping for {path}."
+      },
+      "noHosts": {
+        "title": "No Kodi device",
+        "detail": "No Kodi device is set up."
+      },
+      "unavailable": {
+        "title": "Kodi cannot be reached"
+      },
+      "noHostLeft": {
+        "detail": "Skipped because no Kodi device answers any more."
+      },
+      "refreshFailed": {
+        "title": "Not updated"
+      },
+      "hostProblem": "{host}: {message}",
+      "problems": "{first}; {rest}",
+      "host": {
+        "noSourceWarning": "Kodi has no source for {paths}. Check the path mapping. Sources in Kodi: {sources}."
+      },
+      "sync": {
+        "refreshed": "“{title}” updated.",
+        "scanUnknown": "“{title}” is not yet known to Kodi; Kodi is scanning {directory}.",
+        "noSource": "Kodi has no source for {directory} and will probably find nothing there. Check the path mapping of “{host}”. Sources in Kodi: {sources}.",
+        "renamed": "Kodi is scanning {directory} and removes the old entries from {previous}.",
+        "setNotInKodi": "The movie set “{name}” is not yet known to Kodi.",
+        "setUpdated": "Movie set “{name}” updated.",
+        "scanSource": "{kind, select, tvShow {Kodi is looking for new TV shows and episodes in {directory}.} other {Kodi is looking for new movies in {directory}.}}",
+        "notMapped": "No path mapping for {path}."
+      },
+      "playback": {
+        "jobTitle": "Watched status of “{source}” from Kodi",
+        "querying": "Querying Kodi",
+        "notInKodi": "“{label}” is not known to Kodi.",
+        "unchanged": "“{label}” is already up to date with Kodi.",
+        "kept": "“{label}”: KMM knows more than Kodi, its state is kept.",
+        "failed": "“{label}”: {reason}",
+        "updated": "“{label}” taken over from Kodi: {playCount, plural, =0 {not watched} other {watched #×}}{rating, select, none {} other {, rating {rating}}}."
       }
     }
   }

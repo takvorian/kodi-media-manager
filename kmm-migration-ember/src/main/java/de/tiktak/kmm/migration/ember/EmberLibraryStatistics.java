@@ -1,7 +1,7 @@
 package de.tiktak.kmm.migration.ember;
 
 /**
- * Umfang einer Ember-Bibliothek, wie er vor einer Migration angezeigt wird.
+ * Size of an Ember library as shown before a migration.
  */
 public record EmberLibraryStatistics(
         long movies,

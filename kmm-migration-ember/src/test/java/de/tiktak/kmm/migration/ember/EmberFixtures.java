@@ -13,7 +13,7 @@ import java.sql.Statement;
 import java.util.Arrays;
 
 /**
- * Erzeugt Ember-Profile für Tests aus den Fixtures unter {@code src/test/resources/ember}.
+ * Creates Ember profiles for tests from the fixtures under {@code src/test/resources/ember}.
  */
 public final class EmberFixtures {
 
@@ -59,7 +59,7 @@ public final class EmberFixtures {
         return copy(FIXTURE_SETTINGS, directory.resolve(EmberProfileDetector.SETTINGS_FILE_NAME));
     }
 
-    /** Zwei Kodi-Geräte: „Wohnzimmer“ mit Zugangsdaten und Pfad-Zuordnungen, ein zweites ohne Namen. */
+    /** Two Kodi devices: "Wohnzimmer" with credentials and path mappings, a second one without a name. */
     public static Path copyKodiSettings(Path directory) {
         return copy(FIXTURE_KODI_SETTINGS, directory.resolve(KODI_SETTINGS_FILE_NAME));
     }

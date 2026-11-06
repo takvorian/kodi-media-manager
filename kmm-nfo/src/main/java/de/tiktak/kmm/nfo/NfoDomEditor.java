@@ -9,8 +9,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 /**
- * Ersetzt Kind-Elemente eines NFO-Wurzelelements ({@code <movie>}, {@code <tvshow>} …). Neue Elemente
- * landen an der Position der bisherigen, damit die Reihenfolge einer vorhandenen NFO erhalten bleibt.
+ * Replaces child elements of an NFO root element ({@code <movie>}, {@code <tvshow>} …). New elements end up at the
+ * position of the previous ones, so the order of an existing NFO is kept.
  */
 final class NfoDomEditor {
 
@@ -19,7 +19,7 @@ final class NfoDomEditor {
     private NfoDomEditor() {
     }
 
-    /** Ersetzt das erste Element des Namens oder legt es an; {@code null} oder leer entfernt alle. */
+    /** Replaces the first element of the name or creates it; {@code null} or empty removes all of them. */
     static void setText(Document document, Element parent, String name, String value) {
         List<Element> existing = NfoDocuments.children(parent, name);
         if (value == null || value.isBlank()) {
@@ -31,12 +31,12 @@ final class NfoDomEditor {
         existing.stream().skip(1).forEach(parent::removeChild);
     }
 
-    /** Ersetzt alle Elemente des Namens durch je ein Element pro Wert. */
+    /** Replaces all elements of the name with one element per value. */
     static void setTexts(Document document, Element parent, String name, List<String> values) {
         replaceAll(parent, name, values.stream().map(value -> textElement(document, name, value)).toList());
     }
 
-    /** Ersetzt alle Elemente des Namens durch die übergebenen Elemente. */
+    /** Replaces all elements of the name with the given elements. */
     static void replaceAll(Element parent, String name, List<Element> replacements) {
         List<Element> existing = NfoDocuments.children(parent, name);
         Node position = existing.isEmpty() ? null : existing.getFirst();
@@ -56,7 +56,7 @@ final class NfoDomEditor {
         return element;
     }
 
-    /** Ersetzt die IDs; die erste gilt als Standard-ID. */
+    /** Replaces the IDs; the first one is the default ID. */
     static void setUniqueIds(Document document, Element parent, Map<String, String> uniqueIds) {
         List<Element> elements = new ArrayList<>();
         for (Map.Entry<String, String> id : uniqueIds.entrySet()) {

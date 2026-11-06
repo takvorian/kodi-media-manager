@@ -5,11 +5,12 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Optional;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.migration.ember.path.PathMapper;
 import de.tiktak.kmm.migration.ember.path.PathMappingRule;
 
 /**
- * Schreibt Pfade aus der Sicherung mit der Pfad-Zuordnung um. Pfade ohne passende Regel bleiben unverändert.
+ * Rewrites paths from the backup with the path mapping. Paths without a matching rule stay unchanged.
  */
 final class BackupPaths {
 
@@ -23,7 +24,7 @@ final class BackupPaths {
     }
 
     /**
-     * @throws BackupFileException wenn ein Ziel auf diesem System kein absoluter Pfad ist
+     * @throws BackupFileException if a target is not an absolute path on this system
      */
     static BackupPaths of(List<BackupImportRequest.PathMapping> mappings) {
         mappings.forEach(mapping -> requireAbsolute(mapping.to()));
@@ -47,7 +48,7 @@ final class BackupPaths {
         try {
             return Path.of(target).normalize().toString();
         } catch (InvalidPathException e) {
-            throw new BackupFileException("„%s“ ist auf diesem System kein gültiger Pfad.".formatted(target), e);
+            throw new BackupFileException(LocalizedText.of("backup.pathInvalid").with("path", target), e);
         }
     }
 
@@ -67,7 +68,6 @@ final class BackupPaths {
     }
 
     private static BackupFileException notAbsolute(String target, Throwable cause) {
-        return new BackupFileException("„%s“ ist auf diesem System kein absoluter Pfad. Unter Docker beginnt er zum "
-                .formatted(target) + "Beispiel mit /media.", cause);
+        return new BackupFileException(LocalizedText.of("backup.pathNotAbsolute").with("path", target), cause);
     }
 }

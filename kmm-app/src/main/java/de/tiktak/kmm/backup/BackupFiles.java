@@ -10,6 +10,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.stream.Stream;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
@@ -19,8 +20,8 @@ import org.springframework.web.multipart.MultipartFile;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Verwaltet die Dateien der Sicherung unter {@code ${kmm.home}/backup}. Exporte und Uploads können Zugangsdaten
- * enthalten; Reste eines abgebrochenen Ablaufs löscht deshalb der nächste Start.
+ * Manages the backup files under {@code ${kmm.home}/backup}. Exports and uploads may contain credentials; the next
+ * start therefore deletes leftovers of an aborted run.
  */
 @Slf4j
 @Component
@@ -44,7 +45,7 @@ class BackupFiles {
         this.clock = clock;
     }
 
-    /** Ersetzt die hochgeladene Datei; es gibt nur eine zur Zeit. */
+    /** Replaces the uploaded file; there is only one at a time. */
     void storeUpload(MultipartFile file) {
         try {
             Files.createDirectories(directory);
@@ -56,12 +57,12 @@ class BackupFiles {
     }
 
     /**
-     * @throws BackupFileException wenn keine Datei hochgeladen ist
+     * @throws BackupFileException if no file is uploaded
      */
     Path upload() {
         Path upload = directory.resolve(UPLOAD_NAME);
         if (!Files.isRegularFile(upload)) {
-            throw new BackupFileException("Bitte zuerst eine Sicherung hochladen.");
+            throw new BackupFileException(LocalizedText.of("backup.uploadMissing"));
         }
         return upload;
     }
@@ -74,7 +75,7 @@ class BackupFiles {
         }
     }
 
-    /** Datei für den Stand vor einem Import; ältere räumt {@link #pruneSafetyCopies()} auf. */
+    /** File for the state before an import; {@link #pruneSafetyCopies()} cleans up older ones. */
     Path newSafetyCopy() {
         try {
             Files.createDirectories(directory);
@@ -85,7 +86,7 @@ class BackupFiles {
         return directory.resolve(SAFETY_PREFIX + time + SAFETY_SUFFIX);
     }
 
-    /** Der Name enthält die Zeit, die neuesten stehen also alphabetisch hinten. */
+    /** The name contains the time, so the newest ones come last alphabetically. */
     void pruneSafetyCopies() {
         try (Stream<Path> files = Files.list(directory)) {
             List<Path> copies = files

@@ -1,10 +1,10 @@
 package de.tiktak.kmm.migration.ember.settings;
 
 /**
- * Proxy-Konfiguration aus Ember. Das Passwort wird bewusst nicht übernommen, weil Ember es nicht
- * portabel speichert.
+ * Proxy configuration from Ember. The password is deliberately not imported because Ember does not store it
+ * portably.
  *
- * @param username Benutzername oder {@code null}, wenn der Proxy ohne Anmeldung arbeitet
+ * @param username user name, or {@code null} if the proxy works without login
  */
 public record EmberProxySettings(String uri, int port, String username) {
 }

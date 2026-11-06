@@ -1,14 +1,14 @@
 package de.tiktak.kmm.media;
 
 /**
- * Ruft ffprobe für eine Eingabe auf und liefert dessen JSON-Ausgabe.
+ * Calls ffprobe for an input and returns its JSON output.
  */
 @FunctionalInterface
 public interface ProbeRunner {
 
     /**
-     * @param input Pfad einer Datei oder eine ffmpeg-Eingabe wie {@code concat:a.vob|b.vob}
-     * @throws MediaProbeException wenn ffprobe fehlt, scheitert oder zu lange braucht
+     * @param input path of a file or an ffmpeg input such as {@code concat:a.vob|b.vob}
+     * @throws MediaProbeException if ffprobe is missing, fails or takes too long
      */
     String run(String input);
 }

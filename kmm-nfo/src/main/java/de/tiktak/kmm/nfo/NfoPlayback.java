@@ -3,12 +3,11 @@ package de.tiktak.kmm.nfo;
 import java.time.LocalDateTime;
 
 /**
- * Wiedergabestand und eigene Bewertung eines Films oder einer Episode, wie sie Kodi in seiner Bibliothek
- * führt.
+ * Playback state and own rating of a movie or an episode, as Kodi keeps them in its library.
  *
- * @param playCount  Anzahl der Wiedergaben oder {@code null}, um die Angabe zu entfernen
- * @param lastPlayed letzte Wiedergabe oder {@code null}, um die Angabe zu entfernen
- * @param userRating eigene Bewertung 1–10 oder {@code null}, um die vorhandene Angabe zu behalten
+ * @param playCount  number of playbacks, or {@code null} to remove the entry
+ * @param lastPlayed last playback, or {@code null} to remove the entry
+ * @param userRating own rating 1–10, or {@code null} to keep the existing entry
  */
 public record NfoPlayback(Integer playCount, LocalDateTime lastPlayed, Integer userRating) {
 }

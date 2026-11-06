@@ -39,7 +39,7 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Export der Sicherung Ende zu Ende.
+ * Backup export end to end.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

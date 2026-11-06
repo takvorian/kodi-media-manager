@@ -22,6 +22,7 @@ import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.assertj.MockMvcTester;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
 import de.tiktak.kmm.kodi.rpc.KodiVersion;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
@@ -107,9 +108,13 @@ class KodiHostControllerTest {
     @Test
     void reportsPathMappingProblemsOfTheConnectionTest() {
         when(hostService.testConnection(3)).thenReturn(new KodiVersion("Kodi", 21, 2));
-        when(hostService.pathMappingWarning(3)).thenReturn(Optional.of("Keine Quelle."));
+        when(hostService.pathMappingWarning(3)).thenReturn(Optional.of(LocalizedText.of("kodi.host.noSourceWarning")
+                .with("paths", "a:\\serien").with("sources", LocalizedText.of("kodiRpc.noSources"))));
 
         assertThat(mockMvc.post().uri(KodiHostController.BASE_PATH + "/3/test").with(csrf()))
-                .hasStatusOk().bodyJson().isLenientlyEqualTo("{\"version\": \"Kodi 21.2\", \"warning\": \"Keine Quelle.\"}");
+                .hasStatusOk().bodyJson().isLenientlyEqualTo("""
+                        {"version": "Kodi 21.2", "warning": {"key": "kodi.host.noSourceWarning",
+                         "args": {"paths": "a:\\\\serien", "sources": {"key": "kodiRpc.noSources", "args": {}}}}}
+                        """);
     }
 }

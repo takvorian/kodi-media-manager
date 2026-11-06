@@ -13,7 +13,12 @@ import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
-import { KodiPlaybackResult, kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
+import {
+  KodiPlaybackResult,
+  kodiPlaybackMessage,
+  kodiSyncSnackBarConfig,
+  kodiSyncSummary,
+} from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
@@ -255,7 +260,7 @@ export class MovieDetail {
       next: (result) => {
         this.importingPlayback.set(false);
         this.showPlayback(result);
-        this.notify(`${result.host}: ${result.message}`);
+        this.notify(kodiPlaybackMessage(result));
       },
       error: (error: unknown) => {
         this.importingPlayback.set(false);

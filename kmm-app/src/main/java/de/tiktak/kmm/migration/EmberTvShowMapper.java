@@ -18,7 +18,7 @@ import de.tiktak.kmm.tvshow.TvShowImport;
 import de.tiktak.kmm.tvshow.TvShowMetadata;
 
 /**
- * Übersetzt Serien und Episoden aus Ember in KMM-Importe.
+ * Translates TV shows and episodes from Ember into KMM imports.
  */
 final class EmberTvShowMapper {
 
@@ -31,7 +31,7 @@ final class EmberTvShowMapper {
     }
 
     /**
-     * @param directoryPath Ordner der Serie im Zielsystem
+     * @param directoryPath folder of the TV show on the target system
      */
     static TvShowImport toImport(EmberTvShow show, long sourceId, String directoryPath) {
         TvShowMetadata metadata = new TvShowMetadata(
@@ -56,8 +56,8 @@ final class EmberTvShowMapper {
     }
 
     /**
-     * @param filePath Pfad der Episodendatei im Zielsystem
-     * @param zone     Zeitzone, in der Ember lief; Ember speichert Zeitpunkte als lokale Uhrzeit
+     * @param filePath path of the episode file on the target system
+     * @param zone     time zone Ember ran in; Ember stores points in time as local time
      */
     static EpisodeImport toImport(EmberEpisode episode, String filePath, ZoneId zone) {
         EpisodeMetadata metadata = new EpisodeMetadata(
@@ -83,7 +83,7 @@ final class EmberTvShowMapper {
                 EmberMappings.toInstant(episode.dateAdded(), zone));
     }
 
-    /** Name einer Serie für Berichte. */
+    /** Name of a TV show for reports. */
     static String displayName(EmberTvShow show) {
         return show.title() != null ? show.title() : show.path();
     }

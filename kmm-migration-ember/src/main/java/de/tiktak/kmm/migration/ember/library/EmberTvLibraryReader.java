@@ -18,8 +18,8 @@ import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberActor;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
 
 /**
- * Liest den Serienbestand einer Ember-Datenbank (Schema v48). Episoden ohne Datei kennt Ember nur
- * aus der Online-Suche; sie werden gezählt, aber nicht übernommen.
+ * Reads the TV shows of an Ember database (schema v48). Ember only knows episodes without a file from the online
+ * search; they are counted but not imported.
  */
 public class EmberTvLibraryReader {
 
@@ -91,7 +91,7 @@ public class EmberTvLibraryReader {
         }
     }
 
-    /** Nur die Serienquellen, z. B. um Pfad-Zuordnungen vorzuschlagen. */
+    /** Only the TV show sources, e.g. to suggest path mappings. */
     public List<EmberTvShowSource> readSources(Path databaseFile) {
         try (Connection connection = EmberDatabases.openReadOnly(databaseFile)) {
             return sources(connection);
@@ -154,7 +154,7 @@ public class EmberTvLibraryReader {
         return titles;
     }
 
-    /** Liest die Episoden mit Datei in {@code target} und liefert die Zahl der Episoden ohne Datei. */
+    /** Reads the episodes with a file into {@code target} and returns the number of episodes without a file. */
     private int episodes(Connection connection, List<EmberEpisode> target) throws SQLException {
         Map<Long, Map<String, String>> uniqueIds = EmberQueries.uniqueIds(connection, EPISODE_UNIQUE_IDS, EPISODE_ID);
         Map<Long, List<EmberActor>> actors = EmberQueries.grouped(connection, EPISODE_ACTORS, EPISODE_ID,
@@ -199,7 +199,7 @@ public class EmberTvLibraryReader {
         return withoutFile[0];
     }
 
-    /** Ältere Einträge haben die IDs nur in den Spalten der Serien- bzw. Episodentabelle. */
+    /** Older entries have the IDs only in the columns of the TV show or episode table. */
     private static Map<String, String> withColumnIds(Map<String, String> uniqueIds, ResultSet row, String tvdbColumn)
             throws SQLException {
         Map<String, String> ids = new LinkedHashMap<>(uniqueIds);

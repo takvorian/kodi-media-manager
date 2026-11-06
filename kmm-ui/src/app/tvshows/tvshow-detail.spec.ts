@@ -285,7 +285,7 @@ describe('TvShowDetail', () => {
         hostId: 1,
         host: 'Wohnzimmer',
         outcome: 'REFRESHED',
-        message: '„ALF“ aktualisiert.',
+        message: literal('„ALF“ aktualisiert.'),
         at: '',
       },
     ]);

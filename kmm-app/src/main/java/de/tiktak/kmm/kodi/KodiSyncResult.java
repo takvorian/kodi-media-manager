@@ -2,13 +2,15 @@ package de.tiktak.kmm.kodi;
 
 import java.time.Instant;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis eines Abgleichs mit einem Kodi-Gerät.
+ * Result of a sync with a Kodi device.
  *
- * @param host    Name des Geräts
- * @param message lesbare Beschreibung für die Oberfläche
+ * @param host    name of the device
+ * @param message readable description for the user interface
  */
-public record KodiSyncResult(long hostId, String host, KodiSyncOutcome outcome, String message, Instant at) {
+public record KodiSyncResult(long hostId, String host, KodiSyncOutcome outcome, LocalizedText message, Instant at) {
 
     boolean failed() {
         return outcome == KodiSyncOutcome.FAILED || outcome == KodiSyncOutcome.NOT_MAPPED

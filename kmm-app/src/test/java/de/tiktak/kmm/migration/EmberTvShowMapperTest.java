@@ -47,17 +47,17 @@ class EmberTvShowMapperTest {
         assertThat(imported.sourceId()).isEqualTo(5);
         assertThat(imported.directoryPath()).isEqualTo(DIRECTORY);
         assertThat(imported.metadata().title()).isEqualTo("Lost");
-        assertThat(imported.metadata().year()).as("folgt aus der Erstausstrahlung").isNull();
+        assertThat(imported.metadata().year()).as("follows from the first air date").isNull();
         assertThat(imported.metadata().premiered()).isEqualTo(LocalDate.of(2004, 9, 22));
         assertThat(imported.metadata().mpaa()).isEqualTo("FSK 16");
         assertThat(imported.metadata().status()).isEqualTo("Ended");
         assertThat(imported.metadata().tvdbId()).isEqualTo("73739");
         assertThat(imported.metadata().tmdbId()).isEqualTo("4607");
         assertThat(imported.metadata().imdbId()).isEqualTo("tt0411008");
-        assertThat(imported.metadata().userRating()).as("außerhalb der Skala").isNull();
+        assertThat(imported.metadata().userRating()).as("outside the scale").isNull();
         assertThat(imported.metadata().genres()).containsExactly("Drama");
         assertThat(imported.extras().actors()).containsExactly(new TvActor("Matthew Fox", "Jack", null));
-        assertThat(imported.extras().ratings()).as("Bewertungen ohne Wert entfallen")
+        assertThat(imported.extras().ratings()).as("ratings without a value are dropped")
                 .containsExactly(new TvRating("imdb", 8.3, 10, 500, true));
         assertThat(imported.extras().seasonNames()).containsExactlyEntriesOf(Map.of(0, "Specials"));
     }
@@ -94,7 +94,7 @@ class EmberTvShowMapperTest {
         assertThat(imported.metadata().title()).isEqualTo("Pilot");
         assertThat(imported.metadata().runtime()).isEqualTo(42);
         assertThat(imported.metadata().tvdbId()).isEqualTo("127131");
-        assertThat(imported.metadata().imdbId()).as("ungültige ID entfällt").isNull();
+        assertThat(imported.metadata().imdbId()).as("an invalid ID is dropped").isNull();
         assertThat(imported.metadata().userRating()).isEqualTo(9);
         assertThat(imported.extras().directors()).containsExactly("Jack Bender");
         assertThat(imported.extras().writers()).containsExactly("J. J. Abrams");

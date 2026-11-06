@@ -1,3 +1,5 @@
+import { LocalizedText } from '../i18n/localized-text';
+
 const DATABASE_FILE = /^MyVideos(\d+)\.emm$/i;
 const SETTINGS_FILES = new Set(['Settings.xml', 'AdvancedSettings.xml', 'Interface.Kodi.xml']);
 const DEFAULT_PROFILE = /(^|\/)Profiles\/Default$/;
@@ -120,8 +122,9 @@ export interface EmberImportReport {
   readonly tvShows: EmberTvShowsReport;
   readonly kodiHostsCreated: number;
   readonly kodiHostsUpdated: number;
-  readonly settingsChanges: readonly string[];
-  readonly skippedSources: readonly string[];
+  readonly settingsChanges: readonly LocalizedText[];
+  readonly skippedSources: readonly LocalizedText[];
+  /** Names of the movies, not translated. */
   readonly missingFiles: readonly string[];
-  readonly warnings: readonly string[];
+  readonly warnings: readonly LocalizedText[];
 }

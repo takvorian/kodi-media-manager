@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -29,7 +30,7 @@ class NamePatternTest {
         assertThat(render("{title}[ ({year})][.{source}]")).containsExactly("Heat (1995)");
         values.put("source", "bluray");
         assertThat(render("{title}[.{source}]")).containsExactly("Heat.bluray");
-        assertThat(render("{title}[ - {edition} ({year})]")).as("ein leerer Platzhalter genügt")
+        assertThat(render("{title}[ - {edition} ({year})]")).as("one empty placeholder is enough")
                 .containsExactly("Heat");
     }
 
@@ -93,19 +94,29 @@ class NamePatternTest {
 
     @ParameterizedTest
     @CsvSource(delimiter = '|', value = {
-        "''|Das Muster ist leer.",
-        "{title|„{“ ohne passendes „}“ (Stelle 1).",
-        "{title {year}|„{“ ohne passendes „}“ (Stelle 1).",
-        "title}|„}“ ohne passendes „{“ (Stelle 6).",
-        "[{title}|„[“ ohne passendes „]“ (Stelle 1).",
-        "{title}]|„]“ ohne passendes „[“ (Stelle 8).",
-        "[a[b]]|Optionale Teile lassen sich nicht verschachteln (Stelle 3).",
-        "{titel}|Unbekannter Platzhalter „{titel}“ (Stelle 1).",
-        "{title:fett}|Unbekanntes Format „fett“ bei „{title}“ (Stelle 1)."
+        "''|The pattern is empty.",
+        "{title|“{” without matching “}” (position 1).",
+        "{title {year}|“{” without matching “}” (position 1).",
+        "title}|“}” without matching “{” (position 6).",
+        "[{title}|“[” without matching “]” (position 1).",
+        "{title}]|“]” without matching “[” (position 8).",
+        "[a[b]]|Optional parts cannot be nested (position 3).",
+        "{titel}|Unknown placeholder “{titel}” (position 1).",
+        "{title:fett}|Unknown format “fett” for “{title}” (position 1)."
     })
     void rejectsInvalidPatterns(String pattern, String message) {
         assertThatThrownBy(() -> NamePattern.parse(pattern, PLACEHOLDERS))
                 .isInstanceOf(NamePatternException.class).hasMessage(message);
+    }
+
+    @Test
+    void namesTheProblemAndItsPositionAsTranslatableText() {
+        assertThatThrownBy(() -> NamePattern.parse("{titel}", PLACEHOLDERS))
+                .isInstanceOfSatisfying(NamePatternException.class, e -> assertThat(e.localizedText()).isEqualTo(
+                        LocalizedText.of("scanner.pattern.invalid")
+                                .with("problem", LocalizedText.of("scanner.pattern.unknownPlaceholder")
+                                        .with("placeholder", "{titel}"))
+                                .with("position", 1)));
     }
 
     @Test

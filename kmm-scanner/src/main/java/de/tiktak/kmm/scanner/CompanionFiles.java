@@ -9,19 +9,18 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 /**
- * Begleitdateien eines Films nach Kodi-Konvention (Kodi 19–21), abgeleitet von einem gemeinsamen
- * Basisnamen:
+ * Companion files of a movie according to Kodi's convention (Kodi 19–21), derived from a common base name:
  * <ul>
- * <li>Einzeldatei {@code Heat.mkv} → {@code Heat.nfo}</li>
- * <li>Stapel {@code Heat-cd1.avi}, {@code Heat-cd2.avi} → {@code Heat.nfo}</li>
- * <li>DVD-Ordner → {@code VIDEO_TS/VIDEO_TS.nfo}</li>
- * <li>Blu-ray-Ordner → {@code BDMV/index.nfo}</li>
+ * <li>single file {@code Heat.mkv} → {@code Heat.nfo}</li>
+ * <li>stack {@code Heat-cd1.avi}, {@code Heat-cd2.avi} → {@code Heat.nfo}</li>
+ * <li>DVD folder → {@code VIDEO_TS/VIDEO_TS.nfo}</li>
+ * <li>Blu-ray folder → {@code BDMV/index.nfo}</li>
  * </ul>
- * Kodi akzeptiert außerdem eine {@code movie.nfo} im Filmordner und bei Stapeln Dateien mit dem Namen
- * des ersten Teils ({@code Heat-cd1.nfo}, so schreibt sie Ember); beides wird beim Lesen berücksichtigt.
+ * Kodi also accepts a {@code movie.nfo} in the movie folder and, for stacks, files named after the first part
+ * ({@code Heat-cd1.nfo}, as Ember writes them); both are considered when reading.
  * <p>
- * Bilder heißen {@code <basisname>-poster.jpg}, {@code -fanart.jpg} usw.; bei DVD- und Blu-ray-Ordnern
- * liegen sie als {@code poster.jpg} usw. im Filmordner, wo Kodi sie bei Disc-Strukturen sucht.
+ * Images are called {@code <basename>-poster.jpg}, {@code -fanart.jpg} etc.; for DVD and Blu-ray folders they are
+ * stored as {@code poster.jpg} etc. in the movie folder, where Kodi looks for them with disc structures.
  */
 @EqualsAndHashCode
 @ToString
@@ -29,19 +28,19 @@ public final class CompanionFiles {
 
     static final String NFO_EXTENSION = ".nfo";
     static final String FOLDER_NFO = "movie.nfo";
-    /** Bildformate, die Kodi als lokales Artwork liest. */
+    /** Image formats Kodi reads as local artwork. */
     static final List<String> ARTWORK_EXTENSIONS = List.of("jpg", "jpeg", "png");
     private static final char EXTENSION_SEPARATOR = '.';
     private static final char ARTWORK_SEPARATOR = '-';
 
-    /** Ordner der Hauptdatei. */
+    /** Folder of the main file. */
     private final Path directory;
     /**
-     * Basisname als Text, nicht als Pfad: Windows erlaubt kein Leerzeichen am Ende eines Pfadteils,
-     * wohl aber vor der Endung ({@code Film .mkv} → {@code Film .nfo}).
+     * Base name as text, not as a path: Windows does not allow a space at the end of a path element, but it does
+     * before the extension ({@code Film .mkv} → {@code Film .nfo}).
      */
     private final String baseName;
-    /** Name des ersten Teils ohne Endung bei Stapeln, sonst {@code null}. */
+    /** Name of the first part without extension for stacks, otherwise {@code null}. */
     private final String firstPartName;
     private final Path movieDirectory;
     private final boolean disc;
@@ -56,9 +55,9 @@ public final class CompanionFiles {
     }
 
     /**
-     * @param mainFile  Hauptdatei des Films (bei Stapeln der erste Teil, bei Discs die Markerdatei)
-     * @param format    Speicherform
-     * @param partCount Anzahl der Teile; nur bei mehr als einem Teil wird die Teilangabe entfernt
+     * @param mainFile  main file of the movie (for stacks the first part, for discs the marker file)
+     * @param format    storage format
+     * @param partCount number of parts; the part suffix is only removed for more than one part
      */
     public static CompanionFiles of(Path mainFile, DiscFormat format, int partCount) {
         Objects.requireNonNull(mainFile, "mainFile must not be null");
@@ -72,22 +71,22 @@ public final class CompanionFiles {
         return new CompanionFiles(directory, baseName, firstPartName, movieDirectory, disc);
     }
 
-    /** Gemeinsamer Anfang der Namen von Video- und Begleitdateien, bei Stapeln ohne Teilangabe. */
+    /** Common start of the names of video and companion files, without the part suffix for stacks. */
     public String baseName() {
         return baseName;
     }
 
-    /** Ordner des Films; bei DVD- und Blu-ray-Ordnern der Ordner über {@code VIDEO_TS} bzw. {@code BDMV}. */
+    /** Folder of the movie; for DVD and Blu-ray folders the folder above {@code VIDEO_TS} or {@code BDMV}. */
     public Path movieDirectory() {
         return movieDirectory;
     }
 
-    /** Die NFO, die KMM neu anlegt. */
+    /** The NFO that KMM creates. */
     public Path nfoFile() {
         return withSuffix(NFO_EXTENSION);
     }
 
-    /** Mögliche vorhandene NFOs in der Reihenfolge, in der sie gelesen werden. */
+    /** Possible existing NFOs in the order in which they are read. */
     public List<Path> nfoCandidates() {
         List<Path> candidates = new ArrayList<>();
         candidates.add(nfoFile());
@@ -99,10 +98,10 @@ public final class CompanionFiles {
     }
 
     /**
-     * Datei, unter der ein Bild gespeichert wird.
+     * File an image is saved as.
      *
-     * @param kodiName  Kodi-Bezeichnung der Bildart, z. B. {@code poster}, {@code clearlogo}
-     * @param extension Dateiendung ohne Punkt, z. B. {@code jpg}
+     * @param kodiName  Kodi name of the image type, e.g. {@code poster}, {@code clearlogo}
+     * @param extension file extension without dot, e.g. {@code jpg}
      */
     public Path artworkFile(String kodiName, String extension) {
         String fileName = kodiName + EXTENSION_SEPARATOR + extension;
@@ -110,8 +109,8 @@ public final class CompanionFiles {
     }
 
     /**
-     * Alle Dateien, unter denen ein vorhandenes Bild dieser Art liegen kann; zuerst die Namen, unter
-     * denen KMM speichert, danach bei Stapeln die nach dem ersten Teil benannten.
+     * All files an existing image of this type may be stored as; first the names KMM saves under, then for stacks
+     * the ones named after the first part.
      */
     public List<Path> artworkCandidates(String kodiName) {
         List<Path> candidates = new ArrayList<>();

@@ -1,13 +1,16 @@
 package de.tiktak.kmm.migration;
 
+import de.tiktak.kmm.i18n.LocalizedException;
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Das hochgeladene Ember-Profil fehlt, ist unvollständig oder lässt sich gerade nicht ersetzen.
+ * The uploaded Ember profile is missing, incomplete or cannot be replaced right now.
  */
-class EmberProfileUploadException extends RuntimeException {
+class EmberProfileUploadException extends LocalizedException {
 
     private static final long serialVersionUID = 1L;
 
-    EmberProfileUploadException(String message) {
+    EmberProfileUploadException(LocalizedText message) {
         super(message);
     }
 }

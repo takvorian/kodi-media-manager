@@ -12,15 +12,15 @@ import org.w3c.dom.Element;
 import org.xml.sax.SAXException;
 
 /**
- * Ersetzt nur die Stream-Details ({@code <fileinfo>}) einer vorhandenen NFO. Wie beim
- * {@link PlaybackNfoWriter} wird die Datei als Text bearbeitet, damit alles andere Zeichen für Zeichen
- * erhalten bleibt; nur wenn das nicht sicher geht, wird sie neu geschrieben. Jede Datei wird genau einmal
- * ersetzt: Mehrmaliges Ersetzen kurz hintereinander scheitert auf Netzlaufwerken gelegentlich.
+ * Replaces only the stream details ({@code <fileinfo>}) of an existing NFO. As with the {@link PlaybackNfoWriter},
+ * the file is edited as text so everything else is kept character for character; only if that is not safe is it
+ * rewritten. Each file is replaced exactly once: replacing it several times in quick succession occasionally fails
+ * on network drives.
  */
 public class StreamDetailsNfoWriter {
 
     /**
-     * @throws NfoException wenn die NFO fehlt, keinen Film enthält oder nicht geschrieben werden kann
+     * @throws NfoException if the NFO is missing, contains no movie or cannot be written
      */
     public void writeMovie(Path nfoFile, StreamDetails details) {
         Element container = existing(nfoFile, NfoElements.MOVIE);
@@ -33,10 +33,9 @@ public class StreamDetailsNfoWriter {
     }
 
     /**
-     * Ändert in einer Mehrfachepisoden-NFO nur die angegebenen Episoden; Episoden ohne Stream-Details
-     * bleiben unverändert.
+     * Changes only the given episodes in a multi-episode NFO; episodes without stream details stay unchanged.
      *
-     * @throws NfoException wenn die NFO fehlt, eine der Episoden nicht enthält oder nicht geschrieben werden kann
+     * @throws NfoException if the NFO is missing, does not contain one of the episodes or cannot be written
      */
     public void writeEpisodes(Path nfoFile, List<EpisodeStreamDetails> episodes) {
         Element container = existing(nfoFile, NfoElements.EPISODE_DETAILS);
@@ -58,10 +57,10 @@ public class StreamDetailsNfoWriter {
     }
 
     /**
-     * Geschrieben wird nur, wenn das Ergebnis gültig ist und genau die Spuren der neuen Blöcke enthält.
+     * Only written if the result is valid and contains exactly the streams of the new blocks.
      *
-     * @param byIndex die neuen Stream-Details je Position des Wurzelelements
-     * @return {@code false}, wenn die Datei nicht sicher als Text bearbeitet werden kann
+     * @param byIndex the new stream details per position of the root element
+     * @return {@code false} if the file cannot safely be edited as text
      */
     private static boolean writeAsText(Path nfoFile, String rootName, Map<Integer, StreamDetails> byIndex) {
         Optional<NfoTextEditor> opened = NfoTextEditor.open(nfoFile);

@@ -11,6 +11,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.migration.ember.settings.EmberMovieSetSettings;
 import de.tiktak.kmm.migration.ember.settings.EmberProxySettings;
 import de.tiktak.kmm.migration.ember.settings.EmberRenameSettings;
@@ -28,8 +29,8 @@ import de.tiktak.kmm.settings.RenameSettings;
 import de.tiktak.kmm.settings.TvSettings;
 
 /**
- * Überträgt Ember-Einstellungen auf die KMM-Einstellungen. Übernommen wird nur, was in Ember gültig
- * gesetzt ist; alles andere bleibt, wie es in KMM ist.
+ * Transfers Ember settings to the KMM settings. Only what is validly set in Ember is taken over; everything else
+ * stays as it is in KMM.
  */
 final class EmberSettingsMapper {
 
@@ -37,27 +38,27 @@ final class EmberSettingsMapper {
     private static final Pattern ARTWORK_LANGUAGE = Pattern.compile("[a-z]{2}");
     private static final Pattern EXTENSION = Pattern.compile("\\.?[a-z0-9]{1,10}");
     private static final int DEFAULT_PROXY_PORT = 8080;
-    private static final String FLAT_IMAGES = "Set-Bilder im flachen Schema";
-    private static final String KODI_IMAGES = "Set-Bilder in Kodis Set-Ordnern";
-    /** Embers {@code DayOfYear} kennen die Scraper von KMM nicht; es bleibt bei der bisherigen Reihenfolge. */
+    private static final LocalizedText FLAT_IMAGES = label("flatImages");
+    private static final LocalizedText KODI_IMAGES = label("kodiImages");
+    /** KMM's scrapers do not know Ember's {@code DayOfYear}; the previous order stays. */
     private static final Map<String, EpisodeOrdering> ORDERINGS = Map.of(
             "Standard", EpisodeOrdering.AIRED, "DVD", EpisodeOrdering.DVD, "Absolute", EpisodeOrdering.ABSOLUTE);
 
     private EmberSettingsMapper() {
     }
 
-    /** Wie {@link #map(KmmSettings, Optional, List, Function)}, Ordner werden unverändert übernommen. */
+    /** Like {@link #map(KmmSettings, Optional, List, Function)}, folders are taken over unchanged. */
     static SettingsImport map(KmmSettings current, Optional<EmberSettings> ember, List<String> excludedPaths) {
         return map(current, ember, excludedPaths, Optional::of);
     }
 
     /**
-     * @param excludedPaths aus Ember übernommene, bereits zugeordnete ausgeschlossene Ordner
-     * @param translatePath ordnet einen Ember-Pfad dem KMM-Pfad zu, leer, wenn keine Zuordnung passt
+     * @param excludedPaths excluded folders taken over from Ember, already mapped
+     * @param translatePath maps an Ember path to the KMM path, empty if no mapping matches
      */
     static SettingsImport map(KmmSettings current, Optional<EmberSettings> ember, List<String> excludedPaths,
             Function<String, Optional<String>> translatePath) {
-        List<String> changes = new ArrayList<>();
+        List<LocalizedText> changes = new ArrayList<>();
         String metadataLanguage = current.metadataLanguage();
         String artworkLanguage = current.artworkLanguage();
         List<String> videoExtensions = current.videoExtensions();
@@ -66,28 +67,28 @@ final class EmberSettingsMapper {
             EmberSettings settings = ember.get();
             if (matches(METADATA_LANGUAGE, settings.movieLanguage())) {
                 metadataLanguage = settings.movieLanguage();
-                changes.add("Sprache der Metadaten: " + metadataLanguage);
+                changes.add(change("metadataLanguage", metadataLanguage));
             }
             if (matches(ARTWORK_LANGUAGE, settings.movieImageLanguage())) {
                 artworkLanguage = settings.movieImageLanguage();
-                changes.add("Bevorzugte Bildsprache: " + artworkLanguage);
+                changes.add(change("artworkLanguage", artworkLanguage));
             }
             List<String> extensions = extensions(settings.videoExtensions());
             if (!extensions.isEmpty()) {
                 videoExtensions = extensions;
-                changes.add("Video-Dateiendungen: " + String.join(", ", extensions));
+                changes.add(change("videoExtensions", String.join(", ", extensions)));
             }
             Optional<ProxySettings> emberProxy = settings.proxy().flatMap(EmberSettingsMapper::proxy);
             if (emberProxy.isPresent()) {
                 proxy = emberProxy.get();
-                changes.add("Proxy: %s:%d%s".formatted(proxy.host(), proxy.port(),
-                        proxy.username() == null ? "" : " (Passwort bitte in den Einstellungen eingeben)"));
+                changes.add(LocalizedText.of("migration.settings.proxy").with("host", proxy.host())
+                        .with("port", String.valueOf(proxy.port())).with("withUser", proxy.username() != null));
             }
         }
         TvSettings tv = ember.map(settings -> tv(current.tv(), settings.tv(), changes)).orElse(current.tv());
         Set<String> allExcluded = new LinkedHashSet<>(current.excludedPaths());
         if (allExcluded.addAll(excludedPaths)) {
-            changes.add("Ausgeschlossene Ordner: " + String.join(", ", excludedPaths));
+            changes.add(change("excludedPaths", String.join(", ", excludedPaths)));
         }
         MediaInfoSettings mediaInfo = ember.map(settings -> mediaInfo(current.mediaInfo(), settings, changes))
                 .orElse(current.mediaInfo());
@@ -102,28 +103,29 @@ final class EmberSettingsMapper {
         return new SettingsImport(imported, changes);
     }
 
-    /** Muster ohne Gegenstück in KMM bleiben beim bisherigen Wert; das steht im Bericht. */
-    private static RenameSettings rename(RenameSettings current, EmberRenameSettings ember, List<String> changes) {
+    /** Patterns without a counterpart in KMM keep their previous value; the report says so. */
+    private static RenameSettings rename(RenameSettings current, EmberRenameSettings ember,
+            List<LocalizedText> changes) {
         return new RenameSettings(
-                pattern("Filmordner", ember.movieFolder(), current.movieFolder(), NamePlaceholders.MOVIE, changes),
-                pattern("Filmdateien", ember.movieFile(), current.movieFile(), NamePlaceholders.MOVIE, changes),
-                pattern("Serienordner", ember.tvShowFolder(), current.tvShowFolder(), NamePlaceholders.TV_SHOW,
+                pattern(label("movieFolder"), ember.movieFolder(), current.movieFolder(), NamePlaceholders.MOVIE,
                         changes),
-                pattern("Staffelordner", ember.seasonFolder(), current.seasonFolder(),
+                pattern(label("movieFile"), ember.movieFile(), current.movieFile(), NamePlaceholders.MOVIE, changes),
+                pattern(label("tvShowFolder"), ember.tvShowFolder(), current.tvShowFolder(), NamePlaceholders.TV_SHOW,
+                        changes),
+                pattern(label("seasonFolder"), ember.seasonFolder(), current.seasonFolder(),
                         NamePlaceholders.SEASON_FOLDER, changes),
-                pattern("Episodendateien", ember.episodeFile(), current.episodeFile(), NamePlaceholders.EPISODE_FILE,
-                        changes),
-                flag("Filme nach dem Bearbeiten umbenennen", ember.movieOnEdit(), current.movieOnEdit(), changes),
-                flag("Filme nach dem Scrapen umbenennen", ember.movieOnScrape(), current.movieOnScrape(), changes),
-                flag("Episoden nach dem Bearbeiten umbenennen", ember.tvOnEdit(), current.tvOnEdit(), changes),
-                flag("Serien nach dem Scrapen umbenennen", ember.tvOnScrape(), current.tvOnScrape(), changes),
-                flag("Neue Episoden beim Scan umbenennen", ember.episodesOnScan(), current.episodesOnScan(),
-                        changes));
+                pattern(label("episodeFile"), ember.episodeFile(), current.episodeFile(),
+                        NamePlaceholders.EPISODE_FILE, changes),
+                flag(label("movieOnEdit"), ember.movieOnEdit(), current.movieOnEdit(), changes),
+                flag(label("movieOnScrape"), ember.movieOnScrape(), current.movieOnScrape(), changes),
+                flag(label("tvOnEdit"), ember.tvOnEdit(), current.tvOnEdit(), changes),
+                flag(label("tvOnScrape"), ember.tvOnScrape(), current.tvOnScrape(), changes),
+                flag(label("episodesOnScan"), ember.episodesOnScan(), current.episodesOnScan(), changes));
     }
 
-    /** Eine Ablage ohne zuordenbaren Ordner bleibt aus, sonst wären die Einstellungen ungültig. */
+    /** A storage without a mappable folder stays off, otherwise the settings would be invalid. */
     private static MovieSetSettings movieSets(MovieSetSettings current, EmberMovieSetSettings ember,
-            Function<String, Optional<String>> translatePath, List<String> changes) {
+            Function<String, Optional<String>> translatePath, List<LocalizedText> changes) {
         String flatFolder = folder(FLAT_IMAGES, ember.flatImagesFolder(), current.flatImagesFolder(), translatePath,
                 changes);
         String kodiFolder = folder(KODI_IMAGES, ember.kodiImagesFolder(), current.kodiImagesFolder(), translatePath,
@@ -133,35 +135,36 @@ final class EmberSettingsMapper {
                 flatFolder,
                 storage(KODI_IMAGES, ember.kodiImages(), current.kodiImages(), kodiFolder, changes),
                 kodiFolder,
-                flag("Filme beim Scrapen ihrem Filmset zuordnen", ember.assignOnScrape(), current.assignOnScrape(),
-                        changes));
+                flag(label("assignOnScrape"), ember.assignOnScrape(), current.assignOnScrape(), changes));
     }
 
-    private static String folder(String label, String ember, String current,
-            Function<String, Optional<String>> translatePath, List<String> changes) {
+    private static String folder(LocalizedText label, String ember, String current,
+            Function<String, Optional<String>> translatePath, List<LocalizedText> changes) {
         if (ember == null) {
             return current;
         }
         Optional<String> translated = translatePath.apply(ember);
         if (translated.isEmpty()) {
-            changes.add("Ordner für %s nicht übernommen: „%s“ passt zu keiner Pfadzuordnung.".formatted(label, ember));
+            changes.add(LocalizedText.of("migration.settings.folderNotMapped").with("label", label)
+                    .with("ember", ember));
             return current;
         }
-        changes.add("Ordner für %s: %s".formatted(label, translated.get()));
+        changes.add(LocalizedText.of("migration.settings.folder").with("label", label)
+                .with("folder", translated.get()));
         return translated.get();
     }
 
-    private static boolean storage(String label, Boolean ember, boolean current, String folder,
-            List<String> changes) {
+    private static boolean storage(LocalizedText label, Boolean ember, boolean current, String folder,
+            List<LocalizedText> changes) {
         if (Boolean.TRUE.equals(ember) && folder == null) {
-            changes.add("%s bleibt aus, weil der Ordner fehlt.".formatted(label));
+            changes.add(LocalizedText.of("migration.settings.storageOff").with("label", label));
             return false;
         }
         return flag(label, ember, current, changes);
     }
 
-    private static String pattern(String label, String ember, String current, Set<String> placeholders,
-                                  List<String> changes) {
+    private static String pattern(LocalizedText label, String ember, String current, Set<String> placeholders,
+                                  List<LocalizedText> changes) {
         if (ember == null || ember.isBlank()) {
             return current;
         }
@@ -174,46 +177,49 @@ final class EmberSettingsMapper {
             }
         });
         if (translated.isEmpty()) {
-            changes.add("Muster für %s nicht übernommen: „%s“ lässt sich nicht übersetzen, es bleibt „%s“."
-                    .formatted(label, ember, current));
+            changes.add(LocalizedText.of("migration.settings.patternNotTranslated").with("label", label)
+                    .with("ember", ember).with("current", current));
             return current;
         }
-        changes.add("Muster für %s: %s (Ember: %s)".formatted(label, translated.get(), ember));
+        changes.add(LocalizedText.of("migration.settings.pattern").with("label", label)
+                .with("pattern", translated.get()).with("ember", ember));
         return translated.get();
     }
 
-    private static boolean flag(String label, Boolean ember, boolean current, List<String> changes) {
+    private static boolean flag(LocalizedText label, Boolean ember, boolean current, List<LocalizedText> changes) {
         if (ember == null) {
             return current;
         }
-        changes.add("%s: %s".formatted(label, ember ? "ja" : "nein"));
+        changes.add(LocalizedText.of("migration.settings.flag").with("label", label)
+                .with("value", LocalizedText.of(ember ? "migration.settings.yes" : "migration.settings.no")));
         return ember;
     }
 
-    private static MediaInfoSettings mediaInfo(MediaInfoSettings current, EmberSettings ember, List<String> changes) {
+    private static MediaInfoSettings mediaInfo(MediaInfoSettings current, EmberSettings ember,
+            List<LocalizedText> changes) {
         if (ember.metaDataScan() == null) {
             return current;
         }
-        changes.add("Technische Angaben beim Scrapen auslesen: " + (ember.metaDataScan() ? "ja" : "nein"));
+        flag(label("metaDataScan"), ember.metaDataScan(), current.probeOnScrape(), changes);
         return new MediaInfoSettings(current.ffprobePath(), ember.metaDataScan(), current.probeNewFiles());
     }
 
-    private static TvSettings tv(TvSettings current, EmberTvSettings ember, List<String> changes) {
+    private static TvSettings tv(TvSettings current, EmberTvSettings ember, List<LocalizedText> changes) {
         String language = current.metadataLanguage();
         String imageLanguage = current.artworkLanguage();
         EpisodeOrdering ordering = current.episodeOrdering();
         if (matches(METADATA_LANGUAGE, ember.language())) {
             language = ember.language();
-            changes.add("Sprache der Serien-Metadaten: " + language);
+            changes.add(change("tvMetadataLanguage", language));
         }
         if (matches(ARTWORK_LANGUAGE, ember.imageLanguage())) {
             imageLanguage = ember.imageLanguage();
-            changes.add("Bevorzugte Bildsprache für Serien: " + imageLanguage);
+            changes.add(change("tvArtworkLanguage", imageLanguage));
         }
         EpisodeOrdering emberOrdering = ember.ordering() == null ? null : ORDERINGS.get(ember.ordering());
         if (emberOrdering != null) {
             ordering = emberOrdering;
-            changes.add("Episodenreihenfolge: " + ember.ordering());
+            changes.add(change("episodeOrdering", ember.ordering()));
         }
         return new TvSettings(language, imageLanguage, ordering);
     }
@@ -227,7 +233,7 @@ final class EmberSettingsMapper {
                 .toList();
     }
 
-    /** Ember speichert den Proxy als URI ({@code http://proxy.local}) und Port; das Passwort nicht portabel. */
+    /** Ember stores the proxy as URI ({@code http://proxy.local}) and port; the password not portably. */
     private static Optional<ProxySettings> proxy(EmberProxySettings ember) {
         String host = host(ember.uri().strip());
         if (host == null || host.isBlank()) {
@@ -252,9 +258,19 @@ final class EmberSettingsMapper {
         return value != null && pattern.matcher(value).matches();
     }
 
+    /** A taken over value, e.g. "Language of the metadata: de-DE". */
+    private static LocalizedText change(String setting, String value) {
+        return LocalizedText.of("migration.settings." + setting).with("value", value);
+    }
+
+    /** Name of a setting, inserted into the texts about patterns, folders and switches. */
+    private static LocalizedText label(String setting) {
+        return LocalizedText.of("migration.settings.label." + setting);
+    }
+
     /**
-     * @param changes übernommene Werte in lesbarer Form
+     * @param changes taken over values in readable form
      */
-    record SettingsImport(KmmSettings settings, List<String> changes) {
+    record SettingsImport(KmmSettings settings, List<LocalizedText> changes) {
     }
 }

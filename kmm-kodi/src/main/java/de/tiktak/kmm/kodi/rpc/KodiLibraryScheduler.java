@@ -2,12 +2,13 @@ package de.tiktak.kmm.kodi.rpc;
 
 import java.time.Duration;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Startet Scans und Bereinigungen erst, wenn Kodi damit fertig ist. Kodi kennt keine Warteschlange dafür: Ein Scan
- * während eines laufenden Scans bricht diesen ab, ohne selbst zu starten, und ein Bereinigen währenddessen verwirft
- * Kodi. Beides meldet Kodi dem Aufrufer als Erfolg.
+ * Starts scans and cleanups only once Kodi is done with the previous one. Kodi has no queue for them: a scan
+ * during a running scan cancels it without starting itself, and Kodi discards a cleanup during a scan. Kodi reports
+ * both to the caller as success.
  */
 @RequiredArgsConstructor
 public class KodiLibraryScheduler {
@@ -16,22 +17,22 @@ public class KodiLibraryScheduler {
     private final Duration pollInterval;
 
     /**
-     * Kodi durchsucht das Verzeichnis, sobald es frei ist.
+     * Kodi scans the directory as soon as it is idle.
      *
-     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
-     * @param maxWait   so lange wartet KMM höchstens auf das Ende eines laufenden Scans
-     * @throws KodiException wenn Kodi nach dieser Zeit noch beschäftigt ist
+     * @param directory directory as Kodi sees it, with a trailing separator
+     * @param maxWait   how long KMM waits at most for a running scan to end
+     * @throws KodiException if Kodi is still busy after that time
      */
     public void scan(KodiEndpoint endpoint, String directory, Duration maxWait) {
         whenIdle(endpoint, maxWait, () -> client.scan(endpoint, directory));
     }
 
-    /** Wie {@link #scan}: Kodi entfernt Filme im Verzeichnis, deren Dateien es nicht mehr gibt. */
+    /** Like {@link #scan}: Kodi removes movies in the directory whose files no longer exist. */
     public void cleanMovies(KodiEndpoint endpoint, String directory, Duration maxWait) {
         whenIdle(endpoint, maxWait, () -> client.cleanMovies(endpoint, directory));
     }
 
-    /** Wie {@link #scan}: Kodi entfernt Serien und Episoden im Verzeichnis, deren Dateien es nicht mehr gibt. */
+    /** Like {@link #scan}: Kodi removes TV shows and episodes in the directory whose files no longer exist. */
     public void cleanTvShows(KodiEndpoint endpoint, String directory, Duration maxWait) {
         whenIdle(endpoint, maxWait, () -> client.cleanTvShows(endpoint, directory));
     }
@@ -40,13 +41,13 @@ public class KodiLibraryScheduler {
         long startedAt = System.nanoTime();
         while (!startIfIdle(endpoint, start)) {
             if (System.nanoTime() - startedAt >= maxWait.toNanos()) {
-                throw new KodiException("Kodi liest gerade seine Bibliothek ein. Versuche es danach noch einmal.");
+                throw new KodiException(LocalizedText.of("kodiRpc.libraryBusy"));
             }
             pause();
         }
     }
 
-    /** Prüfen und Starten gehören zusammen, sonst bricht der Scan eines anderen Threads diesen hier gleich wieder ab. */
+    /** Checking and starting belong together, otherwise another thread's scan would cancel this one right away. */
     private synchronized boolean startIfIdle(KodiEndpoint endpoint, Runnable start) {
         if (client.isScanning(endpoint)) {
             return false;
@@ -60,7 +61,7 @@ public class KodiLibraryScheduler {
             Thread.sleep(pollInterval);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new KodiException("Das Warten auf Kodi wurde abgebrochen.", e);
+            throw new KodiException(LocalizedText.of("kodiRpc.waitInterrupted"), e);
         }
     }
 }

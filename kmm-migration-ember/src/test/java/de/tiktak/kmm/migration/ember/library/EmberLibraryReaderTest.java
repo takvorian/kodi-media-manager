@@ -98,8 +98,8 @@ class EmberLibraryReaderTest {
         assertThat(matrix.playCount()).isNull();
         assertThat(matrix.lastPlayed()).isNull();
         assertThat(matrix.userRating()).isNull();
-        assertThat(matrix.edition()).as("leer").isNull();
-        assertThat(matrix.videoSource()).as("leer").isNull();
+        assertThat(matrix.edition()).as("empty").isNull();
+        assertThat(matrix.videoSource()).as("empty").isNull();
     }
 
     @Test
@@ -108,7 +108,7 @@ class EmberLibraryReaderTest {
 
         assertThat(reloaded.year()).isNull();
         assertThat(reloaded.premiered()).isNull();
-        assertThat(reloaded.mpaa()).as("Certification als Ersatz").isEqualTo("Germany:12");
+        assertThat(reloaded.mpaa()).as("Certification as fallback").isEqualTo("Germany:12");
         assertThat(reloaded.actors()).containsExactly(new EmberActor("Keanu Reeves", null, null));
         assertThat(reloaded.sets()).containsExactly(new EmberSetLink(1, null));
         assertThat(reloaded.dateAdded()).isNull();
@@ -143,7 +143,7 @@ class EmberLibraryReaderTest {
 
         assertThatThrownBy(() -> reader.read(notADatabase))
                 .isInstanceOf(EmberProfileException.class)
-                .hasMessageContaining("kann nicht gelesen werden");
+                .hasMessageContaining("cannot be read");
         assertThatThrownBy(() -> reader.readSources(notADatabase)).isInstanceOf(EmberProfileException.class);
     }
 

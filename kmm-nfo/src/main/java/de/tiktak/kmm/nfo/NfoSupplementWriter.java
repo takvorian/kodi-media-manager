@@ -14,13 +14,13 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 /**
- * Schreibt die weiteren Angaben ({@link MovieNfoSupplement}) in das {@code <movie>}-Element.
+ * Writes the further details ({@link MovieNfoSupplement}) into the {@code <movie>} element.
  */
 final class NfoSupplementWriter {
 
     private static final String TRUE = "true";
     private static final String FALSE = "false";
-    /** Angaben eines Darstellers, die KMM verwaltet; alle anderen bleiben beim Schreiben erhalten. */
+    /** Details of an actor that KMM manages; all others are kept when writing. */
     private static final Set<String> ACTOR_FIELDS = Set.of(NfoElements.NAME, NfoElements.ROLE, NfoElements.ORDER,
             NfoElements.THUMB);
 
@@ -89,8 +89,8 @@ final class NfoSupplementWriter {
     }
 
     /**
-     * Ersetzt die Darsteller. Angaben, die KMM nicht kennt (etwa Embers {@code <tmdbid>}), übernimmt jeder Darsteller
-     * vom gleichnamigen bisherigen Eintrag.
+     * Replaces the actors. Details KMM does not know (such as Ember's {@code <tmdbid>}) each actor takes over from
+     * the previous entry with the same name.
      */
     static void replaceActors(Document document, Element parent, List<NfoActor> actors) {
         List<Element> previous = new ArrayList<>(NfoDocuments.children(parent, NfoElements.ACTOR));

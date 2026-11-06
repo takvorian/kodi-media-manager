@@ -5,9 +5,9 @@ import java.util.Map;
 import java.util.Objects;
 
 /**
- * Übersetzt Codec-Namen, wie MediaInfo sie liefert und Ember sie teils unverändert gespeichert hat, in die Namen, die
- * Kodi verwendet (z. B. {@code avc1} → {@code h264}, {@code mp4a-40-2} → {@code aac}). Enthält Embers
- * Standardzuordnungen ({@code AudioFormatConverts}, {@code VideoFormatConverts}); unbekannte Namen bleiben.
+ * Translates codec names as MediaInfo returns them, and as Ember partly stored them unchanged, into the names Kodi
+ * uses (e.g. {@code avc1} → {@code h264}, {@code mp4a-40-2} → {@code aac}). Contains Ember's default mappings
+ * ({@code AudioFormatConverts}, {@code VideoFormatConverts}); unknown names stay as they are.
  */
 public final class CodecNames {
 
@@ -73,7 +73,7 @@ public final class CodecNames {
         return translate(AUDIO, codec);
     }
 
-    /** @return die Angaben mit Kodis Codec-Namen; dasselbe Objekt, wenn nichts zu übersetzen war */
+    /** @return the details with Kodi's codec names; the same object if there was nothing to translate */
     public static StreamDetails normalize(StreamDetails details) {
         if (details == null) {
             return null;

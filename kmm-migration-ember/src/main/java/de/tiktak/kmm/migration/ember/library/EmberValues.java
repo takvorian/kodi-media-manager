@@ -10,8 +10,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Liest Spaltenwerte aus der Ember-Datenbank. Ember speichert viele Zahlen als Text und leere Werte
- * als Leerstring; beides wird hier vereinheitlicht. Unbrauchbare Werte gelten als nicht gesetzt.
+ * Reads column values from the Ember database. Ember stores many numbers as text and empty values as empty
+ * strings; both are normalized here. Unusable values count as not set.
  */
 final class EmberValues {
 
@@ -31,7 +31,7 @@ final class EmberValues {
         return stripped.isEmpty() ? null : stripped;
     }
 
-    /** Erste ganze Zahl im Text, z. B. {@code 120} aus „120 min“. */
+    /** First whole number in the text, e.g. {@code 120} from "120 min". */
     static Integer integer(ResultSet row, String column) throws SQLException {
         String value = text(row, column);
         if (value == null) {
@@ -51,8 +51,8 @@ final class EmberValues {
     }
 
     /**
-     * Ember speichert Zeitpunkte als Sekunden seit 1970, rechnet dabei aber die lokale Uhrzeit ohne
-     * Zeitzone um ({@code ConvertToUnixTimestamp}). Der Wert ist deshalb eine Uhrzeit ohne Zone.
+     * Ember stores points in time as seconds since 1970, but converts the local time without a time zone
+     * ({@code ConvertToUnixTimestamp}). The value is therefore a time without zone.
      */
     static LocalDateTime localDateTime(ResultSet row, String column) throws SQLException {
         long seconds = row.getLong(column);

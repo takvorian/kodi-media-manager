@@ -6,15 +6,15 @@ import java.util.Objects;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
 
 /**
- * Einstellungen eines Kodi-Geräts.
+ * Settings of a Kodi device.
  *
- * @param name         Anzeigename, eindeutig
- * @param address      Rechnername oder IP-Adresse
- * @param port         Port des Kodi-Webservers
- * @param username     Benutzername oder {@code null} ohne Anmeldung
- * @param password     Passwort; {@code null} behält beim Ändern das gespeicherte
- * @param realtimeSync ob KMM Kodi nach jeder Änderung automatisch aktualisiert
- * @param pathMappings Zuordnung der KMM-Verzeichnisse zu Kodi-Pfaden
+ * @param name         display name, unique
+ * @param address      host name or IP address
+ * @param port         port of the Kodi web server
+ * @param username     user name, or {@code null} without login
+ * @param password     password; {@code null} keeps the stored one when changing
+ * @param realtimeSync whether KMM updates Kodi automatically after every change
+ * @param pathMappings mapping of the KMM directories to Kodi paths
  */
 public record KodiHostSettings(
         String name,
@@ -38,7 +38,7 @@ public record KodiHostSettings(
         pathMappings = List.copyOf(pathMappings);
     }
 
-    /** Ohne Benutzer gibt es kein Passwort. */
+    /** Without a user there is no password. */
     boolean withoutCredentials() {
         return username == null;
     }

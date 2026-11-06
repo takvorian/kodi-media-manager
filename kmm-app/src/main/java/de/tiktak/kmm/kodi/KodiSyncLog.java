@@ -7,8 +7,8 @@ import java.util.concurrent.ConcurrentHashMap;
 import org.springframework.stereotype.Component;
 
 /**
- * Merkt sich das letzte Abgleichsergebnis je Kodi-Gerät, damit Fehler des Echtzeit-Syncs in der
- * Oberfläche sichtbar werden. Bewusst nur im Speicher: nach einem Neustart zählt der nächste Abgleich.
+ * Remembers the last sync result per Kodi device so that errors of the realtime sync become visible in the user
+ * interface. Deliberately only in memory: after a restart the next sync counts.
  */
 @Component
 class KodiSyncLog {

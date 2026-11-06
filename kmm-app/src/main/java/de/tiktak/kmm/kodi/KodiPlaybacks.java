@@ -9,9 +9,8 @@ import java.util.Objects;
 import de.tiktak.kmm.kodi.rpc.KodiPlayback;
 
 /**
- * Vergleicht den Gesehen-Status und die eigene Bewertung in KMM mit denen in Kodi und führt beide zusammen.
- * Kodi ergänzt nur: mehr Wiedergaben, eine neuere letzte Wiedergabe oder eine Bewertung. Ein „ungesehen“
- * oder „nicht bewertet“ in Kodi löscht nichts in KMM.
+ * Compares the watched status and the user rating in KMM with those in Kodi and merges both. Kodi only adds: more
+ * plays, a more recent last play or a rating. An "unwatched" or "not rated" in Kodi deletes nothing in KMM.
  */
 final class KodiPlaybacks {
 
@@ -21,9 +20,8 @@ final class KodiPlaybacks {
     }
 
     /**
-     * Gleich sind die Stände auch, wenn KMM keine Wiedergabezahl kennt und Kodi 0 meldet, und wenn Kodi
-     * zur selben letzten Wiedergabe nur das Datum kennt: Aus NFOs übernimmt Kodi die Uhrzeit nicht, die
-     * genauere Angabe in KMM soll dabei nicht verloren gehen.
+     * The states are also equal if KMM knows no play count and Kodi reports 0, and if Kodi only knows the date of the
+     * same last play: Kodi does not take the time over from NFOs, and the more precise value in KMM must not get lost.
      */
     static boolean isCurrent(Playback current, KodiPlayback kodi, ZoneId zone) {
         int known = current.playCount() == null ? 0 : current.playCount();
@@ -41,11 +39,10 @@ final class KodiPlaybacks {
     }
 
     /**
-     * Eine Bewertung aus Kodi gewinnt: Bewertet wird in Kodi, und was KMM speichert, liest Kodi danach
-     * selbst wieder aus der NFO.
+     * A rating from Kodi wins: rating happens in Kodi, and what KMM stores Kodi reads back from the NFO itself.
      *
-     * @return der Stand in KMM, ergänzt um die höhere Wiedergabezahl, die neuere letzte Wiedergabe und die
-     *         Bewertung aus Kodi
+     * @return the state in KMM, completed with the higher play count, the more recent last play and the rating from
+     *         Kodi
      */
     static Playback merge(Playback current, KodiPlayback kodi, ZoneId zone) {
         int known = current.playCount() == null ? 0 : current.playCount();
@@ -56,7 +53,7 @@ final class KodiPlaybacks {
         return new Playback(mergedCount, mergedLastPlayed, mergedRating);
     }
 
-    /** Ein Datum ohne Uhrzeit vom selben Tag ist nicht neuer, nur ungenauer. */
+    /** A date without time of the same day is not more recent, only less precise. */
     private static boolean isNewer(KodiPlayback kodi, Instant lastPlayedAt, ZoneId zone) {
         LocalDateTime fromKodi = kodi.lastPlayed();
         if (fromKodi == null) {
@@ -75,15 +72,15 @@ final class KodiPlaybacks {
         return kodi.lastPlayed() == null ? null : kodi.lastPlayed().atZone(zone).toInstant();
     }
 
-    /** Kodi meldet „nicht bewertet“ als 0. */
+    /** Kodi reports "not rated" as 0. */
     private static Integer userRating(KodiPlayback kodi) {
         return kodi.userRating() == NO_USER_RATING ? null : kodi.userRating();
     }
 
     /**
-     * @param playCount    Anzahl der Wiedergaben oder {@code null}
-     * @param lastPlayedAt letzte Wiedergabe oder {@code null}
-     * @param userRating   eigene Bewertung 1–10 oder {@code null}
+     * @param playCount    number of plays, or {@code null}
+     * @param lastPlayedAt last play, or {@code null}
+     * @param userRating   user rating 1–10, or {@code null}
      */
     record Playback(Integer playCount, Instant lastPlayedAt, Integer userRating) {
     }

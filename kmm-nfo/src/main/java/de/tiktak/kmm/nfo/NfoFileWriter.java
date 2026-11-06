@@ -25,8 +25,8 @@ import org.xml.sax.SAXException;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest vorhandene NFOs zum Bearbeiten und schreibt sie zurück. Die Datei wird über eine temporäre
- * Datei ersetzt, damit bei Fehlern keine halbe NFO entsteht.
+ * Reads existing NFOs for editing and writes them back. The file is replaced via a temporary file, so errors never
+ * leave half an NFO behind.
  */
 @Slf4j
 final class NfoFileWriter {
@@ -41,10 +41,10 @@ final class NfoFileWriter {
     }
 
     /**
-     * Die Wurzelelemente einer vorhandenen NFO, ohne Einrückungen. Mehrfachepisoden enthalten mehrere
-     * Wurzelelemente hintereinander; sie werden unter einem künstlichen Element zusammengefasst.
+     * The root elements of an existing NFO, without indentation. Multi-episode files contain several root elements
+     * in a row; they are grouped under an artificial element.
      *
-     * @return leer, wenn die Datei fehlt, kein solches Element enthält oder kein gültiges XML ist
+     * @return empty if the file is missing, contains no such element or is not valid XML
      */
     static Optional<Element> existingRoots(Path nfoFile, String rootName) {
         if (!Files.isRegularFile(nfoFile)) {
@@ -53,17 +53,17 @@ final class NfoFileWriter {
         try {
             return parseRoots(Files.readString(nfoFile, StandardCharsets.UTF_8), rootName);
         } catch (IOException | SAXException e) {
-            // Eine kaputte NFO wird ersetzt statt den Speichervorgang scheitern zu lassen.
+            // A broken NFO is replaced instead of letting the save fail.
             log.warn("Existing NFO {} is not valid XML and will be replaced: {}", nfoFile, e.getMessage());
             return Optional.empty();
         }
     }
 
     /**
-     * Die Wurzelelemente eines NFO-Texts wie bei {@link #existingRoots(Path, String)}.
+     * The root elements of an NFO text, as with {@link #existingRoots(Path, String)}.
      *
-     * @return leer, wenn der Text kein solches Element enthält
-     * @throws SAXException wenn der Text kein gültiges XML ist
+     * @return empty if the text contains no such element
+     * @throws SAXException if the text is not valid XML
      */
     static Optional<Element> parseRoots(String content, String rootName) throws IOException, SAXException {
         Optional<String> xml = NfoDocuments.rootXml(content, rootName);
@@ -75,7 +75,7 @@ final class NfoFileWriter {
         return Optional.of(container);
     }
 
-    /** Leerer Container für eine neue NFO; die Wurzelelemente hängt der Aufrufer an. */
+    /** Empty container for a new NFO; the caller appends the root elements. */
     static Element newContainer() {
         Document document = SecureXml.documentBuilder().newDocument();
         Element container = document.createElement(NfoDocuments.CONTAINER);
@@ -83,7 +83,7 @@ final class NfoFileWriter {
         return container;
     }
 
-    /** Schreibt die Elemente nacheinander, mit einer gemeinsamen XML-Deklaration. */
+    /** Writes the elements one after another, with a shared XML declaration. */
     static void write(Path nfoFile, List<Element> roots) {
         try {
             StringBuilder content = new StringBuilder(XML_DECLARATION).append(System.lineSeparator());
@@ -96,7 +96,7 @@ final class NfoFileWriter {
         }
     }
 
-    /** Ersetzt den Inhalt der Datei über eine temporäre Datei. */
+    /** Replaces the content of the file via a temporary file. */
     static void writeBytes(Path nfoFile, byte[] content) {
         Path temporary = nfoFile.resolveSibling(nfoFile.getFileName() + TEMP_SUFFIX);
         try {
@@ -116,7 +116,7 @@ final class NfoFileWriter {
         return writer.toString();
     }
 
-    /** Entfernt Einrückungen der alten Datei, damit der Transformer sauber neu einrücken kann. */
+    /** Removes the indentation of the old file so the transformer can indent cleanly again. */
     private static void removeWhitespaceText(Node node) {
         NodeList children = node.getChildNodes();
         for (int index = children.getLength() - 1; index >= 0; index--) {
@@ -129,7 +129,7 @@ final class NfoFileWriter {
         }
     }
 
-    /** Netzlaufwerke unterstützen teils kein atomares Ersetzen; dann wird normal verschoben. */
+    /** Some network drives do not support atomic replacement; then the file is moved normally. */
     private static void replace(Path source, Path target) throws IOException {
         try {
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

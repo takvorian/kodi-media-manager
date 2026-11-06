@@ -9,8 +9,8 @@ import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerFactory;
 
 /**
- * XML-Parser und -Transformer ohne DTD-Verarbeitung und externe Entitäten. NFO-Dateien stammen
- * aus beliebigen Quellen und dürfen keine Dateien vom Server nachladen (XXE).
+ * XML parser and transformer without DTD processing and external entities. NFO files come from arbitrary sources
+ * and must not load files from the server (XXE).
  */
 final class SecureXml {
 

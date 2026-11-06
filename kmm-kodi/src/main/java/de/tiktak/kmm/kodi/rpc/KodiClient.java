@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicLong;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import lombok.extern.slf4j.Slf4j;
 import tools.jackson.core.JacksonException;
 import tools.jackson.databind.JsonNode;
@@ -28,8 +29,8 @@ import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.json.JsonMapper;
 
 /**
- * Spricht die JSON-RPC-Schnittstelle von Kodi (ab Kodi 19) über HTTP an. Fehler werden in
- * verständliche {@link KodiException}s übersetzt.
+ * Talks to the JSON-RPC interface of Kodi (Kodi 19 and later) over HTTP. Errors are translated into
+ * understandable {@link KodiException}s.
  */
 @Slf4j
 public class KodiClient {
@@ -39,7 +40,7 @@ public class KodiClient {
     private static final int UNAUTHORIZED = 401;
     private static final String DEFAULT_NAME = "Kodi";
     private static final String IS_SCANNING_VIDEO = "Library.IsScanningVideo";
-    /** Einträge je Anfrage beim Lesen ganzer Quellen; hält Antworten über langsame Verbindungen klein. */
+    /** Entries per request when reading whole sources; keeps responses over slow connections small. */
     static final int PAGE_SIZE = 500;
     private static final DateTimeFormatter KODI_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -53,7 +54,7 @@ public class KodiClient {
         this.requestTimeout = requestTimeout;
     }
 
-    /** Prüft die Verbindung und liefert die Kodi-Version. */
+    /** Checks the connection and returns the Kodi version. */
     public KodiVersion version(KodiEndpoint endpoint) {
         JsonNode result = call(endpoint, "Application.GetProperties",
                 Map.of("properties", List.of("name", "version")));
@@ -63,11 +64,11 @@ public class KodiClient {
     }
 
     /**
-     * Sucht einen Film in Kodis Bibliothek.
+     * Looks up a movie in Kodi's library.
      *
-     * @param file Datei aus Sicht von Kodi, z. B. {@code smb://nas/filme/Heat/Heat.mkv}; bei
-     *             mehrteiligen Filmen der erste Teil
-     * @return Kodis ID des Films oder leer, wenn Kodi ihn nicht kennt
+     * @param file file as Kodi sees it, e.g. {@code smb://nas/filme/Heat/Heat.mkv}; for multi-part movies the
+     *             first part
+     * @return Kodi's ID of the movie, or empty if Kodi does not know it
      */
     public Optional<Integer> findMovie(KodiEndpoint endpoint, String file) {
         Map<String, Object> filter = Map.of("field", "path", "operator", "is", "value", KodiFiles.directoryOf(file));
@@ -82,9 +83,9 @@ public class KodiClient {
     }
 
     /**
-     * Sucht ein Filmset in Kodis Bibliothek über seinen Titel, ohne Rücksicht auf Groß- und Kleinschreibung.
+     * Looks up a movie set in Kodi's library by its title, ignoring case.
      *
-     * @return Kodis ID des Sets oder leer, wenn Kodi keines mit dem Titel kennt
+     * @return Kodi's ID of the set, or empty if Kodi knows none with that title
      */
     public Optional<Integer> findMovieSet(KodiEndpoint endpoint, String title) {
         JsonNode sets = call(endpoint, "VideoLibrary.GetMovieSets", Map.of("properties", List.of("title")))
@@ -97,7 +98,7 @@ public class KodiClient {
         return Optional.empty();
     }
 
-    /** @return Kodis ID des Sets, zu dem der Film gehört, oder leer ohne Set */
+    /** @return Kodi's ID of the set the movie belongs to, or empty without a set */
     public Optional<Integer> movieSetOf(KodiEndpoint endpoint, int movieId) {
         int setId = call(endpoint, "VideoLibrary.GetMovieDetails",
                 Map.of("movieid", movieId, "properties", List.of("setid"))).path("moviedetails").path("setid").asInt(0);
@@ -105,11 +106,11 @@ public class KodiClient {
     }
 
     /**
-     * Setzt Titel, Beschreibung und Bilder eines Filmsets.
+     * Sets title, plot and images of a movie set.
      *
-     * @param plot Beschreibung oder {@code null}, um sie zu leeren
-     * @param art  Bilder je Kodi-Bildart ({@code poster}, …) als Pfad aus Sicht von Kodi; {@code null} entfernt ein
-     *             Bild, nicht genannte Arten bleiben, wie sie sind
+     * @param plot plot, or {@code null} to clear it
+     * @param art  images per Kodi image type ({@code poster}, …) as paths as Kodi sees them; {@code null} removes an
+     *             image, types not mentioned stay as they are
      */
     public void setMovieSetDetails(KodiEndpoint endpoint, int setId, String title, String plot,
             Map<String, String> art) {
@@ -124,9 +125,9 @@ public class KodiClient {
     }
 
     /**
-     * Entfernt Bilder aus Kodis Bild-Cache, damit Kodi ein unter gleichem Pfad ersetztes Bild neu lädt.
+     * Removes images from Kodi's texture cache so Kodi reloads an image replaced under the same path.
      *
-     * @param urls Pfade der Bilder aus Sicht von Kodi
+     * @param urls paths of the images as Kodi sees them
      */
     public void removeTextures(KodiEndpoint endpoint, Collection<String> urls) {
         if (urls.isEmpty()) {
@@ -142,16 +143,16 @@ public class KodiClient {
         }
     }
 
-    /** Kodi liest NFO und Bilder des Films neu ein. */
+    /** Kodi rereads the NFO and images of the movie. */
     public void refreshMovie(KodiEndpoint endpoint, int movieId) {
         call(endpoint, "VideoLibrary.RefreshMovie", Map.of("movieid", movieId, "ignorenfo", false));
     }
 
     /**
-     * Sucht eine Serie in Kodis Bibliothek über ihren Ordner.
+     * Looks up a TV show in Kodi's library by its folder.
      *
-     * @param directory Serienordner aus Sicht von Kodi mit abschließendem Trennzeichen
-     * @return Kodis ID der Serie oder leer, wenn Kodi sie nicht kennt
+     * @param directory TV show folder as Kodi sees it, with a trailing separator
+     * @return Kodi's ID of the TV show, or empty if Kodi does not know it
      */
     public Optional<Integer> findTvShow(KodiEndpoint endpoint, String directory) {
         Map<String, Object> filter = Map.of("field", "path", "operator", "is", "value", directory);
@@ -166,11 +167,11 @@ public class KodiClient {
     }
 
     /**
-     * Sucht eine Episode in Kodis Bibliothek. Bei Mehrfachepisoden kennt Kodi mehrere Episoden mit
-     * derselben Datei; Staffel und Nummer unterscheiden sie.
+     * Looks up an episode in Kodi's library. For multi-episode files Kodi knows several episodes with the same
+     * file; season and number tell them apart.
      *
-     * @param file Datei aus Sicht von Kodi
-     * @return Kodis ID der Episode oder leer, wenn Kodi sie nicht kennt
+     * @param file file as Kodi sees it
+     * @return Kodi's ID of the episode, or empty if Kodi does not know it
      */
     public Optional<Integer> findEpisode(KodiEndpoint endpoint, String file, int season, int episode) {
         Map<String, Object> filter = Map.of("field", "path", "operator", "is", "value", KodiFiles.directoryOf(file));
@@ -185,18 +186,18 @@ public class KodiClient {
         return Optional.empty();
     }
 
-    /** Kodi liest {@code tvshow.nfo} und die Bilder der Serie neu ein, die Episoden nicht. */
+    /** Kodi rereads {@code tvshow.nfo} and the images of the TV show, but not the episodes. */
     public void refreshTvShow(KodiEndpoint endpoint, int tvShowId) {
         call(endpoint, "VideoLibrary.RefreshTVShow",
                 Map.of("tvshowid", tvShowId, "ignorenfo", false, "refreshepisodes", false));
     }
 
-    /** Kodi liest NFO und Standbild der Episode neu ein. */
+    /** Kodi rereads the NFO and thumbnail of the episode. */
     public void refreshEpisode(KodiEndpoint endpoint, int episodeId) {
         call(endpoint, "VideoLibrary.RefreshEpisode", Map.of("episodeid", episodeId, "ignorenfo", false));
     }
 
-    /** @return die Videoquellen des Geräts */
+    /** @return the video sources of the device */
     public KodiSources videoSources(KodiEndpoint endpoint) {
         List<String> files = new ArrayList<>();
         for (JsonNode source : call(endpoint, "Files.GetSources", Map.of("media", "video")).path("sources")) {
@@ -205,36 +206,36 @@ public class KodiClient {
         return KodiSources.of(files);
     }
 
-    /** @return ob Kodi gerade seine Videobibliothek durchsucht oder bereinigt */
+    /** @return whether Kodi is currently scanning or cleaning its video library */
     public boolean isScanning(KodiEndpoint endpoint) {
         return call(endpoint, "XBMC.GetInfoBooleans", Map.of("booleans", List.of(IS_SCANNING_VIDEO)))
                 .path(IS_SCANNING_VIDEO).asBoolean(false);
     }
 
     /**
-     * Kodi durchsucht das Verzeichnis nach neuen Medien. Bekannte Einträge aktualisiert Kodi dabei nicht. Läuft schon
-     * ein Scan, bricht Kodi ihn stattdessen ab; deshalb nur über den {@link KodiLibraryScheduler} aufrufen.
+     * Kodi scans the directory for new media. Kodi does not update known entries while doing so. If a scan is
+     * already running, Kodi cancels it instead; so only call this through the {@link KodiLibraryScheduler}.
      *
-     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     * @param directory directory as Kodi sees it, with a trailing separator
      */
     void scan(KodiEndpoint endpoint, String directory) {
         call(endpoint, "VideoLibrary.Scan", Map.of("directory", directory, "showdialogs", false));
     }
 
     /**
-     * Kodi entfernt Filme in oder unterhalb des Verzeichnisses, deren Dateien es nicht mehr gibt. Während eines Scans
-     * verwirft Kodi den Aufruf; deshalb nur über den {@link KodiLibraryScheduler} aufrufen.
+     * Kodi removes movies in or below the directory whose files no longer exist. During a scan Kodi discards the
+     * call; so only call this through the {@link KodiLibraryScheduler}.
      *
-     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     * @param directory directory as Kodi sees it, with a trailing separator
      */
     void cleanMovies(KodiEndpoint endpoint, String directory) {
         clean(endpoint, "movies", directory);
     }
 
     /**
-     * Wie {@link #cleanMovies}, für Serien und Episoden.
+     * Like {@link #cleanMovies}, for TV shows and episodes.
      *
-     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     * @param directory directory as Kodi sees it, with a trailing separator
      */
     void cleanTvShows(KodiEndpoint endpoint, String directory) {
         clean(endpoint, "tvshows", directory);
@@ -245,9 +246,9 @@ public class KodiClient {
     }
 
     /**
-     * Liefert den Wiedergabestand aller Filme in oder unterhalb des Verzeichnisses.
+     * Returns the playback state of all movies in or below the directory.
      *
-     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     * @param directory directory as Kodi sees it, with a trailing separator
      */
     public List<KodiPlayback> moviePlaybacks(KodiEndpoint endpoint, String directory) {
         return playbacks(endpoint, "VideoLibrary.GetMovies", "movies", directory, List.of("file", "playcount",
@@ -255,9 +256,9 @@ public class KodiClient {
     }
 
     /**
-     * Liefert den Wiedergabestand aller Episoden in oder unterhalb des Verzeichnisses.
+     * Returns the playback state of all episodes in or below the directory.
      *
-     * @param directory Verzeichnis aus Sicht von Kodi mit abschließendem Trennzeichen
+     * @param directory directory as Kodi sees it, with a trailing separator
      */
     public List<KodiPlayback> episodePlaybacks(KodiEndpoint endpoint, String directory) {
         return playbacks(endpoint, "VideoLibrary.GetEpisodes", "episodes", directory, List.of("file", "season",
@@ -294,7 +295,7 @@ public class KodiClient {
         return node.isNumber() ? node.asInt() : null;
     }
 
-    /** Kodi meldet „nie gespielt“ als leeren Text. */
+    /** Kodi reports "never played" as empty text. */
     private static LocalDateTime dateTime(String value) {
         try {
             return value.isBlank() ? null : LocalDateTime.parse(value, KODI_DATE_TIME);
@@ -308,17 +309,20 @@ public class KodiClient {
         log.debug("Calling {} on {}", method, endpoint);
         HttpResponse<String> response = send(endpoint, request(endpoint, method, params));
         if (response.statusCode() == UNAUTHORIZED) {
-            throw new KodiException("Kodi unter %s lehnt Benutzername oder Passwort ab.".formatted(endpoint.address()));
+            throw new KodiException(LocalizedText.of("kodiRpc.unauthorized").with("address", endpoint.address()));
         }
         if (response.statusCode() != OK) {
-            throw new KodiException("Kodi unter %s antwortet mit HTTP-Status %d."
-                    .formatted(endpoint.address(), response.statusCode()));
+            throw new KodiException(LocalizedText.of("kodiRpc.httpStatus")
+                    .with("address", endpoint.address())
+                    .with("status", response.statusCode()));
         }
         JsonNode body = parse(endpoint, response.body());
         JsonNode error = body.path("error");
         if (!error.isMissingNode() && !error.isNull()) {
-            throw new KodiException("Kodi meldet bei %s einen Fehler: %s (%d)."
-                    .formatted(method, error.path("message").asString(), error.path("code").asInt(0)));
+            throw new KodiException(LocalizedText.of("kodiRpc.error")
+                    .with("method", method)
+                    .with("message", error.path("message").asString())
+                    .with("code", error.path("code").asInt(0)));
         }
         return body.path("result");
     }
@@ -352,18 +356,19 @@ public class KodiClient {
         } catch (HttpConnectTimeoutException e) {
             throw unreachable(endpoint, e);
         } catch (HttpTimeoutException e) {
-            throw new KodiException("Kodi unter %s antwortet nicht rechtzeitig.".formatted(endpoint.address()), e);
+            throw new KodiException(LocalizedText.of("kodiRpc.timeout").with("address", endpoint.address()), e);
         } catch (IOException e) {
             throw unreachable(endpoint, e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw new KodiException("Die Anfrage an Kodi wurde unterbrochen.", e);
+            throw new KodiException(LocalizedText.of("kodiRpc.interrupted"), e);
         }
     }
 
     private static KodiException unreachable(KodiEndpoint endpoint, IOException cause) {
-        return new KodiException(("Kodi unter %s:%d ist nicht erreichbar. Läuft Kodi, und ist "
-                + "„Steuerung über HTTP erlauben“ aktiviert?").formatted(endpoint.address(), endpoint.port()), cause);
+        return new KodiException(LocalizedText.of("kodiRpc.unreachable")
+                .with("address", endpoint.address())
+                .with("port", String.valueOf(endpoint.port())), cause);
     }
 
     private JsonNode parse(KodiEndpoint endpoint, String body) {
@@ -379,7 +384,7 @@ public class KodiClient {
     }
 
     private static KodiException invalidResponse(KodiEndpoint endpoint, Throwable cause) {
-        return new KodiException("Die Antwort von %s ist keine gültige Kodi-Antwort.".formatted(endpoint.address()),
+        return new KodiException(LocalizedText.of("kodiRpc.invalidResponse").with("address", endpoint.address()),
                 cause);
     }
 }

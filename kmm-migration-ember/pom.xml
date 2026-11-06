@@ -12,9 +12,13 @@
 
     <artifactId>kmm-migration-ember</artifactId>
     <name>KMM Ember Migration</name>
-    <description>Liest Ember-Media-Manager-Profile (SQLite-Datenbank und Settings.xml) für die Migration nach KMM.</description>
+    <description>Reads Ember Media Manager profiles (SQLite database and Settings.xml) for the migration to KMM.</description>
 
     <dependencies>
+        <dependency>
+            <groupId>de.tiktak.kmm</groupId>
+            <artifactId>kmm-i18n</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.xerial</groupId>
             <artifactId>sqlite-jdbc</artifactId>
@@ -41,7 +45,7 @@
 
     <build>
         <plugins>
-            <!-- Stellt die Ember-Fixtures (Testdatenbank, Settings.xml) den Integrationstests von kmm-app bereit. -->
+            <!-- Provides the Ember fixtures (test database, Settings.xml) to the integration tests of kmm-app. -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>

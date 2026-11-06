@@ -20,7 +20,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Ein Kodi-Gerät, das KMM nach Änderungen aktualisiert (entspricht Embers Kodi-Hosts).
+ * A Kodi device that KMM updates after changes (corresponds to Ember's Kodi hosts).
  */
 @Entity
 @Table(name = "kodi_host")
@@ -62,8 +62,7 @@ class KodiHost {
     }
 
     /**
-     * Übernimmt die Einstellungen; ein fehlendes Passwort behält das gespeicherte, solange es einen
-     * Benutzer gibt.
+     * Applies the settings; a missing password keeps the stored one as long as there is a user.
      */
     void apply(KodiHostSettings settings) {
         this.name = settings.name();

@@ -15,14 +15,15 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.FileSystemUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.migration.ember.kodi.EmberKodiHostsReader;
 import de.tiktak.kmm.migration.ember.settings.EmberAdvancedSettingsReader;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Hält das hochgeladene Ember-Profil, bis der Import es nicht mehr braucht. Ember läuft meist auf einem anderen
- * Rechner als KMM. Es gibt nur ein Profil zur Zeit, ein neues ersetzt das alte. Die Dateien enthalten Zugangsdaten
- * und bleiben deshalb nicht liegen: Reste eines abgebrochenen Ablaufs löscht der nächste Start.
+ * Keeps the uploaded Ember profile until the import no longer needs it. Ember usually runs on another computer than
+ * KMM. There is only one profile at a time, a new one replaces the old one. The files contain credentials and are
+ * therefore not kept: the next start deletes leftovers of an aborted run.
  */
 @Slf4j
 @Component
@@ -41,14 +42,14 @@ class EmberProfileUpload {
     }
 
     /**
-     * Ersetzt das hochgeladene Profil.
+     * Replaces the uploaded profile.
      *
-     * @throws EmberProfileUploadException wenn eine unerwartete Datei dabei ist oder die Datenbank fehlt
+     * @throws EmberProfileUploadException if an unexpected file is included or the database is missing
      */
     void store(List<MultipartFile> files) {
         List<String> names = files.stream().map(EmberProfileUpload::fileName).toList();
         if (names.stream().noneMatch(name -> DATABASE_FILE.matcher(name).matches())) {
-            throw new EmberProfileUploadException("In den hochgeladenen Dateien ist keine Ember-Datenbank.");
+            throw new EmberProfileUploadException(LocalizedText.of("migration.upload.noDatabase"));
         }
         discard();
         try {
@@ -63,11 +64,11 @@ class EmberProfileUpload {
     }
 
     /**
-     * @throws EmberProfileUploadException wenn kein Profil hochgeladen ist
+     * @throws EmberProfileUploadException if no profile is uploaded
      */
     Path directory() {
         if (!Files.isDirectory(directory)) {
-            throw new EmberProfileUploadException("Bitte zuerst das Ember-Profil hochladen.");
+            throw new EmberProfileUploadException(LocalizedText.of("migration.upload.missing"));
         }
         return directory;
     }
@@ -81,11 +82,11 @@ class EmberProfileUpload {
         }
     }
 
-    /** Nur bekannte Namen, damit kein Dateiname aus dem Upload-Ordner hinausführt. */
+    /** Only known names, so that no file name leads out of the upload folder. */
     private static String fileName(MultipartFile file) {
         String name = String.valueOf(file.getOriginalFilename());
         if (!OPTIONAL_FILES.contains(name) && !DATABASE_FILE.matcher(name).matches()) {
-            throw new EmberProfileUploadException("'%s' gehört nicht zu einem Ember-Profil.".formatted(name));
+            throw new EmberProfileUploadException(LocalizedText.of("migration.upload.foreignFile").with("name", name));
         }
         return name;
     }

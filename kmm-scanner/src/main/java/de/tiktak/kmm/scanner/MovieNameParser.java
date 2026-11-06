@@ -5,16 +5,16 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Leitet Titel, Jahr und IMDb-ID aus typischen Namen ab, z. B. {@code Heat (1995) tt0113277} oder
- * {@code The.Matrix.1999.1080p.BluRay.x264}. Eine Jahreszahl am Anfang gehört zum Titel
- * ({@code 1917 (2019)}, {@code 2001 A Space Odyssey}).
+ * Derives title, year and IMDb ID from typical names, e.g. {@code Heat (1995) tt0113277} or
+ * {@code The.Matrix.1999.1080p.BluRay.x264}. A year at the beginning belongs to the title ({@code 1917 (2019)},
+ * {@code 2001 A Space Odyssey}).
  */
 public class MovieNameParser {
 
     private static final Pattern WORD_SEPARATORS = Pattern.compile("[._]+");
     private static final Pattern WHITESPACE = Pattern.compile("\\s+");
     private static final Pattern YEAR = Pattern.compile("(?<![0-9])(?:19|20)[0-9]{2}(?![0-9])");
-    /** Auch in den Schreibweisen {@code [tt0113277]} und {@code {imdb-tt0113277}} anderer Programme. */
+    /** Also in the notations {@code [tt0113277]} and {@code {imdb-tt0113277}} of other programs. */
     private static final Pattern IMDB_ID = Pattern.compile(
             "(?i)[\\[({]?(?:imdb(?:id)?[- =]*)?(?<![\\p{L}0-9])(tt[0-9]{7,10})(?![\\p{L}0-9])[\\])}]?");
     private static final Pattern RELEASE_TAG = Pattern.compile(

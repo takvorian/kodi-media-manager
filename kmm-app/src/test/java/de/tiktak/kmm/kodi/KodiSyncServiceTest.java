@@ -26,6 +26,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.artwork.MovieSetArtworkService;
 import de.tiktak.kmm.artwork.MovieSetImage;
+import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.kodi.path.KodiPathMapper;
 import de.tiktak.kmm.kodi.path.KodiPathMapping;
 import de.tiktak.kmm.kodi.rpc.FakeKodiServer;
@@ -112,11 +114,11 @@ class KodiSyncServiceTest {
         assertThat(service.refreshMovie(MOVIE_ID)).singleElement().satisfies(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NO_KODI_SOURCE);
             assertThat(result.failed()).isTrue();
-            assertThat(result.message()).isEqualTo("Kodi hat keine Quelle für a:\\medien\\filme\\Sliver\\ und findet "
-                    + "dort vermutlich nichts. Prüfe die Pfad-Zuordnung von „Wohnzimmer“. "
-                    + "Quellen in Kodi: smb://nas/filme/, smb://nas/serien/.");
+            assertThat(Messages.english(result.message())).isEqualTo("Kodi has no source for "
+                    + "a:\\medien\\filme\\Sliver\\ and will probably find nothing there. Check the path mapping of "
+                    + "“Wohnzimmer”. Sources in Kodi: smb://nas/filme/, smb://nas/serien/.");
         });
-        assertThat(kodi.methods()).as("Kodi kann das Verzeichnis trotzdem kennen").contains("VideoLibrary.Scan");
+        assertThat(kodi.methods()).as("Kodi may know the directory anyway").contains("VideoLibrary.Scan");
     }
 
     @Test
@@ -145,7 +147,7 @@ class KodiSyncServiceTest {
         List<KodiSyncResult> results = service.refreshMovie(MOVIE_ID);
 
         assertThat(results).containsExactly(
-                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, "„Heat“ aktualisiert.", NOW));
+                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, refreshed("Heat"), NOW));
         assertThat(kodi.methods()).containsExactly("VideoLibrary.GetMovies", "VideoLibrary.RefreshMovie");
         assertThat(kodi.calls().get(1).params().path("movieid").asInt()).isEqualTo(7);
         assertThat(syncLog.lastResult(1)).contains(results.getFirst());
@@ -161,8 +163,8 @@ class KodiSyncServiceTest {
 
         assertThat(results).singleElement().satisfies(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.SCAN_STARTED);
-            assertThat(result.message())
-                    .isEqualTo("„Heat“ ist in Kodi noch unbekannt; Kodi liest smb://nas/filme/Heat (1995)/ ein.");
+            assertThat(result.message()).isEqualTo(LocalizedText.of("kodi.sync.scanUnknown")
+                    .with("title", "Heat").with("directory", "smb://nas/filme/Heat (1995)/"));
         });
         assertThat(kodi.calls().getFirst().params().path("filter").path("value").asString())
                 .isEqualTo("smb://nas/filme/Heat (1995)/VIDEO_TS/");
@@ -180,7 +182,7 @@ class KodiSyncServiceTest {
 
         assertThat(service.refreshMovie(MOVIE_ID)).singleElement().satisfies(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.FAILED);
-            assertThat(result.message()).contains("liest gerade seine Bibliothek ein");
+            assertThat(result.message().key()).isEqualTo("kodiRpc.libraryBusy");
         });
         assertThat(kodi.methods()).doesNotContain("VideoLibrary.Scan");
     }
@@ -192,7 +194,7 @@ class KodiSyncServiceTest {
 
         assertThat(service.refreshMovie(MOVIE_ID)).singleElement().satisfies(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED);
-            assertThat(result.message()).startsWith("Keine Pfad-Zuordnung für ").endsWith("Heat.mkv.");
+            assertThat(Messages.english(result.message())).startsWith("No path mapping for ").endsWith("Heat.mkv.");
         });
         assertThat(kodi.calls()).isEmpty();
     }
@@ -211,7 +213,7 @@ class KodiSyncServiceTest {
 
         assertThat(results).extracting(KodiSyncResult::outcome)
                 .containsExactly(KodiSyncOutcome.FAILED, KodiSyncOutcome.SCAN_STARTED);
-        assertThat(results.getFirst().message()).contains("nicht erreichbar");
+        assertThat(results.getFirst().message().key()).isEqualTo("kodiRpc.unreachable");
         assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> assertThat(result.failed()).isTrue());
     }
 
@@ -253,8 +255,8 @@ class KodiSyncServiceTest {
                 .isEqualTo("smb://nas/filme/H/Heat (1995)/");
         assertThat(kodi.calls().get(4).params().path("directory").asString()).isEqualTo("smb://nas/filme/heat/");
         assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> assertThat(result.message())
-                .isEqualTo("Kodi liest smb://nas/filme/H/Heat (1995)/ ein und entfernt die alten Einträge aus "
-                        + "smb://nas/filme/heat/."));
+                .isEqualTo(LocalizedText.of("kodi.sync.renamed").with("directory", "smb://nas/filme/H/Heat (1995)/")
+                        .with("previous", "smb://nas/filme/heat/")));
         assertThat(syncLog.lastResult(2)).hasValueSatisfying(
                 result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
         assertThat(syncLog.lastResult(3)).isEmpty();
@@ -321,7 +323,7 @@ class KodiSyncServiceTest {
         JsonNode art = kodi.calls().get(1).params().path("art");
         assertThat(art.path("poster").asString()).isEqualTo("smb://nas/filme/_filmsets/Matrix-poster.jpg");
         assertThat(art.path("fanart").isNull()).isTrue();
-        assertThat(art.has("banner")).as("außerhalb der Pfad-Zuordnung").isFalse();
+        assertThat(art.has("banner")).as("outside the path mapping").isFalse();
         assertThat(kodi.calls()).extracting(call -> call.method()).containsExactly("VideoLibrary.GetMovieSets",
                 "VideoLibrary.SetMovieSetDetails", "Textures.GetTextures", "Textures.RemoveTexture");
     }
@@ -345,7 +347,7 @@ class KodiSyncServiceTest {
 
         assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.SCAN_STARTED);
-            assertThat(result.message()).isEqualTo("Kodi sucht in smb://nas/filme/ nach neuen Filmen.");
+            assertThat(Messages.english(result.message())).isEqualTo("Kodi is looking for new movies in smb://nas/filme/.");
         });
         assertThat(syncLog.lastResult(2)).hasValueSatisfying(
                 result -> assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
@@ -361,7 +363,7 @@ class KodiSyncServiceTest {
 
         assertThat(service.refreshTvShow(SHOW_ID)).singleElement().satisfies(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.REFRESHED);
-            assertThat(result.message()).isEqualTo("„Lost“ aktualisiert.");
+            assertThat(result.message()).isEqualTo(refreshed("Lost"));
         });
         assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow");
 
@@ -369,7 +371,7 @@ class KodiSyncServiceTest {
         service.refreshTvShowOnRealtimeHosts(SHOW_ID);
         assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.SCAN_STARTED);
-            assertThat(result.message()).contains("smb://nas/serien/Lost/");
+            assertThat(result.message().args()).containsEntry("directory", "smb://nas/serien/Lost/");
         });
     }
 
@@ -388,7 +390,7 @@ class KodiSyncServiceTest {
                                "season": 1, "episode": 2}]}""");
 
         assertThat(service.refreshEpisode(9)).singleElement().satisfies(result ->
-                assertThat(result.message()).isEqualTo("„Lost S01E02“ aktualisiert."));
+                assertThat(result.message()).isEqualTo(refreshed("Lost S01E02")));
         assertThat(kodi.calls().get(1).params().path("episodeid").asInt()).isEqualTo(12);
 
         kodi.respond("VideoLibrary.GetEpisodes", "{}");
@@ -415,7 +417,8 @@ class KodiSyncServiceTest {
         when(sourceService.require(4)).thenReturn(new MediaSource("Serien", SERIES_LIBRARY.toString(), MediaType.TV_SHOW));
 
         assertThat(service.scanSource(4)).singleElement().satisfies(result -> assertThat(result.message())
-                .isEqualTo("Kodi sucht in smb://nas/serien/ nach neuen Serien und Episoden."));
+                .isEqualTo(LocalizedText.of("kodi.sync.scanSource").with("directory", "smb://nas/serien/")
+                        .with("kind", "tvShow")));
     }
 
     private void givenShow() {
@@ -436,6 +439,10 @@ class KodiSyncServiceTest {
         when(metadataService.findDetails(MOVIE_ID)).thenReturn(new MovieDetails(MOVIE_ID, 1L,
                 LIBRARY.resolve(relativeFile).toString(), format, 1, NOW, metadata, MovieSupplement.EMPTY,
                 StreamDetails.EMPTY, new MovieDetails.NfoInfo("Heat.nfo", false, null)));
+    }
+
+    private static LocalizedText refreshed(String title) {
+        return LocalizedText.of("kodi.sync.refreshed").with("title", title);
     }
 
     private static KodiTarget target(long id, String name, KodiEndpoint endpoint, KodiPathMapper mapper,
