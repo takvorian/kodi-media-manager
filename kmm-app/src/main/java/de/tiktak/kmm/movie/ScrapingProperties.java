@@ -4,8 +4,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.bind.DefaultValue;
 
 /**
- * @param preferredMetadataScraper Scraper für das automatische Scrapen; ist er nicht verfügbar, wird
- *                                 der erste eingerichtete Metadaten-Scraper genutzt
+ * @param preferredMetadataScraper scraper for automatic scraping; if it is unavailable,
+ *                                 the first metadata scraper that is set up is used
  */
 @ConfigurationProperties("kmm.scraping")
 public record ScrapingProperties(@DefaultValue("tmdb") String preferredMetadataScraper) {

@@ -9,6 +9,7 @@ import org.springframework.web.ErrorResponseException;
 
 import de.tiktak.kmm.artwork.ArtworkFillResult;
 import de.tiktak.kmm.artwork.ArtworkService;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -178,7 +179,7 @@ public class AutoScrapeService {
                 case SCRAPED -> {
                     progress.scraped();
                     streamDetails.probeMovieAfterScrape(movieId)
-                            .ifPresent(failure -> progress.failed(title, TECHNICAL_DETAILS + failure));
+                            .ifPresent(failure -> progress.failed(title, TECHNICAL_DETAILS + Messages.english(failure)));
                 }
                 case NO_MATCH -> progress.unmatched(movieId, title);
                 case NO_SCRAPER -> progress.warn(NO_METADATA_SCRAPER);
@@ -188,7 +189,7 @@ public class AutoScrapeService {
             }
             ArtworkFillResult artwork = artworkService.fillMissing(movieId);
             progress.imagesSaved(artwork.saved());
-            artwork.warnings().forEach(progress::warn);
+            artwork.warnings().forEach(warning -> progress.warn(Messages.english(warning)));
             if (trailerService.fillMissing(movieId)) {
                 progress.trailerSaved();
             }
@@ -197,7 +198,7 @@ public class AutoScrapeService {
             renameService.renameIfEnabled(movieId, RenameTrigger.SCRAPE)
                     .filter(plan -> plan.status() == MovieRenamePlan.Status.CONFLICT
                             || plan.status() == MovieRenamePlan.Status.FAILED)
-                    .ifPresent(plan -> progress.warn(NOT_RENAMED.formatted(title, plan.message())));
+                    .ifPresent(plan -> progress.warn(NOT_RENAMED.formatted(title, Messages.english(plan.message()))));
         } catch (ErrorResponseException e) {
             progress.failed(title, e.getBody().getDetail());
         } catch (RuntimeException e) {

@@ -13,11 +13,11 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 
 /**
- * Bausteine für Filterabfragen, gemeinsam für Film- und Serienlisten. Texte werden ohne Rücksicht auf Groß- und
- * Kleinschreibung verglichen; „ist nicht“ trifft auch Einträge ohne Wert.
+ * Building blocks for filter queries, shared by movie and TV show lists. Texts are compared
+ * case-insensitively; "is not" also matches entries without a value.
  *
- * @param cb    der Criteria-Builder der Abfrage
- * @param clock Uhr für Bedingungen wie „hinzugefügt vor Tagen“
+ * @param cb    the criteria builder of the query
+ * @param clock clock for conditions such as "added days ago"
  */
 public record FilterPredicates(CriteriaBuilder cb, Clock clock) {
 
@@ -25,9 +25,9 @@ public record FilterPredicates(CriteriaBuilder cb, Clock clock) {
     private static final char ESCAPE = StreamIndex.LIKE_ESCAPE;
 
     /**
-     * Prüft Vergleich und Wert, bevor die Abfrage gebaut wird.
+     * Checks comparison and value before the query is built.
      *
-     * @throws InvalidFilterException wenn das Feld den Vergleich nicht erlaubt oder der Wert fehlt oder nicht passt
+     * @throws InvalidFilterException if the field does not allow the comparison or the value is missing or does not fit
      */
     public static void validate(FilterField field, FilterOperator operator, String value) {
         if (!field.allows(operator)) {
@@ -43,7 +43,7 @@ public record FilterPredicates(CriteriaBuilder cb, Clock clock) {
             case NUMBER -> number(field, value);
             case BOOLEAN -> bool(field, value);
             default -> {
-                // Text passt immer.
+                // Text always fits.
             }
         }
     }
@@ -64,7 +64,7 @@ public record FilterPredicates(CriteriaBuilder cb, Clock clock) {
         };
     }
 
-    /** Verknüpft die Bedingungen; ohne Bedingung gilt alles. */
+    /** Combines the conditions; without a condition everything matches. */
     public Predicate combine(List<Predicate> conditions, boolean matchAll) {
         if (conditions.isEmpty()) {
             return cb.conjunction();
@@ -73,7 +73,7 @@ public record FilterPredicates(CriteriaBuilder cb, Clock clock) {
         return matchAll ? cb.and(all) : cb.or(all);
     }
 
-    /** Titelsuche zusätzlich zu den Bedingungen. */
+    /** Title search in addition to the conditions. */
     public Predicate withSearch(Predicate conditions, Path<String> title, String search) {
         return search == null ? conditions : cb.and(conditions, cb.like(cb.lower(title), contains(search), ESCAPE));
     }
@@ -106,13 +106,13 @@ public record FilterPredicates(CriteriaBuilder cb, Clock clock) {
         return operator == FilterOperator.EMPTY ? cb.isNull(path) : cb.isNotNull(path);
     }
 
-    /** Ein Eintrag einer Liste in {@link StreamIndex}-Form, z. B. ein Audio-Codec. */
+    /** An entry of a list in {@link StreamIndex} form, e.g. an audio codec. */
     public Predicate token(Path<String> path, FilterOperator operator, String value) {
         Predicate contained = cb.like(path, StreamIndex.containsToken(value), ESCAPE);
         return operator == FilterOperator.IS ? contained : cb.or(cb.isNull(path), cb.not(contained));
     }
 
-    /** „höchstens n Tage“ heißt: in den letzten n Tagen hinzugefügt. */
+    /** "at most n days" means: added within the last n days. */
     public Predicate addedDaysAgo(Path<Instant> addedAt, FilterField field, FilterOperator operator, String value) {
         Instant boundary = clock.instant().minus(Duration.ofDays(number(field, value)));
         return operator == FilterOperator.AT_MOST ? cb.greaterThanOrEqualTo(addedAt, boundary)

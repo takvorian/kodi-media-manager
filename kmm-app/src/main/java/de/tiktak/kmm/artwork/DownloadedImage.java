@@ -3,9 +3,9 @@ package de.tiktak.kmm.artwork;
 import java.util.Objects;
 
 /**
- * Ein heruntergeladenes Bild.
+ * A downloaded image.
  *
- * @param extension Dateiendung passend zum Inhalt, z. B. {@code jpg} oder {@code png}
+ * @param extension file extension matching the content, e.g. {@code jpg} or {@code png}
  */
 record DownloadedImage(byte[] content, String extension) {
 

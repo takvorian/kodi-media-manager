@@ -15,6 +15,8 @@ import java.util.function.Predicate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.Localized;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobAlreadyRunningException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
@@ -34,8 +36,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest technische Angaben mit ffprobe aus und übernimmt sie in NFO und Datenbank. Episoden einer
- * Mehrfachepisoden-Datei werden zusammen ausgelesen, denn sie teilen sich die Datei.
+ * Reads technical details with ffprobe and applies them to NFO and database. Episodes of a
+ * multi-episode file are read together, because they share the file.
  */
 @Slf4j
 @Service
@@ -44,10 +46,10 @@ public class StreamDetailsService {
 
     static final String JOB_KEY_PREFIX = "stream-details:";
     static final String NEW_FILES_JOB_KEY_PREFIX = "stream-details-new:";
-    /** Präfix je Serie; es liest höchstens eine Staffel der Serie zugleich. */
+    /** Prefix per TV show; at most one season of the show is read at a time. */
     static final String SEASON_JOB_KEY_PREFIX = "stream-details-season:";
     static final int MAX_LISTED_FAILURES = 20;
-    /** Gleichzeitige ffprobe-Aufrufe; jeder liest nur den Anfang der Datei, mehr belastet das NAS. */
+    /** Concurrent ffprobe calls; each reads only the start of the file, more would burden the NAS. */
     static final int PARALLEL_PROBES = 4;
     private static final String EPISODE_LABEL = "%s S%02dE%02d";
 
@@ -58,7 +60,7 @@ public class StreamDetailsService {
     private final JobService jobService;
 
     /**
-     * @throws MediaInfoProblemException wenn ffprobe die Datei nicht lesen kann
+     * @throws MediaInfoProblemException if ffprobe cannot read the file
      */
     public StreamDetails probeMovie(long movieId) {
         MovieMedia media = movies.find(movieId);
@@ -66,25 +68,25 @@ public class StreamDetailsService {
     }
 
     /**
-     * @throws MediaInfoProblemException wenn ffprobe die Datei nicht lesen kann
+     * @throws MediaInfoProblemException if ffprobe cannot read the file
      */
     public StreamDetails probeEpisode(long episodeId) {
         EpisodeMedia media = episodes.find(episodeId);
         return episodes.changeStreamDetails(episodeId, probe(media.file(), DiscFormat.FILE));
     }
 
-    /** Liest die Filme bzw. Episoden der Quelle als Hintergrund-Job aus. */
+    /** Reads the movies or episodes of the source as a background job. */
     public JobSnapshot startSource(long sourceId, StreamDetailsScope scope) {
         MediaSource source = sourceService.require(sourceId);
-        String title = "Technische Angaben „%s“".formatted(source.getName());
+        LocalizedText title = LocalizedText.of("mediaInfo.source.jobTitle").with("source", source.getName());
         return jobService.submit(JOB_KEY_PREFIX + sourceId, title,
                 context -> run(sourceId, entries(source, scope == StreamDetailsScope.ALL, id -> true), context));
     }
 
     /**
-     * Liest alle Episoden einer Staffel als Hintergrund-Job neu aus, auch solche mit vorhandenen Angaben.
+     * Re-reads all episodes of a season as a background job, including those with existing details.
      *
-     * @throws MediaInfoProblemException wenn die Staffel keine Episoden hat
+     * @throws MediaInfoProblemException if the season has no episodes
      */
     public JobSnapshot startSeason(long showId, int season) {
         List<EpisodeMedia> media = episodes.findByShow(showId).stream()
@@ -98,13 +100,15 @@ public class StreamDetailsService {
         List<Entry> entries = perFile(media, EpisodeMedia::file).stream()
                 .map(episode -> episodeEntry(episode, true))
                 .toList();
-        String title = "Technische Angaben Staffel %d von „%s“".formatted(season, media.getFirst().showTitle());
+        LocalizedText title = LocalizedText.of("mediaInfo.season.jobTitle")
+                .with("season", season)
+                .with("show", media.getFirst().showTitle());
         return jobService.submit(SEASON_JOB_KEY_PREFIX + showId, title, context -> run(sourceId, entries, context));
     }
 
     /**
-     * Liest neu gefundene Dateien aus, wenn das eingestellt ist; läuft schon ein solcher Job für die
-     * Quelle, holt der nächste Scan die übrigen nach.
+     * Reads newly found files if that is enabled; if such a job is already running for the
+     * source, the next scan picks up the rest.
      */
     void startNewFiles(long sourceId, MediaType mediaType, Collection<Long> ids) {
         if (ids.isEmpty() || !probes.probeNewFiles()) {
@@ -113,7 +117,7 @@ public class StreamDetailsService {
         MediaSource source = sourceService.require(sourceId);
         Set<Long> wanted = Set.copyOf(ids);
         List<Entry> entries = entries(source, true, wanted::contains);
-        String title = "Technische Angaben neuer Dateien „%s“".formatted(source.getName());
+        LocalizedText title = LocalizedText.of("mediaInfo.newFiles.jobTitle").with("source", source.getName());
         try {
             jobService.submit(NEW_FILES_JOB_KEY_PREFIX + sourceId, title, context -> run(sourceId, entries, context));
         } catch (JobAlreadyRunningException e) {
@@ -123,29 +127,29 @@ public class StreamDetailsService {
     }
 
     /**
-     * Liest einen Film nach dem Scrapen aus, wenn das eingestellt ist.
+     * Reads a movie after scraping if that is enabled.
      *
-     * @return die übernommenen Angaben; leer, wenn das Auslesen nach dem Scrapen abgeschaltet ist
-     * @throws MediaInfoProblemException wenn ffprobe die Datei nicht lesen kann
+     * @return the applied details; empty if reading after scraping is disabled
+     * @throws MediaInfoProblemException if ffprobe cannot read the file
      */
     public Optional<StreamDetails> probeMovieIfEnabled(long movieId) {
         return probes.probeOnScrape() ? Optional.of(probeMovie(movieId)) : Optional.empty();
     }
 
     /**
-     * Liest einen Film nach dem automatischen Scrapen aus, wenn das eingestellt ist.
+     * Reads a movie after automatic scraping if that is enabled.
      *
-     * @return eine Fehlermeldung, wenn das Auslesen scheiterte
+     * @return an error message if reading failed
      */
-    public Optional<String> probeMovieAfterScrape(long movieId) {
+    public Optional<LocalizedText> probeMovieAfterScrape(long movieId) {
         return failureOf(() -> probeMovieIfEnabled(movieId));
     }
 
     /**
-     * Liest nach dem Scrapen einer Serie die Episoden ohne technische Angaben aus, wenn das eingestellt
-     * ist. Vorhandene Angaben, etwa aus Ember, bleiben, damit das Scrapen schnell bleibt.
+     * After scraping a TV show, reads the episodes without technical details if that is
+     * enabled. Existing details, e.g. from Ember, stay so that scraping stays fast.
      *
-     * @return leer, wenn das Auslesen nach dem Scrapen abgeschaltet ist
+     * @return empty if reading after scraping is disabled
      */
     public Optional<ShowStreamDetailsResult> probeShowIfEnabled(long showId) {
         return probeEpisodesIfEnabled(episodes.findByShow(showId));
@@ -156,10 +160,10 @@ public class StreamDetailsService {
             return Optional.empty();
         }
         int updated = 0;
-        List<String> failures = new ArrayList<>();
+        List<LocalizedText> failures = new ArrayList<>();
         for (EpisodeMedia media : perFile(candidates, EpisodeMedia::file)) {
             if (!media.hasStreamDetails()) {
-                Optional<String> failure = failureOf(() -> probeEpisode(media.episodeId()));
+                Optional<LocalizedText> failure = failureOf(() -> probeEpisode(media.episodeId()));
                 failure.ifPresent(failures::add);
                 updated += failure.isEmpty() ? 1 : 0;
             }
@@ -168,21 +172,21 @@ public class StreamDetailsService {
     }
 
     /**
-     * Liest nach dem automatischen Scrapen einer Serie die Episoden ohne technische Angaben aus.
+     * After automatic scraping of a TV show, reads the episodes without technical details.
      *
-     * @return die Fehlermeldungen der Dateien, die nicht gelesen werden konnten
+     * @return the error messages of the files that could not be read
      * @see #probeShowIfEnabled(long)
      */
-    public List<String> probeEpisodesAfterScrape(long showId) {
+    public List<LocalizedText> probeEpisodesAfterScrape(long showId) {
         return probeShowIfEnabled(showId).map(ShowStreamDetailsResult::failures).orElse(List.of());
     }
 
     /**
-     * Wie {@link #probeEpisodesAfterScrape(long)}, aber nur für die Episoden einer Staffel.
+     * Like {@link #probeEpisodesAfterScrape(long)}, but only for the episodes of one season.
      *
-     * @return die Fehlermeldungen der Dateien, die nicht gelesen werden konnten
+     * @return the error messages of the files that could not be read
      */
-    public List<String> probeSeasonAfterScrape(long showId, int season) {
+    public List<LocalizedText> probeSeasonAfterScrape(long showId, int season) {
         return probeEpisodesIfEnabled(episodes.findByShow(showId).stream()
                 .filter(media -> media.season() == season)
                 .toList())
@@ -218,8 +222,8 @@ public class StreamDetailsService {
     }
 
     /**
-     * @param all     ob auch Einträge mit vorhandenen Angaben ausgelesen werden
-     * @param include welche Filme bzw. Episoden überhaupt in Frage kommen
+     * @param all     whether entries with existing details are read as well
+     * @param include which movies or episodes are eligible at all
      */
     private List<Entry> entries(MediaSource source, boolean all, Predicate<Long> include) {
         if (source.getMediaType() == MediaType.TV_SHOW) {
@@ -242,36 +246,37 @@ public class StreamDetailsService {
                 DiscFormat.FILE, all || !media.hasStreamDetails());
     }
 
-    /** Je Datei der erste Eintrag; die übrigen Episoden der Datei bekommen die Angaben mit. */
+    /** Per file the first entry; the remaining episodes of the file receive the details as well. */
     private static <T> List<T> perFile(List<T> items, Function<T, Path> file) {
         Map<Path, T> first = new LinkedHashMap<>();
         items.forEach(item -> first.putIfAbsent(file.apply(item), item));
         return List.copyOf(first.values());
     }
 
-    private static Optional<String> failureOf(Runnable action) {
+    private static Optional<LocalizedText> failureOf(Runnable action) {
         try {
             action.run();
             return Optional.empty();
         } catch (ErrorResponseException e) {
-            return Optional.of(e.getBody().getDetail());
+            return Optional.of(e instanceof Localized localized ? localized.localizedText()
+                    : LocalizedText.literal(e.getBody().getDetail()));
         }
     }
 
     /**
-     * Ein Film oder die erste Episode einer Datei.
+     * A movie or the first episode of a file.
      *
-     * @param wanted ob der Eintrag ausgelesen werden soll
+     * @param wanted whether the entry is supposed to be read
      */
     record Entry(long id, boolean movie, String label, Path file, DiscFormat format, boolean wanted) {
     }
 
-    /** Zählt das Ergebnis und meldet den Fortschritt; die Zähler steigen nie rückwärts. */
+    /** Counts the result and reports progress; the counters never go backwards. */
     private static final class Tally {
 
         private final JobContext context;
         private final int total;
-        private final List<String> failures = new ArrayList<>();
+        private final List<LocalizedText> failures = new ArrayList<>();
         private int updated;
         private int failed;
 
@@ -280,11 +285,13 @@ public class StreamDetailsService {
             this.total = total;
         }
 
-        synchronized void done(Entry entry, Optional<String> failure) {
+        synchronized void done(Entry entry, Optional<LocalizedText> failure) {
             if (failure.isPresent()) {
                 failed++;
                 if (failures.size() < MAX_LISTED_FAILURES) {
-                    failures.add("%s: %s".formatted(entry.label(), failure.get()));
+                    failures.add(LocalizedText.of("mediaInfo.failure")
+                            .with("entry", entry.label())
+                            .with("reason", failure.get()));
                 }
             } else {
                 updated++;

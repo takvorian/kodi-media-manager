@@ -6,8 +6,8 @@ import java.security.NoSuchAlgorithmException;
 import java.util.HexFormat;
 
 /**
- * SHA-256 eines Dateipfads als Hex-Zeichenkette. Dient als eindeutiger Schlüssel, weil ein
- * Unique-Index über den vollständigen Pfad die Indexgrenzen mancher Datenbanken überschreitet.
+ * SHA-256 of a file path as a hex string. Serves as a unique key because a
+ * unique index over the full path exceeds the index limits of some databases.
  */
 public final class FilePathHash {
 
@@ -21,7 +21,7 @@ public final class FilePathHash {
             byte[] digest = MessageDigest.getInstance(ALGORITHM).digest(filePath.getBytes(StandardCharsets.UTF_8));
             return HexFormat.of().formatHex(digest);
         } catch (NoSuchAlgorithmException e) {
-            // SHA-256 muss jede Java-Plattform bereitstellen.
+            // Every Java platform must provide SHA-256.
             throw new IllegalStateException(e);
         }
     }

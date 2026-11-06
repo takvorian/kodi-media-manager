@@ -10,13 +10,13 @@ import de.tiktak.kmm.settings.SettingsService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Erzeugt für jede Untersuchung einen {@link MediaProbe} mit dem eingestellten ffprobe-Pfad.
+ * Creates a {@link MediaProbe} for every examination with the configured ffprobe path.
  */
 @Component
 @RequiredArgsConstructor
 class MediaProbes {
 
-    /** Auf Netzlaufwerken braucht ffprobe Sekunden, bei großen DVD-Titeln auch länger. */
+    /** On network drives ffprobe takes seconds, for large DVD titles even longer. */
     static final Duration TIMEOUT = Duration.ofMinutes(2);
 
     private final SettingsService settingsService;

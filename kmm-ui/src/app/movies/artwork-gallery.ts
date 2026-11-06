@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import {
@@ -23,7 +24,7 @@ const SNACKBAR_DURATION_MS = 5000;
  */
 @Component({
   selector: 'app-artwork-gallery',
-  imports: [MatButtonModule, TranslocoPipe],
+  imports: [LocalizedPipe, MatButtonModule, TranslocoPipe],
   templateUrl: './artwork-gallery.html',
   styleUrl: './artwork-gallery.scss',
 })

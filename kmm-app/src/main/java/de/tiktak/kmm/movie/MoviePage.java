@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 
 /**
- * Eine Seite der Filmliste. Eigene, stabile Darstellung statt der Spring-Data-internen {@code Page}.
+ * A page of the movie list. Own, stable representation instead of the Spring Data internal {@code Page}.
  */
 public record MoviePage(List<MovieSummary> content, int page, int size, long totalElements, int totalPages) {
 

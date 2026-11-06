@@ -12,6 +12,7 @@ import java.util.stream.Collectors;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieRenamePlan.Status;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.CompanionFiles;
@@ -20,7 +21,7 @@ import de.tiktak.kmm.source.MediaSourceService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Plant das Umbenennen der Filme einer Quelle oder eines einzelnen Films, ohne etwas zu ändern.
+ * Plans renaming the movies of a source or a single movie, without changing anything.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,8 +32,8 @@ class MovieRenamePlanning {
     private final MovieRepository movieRepository;
 
     /**
-     * @return je Film der Quelle der Plan, sortiert nach Ordner
-     * @throws MovieRenameProblemException wenn die Quelle keine Filme enthält
+     * @return the plan per movie of the source, sorted by folder
+     * @throws MovieRenameProblemException if the source does not contain movies
      */
     Planned planSource(long sourceId, MovieRenamePatterns.Parsed patterns) {
         MediaSource source = movieSource(sourceId);
@@ -47,7 +48,7 @@ class MovieRenamePlanning {
     }
 
     /**
-     * @throws MovieNotFoundException wenn es den Film nicht gibt
+     * @throws MovieNotFoundException if the movie does not exist
      */
     Planned planMovie(long movieId, MovieRenamePatterns.Parsed patterns) {
         Movie movie = movieRepository.findById(movieId).orElseThrow(() -> new MovieNotFoundException(movieId));
@@ -65,7 +66,7 @@ class MovieRenamePlanning {
         return source;
     }
 
-    /** Zwei Filme dürfen nicht in denselben Ordner wandern. */
+    /** Two movies must not move into the same folder. */
     private static List<MovieRenamePlan> withSharedTargetsAsConflicts(List<MovieRenamePlan> plans) {
         Map<String, Long> targets = plans.stream()
                 .filter(plan -> plan.status() == Status.RENAME)
@@ -78,12 +79,12 @@ class MovieRenamePlanning {
                     && targets.getOrDefault(plan.targetDirectory().toLowerCase(Locale.ROOT), 0L) > 1;
             checked.add(shared ? new MovieRenamePlan(plan.movieId(), plan.title(), plan.currentDirectory(),
                     plan.targetDirectory(), plan.renames(), Status.CONFLICT,
-                    "Mehrere Filme bekämen den Ordner „%s“.".formatted(plan.targetDirectory())) : plan);
+                    LocalizedText.of("movie.rename.sharedTarget").with("folder", plan.targetDirectory())) : plan);
         }
         return checked;
     }
 
-    /** Pläne und die Wurzel der Quelle, die beim Aufräumen leerer Ordner nicht unterschritten wird. */
+    /** Plans and the root of the source, below which cleaning up empty folders never goes. */
     record Planned(Path sourceRoot, List<MovieRenamePlan> plans) {
 
         Planned {
@@ -91,7 +92,7 @@ class MovieRenamePlanning {
         }
     }
 
-    /** Welche Filme sich einen Ordner teilen. */
+    /** Which movies share a folder. */
     private record Folders(Path sourceRoot, Map<Path, List<Movie>> byDirectory,
                            Map<Movie, CompanionFiles> companions) {
 

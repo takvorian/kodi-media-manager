@@ -32,8 +32,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Tag-Manager Ende zu Ende: Tags aus den NFOs zählen, umbenennen, zuweisen, entfernen und löschen; die NFOs
- * tragen danach die neuen Tags.
+ * Tag manager end to end: count tags from the NFOs, rename, assign, remove and delete; the NFOs
+ * afterwards carry the new tags.
  */
 @SpringBootTest
 @AutoConfigureMockMvc

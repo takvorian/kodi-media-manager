@@ -14,8 +14,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Benennt einen Film nach seinem Plan um: zuerst im Dateisystem, dann in der Datenbank. Externe Untertitel
- * stehen mit Pfad in den technischen Angaben; sie werden in Datenbank und NFO nachgezogen.
+ * Renames a movie according to its plan: first in the file system, then in the database. External subtitles
+ * are stored with their path in the technical details; they are updated in the database and NFO.
  */
 @Slf4j
 @Component
@@ -27,8 +27,8 @@ class MovieRenamer {
     private final ApplicationEventPublisher events;
 
     /**
-     * @param plan ein Plan mit Status {@link MovieRenamePlan.Status#RENAME}
-     * @throws IOException wenn das Dateisystem die Änderung ablehnt; dann ist nichts geändert
+     * @param plan a plan with status {@link MovieRenamePlan.Status#RENAME}
+     * @throws IOException if the file system rejects the change; nothing is changed then
      */
     @Transactional
     public void rename(MovieRenamePlan plan, Path sourceRoot) throws IOException {

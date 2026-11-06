@@ -41,6 +41,7 @@ import { MovieSupplementView } from './movie-supplement';
 import { MOVIES_URL, MovieService } from './movie.service';
 import { MovieRenamePlan, renameConfirmation } from './movie-rename';
 import { MovieRenameService } from './movie-rename.service';
+import { localize } from '../i18n/localized-text';
 import { CollectionReference } from './scraper';
 import { HelpLink } from '../shared/help-link';
 
@@ -408,7 +409,7 @@ export class MovieDetail {
       default:
         this.notifyTranslated('movies.detail.notRenamed', {
           title: plan.title,
-          reason: plan.message,
+          reason: localize(plan.message),
         });
     }
   }

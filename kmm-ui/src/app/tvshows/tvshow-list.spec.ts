@@ -330,7 +330,7 @@ describe('TvShowList', () => {
     completed.next({
       ...job,
       status: 'SUCCEEDED',
-      result: { changed: 1, unchanged: 1, failed: 1, failures: ['Serie 4: gesperrt'] },
+      result: { changed: 1, unchanged: 1, failed: 1, failures: [literal('Serie 4: gesperrt')] },
     });
     await respond(page([alf]));
     expect(snackBarMessages).toContain(

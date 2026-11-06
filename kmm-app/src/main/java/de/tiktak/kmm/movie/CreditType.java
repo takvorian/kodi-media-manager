@@ -1,6 +1,6 @@
 package de.tiktak.kmm.movie;
 
-/** Art der Mitwirkung an einem Film. */
+/** Kind of contribution to a movie. */
 enum CreditType {
     ACTOR,
     DIRECTOR,

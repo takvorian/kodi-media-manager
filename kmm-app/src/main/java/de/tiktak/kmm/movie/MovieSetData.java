@@ -6,9 +6,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 /**
- * Bearbeitbare Angaben eines Filmsets. Leere Texte gelten als nicht gesetzt.
+ * Editable details of a movie set. Empty texts count as not set.
  *
- * @param tmdbCollectionId TMDB-ID der Sammlung oder {@code null}
+ * @param tmdbCollectionId TMDB ID of the collection or {@code null}
  */
 public record MovieSetData(
         @NotBlank @Size(max = MovieSupplement.MAX_NAME_LENGTH) String name,

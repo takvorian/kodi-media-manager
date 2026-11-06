@@ -61,10 +61,10 @@ class MovieNfoSyncTest {
         when(nfoFiles.read(unchanged)).thenReturn(nfoWithTrailer("plugin://plugin.video.youtube/?videoid=abc"));
 
         assertThat(nfoSync.readTrailerIfUnknown(movie)).isTrue();
-        assertThat(nfoSync.readTrailerIfUnknown(movie)).as("nur einmal lesen").isTrue();
+        assertThat(nfoSync.readTrailerIfUnknown(movie)).as("read only once").isTrue();
 
         assertThat(movie.getTrailer()).isEqualTo("plugin://plugin.video.youtube/?videoid=abc");
-        assertThat(movie.getTitle()).as("nur der Trailer").isEqualTo("Heat");
+        assertThat(movie.getTitle()).as("only the trailer").isEqualTo("Heat");
         verify(nfoFiles).read(unchanged);
     }
 
@@ -127,7 +127,7 @@ class MovieNfoSyncTest {
 
         assertThatThrownBy(() -> nfoSync.refreshIfChangedOutside(movie))
                 .isInstanceOfSatisfying(NfoChangedOutsideException.class,
-                        e -> assertThat(e.getBody().getDetail()).contains(NFO_FILE.toString()));
+                        e -> assertThat(e.localizedText().args()).containsEntry("file", NFO_FILE.toString()));
         assertThat(movie.getNfoModifiedAt()).isEqualTo(SYNCHRONIZED);
     }
 

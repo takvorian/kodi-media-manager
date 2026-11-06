@@ -24,6 +24,7 @@ import org.springframework.web.ErrorResponseException;
 
 import de.tiktak.kmm.artwork.ArtworkFillResult;
 import de.tiktak.kmm.artwork.TvShowArtworkService;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
@@ -109,14 +110,14 @@ class TvAutoScrapeRunnerTest {
         when(scrapeService.scrapeMissing(3L))
                 .thenThrow(new ErrorResponseException(HttpStatus.BAD_GATEWAY));
         when(scrapeService.scrapeMissing(4L)).thenThrow(new IllegalStateException("kaputt"));
-        when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(2, List.of("POSTER: 404")));
+        when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(2, List.of(LocalizedText.literal("POSTER: 404"))));
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(1, List.of()));
         when(trailerService.fillMissing(1L)).thenReturn(true);
         when(themeService.fillShow(1L)).thenReturn(true);
         when(enrichmentService.fillMissing(1L)).thenReturn(true);
         when(enrichmentService.fillMissing(2L)).thenThrow(new ErrorResponseException(HttpStatus.CONFLICT));
         when(themeService.fillShow(2L)).thenThrow(new ErrorResponseException(HttpStatus.BAD_GATEWAY));
-        when(streamDetails.probeEpisodesAfterScrape(2L)).thenReturn(List.of("ffprobe fehlt"));
+        when(streamDetails.probeEpisodesAfterScrape(2L)).thenReturn(List.of(LocalizedText.literal("ffprobe fehlt")));
         when(renameService.renameIfEnabled(1L, TvRenameTrigger.SCRAPE)).thenReturn(Optional.empty());
         when(renameService.renameIfEnabled(2L, TvRenameTrigger.SCRAPE)).thenReturn(Optional.of(new TvShowRenamePlan(2,
                 "Lost", "/lost", "/Lost", List.of(), TvShowRenamePlan.Status.CONFLICT, "Der Ordner existiert bereits.")));
@@ -157,8 +158,8 @@ class TvAutoScrapeRunnerTest {
         givenShow(2L, "Lost");
         when(scrapeService.refetchSeason(2L, 3))
                 .thenReturn(new TvShowAutoScrapeOutcome(Status.ALREADY_IDENTIFIED, 2, List.of("/lost/x.nfo")));
-        when(streamDetails.probeSeasonAfterScrape(2L, 3)).thenReturn(List.of("ffprobe fehlt"));
-        when(artworkService.fillMissingSeason(2L, 3)).thenReturn(new ArtworkFillResult(1, List.of("POSTER: 404")));
+        when(streamDetails.probeSeasonAfterScrape(2L, 3)).thenReturn(List.of(LocalizedText.literal("ffprobe fehlt")));
+        when(artworkService.fillMissingSeason(2L, 3)).thenReturn(new ArtworkFillResult(1, List.of(LocalizedText.literal("POSTER: 404"))));
         when(renameService.renameSeasonIfEnabled(2L, 3, TvRenameTrigger.SCRAPE)).thenReturn(Optional.of(
                 new TvShowRenamePlan(2, "Lost", "/lost", "/lost", List.of(), TvShowRenamePlan.Status.FAILED, "gesperrt")));
 

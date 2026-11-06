@@ -2,14 +2,16 @@ package de.tiktak.kmm.tag;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Ergebnis einer Tag-Änderung.
+ * Result of a tag change.
  *
- * @param changed   Filme und Serien mit geänderten Tags
- * @param unchanged Filme und Serien, bei denen sich nichts änderte
- * @param failures  Fehlermeldungen, höchstens {@link TagService#MAX_LISTED_FAILURES}
+ * @param changed   movies and TV shows with changed tags
+ * @param unchanged movies and TV shows where nothing changed
+ * @param failures  failure messages, at most {@link TagService#MAX_LISTED_FAILURES}
  */
-public record TagChangeResult(int changed, int unchanged, int failed, List<String> failures) {
+public record TagChangeResult(int changed, int unchanged, int failed, List<LocalizedText> failures) {
 
     public TagChangeResult {
         failures = List.copyOf(failures);

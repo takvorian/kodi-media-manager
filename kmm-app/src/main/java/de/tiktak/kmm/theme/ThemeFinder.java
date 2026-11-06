@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -21,7 +22,7 @@ import de.tiktak.kmm.plugin.api.Titles;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Sucht Titelmusik bei allen Titelmusik-Scrapern, mit dem Titel und, falls anders, dem Originaltitel.
+ * Searches theme music at all theme music scrapers, with the title and, if different, the original title.
  */
 @Service
 @RequiredArgsConstructor
@@ -29,14 +30,14 @@ class ThemeFinder {
 
     private final ScraperRegistry scraperRegistry;
 
-    /** Vorschläge, Treffer mit gleichem Titel zuerst, sonst in der Reihenfolge der Anbieter; jede Quelle einmal. */
+    /** Suggestions, matches with the same title first, otherwise in the order of the providers; each source once. */
     ThemeOptions find(ThemeTarget target) {
-        List<String> warnings = new ArrayList<>();
+        List<LocalizedText> warnings = new ArrayList<>();
         Map<String, ThemeOption> options = new LinkedHashMap<>();
         for (ThemeScraper scraper : scraperRegistry.themeScrapersFor(target.mediaType())) {
-            Optional<String> missing = scraper.missingConfiguration();
+            var missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
-                warnings.add(missing.get());
+                warnings.add(hint(missing.get()));
                 continue;
             }
             for (String title : searchTitles(target)) {
@@ -46,7 +47,9 @@ class ThemeFinder {
                                     ThemeOption.of(candidate, scraper.id(), scraper.displayName(),
                                             sameTitle(candidate.subject(), target))));
                 } catch (ScraperException e) {
-                    warnings.add("%s: %s".formatted(scraper.displayName(), e.getMessage()));
+                    warnings.add(LocalizedText.of("theme.warning")
+                            .with("provider", scraper.displayName())
+                            .with("reason", e.localizedText()));
                 }
             }
         }
@@ -56,7 +59,12 @@ class ThemeFinder {
         return new ThemeOptions(sorted, warnings);
     }
 
-    /** Der erste Treffer mit gleichem Titel; nur ihn übernimmt KMM ohne Rückfrage. */
+    /** Plugins word the hint as a translatable text or as plain text. */
+    private static LocalizedText hint(Object hint) {
+        return hint instanceof LocalizedText text ? text : LocalizedText.literal(String.valueOf(hint));
+    }
+
+    /** The first match with the same title; only this one KMM takes over without asking. */
     static Optional<ThemeOption> safeMatch(ThemeOptions options) {
         return options.candidates().stream().filter(ThemeOption::sameTitle).findFirst();
     }

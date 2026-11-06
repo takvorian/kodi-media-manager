@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.job.JobSnapshot;
 import de.tiktak.kmm.movie.MovieBatchService;
@@ -26,7 +27,7 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Titelmusik eines Films als {@code theme.mp3} im Ordner.
+ * Theme music of a movie as {@code theme.mp3} in its folder.
  */
 @RestController
 @RequiredArgsConstructor
@@ -47,7 +48,7 @@ public class MovieThemeController {
         return themeService.movieTheme(movieId);
     }
 
-    /** Die Datei zum Anhören; sie kann auch außerhalb von KMM ersetzt werden. */
+    /** The file to listen to; it can be replaced outside KMM as well. */
     @GetMapping(FILE_PATH)
     public ResponseEntity<Resource> file(@PathVariable long movieId) {
         return ResponseEntity.ok()
@@ -71,10 +72,10 @@ public class MovieThemeController {
         return themeService.removeFromMovie(movieId);
     }
 
-    /** Holt für die Auswahl fehlende Titelmusik, nur bei sicherem Treffer, als Job. */
+    /** Fetches missing theme music for the selection, only for a safe match, as a job. */
     @PostMapping(FILL_PATH)
     public ResponseEntity<JobSnapshot> fillMissing(@Valid @RequestBody Selection selection) {
-        JobSnapshot job = batchService.startFill("Fehlende Titelmusik für %d Filme holen",
+        JobSnapshot job = batchService.startFill(LocalizedText.of("theme.fill.movies.jobTitle"),
                 selection.movieIds(), themeService::fillMovie);
         return ResponseEntity.accepted().location(URI.create(JobController.BASE_PATH + "/" + job.id())).body(job);
     }

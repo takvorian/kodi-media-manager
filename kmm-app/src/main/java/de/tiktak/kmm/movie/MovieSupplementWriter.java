@@ -10,9 +10,9 @@ import de.tiktak.kmm.nfo.NfoException;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Schreibt geänderte weitere Angaben eines Films (Tags, Set) wie beim Speichern der Metadaten in die NFO und meldet
- * die Änderung, damit Kodi den Film neu einliest. Ist das Beiwerk der NFO unbekannt, bleibt die Datei unberührt,
- * damit nichts verloren geht, was KMM nicht kennt.
+ * Writes changed further details of a movie (tags, set) to the NFO as when saving the metadata, and reports
+ * the change so that Kodi re-reads the movie. If the extras of the NFO are unknown, the file is left untouched,
+ * so that nothing KMM does not know about is lost.
  */
 @Component
 @RequiredArgsConstructor
@@ -23,7 +23,7 @@ class MovieSupplementWriter {
     private final ApplicationEventPublisher events;
 
     /**
-     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann
+     * @throws NfoNotWritableException if the NFO cannot be written
      */
     void write(Movie movie, MovieSupplement supplement) {
         if (movie.isSupplementKnown()) {
@@ -40,10 +40,10 @@ class MovieSupplementWriter {
     }
 
     /**
-     * Schreibt den Trailer-Link des Films; in einer vorhandenen NFO ändert sich nur {@code <trailer>}. Ohne NFO wird sie
-     * wie bei {@link #write} angelegt.
+     * Writes the movie's trailer link; in an existing NFO only {@code <trailer>} changes. Without an NFO, one is
+     * created as with {@link #write}.
      *
-     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann
+     * @throws NfoNotWritableException if the NFO cannot be written
      */
     void writeTrailer(Movie movie) {
         Optional<NfoFileState> nfo = nfoFiles.find(movie.companionFiles());

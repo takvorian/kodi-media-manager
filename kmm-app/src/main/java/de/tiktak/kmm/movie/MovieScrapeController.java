@@ -17,8 +17,8 @@ import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Online-Suche nach Metadaten für einen Film. Suche und Vorschlag ändern nichts; übernommen wird über
- * {@code PUT /api/v1/movies/{id}/metadata}, danach optional die Set-Zuordnung.
+ * Online search for metadata of a movie. Searching and suggestions change nothing; changes are applied via
+ * {@code PUT /api/v1/movies/{id}/metadata}, followed optionally by the set assignment.
  */
 @RestController
 @RequiredArgsConstructor
@@ -47,7 +47,7 @@ public class MovieScrapeController {
         return scrapeService.proposal(movieId, scraper, providerId);
     }
 
-    /** Ordnet den Film nach dem Speichern eines Vorschlags dem Set seiner Sammlung zu, wenn eingestellt. */
+    /** Assigns the movie to the set of its collection after a suggestion is saved, if enabled. */
     @PostMapping(COLLECTION_PATH)
     public CollectionAssignment assignCollection(@PathVariable long movieId,
             @Valid @RequestBody CollectionRequest collection) {
@@ -60,7 +60,7 @@ public class MovieScrapeController {
     }
 
     /**
-     * @param assigned ob der Film jetzt zu einem anderen Set gehört
+     * @param assigned whether the movie now belongs to a different set
      */
     public record CollectionAssignment(boolean assigned) {
     }

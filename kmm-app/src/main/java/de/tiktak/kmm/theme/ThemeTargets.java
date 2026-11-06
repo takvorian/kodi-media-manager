@@ -13,7 +13,7 @@ import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Bestimmt Titel und Ordner eines Films bzw. einer Serie für die Titelmusik.
+ * Determines title and folder of a movie or TV show for the theme music.
  */
 @Component
 @RequiredArgsConstructor

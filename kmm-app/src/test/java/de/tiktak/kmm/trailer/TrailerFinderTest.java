@@ -19,6 +19,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -87,7 +88,9 @@ class TrailerFinderTest {
         TrailerOptions options = finder.find(LOST, "de");
 
         assertThat(options.candidates()).isEmpty();
-        assertThat(options.warnings()).containsExactly("YouTube: API-Key fehlt", "TMDB: nicht erreichbar");
+        assertThat(options.warnings()).containsExactly(LocalizedText.literal("YouTube: API-Key fehlt"),
+                LocalizedText.of("trailer.warning").with("provider", "TMDB")
+                        .with("reason", LocalizedText.literal("nicht erreichbar")));
         verify(unconfigured, never()).findTrailers(any());
     }
 

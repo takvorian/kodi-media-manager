@@ -21,7 +21,7 @@ describe('media info', () => {
     done: 3,
     total: 3,
     message: null,
-    result: { sourceId: 1, updated: 2, skipped: 5, failed: 1, failures: ['Heat: kaputt'] },
+    result: { sourceId: 1, updated: 2, skipped: 5, failed: 1, failures: [literal('Heat: kaputt')] },
     startedAt: '2026-10-27T10:00:00Z',
     finishedAt: '2026-10-27T10:01:00Z',
   };
@@ -57,7 +57,7 @@ describe('media info', () => {
     expect(showStreamDetailsSummary({ updated: 3, failures: [] })).toBe(
       'Technische Angaben von 3 Episodendateien ausgelesen.',
     );
-    expect(showStreamDetailsSummary({ updated: 0, failures: ['kaputt'] })).toBe(
+    expect(showStreamDetailsSummary({ updated: 0, failures: [literal('kaputt')] })).toBe(
       'Technische Angaben von 0 Episodendateien ausgelesen. 1 Fehler (z. B. kaputt).',
     );
     expect(showStreamDetailsSummary({ updated: 1, failures: [] })).toBe(
@@ -74,7 +74,7 @@ describe('media info', () => {
     expect(streamDetailsSummary({ ...job, status: 'CANCELLED' })).toBe(
       'Technische Angaben „Filme“ cancelled.',
     );
-    expect(showStreamDetailsSummary({ updated: 3, failures: ['a', 'b'] })).toBe(
+    expect(showStreamDetailsSummary({ updated: 3, failures: [literal('a'), literal('b')] })).toBe(
       'Read the technical details of 3 episode files. 2 errors (e.g. a).',
     );
   });

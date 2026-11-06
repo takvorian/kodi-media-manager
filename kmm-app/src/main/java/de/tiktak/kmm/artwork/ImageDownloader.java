@@ -14,11 +14,12 @@ import java.util.Set;
 
 import org.springframework.stereotype.Component;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Lädt ein Bild aus dem Internet. Erlaubt sind nur http(s)-Adressen, JPEG und PNG sowie eine
- * begrenzte Dateigröße, damit keine beliebigen Inhalte im Filmordner landen.
+ * Loads an image from the internet. Only http(s) addresses, JPEG and PNG and a limited file size are allowed, so
+ * that no arbitrary content ends up in the movie folder.
  */
 @Component
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ class ImageDownloader {
             "image/png", "png");
     private static final Duration TIMEOUT = Duration.ofSeconds(60);
     private static final int OK = 200;
-    private static final String UNKNOWN_CONTENT_TYPE = "unbekannt";
+    private static final LocalizedText UNKNOWN_CONTENT_TYPE = LocalizedText.of("artwork.download.unknownContentType");
 
     private final HttpClient httpClient;
     private final ArtworkProperties properties;
@@ -43,14 +44,16 @@ class ImageDownloader {
         HttpResponse<InputStream> response = send(url);
         try (InputStream body = response.body()) {
             if (response.statusCode() != OK) {
-                throw ImageDownloadException.downloadFailed(url, "HTTP " + response.statusCode(), null);
+                throw ImageDownloadException.downloadFailed(url,
+                        LocalizedText.of("artwork.download.httpStatus").with("status", response.statusCode()), null);
             }
-            String contentType = contentType(response);
-            String extension = Optional.ofNullable(EXTENSIONS.get(contentType))
-                    .orElseThrow(() -> ImageDownloadException.notAnImage(url, contentType));
+            Optional<String> contentType = contentType(response);
+            String extension = contentType.map(EXTENSIONS::get)
+                    .orElseThrow(() -> ImageDownloadException.notAnImage(url,
+                            contentType.map(LocalizedText::literal).orElse(UNKNOWN_CONTENT_TYPE)));
             return new DownloadedImage(readLimited(body, url), extension);
         } catch (IOException e) {
-            throw ImageDownloadException.downloadFailed(url, e.getMessage(), e);
+            throw ImageDownloadException.downloadFailed(url, LocalizedText.literal(e.getMessage()), e);
         }
     }
 
@@ -59,10 +62,10 @@ class ImageDownloader {
             HttpRequest request = HttpRequest.newBuilder(url).timeout(TIMEOUT).GET().build();
             return httpClient.send(request, HttpResponse.BodyHandlers.ofInputStream());
         } catch (IOException e) {
-            throw ImageDownloadException.downloadFailed(url, e.getMessage(), e);
+            throw ImageDownloadException.downloadFailed(url, LocalizedText.literal(e.getMessage()), e);
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            throw ImageDownloadException.downloadFailed(url, "Download unterbrochen", e);
+            throw ImageDownloadException.downloadFailed(url, LocalizedText.of("artwork.download.interrupted"), e);
         }
     }
 
@@ -75,9 +78,8 @@ class ImageDownloader {
         return content;
     }
 
-    private static String contentType(HttpResponse<?> response) {
+    private static Optional<String> contentType(HttpResponse<?> response) {
         return response.headers().firstValue("Content-Type")
-                .map(value -> value.split(";")[0].strip().toLowerCase(Locale.ROOT))
-                .orElse(UNKNOWN_CONTENT_TYPE);
+                .map(value -> value.split(";")[0].strip().toLowerCase(Locale.ROOT));
     }
 }

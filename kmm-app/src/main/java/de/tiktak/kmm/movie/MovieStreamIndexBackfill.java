@@ -11,8 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Legt beim Start die abfragbare Kurzform der technischen Angaben für Filme an, die sie noch nicht haben, etwa
- * nach dem Update auf eine Version mit Filtern. Neue Angaben bekommen sie sofort beim Speichern.
+ * At startup, creates the queryable short form of the stream details for movies that do not have it yet, e.g.
+ * after updating to a version with filters. New details get it immediately when saved.
  */
 @Slf4j
 @Component

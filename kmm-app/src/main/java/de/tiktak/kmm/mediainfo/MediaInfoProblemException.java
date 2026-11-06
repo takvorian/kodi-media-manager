@@ -1,27 +1,34 @@
 package de.tiktak.kmm.mediainfo;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.Localized;
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.media.MediaProbeException;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * ffprobe konnte die technischen Angaben nicht lesen, als Problem Detail für die Oberfläche.
+ * ffprobe could not read the technical details, as a problem detail for the user interface.
  */
-public class MediaInfoProblemException extends ErrorResponseException {
+public class MediaInfoProblemException extends LocalizedProblemException {
 
     MediaInfoProblemException(MediaProbeException cause) {
-        this("Technische Angaben nicht lesbar", cause.getMessage(), cause);
+        this("mediaInfo.unreadable", reason(cause), cause);
     }
 
-    private MediaInfoProblemException(String title, String detail, Throwable cause) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT, cause);
-        getBody().setTitle(title);
-        getBody().setDetail(detail);
+    private MediaInfoProblemException(String key, LocalizedText detail, Throwable cause) {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, LocalizedText.of(key + ".title"), detail, cause);
     }
 
     static MediaInfoProblemException seasonWithoutEpisodes(String showTitle, int season) {
-        return new MediaInfoProblemException("Keine Episoden",
-                "„%s“ hat keine Episoden in Staffel %d.".formatted(showTitle, season), null);
+        return new MediaInfoProblemException("mediaInfo.seasonWithoutEpisodes",
+                LocalizedText.of("mediaInfo.seasonWithoutEpisodes.detail")
+                        .with("show", showTitle)
+                        .with("season", season), null);
+    }
+
+    private static LocalizedText reason(Throwable cause) {
+        return cause instanceof Localized localized ? localized.localizedText()
+                : LocalizedText.literal(cause.getMessage());
     }
 }

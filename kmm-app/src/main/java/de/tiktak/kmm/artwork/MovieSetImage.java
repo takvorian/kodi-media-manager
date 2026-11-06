@@ -3,10 +3,10 @@ package de.tiktak.kmm.artwork;
 import java.nio.file.Path;
 
 /**
- * Ein Bild eines Filmsets für Kodi.
+ * An image of a movie set for Kodi.
  *
- * @param kodiName Kodis Bezeichnung der Bildart, z. B. {@code poster}
- * @param file     vorhandene Datei oder {@code null}, wenn das Bild fehlt
+ * @param kodiName Kodi's name of the image type, e.g. {@code poster}
+ * @param file     existing file or {@code null} if the image is missing
  */
 public record MovieSetImage(String kodiName, Path file) {
 }

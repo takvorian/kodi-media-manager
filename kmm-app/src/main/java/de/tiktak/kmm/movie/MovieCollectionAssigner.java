@@ -8,8 +8,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Ordnet einen gescrapten Film dem Set seiner Sammlung zu, wie Embers „CollectionsAuto“. Das Set wird über die
- * TMDB-ID der Sammlung gefunden, sonst über den Namen, sonst angelegt; ein anderes Set des Films wird ersetzt.
+ * Assigns a scraped movie to the set of its collection, like Ember's "CollectionsAuto". The set is found via the
+ * TMDB ID of the collection, otherwise via the name, otherwise created; another set of the movie is replaced.
  */
 @Slf4j
 @Component
@@ -20,7 +20,7 @@ class MovieCollectionAssigner {
     private final MovieSetMembership membership;
 
     /**
-     * @return ob sich die Set-Zugehörigkeit geändert hat
+     * @return whether the set membership changed
      */
     @Transactional
     public boolean assign(long movieId, CollectionReference collection) {

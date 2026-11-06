@@ -20,6 +20,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -89,8 +90,10 @@ class ThemeFinderTest {
         ThemeOptions options = finder.find(ALF);
 
         assertThat(options.candidates()).isEmpty();
-        assertThat(options.warnings()).containsExactly("YouTube: yt-dlp fehlt", "TelevisionTunes: nicht erreichbar",
-                "TelevisionTunes: nicht erreichbar");
+        LocalizedText failure = LocalizedText.of("theme.warning").with("provider", "TelevisionTunes")
+                .with("reason", LocalizedText.literal("nicht erreichbar"));
+        assertThat(options.warnings()).containsExactly(LocalizedText.literal("YouTube: yt-dlp fehlt"), failure,
+                failure);
         verify(unconfigured, never()).findThemes(any());
     }
 

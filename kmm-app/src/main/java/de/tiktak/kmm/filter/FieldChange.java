@@ -3,7 +3,7 @@ package de.tiktak.kmm.filter;
 import jakarta.validation.constraints.Size;
 
 /**
- * Ein Feld in der Stapel-Bearbeitung setzen ({@code value}) oder leeren ({@code clear}); beides fehlt: unverändert.
+ * Set ({@code value}) or clear ({@code clear}) a field in the batch edit; if both are missing: unchanged.
  */
 public record FieldChange(Boolean clear, @Size(max = FieldChange.MAX_LENGTH) String value) {
 
@@ -23,7 +23,7 @@ public record FieldChange(Boolean clear, @Size(max = FieldChange.MAX_LENGTH) Str
         return clear ? null : value != null ? value : current;
     }
 
-    /** Ob ein zu setzender Wert in ein kürzeres Feld passt, etwa die Altersfreigabe. */
+    /** Whether a value to be set fits into a shorter field, such as the certification. */
     public boolean fits(int maxLength) {
         return value == null || value.length() <= maxLength;
     }

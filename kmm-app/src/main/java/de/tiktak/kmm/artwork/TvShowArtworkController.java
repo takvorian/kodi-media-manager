@@ -20,7 +20,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Bilder von Serien und Staffeln ({@code ?season=}) sowie Standbilder von Episoden.
+ * Images of TV shows and seasons ({@code ?season=}) as well as stills of episodes.
  */
 @RestController
 @RequiredArgsConstructor
@@ -97,7 +97,7 @@ public class TvShowArtworkController {
         return ResponseEntity.noContent().build();
     }
 
-    /** Wie bei Filmen: Der Browser muss nachfragen, weil Bilder auch außerhalb von KMM ersetzt werden. */
+    /** As with movies: the browser has to revalidate, because images are also replaced outside KMM. */
     private static ResponseEntity<Resource> file(ArtworkFile file) {
         return ResponseEntity.ok()
                 .contentType(file.mediaType())

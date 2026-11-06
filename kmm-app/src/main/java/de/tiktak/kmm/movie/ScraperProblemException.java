@@ -1,68 +1,75 @@
 package de.tiktak.kmm.movie;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Ein Scraper ist unbekannt, nicht eingerichtet oder sein Anbieter meldet einen Fehler.
+ * A scraper is unknown or not set up, or its provider reports an error.
  */
-public class ScraperProblemException extends ErrorResponseException {
+public class ScraperProblemException extends LocalizedProblemException {
 
-    private ScraperProblemException(HttpStatus status, String title, String detail, Throwable cause) {
-        super(status, cause);
-        getBody().setTitle(title);
-        getBody().setDetail(detail);
+    private ScraperProblemException(HttpStatus status, LocalizedText title, LocalizedText detail, Throwable cause) {
+        super(status, title, detail, cause);
+    }
+
+    private ScraperProblemException(HttpStatus status, String key, LocalizedText detail) {
+        this(status, LocalizedText.of(key + ".title"), detail, null);
     }
 
     static ScraperProblemException unknown(String scraperId) {
-        return new ScraperProblemException(HttpStatus.NOT_FOUND, "Scraper nicht gefunden",
-                "Es ist kein Scraper mit der ID '%s' installiert und aktiv.".formatted(scraperId), null);
+        return new ScraperProblemException(HttpStatus.NOT_FOUND, "movie.scraper.unknown",
+                LocalizedText.of("movie.scraper.unknown.detail").with("id", scraperId));
     }
 
-    static ScraperProblemException notConfigured(Scraper scraper, String hint) {
+    /** @param hint what is missing, as the plugin words it: a translatable text or plain text */
+    static ScraperProblemException notConfigured(Scraper scraper, Object hint) {
         return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT,
-                "%s ist nicht eingerichtet".formatted(scraper.displayName()), hint, null);
+                LocalizedText.of("movie.scraper.notConfigured.title").with("scraper", scraper.displayName()),
+                LocalizedReasons.hint(hint), null);
     }
 
-    /** Der Anbieter ist nicht erreichbar oder lehnt ab: aus Sicht von KMM ein Gateway-Fehler. */
+    /** The provider cannot be reached or refuses: from KMM's point of view a gateway error. */
     static ScraperProblemException providerFailed(Scraper scraper, ScraperException cause) {
         return new ScraperProblemException(HttpStatus.BAD_GATEWAY,
-                "%s meldet einen Fehler".formatted(scraper.displayName()), cause.getMessage(), cause);
+                LocalizedText.of("movie.scraper.providerFailed.title").with("scraper", scraper.displayName()),
+                cause.localizedText(), cause);
     }
 
     static ScraperProblemException noMetadataScraper() {
-        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Scraper eingerichtet",
-                "Es ist kein Metadaten-Scraper eingerichtet, etwa TMDB mit API-Key.", null);
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "movie.scraper.noMetadataScraper",
+                LocalizedText.of("movie.scraper.noMetadataScraper.detail"));
     }
 
     static ScraperProblemException notIdentified(Scraper scraper, String title) {
-        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Film nicht zugeordnet",
-                "„%s“ ist bei %s nicht eindeutig zugeordnet. Bitte zuerst über die Online-Suche übernehmen."
-                        .formatted(title, scraper.displayName()), null);
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "movie.scraper.notIdentified",
+                LocalizedText.of("movie.scraper.notIdentified.detail")
+                        .with("title", title)
+                        .with("scraper", scraper.displayName()));
     }
 
     static ScraperProblemException noMovieSetScraper() {
-        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Kein Scraper für Filmsets",
-                "Es ist kein Scraper für Filmsets installiert und aktiv, etwa das TMDB-Plugin.", null);
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "movie.scraper.noMovieSetScraper",
+                LocalizedText.of("movie.scraper.noMovieSetScraper.detail"));
     }
 
     static ScraperProblemException missingIdsForTrailers() {
-        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "Film nicht eindeutig zugeordnet",
-                "Für die Trailersuche wird eine TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen.",
-                null);
+        return new ScraperProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "movie.trailer.missingIds",
+                LocalizedText.of("movie.trailer.missingIds.detail"));
     }
 
     static ScraperProblemException invalidTrailer(String url) {
-        return new ScraperProblemException(HttpStatus.BAD_REQUEST, "Ungültiger Trailer",
-                "„%s“ ist kein Link, den Kodi abspielen kann (plugin://, http(s)://, smb:// oder nfs://)."
-                        .formatted(url), null);
+        return new ScraperProblemException(HttpStatus.BAD_REQUEST, "movie.trailer.invalid",
+                LocalizedText.of("movie.trailer.invalid.detail").with("url", url));
     }
 
     static ScraperProblemException notFoundAtProvider(Scraper scraper, String providerId) {
-        return new ScraperProblemException(HttpStatus.NOT_FOUND, "Treffer nicht gefunden",
-                "%s kennt den Eintrag '%s' nicht.".formatted(scraper.displayName(), providerId), null);
+        return new ScraperProblemException(HttpStatus.NOT_FOUND, "movie.scraper.notFoundAtProvider",
+                LocalizedText.of("movie.scraper.notFoundAtProvider.detail")
+                        .with("scraper", scraper.displayName())
+                        .with("id", providerId));
     }
 }

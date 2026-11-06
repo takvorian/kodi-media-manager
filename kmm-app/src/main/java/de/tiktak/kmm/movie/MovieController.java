@@ -19,9 +19,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.job.JobSnapshot;
 import jakarta.validation.Valid;
+import de.tiktak.kmm.web.LocalizedProblems;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -36,7 +38,7 @@ public class MovieController {
     public static final String BATCH_PATH = MOVIES_PATH + "/batch";
     public static final String QUERY_IDS_PATH = QUERY_PATH + "/ids";
     static final int DEFAULT_PAGE_SIZE = 50;
-    static final String INVALID_SORT_TITLE = "Ungültige Sortierung";
+    static final LocalizedText INVALID_SORT_TITLE = LocalizedText.of("movie.sort.invalid.title");
 
     private final MovieQueryService queryService;
     private final MovieMetadataService metadataService;
@@ -50,7 +52,7 @@ public class MovieController {
         return MoviePage.from(queryService.findMovies(search, pageable));
     }
 
-    /** Filmliste mit Filter; ändert nichts, braucht aber einen Rumpf für die Bedingungen. */
+    /** Movie list with a filter; changes nothing, but needs a body for the conditions. */
     @PostMapping(QUERY_PATH)
     public MoviePage queryMovies(
             @Valid @RequestBody MovieFilter filter,
@@ -58,13 +60,13 @@ public class MovieController {
         return MoviePage.from(queryService.findFiltered(filter, pageable));
     }
 
-    /** IDs aller Filme, auf die der Filter passt, etwa um alle gefilterten Filme zu bearbeiten. */
+    /** IDs of all movies the filter matches, e.g. to edit all filtered movies. */
     @PostMapping(QUERY_IDS_PATH)
     public List<Long> queryMovieIds(@Valid @RequestBody MovieFilter filter) {
         return queryService.findMovieIds(filter);
     }
 
-    /** Stapel-Bearbeitung als Job; die NFOs der Filme werden geschrieben, umbenannt wird nicht. */
+    /** Batch edit as a job; the NFOs of the movies are written, nothing is renamed. */
     @PostMapping(BATCH_PATH)
     public ResponseEntity<JobSnapshot> batchEdit(@Valid @RequestBody MovieBatchEdit edit) {
         JobSnapshot job = batchService.start(edit);
@@ -82,7 +84,7 @@ public class MovieController {
     }
 
     /**
-     * Speichert die Metadaten und schreibt sie in die NFO des Films; je nach Einstellung wird er danach umbenannt.
+     * Saves the metadata and writes it to the NFO of the movie; depending on the settings it is renamed afterwards.
      */
     @PutMapping(METADATA_PATH)
     public MovieDetails updateMetadata(@PathVariable long movieId, @Valid @RequestBody MovieMetadata metadata) {
@@ -91,9 +93,7 @@ public class MovieController {
 
     @ExceptionHandler(PropertyReferenceException.class)
     ProblemDetail handleUnknownSortProperty(PropertyReferenceException exception) {
-        ProblemDetail problem = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST,
-                "Nach '%s' kann nicht sortiert werden.".formatted(exception.getPropertyName()));
-        problem.setTitle(INVALID_SORT_TITLE);
-        return problem;
+        return LocalizedProblems.problem(HttpStatus.BAD_REQUEST, INVALID_SORT_TITLE,
+                LocalizedText.of("movie.sort.invalid.detail").with("property", exception.getPropertyName()));
     }
 }

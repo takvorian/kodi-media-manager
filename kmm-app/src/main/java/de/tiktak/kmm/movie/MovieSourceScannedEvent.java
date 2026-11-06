@@ -3,11 +3,11 @@ package de.tiktak.kmm.movie;
 import java.util.List;
 
 /**
- * Ein Scan hat die Filme einer Quelle mit dem Dateisystem abgeglichen.
+ * A scan has reconciled the movies of a source with the file system.
  *
- * @param added             neu gefundene Filme
- * @param removed           verschwundene Filme
- * @param newWithoutStreams IDs der neu gefundenen Filme ohne technische Angaben in der NFO
+ * @param added             newly found movies
+ * @param removed           movies that have disappeared
+ * @param newWithoutStreams IDs of the newly found movies without stream details in the NFO
  */
 public record MovieSourceScannedEvent(long sourceId, int added, int removed, List<Long> newWithoutStreams) {
 

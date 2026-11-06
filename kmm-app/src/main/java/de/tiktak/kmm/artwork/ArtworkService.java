@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
@@ -23,9 +24,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Bilder eines Films: anzeigen, online suchen, übernehmen und entfernen. Die Bilder liegen als
- * Dateien neben dem Film; KMM speichert sie nicht in der Datenbank. Jede Änderung wird als
- * {@link MovieFilesChangedEvent} veröffentlicht.
+ * Images of a movie: show, search online, apply and remove. The images are stored as
+ * files next to the movie; KMM does not store them in the database. Every change is published as a
+ * {@link MovieFilesChangedEvent}.
  */
 @Slf4j
 @Service
@@ -54,7 +55,7 @@ public class ArtworkService {
                 .orElseThrow(() -> ArtworkProblemException.imageMissing(type));
     }
 
-    /** Die Poster-Datei des Films, etwa für den Export. */
+    /** The poster file of the movie, e.g. for the export. */
     public Optional<Path> posterFile(MovieDetails movie) {
         return artworkFiles.find(companionFiles(movie), ImageType.POSTER).map(ArtworkFile::file);
     }
@@ -71,7 +72,7 @@ public class ArtworkService {
     }
 
     /**
-     * Lädt das Bild und speichert es nach Kodi-Konvention neben dem Film.
+     * Downloads the image and saves it next to the movie following the Kodi convention.
      */
     public ArtworkInfo apply(long movieId, ImageType type, String url) {
         requireSupported(type);
@@ -84,10 +85,10 @@ public class ArtworkService {
     }
 
     /**
-     * Holt für jede fehlende Bildart den besten Treffer. Vorhandene Bilder bleiben unverändert;
-     * schlägt ein Download fehl, wird der nächste Treffer versucht.
+     * Fetches the best match for each missing image type. Existing images stay unchanged;
+     * if a download fails, the next match is tried.
      *
-     * @return Anzahl gespeicherter Bilder und Hinweise; ohne TMDB-/IMDb-ID wird nichts gesucht
+     * @return number of saved images and notices; without a TMDB/IMDb ID nothing is searched
      */
     public ArtworkFillResult fillMissing(long movieId) {
         MovieDetails movie = metadataService.findDetails(movieId);
@@ -102,7 +103,7 @@ public class ArtworkService {
         ArtworkSearch search = ScrapeLanguage.with(metadataService.scrapeLanguage(movieId),
                 () -> candidateFinder.findAll(MediaType.MOVIE, movie.metadata().title(), movie.metadata().year(),
                         uniqueIds));
-        List<String> warnings = new ArrayList<>(search.warnings());
+        List<LocalizedText> warnings = new ArrayList<>(search.warnings());
         int saved = 0;
         for (ImageType type : missing) {
             if (ArtworkDownloads.saveFirstLoadable(downloader, type, search.candidatesOf(type),

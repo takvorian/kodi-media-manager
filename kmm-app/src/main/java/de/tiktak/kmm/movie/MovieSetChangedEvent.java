@@ -1,9 +1,9 @@
 package de.tiktak.kmm.movie;
 
 /**
- * Titel, Beschreibung oder Bilder eines Filmsets haben sich geändert, etwa damit Kodi sie übernimmt.
+ * Title, description or images of a movie set have changed, for example so that Kodi picks them up.
  *
- * @param previousName Name vorher, um das Set in Kodi zu finden
+ * @param previousName previous name, to find the set in Kodi
  */
 public record MovieSetChangedEvent(long setId, String previousName) {
 }

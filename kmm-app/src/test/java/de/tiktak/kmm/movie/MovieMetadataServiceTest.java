@@ -94,7 +94,7 @@ class MovieMetadataServiceTest {
 
         assertThat(movie.getMetadataLanguage()).isEqualTo("fr-FR");
         assertThat(movie.getNfoModifiedAt()).isEqualTo(written);
-        assertThat(service.changeLanguage(5L, "fr-FR")).as("unverändert").isFalse();
+        assertThat(service.changeLanguage(5L, "fr-FR")).as("unchanged").isFalse();
         verify(nfoSync, times(2)).refreshIfChangedOutside(movie);
         verify(nfoFiles).writeLanguage(nfo, "fr-FR");
     }
@@ -203,7 +203,7 @@ class MovieMetadataServiceTest {
         assertThatThrownBy(() -> service.update(MOVIE_ID, metadata("Neu")))
                 .isInstanceOfSatisfying(NfoNotWritableException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
-                    assertThat(exception.getBody().getDetail()).contains("Schreibrechte");
+                    assertThat(exception.localizedText().key()).isEqualTo("movie.nfo.notWritable.detail");
                 });
         assertThat(movie.getTitle()).isEqualTo("Heat");
         verifyNoInteractions(events);

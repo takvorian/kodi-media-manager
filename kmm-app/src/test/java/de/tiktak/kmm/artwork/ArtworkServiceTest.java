@@ -28,6 +28,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieDetails;
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieMetadata;
@@ -112,7 +113,7 @@ class ArtworkServiceTest {
         assertThatThrownBy(() -> service.candidates(MOVIE_ID, ImageType.POSTER))
                 .isInstanceOfSatisfying(ArtworkProblemException.class, exception -> {
                     assertThat(exception.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT);
-                    assertThat(exception.getBody().getDetail()).contains("Online suchen");
+                    assertThat(exception.localizedText()).isEqualTo(LocalizedText.of("artwork.missingIds.detail"));
                 });
     }
 
@@ -166,16 +167,17 @@ class ArtworkServiceTest {
         when(candidateFinder.findAll(MediaType.MOVIE, "Heat", 1995, Map.of("tmdb", "949", "imdb", "tt0113277"))).thenReturn(
                 new ArtworkSearch(Map.of(ImageType.FANART, List.of(broken, fanart), ImageType.CLEARLOGO, List.of(logo),
                         ImageType.POSTER, List.of(candidate(ImageType.POSTER, "https://img/p.jpg"))),
-                        List.of("fanart.tv: Key fehlt")));
+                        List.of(LocalizedText.literal("fanart.tv: Key fehlt"))));
         var image = new DownloadedImage(new byte[] {1}, "jpg");
-        when(downloader.download(broken.url())).thenThrow(ImageDownloadException.downloadFailed(broken.url(), "HTTP 500", null));
+        when(downloader.download(broken.url())).thenThrow(ImageDownloadException.downloadFailed(broken.url(),
+                LocalizedText.literal("HTTP 500"), null));
         when(downloader.download(fanart.url())).thenReturn(image);
         when(downloader.download(logo.url())).thenReturn(image);
 
         ArtworkFillResult result = service.fillMissing(MOVIE_ID);
 
         assertThat(result.saved()).isEqualTo(2);
-        assertThat(result.warnings()).containsExactly("fanart.tv: Key fehlt");
+        assertThat(result.warnings()).containsExactly(LocalizedText.literal("fanart.tv: Key fehlt"));
         verify(artworkFiles).save(FILES, ImageType.FANART, image);
         verify(artworkFiles).save(FILES, ImageType.CLEARLOGO, image);
         verify(downloader, never()).download(URI.create("https://img/p.jpg"));
@@ -190,13 +192,15 @@ class ArtworkServiceTest {
                 candidate(ImageType.BANNER, "https://img/4.jpg"));
         when(candidateFinder.findAll(any(), anyString(), any(), any()))
                 .thenReturn(new ArtworkSearch(Map.of(ImageType.BANNER, broken), List.of()));
-        when(downloader.download(any())).thenThrow(ImageDownloadException.downloadFailed(URI.create("https://img"),
-                "HTTP 404", null));
+        ImageDownloadException notFound = ImageDownloadException.downloadFailed(URI.create("https://img"),
+                LocalizedText.literal("HTTP 404"), null);
+        when(downloader.download(any())).thenThrow(notFound);
 
         ArtworkFillResult result = service.fillMissing(MOVIE_ID);
 
         assertThat(result.saved()).isZero();
-        assertThat(result.warnings()).singleElement().asString().startsWith("BANNER: ").contains("HTTP 404");
+        assertThat(result.warnings()).containsExactly(LocalizedText.of("artwork.warning.download")
+                .with("type", ImageType.BANNER).with("reason", notFound.localizedText()));
         verify(downloader, times(3)).download(any());
         verifyNoInteractions(events);
     }

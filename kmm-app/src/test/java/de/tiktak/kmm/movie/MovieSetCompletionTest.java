@@ -17,12 +17,13 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.plugin.api.MovieSetResult;
 
 /**
- * „Alle Sets ergänzen“ in {@link MovieSetJobService}.
+ * "Complete all sets" in {@link MovieSetJobService}.
  */
 @ExtendWith(MockitoExtension.class)
 class MovieSetCompletionTest {
@@ -60,12 +61,13 @@ class MovieSetCompletionTest {
         when(scrapeService.fetch("2344")).thenReturn(Optional.of(new MovieSetResult("2344", "The Matrix", "Neo.")));
         when(setService.update(1L, new MovieSetData("Matrix Filmreihe", "Neo.", "2344", SetSortMethod.YEAR)))
                 .thenReturn(List.of(10L, 11L));
-        when(artworkFiller.fillMissingArtwork(1L)).thenReturn(new MovieSetArtworkFiller.Fill(2, List.of("fanart.tv: aus")));
-        when(artworkFiller.fillMissingArtwork(2L)).thenReturn(new MovieSetArtworkFiller.Fill(1, List.of("fanart.tv: aus")));
+        List<LocalizedText> warnings = List.of(LocalizedText.literal("fanart.tv: aus"));
+        when(artworkFiller.fillMissingArtwork(1L)).thenReturn(new MovieSetArtworkFiller.Fill(2, warnings));
+        when(artworkFiller.fillMissingArtwork(2L)).thenReturn(new MovieSetArtworkFiller.Fill(1, warnings));
 
         MovieSetCompletionResult result = setJobs.complete(context);
 
-        assertThat(result).isEqualTo(new MovieSetCompletionResult(1, 3, 1, List.of("fanart.tv: aus")));
+        assertThat(result).isEqualTo(new MovieSetCompletionResult(1, 3, 1, warnings));
         verify(membership).rewrite(10L);
         verify(membership).rewrite(11L);
         verify(scrapeService, never()).fetch("1234");
@@ -84,8 +86,9 @@ class MovieSetCompletionTest {
         MovieSetCompletionResult result = setJobs.complete(context);
 
         assertThat(result.overviews()).isZero();
-        assertThat(result.problems()).containsExactly("Matrix Filmreihe: Es ist kein Scraper für Filmsets installiert "
-                + "und aktiv, etwa das TMDB-Plugin.");
+        assertThat(result.problems()).containsExactly(LocalizedText.of("movieSet.failure")
+                .with("set", "Matrix Filmreihe")
+                .with("reason", LocalizedText.of("movie.scraper.noMovieSetScraper.detail")));
         verify(setService, never()).update(anyLong(), any());
         verify(artworkFiller).fillMissingArtwork(2L);
     }

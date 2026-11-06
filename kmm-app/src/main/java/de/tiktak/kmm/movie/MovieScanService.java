@@ -11,6 +11,7 @@ import java.util.Optional;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -24,21 +25,21 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Durchsucht eine Filmquelle als Hintergrund-Job und übernimmt das Ergebnis in die Bibliothek.
- * Verzeichnisse und NFOs werden außerhalb der Datenbanktransaktion und parallel gelesen, damit lange
- * Scans keine Transaktion offen halten; unveränderte NFOs liest der Scan nicht erneut.
+ * Searches a movie source as a background job and takes the result over into the library. Directories and NFOs
+ * are read outside the database transaction and in parallel, so that long scans do not keep a transaction open;
+ * the scan does not read unchanged NFOs again.
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class MovieScanService {
 
-    /** Präfix des Job-Schlüssels; pro Quelle läuft höchstens ein Scan. */
+    /** Prefix of the job key; at most one scan runs per source. */
     public static final String JOB_KEY_PREFIX = MediaSourceService.SCAN_JOB_KEY_PREFIX;
-    static final String SEARCHING_MESSAGE = "Verzeichnisse werden durchsucht";
-    static final String CHECKING_NFOS_MESSAGE = "NFOs werden geprüft";
-    static final String SYNCHRONIZING_MESSAGE = "Bibliothek wird abgeglichen";
-    /** Gleichzeitig gelesene Ordner bzw. NFOs; mehr bringt auf Netzlaufwerken kaum etwas und belastet das NAS. */
+    static final LocalizedText SEARCHING_MESSAGE = LocalizedText.of("movie.scan.searching");
+    static final LocalizedText CHECKING_NFOS_MESSAGE = LocalizedText.of("movie.scan.checkingNfos");
+    static final LocalizedText SYNCHRONIZING_MESSAGE = LocalizedText.of("movie.scan.synchronizing");
+    /** Folders or NFOs read at the same time; more hardly helps on network drives and burdens the NAS. */
     static final int PARALLEL_READS = 8;
     private static final int UNKNOWN_TOTAL = 0;
 
@@ -50,14 +51,15 @@ public class MovieScanService {
     private final ApplicationEventPublisher events;
 
     /**
-     * Prüft die Quelle und startet den Scan im Hintergrund.
+     * Checks the source and starts the scan in the background.
      *
-     * @throws SourceNotScannableException wenn die Quelle keine Filmquelle oder nicht erreichbar ist
+     * @throws SourceNotScannableException if the source is not a movie source or cannot be reached
      */
     public JobSnapshot startScan(long sourceId) {
         MediaSource source = sourceService.require(sourceId);
         Path directory = scannableDirectory(source);
-        return jobService.submit(JOB_KEY_PREFIX + sourceId, "Scan „%s“".formatted(source.getName()),
+        return jobService.submit(JOB_KEY_PREFIX + sourceId,
+                LocalizedText.of("movie.scan.jobTitle").with("source", source.getName()),
                 context -> scan(source, directory, context));
     }
 
@@ -77,7 +79,7 @@ public class MovieScanService {
         return result;
     }
 
-    /** Sucht die NFOs parallel und liest neue oder geänderte gleich mit; die Reihenfolge bleibt erhalten. */
+    /** Looks for the NFOs in parallel and reads new or changed ones right away; the order is kept. */
     private List<ScannedMovie> withNfos(List<MovieCandidate> candidates, Map<String, Instant> knownNfos,
                                         JobContext context) {
         Progress progress = new Progress(context, candidates.size(), CHECKING_NFOS_MESSAGE);
@@ -110,7 +112,7 @@ public class MovieScanService {
         return directory;
     }
 
-    /** Durchsucht die Unterordner der Quelle parallel. */
+    /** Searches the subfolders of the source in parallel. */
     private List<MovieCandidate> findCandidates(MediaSource source, Path directory, JobContext context) {
         try {
             return scannerFactory.create().scan(directory, (directories, scan) -> {
@@ -128,15 +130,15 @@ public class MovieScanService {
         }
     }
 
-    /** Meldet den Fortschritt paralleler Schritte; die Zähler steigen nie rückwärts. */
+    /** Reports the progress of parallel steps; the counters never go backwards. */
     private static final class Progress {
 
         private final JobContext context;
         private final int total;
-        private final String message;
+        private final LocalizedText message;
         private int done;
 
-        private Progress(JobContext context, int total, String message) {
+        private Progress(JobContext context, int total, LocalizedText message) {
             this.context = context;
             this.total = total;
             this.message = message;

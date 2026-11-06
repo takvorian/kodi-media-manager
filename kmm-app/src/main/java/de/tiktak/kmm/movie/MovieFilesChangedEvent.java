@@ -1,8 +1,8 @@
 package de.tiktak.kmm.movie;
 
 /**
- * Die Begleitdateien eines Films (NFO, Bilder) wurden geändert. Wird nach dem Speichern
- * veröffentlicht, z. B. damit Kodi den Film neu einliest.
+ * The companion files of a movie (NFO, images) were changed. Published after saving,
+ * e.g. so that Kodi rescans the movie.
  */
 public record MovieFilesChangedEvent(long movieId) {
 }

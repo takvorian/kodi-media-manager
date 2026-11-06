@@ -20,7 +20,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Tag-Manager. Tags stehen im Rumpf statt im Pfad, weil sie beliebige Zeichen enthalten dürfen.
+ * Tag manager. Tags are in the body instead of the path, because they may contain arbitrary characters.
  */
 @RestController
 @RequestMapping(TagController.BASE_PATH)

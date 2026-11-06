@@ -122,20 +122,24 @@ class TagServiceTest {
         when(showTags.changeTags(7L, change)).thenReturn(true);
         JobContext context = mock(JobContext.class);
 
-        TagChangeResult result = service.apply("Test", List.of(1L, 2L, 3L), List.of(7L), change, context);
+        TagChangeResult result = service.apply(LocalizedText.literal("Test"), List.of(1L, 2L, 3L), List.of(7L), change,
+                context);
 
         assertThat(result.changed()).isEqualTo(2);
         assertThat(result.unchanged()).isEqualTo(1);
         assertThat(result.failed()).isEqualTo(1);
-        assertThat(result.failures()).singleElement().asString().startsWith("Film 3: ");
-        verify(context).reportProgress(3, 4, "Serie 7");
+        assertThat(result.failures()).singleElement().satisfies(failure -> {
+            assertThat(failure.key()).isEqualTo("tag.failure");
+            assertThat(failure.args()).containsEntry("entry", LocalizedText.of("tag.item.movie").with("id", 3L));
+        });
+        verify(context).reportProgress(3, 4, LocalizedText.of("tag.item.tvShow").with("id", 7L));
     }
 
     @SuppressWarnings("unchecked")
     private UnaryOperator<List<String>> submitted(Runnable start) {
         ArgumentCaptor<JobTask<TagChangeResult>> task = ArgumentCaptor.forClass(JobTask.class);
         start.run();
-        verify(jobService, atLeastOnce()).submit(eq(TagService.JOB_KEY), any(String.class), task.capture());
+        verify(jobService, atLeastOnce()).submit(eq(TagService.JOB_KEY), any(LocalizedText.class), task.capture());
         List<UnaryOperator<List<String>>> changes = new ArrayList<>();
         lenient().when(movieTags.changeTags(anyLong(), any())).thenAnswer(invocation -> {
             changes.add(invocation.getArgument(1));

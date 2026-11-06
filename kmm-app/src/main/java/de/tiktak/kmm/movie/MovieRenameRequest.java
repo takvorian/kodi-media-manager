@@ -6,9 +6,9 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 
 /**
- * Auftrag, Filme einer Quelle umzubenennen.
+ * Request to rename movies of a source.
  *
- * @param movieIds die umzubenennenden Filme; {@code null} heißt alle der Quelle
+ * @param movieIds the movies to rename; {@code null} means all of the source
  */
 public record MovieRenameRequest(@NotNull @Valid MovieRenamePatterns patterns, List<Long> movieIds) {
 

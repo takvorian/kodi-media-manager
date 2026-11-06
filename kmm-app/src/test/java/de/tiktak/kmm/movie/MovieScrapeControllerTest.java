@@ -81,7 +81,7 @@ class MovieScrapeControllerTest {
         assertThat(mockMvc.get().uri(MovieScrapeController.SEARCH_PATH, 5L).param("scraper", "tmdb"))
                 .hasStatus(404)
                 .bodyJson()
-                .extractingPath("$.title").isEqualTo("Scraper nicht gefunden");
+                .extractingPath("$.title").isEqualTo("Scraper not found");
     }
 
     @Test

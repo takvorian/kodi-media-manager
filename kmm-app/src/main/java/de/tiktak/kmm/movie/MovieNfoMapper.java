@@ -17,7 +17,7 @@ import de.tiktak.kmm.nfo.NfoRating;
 import de.tiktak.kmm.nfo.StreamDetails;
 
 /**
- * Übersetzt zwischen NFO-Inhalt und Film-Metadaten. Zeitangaben stehen in der NFO in lokaler Zeit.
+ * Translates between NFO content and movie metadata. Time values in the NFO are in local time.
  */
 final class MovieNfoMapper {
 
@@ -29,10 +29,10 @@ final class MovieNfoMapper {
     }
 
     /**
-     * Übernimmt die NFO; fehlende Werte werden mit den Werten aus dem Scan ergänzt.
+     * Takes over the NFO; missing values are supplemented with the values from the scan.
      *
-     * @param fallbackTitle aus dem Dateinamen abgeleiteter Titel, falls die NFO keinen enthält
-     * @param fallbackYear  aus dem Dateinamen abgeleitetes Jahr, falls die NFO keines enthält
+     * @param fallbackTitle title derived from the file name, in case the NFO has none
+     * @param fallbackYear  year derived from the file name, in case the NFO has none
      */
     static MovieMetadata toMetadata(MovieNfo nfo, String fallbackTitle, Integer fallbackYear) {
         Integer year = nfo.effectiveYear();
@@ -53,8 +53,8 @@ final class MovieNfoMapper {
     }
 
     /**
-     * Erzeugt den NFO-Inhalt. IDs weiterer Anbieter aus der vorhandenen NFO (z. B. {@code tvdb})
-     * bleiben erhalten; IMDb und TMDB kommen ausschließlich aus den Metadaten.
+     * Creates the NFO content. IDs of further providers from the existing NFO (e.g. {@code tvdb})
+     * are kept; IMDb and TMDB come exclusively from the metadata.
      */
     static MovieNfo toNfo(MovieMetadata metadata, MovieNfoSupplement supplement,
             Map<String, String> existingUniqueIds) {
@@ -84,7 +84,7 @@ final class MovieNfoMapper {
                 supplement);
     }
 
-    /** Darsteller werden nach ihrer Reihenfolge in der NFO sortiert; eine eigene Bewertung von 0 heißt „keine“. */
+    /** Cast members are sorted by their order in the NFO; an own rating of 0 means "none". */
     static MovieSupplement toSupplement(MovieNfoSupplement nfo, ZoneId zone) {
         return new MovieSupplement(
                 nfo.actors().stream().sorted(BY_ORDER)
@@ -107,7 +107,7 @@ final class MovieNfoMapper {
     }
 
     /**
-     * @param trailer Trailer-Link, {@link MovieNfoSupplement#NO_TRAILER} oder {@code null}, wenn unbekannt
+     * @param trailer trailer link, {@link MovieNfoSupplement#NO_TRAILER} or {@code null} if unknown
      */
     static MovieNfoSupplement toNfoSupplement(MovieSupplement supplement, StreamDetails streams, Instant addedAt,
             ZoneId zone, String trailer) {

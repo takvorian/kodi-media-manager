@@ -18,8 +18,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Trailer eines Films als Link in der NFO ({@code <trailer>}), den Kodi abspielt: Vorschläge der Trailer-Scraper
- * anzeigen, einen übernehmen oder entfernen und fehlende automatisch ergänzen. Heruntergeladen wird nichts.
+ * Trailer of a movie as a link in the NFO ({@code <trailer>}) that Kodi plays: show suggestions of the trailer
+ * scrapers, accept or remove one, and add missing ones automatically. Nothing is downloaded.
  */
 @Slf4j
 @Service
@@ -36,7 +36,7 @@ public class MovieTrailerService {
     private final TrailerFinder trailerFinder;
     private final SettingsService settingsService;
 
-    /** Vorschläge, die besten zuerst: bevorzugte Sprache der Bilder, dann Englisch. */
+    /** Suggestions, best first: preferred image language, then English. */
     public TrailerOptions candidates(long movieId) {
         MovieMetadata metadata = metadataService.findDetails(movieId).metadata();
         Map<String, String> ids = uniqueIds(metadata);
@@ -49,9 +49,9 @@ public class MovieTrailerService {
     }
 
     /**
-     * Übernimmt den Link in Datenbank und NFO.
+     * Takes over the link into the database and NFO.
      *
-     * @throws ScraperProblemException wenn der Link nichts ist, was Kodi abspielen kann
+     * @throws ScraperProblemException if the link is not something Kodi can play
      */
     @Transactional
     public MovieDetails apply(long movieId, String url) {
@@ -68,9 +68,9 @@ public class MovieTrailerService {
     }
 
     /**
-     * Trägt den besten Vorschlag ein, wenn der Film keinen Trailer hat.
+     * Enters the best suggestion if the movie has no trailer.
      *
-     * @return ob ein Trailer eingetragen wurde
+     * @return whether a trailer was entered
      */
     @Transactional
     public boolean fillMissing(long movieId) {

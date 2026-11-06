@@ -14,16 +14,16 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Übernimmt Filme aus einer Migration in die Bibliothek. Ein Film wird über seinen Dateipfad
- * erkannt; ein erneuter Import aktualisiert ihn, statt ihn doppelt anzulegen. Die NFO wird nicht
- * geschrieben, aber als eingelesen vermerkt, damit der nächste Scan die importierten Angaben nicht
- * mit dem Inhalt der Datei überschreibt.
+ * Takes over movies from a migration into the library. A movie is recognized by its file path;
+ * a repeated import updates it instead of creating it twice. The NFO is not
+ * written, but marked as read so that the next scan does not overwrite the imported details
+ * with the content of the file.
  */
 @Service
 @RequiredArgsConstructor
 public class MovieImportService {
 
-    /** Höchstzahl der Parameter einer IN-Abfrage, damit auch große Bibliotheken jede Datenbank vertragen. */
+    /** Maximum number of parameters of an IN query, so that even large libraries work with every database. */
     static final int QUERY_CHUNK_SIZE = 1000;
 
     private final MovieRepository movieRepository;
@@ -31,10 +31,10 @@ public class MovieImportService {
     private final MovieNfoFiles nfoFiles;
 
     /**
-     * Beginnt einen Import. Die Sitzung lädt die vorhandenen Filme vorab und merkt sich Sets, damit
-     * nicht jeder Film eigene Abfragen auslöst. Sie ist nur innerhalb der aufrufenden Transaktion gültig.
+     * Begins an import. The session loads the existing movies in advance and remembers sets so that
+     * not every movie triggers its own queries. It is valid only within the calling transaction.
      *
-     * @param filePaths Dateipfade aller Filme, die importiert werden sollen
+     * @param filePaths file paths of all movies to be imported
      */
     @Transactional(propagation = Propagation.MANDATORY)
     public MovieImportSession startSession(Collection<String> filePaths) {
@@ -48,7 +48,7 @@ public class MovieImportService {
     }
 
     /**
-     * Import mehrerer Filme innerhalb einer laufenden Transaktion.
+     * Import of several movies within a running transaction.
      */
     public final class MovieImportSession {
 

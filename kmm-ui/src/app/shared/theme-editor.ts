@@ -6,6 +6,7 @@ import { translate, TranslocoPipe } from '@jsverse/transloco';
 import { TranslocoDecimalPipe } from '@jsverse/transloco-locale';
 import { finalize } from 'rxjs';
 
+import { LocalizedPipe } from '../i18n/localized.pipe';
 import { CONFIRM } from './confirm';
 import { problemMessage } from './problem-message';
 import { ThemeInfo, ThemeOption, ThemeOptions, ThemeService } from './theme';
@@ -19,7 +20,7 @@ const BYTES_PER_KB = 1024;
  */
 @Component({
   selector: 'app-theme-editor',
-  imports: [MatButtonModule, TranslocoDecimalPipe, TranslocoPipe],
+  imports: [LocalizedPipe, MatButtonModule, TranslocoDecimalPipe, TranslocoPipe],
   templateUrl: './theme-editor.html',
   styleUrl: './theme-editor.scss',
 })

@@ -2,12 +2,14 @@ package de.tiktak.kmm.theme;
 
 import java.util.List;
 
+import de.tiktak.kmm.i18n.LocalizedText;
+
 /**
- * Titelmusik-Vorschläge, Treffer mit gleichem Titel zuerst.
+ * Theme music suggestions, matches with the same title first.
  *
- * @param warnings Hinweise zu nicht eingerichteten oder fehlerhaften Anbietern
+ * @param warnings hints about providers that are not set up or failed
  */
-public record ThemeOptions(List<ThemeOption> candidates, List<String> warnings) {
+public record ThemeOptions(List<ThemeOption> candidates, List<LocalizedText> warnings) {
 
     public ThemeOptions {
         candidates = List.copyOf(candidates);

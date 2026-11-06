@@ -1063,6 +1063,308 @@
         "title": "Job nicht gefunden",
         "detail": "Es gibt keinen Job mit der ID {id}."
       }
+    },
+    "movie": {
+      "notFound": {
+        "title": "Film nicht gefunden",
+        "detail": "Es gibt keinen Film mit der ID {id}."
+      },
+      "item": "Film {id}",
+      "failure": "Film {id}: {reason}",
+      "sort": {
+        "invalid": {
+          "title": "Ungültige Sortierung",
+          "detail": "Nach „{property}“ kann nicht sortiert werden."
+        }
+      },
+      "batch": {
+        "edit": {
+          "jobTitle": "{count, plural, one {# Film bearbeiten} other {# Filme bearbeiten}}"
+        },
+        "trailerFill": {
+          "jobTitle": "{count, plural, one {Fehlenden Trailer für # Film holen} other {Fehlende Trailer für # Filme holen}}"
+        },
+        "enrichment": {
+          "jobTitle": "{count, plural, one {Bewertungen für # Film aktualisieren} other {Bewertungen für # Filme aktualisieren}}"
+        },
+        "language": {
+          "jobTitle": "{count, plural, one {Sprache von # Film ändern} other {Sprache von # Filmen ändern}}"
+        }
+      },
+      "scan": {
+        "jobTitle": "Scan „{source}“",
+        "searching": "Verzeichnisse werden durchsucht",
+        "checkingNfos": "NFOs werden geprüft",
+        "synchronizing": "Bibliothek wird abgeglichen",
+        "notScannable": {
+          "title": "Quelle kann nicht gescannt werden"
+        },
+        "notAMovieSource": {
+          "detail": "Die Quelle „{source}“ enthält keine Filme ({mediaType})."
+        },
+        "unreachable": {
+          "detail": "Das Verzeichnis „{path}“ der Quelle „{source}“ ist nicht erreichbar."
+        }
+      },
+      "rename": {
+        "jobTitle": "Filme umbenennen „{source}“",
+        "planning": "Neue Namen werden berechnet",
+        "impossible": {
+          "title": "Umbenennen nicht möglich"
+        },
+        "invalidPattern": {
+          "detail": "{pattern}: {reason}"
+        },
+        "pattern": {
+          "folder": "Ordnermuster",
+          "file": "Dateimuster"
+        },
+        "folderInFilePattern": {
+          "detail": "Das Dateimuster darf keine Ordner (/) enthalten."
+        },
+        "notAMovieSource": {
+          "detail": "Die Quelle „{source}“ enthält keine Filme."
+        },
+        "folderPatternEmpty": "Das Ordnermuster ergibt keinen Namen.",
+        "filePatternInvalid": "Das Dateimuster ergibt keinen gültigen Dateinamen.",
+        "folderUnreadable": "Der Ordner ist nicht lesbar: {reason}",
+        "folderExists": "Der Ordner „{folder}“ existiert bereits.",
+        "folderInsideCurrent": "Der neue Ordner liegt im bisherigen.",
+        "fileExists": "Die Datei „{file}“ existiert bereits.",
+        "folderGone": "Der Ordner „{folder}“ existiert nicht mehr.",
+        "sharedTarget": "Mehrere Filme bekämen den Ordner „{folder}“.",
+        "failed": "Umbenennen fehlgeschlagen: {reason}",
+        "problem": "„{title}“: {reason}"
+      },
+      "nfo": {
+        "changedOutside": {
+          "title": "NFO außerhalb von KMM geändert",
+          "detail": "{file} wurde außerhalb von KMM geändert und lässt sich nicht lesen ({reason}). KMM überschreibt sie deshalb nicht; bitte die Datei prüfen."
+        },
+        "notWritable": {
+          "title": "NFO konnte nicht geschrieben werden",
+          "detail": "{reason} Bitte Schreibrechte im Filmordner prüfen."
+        }
+      },
+      "scraper": {
+        "unknown": {
+          "title": "Scraper nicht gefunden",
+          "detail": "Es ist kein Scraper mit der ID „{id}“ installiert und aktiv."
+        },
+        "notConfigured": {
+          "title": "{scraper} ist nicht eingerichtet"
+        },
+        "providerFailed": {
+          "title": "{scraper} meldet einen Fehler"
+        },
+        "noMetadataScraper": {
+          "title": "Kein Scraper eingerichtet",
+          "detail": "Es ist kein Metadaten-Scraper eingerichtet, etwa TMDB mit API-Key."
+        },
+        "notIdentified": {
+          "title": "Film nicht zugeordnet",
+          "detail": "„{title}“ ist bei {scraper} nicht eindeutig zugeordnet. Bitte zuerst über die Online-Suche übernehmen."
+        },
+        "noMovieSetScraper": {
+          "title": "Kein Scraper für Filmsets",
+          "detail": "Es ist kein Scraper für Filmsets installiert und aktiv, etwa das TMDB-Plugin."
+        },
+        "notFoundAtProvider": {
+          "title": "Treffer nicht gefunden",
+          "detail": "{scraper} kennt den Eintrag „{id}“ nicht."
+        }
+      },
+      "trailer": {
+        "missingIds": {
+          "title": "Film nicht eindeutig zugeordnet",
+          "detail": "Für die Trailersuche wird eine TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+        },
+        "invalid": {
+          "title": "Ungültiger Trailer",
+          "detail": "„{url}“ ist kein Link, den Kodi abspielen kann (plugin://, http(s)://, smb:// oder nfs://)."
+        }
+      }
+    },
+    "movieSet": {
+      "notFound": {
+        "title": "Filmset nicht gefunden",
+        "detail": "Es gibt kein Filmset mit der ID {id}."
+      },
+      "nameTaken": {
+        "title": "Name vergeben",
+        "detail": "Es gibt schon ein Filmset „{name}“."
+      },
+      "save": {
+        "jobTitle": "Filmset „{name}“ speichern"
+      },
+      "delete": {
+        "jobTitle": "Filmset „{name}“ löschen"
+      },
+      "addMovies": {
+        "jobTitle": "Filme zu „{name}“ hinzufügen"
+      },
+      "removeMovies": {
+        "jobTitle": "Filme aus „{name}“ entfernen"
+      },
+      "completeAll": {
+        "jobTitle": "Alle Sets ergänzen"
+      },
+      "failure": "{set}: {reason}"
+    },
+    "artwork": {
+      "unsupportedType": {
+        "title": "Bildart nicht unterstützt",
+        "detail": "Die Bildart {type} wird für Filme nicht verwaltet.",
+        "otherDetail": "Die Bildart {type} wird für {target} nicht verwaltet."
+      },
+      "target": {
+        "movieSet": "Filmsets",
+        "tvShow": "Serien",
+        "season": "Staffeln",
+        "episode": "Episoden"
+      },
+      "missingIds": {
+        "title": "Film nicht eindeutig zugeordnet",
+        "detail": "Für die Bildsuche wird eine TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+      },
+      "imageMissing": {
+        "title": "Kein Bild vorhanden",
+        "detail": "Es gibt kein Bild der Art {type}."
+      },
+      "unwritable": {
+        "title": "Bild konnte nicht gespeichert werden",
+        "detail": "{file} kann nicht geschrieben werden. Bitte Schreibrechte im Ordner prüfen."
+      },
+      "missingCollectionId": {
+        "title": "Set nicht zugeordnet",
+        "detail": "Für die Bildsuche wird die TMDB-ID der Sammlung benötigt. Bitte zuerst das Set bei TMDB suchen."
+      },
+      "noMovieSetImageStorage": {
+        "title": "Keine Ablage für Set-Bilder",
+        "detail": "Bitte in den Einstellungen unter „Filmsets“ eine Ablage für Set-Bilder einschalten."
+      },
+      "missingTvIds": {
+        "title": "Serie nicht eindeutig zugeordnet",
+        "detail": "Für die Bildsuche wird eine TVDB-, TMDB- oder IMDb-ID benötigt. Bitte zuerst „Online suchen“ nutzen."
+      },
+      "download": {
+        "invalidUrl": {
+          "title": "Ungültige Bildadresse",
+          "detail": "„{url}“ ist keine gültige http(s)-Adresse."
+        },
+        "failed": {
+          "title": "Bild konnte nicht geladen werden",
+          "detail": "{url}: {reason}"
+        },
+        "httpStatus": "HTTP {status}",
+        "interrupted": "Download unterbrochen",
+        "notAnImage": {
+          "title": "Kein unterstütztes Bild",
+          "detail": "{url} liefert „{contentType}“ statt JPEG oder PNG."
+        },
+        "unknownContentType": "unbekannt",
+        "tooLarge": {
+          "title": "Bild zu groß",
+          "detail": "{url} ist größer als {megabytes} MB."
+        }
+      },
+      "warning": {
+        "provider": "{provider}: {reason}",
+        "unexpectedError": "unerwarteter Fehler",
+        "interrupted": "Abfrage unterbrochen",
+        "download": "{type}: {reason}"
+      }
+    },
+    "theme": {
+      "unknownScraper": {
+        "title": "Anbieter nicht gefunden",
+        "detail": "Es ist kein Titelmusik-Anbieter mit der ID „{id}“ installiert und aktiv."
+      },
+      "downloadFailed": {
+        "title": "Titelmusik nicht geladen"
+      },
+      "missing": {
+        "title": "Keine Titelmusik",
+        "detail": "Es gibt keine theme.mp3."
+      },
+      "unwritable": {
+        "title": "Titelmusik nicht gespeichert",
+        "detail": "{file} kann nicht geschrieben werden. Bitte Schreibrechte im Ordner prüfen."
+      },
+      "fill": {
+        "movies": {
+          "jobTitle": "{count, plural, one {Fehlende Titelmusik für # Film holen} other {Fehlende Titelmusik für # Filme holen}}"
+        }
+      },
+      "warning": "{provider}: {reason}"
+    },
+    "trailer": {
+      "warning": "{provider}: {reason}"
+    },
+    "mediaInfo": {
+      "unreadable": {
+        "title": "Technische Angaben nicht lesbar"
+      },
+      "seasonWithoutEpisodes": {
+        "title": "Keine Episoden",
+        "detail": "„{show}“ hat keine Episoden in Staffel {season}."
+      },
+      "source": {
+        "jobTitle": "Technische Angaben „{source}“"
+      },
+      "season": {
+        "jobTitle": "Technische Angaben Staffel {season} von „{show}“"
+      },
+      "newFiles": {
+        "jobTitle": "Technische Angaben neuer Dateien „{source}“"
+      },
+      "failure": "{entry}: {reason}"
+    },
+    "tag": {
+      "invalid": {
+        "title": "Ungültiger Tag",
+        "detail": "Ein Tag braucht einen Namen mit höchstens {max} Zeichen."
+      },
+      "rename": {
+        "jobTitle": "Tag „{tag}“ in „{name}“ umbenennen"
+      },
+      "delete": {
+        "jobTitle": "Tag „{tag}“ löschen"
+      },
+      "assign": {
+        "jobTitle": "Tag „{tag}“ zuweisen"
+      },
+      "unassign": {
+        "jobTitle": "Tag „{tag}“ entfernen"
+      },
+      "item": {
+        "movie": "Film {id}",
+        "tvShow": "Serie {id}"
+      },
+      "failure": "{entry}: {reason}"
+    },
+    "filter": {
+      "invalid": {
+        "title": "Ungültiger Filter",
+        "operatorNotAllowed": "{field} erlaubt den Vergleich {operator} nicht.",
+        "valueMissing": "Für {field} fehlt der Vergleichswert.",
+        "notANumber": "{field} erwartet eine Zahl, nicht „{value}“.",
+        "notABoolean": "{field} erwartet true oder false, nicht „{value}“."
+      },
+      "saved": {
+        "notFound": {
+          "title": "Filter nicht gefunden",
+          "detail": "Es gibt keinen gespeicherten Filter mit der ID {id}."
+        },
+        "nameTaken": {
+          "title": "Name vergeben",
+          "detail": "Es gibt schon einen Filter „{name}“."
+        },
+        "tooLong": {
+          "title": "Filter zu groß",
+          "detail": "Der Filter hat zu viele oder zu lange Bedingungen."
+        }
+      }
     }
   }
 }

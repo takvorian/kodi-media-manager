@@ -14,8 +14,8 @@ import de.tiktak.kmm.plugin.api.ThemeScraper;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Liest, speichert und löscht {@code theme.mp3}. Geladen wird in eine temporäre Datei neben der Titelmusik, damit bei
- * Fehlern keine halbe Datei entsteht.
+ * Reads, saves and deletes {@code theme.mp3}. Downloading goes to a temporary file next to the theme music, so
+ * that errors do not leave a half-written file.
  */
 @Slf4j
 @Component
@@ -42,8 +42,8 @@ class ThemeFiles {
     }
 
     /**
-     * @throws de.tiktak.kmm.plugin.api.ScraperException wenn der Anbieter die Musik nicht liefert
-     * @throws ThemeProblemException                     wenn die Datei nicht geschrieben werden kann
+     * @throws de.tiktak.kmm.plugin.api.ScraperException if the provider does not deliver the music
+     * @throws ThemeProblemException                     if the file cannot be written
      */
     void save(ThemeTarget target, ThemeScraper scraper, ThemeCandidate candidate) {
         Path file = target.themeFile();
@@ -58,7 +58,7 @@ class ThemeFiles {
         }
     }
 
-    /** @throws ThemeProblemException wenn die Datei nicht gelöscht werden kann */
+    /** @throws ThemeProblemException if the file cannot be deleted */
     void delete(ThemeTarget target) {
         Path file = target.themeFile();
         try {
@@ -68,7 +68,7 @@ class ThemeFiles {
         }
     }
 
-    /** Netzlaufwerke unterstützen teils kein atomares Ersetzen; dann wird normal verschoben. */
+    /** Network drives sometimes do not support atomic replacement; then a normal move is used. */
     private static void replace(Path source, Path target) throws IOException {
         try {
             Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

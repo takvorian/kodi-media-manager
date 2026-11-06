@@ -5,7 +5,7 @@ import org.springframework.boot.context.properties.bind.DefaultValue;
 import org.springframework.util.unit.DataSize;
 
 /**
- * @param maxDownloadSize größte Bilddatei, die heruntergeladen wird
+ * @param maxDownloadSize largest image file that is downloaded
  */
 @ConfigurationProperties("kmm.artwork")
 public record ArtworkProperties(

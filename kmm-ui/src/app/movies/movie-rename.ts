@@ -1,7 +1,7 @@
 import { translate } from '@jsverse/transloco';
 
 import { Job } from '../jobs/job';
-import { localize } from '../i18n/localized-text';
+import { LocalizedText, localize } from '../i18n/localized-text';
 
 /** Prefix of the job key for renaming; must match MovieRenameService.JOB_KEY_PREFIX. */
 export const MOVIE_RENAME_JOB_KEY_PREFIX = 'movie-rename:';
@@ -31,7 +31,7 @@ export interface MovieRenamePlan {
   readonly targetDirectory: string;
   readonly renames: readonly FileRename[];
   readonly status: MovieRenameStatus;
-  readonly message: string | null;
+  readonly message: LocalizedText | null;
 }
 
 export interface MovieRenameResult {
@@ -40,7 +40,7 @@ export interface MovieRenameResult {
   readonly unchanged: number;
   readonly skipped: number;
   readonly failed: number;
-  readonly problems: readonly string[];
+  readonly problems: readonly LocalizedText[];
 }
 
 /** Translation key of the label of each rename status. */

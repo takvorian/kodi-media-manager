@@ -15,7 +15,7 @@ import de.tiktak.kmm.nfo.StreamDetails;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Liest technische Angaben mit ffprobe aus, für eine ganze Quelle oder einen einzelnen Film bzw. eine Episode.
+ * Reads technical details with ffprobe, for a whole source or a single movie or episode.
  */
 @RestController
 @RequestMapping(StreamDetailsController.BASE_PATH)
@@ -26,7 +26,7 @@ public class StreamDetailsController {
 
     private final StreamDetailsService service;
 
-    /** Startet das Auslesen im Hintergrund. Fortschritt und Ergebnis liefert die Job-API. */
+    /** Starts the reading in the background. Progress and result are provided by the job API. */
     @PostMapping("/sources/{sourceId}/stream-details")
     public ResponseEntity<JobSnapshot> probeSource(@PathVariable long sourceId,
             @RequestParam(defaultValue = "MISSING") StreamDetailsScope scope) {
@@ -34,7 +34,7 @@ public class StreamDetailsController {
         return ResponseEntity.accepted().location(URI.create(JobController.BASE_PATH + "/" + job.id())).body(job);
     }
 
-    /** Liest alle Episoden einer Staffel im Hintergrund neu aus. Fortschritt und Ergebnis liefert die Job-API. */
+    /** Re-reads all episodes of a season in the background. Progress and result are provided by the job API. */
     @PostMapping("/tvshows/{showId}/seasons/{season}/stream-details")
     public ResponseEntity<JobSnapshot> probeSeason(@PathVariable long showId, @PathVariable int season) {
         JobSnapshot job = service.startSeason(showId, season);
@@ -52,9 +52,9 @@ public class StreamDetailsController {
     }
 
     /**
-     * Liest den Film nach der Online-Suche aus, wenn das eingestellt ist.
+     * Reads the movie after the online search if that is enabled.
      *
-     * @return die Angaben oder 204, wenn das Auslesen nach dem Scrapen abgeschaltet ist
+     * @return the details or 204 if reading after scraping is disabled
      */
     @PostMapping("/movies/{movieId}/stream-details/after-scrape")
     public ResponseEntity<StreamDetails> probeMovieAfterScrape(@PathVariable long movieId) {
@@ -63,9 +63,9 @@ public class StreamDetailsController {
     }
 
     /**
-     * Liest nach der Online-Suche die Episoden der Serie ohne Angaben aus, wenn das eingestellt ist.
+     * After the online search, reads the episodes of the TV show without details if that is enabled.
      *
-     * @return das Ergebnis oder 204, wenn das Auslesen nach dem Scrapen abgeschaltet ist
+     * @return the result or 204 if reading after scraping is disabled
      */
     @PostMapping("/tvshows/{showId}/stream-details/after-scrape")
     public ResponseEntity<ShowStreamDetailsResult> probeShowAfterScrape(@PathVariable long showId) {

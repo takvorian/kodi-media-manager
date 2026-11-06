@@ -251,7 +251,11 @@ class AutoScrapeIntegrationTest {
         JsonNode result = changeLanguage(movieIdOf("Unbekannt (2001)"), "fr-FR", true);
 
         assertThat(result.get("failed").asInt()).isEqualTo(1);
-        assertThat(result.get("failures").get(0).asString()).contains("„Unbekannt (2001)“", "nicht eindeutig zugeordnet");
+        JsonNode failure = result.get("failures").get(0);
+        assertThat(failure.get("key").asString()).isEqualTo("movie.failure");
+        assertThat(failure.get("args").get("reason").get("key").asString())
+                .isEqualTo("movie.scraper.notIdentified.detail");
+        assertThat(failure.get("args").get("reason").get("args").get("title").asString()).isEqualTo("Unbekannt (2001)");
     }
 
     private JsonNode changeLanguage(long movieId, String language, boolean refetchTexts) {

@@ -1,11 +1,11 @@
 package de.tiktak.kmm.movie;
 
 /**
- * Reihenfolge der Filme in einem Set, wie in Ember.
+ * Order of the movies in a set, as in Ember.
  */
 public enum SetSortMethod {
-    /** Nach Erscheinungsjahr, wie Kodi. */
+    /** By release year, like Kodi. */
     YEAR,
-    /** Nach (Sortier-)Titel. */
+    /** By (sort) title. */
     TITLE
 }

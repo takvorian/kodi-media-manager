@@ -9,8 +9,8 @@ import de.tiktak.kmm.scanner.CompanionFiles;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Bilddateien eines Films nach Kodi-Konvention ({@code <film>-poster.jpg}, bei DVD/Blu-ray
- * {@code poster.jpg} im Filmordner).
+ * Image files of a movie following the Kodi convention ({@code <film>-poster.jpg}, for DVD/Blu-ray
+ * {@code poster.jpg} in the movie folder).
  */
 @Component
 @RequiredArgsConstructor

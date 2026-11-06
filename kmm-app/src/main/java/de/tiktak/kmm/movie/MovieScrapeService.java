@@ -22,8 +22,8 @@ import de.tiktak.kmm.settings.SettingsService;
 import lombok.RequiredArgsConstructor;
 
 /**
- * Sucht Filme bei einem Metadaten-Scraper und bereitet die Daten eines gewählten Treffers als
- * Vorschlag auf. Gespeichert wird erst, wenn der Nutzer den Vorschlag übernimmt.
+ * Searches for movies with a metadata scraper and prepares the data of a chosen match as a
+ * suggestion. Nothing is saved until the user accepts the suggestion.
  */
 @Service
 @RequiredArgsConstructor
@@ -39,8 +39,8 @@ public class MovieScrapeService {
     private final MovieCollectionAssigner collectionAssigner;
 
     /**
-     * @param title Suchbegriff; ohne Angabe der Titel des Films
-     * @param year  Jahr; ohne Angabe das Jahr des Films, sofern der Titel nicht angegeben wurde
+     * @param title search term; if omitted, the movie's title
+     * @param year  year; if omitted, the movie's year, provided no title was given
      */
     public List<ScrapeCandidate> search(long movieId, String scraperId, String title, Integer year) {
         MovieMetadata current = metadataService.findDetails(movieId).metadata();
@@ -53,7 +53,7 @@ public class MovieScrapeService {
     }
 
     /**
-     * @return die vorhandenen Metadaten, überlagert mit den Daten des Treffers, und die Sammlung des Films
+     * @return the existing metadata, overlaid with the data of the match, and the movie's collection
      */
     public MovieScrapeProposal proposal(long movieId, String scraperId, String providerId) {
         MovieMetadata current = metadataService.findDetails(movieId).metadata();
@@ -66,10 +66,10 @@ public class MovieScrapeService {
     }
 
     /**
-     * Ordnet einen gescrapten Film dem Set seiner Sammlung zu, sofern „Filme beim Scrapen ihrem Filmset zuordnen“
-     * eingeschaltet ist.
+     * Assigns a scraped movie to the set of its collection, provided "Assign movies to their movie set when scraping"
+     * is enabled.
      *
-     * @return ob sich die Set-Zugehörigkeit geändert hat
+     * @return whether the set membership has changed
      */
     public boolean assignCollection(long movieId, CollectionReference collection) {
         return settingsService.current().movieSets().assignOnScrape()
@@ -77,10 +77,10 @@ public class MovieScrapeService {
     }
 
     /**
-     * Holt Metadaten für einen Film, der noch keine TMDB-ID hat. Übernommen wird nur ein sicherer
-     * Treffer des bevorzugten Scrapers; vorhandene Werte, die der Scraper nicht kennt, bleiben.
+     * Fetches metadata for a movie that has no TMDB ID yet. Only a reliable match from the preferred
+     * scraper is applied; existing values the scraper does not know are kept.
      *
-     * @throws ScraperProblemException wenn der Anbieter einen Fehler meldet
+     * @throws ScraperProblemException if the provider reports an error
      */
     public MetadataScrapeOutcome scrapeMissingMetadata(long movieId) {
         MovieMetadata current = metadataService.findDetails(movieId).metadata();
@@ -109,12 +109,12 @@ public class MovieScrapeService {
     }
 
     /**
-     * Holt Titel und Texte des Films neu in seiner Sprache und überschreibt die vorhandenen, auch von Hand geänderte.
-     * Was der Anbieter in dieser Sprache nicht hat, bleibt.
+     * Fetches the movie's title and texts again in its language and overwrites the existing ones, including those
+     * edited by hand. Whatever the provider does not have in this language is kept.
      *
-     * @return ob sich etwas geändert hat
-     * @throws ScraperProblemException wenn kein Anbieter eingerichtet ist, er einen Fehler meldet oder den Film nicht
-     *                                 eindeutig findet
+     * @return whether anything has changed
+     * @throws ScraperProblemException if no provider is set up, it reports an error or cannot find the movie
+     *                                 unambiguously
      */
     public boolean refetchTexts(long movieId) {
         MovieMetadata current = metadataService.findDetails(movieId).metadata();
@@ -141,7 +141,7 @@ public class MovieScrapeService {
         return ScrapeLanguage.with(metadataService.scrapeLanguage(movieId), body);
     }
 
-    /** Der konfigurierte Scraper, sonst der erste eingerichtete. */
+    /** The configured scraper, otherwise the first one that is set up. */
     private Optional<MetadataScraper> preferredReadyScraper() {
         List<MetadataScraper> ready = scraperRegistry.metadataScrapersFor(MediaType.MOVIE).stream()
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())

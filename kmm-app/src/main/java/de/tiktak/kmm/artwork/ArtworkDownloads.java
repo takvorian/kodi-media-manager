@@ -3,40 +3,41 @@ package de.tiktak.kmm.artwork;
 import java.util.List;
 import java.util.function.Consumer;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.api.ImageType;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Speichert beim automatischen Holen von Bildern den ersten Treffer, der sich laden lässt.
+ * When fetching images automatically, saves the first match that can be downloaded.
  */
 @Slf4j
 final class ArtworkDownloads {
 
-    /** Versuche je Bildart, falls Downloads fehlschlagen. */
+    /** Attempts per image type in case downloads fail. */
     static final int MAX_DOWNLOAD_ATTEMPTS = 3;
 
     private ArtworkDownloads() {
     }
 
     /**
-     * Ein Schreibfehler im Zielordner wird nicht abgefangen, weil weitere Versuche daran nichts ändern.
+     * A write error in the target folder is not caught, because further attempts would not change it.
      *
-     * @return ob ein Bild gespeichert wurde; der letzte Downloadfehler landet in {@code warnings}
+     * @return whether an image was saved; the last download error ends up in {@code warnings}
      */
     static boolean saveFirstLoadable(ImageDownloader downloader, ImageType type, List<ArtworkCandidate> candidates,
-            Consumer<DownloadedImage> save, List<String> warnings) {
-        String lastProblem = null;
+            Consumer<DownloadedImage> save, List<LocalizedText> warnings) {
+        LocalizedText lastProblem = null;
         for (ArtworkCandidate candidate : candidates.stream().limit(MAX_DOWNLOAD_ATTEMPTS).toList()) {
             try {
                 save.accept(downloader.download(candidate.url()));
                 return true;
             } catch (ImageDownloadException e) {
                 log.warn("Could not download {} from {}: {}", type, candidate.url(), e.getMessage());
-                lastProblem = e.getMessage();
+                lastProblem = e.localizedText();
             }
         }
         if (lastProblem != null) {
-            warnings.add("%s: %s".formatted(type, lastProblem));
+            warnings.add(LocalizedText.of("artwork.warning.download").with("type", type).with("reason", lastProblem));
         }
         return false;
     }

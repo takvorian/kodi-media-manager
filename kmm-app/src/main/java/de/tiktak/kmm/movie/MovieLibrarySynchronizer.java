@@ -24,9 +24,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Gleicht die Filme einer Quelle in der Datenbank mit dem Scan-Ergebnis ab: Neue Dateien werden
- * angelegt, verschwundene entfernt. Metadaten kommen aus der NFO; bekannte Filme werden nur
- * aktualisiert, wenn sich ihre NFO seit dem letzten Einlesen geändert hat.
+ * Reconciles the movies of a source in the database with the scan result: new files are
+ * created, vanished ones removed. Metadata comes from the NFO; known movies are only
+ * updated if their NFO has changed since it was last read.
  */
 @Slf4j
 @Component
@@ -39,7 +39,7 @@ class MovieLibrarySynchronizer {
     private final MovieNfoSync nfoSync;
     private final Clock clock;
 
-    /** Liefert die Änderungszeiten der zuletzt eingelesenen NFOs je Filmdatei, damit der Scan nur geänderte liest. */
+    /** Returns the modification times of the last-read NFOs per movie file, so the scan reads only changed ones. */
     @Transactional(readOnly = true)
     Map<String, Instant> knownNfos(long sourceId) {
         Map<String, Instant> known = new HashMap<>();
@@ -120,7 +120,7 @@ class MovieLibrarySynchronizer {
     }
 
     /**
-     * @return {@code true}, wenn die NFO übernommen wurde
+     * @return {@code true} if the NFO was taken over
      */
     private boolean applyNfo(Movie movie, ScannedMovie scanned, String fallbackTitle, Integer fallbackYear,
             Outcome outcome) {
@@ -140,7 +140,7 @@ class MovieLibrarySynchronizer {
         }
     }
 
-    /** Zwischenstand eines Abgleichs. */
+    /** Intermediate state of a reconciliation. */
     private static final class Outcome {
 
         private final List<Movie> added = new ArrayList<>();

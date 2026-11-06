@@ -42,8 +42,8 @@
       @if (candidatesError()) {
         <p class="error">{{ candidatesError() }}</p>
       } @else if (candidates(); as result) {
-        @for (warning of result.warnings; track warning) {
-          <p class="warning">{{ warning }}</p>
+        @for (warning of result.warnings; track $index) {
+          <p class="warning">{{ warning | localized }}</p>
         }
         @if (result.candidates.length === 0) {
           <p class="hint no-candidates">{{ 'movies.artwork.noCandidates' | transloco }}</p>

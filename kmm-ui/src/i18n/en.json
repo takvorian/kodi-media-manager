@@ -1063,6 +1063,308 @@
         "title": "Job not found",
         "detail": "There is no job with the ID {id}."
       }
+    },
+    "movie": {
+      "notFound": {
+        "title": "Movie not found",
+        "detail": "There is no movie with the ID {id}."
+      },
+      "item": "Movie {id}",
+      "failure": "Movie {id}: {reason}",
+      "sort": {
+        "invalid": {
+          "title": "Invalid sorting",
+          "detail": "Cannot sort by “{property}”."
+        }
+      },
+      "batch": {
+        "edit": {
+          "jobTitle": "{count, plural, one {Edit # movie} other {Edit # movies}}"
+        },
+        "trailerFill": {
+          "jobTitle": "{count, plural, one {Fetch missing trailer for # movie} other {Fetch missing trailers for # movies}}"
+        },
+        "enrichment": {
+          "jobTitle": "{count, plural, one {Update ratings for # movie} other {Update ratings for # movies}}"
+        },
+        "language": {
+          "jobTitle": "{count, plural, one {Change language of # movie} other {Change language of # movies}}"
+        }
+      },
+      "scan": {
+        "jobTitle": "Scan “{source}”",
+        "searching": "Searching directories",
+        "checkingNfos": "Checking NFOs",
+        "synchronizing": "Synchronizing library",
+        "notScannable": {
+          "title": "Source cannot be scanned"
+        },
+        "notAMovieSource": {
+          "detail": "The source “{source}” does not contain movies ({mediaType})."
+        },
+        "unreachable": {
+          "detail": "The directory “{path}” of the source “{source}” cannot be reached."
+        }
+      },
+      "rename": {
+        "jobTitle": "Rename movies “{source}”",
+        "planning": "Calculating new names",
+        "impossible": {
+          "title": "Renaming not possible"
+        },
+        "invalidPattern": {
+          "detail": "{pattern}: {reason}"
+        },
+        "pattern": {
+          "folder": "Folder pattern",
+          "file": "File pattern"
+        },
+        "folderInFilePattern": {
+          "detail": "The file pattern must not contain folders (/)."
+        },
+        "notAMovieSource": {
+          "detail": "The source “{source}” does not contain movies."
+        },
+        "folderPatternEmpty": "The folder pattern does not produce a name.",
+        "filePatternInvalid": "The file pattern does not produce a valid file name.",
+        "folderUnreadable": "The folder cannot be read: {reason}",
+        "folderExists": "The folder “{folder}” already exists.",
+        "folderInsideCurrent": "The new folder lies inside the current one.",
+        "fileExists": "The file “{file}” already exists.",
+        "folderGone": "The folder “{folder}” no longer exists.",
+        "sharedTarget": "Several movies would get the folder “{folder}”.",
+        "failed": "Renaming failed: {reason}",
+        "problem": "“{title}”: {reason}"
+      },
+      "nfo": {
+        "changedOutside": {
+          "title": "NFO changed outside KMM",
+          "detail": "{file} was changed outside KMM and cannot be read ({reason}). KMM therefore does not overwrite it; please check the file."
+        },
+        "notWritable": {
+          "title": "NFO could not be written",
+          "detail": "{reason} Please check the write permissions in the movie folder."
+        }
+      },
+      "scraper": {
+        "unknown": {
+          "title": "Scraper not found",
+          "detail": "No scraper with the ID “{id}” is installed and active."
+        },
+        "notConfigured": {
+          "title": "{scraper} is not set up"
+        },
+        "providerFailed": {
+          "title": "{scraper} reports an error"
+        },
+        "noMetadataScraper": {
+          "title": "No scraper set up",
+          "detail": "No metadata scraper is set up, e.g. TMDB with an API key."
+        },
+        "notIdentified": {
+          "title": "Movie not matched",
+          "detail": "“{title}” is not clearly matched at {scraper}. Please take it over via the online search first."
+        },
+        "noMovieSetScraper": {
+          "title": "No scraper for movie sets",
+          "detail": "No scraper for movie sets is installed and active, e.g. the TMDB plugin."
+        },
+        "notFoundAtProvider": {
+          "title": "Match not found",
+          "detail": "{scraper} does not know the entry “{id}”."
+        }
+      },
+      "trailer": {
+        "missingIds": {
+          "title": "Movie not clearly matched",
+          "detail": "The trailer search needs a TMDB or IMDb ID. Please use “Search online” first."
+        },
+        "invalid": {
+          "title": "Invalid trailer",
+          "detail": "“{url}” is not a link Kodi can play (plugin://, http(s)://, smb:// or nfs://)."
+        }
+      }
+    },
+    "movieSet": {
+      "notFound": {
+        "title": "Movie set not found",
+        "detail": "There is no movie set with the ID {id}."
+      },
+      "nameTaken": {
+        "title": "Name taken",
+        "detail": "A movie set “{name}” already exists."
+      },
+      "save": {
+        "jobTitle": "Save movie set “{name}”"
+      },
+      "delete": {
+        "jobTitle": "Delete movie set “{name}”"
+      },
+      "addMovies": {
+        "jobTitle": "Add movies to “{name}”"
+      },
+      "removeMovies": {
+        "jobTitle": "Remove movies from “{name}”"
+      },
+      "completeAll": {
+        "jobTitle": "Complete all sets"
+      },
+      "failure": "{set}: {reason}"
+    },
+    "artwork": {
+      "unsupportedType": {
+        "title": "Image type not supported",
+        "detail": "The image type {type} is not managed for movies.",
+        "otherDetail": "The image type {type} is not managed for {target}."
+      },
+      "target": {
+        "movieSet": "movie sets",
+        "tvShow": "TV shows",
+        "season": "seasons",
+        "episode": "episodes"
+      },
+      "missingIds": {
+        "title": "Movie not clearly matched",
+        "detail": "The image search needs a TMDB or IMDb ID. Please use “Search online” first."
+      },
+      "imageMissing": {
+        "title": "No image available",
+        "detail": "There is no image of type {type}."
+      },
+      "unwritable": {
+        "title": "Image could not be saved",
+        "detail": "{file} cannot be written. Please check the write permissions in the folder."
+      },
+      "missingCollectionId": {
+        "title": "Set not matched",
+        "detail": "The image search needs the TMDB ID of the collection. Please search the set at TMDB first."
+      },
+      "noMovieSetImageStorage": {
+        "title": "No storage for set images",
+        "detail": "Please turn on a storage for set images in the settings under “Movie sets”."
+      },
+      "missingTvIds": {
+        "title": "TV show not clearly matched",
+        "detail": "The image search needs a TVDB, TMDB or IMDb ID. Please use “Search online” first."
+      },
+      "download": {
+        "invalidUrl": {
+          "title": "Invalid image address",
+          "detail": "“{url}” is not a valid http(s) address."
+        },
+        "failed": {
+          "title": "Image could not be loaded",
+          "detail": "{url}: {reason}"
+        },
+        "httpStatus": "HTTP {status}",
+        "interrupted": "Download interrupted",
+        "notAnImage": {
+          "title": "No supported image",
+          "detail": "{url} returns “{contentType}” instead of JPEG or PNG."
+        },
+        "unknownContentType": "unknown",
+        "tooLarge": {
+          "title": "Image too large",
+          "detail": "{url} is larger than {megabytes} MB."
+        }
+      },
+      "warning": {
+        "provider": "{provider}: {reason}",
+        "unexpectedError": "unexpected error",
+        "interrupted": "query interrupted",
+        "download": "{type}: {reason}"
+      }
+    },
+    "theme": {
+      "unknownScraper": {
+        "title": "Provider not found",
+        "detail": "No theme music provider with the ID “{id}” is installed and active."
+      },
+      "downloadFailed": {
+        "title": "Theme music not loaded"
+      },
+      "missing": {
+        "title": "No theme music",
+        "detail": "There is no theme.mp3."
+      },
+      "unwritable": {
+        "title": "Theme music not saved",
+        "detail": "{file} cannot be written. Please check the write permissions in the folder."
+      },
+      "fill": {
+        "movies": {
+          "jobTitle": "{count, plural, one {Fetch missing theme music for # movie} other {Fetch missing theme music for # movies}}"
+        }
+      },
+      "warning": "{provider}: {reason}"
+    },
+    "trailer": {
+      "warning": "{provider}: {reason}"
+    },
+    "mediaInfo": {
+      "unreadable": {
+        "title": "Technical details not readable"
+      },
+      "seasonWithoutEpisodes": {
+        "title": "No episodes",
+        "detail": "“{show}” has no episodes in season {season}."
+      },
+      "source": {
+        "jobTitle": "Technical details “{source}”"
+      },
+      "season": {
+        "jobTitle": "Technical details of season {season} of “{show}”"
+      },
+      "newFiles": {
+        "jobTitle": "Technical details of new files “{source}”"
+      },
+      "failure": "{entry}: {reason}"
+    },
+    "tag": {
+      "invalid": {
+        "title": "Invalid tag",
+        "detail": "A tag needs a name with at most {max} characters."
+      },
+      "rename": {
+        "jobTitle": "Rename tag “{tag}” to “{name}”"
+      },
+      "delete": {
+        "jobTitle": "Delete tag “{tag}”"
+      },
+      "assign": {
+        "jobTitle": "Assign tag “{tag}”"
+      },
+      "unassign": {
+        "jobTitle": "Remove tag “{tag}”"
+      },
+      "item": {
+        "movie": "Movie {id}",
+        "tvShow": "TV show {id}"
+      },
+      "failure": "{entry}: {reason}"
+    },
+    "filter": {
+      "invalid": {
+        "title": "Invalid filter",
+        "operatorNotAllowed": "{field} does not allow the comparison {operator}.",
+        "valueMissing": "The comparison value for {field} is missing.",
+        "notANumber": "{field} expects a number, not “{value}”.",
+        "notABoolean": "{field} expects true or false, not “{value}”."
+      },
+      "saved": {
+        "notFound": {
+          "title": "Filter not found",
+          "detail": "There is no saved filter with the ID {id}."
+        },
+        "nameTaken": {
+          "title": "Name taken",
+          "detail": "A filter “{name}” already exists."
+        },
+        "tooLong": {
+          "title": "Filter too large",
+          "detail": "The filter has too many or too long conditions."
+        }
+      }
     }
   }
 }

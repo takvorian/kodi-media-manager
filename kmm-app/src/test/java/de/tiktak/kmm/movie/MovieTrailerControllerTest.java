@@ -50,14 +50,15 @@ class MovieTrailerControllerTest {
     void listsTheCandidates() {
         when(trailerService.candidates(7L)).thenReturn(new TrailerOptions(List.of(
                 new TrailerOption("Trailer", LINK, URI.create("https://www.youtube.com/watch?v=abc"), null, "de",
-                        "Trailer", true, 1080, "2020-01-01", "TMDB")), List.of("fanart.tv: Key fehlt")));
+                        "Trailer", true, 1080, "2020-01-01", "TMDB")),
+                List.of(LocalizedText.literal("fanart.tv: Key fehlt"))));
 
         assertThat(mockMvc.get().uri(MovieTrailerController.CANDIDATES_PATH, 7L))
                 .hasStatusOk()
                 .bodyJson()
                 .isLenientlyEqualTo("""
                         {"candidates": [{"name": "Trailer", "url": "%s", "language": "de", "official": true}],
-                         "warnings": ["fanart.tv: Key fehlt"]}
+                         "warnings": [{"key": "literal", "args": {"text": "fanart.tv: Key fehlt"}}]}
                         """.formatted(LINK));
     }
 

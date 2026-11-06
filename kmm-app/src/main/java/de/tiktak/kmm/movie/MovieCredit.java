@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Eine Mitwirkung an einem Film (Darsteller, Regie oder Drehbuch).
+ * A contribution to a movie (cast, direction or screenplay).
  */
 @Embeddable
 @Getter
@@ -25,7 +25,7 @@ class MovieCredit {
     @Column(name = "name", nullable = false, length = MovieSupplement.MAX_NAME_LENGTH)
     private String name;
 
-    /** Rolle eines Darstellers. */
+    /** Role of an actor. */
     @Column(name = "role", length = MovieSupplement.MAX_NAME_LENGTH)
     private String role;
 

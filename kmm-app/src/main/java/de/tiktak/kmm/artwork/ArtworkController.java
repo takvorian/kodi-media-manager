@@ -35,8 +35,8 @@ public class ArtworkController {
     }
 
     /**
-     * Liefert die Bilddatei. Die Oberfläche hängt die Änderungszeit an die URL; der Browser muss
-     * trotzdem nachfragen, weil Bilder auch außerhalb von KMM ersetzt werden können.
+     * Returns the image file. The UI appends the modification time to the URL; the browser still has
+     * to revalidate, because images can also be replaced outside KMM.
      */
     @GetMapping(IMAGE_PATH)
     public ResponseEntity<Resource> image(@PathVariable long movieId, @PathVariable ImageType type) {
@@ -66,7 +66,7 @@ public class ArtworkController {
     }
 
     /**
-     * @param url Adresse des Bildes in voller Auflösung, meist aus einem {@link ArtworkCandidate}
+     * @param url address of the image in full resolution, usually from an {@link ArtworkCandidate}
      */
     public record ApplyArtworkRequest(@NotBlank String url) {
     }

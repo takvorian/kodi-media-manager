@@ -241,10 +241,10 @@ class AutoScrapeServiceTest {
         when(scrapeService.scrapeMissingMetadata(2L)).thenReturn(MetadataScrapeOutcome.NO_MATCH);
         when(scrapeService.scrapeMissingMetadata(3L)).thenReturn(MetadataScrapeOutcome.ALREADY_IDENTIFIED);
         when(scrapeService.scrapeMissingMetadata(4L)).thenThrow(problem("TMDB ist nicht erreichbar"));
-        when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(7, List.of("fanart.tv: Key fehlt")));
+        when(artworkService.fillMissing(1L)).thenReturn(new ArtworkFillResult(7, List.of(LocalizedText.literal("fanart.tv: Key fehlt"))));
         when(artworkService.fillMissing(2L)).thenReturn(new ArtworkFillResult(0, List.of()));
-        when(artworkService.fillMissing(3L)).thenReturn(new ArtworkFillResult(2, List.of("fanart.tv: Key fehlt")));
-        when(streamDetails.probeMovieAfterScrape(1L)).thenReturn(Optional.of("ffprobe fehlt"));
+        when(artworkService.fillMissing(3L)).thenReturn(new ArtworkFillResult(2, List.of(LocalizedText.literal("fanart.tv: Key fehlt"))));
+        when(streamDetails.probeMovieAfterScrape(1L)).thenReturn(Optional.of(LocalizedText.literal("ffprobe fehlt")));
         when(trailerService.fillMissing(1L)).thenReturn(true);
         when(themeService.fillMovie(1L)).thenReturn(false);
         when(enrichmentService.fillMissing(1L)).thenReturn(true);
@@ -254,7 +254,7 @@ class AutoScrapeServiceTest {
         when(renameService.renameIfEnabled(anyLong(), eq(RenameTrigger.SCRAPE))).thenReturn(Optional.empty());
         when(renameService.renameIfEnabled(3L, RenameTrigger.SCRAPE)).thenReturn(Optional.of(new MovieRenamePlan(3,
                 "Ronin", "/filme/ronin", "/filme/Ronin", List.of(), MovieRenamePlan.Status.CONFLICT,
-                "Der Ordner existiert bereits.")));
+                LocalizedText.literal("Der Ordner existiert bereits."))));
         RecordingContext context = new RecordingContext(false);
 
         AutoScrapeResult result = service.run(SOURCE_ID, context);

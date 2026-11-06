@@ -1,30 +1,31 @@
 package de.tiktak.kmm.movie;
 
 import org.springframework.http.HttpStatus;
-import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.source.MediaSource;
+import de.tiktak.kmm.web.LocalizedProblemException;
 
 /**
- * Eine Quelle kann nicht nach Filmen durchsucht werden. Wird als HTTP 422 beantwortet.
+ * A source cannot be searched for movies. Answered as HTTP 422.
  */
-public class SourceNotScannableException extends ErrorResponseException {
+public class SourceNotScannableException extends LocalizedProblemException {
 
-    private static final String TITLE = "Quelle kann nicht gescannt werden";
+    private static final LocalizedText TITLE = LocalizedText.of("movie.scan.notScannable.title");
 
-    private SourceNotScannableException(String detail) {
-        super(HttpStatus.UNPROCESSABLE_CONTENT);
-        getBody().setTitle(TITLE);
-        getBody().setDetail(detail);
+    private SourceNotScannableException(LocalizedText detail) {
+        super(HttpStatus.UNPROCESSABLE_CONTENT, TITLE, detail, null);
     }
 
     static SourceNotScannableException notAMovieSource(MediaSource source) {
-        return new SourceNotScannableException("Die Quelle '%s' enthält keine Filme (%s)."
-                .formatted(source.getName(), source.getMediaType()));
+        return new SourceNotScannableException(LocalizedText.of("movie.scan.notAMovieSource.detail")
+                .with("source", source.getName())
+                .with("mediaType", source.getMediaType()));
     }
 
     static SourceNotScannableException unreachable(MediaSource source) {
-        return new SourceNotScannableException("Das Verzeichnis '%s' der Quelle '%s' ist nicht erreichbar."
-                .formatted(source.getPath(), source.getName()));
+        return new SourceNotScannableException(LocalizedText.of("movie.scan.unreachable.detail")
+                .with("path", source.getPath())
+                .with("source", source.getName()));
     }
 }

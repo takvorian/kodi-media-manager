@@ -5,7 +5,7 @@ import java.time.Instant;
 import de.tiktak.kmm.scanner.DiscFormat;
 
 /**
- * Film in der Listenansicht.
+ * Movie in the list view.
  */
 public record MovieSummary(
         long id,

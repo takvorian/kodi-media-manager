@@ -39,8 +39,8 @@ import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
 
 /**
- * Technische Angaben Ende zu Ende mit einem vorgetäuschten ffprobe: Sie landen in NFO und Datenbank,
- * Sprachen aus der NFO bleiben, und der nächste Scan hält die NFOs für aktuell.
+ * Technical details end to end with a fake ffprobe: they end up in the NFO and database,
+ * languages from the NFO are kept, and the next scan considers the NFOs up to date.
  */
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -169,7 +169,7 @@ class StreamDetailsIntegrationTest {
                 .containsExactly("1:true", "1:true", "1:true", "2:false");
         assertThat(mockMvc.post().uri("/api/v1/tvshows/{id}/seasons/5/stream-details", lost).with(csrf()))
                 .hasStatus(HttpStatus.UNPROCESSABLE_CONTENT).bodyJson().extractingPath("$.detail")
-                .isEqualTo("„Lost“ hat keine Episoden in Staffel 5.");
+                .isEqualTo("“Lost” has no episodes in season 5.");
     }
 
     @Test
@@ -190,7 +190,7 @@ class StreamDetailsIntegrationTest {
         JsonNode result = runJob(mockMvc.post().uri("/api/v1/sources/{id}/stream-details", sourceId)
                 .with(csrf()).exchange());
         assertThat(result.toString()).contains("\"updated\":0", "\"failed\":1",
-                "Heat (1995): ffprobe kann nicht gestartet werden");
+                "{\"key\":\"mediaInfo.failure\",\"args\":{\"entry\":\"Heat (1995)\"");
         assertThat(streamsOf("Heat (1995)")).isNull();
         when(probes.current()).thenReturn(probe);
         assertThat(mockMvc.post().uri("/api/v1/movies/{id}/stream-details", heat).with(csrf())).hasStatusOk();
@@ -247,7 +247,7 @@ class StreamDetailsIntegrationTest {
         return runJob(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange());
     }
 
-    /** @return das Ergebnis des erfolgreich beendeten Jobs */
+    /** @return the result of the successfully finished job */
     private JsonNode runJob(MvcTestResult started) {
         assertThat(started).hasStatus(HttpStatus.ACCEPTED);
         String jobId = read(started).get("id").asString();

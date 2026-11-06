@@ -15,6 +15,7 @@ import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ImageCandidate;
 import de.tiktak.kmm.plugin.api.ImageScraper;
@@ -95,7 +96,11 @@ class ArtworkCandidateFinderTest {
 
         assertThat(result.candidates()).hasSize(1);
         assertThat(result.warnings()).containsExactly(
-                "Für fanart.tv fehlt ein API-Key.", "Kaputt: nicht erreichbar", "Absturz: unerwarteter Fehler");
+                LocalizedText.literal("Für fanart.tv fehlt ein API-Key."),
+                LocalizedText.of("artwork.warning.provider").with("provider", "Kaputt")
+                        .with("reason", LocalizedText.literal("nicht erreichbar")),
+                LocalizedText.of("artwork.warning.provider").with("provider", "Absturz")
+                        .with("reason", LocalizedText.of("artwork.warning.unexpectedError")));
         verify(unconfigured, never()).findImages(any());
     }
 

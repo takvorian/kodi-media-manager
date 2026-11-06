@@ -10,6 +10,7 @@ import java.util.function.LongPredicate;
 import org.springframework.stereotype.Service;
 import org.springframework.web.ErrorResponseException;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
@@ -19,8 +20,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Änderungen an Filmsets, die die NFOs ihrer Filme betreffen, als Hintergrund-Job: Set ändern, löschen, Filme
- * hinzufügen und entfernen, alle Sets ergänzen.
+ * Changes to movie sets that affect the NFOs of their movies, as a background job: change or delete a set, add and
+ * remove movies, complete all sets.
  */
 @Slf4j
 @Service
@@ -37,22 +38,21 @@ public class MovieSetJobService {
     private final MovieSetArtworkFiller artworkFiller;
 
     /**
-     * Übernimmt die Angaben sofort und schreibt danach die NFOs der Filme neu, wenn sich Name oder Beschreibung
-     * geändert haben.
+     * Takes the data over right away and then rewrites the NFOs of the movies if name or overview changed.
      *
-     * @throws MovieSetProblemException wenn es das Set nicht gibt oder der Name vergeben ist
+     * @throws MovieSetProblemException if the set does not exist or the name is taken
      */
     public JobSnapshot update(long setId, MovieSetData data) {
         List<Long> movies = setService.update(setId, data);
-        return submit("Filmset „%s“ speichern".formatted(data.name()), context ->
+        return submit(LocalizedText.of("movieSet.save.jobTitle").with("name", data.name()), context ->
                 apply(movies, membership::rewrite, context));
     }
 
-    /** Nimmt alle Filme aus dem Set und löscht es. */
+    /** Takes all movies out of the set and deletes it. */
     public JobSnapshot delete(long setId) {
         MovieSetDetails set = setService.find(setId);
         List<Long> movies = setService.findMovieIds(setId);
-        return submit("Filmset „%s“ löschen".formatted(set.data().name()), context -> {
+        return submit(LocalizedText.of("movieSet.delete.jobTitle").with("name", set.data().name()), context -> {
             MovieSetChangeResult result = apply(movies, movieId -> membership.assign(movieId, null), context);
             if (result.failed() == 0) {
                 setService.deleteEmpty(setId);
@@ -61,30 +61,30 @@ public class MovieSetJobService {
         });
     }
 
-    /** Fügt Filme dem Set hinzu; sie verlassen dabei ihr bisheriges Set. */
+    /** Adds movies to the set; they leave their former set. */
     public JobSnapshot addMovies(long setId, List<Long> movieIds) {
         MovieSetDetails set = setService.find(setId);
-        return submit("Filme zu „%s“ hinzufügen".formatted(set.data().name()), context ->
+        return submit(LocalizedText.of("movieSet.addMovies.jobTitle").with("name", set.data().name()), context ->
                 apply(distinct(movieIds), movieId -> membership.assign(movieId, setId), context));
     }
 
-    /** Nimmt Filme aus dem Set. */
+    /** Takes movies out of the set. */
     public JobSnapshot removeMovies(long setId, List<Long> movieIds) {
         MovieSetDetails set = setService.find(setId);
         List<Long> members = setService.findMovieIds(setId);
         List<Long> removed = distinct(movieIds).stream().filter(members::contains).toList();
-        return submit("Filme aus „%s“ entfernen".formatted(set.data().name()), context ->
+        return submit(LocalizedText.of("movieSet.removeMovies.jobTitle").with("name", set.data().name()), context ->
                 apply(removed, movieId -> membership.assign(movieId, null), context));
     }
 
-    /** Ergänzt bei allen Sets mit TMDB-ID fehlende Beschreibungen und Bilder; vorhandene bleiben. */
+    /** Completes missing overviews and images of all sets with a TMDB ID; existing ones stay. */
     public JobSnapshot completeAll() {
-        return jobService.submit(JOB_KEY, "Alle Sets ergänzen", this::complete);
+        return jobService.submit(JOB_KEY, LocalizedText.of("movieSet.completeAll.jobTitle"), this::complete);
     }
 
     MovieSetCompletionResult complete(JobContext context) {
         List<MovieSetSummary> sets = setService.findAll();
-        Set<String> problems = new LinkedHashSet<>();
+        Set<LocalizedText> problems = new LinkedHashSet<>();
         int overviews = 0;
         int images = 0;
         int withoutCollection = 0;
@@ -104,7 +104,9 @@ public class MovieSetJobService {
                 images += fill.saved();
                 problems.addAll(fill.warnings());
             } catch (ErrorResponseException e) {
-                problems.add("%s: %s".formatted(set.name(), e.getBody().getDetail()));
+                problems.add(LocalizedText.of("movieSet.failure")
+                        .with("set", set.name())
+                        .with("reason", LocalizedReasons.of(e)));
             }
         }
         context.reportProgress(sets.size(), sets.size());
@@ -124,18 +126,19 @@ public class MovieSetJobService {
         return true;
     }
 
-    private JobSnapshot submit(String title, JobTask<MovieSetChangeResult> task) {
+    private JobSnapshot submit(LocalizedText title, JobTask<MovieSetChangeResult> task) {
         return jobService.submit(JOB_KEY, title, task);
     }
 
     MovieSetChangeResult apply(List<Long> movieIds, LongPredicate change, JobContext context) {
-        List<String> failures = new ArrayList<>();
+        List<LocalizedText> failures = new ArrayList<>();
         int changed = 0;
         int unchanged = 0;
         int failed = 0;
         for (long movieId : movieIds) {
             context.throwIfCancellationRequested();
-            context.reportProgress(changed + unchanged + failed, movieIds.size(), "Film " + movieId);
+            context.reportProgress(changed + unchanged + failed, movieIds.size(),
+                    LocalizedText.of("movie.item").with("id", movieId));
             try {
                 if (change.test(movieId)) {
                     changed++;
@@ -145,7 +148,9 @@ public class MovieSetJobService {
             } catch (ErrorResponseException e) {
                 failed++;
                 if (failures.size() < MAX_LISTED_FAILURES) {
-                    failures.add("Film %d: %s".formatted(movieId, e.getBody().getDetail()));
+                    failures.add(LocalizedText.of("movie.failure")
+                            .with("id", movieId)
+                            .with("reason", LocalizedReasons.of(e)));
                 }
             }
         }

@@ -13,8 +13,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 /**
- * Tags von Filmen: zählen, finden und ändern. Geänderte Tags landen wie beim Speichern der Metadaten in NFO und
- * Datenbank; Kodi liest den Film danach neu ein.
+ * Tags of movies: count, find and change. Changed tags end up in the NFO and database as when saving the metadata;
+ * Kodi then re-reads the movie.
  */
 @Slf4j
 @Service
@@ -26,7 +26,7 @@ public class MovieTagService {
     private final MovieSupplementWriter supplementWriter;
     private final MovieNfoSync nfoSync;
 
-    /** @return je Tag die Anzahl der Filme */
+    /** @return the number of movies per tag */
     public Map<String, Long> countByTag() {
         return movieRepository.countByTag().stream()
                 .collect(Collectors.toMap(row -> (String) row[0], row -> (Long) row[1]));
@@ -36,17 +36,17 @@ public class MovieTagService {
         return movieRepository.findIdsByTag(tag);
     }
 
-    /** @return ID und Titel der Filme mit dem Tag, nach Titel sortiert */
+    /** @return ID and title of the movies with the tag, sorted by title */
     public Map<Long, String> findTitlesByTag(String tag) {
         return movieRepository.findTitlesByTag(tag).stream().collect(Collectors.toMap(row -> (Long) row[0],
                 row -> (String) row[1], (first, second) -> first, LinkedHashMap::new));
     }
 
     /**
-     * @param change bildet die bisherigen Tags auf die neuen ab
-     * @return ob sich die Tags geändert haben
-     * @throws MovieNotFoundException  wenn es den Film nicht gibt
-     * @throws NfoNotWritableException wenn die NFO nicht geschrieben werden kann; die Datenbank bleibt dann unverändert
+     * @param change maps the previous tags to the new ones
+     * @return whether the tags have changed
+     * @throws MovieNotFoundException  if the movie does not exist
+     * @throws NfoNotWritableException if the NFO cannot be written; the database then remains unchanged
      */
     @Transactional
     public boolean changeTags(long movieId, UnaryOperator<List<String>> change) {

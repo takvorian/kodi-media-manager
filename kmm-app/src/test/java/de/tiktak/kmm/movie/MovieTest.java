@@ -19,7 +19,7 @@ class MovieTest {
     void leavesTheNfoTrailerAloneUntilTheTrailerIsKnown() {
         var movie = new Movie(1L, PATH, "Heat", 1995, DiscFormat.FILE, 1);
 
-        assertThat(movie.nfoTrailer()).as("Altbestand: <trailer> der NFO bleibt").isNull();
+        assertThat(movie.nfoTrailer()).as("legacy data: <trailer> of the NFO is kept").isNull();
 
         movie.changeTrailer(" plugin://plugin.video.youtube/?action=play_video&videoid=abc ");
         assertThat(movie.getTrailer()).isEqualTo("plugin://plugin.video.youtube/?action=play_video&videoid=abc");

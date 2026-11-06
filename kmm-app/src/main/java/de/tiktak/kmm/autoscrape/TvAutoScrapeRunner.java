@@ -11,6 +11,7 @@ import org.springframework.web.ErrorResponseException;
 
 import de.tiktak.kmm.artwork.ArtworkFillResult;
 import de.tiktak.kmm.artwork.TvShowArtworkService;
+import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
@@ -112,14 +113,14 @@ class TvAutoScrapeRunner {
             if (count(outcome, showId, title, progress)) {
                 context.throwIfCancellationRequested();
                 context.reportProgress(1, SEASON_STEPS, SEASON_LABEL.formatted(season, title));
-                streamDetails.probeSeasonAfterScrape(showId, season).forEach(
-                        failure -> progress.failed(title, AutoScrapeService.TECHNICAL_DETAILS + failure));
+                streamDetails.probeSeasonAfterScrape(showId, season).forEach(failure -> progress.failed(title,
+                        AutoScrapeService.TECHNICAL_DETAILS + Messages.english(failure)));
             }
             context.throwIfCancellationRequested();
             context.reportProgress(2, SEASON_STEPS, SEASON_LABEL.formatted(season, title));
             ArtworkFillResult artwork = artworkService.fillMissingSeason(showId, season);
             progress.imagesSaved += artwork.saved();
-            artwork.warnings().forEach(progress::warn);
+            artwork.warnings().forEach(warning -> progress.warn(Messages.english(warning)));
             context.throwIfCancellationRequested();
             context.reportProgress(3, SEASON_STEPS, SEASON_LABEL.formatted(season, title));
             renameService.renameSeasonIfEnabled(showId, season, TvRenameTrigger.SCRAPE)
@@ -173,12 +174,12 @@ class TvAutoScrapeRunner {
         try {
             TvShowAutoScrapeOutcome outcome = scrapeService.scrapeMissing(showId);
             if (count(outcome, showId, title, progress)) {
-                streamDetails.probeEpisodesAfterScrape(showId).forEach(
-                        failure -> progress.failed(title, AutoScrapeService.TECHNICAL_DETAILS + failure));
+                streamDetails.probeEpisodesAfterScrape(showId).forEach(failure -> progress.failed(title,
+                        AutoScrapeService.TECHNICAL_DETAILS + Messages.english(failure)));
             }
             ArtworkFillResult artwork = artworkService.fillMissing(showId);
             progress.imagesSaved += artwork.saved();
-            artwork.warnings().forEach(progress::warn);
+            artwork.warnings().forEach(warning -> progress.warn(Messages.english(warning)));
             if (trailerService.fillMissing(showId)) {
                 progress.trailersSaved++;
             }

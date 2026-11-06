@@ -22,7 +22,7 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 import de.tiktak.kmm.i18n.LocalizedText;
 
 /**
- * Set-Scraping im Filmset-Manager; die Verwaltung prüft {@link MovieSetIntegrationTest}.
+ * Set scraping in the movie set manager; the management is tested by {@link MovieSetIntegrationTest}.
  */
 @WebMvcTest(controllers = MovieSetController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)

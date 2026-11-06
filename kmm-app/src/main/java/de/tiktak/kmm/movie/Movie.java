@@ -41,8 +41,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 /**
- * Ein Film der Bibliothek. Die Quelle wird nur über ihre ID referenziert, damit die Module
- * {@code movie} und {@code source} lose gekoppelt bleiben.
+ * A movie in the library. The source is referenced only by its ID so that the modules
+ * {@code movie} and {@code source} stay loosely coupled.
  */
 @Entity
 @Table(name = "movie")
@@ -116,7 +116,7 @@ public class Movie {
     @Column(name = "imdb_id", length = 16)
     private String imdbId;
 
-    /** Sprache beim Scrapen; ohne Angabe gilt die der Quelle, sonst die der Einstellungen. */
+    /** Language when scraping; if unset, the source language applies, otherwise the one from the settings. */
     @Column(name = "metadata_language", length = 16)
     private String metadataLanguage;
 
@@ -161,7 +161,7 @@ public class Movie {
     @JoinColumn(name = "movie_set_id")
     private MovieSet movieSet;
 
-    /** Position im Filmset oder {@code null}, wenn unbekannt. */
+    /** Position in the movie set, or {@code null} if unknown. */
     @Column(name = "set_order")
     private Integer setOrder;
 
@@ -175,42 +175,43 @@ public class Movie {
     private Instant lastPlayedAt;
 
     /**
-     * Ob die weiteren Angaben (Darsteller, Bewertungen …) bekannt sind. Fehlen sie, weil die NFO
-     * noch nicht neu eingelesen wurde, darf KMM sie beim Schreiben der NFO nicht löschen.
+     * Whether the further details (cast, ratings, ...) are known. If they are missing because the NFO
+     * has not been re-read yet, KMM must not delete them when writing the NFO.
      */
     @Column(name = "supplement_known", nullable = false)
     private boolean supplementKnown;
 
     /**
-     * Ob die Angaben aus der NFO stammen. Bei Filmen aus dem Ember-Import stammen sie aus Embers Datenbank und können
-     * von der NFO abweichen; dann liest KMM die NFO vor dem ersten Schreiben ein.
+     * Whether the details come from the NFO. For movies from the Ember import they come from Ember's database and
+     * may
+     * differ from the NFO; KMM then reads the NFO before the first write.
      */
     @Column(name = "nfo_read", nullable = false)
     private boolean nfoRead;
 
-    /** Video-, Ton- und Untertitelspuren aus NFO oder Migration. */
+    /** Video, audio and subtitle tracks from the NFO or migration. */
     @Getter(AccessLevel.NONE)
     @Convert(converter = StreamDetailsConverter.class)
     @JdbcTypeCode(SqlTypes.LONG32VARCHAR)
     @Column(name = "stream_details", length = Length.LONG32)
     private StreamDetails streamDetails;
 
-    /** Trailer-Link aus der NFO, etwa {@code plugin://plugin.video.youtube/…}, oder {@code null}. */
+    /** Trailer link from the NFO, such as {@code plugin://plugin.video.youtube/…}, or {@code null}. */
     @Column(name = "trailer", length = MAX_TRAILER_LENGTH)
     private String trailer;
 
     /**
-     * Ob {@link #trailer} den Stand der NFO wiedergibt. Bei Filmen aus älteren Versionen ist er unbekannt; dann
-     * bleibt der Eintrag in der NFO beim Schreiben unverändert.
+     * Whether {@link #trailer} reflects the state of the NFO. For movies from older versions it is unknown; the
+     * entry in the NFO then stays unchanged when writing.
      */
     @Column(name = "trailer_known", nullable = false)
     private boolean trailerKnown;
 
-    /** Abfragbare Kurzform der technischen Angaben für Filter; folgt {@link #streamDetails}. */
+    /** Queryable short form of the technical details for filters; follows {@link #streamDetails}. */
     @Embedded
     private StreamIndex streamIndex;
 
-    /** Änderungszeit der NFO beim letzten Einlesen bzw. Schreiben; {@code null} ohne NFO. */
+    /** Modification time of the NFO when it was last read or written; {@code null} without an NFO. */
     @Column(name = "nfo_modified_at")
     private Instant nfoModifiedAt;
 
@@ -249,10 +250,10 @@ public class Movie {
     }
 
     /**
-     * Ergänzt fehlendes Jahr und fehlende IMDb-ID aus dem Datei- oder Ordnernamen, damit das Scrapen den Film sicher
-     * findet. Ein bereits zugeordneter Film bleibt unverändert.
+     * Fills in a missing year and a missing IMDb ID from the file or folder name so that scraping reliably
+     * finds the movie. A movie that is already matched stays unchanged.
      *
-     * @return ob sich etwas geändert hat
+     * @return whether anything changed
      */
     boolean fillMissingFromName(Integer nameYear, String nameImdbId) {
         if (tmdbId != null) {
@@ -270,10 +271,11 @@ public class Movie {
     }
 
     /**
-     * Ersetzt einen Titel, der noch aus dem Dateinamen stammt, durch den aus dem Verzeichnisnamen. Ein von Hand, aus einer
-     * NFO, aus Ember oder von einem Anbieter stammender Titel bleibt.
+     * Replaces a title that still comes from the file name with the one from the directory name. A title that
+     * comes from
+     * hand, an NFO, Ember or a provider stays.
      *
-     * @return ob sich der Titel geändert hat
+     * @return whether the title changed
      */
     boolean replaceFileTitle(String fileTitle, String directoryTitle) {
         if (tmdbId != null || !title.equals(fileTitle) || title.equals(directoryTitle)) {
@@ -283,7 +285,7 @@ public class Movie {
         return true;
     }
 
-    /** @return ob sich die Sprache geändert hat */
+    /** @return whether the language changed */
     boolean changeMetadataLanguage(String language) {
         boolean changed = !Objects.equals(metadataLanguage, language);
         metadataLanguage = language;
@@ -306,9 +308,9 @@ public class Movie {
     }
 
     /**
-     * Übernimmt die weiteren Angaben.
+     * Takes over the further details.
      *
-     * @param set das zum Verweis des Supplements gehörende Set oder {@code null}
+     * @param set the set belonging to the supplement's reference, or {@code null}
      */
     void applySupplement(MovieSupplement supplement, MovieSet set) {
         credits.clear();
@@ -330,7 +332,7 @@ public class Movie {
         supplementKnown = true;
     }
 
-    /** Ordnet den Film einem Set an der angegebenen Position zu. */
+    /** Assigns the movie to a set at the given position. */
     void assignSet(MovieSet set, Integer order) {
         movieSet = set;
         setOrder = set == null ? null : order;
@@ -346,20 +348,21 @@ public class Movie {
     }
 
     /**
-     * Legt die Kurzform für Filme an, deren technische Angaben vor der Kurzform gespeichert wurden, und übersetzt
-     * dabei Codec-Namen, die etwa aus Ember noch roh übernommen wurden.
+     * Creates the short form for movies whose technical details were saved before the short form existed, and
+     * translates
+     * codec names that were taken over raw from Ember, for example.
      */
     void indexStreams() {
         applyStreamDetails(this.streamDetails);
     }
 
-    /** @param newTrailer Link oder {@code null} bzw. leer für „kein Trailer“ */
+    /** @param newTrailer link, or {@code null} or empty for "no trailer" */
     void changeTrailer(String newTrailer) {
         this.trailer = newTrailer == null || newTrailer.isBlank() ? null : newTrailer.strip();
         this.trailerKnown = true;
     }
 
-    /** Trailer für die NFO: {@code null}, wenn unbekannt, sonst Link oder „kein Trailer“. */
+    /** Trailer for the NFO: {@code null} if unknown, otherwise a link or "no trailer". */
     String nfoTrailer() {
         if (!trailerKnown) {
             return null;
@@ -377,7 +380,7 @@ public class Movie {
         this.userRating = newUserRating;
     }
 
-    /** Nach dem Umbenennen: die Hauptdatei liegt jetzt dort. */
+    /** After renaming: the main file is now located there. */
     void relocate(String newFilePath) {
         this.filePath = Objects.requireNonNull(newFilePath, "newFilePath must not be null");
         this.filePathHash = FilePathHash.of(newFilePath);
@@ -387,7 +390,7 @@ public class Movie {
         this.nfoRead = true;
     }
 
-    /** Die Angaben stammen nicht aus der NFO, etwa nach einem Import. */
+    /** The details do not come from the NFO, for example after an import. */
     void markNfoNotRead() {
         this.nfoRead = false;
     }

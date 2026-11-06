@@ -11,6 +11,7 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
+import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.movie.MovieRenamePlan.FileRename;
 import de.tiktak.kmm.movie.MovieRenamePlan.Status;
 import de.tiktak.kmm.scanner.DiscFormat;
@@ -103,12 +104,13 @@ class MovieRenamePlannerTest {
         Path video = givenFiles("heat/heat.mkv", "Heat (1995)/other.mkv");
         MovieRenamePlan folder = plan(video, DiscFormat.FILE, 1, true, Set.of(), "{title} ({year})", "{title}");
         assertThat(folder.status()).isEqualTo(Status.CONFLICT);
-        assertThat(folder.message()).contains("existiert bereits");
+        assertThat(folder.message()).isEqualTo(LocalizedText.of("movie.rename.folderExists")
+                .with("folder", source.resolve("Heat (1995)")));
 
         givenFiles("heat/heat2.mkv");
         MovieRenamePlan file = plan(video, DiscFormat.FILE, 1, false, Set.of(), "{title}", "heat2");
         assertThat(file.status()).isEqualTo(Status.CONFLICT);
-        assertThat(file.message()).isEqualTo("Die Datei „heat2.mkv“ existiert bereits.");
+        assertThat(file.message()).isEqualTo(LocalizedText.of("movie.rename.fileExists").with("file", "heat2.mkv"));
     }
 
     @Test
@@ -130,9 +132,9 @@ class MovieRenamePlannerTest {
         MovieRenamePlan file = plan(video, DiscFormat.FILE, 1, true, Set.of(), "{title}", "[{edition}]");
 
         assertThat(folder.status()).isEqualTo(Status.FAILED);
-        assertThat(folder.message()).isEqualTo("Das Ordnermuster ergibt keinen Namen.");
+        assertThat(folder.message()).isEqualTo(LocalizedText.of("movie.rename.folderPatternEmpty"));
         assertThat(file.status()).isEqualTo(Status.FAILED);
-        assertThat(file.message()).isEqualTo("Das Dateimuster ergibt keinen gültigen Dateinamen.");
+        assertThat(file.message()).isEqualTo(LocalizedText.of("movie.rename.filePatternInvalid"));
     }
 
     @Test
@@ -142,7 +144,7 @@ class MovieRenamePlannerTest {
         MovieRenamePlan plan = plan(video, DiscFormat.FILE, 1, false, Set.of(), "{title}", "{title} x");
 
         assertThat(plan.status()).isEqualTo(Status.FAILED);
-        assertThat(plan.message()).startsWith("Der Ordner ist nicht lesbar");
+        assertThat(plan.message().key()).isEqualTo("movie.rename.folderUnreadable");
     }
 
     private MovieRenamePlan plan(Path mainFile, DiscFormat format, int parts, boolean ownsFolder,

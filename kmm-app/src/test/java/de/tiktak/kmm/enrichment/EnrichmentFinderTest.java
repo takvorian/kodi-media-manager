@@ -134,7 +134,7 @@ class EnrichmentFinderTest {
         assertThat(EnrichmentFinder.first(List.of(empty), Enrichment::runtime)).isNull();
     }
 
-    /** Bewertungen als {Kennung, Wert, Standard}. */
+    /** Ratings as {identifier, value, default}. */
     private static final class RatingAdapterForTest implements EnrichmentFinder.RatingAdapter<String[]> {
 
         @Override

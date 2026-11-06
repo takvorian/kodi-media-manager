@@ -8,7 +8,7 @@ import de.tiktak.kmm.nfo.NfoWriter;
 import de.tiktak.kmm.scanner.MovieNameParser;
 
 /**
- * Verdrahtet die frameworkfreien Bibliotheken {@code kmm-scanner} und {@code kmm-nfo} als Spring-Beans.
+ * Wires the framework-free libraries {@code kmm-scanner} and {@code kmm-nfo} as Spring beans.
  */
 @Configuration(proxyBeanMethods = false)
 class MovieLibraryConfiguration {
