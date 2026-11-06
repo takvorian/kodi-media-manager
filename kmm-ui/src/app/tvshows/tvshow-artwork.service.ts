@@ -4,13 +4,13 @@ import { Injectable, inject } from '@angular/core';
 import { ArtworkCandidates, ArtworkInfo, ArtworkSource, versioned } from '../movies/artwork';
 import { EPISODES_URL, TVSHOWS_URL } from './tvshow.service';
 
-/** Bildquellen für Serien, Staffeln und Episoden; gespeichert wird nach Kodi-Konvention. */
+/** Artwork sources for TV shows, seasons and episodes; saved following the Kodi convention. */
 @Injectable({ providedIn: 'root' })
 export class TvShowArtworkService {
   private readonly http = inject(HttpClient);
 
   /**
-   * @param season Staffel oder `null` für die Bilder der Serie
+   * @param season season, or `null` for the artwork of the TV show
    */
   forShow(showId: number, season: number | null): ArtworkSource {
     return this.source(`${TVSHOWS_URL}/${showId}/artwork`, season === null ? null : String(season));
@@ -26,7 +26,8 @@ export class TvShowArtworkService {
     return {
       findAll: () => this.http.get<ArtworkInfo[]>(baseUrl, { params }),
       imageUrl: (artwork) => versioned(`${baseUrl}/${artwork.type}/image${query}`, artwork),
-      candidates: (type) => this.http.get<ArtworkCandidates>(`${baseUrl}/${type}/candidates`, { params }),
+      candidates: (type) =>
+        this.http.get<ArtworkCandidates>(`${baseUrl}/${type}/candidates`, { params }),
       apply: (type, url) => this.http.put<ArtworkInfo>(`${baseUrl}/${type}`, { url }, { params }),
       remove: (type) => this.http.delete<void>(`${baseUrl}/${type}`, { params }),
     };

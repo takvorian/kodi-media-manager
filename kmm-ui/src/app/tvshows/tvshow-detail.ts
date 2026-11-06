@@ -1,4 +1,3 @@
-import { DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
 import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
@@ -9,6 +8,8 @@ import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe, TranslocoService, translate } from '@jsverse/transloco';
+import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 import { EMPTY, Observable, filter, finalize, map, of, switchMap } from 'rxjs';
 
 import { Job } from '../jobs/job';
@@ -54,6 +55,7 @@ import {
   toTvShowFormValue,
   toTvShowMetadata,
 } from './tvshow-forms';
+import { MEDIUM_DATE, SHORT_DATE_TIME } from './tv-date-formats';
 import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TVSHOW_BATCH_JOB_KEY, tvShowScrapeJobKey } from './tvshow-batch';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
@@ -61,7 +63,7 @@ import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 
 const SNACKBAR_DURATION_MS = 5000;
 
-/** Staffel mit ihren Episoden für die Übersicht. */
+/** A season with its episodes for the overview. */
 export interface SeasonWithEpisodes {
   readonly season: Season;
   readonly episodes: readonly EpisodeSummary[];
@@ -70,7 +72,6 @@ export interface SeasonWithEpisodes {
 @Component({
   selector: 'app-tvshow-detail',
   imports: [
-    DatePipe,
     LanguageSelect,
     ReactiveFormsModule,
     RouterLink,
@@ -86,6 +87,8 @@ export interface SeasonWithEpisodes {
     ScrapeReport,
     ThemeEditor,
     TrailerEditor,
+    TranslocoDatePipe,
+    TranslocoPipe,
   ],
   templateUrl: './tvshow-detail.html',
   styleUrl: './tvshow-detail.scss',
@@ -100,10 +103,13 @@ export class TvShowDetail {
   private readonly settingsService = inject(SettingsService);
   private readonly confirm = inject(CONFIRM);
   private readonly jobStore = inject(JobStore);
+  private readonly transloco = inject(TranslocoService);
 
-  /** Serien-ID aus der Route `/tvshows/:id`. */
+  /** TV show ID from the route `/tvshows/:id`. */
   readonly id = input.required({ transform: numberAttribute });
 
+  protected readonly shortDateTime = SHORT_DATE_TIME;
+  protected readonly mediumDate = MEDIUM_DATE;
   protected readonly minYear = MIN_YEAR;
   protected readonly maxYear = MAX_YEAR;
   protected readonly form = createTvShowMetadataForm(inject(NonNullableFormBuilder));
@@ -112,7 +118,7 @@ export class TvShowDetail {
     params: () => this.id(),
     stream: ({ params }) => this.tvShowService.findShow(params),
   });
-  /** Eigenes Signal, damit Änderungen außerhalb der Metadaten (Trailer) das Formular nicht zurücksetzen. */
+  /** Own signal, so changes outside the metadata (trailer) do not reset the form. */
   private readonly metadata = computed(() =>
     this.show.hasValue() ? this.show.value().metadata : null,
   );
@@ -123,7 +129,7 @@ export class TvShowDetail {
   );
   protected readonly showArtwork = computed(() => this.artworkService.forShow(this.id(), null));
   protected readonly scrapers = rxResource({ stream: () => this.tvShowService.tvShowScrapers() });
-  /** Hinweise der Anbieter, deren IDs die Serie trägt (z. B. TheTVDB). */
+  /** Attributions of the providers whose IDs the TV show carries (e.g. TheTVDB). */
   protected readonly attributions = computed<Attribution[]>(() =>
     this.show.hasValue() && this.scrapers.hasValue()
       ? attributionsFor(this.show.value().metadata, this.scrapers.value())
@@ -132,23 +138,23 @@ export class TvShowDetail {
   protected readonly searchingOnline = signal(false);
   protected readonly refreshingKodi = signal(false);
   protected readonly renaming = signal(false);
-  /** Läuft auch weiter, wenn man die Seite verlässt und zurückkehrt. */
+  /** Keeps running when leaving the page and coming back. */
   protected readonly scrapeJob = computed(() =>
     this.jobStore.runningJob(tvShowScrapeJobKey(this.id())),
   );
   protected readonly scrapeReport = signal<Job | null>(null);
-  /** Neues Auslesen der technischen Angaben einer Staffel; schreibt Episoden-NFOs wie das Scrapen. */
+  /** Re-reading the technical details of a season; writes episode NFOs like scraping does. */
   protected readonly seasonStreamsJob = computed(() =>
     this.jobStore.runningJob(seasonStreamDetailsJobKey(this.id())),
   );
-  /** Zählt beendete Läufe; Titelmusik und Bilder laden selbst und werden damit neu aufgebaut. */
+  /** Counts finished runs; theme music and artwork load by themselves and are rebuilt with it. */
   protected readonly scrapeRuns = signal(0);
   private readonly changingLanguage = signal(false);
-  /** Der Sprachwechsel dieser Ansicht; das Formular wird danach neu geladen. */
+  /** The language change of this view; the form is reloaded afterwards. */
   protected readonly languageJob = computed(() =>
     this.changingLanguage() ? this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY) : undefined,
   );
-  /** Übernommener Treffer, dessen Episodendaten beim nächsten Speichern ergänzt werden. */
+  /** Adopted match whose episode data is completed on the next save. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
   protected readonly loadingMissing = signal(false);
@@ -161,7 +167,7 @@ export class TvShowDetail {
         this.form.reset(toTvShowFormValue(metadata));
       }
     });
-    // Am Ende wird das Formular neu geladen; Eingaben während des Laufs gingen dabei verloren.
+    // The form is reloaded at the end; input made during the run would be lost.
     effect(() => {
       if (this.scrapeJob() || this.languageJob()) {
         this.form.disable();
@@ -197,27 +203,29 @@ export class TvShowDetail {
       });
   }
 
-  /** Ergänzt alles Fehlende wie das Scrapen einer Quelle, nur für diese Serie. */
+  /** Adds everything missing like scraping a source does, only for this TV show. */
   protected scrape(): void {
     this.startScrape(() => this.tvShowService.autoScrape(this.id()));
   }
 
   /**
-   * Scrapt nur eine Staffel: leere Felder und fehlende Bilder, mit `overwrite` nach Rückfrage auch neue Titel und
-   * Texte für ihre Episoden.
+   * Scrapes only one season: empty fields and missing artwork, with `overwrite` after confirmation also new titles and
+   * texts for its episodes.
    */
   protected scrapeSeason(group: SeasonWithEpisodes, overwrite: boolean): void {
     const season = group.season;
     this.startScrape(
       () => this.tvShowService.autoScrapeSeason(this.id(), season.number, overwrite),
       overwrite
-        ? `Titel und Texte der ${group.episodes.length} Episoden von „${this.label(season)}“ werden ` +
-            'durch die des Anbieters ersetzt, auch von Hand geänderte. Fortfahren?'
+        ? this.transloco.translate('tvshows.detail.confirmRefetchSeason', {
+            count: group.episodes.length,
+            season: this.label(season),
+          })
         : null,
     );
   }
 
-  /** Liest Codecs, Auflösung und Spuren aller Episoden der Staffel neu aus, als Job. */
+  /** Re-reads codecs, resolution and tracks of all episodes of the season, as a job. */
   protected probeSeason(group: SeasonWithEpisodes): void {
     this.mediaInfoService.probeSeason(this.id(), group.season.number).subscribe({
       next: (job) => this.jobStore.update(job),
@@ -227,7 +235,7 @@ export class TvShowDetail {
 
   private startScrape(start: () => Observable<Job>, confirmation: string | null = null): void {
     if (this.form.dirty) {
-      this.notify('Bitte die Änderungen zuerst speichern.');
+      this.notify(this.transloco.translate('tvshows.saveFirst'));
       return;
     }
     if (confirmation && !this.confirm(confirmation)) {
@@ -241,7 +249,7 @@ export class TvShowDetail {
     });
   }
 
-  /** Übernimmt nur den Trailer, damit ungespeicherte Änderungen im Formular bleiben. */
+  /** Takes over only the trailer, so unsaved changes in the form stay. */
   protected showTrailer(trailer: string | null): void {
     this.show.update((details) => details && { ...details, trailer });
   }
@@ -262,7 +270,7 @@ export class TvShowDetail {
     return episodeCode(episode.season, episode.episode);
   }
 
-  /** Lässt Kodi NFO und Bilder der Serie neu einlesen, unabhängig vom Echtzeit-Sync. */
+  /** Makes Kodi re-read the NFO and artwork of the TV show, independent of the real-time sync. */
   protected refreshInKodi(): void {
     this.refreshingKodi.set(true);
     this.kodiService.refreshTvShow(this.id()).subscribe({
@@ -287,18 +295,20 @@ export class TvShowDetail {
     this.searchingOnline.set(false);
     this.pendingFill.set(scraped);
     this.notify(
-      `Daten von ${scraped.scraperName} übernommen – bitte prüfen und speichern. ` +
-        `Beim Speichern werden ${scraped.proposal.matchedEpisodes} Episoden ergänzt.`,
+      this.transloco.translate('tvshows.detail.adopted', {
+        scraper: scraped.scraperName,
+        count: scraped.proposal.matchedEpisodes,
+      }),
     );
   }
 
-  /** Fragt beim bevorzugten Serien-Scraper, welche Episoden ohne Datei es gibt. */
+  /** Asks the preferred TV show scraper which episodes exist without a file. */
   protected showMissingEpisodes(): void {
     const scraper = this.scrapers.hasValue()
       ? defaultTvShowScraper(this.scrapers.value())
       : undefined;
     if (!scraper) {
-      this.notify('Es ist kein Serien-Scraper installiert oder aktiv.');
+      this.notify(this.transloco.translate('tvshows.noScraper'));
       return;
     }
     this.loadingMissing.set(true);
@@ -314,14 +324,14 @@ export class TvShowDetail {
     });
   }
 
-  /** Fragt, ob die Texte in der neuen Sprache neu geholt werden; die Sprache ändert sich in jedem Fall. */
+  /** Asks whether the texts are refetched in the new language; the language changes in any case. */
   protected changeLanguage(language: string | null): void {
     if (this.form.dirty) {
-      this.notify('Bitte die Änderungen zuerst speichern.');
+      this.notify(this.transloco.translate('tvshows.saveFirst'));
       return;
     }
     const refetchTexts = this.confirm(
-      languageChangeQuestion(language, 'Titel, Inhaltsangaben und Episodennamen'),
+      languageChangeQuestion(language, this.transloco.translate('tvshows.languageTexts')),
     );
     this.changingLanguage.set(true);
     this.tvShowService.changeLanguage([this.id()], language, refetchTexts).subscribe({
@@ -348,7 +358,7 @@ export class TvShowDetail {
         }
         this.saving.set(false);
         this.show.set(details);
-        this.notify(`Gespeichert und in ${details.nfo.path} geschrieben.`);
+        this.notify(this.transloco.translate('tvshows.savedTo', { path: details.nfo.path }));
       },
       error: (error: unknown) => {
         this.saving.set(false);
@@ -376,12 +386,14 @@ export class TvShowDetail {
       error: (error: unknown) => {
         this.saving.set(false);
         this.show.reload();
-        this.notify(`Serie gespeichert, Episoden nicht ergänzt: ${problemMessage(error)}`);
+        this.notify(
+          this.transloco.translate('tvshows.detail.fillFailed', { problem: problemMessage(error) }),
+        );
       },
     });
   }
 
-  /** Liest die Episoden ohne technische Angaben aus, wie nach dem automatischen Scrapen. */
+  /** Reads the episodes without technical details, as after automatic scraping. */
   private probeStreamsAfterScrape(): void {
     this.mediaInfoService.probeShowAfterScrape(this.id()).subscribe({
       next: (result) => {
@@ -391,17 +403,21 @@ export class TvShowDetail {
         }
       },
       error: (error: unknown) =>
-        this.notify(`Technische Angaben nicht ausgelesen: ${problemMessage(error)}`),
+        this.notify(
+          this.transloco.translate('tvshows.detail.probeFailed', {
+            problem: problemMessage(error),
+          }),
+        ),
     });
   }
 
   /**
-   * Benennt Serienordner, Staffelordner und Episodendateien nach den Mustern aus den Einstellungen um; vorher
-   * werden die Änderungen zur Bestätigung zusammengefasst. Ungespeicherte Änderungen müssen erst gespeichert werden.
+   * Renames the show folder, season folders and episode files by the patterns from the settings; before that the
+   * changes are summarized for confirmation. Unsaved changes have to be saved first.
    */
   protected renameShow(): void {
     if (this.form.dirty) {
-      this.notify('Bitte die Änderungen zuerst speichern.');
+      this.notify(this.transloco.translate('tvshows.saveFirst'));
       return;
     }
     this.renaming.set(true);
@@ -437,14 +453,19 @@ export class TvShowDetail {
   private showRenamed(plan: TvShowRenamePlan): void {
     switch (plan.status) {
       case 'RENAME':
-        this.notify(`„${plan.title}“ umbenannt.`);
+        this.notify(this.transloco.translate('tvshows.detail.renamed', { title: plan.title }));
         this.show.reload();
         break;
       case 'UNCHANGED':
-        this.notify(`„${plan.title}“ heißt schon so.`);
+        this.notify(this.transloco.translate('tvshows.detail.alreadyNamed', { title: plan.title }));
         break;
       default:
-        this.notify(`„${plan.title}“ nicht umbenannt: ${plan.message}`);
+        this.notify(
+          this.transloco.translate('tvshows.detail.notRenamed', {
+            title: plan.title,
+            message: plan.message,
+          }),
+        );
     }
   }
 
@@ -454,14 +475,16 @@ export class TvShowDetail {
 }
 
 function fillSummary(scraperName: string, result: EpisodeFillResult): string {
-  const failed =
-    result.failedFiles.length > 0
-      ? ` ${result.failedFiles.length} NFOs konnten nicht geschrieben werden.`
-      : '';
-  return `Gespeichert; ${result.updated} Episoden mit Daten von ${scraperName} ergänzt.${failed}`;
+  const filled = translate('tvshows.detail.filled', {
+    count: result.updated,
+    scraper: scraperName,
+  });
+  return result.failedFiles.length > 0
+    ? `${filled} ${translate('tvshows.detail.nfosFailed', { count: result.failedFiles.length })}`
+    : filled;
 }
 
-/** TheTVDB verlangt den Hinweis, wo seine Daten genutzt werden; die Serie trägt dann eine TVDB-ID. */
+/** TheTVDB requires the attribution wherever its data is used; the TV show then carries a TVDB ID. */
 function attributionsFor(
   metadata: TvShowMetadata,
   scrapers: readonly ScraperInfo[],

@@ -1,9 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { EpisodeMetadata, TvShowMetadata, episodeCode, seasonLabel } from './tvshow';
 import { EPISODES_URL, TVSHOWS_URL, TV_SHOW_SCRAPERS_URL, TvShowService } from './tvshow.service';
+import { TVSHOW_BATCH_FIELDS } from './tvshow-batch';
 
 describe('TvShowService', () => {
   let service: TvShowService;
@@ -11,7 +14,7 @@ describe('TvShowService', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideI18nTesting()],
     });
     service = TestBed.inject(TvShowService);
     httpTesting = TestBed.inject(HttpTestingController);
@@ -78,6 +81,16 @@ describe('TvShowService', () => {
     expect(seasonLabel({ number: 2, title: 'Rückkehr', episodeCount: 1 })).toBe(
       'Staffel 2 – Rückkehr',
     );
+  });
+
+  it('labels seasons and batch fields in the active language', () => {
+    expect(TVSHOW_BATCH_FIELDS.map((field) => field.label)).toEqual(['Altersfreigabe', 'Status']);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+
+    expect(seasonLabel({ number: 2, title: null, episodeCount: 1 })).toBe('Season 2');
+    expect(seasonLabel({ number: 2, title: 'Return', episodeCount: 1 })).toBe('Season 2 – Return');
+    expect(TVSHOW_BATCH_FIELDS.map((field) => field.label)).toEqual(['Certification', 'Status']);
   });
 
   it('queries shows with a filter, their IDs and the filter values', () => {

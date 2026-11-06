@@ -40,7 +40,7 @@ export class TvShowService {
     return this.http.get<TvShowPage>(TVSHOWS_URL, { params });
   }
 
-  /** Serienliste mit Filter, standardmäßig nach Titel sortiert. */
+  /** TV show list with filter, sorted by title by default. */
   queryShows(
     filter: TvShowFilter,
     page: number,
@@ -51,18 +51,17 @@ export class TvShowService {
     return this.http.post<TvShowPage>(`${TVSHOWS_URL}/query`, filter, { params });
   }
 
-  /** IDs aller Serien, auf die der Filter passt. */
+  /** IDs of all TV shows the filter matches. */
   queryShowIds(filter: TvShowFilter): Observable<number[]> {
     return this.http.post<number[]>(`${TVSHOWS_URL}/query/ids`, filter);
   }
 
-  /** Startet die Stapel-Bearbeitung als Job. */
+  /** Starts the batch edit as a job. */
   batchEdit(edit: TvShowBatchEdit): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/batch`, edit);
   }
 
-  /** Holt für die Serien ohne Trailer den besten Vorschlag, als Job. */
-  /** Aktualisiert Bewertungen und füllt leere Felder über Trakt und OMDb, als Job. */
+  /** Updates ratings and fills empty fields via Trakt and OMDb, as a job. */
   refreshRatings(showIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/ratings/refresh`, { showIds });
   }
@@ -75,14 +74,14 @@ export class TvShowService {
     return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/auto-scrape`, null);
   }
 
-  /** Scrapt eine Staffel; mit `overwrite` werden Titel und Texte ihrer Episoden ersetzt. */
+  /** Scrapes one season; with `overwrite` the titles and texts of its episodes are replaced. */
   autoScrapeSeason(showId: number, season: number, overwrite: boolean): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/seasons/${season}/auto-scrape`, null, {
       params: { overwrite },
     });
   }
 
-  /** Ergänzt für die Auswahl alles Fehlende wie das Scrapen einer Quelle, als Job. */
+  /** Adds everything missing for the selection like scraping a source does, as a job. */
   changeLanguage(
     showIds: readonly number[],
     language: string | null,
@@ -95,11 +94,12 @@ export class TvShowService {
     return this.http.post<Job>(`${TVSHOWS_URL}/auto-scrape`, { showIds });
   }
 
+  /** Gets the best proposal for the TV shows without a trailer, as a job. */
   fillMissingTrailers(showIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/trailers/fill`, { showIds });
   }
 
-  /** Vorhandene Werte je Filterfeld für Auswahllisten. */
+  /** Existing values per filter field for drop-down lists. */
   filterValues(): Observable<TvShowFilterValues> {
     return this.http.get<TvShowFilterValues>(`${TVSHOWS_URL}/filter-values`);
   }
@@ -108,7 +108,7 @@ export class TvShowService {
     return this.http.get<TvShowDetails>(`${TVSHOWS_URL}/${showId}`);
   }
 
-  /** Speichert die Metadaten; das Backend schreibt sie zugleich in die tvshow.nfo. */
+  /** Saves the metadata; the backend writes them to the tvshow.nfo at the same time. */
   updateShow(showId: number, metadata: TvShowMetadata): Observable<TvShowDetails> {
     return this.http.put<TvShowDetails>(`${TVSHOWS_URL}/${showId}/metadata`, metadata);
   }
@@ -135,7 +135,7 @@ export class TvShowService {
     return this.http.get<TvShowProposal>(`${TVSHOWS_URL}/${showId}/scraper-proposal`, { params });
   }
 
-  /** Ergänzt leere Angaben der Episoden aus dem Treffer und schreibt deren NFOs. */
+  /** Fills empty details of the episodes from the match and writes their NFOs. */
   fillEpisodes(showId: number, scraper: string, providerId: string): Observable<EpisodeFillResult> {
     const params = new HttpParams().set('scraper', scraper).set('providerId', providerId);
     return this.http.post<EpisodeFillResult>(`${TVSHOWS_URL}/${showId}/scraper-episodes`, null, {
@@ -152,7 +152,7 @@ export class TvShowService {
     return this.http.get<EpisodeDetails>(`${EPISODES_URL}/${episodeId}`);
   }
 
-  /** Speichert die Metadaten; das Backend schreibt sie zugleich in die NFO der Episode. */
+  /** Saves the metadata; the backend writes them to the NFO of the episode at the same time. */
   updateEpisode(episodeId: number, metadata: EpisodeMetadata): Observable<EpisodeDetails> {
     return this.http.put<EpisodeDetails>(`${EPISODES_URL}/${episodeId}/metadata`, metadata);
   }

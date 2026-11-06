@@ -1,7 +1,7 @@
-<a matButton routerLink="/tvshows" class="back-link">← Zur Serienliste</a>
+<a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
 
 @if (show.error()) {
-  <p class="error">Die Serie konnte nicht geladen werden.</p>
+  <p class="error">{{ 'tvshows.detail.loadError' | transloco }}</p>
 } @else if (show.hasValue()) {
   @let details = show.value();
   <div class="title-row">
@@ -14,7 +14,7 @@
         [disabled]="refreshingKodi()"
         (click)="refreshInKodi()"
       >
-        In Kodi aktualisieren
+        {{ 'tvshows.refreshInKodi' | transloco }}
       </button>
       <button
         matButton
@@ -23,7 +23,7 @@
         [disabled]="renaming()"
         (click)="renameShow()"
       >
-        Umbenennen
+        {{ 'common.rename' | transloco }}
       </button>
       <button
         matButton="tonal"
@@ -32,7 +32,7 @@
         [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
         (click)="scrape()"
       >
-        Scrapen
+        {{ 'tvshows.scrape' | transloco }}
       </button>
       <button
         matButton="tonal"
@@ -41,7 +41,11 @@
         [disabled]="!!scrapeJob()"
         (click)="toggleOnlineSearch()"
       >
-        {{ searchingOnline() ? 'Suche schließen' : 'Online suchen' }}
+        {{
+          searchingOnline()
+            ? ('tvshows.detail.closeSearch' | transloco)
+            : ('tvshows.detail.onlineSearch' | transloco)
+        }}
       </button>
     </div>
   </div>
@@ -70,37 +74,42 @@
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>
       <dl class="facts">
-        <dt>Ordner</dt>
+        <dt>{{ 'common.folder' | transloco }}</dt>
         <dd class="path directory">{{ details.directoryPath }}</dd>
         <dt>NFO</dt>
         <dd class="nfo-status">
           @if (details.nfo.exists) {
             <span class="path">{{ details.nfo.path }}</span>
-            <span class="hint"> (geändert {{ details.nfo.modifiedAt | date: 'short' }})</span>
+            <span class="hint">
+              {{
+                'tvshows.nfoModified'
+                  | transloco: { date: (details.nfo.modifiedAt! | translocoDate: shortDateTime) }
+              }}</span
+            >
           } @else {
-            <span class="hint">Noch keine tvshow.nfo – wird beim Speichern angelegt:</span>
+            <span class="hint">{{ 'tvshows.detail.noNfo' | transloco }}</span>
             <span class="path">{{ details.nfo.path }}</span>
           }
         </dd>
-        <dt>Hinzugefügt</dt>
-        <dd>{{ details.addedAt | date: 'short' }}</dd>
+        <dt>{{ 'fields.added' | transloco }}</dt>
+        <dd>{{ details.addedAt | translocoDate: shortDateTime }}</dd>
       </dl>
       <app-language-select
         class="language-select"
         [value]="details.language"
-        defaultLabel="Standard (Quelle oder Einstellungen)"
+        [defaultLabel]="'tvshows.languageDefault' | transloco"
         [disabled]="!!scrapeJob() || !!languageJob()"
         (chosen)="changeLanguage($event)"
       />
       @if (languageJob()) {
-        <p class="hint language-running">Die Sprache wird geändert …</p>
+        <p class="hint language-running">{{ 'tvshows.detail.languageRunning' | transloco }}</p>
       }
     </mat-card-content>
   </mat-card>
 
   <mat-card appearance="outlined" class="trailer-card">
     <mat-card-header>
-      <mat-card-title>Trailer</mat-card-title>
+      <mat-card-title>{{ 'fields.trailer' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <app-trailer-editor
@@ -113,7 +122,7 @@
 
   <mat-card appearance="outlined" class="theme-card">
     <mat-card-header>
-      <mat-card-title>Titelmusik</mat-card-title>
+      <mat-card-title>{{ 'fields.theme' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       @for (version of [scrapeRuns()]; track version) {
@@ -124,7 +133,7 @@
 
   <mat-card appearance="outlined" class="artwork-card">
     <mat-card-header>
-      <mat-card-title>Bilder der Serie</mat-card-title>
+      <mat-card-title>{{ 'tvshows.detail.showArtwork' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       @for (version of [scrapeRuns()]; track version) {
@@ -135,15 +144,18 @@
 
   <mat-card appearance="outlined" class="seasons-card">
     <mat-card-header>
-      <mat-card-title>Staffeln und Episoden</mat-card-title>
+      <mat-card-title>{{ 'tvshows.detail.seasonsAndEpisodes' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       @if (seasons().length === 0) {
-        <p class="hint empty-seasons">Keine Episoden gefunden.</p>
+        <p class="hint empty-seasons">{{ 'tvshows.detail.noEpisodes' | transloco }}</p>
       }
       @if (seasonStreamsJob(); as job) {
         <p class="hint season-streams-progress">
-          {{ job.title }}: {{ job.done }} von {{ job.total }} Dateien …
+          {{
+            'tvshows.detail.seasonStreamsProgress'
+              | transloco: { title: job.title, done: job.done, total: job.total }
+          }}
         </p>
       }
       <mat-accordion multi>
@@ -151,9 +163,9 @@
           <mat-expansion-panel class="season">
             <mat-expansion-panel-header>
               <mat-panel-title class="season-title">{{ label(group.season) }}</mat-panel-title>
-              <mat-panel-description
-                >{{ group.season.episodeCount }} Episoden</mat-panel-description
-              >
+              <mat-panel-description>{{
+                'tvshows.detail.episodeCount' | transloco: { count: group.season.episodeCount }
+              }}</mat-panel-description>
             </mat-expansion-panel-header>
             <div class="season-actions">
               <button
@@ -163,7 +175,7 @@
                 [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
                 (click)="scrapeSeason(group, false)"
               >
-                Staffel scrapen
+                {{ 'tvshows.detail.scrapeSeason' | transloco }}
               </button>
               <button
                 matButton
@@ -172,7 +184,7 @@
                 [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
                 (click)="scrapeSeason(group, true)"
               >
-                Staffel neu holen
+                {{ 'tvshows.detail.refetchSeason' | transloco }}
               </button>
               <button
                 matButton
@@ -181,7 +193,7 @@
                 [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
                 (click)="probeSeason(group)"
               >
-                Technische Angaben auslesen
+                {{ 'tvshows.probeStreams' | transloco }}
               </button>
             </div>
             <ul class="episodes">
@@ -190,16 +202,16 @@
                   <span class="code">{{ code(episode) }}</span>
                   <a [routerLink]="['/episodes', episode.id]">{{ episode.title }}</a>
                   @if (episode.aired) {
-                    <span class="hint"> · {{ episode.aired | date: 'mediumDate' }}</span>
+                    <span class="hint"> · {{ episode.aired | translocoDate: mediumDate }}</span>
                   }
                   @if (episode.playCount) {
-                    <span class="hint watched"> · gesehen</span>
+                    <span class="hint watched"> · {{ 'tvshows.detail.watched' | transloco }}</span>
                   }
                 </li>
               }
             </ul>
             <ng-template matExpansionPanelContent>
-              <h4 class="season-artwork-title">Bilder der Staffel</h4>
+              <h4 class="season-artwork-title">{{ 'tvshows.detail.seasonArtwork' | transloco }}</h4>
               <app-artwork-gallery class="season-artwork" [source]="seasonArtwork(group.season)" />
             </ng-template>
           </mat-expansion-panel>
@@ -215,19 +227,25 @@
           [disabled]="loadingMissing()"
           (click)="showMissingEpisodes()"
         >
-          {{ loadingMissing() ? 'Frage Anbieter …' : 'Fehlende Episoden anzeigen' }}
+          {{
+            loadingMissing()
+              ? ('tvshows.detail.askingProvider' | transloco)
+              : ('tvshows.detail.showMissing' | transloco)
+          }}
         </button>
       } @else if (missing.length === 0) {
-        <p class="hint no-missing">Es fehlen keine Episoden.</p>
+        <p class="hint no-missing">{{ 'tvshows.detail.noMissing' | transloco }}</p>
       } @else {
-        <h3 class="missing-title">Fehlende Episoden ({{ missing.length }})</h3>
+        <h3 class="missing-title">
+          {{ 'tvshows.detail.missingTitle' | transloco: { count: missing.length } }}
+        </h3>
         <ul class="episodes missing-episodes">
           @for (episode of missing; track $index) {
             <li class="episode missing-episode">
               <span class="code">{{ missingCode(episode) }}</span>
-              {{ episode.title ?? 'ohne Titel' }}
+              {{ episode.title ?? ('tvshows.detail.untitled' | transloco) }}
               @if (episode.aired) {
-                <span class="hint"> · {{ episode.aired | date: 'mediumDate' }}</span>
+                <span class="hint"> · {{ episode.aired | translocoDate: mediumDate }}</span>
               }
             </li>
           }
@@ -239,7 +257,7 @@
   @if (details.extras.actors.length > 0 || details.extras.ratings.length > 0) {
     <mat-card appearance="outlined" class="people-card">
       <mat-card-header>
-        <mat-card-title>Weitere Angaben</mat-card-title>
+        <mat-card-title>{{ 'tvshows.detail.moreDetails' | transloco }}</mat-card-title>
       </mat-card-header>
       <mat-card-content>
         <app-tv-people [actors]="details.extras.actors" [ratings]="details.extras.ratings" />
@@ -250,24 +268,24 @@
   <form [formGroup]="form" (ngSubmit)="save()" class="metadata-form">
     <div class="row">
       <mat-form-field class="wide">
-        <mat-label>Titel</mat-label>
+        <mat-label>{{ 'fields.title' | transloco }}</mat-label>
         <input matInput formControlName="title" name="title" required />
-        <mat-error>Der Titel ist erforderlich.</mat-error>
+        <mat-error>{{ 'tvshows.form.titleRequired' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="wide">
-        <mat-label>Originaltitel</mat-label>
+        <mat-label>{{ 'fields.originalTitle' | transloco }}</mat-label>
         <input matInput formControlName="originalTitle" name="originalTitle" />
       </mat-form-field>
       <mat-form-field class="wide">
-        <mat-label>Sortiertitel</mat-label>
+        <mat-label>{{ 'fields.sortTitle' | transloco }}</mat-label>
         <input matInput formControlName="sortTitle" name="sortTitle" />
-        <mat-hint>Reihenfolge in Kodi</mat-hint>
+        <mat-hint>{{ 'tvshows.form.sortTitleHint' | transloco }}</mat-hint>
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field class="narrow">
-        <mat-label>Jahr</mat-label>
+        <mat-label>{{ 'fields.year' | transloco }}</mat-label>
         <input
           matInput
           type="number"
@@ -276,68 +294,75 @@
           [min]="minYear"
           [max]="maxYear"
         />
-        <mat-error>Zwischen {{ minYear }} und {{ maxYear }}.</mat-error>
+        <mat-error>{{
+          'tvshows.form.yearRange' | transloco: { min: minYear, max: maxYear }
+        }}</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Erstausstrahlung</mat-label>
+        <mat-label>{{ 'tvshows.form.premiered' | transloco }}</mat-label>
         <input matInput type="date" formControlName="premiered" name="premiered" />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Episodenlänge (Minuten)</mat-label>
+        <mat-label>{{ 'tvshows.form.episodeRuntime' | transloco }}</mat-label>
         <input matInput type="number" formControlName="runtime" name="runtime" min="0" />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Altersfreigabe</mat-label>
-        <input matInput formControlName="mpaa" name="mpaa" placeholder="z. B. FSK 12" />
+        <mat-label>{{ 'fields.certification' | transloco }}</mat-label>
+        <input
+          matInput
+          formControlName="mpaa"
+          name="mpaa"
+          [placeholder]="'tvshows.form.certificationPlaceholder' | transloco"
+        />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Status</mat-label>
+        <mat-label>{{ 'common.status' | transloco }}</mat-label>
         <input
           matInput
           formControlName="status"
           name="status"
-          placeholder="Continuing oder Ended"
+          [placeholder]="'tvshows.form.statusPlaceholder' | transloco"
         />
-        <mat-hint>Continuing: läuft, Ended: beendet</mat-hint>
+        <mat-hint>{{ 'tvshows.form.statusHint' | transloco }}</mat-hint>
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field class="wide">
-        <mat-label>Genres</mat-label>
+        <mat-label>{{ 'fields.genres' | transloco }}</mat-label>
         <input matInput formControlName="genres" name="genres" />
-        <mat-hint>Mehrere durch Komma trennen</mat-hint>
+        <mat-hint>{{ 'tvshows.form.listHint' | transloco }}</mat-hint>
       </mat-form-field>
       <mat-form-field class="wide">
-        <mat-label>Sender/Studios</mat-label>
+        <mat-label>{{ 'tvshows.form.studios' | transloco }}</mat-label>
         <input matInput formControlName="studios" name="studios" />
-        <mat-hint>Mehrere durch Komma trennen</mat-hint>
+        <mat-hint>{{ 'tvshows.form.listHint' | transloco }}</mat-hint>
       </mat-form-field>
       <mat-form-field class="wide">
-        <mat-label>Tags</mat-label>
+        <mat-label>{{ 'fields.tags' | transloco }}</mat-label>
         <input matInput formControlName="tags" name="tags" />
-        <mat-hint>Mehrere durch Komma trennen</mat-hint>
+        <mat-hint>{{ 'tvshows.form.listHint' | transloco }}</mat-hint>
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field class="narrow">
-        <mat-label>TVDB-ID</mat-label>
+        <mat-label>{{ 'fields.tvdbId' | transloco }}</mat-label>
         <input matInput formControlName="tvdbId" name="tvdbId" />
-        <mat-error>Nur Ziffern</mat-error>
+        <mat-error>{{ 'tvshows.form.digitsOnly' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>TMDB-ID</mat-label>
+        <mat-label>{{ 'fields.tmdbId' | transloco }}</mat-label>
         <input matInput formControlName="tmdbId" name="tmdbId" />
-        <mat-error>Nur Ziffern</mat-error>
+        <mat-error>{{ 'tvshows.form.digitsOnly' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>IMDb-ID</mat-label>
+        <mat-label>{{ 'fields.imdbId' | transloco }}</mat-label>
         <input matInput formControlName="imdbId" name="imdbId" placeholder="tt0090390" />
-        <mat-error>Format: tt gefolgt von 7–10 Ziffern</mat-error>
+        <mat-error>{{ 'tvshows.form.imdbFormat' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Eigene Bewertung</mat-label>
+        <mat-label>{{ 'fields.userRating' | transloco }}</mat-label>
         <input
           matInput
           type="number"
@@ -346,20 +371,21 @@
           min="1"
           max="10"
         />
-        <mat-error>1 bis 10</mat-error>
+        <mat-error>{{ 'tvshows.form.ratingRange' | transloco }}</mat-error>
       </mat-form-field>
     </div>
 
     <mat-form-field class="full">
-      <mat-label>Handlung</mat-label>
+      <mat-label>{{ 'fields.plot' | transloco }}</mat-label>
       <textarea matInput formControlName="plot" name="plot" rows="6"></textarea>
     </mat-form-field>
 
     @if (pendingFill(); as pending) {
       <p class="hint pending-fill">
-        Beim Speichern werden {{ pending.proposal.matchedEpisodes }} Episoden mit Daten von
-        {{ pending.scraperName }}
-        ergänzt (nur leere Felder).
+        {{
+          'tvshows.detail.pendingFill'
+            | transloco: { count: pending.proposal.matchedEpisodes, scraper: pending.scraperName }
+        }}
       </p>
     }
 
@@ -371,7 +397,7 @@
         (click)="reset()"
         [disabled]="form.pristine || saving()"
       >
-        Verwerfen
+        {{ 'tvshows.discard' | transloco }}
       </button>
       <button
         matButton="filled"
@@ -379,7 +405,7 @@
         class="save-button"
         [disabled]="form.pristine || saving()"
       >
-        {{ saving() ? 'Speichere …' : 'Speichern' }}
+        {{ saving() ? ('tvshows.saving' | transloco) : ('common.save' | transloco) }}
       </button>
     </div>
   </form>
@@ -390,5 +416,5 @@
     </p>
   }
 } @else {
-  <p class="loading">Lade Serie …</p>
+  <p class="loading">{{ 'tvshows.detail.loading' | transloco }}</p>
 }

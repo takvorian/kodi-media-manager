@@ -12,7 +12,7 @@ const LIST_SEPARATOR = ',';
 const MIN_USER_RATING = 1;
 const MAX_USER_RATING = 10;
 
-/** Textfelder sind leer statt `null`; leere Eingaben gelten beim Speichern als „nicht gesetzt“. */
+/** Text fields are empty instead of `null`; empty input counts as “not set” on saving. */
 export type TvShowMetadataForm = FormGroup<{
   title: FormControl<string>;
   originalTitle: FormControl<string>;
@@ -50,7 +50,10 @@ export function createTvShowMetadataForm(formBuilder: NonNullableFormBuilder): T
     title: ['', [Validators.required, Validators.maxLength(MAX_TITLE_LENGTH)]],
     originalTitle: [''],
     sortTitle: [''],
-    year: formBuilder.control<number | null>(null, [Validators.min(MIN_YEAR), Validators.max(MAX_YEAR)]),
+    year: formBuilder.control<number | null>(null, [
+      Validators.min(MIN_YEAR),
+      Validators.max(MAX_YEAR),
+    ]),
     premiered: [''],
     runtime: formBuilder.control<number | null>(null, Validators.min(0)),
     mpaa: [''],
@@ -66,7 +69,9 @@ export function createTvShowMetadataForm(formBuilder: NonNullableFormBuilder): T
   });
 }
 
-export function createEpisodeMetadataForm(formBuilder: NonNullableFormBuilder): EpisodeMetadataForm {
+export function createEpisodeMetadataForm(
+  formBuilder: NonNullableFormBuilder,
+): EpisodeMetadataForm {
   return formBuilder.group({
     title: ['', [Validators.required, Validators.maxLength(MAX_TITLE_LENGTH)]],
     originalTitle: [''],

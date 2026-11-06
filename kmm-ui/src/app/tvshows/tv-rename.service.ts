@@ -9,7 +9,7 @@ import { TvRenamePatterns, TvShowRenamePlan } from './tv-rename';
 export class TvRenameService {
   private readonly http = inject(HttpClient);
 
-  /** Was das Umbenennen der Serien einer Quelle ändern würde; ändert nichts. */
+  /** What renaming the TV shows of a source would change; changes nothing. */
   previewSource(sourceId: number, patterns: TvRenamePatterns): Observable<TvShowRenamePlan[]> {
     return this.http.post<TvShowRenamePlan[]>(
       `/api/v1/sources/${sourceId}/tv-rename/preview`,
@@ -17,7 +17,7 @@ export class TvRenameService {
     );
   }
 
-  /** Benennt die ausgewählten Serien der Quelle im Hintergrund um. */
+  /** Renames the selected TV shows of the source in the background. */
   renameSource(
     sourceId: number,
     patterns: TvRenamePatterns,

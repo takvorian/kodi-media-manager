@@ -1,3 +1,5 @@
+import { translate } from '@jsverse/transloco';
+
 import { StreamDetails } from '../shared/stream-details';
 
 export interface TvShowSummary {
@@ -10,7 +12,7 @@ export interface TvShowSummary {
   readonly addedAt: string;
 }
 
-/** Antwort von GET /api/v1/tvshows. */
+/** Response of GET /api/v1/tvshows. */
 export interface TvShowPage {
   readonly content: readonly TvShowSummary[];
   readonly page: number;
@@ -25,7 +27,7 @@ export interface TvShowQuery {
   readonly size: number;
 }
 
-/** Bearbeitbare Metadaten einer Serie, entspricht dem Inhalt der tvshow.nfo. */
+/** Editable metadata of a TV show, matches the content of the tvshow.nfo. */
 export interface TvShowMetadata {
   readonly title: string;
   readonly originalTitle: string | null;
@@ -62,7 +64,7 @@ export interface TvRating {
 export interface TvShowExtras {
   readonly actors: readonly TvActor[];
   readonly ratings: readonly TvRating[];
-  /** Staffeltitel nach Staffelnummer. */
+  /** Season titles by season number. */
   readonly seasonNames: Readonly<Record<string, string>>;
 }
 
@@ -98,13 +100,13 @@ export interface TvShowDetails {
   readonly seasons: readonly Season[];
   readonly episodes: readonly EpisodeSummary[];
   readonly nfo: NfoInfo;
-  /** Trailer-Link der tvshow.nfo, den Kodi abspielt. */
+  /** Trailer link of the tvshow.nfo that Kodi plays. */
   readonly trailer: string | null;
-  /** Eigene Sprache, auch für die Episoden; ohne Angabe gilt die der Quelle bzw. der Einstellungen. */
+  /** Own language, also for the episodes; without one, that of the source or the settings applies. */
   readonly language: string | null;
 }
 
-/** Bearbeitbare Metadaten einer Episode; Staffel und Episode stehen im Dateinamen. */
+/** Editable metadata of an episode; season and episode are part of the file name. */
 export interface EpisodeMetadata {
   readonly title: string;
   readonly originalTitle: string | null;
@@ -115,7 +117,7 @@ export interface EpisodeMetadata {
   readonly tmdbId: string | null;
   readonly imdbId: string | null;
   readonly userRating: number | null;
-  /** Videoquelle, z. B. dvd. */
+  /** Video source, e.g. dvd. */
   readonly videoSource: string | null;
 }
 
@@ -142,26 +144,31 @@ export interface EpisodeDetails {
   readonly nfo: NfoInfo;
 }
 
-/** Staffel und Episode wie in Kodi, z. B. „S01E04“. */
+/** Season and episode as in Kodi, e.g. “S01E04”. */
 export function episodeCode(season: number, episode: number): string {
   return `S${String(season).padStart(2, '0')}E${String(episode).padStart(2, '0')}`;
 }
 
-/** „Staffel 1“, für Staffel 0 „Specials“, mit Titel, sofern vorhanden. */
+/** “Season 1”, “Specials” for season 0, with its title if there is one; in the active UI language. */
 export function seasonLabel(season: Season): string {
-  const name = season.number === 0 ? 'Specials' : `Staffel ${season.number}`;
-  return season.title && season.title !== name ? `${name} – ${season.title}` : name;
+  const name =
+    season.number === 0
+      ? translate('tvshows.specials')
+      : translate('tvshows.season', { number: season.number });
+  return season.title && season.title !== name
+    ? translate('tvshows.seasonWithTitle', { season: name, title: season.title })
+    : name;
 }
 
-/** Vorschlag aus der Online-Suche für das Formular der Serie. */
+/** Proposal from the online search for the form of the TV show. */
 export interface TvShowProposal {
   readonly metadata: TvShowMetadata;
-  /** Episoden der Bibliothek, die der Anbieter kennt und beim Übernehmen ergänzt. */
+  /** Episodes of the library that the provider knows and completes on adopting. */
   readonly matchedEpisodes: number;
   readonly providerEpisodes: number;
 }
 
-/** Ergebnis der Übernahme von Episodendaten. */
+/** Result of adopting episode data. */
 export interface EpisodeFillResult {
   readonly updated: number;
   readonly unchanged: number;
@@ -169,7 +176,7 @@ export interface EpisodeFillResult {
   readonly failedFiles: readonly string[];
 }
 
-/** Episode, die der Anbieter kennt, für die es aber keine Datei gibt. */
+/** Episode the provider knows but for which there is no file. */
 export interface MissingEpisode {
   readonly season: number;
   readonly episode: number;

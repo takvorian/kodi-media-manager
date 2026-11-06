@@ -1,7 +1,9 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { Job } from '../jobs/job';
 import {
   TvShowRenamePlan,
@@ -32,6 +34,13 @@ describe('tv rename', () => {
     message: null,
   };
 
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideI18nTesting()],
+    });
+    TestBed.inject(TranslocoService);
+  });
+
   it('describes the changes for confirmation', () => {
     expect(tvRenameConfirmation(plan)).toBe(
       '„Lost“ umbenennen?\n\n1 Episodendateien bekommen neue Namen bzw. Staffelordner.',
@@ -41,6 +50,24 @@ describe('tv rename', () => {
     );
     expect(folderLabel('')).toBe('(Serienordner)');
     expect(folderLabel('Staffel 1')).toBe('Staffel 1');
+  });
+
+  it('describes the changes and results in English after a language switch', () => {
+    TestBed.inject(TranslocoService).setActiveLang('en');
+
+    expect(tvRenameConfirmation(plan)).toBe(
+      'Rename “Lost”?\n\n1 episode file gets a new name or season folder.',
+    );
+    expect(folderLabel('')).toBe('(show folder)');
+    expect(
+      tvRenameSummary({
+        id: 'j',
+        key: tvRenameJobKey(8),
+        title: 'Rename TV shows',
+        status: 'SUCCEEDED',
+        result: { sourceId: 8, renamed: 2, unchanged: 1, skipped: 0, failed: 0, problems: [] },
+      } as Job),
+    ).toBe('Rename TV shows finished: 2 renamed, 1 unchanged, 0 skipped.');
   });
 
   it('summarizes finished jobs', () => {
@@ -67,9 +94,6 @@ describe('tv rename', () => {
   });
 
   it('calls the rename endpoints', () => {
-    TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting()],
-    });
     const service = TestBed.inject(TvRenameService);
     const httpTesting = TestBed.inject(HttpTestingController);
     const patterns = { showFolder: '{show}', seasonFolder: '{season}', episodeFile: '{show}' };

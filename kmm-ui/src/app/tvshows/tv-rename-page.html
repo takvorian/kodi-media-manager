@@ -1,32 +1,40 @@
-<a matButton routerLink="/sources" class="back-link">← Quellen</a>
+<a matButton routerLink="/sources" class="back-link">{{
+  'tvshows.rename.page.back' | transloco
+}}</a>
 
 <mat-card appearance="outlined">
   <mat-card-header>
-    <mat-card-title>Serien umbenennen</mat-card-title>
-    <mat-card-subtitle>Erst die Vorschau prüfen; geändert wird nur, was ausgewählt ist.</mat-card-subtitle>
+    <mat-card-title>{{ 'tvshows.rename.page.title' | transloco }}</mat-card-title>
+    <mat-card-subtitle>{{ 'tvshows.rename.page.subtitle' | transloco }}</mat-card-subtitle>
   </mat-card-header>
   <mat-card-content>
     <form [formGroup]="form" (ngSubmit)="preview()" class="patterns">
       <mat-form-field class="pattern">
-        <mat-label>Serienordner</mat-label>
+        <mat-label>{{ 'tvshows.rename.page.showFolder' | transloco }}</mat-label>
         <input matInput formControlName="showFolder" name="showFolder" />
       </mat-form-field>
       <mat-form-field class="pattern">
-        <mat-label>Staffelordner</mat-label>
+        <mat-label>{{ 'tvshows.rename.page.seasonFolder' | transloco }}</mat-label>
         <input matInput formControlName="seasonFolder" name="seasonFolder" />
       </mat-form-field>
       <mat-form-field class="pattern">
-        <mat-label>Episodendateien</mat-label>
+        <mat-label>{{ 'tvshows.rename.page.episodeFile' | transloco }}</mat-label>
         <input matInput formControlName="episodeFile" name="episodeFile" />
       </mat-form-field>
-      <button matButton="filled" class="preview-button" type="submit" [disabled]="form.invalid || loading() || !!runningJob()">
-        Vorschau
+      <button
+        matButton="filled"
+        class="preview-button"
+        type="submit"
+        [disabled]="form.invalid || loading() || !!runningJob()"
+      >
+        {{ 'tvshows.rename.page.preview' | transloco }}
       </button>
     </form>
     <p class="hint">
-      Die Vorgaben stammen aus den Einstellungen. Hier geänderte Muster gelten nur für diesen Durchlauf.
-      Staffelbilder liegen im Serienordner und bleiben, wo sie sind.
-      <app-help-link chapter="umbenennen" anchor="so-sind-muster-aufgebaut">Muster und Platzhalter</app-help-link>
+      {{ 'tvshows.rename.page.hint' | transloco }}
+      <app-help-link chapter="umbenennen" anchor="so-sind-muster-aufgebaut">{{
+        'tvshows.rename.page.helpLink' | transloco
+      }}</app-help-link>
     </p>
     @if (loading()) {
       <mat-progress-bar mode="indeterminate" />
@@ -34,7 +42,10 @@
     @let job = runningJob();
     @if (job) {
       <div class="job-progress">
-        <mat-progress-bar [mode]="percent(job) === null ? 'indeterminate' : 'determinate'" [value]="percent(job) ?? 0" />
+        <mat-progress-bar
+          [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
+          [value]="percent(job) ?? 0"
+        />
         <span>{{ job.message }}</span>
       </div>
     }
@@ -45,29 +56,54 @@
   <mat-card appearance="outlined">
     <mat-card-content>
       <div class="summary">
-        <span class="count-rename">{{ counts().rename }} umzubenennen</span>
-        <span class="count-unchanged">{{ counts().unchanged }} unverändert</span>
-        <span class="count-conflict">{{ counts().conflict }} Konflikte</span>
-        <span class="count-failed">{{ counts().failed }} nicht möglich</span>
+        <span class="count-rename">{{
+          'tvshows.rename.page.countRename' | transloco: { count: counts().rename }
+        }}</span>
+        <span class="count-unchanged">{{
+          'tvshows.rename.page.countUnchanged' | transloco: { count: counts().unchanged }
+        }}</span>
+        <span class="count-conflict">{{
+          'tvshows.rename.page.countConflict' | transloco: { count: counts().conflict }
+        }}</span>
+        <span class="count-failed">{{
+          'tvshows.rename.page.countFailed' | transloco: { count: counts().failed }
+        }}</span>
       </div>
       <div class="toolbar">
-        <mat-checkbox class="only-changes" [checked]="onlyChanges()" (change)="onlyChanges.set($event.checked)">
-          Unveränderte ausblenden
+        <mat-checkbox
+          class="only-changes"
+          [checked]="onlyChanges()"
+          (change)="onlyChanges.set($event.checked)"
+        >
+          {{ 'tvshows.rename.page.hideUnchanged' | transloco }}
         </mat-checkbox>
-        <button matButton class="select-all" (click)="selectAll(true)">Alle auswählen</button>
-        <button matButton class="select-none" (click)="selectAll(false)">Keine</button>
-        <button matButton="filled" class="rename-button" (click)="rename()" [disabled]="selected().size === 0 || !!runningJob()">
-          {{ selected().size }} umbenennen
+        <button matButton class="select-all" (click)="selectAll(true)">
+          {{ 'tvshows.rename.page.selectAll' | transloco }}
+        </button>
+        <button matButton class="select-none" (click)="selectAll(false)">
+          {{ 'tvshows.rename.page.selectNone' | transloco }}
+        </button>
+        <button
+          matButton="filled"
+          class="rename-button"
+          (click)="rename()"
+          [disabled]="selected().size === 0 || !!runningJob()"
+        >
+          {{ 'tvshows.rename.page.renameSelected' | transloco: { count: selected().size } }}
         </button>
       </div>
       @for (plan of visiblePlans(); track plan.showId) {
         <section class="show" [class]="'show status-' + plan.status">
           <div class="show-header">
             @if (plan.status === 'RENAME') {
-              <mat-checkbox [checked]="isSelected(plan)" (change)="toggle(plan)" [aria-label]="plan.title" />
+              <mat-checkbox
+                [checked]="isSelected(plan)"
+                (change)="toggle(plan)"
+                [aria-label]="plan.title"
+              />
             }
             <a class="show-title" [routerLink]="['/tvshows', plan.showId]">{{ plan.title }}</a>
-            <span class="status">{{ statusLabels[plan.status] }}</span>
+            <span class="status">{{ statusKeys[plan.status] | transloco }}</span>
           </div>
           <div class="folder">
             <div>{{ plan.currentDirectory }}</div>
@@ -81,7 +117,10 @@
           @if (plan.files.length > 0) {
             <table class="files">
               <tbody>
-                @for (file of plan.files; track file.episodes + file.currentFolder + file.renames[0]?.currentName) {
+                @for (
+                  file of plan.files;
+                  track file.episodes + file.currentFolder + file.renames[0]?.currentName
+                ) {
                   <tr [class]="'status-' + file.status">
                     <td class="episodes">{{ file.episodes }}</td>
                     <td class="season">
@@ -92,7 +131,10 @@
                     </td>
                     <td class="names">
                       @for (rename of file.renames; track rename.currentName) {
-                        <div>{{ rename.currentName }} <span class="target">→ {{ rename.targetName }}</span></div>
+                        <div>
+                          {{ rename.currentName }}
+                          <span class="target">→ {{ rename.targetName }}</span>
+                        </div>
                       }
                       @if (file.message) {
                         <div class="message">{{ file.message }}</div>
@@ -105,7 +147,9 @@
           }
         </section>
       } @empty {
-        <p class="empty">Alle {{ all.length }} Serien heißen schon so.</p>
+        <p class="empty">
+          {{ 'tvshows.rename.page.allUnchanged' | transloco: { count: all.length } }}
+        </p>
       }
     </mat-card-content>
   </mat-card>

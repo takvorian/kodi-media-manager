@@ -1,14 +1,25 @@
 import { provideHttpClient } from '@angular/common/http';
-import { HttpTestingController, TestRequest, provideHttpClientTesting } from '@angular/common/http/testing';
+import {
+  HttpTestingController,
+  TestRequest,
+  provideHttpClientTesting,
+} from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { TranslocoService } from '@jsverse/transloco';
 
+import { provideI18nTesting } from '../i18n/testing';
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import { TvShowProposal } from './tvshow';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TVSHOWS_URL, TV_SHOW_SCRAPERS_URL } from './tvshow.service';
 
 describe('TvShowOnlineSearch', () => {
-  const tmdb: ScraperInfo = { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['TV_SHOW'], missingConfiguration: null };
+  const tmdb: ScraperInfo = {
+    id: 'tmdb',
+    displayName: 'TMDB',
+    mediaTypes: ['TV_SHOW'],
+    missingConfiguration: null,
+  };
   const tvdb: ScraperInfo = {
     id: 'tvdb',
     displayName: 'TheTVDB',
@@ -24,7 +35,11 @@ describe('TvShowOnlineSearch', () => {
     overview: 'Überlebende eines Flugzeugabsturzes.',
     posterUrl: null,
   };
-  const proposal = { metadata: { title: 'Lost' }, matchedEpisodes: 3, providerEpisodes: 120 } as TvShowProposal;
+  const proposal = {
+    metadata: { title: 'Lost' },
+    matchedEpisodes: 3,
+    providerEpisodes: 120,
+  } as TvShowProposal;
 
   let fixture: ComponentFixture<TvShowOnlineSearch>;
   let httpTesting: HttpTestingController;
@@ -33,7 +48,7 @@ describe('TvShowOnlineSearch', () => {
   beforeEach(() => {
     TestBed.configureTestingModule({
       imports: [TvShowOnlineSearch],
-      providers: [provideHttpClient(), provideHttpClientTesting()],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideI18nTesting()],
     });
     httpTesting = TestBed.inject(HttpTestingController);
     fixture = TestBed.createComponent(TvShowOnlineSearch);
@@ -75,7 +90,9 @@ describe('TvShowOnlineSearch', () => {
     await loadScrapers([tmdb, tvdb]);
 
     expect(searchButton().textContent).toContain('Bei TheTVDB suchen');
-    expect(element().querySelector('.attribution a')?.getAttribute('href')).toBe('https://www.thetvdb.com');
+    expect(element().querySelector('.attribution a')?.getAttribute('href')).toBe(
+      'https://www.thetvdb.com',
+    );
     searchButton().click();
     const request = expectSearch();
     request.flush([lost]);
@@ -84,7 +101,23 @@ describe('TvShowOnlineSearch', () => {
     expect(request.request.params.get('scraper')).toBe('tvdb');
     expect(request.request.params.get('title')).toBe('Lost');
     expect(request.request.params.get('year')).toBe('2004');
-    expect(element().querySelector('.candidate-title')?.textContent?.replace(/\s+/g, ' ').trim()).toBe('Lost (2004)');
+    expect(
+      element().querySelector('.candidate-title')?.textContent?.replace(/\s+/g, ' ').trim(),
+    ).toBe('Lost (2004)');
+  });
+
+  it('switches the texts to English at runtime', async () => {
+    await loadScrapers([tmdb]);
+    searchButton().click();
+    expectSearch().flush([]);
+    await fixture.whenStable();
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(searchButton().textContent?.trim()).toBe('Search TMDB');
+    expect(element().querySelector('.no-results')?.textContent).toContain('No results.');
+    expect(element().querySelector('.query-field mat-label')?.textContent).toBe('Search term');
   });
 
   it('searches with a custom term and year', async () => {
@@ -112,7 +145,9 @@ describe('TvShowOnlineSearch', () => {
     element().querySelector<HTMLButtonElement>('.adopt-button')!.click();
     httpTesting.expectOne((req) => req.url === `${TVSHOWS_URL}/7/scraper-proposal`).flush(proposal);
 
-    expect(proposals).toEqual([{ proposal, scraperId: 'tvdb', scraperName: 'TheTVDB', providerId: '73739' }]);
+    expect(proposals).toEqual([
+      { proposal, scraperId: 'tvdb', scraperName: 'TheTVDB', providerId: '73739' },
+    ]);
   });
 
   it('shows provider errors and missing configuration', async () => {
@@ -126,7 +161,10 @@ describe('TvShowOnlineSearch', () => {
     await loadScrapers([tvdb]);
 
     searchButton().click();
-    expectSearch().flush({ detail: 'TVDB nicht erreichbar' }, { status: 502, statusText: 'Bad Gateway' });
+    expectSearch().flush(
+      { detail: 'TVDB nicht erreichbar' },
+      { status: 502, statusText: 'Bad Gateway' },
+    );
     await fixture.whenStable();
 
     expect(element().querySelector('.error')?.textContent).toContain('TVDB nicht erreichbar');

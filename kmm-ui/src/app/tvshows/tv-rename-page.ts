@@ -9,6 +9,7 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { RouterLink } from '@angular/router';
+import { TranslocoPipe } from '@jsverse/transloco';
 import { filter } from 'rxjs';
 
 import { Job, progressPercent } from '../jobs/job';
@@ -16,7 +17,7 @@ import { JobStore } from '../jobs/job-store';
 import { SettingsService } from '../settings/settings.service';
 import { problemMessage } from '../shared/problem-message';
 import {
-  TV_RENAME_STATUS_LABELS,
+  TV_RENAME_STATUS_KEYS,
   TvRenamePatterns,
   TvShowRenamePlan,
   folderLabel,
@@ -29,8 +30,8 @@ import { HelpLink } from '../shared/help-link';
 const SNACKBAR_DURATION_MS = 8000;
 
 /**
- * Serien einer Quelle nach Mustern umbenennen: Vorschau mit Serienordnern, Staffelordnern, Episodendateien und
- * Konflikten, Auswahl, dann Umbenennen als Hintergrund-Job. Die Vorschau ändert nichts.
+ * Renames the TV shows of a source by patterns: preview with show folders, season folders, episode files and
+ * conflicts, selection, then renaming as a background job. The preview changes nothing.
  */
 @Component({
   selector: 'app-tv-rename-page',
@@ -44,6 +45,7 @@ const SNACKBAR_DURATION_MS = 8000;
     MatFormFieldModule,
     MatInputModule,
     MatProgressBarModule,
+    TranslocoPipe,
   ],
   templateUrl: './tv-rename-page.html',
   styleUrl: './tv-rename-page.scss',
@@ -53,10 +55,10 @@ export class TvRenamePage {
   private readonly jobStore = inject(JobStore);
   private readonly snackBar = inject(MatSnackBar);
 
-  /** Quelle aus der Route. */
+  /** Source from the route. */
   readonly id = input.required({ transform: numberAttribute });
 
-  protected readonly statusLabels = TV_RENAME_STATUS_LABELS;
+  protected readonly statusKeys = TV_RENAME_STATUS_KEYS;
   protected readonly folderLabel = folderLabel;
   protected readonly form = inject(NonNullableFormBuilder).group({
     showFolder: ['', Validators.required],

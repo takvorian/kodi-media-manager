@@ -2,8 +2,18 @@ import { ScraperInfo } from '../movies/scraper';
 import { defaultTvShowScraper } from './tv-scrapers';
 
 describe('defaultTvShowScraper', () => {
-  const tmdb: ScraperInfo = { id: 'tmdb', displayName: 'TMDB', mediaTypes: ['TV_SHOW'], missingConfiguration: null };
-  const tvdb: ScraperInfo = { id: 'tvdb', displayName: 'TheTVDB', mediaTypes: ['TV_SHOW'], missingConfiguration: null };
+  const tmdb: ScraperInfo = {
+    id: 'tmdb',
+    displayName: 'TMDB',
+    mediaTypes: ['TV_SHOW'],
+    missingConfiguration: null,
+  };
+  const tvdb: ScraperInfo = {
+    id: 'tvdb',
+    displayName: 'TheTVDB',
+    mediaTypes: ['TV_SHOW'],
+    missingConfiguration: null,
+  };
   const unconfiguredTvdb: ScraperInfo = { ...tvdb, missingConfiguration: 'Key fehlt' };
 
   it('prefers a ready TVDB scraper', () => {

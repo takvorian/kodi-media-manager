@@ -1,22 +1,42 @@
 @if (episode.error()) {
-  <a matButton routerLink="/tvshows" class="back-link">← Zur Serienliste</a>
-  <p class="error">Die Episode konnte nicht geladen werden.</p>
+  <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
+  <p class="error">{{ 'tvshows.episode.loadError' | transloco }}</p>
 } @else if (episode.hasValue()) {
   @let details = episode.value();
-  <a matButton [routerLink]="['/tvshows', details.tvShowId]" class="back-link">← {{ details.showTitle }}</a>
+  <a matButton [routerLink]="['/tvshows', details.tvShowId]" class="back-link"
+    >← {{ details.showTitle }}</a
+  >
   <div class="title-row">
     <h2 class="page-title">
       <span class="code">{{ code(details) }}</span> {{ details.metadata.title }}
     </h2>
     <div class="title-actions">
-      <button matButton type="button" class="kodi-refresh-button" [disabled]="refreshingKodi()" (click)="refreshInKodi()">
-        In Kodi aktualisieren
+      <button
+        matButton
+        type="button"
+        class="kodi-refresh-button"
+        [disabled]="refreshingKodi()"
+        (click)="refreshInKodi()"
+      >
+        {{ 'tvshows.refreshInKodi' | transloco }}
       </button>
-      <button matButton type="button" class="kodi-playback-button" [disabled]="importingPlayback()" (click)="importPlayback()">
-        Gesehen-Status aus Kodi
+      <button
+        matButton
+        type="button"
+        class="kodi-playback-button"
+        [disabled]="importingPlayback()"
+        (click)="importPlayback()"
+      >
+        {{ 'tvshows.episode.importPlayback' | transloco }}
       </button>
-      <button matButton type="button" class="stream-details-button" [disabled]="probingStreams()" (click)="probeStreams()">
-        Technische Angaben auslesen
+      <button
+        matButton
+        type="button"
+        class="stream-details-button"
+        [disabled]="probingStreams()"
+        (click)="probeStreams()"
+      >
+        {{ 'tvshows.probeStreams' | transloco }}
       </button>
     </div>
   </div>
@@ -24,32 +44,48 @@
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>
       <dl class="facts">
-        <dt>Datei</dt>
+        <dt>{{ 'common.file' | transloco }}</dt>
         <dd class="path file-path">{{ details.filePath }}</dd>
         <dt>NFO</dt>
         <dd class="nfo-status">
           @if (details.nfo.exists) {
             <span class="path">{{ details.nfo.path }}</span>
-            <span class="hint"> (geändert {{ details.nfo.modifiedAt | date: 'short' }})</span>
+            <span class="hint">
+              {{
+                'tvshows.nfoModified'
+                  | transloco: { date: (details.nfo.modifiedAt! | translocoDate: shortDateTime) }
+              }}</span
+            >
           } @else {
-            <span class="hint">Noch keine NFO – wird beim Speichern angelegt:</span>
+            <span class="hint">{{ 'tvshows.episode.noNfo' | transloco }}</span>
             <span class="path">{{ details.nfo.path }}</span>
           }
         </dd>
-        <dt>Hinzugefügt</dt>
-        <dd>{{ details.addedAt | date: 'short' }}</dd>
+        <dt>{{ 'fields.added' | transloco }}</dt>
+        <dd>{{ details.addedAt | translocoDate: shortDateTime }}</dd>
         @if (details.extras.directors.length > 0) {
-          <dt>Regie</dt>
+          <dt>{{ 'fields.director' | transloco }}</dt>
           <dd class="directors">{{ details.extras.directors.join(', ') }}</dd>
         }
         @if (details.extras.writers.length > 0) {
-          <dt>Drehbuch</dt>
+          <dt>{{ 'fields.writer' | transloco }}</dt>
           <dd class="writers">{{ details.extras.writers.join(', ') }}</dd>
         }
         @if (details.extras.playCount) {
-          <dt>Gesehen</dt>
+          <dt>{{ 'fields.watched' | transloco }}</dt>
           <dd class="play-count">
-            {{ details.extras.playCount }}×@if (details.extras.lastPlayed) {, zuletzt {{ details.extras.lastPlayed | date: 'short' }}}
+            @if (details.extras.lastPlayed) {
+              {{
+                'tvshows.episode.playCountLastPlayed'
+                  | transloco
+                    : {
+                        count: details.extras.playCount,
+                        date: (details.extras.lastPlayed | translocoDate: shortDateTime),
+                      }
+              }}
+            } @else {
+              {{ 'tvshows.episode.playCount' | transloco: { count: details.extras.playCount } }}
+            }
           </dd>
         }
       </dl>
@@ -58,7 +94,7 @@
 
   <mat-card appearance="outlined" class="artwork-card">
     <mat-card-header>
-      <mat-card-title>Standbild</mat-card-title>
+      <mat-card-title>{{ 'tvshows.episode.thumbnail' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <app-artwork-gallery [source]="artwork()" />
@@ -67,7 +103,7 @@
 
   <mat-card appearance="outlined" class="streams-card">
     <mat-card-header>
-      <mat-card-title>Technik</mat-card-title>
+      <mat-card-title>{{ 'tvshows.episode.streams' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
       <app-stream-details [streams]="details.extras.streams" />
@@ -85,68 +121,91 @@
   <form [formGroup]="form" (ngSubmit)="save()" class="metadata-form">
     <div class="row">
       <mat-form-field class="wide">
-        <mat-label>Titel</mat-label>
+        <mat-label>{{ 'fields.title' | transloco }}</mat-label>
         <input matInput formControlName="title" name="title" required />
-        <mat-error>Der Titel ist erforderlich.</mat-error>
+        <mat-error>{{ 'tvshows.form.titleRequired' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="wide">
-        <mat-label>Originaltitel</mat-label>
+        <mat-label>{{ 'fields.originalTitle' | transloco }}</mat-label>
         <input matInput formControlName="originalTitle" name="originalTitle" />
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field class="narrow">
-        <mat-label>Erstausstrahlung</mat-label>
+        <mat-label>{{ 'tvshows.form.premiered' | transloco }}</mat-label>
         <input matInput type="date" formControlName="aired" name="aired" />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Laufzeit (Minuten)</mat-label>
+        <mat-label>{{ 'tvshows.form.runtime' | transloco }}</mat-label>
         <input matInput type="number" formControlName="runtime" name="runtime" min="0" />
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Eigene Bewertung</mat-label>
-        <input matInput type="number" formControlName="userRating" name="userRating" min="1" max="10" />
-        <mat-error>1 bis 10</mat-error>
+        <mat-label>{{ 'fields.userRating' | transloco }}</mat-label>
+        <input
+          matInput
+          type="number"
+          formControlName="userRating"
+          name="userRating"
+          min="1"
+          max="10"
+        />
+        <mat-error>{{ 'tvshows.form.ratingRange' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>Videoquelle</mat-label>
-        <input matInput formControlName="videoSource" name="videoSource" placeholder="z. B. dvd" />
+        <mat-label>{{ 'fields.videoSource' | transloco }}</mat-label>
+        <input
+          matInput
+          formControlName="videoSource"
+          name="videoSource"
+          [placeholder]="'tvshows.form.videoSourcePlaceholder' | transloco"
+        />
       </mat-form-field>
     </div>
 
     <div class="row">
       <mat-form-field class="narrow">
-        <mat-label>TVDB-ID</mat-label>
+        <mat-label>{{ 'fields.tvdbId' | transloco }}</mat-label>
         <input matInput formControlName="tvdbId" name="tvdbId" />
-        <mat-error>Nur Ziffern</mat-error>
+        <mat-error>{{ 'tvshows.form.digitsOnly' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>TMDB-ID</mat-label>
+        <mat-label>{{ 'fields.tmdbId' | transloco }}</mat-label>
         <input matInput formControlName="tmdbId" name="tmdbId" />
-        <mat-error>Nur Ziffern</mat-error>
+        <mat-error>{{ 'tvshows.form.digitsOnly' | transloco }}</mat-error>
       </mat-form-field>
       <mat-form-field class="narrow">
-        <mat-label>IMDb-ID</mat-label>
+        <mat-label>{{ 'fields.imdbId' | transloco }}</mat-label>
         <input matInput formControlName="imdbId" name="imdbId" />
-        <mat-error>Format: tt gefolgt von 7–10 Ziffern</mat-error>
+        <mat-error>{{ 'tvshows.form.imdbFormat' | transloco }}</mat-error>
       </mat-form-field>
     </div>
 
     <mat-form-field class="full">
-      <mat-label>Handlung</mat-label>
+      <mat-label>{{ 'fields.plot' | transloco }}</mat-label>
       <textarea matInput formControlName="plot" name="plot" rows="5"></textarea>
     </mat-form-field>
 
     <div class="actions">
-      <button matButton type="button" class="reset-button" (click)="reset()" [disabled]="form.pristine || saving()">
-        Verwerfen
+      <button
+        matButton
+        type="button"
+        class="reset-button"
+        (click)="reset()"
+        [disabled]="form.pristine || saving()"
+      >
+        {{ 'tvshows.discard' | transloco }}
       </button>
-      <button matButton="filled" type="submit" class="save-button" [disabled]="form.pristine || saving()">
-        {{ saving() ? 'Speichere …' : 'Speichern' }}
+      <button
+        matButton="filled"
+        type="submit"
+        class="save-button"
+        [disabled]="form.pristine || saving()"
+      >
+        {{ saving() ? ('tvshows.saving' | transloco) : ('common.save' | transloco) }}
       </button>
     </div>
   </form>
 } @else {
-  <p class="loading">Lade Episode …</p>
+  <p class="loading">{{ 'tvshows.episode.loading' | transloco }}</p>
 }
