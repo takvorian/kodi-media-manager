@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.18 - 2026-11-10
+- Keep header and status line of detail pages in view (0e399dd)
+- Scan TV shows and seasons in Kodi (cae9be1)
+
 ## v0.17 - 2026-11-10
 - Refresh TV shows and seasons in Kodi with their episodes (39a2620)
 
