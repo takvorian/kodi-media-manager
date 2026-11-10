@@ -1462,7 +1462,10 @@
         "setNotInKodi": "Das Filmset „{name}“ ist in Kodi noch unbekannt.",
         "setUpdated": "Filmset „{name}“ aktualisiert.",
         "scanSource": "{kind, select, tvShow {Kodi sucht in {directory} nach neuen Serien und Episoden.} other {Kodi sucht in {directory} nach neuen Filmen.}}",
-        "notMapped": "Keine Pfad-Zuordnung für {path}."
+        "notMapped": "Keine Pfad-Zuordnung für {path}.",
+        "removed": "„{title}“ aus Kodi entfernt.",
+        "notInKodi": "Kodi kennt „{title}“ nicht; dort ist nichts zu entfernen.",
+        "episodesRemoved": "{count, plural, one {# Episode} other {# Episoden}} von „{title}“ aus Kodi entfernt."
       },
       "playback": {
         "jobTitle": "Gesehen-Status „{source}“ aus Kodi",

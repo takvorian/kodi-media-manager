@@ -10,6 +10,8 @@ public enum KodiSyncOutcome {
     SCAN_STARTED,
     /** Kodi took over changed details, e.g. title and overview of a movie set. */
     UPDATED,
+    /** Kodi removed the entry from its library. */
+    REMOVED,
     /** Kodi does not know the entry (yet); it arrives with the next scan. */
     NOT_IN_KODI,
     /** There is no mapping of the path to a Kodi path. */

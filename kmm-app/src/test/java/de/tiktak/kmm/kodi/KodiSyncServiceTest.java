@@ -429,6 +429,84 @@ class KodiSyncServiceTest {
         lenient().when(tvShowService.findShow(SHOW_ID)).thenReturn(show);
     }
 
+    @Test
+    void removesAMovieOnRealtimeHostsOnly() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true),
+                target(2, "Manuell", kodi.endpoint(), FILME, false));
+        kodi.respond("VideoLibrary.GetMovies", """
+                {"movies": [{"movieid": 7, "file": "smb://nas/filme/Heat (1995)/Heat (1995).mkv"}]}""");
+
+        List<KodiSyncResult> results = service.removeMovieOnRealtimeHosts("Heat",
+                LIBRARY.resolve("Heat (1995)/Heat (1995).mkv").toString());
+
+        assertThat(results).containsExactly(new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REMOVED,
+                LocalizedText.of("kodi.sync.removed").with("title", "Heat"), NOW));
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetMovies", "VideoLibrary.RemoveMovie");
+        assertThat(kodi.calls().get(1).params().path("movieid").asInt()).isEqualTo(7);
+    }
+
+    @Test
+    void reportsAMovieKodiDoesNotKnowAndAMissingMapping() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true),
+                target(2, "Ohne Zuordnung", kodi.endpoint(), new KodiPathMapper(List.of()), true));
+        kodi.respond("VideoLibrary.GetMovies", "{\"limits\": {\"total\": 0}}");
+
+        List<KodiSyncResult> results = service.removeMovieOnRealtimeHosts("Heat",
+                LIBRARY.resolve("Heat.mkv").toString());
+
+        assertThat(results).extracting(KodiSyncResult::outcome)
+                .containsExactly(KodiSyncOutcome.NOT_IN_KODI, KodiSyncOutcome.NOT_MAPPED);
+        assertThat(kodi.methods()).doesNotContain("VideoLibrary.RemoveMovie");
+    }
+
+    @Test
+    void removesATvShowWithItsEpisodes() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
+        kodi.respond("VideoLibrary.GetTVShows", """
+                {"tvshows": [{"tvshowid": 3, "file": "smb://nas/serien/ALF/"}]}""");
+
+        List<KodiSyncResult> results = service.removeTvShowOnRealtimeHosts("ALF",
+                SERIES_LIBRARY.resolve("ALF").toString());
+
+        assertThat(results).extracting(KodiSyncResult::outcome).containsExactly(KodiSyncOutcome.REMOVED);
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.RemoveTVShow");
+        assertThat(kodi.calls().get(1).params().path("tvshowid").asInt()).isEqualTo(3);
+    }
+
+    @Test
+    void removesAllEpisodesOfAMultiEpisodeFile() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
+        kodi.respond("VideoLibrary.GetEpisodes", """
+                {"episodes": [
+                  {"episodeid": 11, "file": "smb://nas/serien/ALF/Staffel 1/ALF - S01E01E02.mkv",
+                   "season": 1, "episode": 1},
+                  {"episodeid": 12, "file": "smb://nas/serien/ALF/Staffel 1/ALF - S01E01E02.mkv",
+                   "season": 1, "episode": 2}]}""");
+        String file = SERIES_LIBRARY.resolve("ALF/Staffel 1/ALF - S01E01E02.mkv").toString();
+
+        List<KodiSyncResult> results = service.removeEpisodesOnRealtimeHosts("ALF",
+                List.of(new KodiEpisodeRef(file, 1, 1), new KodiEpisodeRef(file, 1, 2),
+                        new KodiEpisodeRef(file, 1, 3)));
+
+        assertThat(results).singleElement().satisfies(result -> {
+            assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.REMOVED);
+            assertThat(result.message()).isEqualTo(LocalizedText.of("kodi.sync.episodesRemoved")
+                    .with("title", "ALF").with("count", 2));
+        });
+        assertThat(kodi.methods()).filteredOn("VideoLibrary.RemoveEpisode"::equals).hasSize(2);
+    }
+
+    @Test
+    void reportsEpisodesKodiDoesNotKnow() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
+        kodi.respond("VideoLibrary.GetEpisodes", "{\"limits\": {\"total\": 0}}");
+
+        List<KodiSyncResult> results = service.removeEpisodesOnRealtimeHosts("ALF",
+                List.of(new KodiEpisodeRef(SERIES_LIBRARY.resolve("ALF/x.mkv").toString(), 1, 1)));
+
+        assertThat(results).extracting(KodiSyncResult::outcome).containsExactly(KodiSyncOutcome.NOT_IN_KODI);
+    }
+
     private void givenHosts(KodiTarget... targets) {
         when(hostService.targets()).thenReturn(List.of(targets));
     }

@@ -197,6 +197,21 @@ public class KodiClient {
         call(endpoint, "VideoLibrary.RefreshEpisode", Map.of("episodeid", episodeId, "ignorenfo", false));
     }
 
+    /** Removes the movie from Kodi's library; the files stay untouched. */
+    public void removeMovie(KodiEndpoint endpoint, int movieId) {
+        call(endpoint, "VideoLibrary.RemoveMovie", Map.of("movieid", movieId));
+    }
+
+    /** Removes the TV show with all its seasons and episodes from Kodi's library; the files stay untouched. */
+    public void removeTvShow(KodiEndpoint endpoint, int tvShowId) {
+        call(endpoint, "VideoLibrary.RemoveTVShow", Map.of("tvshowid", tvShowId));
+    }
+
+    /** Removes the episode from Kodi's library; the file stays untouched. */
+    public void removeEpisode(KodiEndpoint endpoint, int episodeId) {
+        call(endpoint, "VideoLibrary.RemoveEpisode", Map.of("episodeid", episodeId));
+    }
+
     /** @return the video sources of the device */
     public KodiSources videoSources(KodiEndpoint endpoint) {
         List<String> files = new ArrayList<>();

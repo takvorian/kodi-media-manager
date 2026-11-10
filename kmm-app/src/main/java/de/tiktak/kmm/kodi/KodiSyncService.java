@@ -146,6 +146,27 @@ public class KodiSyncService {
         syncAll(targets, target -> syncSet(target, set, event.previousName(), memberFile, images));
     }
 
+    /**
+     * Removes a movie from Kodi on all devices with realtime sync. Called before KMM deletes its entry and the files,
+     * because Kodi finds the movie by its file.
+     */
+    public List<KodiSyncResult> removeMovieOnRealtimeHosts(String title, String filePath) {
+        return syncAll(realtimeTargets(), target -> removeMovie(target, title, filePath));
+    }
+
+    /** Removes a TV show with all its episodes from Kodi on all devices with realtime sync. */
+    public List<KodiSyncResult> removeTvShowOnRealtimeHosts(String title, String directory) {
+        return syncAll(realtimeTargets(), target -> removeTvShow(target, title, directory));
+    }
+
+    /**
+     * Removes episodes from Kodi on all devices with realtime sync, e.g. all episodes of a season or of a
+     * multi-episode file.
+     */
+    public List<KodiSyncResult> removeEpisodesOnRealtimeHosts(String showTitle, List<KodiEpisodeRef> episodes) {
+        return syncAll(realtimeTargets(), target -> removeEpisodes(target, showTitle, episodes));
+    }
+
     void scanSourceOnRealtimeHosts(long sourceId) {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {
@@ -229,6 +250,47 @@ public class KodiSyncService {
             return refreshed(title);
         }
         return scanUnknown(target, title, kodiDirectory.get(), maxWait);
+    }
+
+    private Outcome removeMovie(KodiTarget target, String title, String filePath) {
+        Optional<String> kodiFile = target.pathMapper().toKodiPath(filePath);
+        if (kodiFile.isEmpty()) {
+            return notMapped(filePath);
+        }
+        Optional<Integer> kodiMovieId = kodiClient.findMovie(target.endpoint(), kodiFile.get());
+        kodiMovieId.ifPresent(id -> kodiClient.removeMovie(target.endpoint(), id));
+        return kodiMovieId.isPresent() ? removed(title) : notInKodi(title);
+    }
+
+    private Outcome removeTvShow(KodiTarget target, String title, String directory) {
+        Optional<String> kodiDirectory = target.pathMapper().toKodiDirectory(directory);
+        if (kodiDirectory.isEmpty()) {
+            return notMapped(directory);
+        }
+        Optional<Integer> kodiShowId = kodiClient.findTvShow(target.endpoint(), kodiDirectory.get());
+        kodiShowId.ifPresent(id -> kodiClient.removeTvShow(target.endpoint(), id));
+        return kodiShowId.isPresent() ? removed(title) : notInKodi(title);
+    }
+
+    private Outcome removeEpisodes(KodiTarget target, String showTitle, List<KodiEpisodeRef> episodes) {
+        int removedCount = 0;
+        for (KodiEpisodeRef episode : episodes) {
+            Optional<String> kodiFile = target.pathMapper().toKodiPath(episode.filePath());
+            if (kodiFile.isEmpty()) {
+                return notMapped(episode.filePath());
+            }
+            Optional<Integer> kodiEpisodeId = kodiClient.findEpisode(target.endpoint(), kodiFile.get(),
+                    episode.season(), episode.episode());
+            if (kodiEpisodeId.isPresent()) {
+                kodiClient.removeEpisode(target.endpoint(), kodiEpisodeId.get());
+                removedCount++;
+            }
+        }
+        if (removedCount == 0) {
+            return notInKodi(showTitle);
+        }
+        return new Outcome(KodiSyncOutcome.REMOVED, LocalizedText.of("kodi.sync.episodesRemoved")
+                .with("title", showTitle).with("count", removedCount));
     }
 
     private Outcome scanUnknown(KodiTarget target, String title, String kodiDirectory, Duration maxWait) {
@@ -351,6 +413,14 @@ public class KodiSyncService {
 
     private static Outcome notMapped(String path) {
         return new Outcome(KodiSyncOutcome.NOT_MAPPED, LocalizedText.of("kodi.sync.notMapped").with("path", path));
+    }
+
+    private static Outcome removed(String title) {
+        return new Outcome(KodiSyncOutcome.REMOVED, LocalizedText.of("kodi.sync.removed").with("title", title));
+    }
+
+    private static Outcome notInKodi(String title) {
+        return new Outcome(KodiSyncOutcome.NOT_IN_KODI, LocalizedText.of("kodi.sync.notInKodi").with("title", title));
     }
 
     private static Outcome refreshed(String title) {

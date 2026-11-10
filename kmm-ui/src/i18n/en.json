@@ -1462,7 +1462,10 @@
         "setNotInKodi": "The movie set “{name}” is not yet known to Kodi.",
         "setUpdated": "Movie set “{name}” updated.",
         "scanSource": "{kind, select, tvShow {Kodi is looking for new TV shows and episodes in {directory}.} other {Kodi is looking for new movies in {directory}.}}",
-        "notMapped": "No path mapping for {path}."
+        "notMapped": "No path mapping for {path}.",
+        "removed": "“{title}” removed from Kodi.",
+        "notInKodi": "Kodi does not know “{title}”; nothing to remove.",
+        "episodesRemoved": "{count, plural, one {# episode} other {# episodes}} of “{title}” removed from Kodi."
       },
       "playback": {
         "jobTitle": "Watched status of “{source}” from Kodi",

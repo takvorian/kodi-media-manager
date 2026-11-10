@@ -49,6 +49,7 @@ export type KodiSyncOutcome =
   | 'REFRESHED'
   | 'SCAN_STARTED'
   | 'UPDATED'
+  | 'REMOVED'
   | 'NOT_IN_KODI'
   | 'NOT_MAPPED'
   | 'NO_KODI_SOURCE'

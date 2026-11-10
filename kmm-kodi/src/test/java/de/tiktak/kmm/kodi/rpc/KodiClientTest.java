@@ -262,6 +262,19 @@ class KodiClientTest {
     }
 
     @Test
+    void removesMoviesTvShowsAndEpisodesFromTheLibrary() {
+        client.removeMovie(kodi.endpoint(), 8);
+        client.removeTvShow(kodi.endpoint(), 7);
+        client.removeEpisode(kodi.endpoint(), 12);
+
+        assertThat(kodi.calls()).extracting(call -> call.method()).containsExactly("VideoLibrary.RemoveMovie",
+                "VideoLibrary.RemoveTVShow", "VideoLibrary.RemoveEpisode");
+        assertThat(kodi.calls().get(0).params()).isEqualTo(json("{\"movieid\": 8}"));
+        assertThat(kodi.calls().get(1).params()).isEqualTo(json("{\"tvshowid\": 7}"));
+        assertThat(kodi.calls().get(2).params()).isEqualTo(json("{\"episodeid\": 12}"));
+    }
+
+    @Test
     void refreshesTvShowsWithoutEpisodesAndSingleEpisodes() {
         client.refreshTvShow(kodi.endpoint(), 7);
         client.refreshEpisode(kodi.endpoint(), 12);
