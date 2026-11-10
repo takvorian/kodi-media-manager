@@ -1,5 +1,13 @@
 # Changelog
 
+## v0.16 - 2026-11-10
+- Find folders emptied by the files of several movies (32f707a)
+- Describe removing in the manual (9c46ff9)
+- Offer removing in the user interface (7bc94ad)
+- Remove episodes, seasons, TV shows and movies (5a51c6b)
+- Add file logic for removing movies, TV shows and episodes (ddc664d)
+- Remove movies, TV shows and episodes from Kodi (140b886)
+
 ## v0.15 - 2026-11-06
 - Make the last scan time test independent of the system locale (ca79b3d)
 - Expect the British spelling in the movie scan progress test (f7c1dc2)
