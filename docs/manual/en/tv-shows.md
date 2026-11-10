@@ -28,7 +28,7 @@ If you have added episodes to the folder of a TV show or deleted some, you do no
 
 After that, things go on as after [scanning a source](sources.md): the technical details of new episodes are read, the TV show is renamed if that is enabled, and Kodi devices with [real-time sync](kodi.md#real-time-sync) look through the folder of the TV show or season.
 
-If the folder cannot be reached or no longer contains any video files, KMM reports this and removes nothing. You remove a TV show that no longer exists with [Removing](#removing).
+If the folder cannot be reached or no longer contains any video files, KMM reports this and removes nothing. You remove a TV show that no longer exists with [Removing](tv-shows.md#removing).
 
 ## Scraping a TV show
 

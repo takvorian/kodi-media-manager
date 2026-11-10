@@ -28,7 +28,7 @@ Hast du neue Episoden in den Ordner einer Serie gelegt oder welche gelöscht, mu
 
 Danach geht es weiter wie nach dem [Scan einer Quelle](sources.md): Die technischen Angaben neuer Episoden werden ausgelesen, die Serie wird bei Bedarf umbenannt, und Kodi-Geräte mit [Echtzeit-Sync](kodi.md#echtzeit-sync) durchsuchen den Ordner der Serie oder Staffel.
 
-Ist der Ordner nicht erreichbar oder enthält er keine Videodateien mehr, meldet KMM das und entfernt nichts. Eine Serie, die es nicht mehr gibt, entfernst du über [Entfernen](#entfernen).
+Ist der Ordner nicht erreichbar oder enthält er keine Videodateien mehr, meldet KMM das und entfernt nichts. Eine Serie, die es nicht mehr gibt, entfernst du über [Entfernen](tv-shows.md#entfernen).
 
 ## Eine Serie scrapen
 
