@@ -308,7 +308,7 @@ describe('TvShowDetail', () => {
       fixture.detectChanges();
       await fixture.whenStable();
 
-      expect(element().querySelector('.kodi-progress')?.textContent).toContain(
+      expect(element().querySelector('.detail-status .kodi-progress')?.textContent).toContain(
         '„ALF“ in Kodi aktualisieren … (1/3)',
       );
       kodiButtons().forEach((button) => expect(button.disabled).toBe(true));
@@ -332,6 +332,8 @@ describe('TvShowDetail', () => {
 
       expect(snackBarMessages).toEqual(['Wohnzimmer: „ALF“ und 3 Episoden aktualisiert.']);
       expect(element().querySelector('.kodi-progress')).toBeNull();
+      expect(element().querySelector('.detail-status')).toBeNull();
+      expect(element().querySelector('.detail-header .kodi-refresh-button')).not.toBeNull();
       kodiButtons().forEach((button) => expect(button.disabled).toBe(false));
     });
 

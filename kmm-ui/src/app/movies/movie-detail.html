@@ -1,84 +1,86 @@
-<a matButton routerLink="/movies" class="back-link">{{ 'movies.detail.backToList' | transloco }}</a>
-
 @if (movie.error()) {
+  <a matButton routerLink="/movies" class="back-link">{{
+    'movies.detail.backToList' | transloco
+  }}</a>
   <p class="error">{{ 'movies.detail.loadError' | transloco }}</p>
 } @else if (movie.hasValue()) {
   @let details = movie.value();
-  <div class="title-row">
-    <h2 class="page-title">{{ details.metadata.title }}</h2>
-    <div class="title-actions">
-      <button
-        matButton
-        type="button"
-        class="kodi-refresh-button"
-        [disabled]="refreshingKodi()"
-        (click)="refreshInKodi()"
-      >
-        {{ 'movies.actions.refreshInKodi' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="kodi-playback-button"
-        [disabled]="importingPlayback()"
-        (click)="importPlayback()"
-      >
-        {{ 'movies.detail.importPlayback' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="stream-details-button"
-        [disabled]="probingStreams()"
-        (click)="probeStreams()"
-      >
-        {{ 'movies.detail.probeStreams' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="rename-button"
-        [disabled]="renaming()"
-        (click)="renameMovie()"
-      >
-        {{ 'common.rename' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="remove-button"
-        [disabled]="removing()"
-        (click)="remove(details)"
-      >
-        {{ 'removal.button.movie' | transloco }}
-      </button>
-      <button
-        matButton="tonal"
-        type="button"
-        class="scrape-button"
-        [disabled]="!!scrapeJob()"
-        (click)="scrape()"
-      >
-        {{ 'movies.actions.scrape' | transloco }}
-      </button>
-      <button
-        matButton="tonal"
-        type="button"
-        class="online-search-button"
-        [disabled]="!!scrapeJob()"
-        (click)="toggleOnlineSearch()"
-      >
-        {{
-          (searchingOnline() ? 'movies.detail.closeSearch' : 'movies.detail.searchOnline')
-            | transloco
-        }}
-      </button>
+  <header class="detail-header">
+    <a matButton routerLink="/movies" class="back-link">{{
+      'movies.detail.backToList' | transloco
+    }}</a>
+    <div class="title-row">
+      <h2 class="page-title">{{ details.metadata.title }}</h2>
+      <div class="title-actions">
+        <button
+          matButton
+          type="button"
+          class="kodi-refresh-button"
+          [disabled]="refreshingKodi()"
+          (click)="refreshInKodi()"
+        >
+          {{ 'movies.actions.refreshInKodi' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="kodi-playback-button"
+          [disabled]="importingPlayback()"
+          (click)="importPlayback()"
+        >
+          {{ 'movies.detail.importPlayback' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="stream-details-button"
+          [disabled]="probingStreams()"
+          (click)="probeStreams()"
+        >
+          {{ 'movies.detail.probeStreams' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="rename-button"
+          [disabled]="renaming()"
+          (click)="renameMovie()"
+        >
+          {{ 'common.rename' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="remove-button"
+          [disabled]="removing()"
+          (click)="remove(details)"
+        >
+          {{ 'removal.button.movie' | transloco }}
+        </button>
+        <button
+          matButton="tonal"
+          type="button"
+          class="scrape-button"
+          [disabled]="!!scrapeJob()"
+          (click)="scrape()"
+        >
+          {{ 'movies.actions.scrape' | transloco }}
+        </button>
+        <button
+          matButton="tonal"
+          type="button"
+          class="online-search-button"
+          [disabled]="!!scrapeJob()"
+          (click)="toggleOnlineSearch()"
+        >
+          {{
+            (searchingOnline() ? 'movies.detail.closeSearch' : 'movies.detail.searchOnline')
+              | transloco
+          }}
+        </button>
+      </div>
     </div>
-  </div>
-
-  @if (scrapeJob(); as running) {
-    <app-scrape-progress [job]="running" />
-  }
+  </header>
 
   @if (scrapeReport(); as report) {
     <app-scrape-report [job]="report" (closed)="scrapeReport.set(null)" />
@@ -132,9 +134,6 @@
         [disabled]="!!scrapeJob() || !!languageJob()"
         (chosen)="changeLanguage($event)"
       />
-      @if (languageJob()) {
-        <p class="hint language-running">{{ 'movies.language.running' | transloco }}</p>
-      }
     </mat-card-content>
   </mat-card>
 
@@ -331,6 +330,20 @@
       </button>
     </div>
   </form>
+
+  @if (scrapeJob() || languageJob()) {
+    <footer class="detail-status">
+      @if (languageJob()) {
+        <p class="hint language-running">{{ 'movies.language.running' | transloco }}</p>
+      }
+      @if (scrapeJob(); as running) {
+        <app-scrape-progress [job]="running" />
+      }
+    </footer>
+  }
 } @else {
+  <a matButton routerLink="/movies" class="back-link">{{
+    'movies.detail.backToList' | transloco
+  }}</a>
   <p class="loading">{{ 'movies.detail.loading' | transloco }}</p>
 }

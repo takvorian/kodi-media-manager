@@ -413,6 +413,11 @@
       "notRenamed": "“{title}” not renamed: {message}"
     },
     "episode": {
+      "status": {
+        "kodi": "Refreshing in Kodi …",
+        "playback": "Fetching the watched status from Kodi …",
+        "streams": "Reading the technical details …"
+      },
       "loadError": "The episode could not be loaded.",
       "importPlayback": "Watched status from Kodi",
       "noNfo": "No NFO yet – it is created on saving:",

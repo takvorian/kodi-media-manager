@@ -413,6 +413,11 @@
       "notRenamed": "„{title}“ nicht umbenannt: {message}"
     },
     "episode": {
+      "status": {
+        "kodi": "Kodi wird aktualisiert …",
+        "playback": "Gesehen-Status wird aus Kodi geholt …",
+        "streams": "Technische Angaben werden ausgelesen …"
+      },
       "loadError": "Die Episode konnte nicht geladen werden.",
       "importPlayback": "Gesehen-Status aus Kodi",
       "noNfo": "Noch keine NFO – wird beim Speichern angelegt:",

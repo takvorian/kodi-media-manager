@@ -789,7 +789,7 @@ describe('MovieDetail', () => {
       change.flush(running);
       events.emit(running);
       fixture.detectChanges();
-      expect(element().querySelector('.language-running')).not.toBeNull();
+      expect(element().querySelector('.detail-status .language-running')).not.toBeNull();
       expect(languageSelect().disabled()).toBe(true);
 
       events.emit(

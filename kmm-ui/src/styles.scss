@@ -27,3 +27,33 @@ body {
   font: var(--mat-sys-headline-small);
   margin: 0 0 16px;
 }
+
+/* Detail pages: title and actions stay at the top, the progress of running work at the bottom, while the content
+   scrolls in between. The negative margins span the padding of the main content area. */
+.detail-header {
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  margin: -24px -24px 16px;
+  padding: 4px 24px 8px;
+  background-color: var(--mat-sys-surface);
+  border-bottom: 1px solid var(--mat-sys-outline-variant);
+
+  .page-title {
+    margin-bottom: 0;
+  }
+}
+
+.detail-status {
+  position: sticky;
+  bottom: 0;
+  z-index: 3;
+  margin: 24px -24px -24px;
+  padding: 8px 24px;
+  background-color: var(--mat-sys-surface-container);
+  border-top: 1px solid var(--mat-sys-outline-variant);
+
+  p {
+    margin: 4px 0;
+  }
+}

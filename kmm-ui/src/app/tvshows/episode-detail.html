@@ -3,52 +3,54 @@
   <p class="error">{{ 'tvshows.episode.loadError' | transloco }}</p>
 } @else if (episode.hasValue()) {
   @let details = episode.value();
-  <a matButton [routerLink]="['/tvshows', details.tvShowId]" class="back-link"
-    >← {{ details.showTitle }}</a
-  >
-  <div class="title-row">
-    <h2 class="page-title">
-      <span class="code">{{ code(details) }}</span> {{ details.metadata.title }}
-    </h2>
-    <div class="title-actions">
-      <button
-        matButton
-        type="button"
-        class="kodi-refresh-button"
-        [disabled]="refreshingKodi()"
-        (click)="refreshInKodi()"
-      >
-        {{ 'tvshows.refreshInKodi' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="kodi-playback-button"
-        [disabled]="importingPlayback()"
-        (click)="importPlayback()"
-      >
-        {{ 'tvshows.episode.importPlayback' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="stream-details-button"
-        [disabled]="probingStreams()"
-        (click)="probeStreams()"
-      >
-        {{ 'tvshows.probeStreams' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="remove-button"
-        [disabled]="removing()"
-        (click)="remove(details)"
-      >
-        {{ 'removal.button.episode' | transloco }}
-      </button>
+  <header class="detail-header">
+    <a matButton [routerLink]="['/tvshows', details.tvShowId]" class="back-link"
+      >← {{ details.showTitle }}</a
+    >
+    <div class="title-row">
+      <h2 class="page-title">
+        <span class="code">{{ code(details) }}</span> {{ details.metadata.title }}
+      </h2>
+      <div class="title-actions">
+        <button
+          matButton
+          type="button"
+          class="kodi-refresh-button"
+          [disabled]="refreshingKodi()"
+          (click)="refreshInKodi()"
+        >
+          {{ 'tvshows.refreshInKodi' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="kodi-playback-button"
+          [disabled]="importingPlayback()"
+          (click)="importPlayback()"
+        >
+          {{ 'tvshows.episode.importPlayback' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="stream-details-button"
+          [disabled]="probingStreams()"
+          (click)="probeStreams()"
+        >
+          {{ 'tvshows.probeStreams' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="remove-button"
+          [disabled]="removing()"
+          (click)="remove(details)"
+        >
+          {{ 'removal.button.episode' | transloco }}
+        </button>
+      </div>
     </div>
-  </div>
+  </header>
 
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>
@@ -215,6 +217,20 @@
       </button>
     </div>
   </form>
+
+  @if (refreshingKodi() || importingPlayback() || probingStreams()) {
+    <footer class="detail-status">
+      @if (refreshingKodi()) {
+        <p class="hint kodi-running">{{ 'tvshows.episode.status.kodi' | transloco }}</p>
+      }
+      @if (importingPlayback()) {
+        <p class="hint playback-running">{{ 'tvshows.episode.status.playback' | transloco }}</p>
+      }
+      @if (probingStreams()) {
+        <p class="hint streams-running">{{ 'tvshows.episode.status.streams' | transloco }}</p>
+      }
+    </footer>
+  }
 } @else {
   <p class="loading">{{ 'tvshows.episode.loading' | transloco }}</p>
 }

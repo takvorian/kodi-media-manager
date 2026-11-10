@@ -1,3 +1,7 @@
+:host {
+  display: block;
+}
+
 .back-link {
   margin-bottom: 8px;
 }
@@ -101,6 +105,7 @@
 
 .title-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
 }
 

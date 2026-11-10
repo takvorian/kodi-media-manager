@@ -139,7 +139,13 @@ describe('EpisodeDetail', () => {
     await load(gestatten);
 
     element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
+    fixture.detectChanges();
+    expect(element().querySelector('.detail-status .kodi-running')?.textContent).toContain(
+      'Kodi wird aktualisiert',
+    );
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/refresh' }).flush([]);
+    fixture.detectChanges();
+    expect(element().querySelector('.detail-status')).toBeNull();
     element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/episodes/12/refresh' })

@@ -1,85 +1,74 @@
-<a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
-
 @if (show.error()) {
+  <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
   <p class="error">{{ 'tvshows.detail.loadError' | transloco }}</p>
 } @else if (show.hasValue()) {
   @let details = show.value();
-  <div class="title-row">
-    <h2 class="page-title">{{ details.metadata.title }}</h2>
-    <div class="title-actions">
-      <button
-        matButton
-        type="button"
-        class="kodi-refresh-button"
-        [disabled]="!!kodiJob()"
-        (click)="refreshInKodi()"
-      >
-        {{ 'tvshows.refreshInKodi' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="kodi-scan-button"
-        [disabled]="!!kodiJob()"
-        (click)="scanInKodi()"
-      >
-        {{ 'tvshows.scanInKodi' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="rename-button"
-        [disabled]="renaming()"
-        (click)="renameShow()"
-      >
-        {{ 'common.rename' | transloco }}
-      </button>
-      <button
-        matButton
-        type="button"
-        class="remove-show-button"
-        [disabled]="removing() || !!scrapeJob()"
-        (click)="removeShow()"
-      >
-        {{ 'removal.button.tvShow' | transloco }}
-      </button>
-      <button
-        matButton="tonal"
-        type="button"
-        class="scrape-button"
-        [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
-        (click)="scrape()"
-      >
-        {{ 'tvshows.scrape' | transloco }}
-      </button>
-      <button
-        matButton="tonal"
-        type="button"
-        class="online-search-button"
-        [disabled]="!!scrapeJob()"
-        (click)="toggleOnlineSearch()"
-      >
-        {{
-          searchingOnline()
-            ? ('tvshows.detail.closeSearch' | transloco)
-            : ('tvshows.detail.onlineSearch' | transloco)
-        }}
-      </button>
+  <header class="detail-header">
+    <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
+    <div class="title-row">
+      <h2 class="page-title">{{ details.metadata.title }}</h2>
+      <div class="title-actions">
+        <button
+          matButton
+          type="button"
+          class="kodi-refresh-button"
+          [disabled]="!!kodiJob()"
+          (click)="refreshInKodi()"
+        >
+          {{ 'tvshows.refreshInKodi' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="kodi-scan-button"
+          [disabled]="!!kodiJob()"
+          (click)="scanInKodi()"
+        >
+          {{ 'tvshows.scanInKodi' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="rename-button"
+          [disabled]="renaming()"
+          (click)="renameShow()"
+        >
+          {{ 'common.rename' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="remove-show-button"
+          [disabled]="removing() || !!scrapeJob()"
+          (click)="removeShow()"
+        >
+          {{ 'removal.button.tvShow' | transloco }}
+        </button>
+        <button
+          matButton="tonal"
+          type="button"
+          class="scrape-button"
+          [disabled]="!!scrapeJob() || !!seasonStreamsJob()"
+          (click)="scrape()"
+        >
+          {{ 'tvshows.scrape' | transloco }}
+        </button>
+        <button
+          matButton="tonal"
+          type="button"
+          class="online-search-button"
+          [disabled]="!!scrapeJob()"
+          (click)="toggleOnlineSearch()"
+        >
+          {{
+            searchingOnline()
+              ? ('tvshows.detail.closeSearch' | transloco)
+              : ('tvshows.detail.onlineSearch' | transloco)
+          }}
+        </button>
+      </div>
     </div>
-  </div>
-
-  @if (kodiJob(); as job) {
-    <p class="hint kodi-progress">
-      {{
-        'tvshows.detail.kodiProgress'
-          | transloco: { title: (job.title | localized), done: job.done, total: job.total }
-      }}
-    </p>
-  }
-
-  @if (scrapeJob(); as running) {
-    <app-scrape-progress [job]="running" />
-  }
+  </header>
 
   @if (scrapeReport(); as report) {
     <app-scrape-report [job]="report" (closed)="scrapeReport.set(null)" />
@@ -128,9 +117,6 @@
         [disabled]="!!scrapeJob() || !!languageJob()"
         (chosen)="changeLanguage($event)"
       />
-      @if (languageJob()) {
-        <p class="hint language-running">{{ 'tvshows.detail.languageRunning' | transloco }}</p>
-      }
     </mat-card-content>
   </mat-card>
 
@@ -176,14 +162,6 @@
     <mat-card-content>
       @if (seasons().length === 0) {
         <p class="hint empty-seasons">{{ 'tvshows.detail.noEpisodes' | transloco }}</p>
-      }
-      @if (seasonStreamsJob(); as job) {
-        <p class="hint season-streams-progress">
-          {{
-            'tvshows.detail.seasonStreamsProgress'
-              | transloco: { title: (job.title | localized), done: job.done, total: job.total }
-          }}
-        </p>
       }
       <mat-accordion multi>
         @for (group of seasons(); track scrapeRuns() + ':' + group.season.number) {
@@ -471,6 +449,34 @@
       }}</a>
     </p>
   }
+
+  @if (kodiJob() || scrapeJob() || seasonStreamsJob() || languageJob()) {
+    <footer class="detail-status">
+      @if (languageJob()) {
+        <p class="hint language-running">{{ 'tvshows.detail.languageRunning' | transloco }}</p>
+      }
+      @if (kodiJob(); as job) {
+        <p class="hint kodi-progress">
+          {{
+            'tvshows.detail.kodiProgress'
+              | transloco: { title: (job.title | localized), done: job.done, total: job.total }
+          }}
+        </p>
+      }
+      @if (seasonStreamsJob(); as job) {
+        <p class="hint season-streams-progress">
+          {{
+            'tvshows.detail.seasonStreamsProgress'
+              | transloco: { title: (job.title | localized), done: job.done, total: job.total }
+          }}
+        </p>
+      }
+      @if (scrapeJob(); as running) {
+        <app-scrape-progress [job]="running" />
+      }
+    </footer>
+  }
 } @else {
+  <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
   <p class="loading">{{ 'tvshows.detail.loading' | transloco }}</p>
 }
