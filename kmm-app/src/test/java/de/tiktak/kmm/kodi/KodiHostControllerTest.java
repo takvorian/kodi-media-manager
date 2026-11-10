@@ -33,7 +33,7 @@ import de.tiktak.kmm.security.WebSecurityTestConfiguration;
 class KodiHostControllerTest {
 
     private static final KodiHostResponse HOST = new KodiHostResponse(3, "Wohnzimmer", "kodi.local", 8080, "kodi",
-            true, true, List.of(new KodiHostCommand.PathMapping("/media/filme", "smb://nas/filme/")), null);
+            true, true, true, List.of(new KodiHostCommand.PathMapping("/media/filme", "smb://nas/filme/")), null);
     private static final String VALID_HOST = """
             {"name": "Wohnzimmer", "address": "kodi.local", "port": 8080, "username": "kodi", "password": null,
              "realtimeSync": true, "pathMappings": [{"localPath": "/media/filme", "kodiPath": "smb://nas/filme/"}]}
@@ -89,6 +89,16 @@ class KodiHostControllerTest {
                 .contentType(MediaType.APPLICATION_JSON).content(body))
                 .hasStatus(400);
         verifyNoInteractions(hostService);
+    }
+
+    @Test
+    void switchesAHostOnAndOff() {
+        when(hostService.switchTo(3, false)).thenReturn(HOST);
+
+        assertThat(mockMvc.put().uri(KodiHostController.BASE_PATH + "/3/enabled").with(csrf())
+                .contentType(MediaType.APPLICATION_JSON).content("{\"enabled\": false}"))
+                .hasStatusOk();
+        verify(hostService).switchTo(3, false);
     }
 
     @Test

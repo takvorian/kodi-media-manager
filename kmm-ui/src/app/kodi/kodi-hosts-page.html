@@ -6,15 +6,24 @@
   <p class="error">{{ 'kodi.loadError' | transloco }}</p>
 } @else if (hosts.hasValue()) {
   @for (host of hosts.value(); track host.id) {
-    <mat-card appearance="outlined" class="host">
+    <mat-card appearance="outlined" class="host" [class.switched-off]="!host.enabled">
       <mat-card-header>
         <mat-card-title class="host-name">{{ host.name }}</mat-card-title>
         <mat-card-subtitle class="host-address">
           {{ host.address }}:{{ host.port
           }}{{ host.username ? ' · ' + ('kodi.user' | transloco: { name: host.username }) : '' }}
         </mat-card-subtitle>
+        <mat-slide-toggle
+          class="enabled-toggle"
+          [checked]="host.enabled"
+          (change)="setEnabled(host, $event)"
+          >{{ 'kodi.enabled' | transloco }}</mat-slide-toggle
+        >
       </mat-card-header>
       <mat-card-content>
+        @if (!host.enabled) {
+          <p class="switched-off-hint">{{ 'kodi.switchedOffHint' | transloco }}</p>
+        }
         <p class="realtime">
           {{ (host.realtimeSync ? 'kodi.realtimeOn' : 'kodi.realtimeOff') | transloco }}
         </p>

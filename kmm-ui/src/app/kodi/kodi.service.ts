@@ -34,6 +34,11 @@ export class KodiService {
     return this.http.delete<void>(`${KODI_HOSTS_URL}/${hostId}`);
   }
 
+  /** Switches the device on or off; KMM leaves a switched-off device out of every sync. */
+  setEnabled(hostId: number, enabled: boolean): Observable<KodiHost> {
+    return this.http.put<KodiHost>(`${KODI_HOSTS_URL}/${hostId}/enabled`, { enabled });
+  }
+
   testConnection(hostId: number): Observable<KodiConnectionTest> {
     return this.http.post<KodiConnectionTest>(`${KODI_HOSTS_URL}/${hostId}/test`, null);
   }

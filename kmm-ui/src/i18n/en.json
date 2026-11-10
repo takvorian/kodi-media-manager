@@ -570,6 +570,8 @@
     "user": "User {name}",
     "realtimeOn": "Real-time sync: Kodi is updated after every change.",
     "realtimeOff": "No real-time sync.",
+    "enabled": "Switched on",
+    "switchedOffHint": "Switched off: KMM does not contact this device, not even for manual updates. Its settings are kept.",
     "noMappings": "Without a path mapping KMM cannot update any movies in Kodi.",
     "lastSync": "Last sync",
     "connected": "Connected to {version}",
@@ -1480,7 +1482,7 @@
       },
       "noHosts": {
         "title": "No Kodi device",
-        "detail": "No Kodi device is set up."
+        "detail": "No Kodi device is set up and switched on."
       },
       "unavailable": {
         "title": "Kodi cannot be reached"

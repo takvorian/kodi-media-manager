@@ -52,6 +52,18 @@
   font: var(--mat-sys-title-small);
 }
 
+.enabled-toggle {
+  margin-left: auto;
+}
+
+.switched-off mat-card-content {
+  opacity: 0.6;
+}
+
+.switched-off-hint {
+  font-weight: 500;
+}
+
 .add-row {
   display: flex;
   justify-content: flex-end;

@@ -51,6 +51,10 @@ class KodiHost {
     @Column(name = "realtime_sync", nullable = false)
     private boolean realtimeSync;
 
+    /** A switched-off device keeps its settings, but KMM does not contact it for syncs. */
+    @Column(nullable = false)
+    private boolean enabled = true;
+
     @Getter(AccessLevel.NONE)
     @ElementCollection
     @CollectionTable(name = "kodi_host_path_mapping", joinColumns = @JoinColumn(name = "kodi_host_id"))
@@ -77,6 +81,10 @@ class KodiHost {
         this.realtimeSync = settings.realtimeSync();
         this.pathMappings.clear();
         settings.pathMappings().stream().map(KodiHostPathMapping::of).forEach(pathMappings::add);
+    }
+
+    void switchTo(boolean enabled) {
+        this.enabled = enabled;
     }
 
     boolean hasPassword() {

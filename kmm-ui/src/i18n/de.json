@@ -570,6 +570,8 @@
     "user": "Benutzer {name}",
     "realtimeOn": "Echtzeit-Sync: Kodi wird nach jeder Änderung aktualisiert.",
     "realtimeOff": "Kein Echtzeit-Sync.",
+    "enabled": "Eingeschaltet",
+    "switchedOffHint": "Ausgeschaltet: KMM spricht dieses Gerät nicht an, auch nicht beim Aktualisieren von Hand. Die Einstellungen bleiben erhalten.",
     "noMappings": "Ohne Pfad-Zuordnung kann KMM keine Filme in Kodi aktualisieren.",
     "lastSync": "Letzter Abgleich",
     "connected": "Verbunden mit {version}",
@@ -1480,7 +1482,7 @@
       },
       "noHosts": {
         "title": "Kein Kodi-Gerät",
-        "detail": "Es ist kein Kodi-Gerät eingerichtet."
+        "detail": "Es ist kein Kodi-Gerät eingerichtet und eingeschaltet."
       },
       "unavailable": {
         "title": "Kodi nicht erreichbar"

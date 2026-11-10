@@ -23,6 +23,7 @@ describe('KodiHostsPage', () => {
     username: 'kodi',
     passwordSet: true,
     realtimeSync: true,
+    enabled: true,
     pathMappings: [{ localPath: '/media/filme', kodiPath: 'smb://nas/filme/' }],
     lastSync: {
       hostId: 3,
@@ -316,6 +317,41 @@ describe('KodiHostsPage', () => {
     await answerReload([]);
 
     expect(snackBarMessages).toEqual(['Kodi-Gerät „Wohnzimmer“ entfernt.']);
+  });
+
+  it('switches a host off and back on', async () => {
+    await loadHosts([livingRoom]);
+    expect(element().querySelectorAll('.switched-off-hint')).toHaveLength(0);
+
+    buttons('.enabled-toggle button')[0].click();
+    const switchOff = httpTesting.expectOne({ method: 'PUT', url: `${KODI_HOSTS_URL}/3/enabled` });
+    expect(switchOff.request.body).toEqual({ enabled: false });
+    switchOff.flush({ ...livingRoom, enabled: false });
+    await answerReload([{ ...livingRoom, enabled: false }]);
+
+    expect(element().querySelectorAll('.host.switched-off')).toHaveLength(1);
+    expect(texts('.switched-off-hint')[0]).toMatch(/^Ausgeschaltet: KMM spricht/);
+
+    buttons('.enabled-toggle button')[0].click();
+    const switchOn = httpTesting.expectOne({ method: 'PUT', url: `${KODI_HOSTS_URL}/3/enabled` });
+    expect(switchOn.request.body).toEqual({ enabled: true });
+    switchOn.flush(livingRoom);
+    await answerReload([livingRoom]);
+
+    expect(element().querySelectorAll('.switched-off-hint')).toHaveLength(0);
+  });
+
+  it('reports a failed switch and shows the stored state again', async () => {
+    await loadHosts([livingRoom]);
+
+    buttons('.enabled-toggle button')[0].click();
+    httpTesting
+      .expectOne({ method: 'PUT', url: `${KODI_HOSTS_URL}/3/enabled` })
+      .flush({ detail: 'nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+    await fixture.whenStable();
+
+    expect(snackBarMessages).toEqual(['nicht gefunden']);
+    expect(buttons('.enabled-toggle button')[0].getAttribute('aria-checked')).toBe('true');
   });
 
   it('reports a failed deletion', async () => {

@@ -55,6 +55,7 @@ class KodiHostServiceTest {
             assertThat(host.username()).isEqualTo("kodi");
             assertThat(host.passwordSet()).isTrue();
             assertThat(host.realtimeSync()).isTrue();
+            assertThat(host.enabled()).isTrue();
             assertThat(host.pathMappings()).containsExactly(new KodiHostCommand.PathMapping("/media/filme", "smb://nas/filme/"));
         });
         assertThat(repository.findById(created.id()).orElseThrow().endpoint())
@@ -105,6 +106,30 @@ class KodiHostServiceTest {
     }
 
     @Test
+    void leavesSwitchedOffHostsOutOfSyncs() {
+        service.create(settings("Wohnzimmer", null, null, List.of()));
+        long off = service.create(settings("Ferienhaus", null, null, List.of())).id();
+
+        assertThat(service.switchTo(off, false).enabled()).isFalse();
+
+        assertThat(service.targets()).extracting(KodiTarget::name).containsExactly("Wohnzimmer");
+        assertThat(service.findAll()).extracting(KodiHostResponse::name).containsExactly("Ferienhaus", "Wohnzimmer");
+        assertThat(service.switchTo(off, true).enabled()).isTrue();
+        assertThat(service.targets()).hasSize(2);
+    }
+
+    @Test
+    void keepsTheSwitchWhenTheSettingsChange() {
+        long id = service.create(settings("Ferienhaus", null, null, List.of())).id();
+        service.switchTo(id, false);
+
+        service.update(id, settings("Ferienhaus", null, null, List.of(FILME)));
+        service.importHost(settings("ferienhaus", null, null, List.of()));
+
+        assertThat(service.findAll()).singleElement().satisfies(host -> assertThat(host.enabled()).isFalse());
+    }
+
+    @Test
     void deletesAHost() {
         long id = service.create(settings("Wohnzimmer", null, null, List.of(FILME))).id();
 
@@ -121,6 +146,7 @@ class KodiHostServiceTest {
         assertThatThrownBy(() -> service.update(42, settings("x", null, null, List.of())))
                 .isInstanceOf(KodiProblemException.class);
         assertThatThrownBy(() -> service.testConnection(42)).isInstanceOf(KodiProblemException.class);
+        assertThatThrownBy(() -> service.switchTo(42, false)).isInstanceOf(KodiProblemException.class);
     }
 
     @Test

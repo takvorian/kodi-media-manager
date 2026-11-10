@@ -6,6 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatSlideToggleChange, MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
@@ -48,6 +49,7 @@ type Editing = KodiHost | 'new' | null;
     MatCheckboxModule,
     MatFormFieldModule,
     MatInputModule,
+    MatSlideToggleModule,
   ],
   templateUrl: './kodi-hosts-page.html',
   styleUrl: './kodi-hosts-page.scss',
@@ -135,6 +137,16 @@ export class KodiHostsPage {
         this.hosts.reload();
       },
       error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
+  protected setEnabled(host: KodiHost, change: MatSlideToggleChange): void {
+    this.kodiService.setEnabled(host.id, change.checked).subscribe({
+      next: () => this.hosts.reload(),
+      error: (error: unknown) => {
+        change.source.checked = !change.checked;
+        this.notify(problemMessage(error));
+      },
     });
   }
 

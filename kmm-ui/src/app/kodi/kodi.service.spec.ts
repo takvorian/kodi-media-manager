@@ -15,7 +15,7 @@ describe('KodiService', () => {
     realtimeSync: true,
     pathMappings: [{ localPath: '/media/filme', kodiPath: 'smb://nas/filme/' }],
   };
-  const host: KodiHost = { ...command, id: 3, passwordSet: false, lastSync: null };
+  const host: KodiHost = { ...command, id: 3, passwordSet: false, enabled: true, lastSync: null };
 
   let service: KodiService;
   let httpTesting: HttpTestingController;
@@ -49,6 +49,14 @@ describe('KodiService', () => {
     created.flush(host);
     httpTesting.expectOne({ method: 'PUT', url: `${KODI_HOSTS_URL}/3` }).flush(host);
     httpTesting.expectOne({ method: 'DELETE', url: `${KODI_HOSTS_URL}/3` }).flush(null);
+  });
+
+  it('switches a host on and off', () => {
+    service.setEnabled(3, false).subscribe();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: `${KODI_HOSTS_URL}/3/enabled` });
+    expect(request.request.body).toEqual({ enabled: false });
+    request.flush({ ...host, enabled: false });
   });
 
   it('refreshes a movie and scans a source on all hosts', () => {

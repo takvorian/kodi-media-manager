@@ -42,6 +42,11 @@ public class KodiHostController {
         return hostService.update(hostId, command.toSettings());
     }
 
+    @PutMapping("/{hostId}/enabled")
+    public KodiHostResponse switchTo(@PathVariable long hostId, @RequestBody EnabledCommand command) {
+        return hostService.switchTo(hostId, command.enabled());
+    }
+
     @DeleteMapping("/{hostId}")
     public ResponseEntity<Void> delete(@PathVariable long hostId) {
         hostService.delete(hostId);
@@ -53,6 +58,10 @@ public class KodiHostController {
     public ConnectionTest test(@PathVariable long hostId) {
         String version = hostService.testConnection(hostId).toString();
         return new ConnectionTest(version, hostService.pathMappingWarning(hostId).orElse(null));
+    }
+
+    /** @param enabled whether KMM contacts the device for syncs */
+    public record EnabledCommand(boolean enabled) {
     }
 
     /** @param warning problem with the path mapping, or {@code null} */

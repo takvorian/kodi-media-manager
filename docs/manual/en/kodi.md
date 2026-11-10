@@ -75,4 +75,6 @@ Only higher play counts, more recent dates and ratings are added; nothing is eve
 
 You can add as many devices as you like. If they share the same Kodi database, one device is enough for the watched status.
 
+If a device is not running at the moment, switch it off with the **Switched on** toggle on its card. KMM then leaves it alone: no real-time sync, no manual refresh or scan and no watched-status import, so you get no "not reachable" messages. Its settings and path mapping are kept, and **Test connection** still works. A new device starts switched on.
+
 Kodi is always contacted without the proxy from the settings.

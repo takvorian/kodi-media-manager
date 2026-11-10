@@ -75,4 +75,6 @@ Es werden nur mehr Wiedergaben, neuere Daten und Bewertungen ergänzt, nie etwas
 
 Du kannst beliebig viele Geräte anlegen. Teilen sie sich dieselbe Kodi-Datenbank, genügt für den Gesehen-Status ein Gerät.
 
+Läuft ein Gerät gerade nicht, schalte es mit dem Schalter **Eingeschaltet** auf seiner Karte aus. KMM spricht es dann nicht mehr an, weder beim Echtzeit-Sync noch beim Aktualisieren oder Scannen von Hand noch beim Holen des Gesehen-Status. So kommt keine Meldung „nicht erreichbar“. Die Einstellungen und die Pfad-Zuordnung bleiben erhalten, und **Verbindung testen** funktioniert weiterhin. Ein neues Gerät ist eingeschaltet.
+
 Kodi wird immer ohne den Proxy aus den Einstellungen angesprochen.

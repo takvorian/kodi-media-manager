@@ -23,6 +23,8 @@ export interface KodiHost {
   readonly username: string | null;
   readonly passwordSet: boolean;
   readonly realtimeSync: boolean;
+  /** A switched-off device is left out of every sync. */
+  readonly enabled: boolean;
   readonly pathMappings: readonly KodiPathMapping[];
   /** Last sync since KMM started. */
   readonly lastSync: KodiSyncResult | null;

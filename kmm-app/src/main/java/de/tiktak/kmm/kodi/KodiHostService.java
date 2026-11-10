@@ -36,9 +36,9 @@ public class KodiHostService {
         return repository.findAll(BY_NAME).stream().map(this::toResponse).toList();
     }
 
-    /** State of all devices for a sync. */
+    /** State of all switched-on devices for a sync. */
     List<KodiTarget> targets() {
-        return repository.findAll(BY_NAME).stream().map(KodiTarget::of).toList();
+        return repository.findAll(BY_NAME).stream().filter(KodiHost::isEnabled).map(KodiTarget::of).toList();
     }
 
     @Transactional
@@ -55,6 +55,15 @@ public class KodiHostService {
         requireUniqueName(settings.name(), hostId);
         host.apply(settings);
         log.info("Kodi host '{}' updated", host.getName());
+        return toResponse(host);
+    }
+
+    /** Switches the device on or off; a switched-off device is left out of every sync. */
+    @Transactional
+    public KodiHostResponse switchTo(long hostId, boolean enabled) {
+        KodiHost host = require(hostId);
+        host.switchTo(enabled);
+        log.info("Kodi host '{}' switched {}", host.getName(), enabled ? "on" : "off");
         return toResponse(host);
     }
 

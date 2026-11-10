@@ -126,7 +126,7 @@ class BackupExportIntegrationTest {
                 .startsWith("attachment; filename=\"kmm-sicherung-").endsWith(".json.gz\"");
         JsonNode backup = read(result);
         assertThat(backup.get(BackupFormat.FORMAT).asInt()).isEqualTo(BackupFormat.VERSION);
-        assertThat(backup.get(BackupFormat.SCHEMA_VERSION).asString()).isEqualTo("21");
+        assertThat(backup.get(BackupFormat.SCHEMA_VERSION).asString()).isEqualTo("22");
         assertThat(backup.get(BackupFormat.COUNTS).get(BackupTables.MOVIE).asInt()).isEqualTo(1);
         JsonNode movie = backup.get(BackupFormat.TABLES).get(BackupTables.MOVIE).get(0);
         assertThat(movie.get("title").asString()).isEqualTo("Heat");
