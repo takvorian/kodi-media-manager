@@ -46,7 +46,7 @@ Mit eingeschaltetem Echtzeit-Sync aktualisiert KMM Kodi nach jeder Änderung sel
 
 Mehrere Änderungen kurz hintereinander lösen nur eine Aktualisierung aus, KMM wartet dafür einige Sekunden. Der letzte Abgleich steht auf der Karte des Geräts.
 
-Aus KMM entfernte Filme bleiben in Kodi, bis dort die Bibliothek bereinigt wird.
+Entfernst du Filme, Serien, Staffeln oder Episoden mit den Knöpfen **Entfernen** (siehe [Filme](movies.md#remove) und [Serien](tv-shows.md#remove)), entfernt KMM sie auch aus Kodi. Einträge, die nur durch einen Scan oder das Entfernen einer Quelle aus KMM verschwinden, bleiben in Kodi, bis dort die Bibliothek bereinigt wird.
 
 ## Von Hand aktualisieren
 

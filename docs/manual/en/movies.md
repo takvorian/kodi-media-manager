@@ -42,6 +42,7 @@ Some fields in detail:
 | **Rename** | Renames only this movie using the patterns from the settings. |
 | **Scrape** | Fills in everything missing, for this movie only, see [Scraping](scraping.md#automatic-scraping). |
 | **Search online** | Searches for the movie at a provider, see [Scraping](scraping.md#online-search). |
+| **Remove** | Removes the movie, see [Removing](movies.md#remove). |
 
 <a id="technical-details"></a>
 
@@ -55,6 +56,24 @@ The **Technical details** card shows codec, resolution, aspect ratio, runtime, H
 - and automatically after scraping and after scanning new files, see [Settings](settings.md#technical-details).
 
 When writing, KMM only replaces this technical part of the NFO; the rest of the file stays unchanged.
+
+<a id="remove"></a>
+
+## Removing
+
+You remove a movie with **Remove** in the movie view, several movies by ticking them in the movie list and clicking **Remove selection**. KMM first shows the affected movies and asks how to remove them:
+
+- **From the library only** (default): the movies disappear from KMM and, with [real-time sync](kodi.md#real-time-sync) turned on, from Kodi. The files stay where they are, and KMM remembers nothing. The next scan of the source adds them again.
+- **Delete the files as well:** KMM also deletes the files for good, without a recycle bin. The confirmation lists every file, and the button then reads **Delete for good**.
+
+What is deleted:
+
+- the movie file, for multi-part movies (`-cd1`, `-part2` …) all parts,
+- everything that carries the name of the movie followed by a dot, hyphen, underscore or space: NFO, artwork, subtitles, trailers,
+- for a movie in a folder of its own also `movie.nfo`; the folder itself goes if nothing is left in it. Otherwise a note says how many other files keep it,
+- for DVD and Blu-ray folders (`VIDEO_TS`, `BDMV`) the whole movie folder.
+
+If several movies share a folder, KMM deletes only the files of the chosen movie. It cleans up empty folders above it up to the source. KMM never deletes the source itself or anything outside it. A file that cannot be deleted is listed in the final message; the other files and the entries are gone nevertheless. A movie set stays, even if it has no movies left.
 
 ## Watched status
 

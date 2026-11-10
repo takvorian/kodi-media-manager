@@ -32,7 +32,7 @@ Then click **Add**.
 | **Watched status** | Fetches play counts and your own ratings from Kodi. |
 | **Technical details** | Reads the details with ffprobe: **Read missing** or **Read all again**. |
 | **Rename** | Opens the preview for [renaming](renaming.md). |
-| **Remove** | Removes the source and all its entries from KMM, after asking you. Your files stay where they are. |
+| **Remove** | Removes the source and all its entries from KMM, after asking you. Your files stay where they are. You remove single movies, TV shows, seasons or episodes in their views, see [Movies](movies.md#remove) and [TV shows](tv-shows.md#remove). |
 
 While a task is running, the row shows the progress and a **Cancel** button.
 

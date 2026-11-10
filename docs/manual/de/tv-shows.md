@@ -53,6 +53,27 @@ Ein Klick auf eine Episode öffnet ihre Ansicht mit Datei, NFO, Standbild, techn
 
 Teilen sich mehrere Episoden eine Datei, schreibt KMM die NFO für alle Episoden dieser Datei.
 
+<a id="remove"></a>
+
+## Entfernen
+
+Episoden, Staffeln und ganze Serien entfernst du mit den Knöpfen **Entfernen** in der Episodenansicht, **Staffel entfernen** in einer aufgeklappten Staffel und **Serie entfernen** oben in der Serienansicht. KMM zeigt vorher, welche Einträge betroffen sind, und fragt, wie entfernt werden soll:
+
+- **Nur aus der Bibliothek** (Vorgabe): Die Einträge verschwinden aus KMM und, mit eingeschaltetem [Echtzeit-Sync](kodi.md#real-time-sync), aus Kodi. Die Dateien bleiben liegen, und KMM merkt sich nichts. Der nächste Scan der Quelle nimmt sie wieder auf.
+- **Auch Dateien löschen:** Zusätzlich löscht KMM die Dateien endgültig, ohne Papierkorb. Die Rückfrage listet jede Datei auf, der Knopf heißt dann **Endgültig löschen**.
+
+Was gelöscht wird:
+
+| Was | Dateien |
+|---|---|
+| Episode | die Videodatei mit allem, was ihren Namen trägt, gefolgt von Punkt, Bindestrich, Unterstrich oder Leerzeichen: NFO, Standbild (`-thumb.jpg`), Untertitel |
+| Staffel | alle Episodendateien der Staffel wie oben und die Staffelbilder im Serienordner (`season01-poster.jpg` usw.) |
+| Serie | der ganze Serienordner mit allem darin. Dateien, die KMM nicht kennt, nennt die Rückfrage eigens. |
+
+**Mehrfachepisoden:** Enthält eine Datei mehrere Episoden (z. B. `S01E02E03`), entfernt KMM immer die ganze Datei mit allen ihren Episoden, auch wenn du nur eine davon gewählt hast. Die Rückfrage nennt alle betroffenen Episoden. Reicht eine solche Datei in eine andere Staffel, gehen deren Episoden mit, und ein Hinweis sagt das.
+
+Ordner, die danach leer sind, entfernt KMM ebenfalls, bei Episoden und Staffeln bis zum Serienordner, bei einer Serie bis zur Quelle. Die Quelle selbst und alles außerhalb von ihr löscht KMM nie. Ist eine Serie die Quelle selbst, geht nur **Nur aus der Bibliothek**. Eine Datei, die sich nicht löschen lässt, steht am Ende in der Meldung; die übrigen Dateien und die Einträge sind dann trotzdem weg.
+
 ## Bilder bei Serien
 
 | Wofür | Bildarten | Dateien |

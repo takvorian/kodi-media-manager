@@ -46,7 +46,7 @@ With real-time sync turned on, KMM updates Kodi by itself after every change:
 
 Several changes in quick succession trigger only one update; KMM waits a few seconds for this. The last sync is shown on the device’s card.
 
-Movies removed from KMM stay in Kodi until the library is cleaned there.
+When you remove movies, TV shows, seasons or episodes with the **Remove** buttons (see [Movies](movies.md#remove) and [TV shows](tv-shows.md#remove)), KMM removes them from Kodi as well. Entries that only disappear from KMM through a scan or by removing a source stay in Kodi until the library is cleaned there.
 
 ## Updating manually
 

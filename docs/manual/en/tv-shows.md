@@ -53,6 +53,27 @@ Clicking an episode opens its view with file, NFO, thumbnail, technical details 
 
 If several episodes share a file, KMM writes the NFO for all episodes of that file.
 
+<a id="remove"></a>
+
+## Removing
+
+You remove episodes, seasons and whole TV shows with the buttons **Remove** in the episode view, **Remove season** in an expanded season and **Remove TV show** at the top of the TV show view. KMM first shows which entries are affected and asks how to remove them:
+
+- **From the library only** (default): the entries disappear from KMM and, with [real-time sync](kodi.md#real-time-sync) turned on, from Kodi. The files stay where they are, and KMM remembers nothing. The next scan of the source adds them again.
+- **Delete the files as well:** KMM also deletes the files for good, without a recycle bin. The confirmation lists every file, and the button then reads **Delete for good**.
+
+What is deleted:
+
+| What | Files |
+|---|---|
+| Episode | the video file with everything that carries its name followed by a dot, hyphen, underscore or space: NFO, thumbnail (`-thumb.jpg`), subtitles |
+| Season | all episode files of the season as above, plus the season artwork in the show folder (`season01-poster.jpg` etc.) |
+| TV show | the whole show folder with everything in it. The confirmation names files that KMM does not know. |
+
+**Multi-episode files:** if a file contains several episodes (e.g. `S01E02E03`), KMM always removes the whole file with all its episodes, even if you chose only one of them. The confirmation names all affected episodes. If such a file reaches into another season, those episodes go as well, and a note says so.
+
+Folders that are empty afterwards are removed too: for episodes and seasons up to the show folder, for a TV show up to the source. KMM never deletes the source itself or anything outside it. If a TV show is the source itself, only **From the library only** is possible. A file that cannot be deleted is listed in the final message; the other files and the entries are gone nevertheless.
+
 ## Artwork for TV shows
 
 | For | Artwork types | Files |

@@ -42,6 +42,7 @@ Einige Felder im Detail:
 | **Umbenennen** | Benennt nur diesen Film nach den Mustern der Einstellungen um. |
 | **Scrapen** | Ergänzt alles Fehlende nur für diesen Film, siehe [Scrapen](scraping.md#automatisches-scrapen). |
 | **Online suchen** | Sucht den Film bei einem Anbieter, siehe [Scrapen](scraping.md#online-suche). |
+| **Entfernen** | Entfernt den Film, siehe [Entfernen](movies.md#remove). |
 
 <a id="technical-details"></a>
 
@@ -55,6 +56,24 @@ Die Karte **Technik** zeigt Codec, Auflösung, Seitenverhältnis, Laufzeit, HDR,
 - und automatisch nach dem Scrapen und nach dem Scan neuer Dateien, siehe [Einstellungen](settings.md#technische-angaben).
 
 Beim Schreiben ersetzt KMM in der NFO nur diesen technischen Teil, der Rest der Datei bleibt unverändert.
+
+<a id="remove"></a>
+
+## Entfernen
+
+Einen Film entfernst du mit **Entfernen** in der Filmansicht, mehrere über die Häkchen in der Filmliste und **Auswahl entfernen**. KMM zeigt vorher die betroffenen Filme und fragt, wie entfernt werden soll:
+
+- **Nur aus der Bibliothek** (Vorgabe): Die Filme verschwinden aus KMM und, mit eingeschaltetem [Echtzeit-Sync](kodi.md#real-time-sync), aus Kodi. Die Dateien bleiben liegen, und KMM merkt sich nichts. Der nächste Scan der Quelle nimmt sie wieder auf.
+- **Auch Dateien löschen:** Zusätzlich löscht KMM die Dateien endgültig, ohne Papierkorb. Die Rückfrage listet jede Datei auf, der Knopf heißt dann **Endgültig löschen**.
+
+Was gelöscht wird:
+
+- die Filmdatei, bei mehrteiligen Filmen (`-cd1`, `-part2` …) alle Teile,
+- alles, was den Namen des Films trägt, gefolgt von Punkt, Bindestrich, Unterstrich oder Leerzeichen: NFO, Bilder, Untertitel, Trailer,
+- bei einem Film im eigenen Ordner auch `movie.nfo`; der Ordner selbst verschwindet, wenn danach nichts mehr darin liegt. Sonst nennt ein Hinweis, wie viele andere Dateien ihn erhalten,
+- bei DVD- und Blu-ray-Ordnern (`VIDEO_TS`, `BDMV`) der ganze Filmordner.
+
+Liegen mehrere Filme in einem Ordner, löscht KMM nur die Dateien des gewählten Films. Leere Ordner darüber räumt es bis zur Quelle auf. Die Quelle selbst und alles außerhalb von ihr löscht KMM nie. Eine Datei, die sich nicht löschen lässt, steht am Ende in der Meldung; die übrigen Dateien und die Einträge sind dann trotzdem weg. Ein Filmset bleibt bestehen, auch wenn es danach keine Filme mehr hat.
 
 ## Gesehen-Status
 

@@ -32,7 +32,7 @@ Klicke dann auf **Hinzufügen**.
 | **Gesehen-Status** | Holt Wiedergaben und eigene Bewertungen aus Kodi. |
 | **Technische Angaben** | Liest mit ffprobe aus: **Fehlende auslesen** oder **Alle neu auslesen**. |
 | **Umbenennen** | Öffnet die Vorschau zum [Umbenennen](renaming.md). |
-| **Entfernen** | Entfernt die Quelle und alle ihre Einträge aus KMM, nach einer Rückfrage. Deine Dateien bleiben liegen. |
+| **Entfernen** | Entfernt die Quelle und alle ihre Einträge aus KMM, nach einer Rückfrage. Deine Dateien bleiben liegen. Einzelne Filme, Serien, Staffeln oder Episoden entfernst du in deren Ansicht, siehe [Filme](movies.md#remove) und [Serien](tv-shows.md#remove). |
 
 Während eine Aufgabe läuft, zeigt die Zeile den Fortschritt und einen Knopf **Abbrechen**.
 
