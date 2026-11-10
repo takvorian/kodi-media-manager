@@ -8,6 +8,11 @@ export const TVSHOW_BATCH_JOB_KEY = 'tvshows-batch';
 /** Job key for scraping a selection; must match AutoScrapeService.TV_SHOWS_JOB_KEY. */
 export const TVSHOWS_SCRAPE_JOB_KEY = 'tvshows-scrape';
 
+/** Job key for scanning the folder of a TV show or season; must match TvShowFolderScanService.JOB_KEY_PREFIX. */
+export function tvShowScanJobKey(showId: number): string {
+  return `tv-scan:${showId}`;
+}
+
 /** Job key for scraping one TV show; must match AutoScrapeService.TV_SHOW_JOB_KEY_PREFIX. */
 export function tvShowScrapeJobKey(showId: number): string {
   return `tvshow-scrape:${showId}`;

@@ -50,6 +50,18 @@ public class TvShowProblemException extends LocalizedProblemException {
                         .with("source", source.getName()), null);
     }
 
+    static TvShowProblemException folderUnreachable(TvShow show) {
+        return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "folderScan",
+                LocalizedText.of("tvShow.folderScan.unreachable").with("title", show.getTitle())
+                        .with("path", show.getDirectoryPath()), null);
+    }
+
+    static TvShowProblemException noVideoFiles(TvShow show) {
+        return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "folderScan",
+                LocalizedText.of("tvShow.folderScan.noVideoFiles").with("title", show.getTitle())
+                        .with("path", show.getDirectoryPath()), null);
+    }
+
     static TvShowProblemException nfoChangedOutside(Path file, NfoException cause) {
         return new TvShowProblemException(HttpStatus.CONFLICT, "nfoChangedOutside",
                 LocalizedText.of("tvShow.nfoChangedOutside.detail").with("file", file)

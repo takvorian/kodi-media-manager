@@ -71,6 +71,21 @@ export class TvShowService {
     return this.http.post<Job>(`${TVSHOWS_URL}/themes/fill`, { showIds });
   }
 
+  /** Reads the folder of the TV show again: new episodes are added, vanished ones removed; runs as a job. */
+  scanShow(showId: number): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/scan`, null);
+  }
+
+  /** Like `scanShow`, limited to the episodes of the season. */
+  scanSeason(showId: number, season: number): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/seasons/${season}/scan`, null);
+  }
+
+  /** Scans the folders of the selected TV shows one after another as one job. */
+  scanShows(showIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/scan`, { showIds });
+  }
+
   autoScrape(showId: number): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/auto-scrape`, null);
   }

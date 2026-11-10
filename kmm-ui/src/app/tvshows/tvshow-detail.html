@@ -11,6 +11,15 @@
         <button
           matButton
           type="button"
+          class="scan-button"
+          [disabled]="!!scanJob()"
+          (click)="scan()"
+        >
+          {{ 'tvshows.scan' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
           class="kodi-refresh-button"
           [disabled]="!!kodiJob()"
           (click)="refreshInKodi()"
@@ -199,6 +208,15 @@
                 (click)="probeSeason(group)"
               >
                 {{ 'tvshows.probeStreams' | transloco }}
+              </button>
+              <button
+                matButton
+                type="button"
+                class="season-scan-button"
+                [disabled]="!!scanJob()"
+                (click)="scanSeason(group)"
+              >
+                {{ 'tvshows.scan' | transloco }}
               </button>
               <button
                 matButton
@@ -450,8 +468,13 @@
     </p>
   }
 
-  @if (kodiJob() || scrapeJob() || seasonStreamsJob() || languageJob()) {
+  @if (scanJob() || kodiJob() || scrapeJob() || seasonStreamsJob() || languageJob()) {
     <footer class="detail-status">
+      @if (scanJob(); as job) {
+        <p class="hint scan-progress">
+          {{ 'tvshows.detail.scanRunning' | transloco: { title: (job.title | localized) } }}
+        </p>
+      }
       @if (languageJob()) {
         <p class="hint language-running">{{ 'tvshows.detail.languageRunning' | transloco }}</p>
       }

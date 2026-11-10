@@ -19,4 +19,11 @@ class NewEpisodesRename {
     void onScanned(TvShowSourceScannedEvent event) {
         event.showsWithNewEpisodes().forEach(showId -> renameService.renameIfEnabled(showId, TvRenameTrigger.SCAN));
     }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    void onFolderScanned(TvShowFolderScannedEvent event) {
+        if (event.added() > 0) {
+            renameService.renameIfEnabled(event.showId(), TvRenameTrigger.SCAN);
+        }
+    }
 }

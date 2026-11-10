@@ -22,6 +22,14 @@ Das Formular speicherst du wie bei Filmen mit **Speichern**. Zusätzlich gibt es
 
 **Fehlende Episoden anzeigen** fragt den Anbieter, welche Episoden es gibt, für die du keine Datei hast. Das ist nur eine Anzeige, KMM legt dafür nichts an.
 
+## Eine Serie oder Staffel scannen
+
+Hast du neue Episoden in den Ordner einer Serie gelegt oder welche gelöscht, musst du nicht die ganze Quelle scannen. **Scannen** oben in der Serienansicht liest nur den Ordner dieser Serie neu ein: Neue Episoden kommen dazu, Episoden ohne Datei werden aus der Bibliothek entfernt, und geänderte NFOs werden übernommen. **Scannen** bei einer Staffel macht dasselbe nur für die Episoden dieser Staffel. In der Serienliste scannst du so mehrere ausgewählte Serien auf einmal.
+
+Danach geht es weiter wie nach dem [Scan einer Quelle](sources.md): Die technischen Angaben neuer Episoden werden ausgelesen, die Serie wird bei Bedarf umbenannt, und Kodi-Geräte mit [Echtzeit-Sync](kodi.md#echtzeit-sync) durchsuchen den Ordner der Serie oder Staffel.
+
+Ist der Ordner nicht erreichbar oder enthält er keine Videodateien mehr, meldet KMM das und entfernt nichts. Eine Serie, die es nicht mehr gibt, entfernst du über [Entfernen](#entfernen).
+
 ## Eine Serie scrapen
 
 **Scrapen** in der Serienansicht ergänzt alles Fehlende nur für diese Serie, auch leere Episodenfelder, siehe [Scrapen](scraping.md#automatisches-scrapen).

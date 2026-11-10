@@ -167,6 +167,14 @@ public class KodiSyncService {
         return syncAll(realtimeTargets(), target -> removeEpisodes(target, showTitle, episodes));
     }
 
+    /** After KMM scanned a TV show or season folder: Kodi scans the folder and cleans it up. */
+    void scanTvShowOnRealtimeHosts(long showId, OptionalInt season) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (!targets.isEmpty()) {
+            scanTvShow(showId, season, targets, KodiProgress.NONE);
+        }
+    }
+
     void scanSourceOnRealtimeHosts(long sourceId) {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {

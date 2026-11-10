@@ -16,6 +16,7 @@ import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
 import de.tiktak.kmm.tvshow.EpisodesRemovedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
+import de.tiktak.kmm.tvshow.TvShowFolderScannedEvent;
 import de.tiktak.kmm.tvshow.TvShowRemovedEvent;
 import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
@@ -91,6 +92,14 @@ class KodiRealtimeSync implements DisposableBean {
     void onSourceScanned(MovieSourceScannedEvent event) {
         if (event.added() > 0) {
             sources.submit(event.sourceId());
+        }
+    }
+
+    /** Only the folder of the TV show or season, not the whole source. */
+    @TransactionalEventListener(fallbackExecution = true)
+    void onTvShowFolderScanned(TvShowFolderScannedEvent event) {
+        if (event.episodesChanged()) {
+            executor.execute(() -> syncService.scanTvShowOnRealtimeHosts(event.showId(), event.season()));
         }
     }
 

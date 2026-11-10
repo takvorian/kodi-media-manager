@@ -451,6 +451,26 @@ describe('TvShowList', () => {
     expect(updated).toEqual([job]);
   });
 
+  it('scans the folders of the chosen shows as a job after asking', async () => {
+    await respond(page([alf]));
+    element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();
+    httpTesting.expectOne(`${TVSHOWS_URL}/query/ids`).flush([1, 4]);
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.scan-button')!.click();
+    const scan = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/scan` });
+    expect(scan.request.body).toEqual({ showIds: [1, 4] });
+    const job = {
+      id: 's',
+      key: 'tvshows-batch',
+      title: literal('2 Serien scannen'),
+      status: 'RUNNING',
+    } as Job;
+    scan.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('scans the chosen shows in Kodi as a job', async () => {
     await respond(page([alf]));
     element().querySelector<HTMLButtonElement>('.choose-all-button')!.click();

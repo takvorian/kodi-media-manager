@@ -332,6 +332,20 @@ export class TvShowList {
     });
   }
 
+  /** Reads the folders of the selected TV shows again, one after another as one job. */
+  protected scanChosen(): void {
+    const ids = [...this.chosen()];
+    if (
+      !this.confirm(this.transloco.translate('tvshows.list.confirmScan', { count: ids.length }))
+    ) {
+      return;
+    }
+    this.tvShowService.scanShows(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   protected scanChosenInKodi(): void {
     const ids = [...this.chosen()];
     if (

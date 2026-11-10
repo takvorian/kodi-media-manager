@@ -41,6 +41,11 @@ public record TvShowScanResult(
         showsWithNewEpisodes = showsWithNewEpisodes == null ? List.of() : List.copyOf(showsWithNewEpisodes);
     }
 
+    /** Whether the scan added, changed or removed anything. */
+    boolean changedSomething() {
+        return showsAdded + showsRemoved + added + updated + removed > 0;
+    }
+
     public TvShowScanResult(long sourceId, int showsAdded, int showsRemoved, int added, int updated, int removed,
             int unchanged, int nfoErrors, List<String> unrecognizedFiles) {
         this(sourceId, showsAdded, showsRemoved, added, updated, removed, unchanged, nfoErrors, unrecognizedFiles,

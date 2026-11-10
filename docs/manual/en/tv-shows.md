@@ -22,6 +22,14 @@ You save the form with **Save**, just as for movies. In addition there are **Sta
 
 **Show missing episodes** asks the provider which episodes exist that you have no file for. This is only a display; KMM does not create anything for them.
 
+## Scanning a TV show or season
+
+If you have added episodes to the folder of a TV show or deleted some, you do not need to scan the whole source. **Scan** at the top of the TV show view reads only the folder of this TV show again: new episodes are added, episodes without a file are removed from the library, and changed NFOs are taken over. **Scan** on a season does the same for the episodes of that season only. In the TV show list you can scan several selected TV shows at once.
+
+After that, things go on as after [scanning a source](sources.md): the technical details of new episodes are read, the TV show is renamed if that is enabled, and Kodi devices with [real-time sync](kodi.md#real-time-sync) look through the folder of the TV show or season.
+
+If the folder cannot be reached or no longer contains any video files, KMM reports this and removes nothing. You remove a TV show that no longer exists with [Removing](#removing).
+
 ## Scraping a TV show
 
 **Scrape** in the TV show view fills in everything missing for this TV show only, including empty episode fields, see [Scraping](scraping.md#automatic-scraping).

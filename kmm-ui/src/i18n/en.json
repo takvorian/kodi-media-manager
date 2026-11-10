@@ -307,6 +307,7 @@
   },
   "tvshows": {
     "refreshInKodi": "Refresh in Kodi",
+    "scan": "Scan",
     "scanInKodi": "Scan in Kodi",
     "scrape": "Scrape",
     "saveFirst": "Please save the changes first.",
@@ -371,6 +372,7 @@
       "confirmRatings": "Refresh the ratings of {count, plural, one {# TV show} other {# TV shows}} and fill empty fields (Trakt, OMDb)? The NFOs will be written.",
       "confirmThemes": "Fetch missing theme music for {count, plural, one {# TV show} other {# TV shows}}? It is saved as theme.mp3 in the folder.",
       "confirmKodi": "Refresh {count, plural, one {# TV show} other {# TV shows}} with all their episodes on all Kodi devices?",
+      "confirmScan": "The folders of {count, plural, one {# TV show} other {# TV shows}} will be read again: new episodes are added, episodes without a file are removed from the library. Continue?",
       "confirmKodiScan": "Kodi will look for new episodes in the folders of {count, plural, one {# TV show} other {# TV shows}} on all Kodi devices and clean them up afterwards. Continue?",
       "confirmTrailers": "Fetch missing trailers for {count, plural, one {# TV show} other {# TV shows}}? The NFOs will be written.",
       "filterNameRequired": "Please enter a name for the filter.",
@@ -389,6 +391,7 @@
       "noEpisodes": "No episodes found.",
       "seasonStreamsProgress": "{title}: {done} of {total} files …",
       "kodiProgress": "{title} … ({done}/{total})",
+      "scanRunning": "{title} is running …",
       "episodeCount": "{count, plural, one {# episode} other {# episodes}}",
       "scrapeSeason": "Scrape season",
       "refetchSeason": "Refetch season",
@@ -1258,6 +1261,13 @@
         "searching": "Searching directories",
         "synchronizing": "Updating the library"
       },
+      "folderScan": {
+        "title": "TV show cannot be scanned",
+        "unreachable": "The folder “{path}” of “{title}” cannot be reached. Nothing was removed from the library.",
+        "noVideoFiles": "The folder “{path}” of “{title}” contains no video files. Nothing was removed from the library.",
+        "jobTitle": "Scan “{title}”",
+        "seasonJobTitle": "Scan season {season} of “{title}”"
+      },
       "nfoChangedOutside": {
         "title": "NFO changed outside of KMM",
         "detail": "{file} was changed outside of KMM and cannot be read ({reason}). KMM therefore does not overwrite it; please check the file."
@@ -1334,6 +1344,7 @@
         "trailerFillJobTitle": "Fetch missing trailers for {count, plural, one {# TV show} other {# TV shows}}",
         "enrichmentJobTitle": "Update ratings for {count, plural, one {# TV show} other {# TV shows}}",
         "languageJobTitle": "Change the language of {count, plural, one {# TV show} other {# TV shows}}",
+        "scanJobTitle": "Scan {count, plural, one {# TV show} other {# TV shows}}",
         "progress": "TV show {id}",
         "failure": "TV show {id}: {message}"
       },

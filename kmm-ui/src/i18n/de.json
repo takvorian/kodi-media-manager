@@ -307,6 +307,7 @@
   },
   "tvshows": {
     "refreshInKodi": "In Kodi aktualisieren",
+    "scan": "Scannen",
     "scanInKodi": "In Kodi scannen",
     "scrape": "Scrapen",
     "saveFirst": "Bitte die Änderungen zuerst speichern.",
@@ -371,6 +372,7 @@
       "confirmRatings": "Bewertungen für {count} Serien aktualisieren und leere Felder füllen (Trakt, OMDb)? Die NFOs werden dabei geschrieben.",
       "confirmThemes": "Für {count} Serien fehlende Titelmusik holen? Sie wird als theme.mp3 im Ordner gespeichert.",
       "confirmKodi": "{count, plural, one {# Serie} other {# Serien}} mit allen Episoden auf allen Kodi-Geräten aktualisieren?",
+      "confirmScan": "Die Ordner von {count, plural, one {# Serie} other {# Serien}} werden neu eingelesen: Neue Episoden kommen dazu, Episoden ohne Datei werden aus der Bibliothek entfernt. Fortfahren?",
       "confirmKodiScan": "Kodi soll die Ordner von {count, plural, one {# Serie} other {# Serien}} auf allen Kodi-Geräten nach neuen Episoden durchsuchen und danach aufräumen. Fortfahren?",
       "confirmTrailers": "Für {count} Serien fehlende Trailer holen? Die NFOs werden dabei geschrieben.",
       "filterNameRequired": "Bitte einen Namen für den Filter eingeben.",
@@ -389,6 +391,7 @@
       "noEpisodes": "Keine Episoden gefunden.",
       "seasonStreamsProgress": "{title}: {done} von {total} Dateien …",
       "kodiProgress": "{title} … ({done}/{total})",
+      "scanRunning": "{title} läuft …",
       "episodeCount": "{count} Episoden",
       "scrapeSeason": "Staffel scrapen",
       "refetchSeason": "Staffel neu holen",
@@ -1258,6 +1261,13 @@
         "searching": "Verzeichnisse werden durchsucht",
         "synchronizing": "Bibliothek wird abgeglichen"
       },
+      "folderScan": {
+        "title": "Serie kann nicht gescannt werden",
+        "unreachable": "Der Ordner „{path}“ von „{title}“ ist nicht erreichbar. Aus der Bibliothek wurde nichts entfernt.",
+        "noVideoFiles": "Der Ordner „{path}“ von „{title}“ enthält keine Videodateien. Aus der Bibliothek wurde nichts entfernt.",
+        "jobTitle": "Scan „{title}“",
+        "seasonJobTitle": "Scan Staffel {season} von „{title}“"
+      },
       "nfoChangedOutside": {
         "title": "NFO außerhalb von KMM geändert",
         "detail": "{file} wurde außerhalb von KMM geändert und lässt sich nicht lesen ({reason}). KMM überschreibt sie deshalb nicht; bitte die Datei prüfen."
@@ -1334,6 +1344,7 @@
         "trailerFillJobTitle": "Fehlende Trailer für {count, plural, one {# Serie} other {# Serien}} holen",
         "enrichmentJobTitle": "Bewertungen für {count, plural, one {# Serie} other {# Serien}} aktualisieren",
         "languageJobTitle": "Sprache von {count, plural, one {# Serie} other {# Serien}} ändern",
+        "scanJobTitle": "{count, plural, one {# Serie} other {# Serien}} scannen",
         "progress": "Serie {id}",
         "failure": "Serie {id}: {message}"
       },

@@ -33,6 +33,7 @@ import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
 import { ScrapeReport } from '../sources/scrape-report';
+import { scanSummary } from '../sources/scan-summary';
 import { CONFIRM } from '../shared/confirm';
 import { batchSummary } from '../filters/batch';
 import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
@@ -63,7 +64,7 @@ import {
 } from './tvshow-forms';
 import { MEDIUM_DATE, SHORT_DATE_TIME } from './tv-date-formats';
 import { TvShowArtworkService } from './tvshow-artwork.service';
-import { TVSHOW_BATCH_JOB_KEY, tvShowScrapeJobKey } from './tvshow-batch';
+import { TVSHOW_BATCH_JOB_KEY, tvShowScanJobKey, tvShowScrapeJobKey } from './tvshow-batch';
 import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-search';
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 import { localize } from '../i18n/localized-text';
@@ -158,6 +159,10 @@ export class TvShowDetail {
   protected readonly seasonStreamsJob = computed(() =>
     this.jobStore.runningJob(seasonStreamDetailsJobKey(this.id())),
   );
+  /** Scanning the folder of the TV show or of one of its seasons in KMM. */
+  protected readonly scanJob = computed(() =>
+    this.jobStore.runningJob(tvShowScanJobKey(this.id())),
+  );
   /** Refreshing or scanning the TV show or one of its seasons in Kodi. */
   protected readonly kodiJob = computed(() =>
     this.jobStore.runningJob(kodiTvShowJobKey(this.id())),
@@ -206,6 +211,15 @@ export class TvShowDetail {
         takeUntilDestroyed(),
       )
       .subscribe((job) => this.notify(streamDetailsSummary(job)));
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key === tvShowScanJobKey(this.id())),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.notify(scanSummary(job));
+        this.show.reload();
+      });
     this.jobStore.completed
       .pipe(
         filter((job) => job.key === kodiTvShowJobKey(this.id())),
@@ -330,27 +344,37 @@ export class TvShowDetail {
     return episodeCode(episode.season, episode.episode);
   }
 
+  /** Reads the folder of the TV show again: new episodes are added, vanished ones removed. */
+  protected scan(): void {
+    this.startJob(this.tvShowService.scanShow(this.id()));
+  }
+
+  /** Like `scan`, limited to the episodes of the season. */
+  protected scanSeason(group: SeasonWithEpisodes): void {
+    this.startJob(this.tvShowService.scanSeason(this.id(), group.season.number));
+  }
+
   /** Makes Kodi re-read the TV show and all its episodes, independent of the real-time sync. */
   protected refreshInKodi(): void {
-    this.startKodiJob(this.kodiService.refreshTvShow(this.id()));
+    this.startJob(this.kodiService.refreshTvShow(this.id()));
   }
 
   /** Makes Kodi re-read the episodes of the season. */
   protected refreshSeasonInKodi(group: SeasonWithEpisodes): void {
-    this.startKodiJob(this.kodiService.refreshSeason(this.id(), group.season.number));
+    this.startJob(this.kodiService.refreshSeason(this.id(), group.season.number));
   }
 
   /** Kodi looks for new episodes in the TV show folder and then removes entries whose files are gone. */
   protected scanInKodi(): void {
-    this.startKodiJob(this.kodiService.scanTvShow(this.id()));
+    this.startJob(this.kodiService.scanTvShow(this.id()));
   }
 
   /** Like `scanInKodi` for the season folder. */
   protected scanSeasonInKodi(group: SeasonWithEpisodes): void {
-    this.startKodiJob(this.kodiService.scanSeason(this.id(), group.season.number));
+    this.startJob(this.kodiService.scanSeason(this.id(), group.season.number));
   }
 
-  private startKodiJob(start: Observable<Job>): void {
+  private startJob(start: Observable<Job>): void {
     start.subscribe({
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),

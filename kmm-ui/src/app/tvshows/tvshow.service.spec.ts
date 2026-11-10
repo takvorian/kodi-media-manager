@@ -122,4 +122,16 @@ describe('TvShowService', () => {
     expect(request.request.body).toEqual(edit);
     request.flush({});
   });
+
+  it('scans the folders of shows and seasons as jobs', () => {
+    service.scanShow(3).subscribe();
+    service.scanSeason(3, 2).subscribe();
+    service.scanShows([3, 4]).subscribe();
+
+    httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/scan` }).flush({});
+    httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/seasons/2/scan` }).flush({});
+    const batch = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/scan` });
+    expect(batch.request.body).toEqual({ showIds: [3, 4] });
+    batch.flush({});
+  });
 });

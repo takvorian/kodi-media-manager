@@ -207,6 +207,52 @@ class TvShowLibraryIntegrationTest {
     }
 
     @Test
+    void scansASingleShowOrSeasonWithoutTouchingTheOthers() throws IOException {
+        createFile("ALF (1986)/Staffel 1/ALF - S01E01.avi");
+        createFile("ALF (1986)/Staffel 2/ALF - S02E01.avi");
+        createFile("Chernobyl (2019)/S01E01.mp4");
+        long sourceId = createSource();
+        scan(sourceId);
+        long alfId = idOf(mockMvc.get().uri(TvShowController.SHOWS_PATH).param("search", "alf").exchange());
+        long chernobylId = idOf(mockMvc.get().uri(TvShowController.SHOWS_PATH).param("search", "chernobyl").exchange());
+        createFile("ALF (1986)/Staffel 1/ALF - S01E02.avi");
+        createFile("ALF (1986)/Staffel 2/ALF - S02E02.avi");
+        Files.delete(library.resolve("ALF (1986)/Staffel 2/ALF - S02E01.avi"));
+        createFile("Chernobyl (2019)/S01E02.mp4");
+
+        JsonNode season = finished(mockMvc.post().uri(TvShowFolderScanController.SEASON_SCAN_PATH, alfId, 1)
+                .with(csrf()).exchange());
+        assertThat(season.get("result").get("added").asInt()).isEqualTo(1);
+        assertThat(season.get("result").get("removed").asInt()).isZero();
+        assertThat(episodeCodes(alfId)).containsExactly("1/1", "1/2", "2/1");
+
+        JsonNode show = finished(mockMvc.post().uri(TvShowFolderScanController.SHOW_SCAN_PATH, alfId).with(csrf())
+                .exchange());
+        assertThat(show.get("result").get("added").asInt()).isEqualTo(1);
+        assertThat(show.get("result").get("removed").asInt()).isEqualTo(1);
+        assertThat(show.get("result").get("details").get("removed").get(0).get("label").asString())
+                .contains("S02E01");
+        assertThat(episodeCodes(alfId)).containsExactly("1/1", "1/2", "2/2");
+        assertThat(episodeCodes(chernobylId)).containsExactly("1/1");
+
+        deleteRecursively(library.resolve("ALF (1986)"));
+        JsonNode failed = job(mockMvc.post().uri(TvShowFolderScanController.SHOW_SCAN_PATH, alfId).with(csrf())
+                .exchange());
+        assertThat(failed.get("status").asString()).isEqualTo("FAILED");
+        assertThat(failed.get("message").get("key").asString()).isEqualTo("tvShow.folderScan.unreachable");
+        assertThat(episodeCodes(alfId)).containsExactly("1/1", "1/2", "2/2");
+
+        JsonNode batch = finished(mockMvc.post().uri(TvShowFolderScanController.SHOWS_SCAN_PATH).with(csrf())
+                .contentType(JSON).content("{\"showIds\": [%d, %d]}".formatted(alfId, chernobylId)).exchange());
+        assertThat(batch.get("result").get("changed").asInt()).isEqualTo(1);
+        assertThat(batch.get("result").get("failed").asInt()).isEqualTo(1);
+        assertThat(episodeCodes(chernobylId)).containsExactly("1/1", "1/2");
+        assertThat(mockMvc.post().uri(TvShowFolderScanController.SEASON_SCAN_PATH, chernobylId, -1).with(csrf()))
+                .hasStatus(400);
+        assertThat(mockMvc.post().uri(TvShowFolderScanController.SHOW_SCAN_PATH, 999L).with(csrf())).hasStatus(404);
+    }
+
+    @Test
     void rejectsAScanOfAnUnreachableSource() throws IOException {
         Path shows = Files.createDirectories(library.resolve("Serien"));
         long sourceId = createSource(shows);
@@ -229,15 +275,31 @@ class TvShowLibraryIntegrationTest {
     }
 
     private JsonNode scan(long sourceId) {
-        MvcTestResult started = mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf())
-                .exchange();
+        return finished(mockMvc.post().uri(LibraryScanController.SCAN_PATH, sourceId).with(csrf()).exchange())
+                .get("result");
+    }
+
+    /** Waits for the started job and expects it to succeed. */
+    private JsonNode finished(MvcTestResult started) {
+        JsonNode job = job(started);
+        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job;
+    }
+
+    /** Waits for the started job to end. */
+    private JsonNode job(MvcTestResult started) {
         assertThat(started).hasStatus(HttpStatus.ACCEPTED);
         String jobId = read(started).get("id").asString();
-        JsonNode job = await().atMost(JOB_TIMEOUT).pollInSameThread()
+        return await().atMost(JOB_TIMEOUT).pollInSameThread()
                 .until(() -> read(mockMvc.get().uri(JobController.BASE_PATH + "/" + jobId).exchange()),
                         node -> !"RUNNING".equals(node.get("status").asString()));
-        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
-        return job.get("result");
+    }
+
+    /** Season and episode number of all episodes of the TV show, e.g. "1/2". */
+    private List<String> episodeCodes(long showId) {
+        return read(mockMvc.get().uri(TvShowController.SHOW_PATH, showId).exchange()).get("episodes").valueStream()
+                .map(episode -> episode.get("season").asInt() + "/" + episode.get("episode").asInt())
+                .toList();
     }
 
     private List<String> sortedTitles(String sort) {

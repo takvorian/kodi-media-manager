@@ -280,6 +280,61 @@ describe('TvShowDetail', () => {
     expect(input('title').value).toBe('ALF (neu)');
   });
 
+  describe('scan', () => {
+    const scanning = job({
+      id: 'scan',
+      key: 'tv-scan:3',
+      title: literal('Scan „ALF“'),
+      status: 'RUNNING',
+    });
+
+    it('scans the folder of the show and reloads it with a summary', async () => {
+      await load(alf);
+
+      click('.scan-button');
+      httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/scan` }).flush(scanning);
+      fixture.detectChanges();
+      expect(element().querySelector('.detail-status .scan-progress')?.textContent?.trim()).toBe(
+        'Scan „ALF“ läuft …',
+      );
+      expect(element().querySelector<HTMLButtonElement>('.scan-button')!.disabled).toBe(true);
+
+      events.emit({
+        ...scanning,
+        status: 'SUCCEEDED',
+        result: { sourceId: 1, added: 2, updated: 0, removed: 1, unchanged: 5, nfoErrors: 0 },
+      });
+      await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, alf);
+      httpTesting.match(`${TVSHOWS_URL}/3/artwork`).forEach((request) => request.flush([]));
+      await fixture.whenStable();
+
+      expect(snackBarMessages).toEqual([
+        'Scan „ALF“ abgeschlossen: 2 neu, 0 aktualisiert, 1 entfernt, 5 unverändert.',
+      ]);
+    });
+
+    it('scans a season and reports a folder that cannot be reached', async () => {
+      await load(alf);
+
+      element().querySelectorAll<HTMLButtonElement>('.season-scan-button')[1].click();
+      httpTesting
+        .expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/seasons/1/scan` })
+        .flush({ ...scanning, title: literal('Scan Staffel 1 von „ALF“') });
+      events.emit({
+        ...scanning,
+        title: literal('Scan Staffel 1 von „ALF“'),
+        status: 'FAILED',
+        message: literal('Der Ordner ist nicht erreichbar.'),
+      });
+      await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, alf);
+      httpTesting.match(`${TVSHOWS_URL}/3/artwork`).forEach((request) => request.flush([]));
+
+      expect(snackBarMessages).toEqual([
+        'Scan Staffel 1 von „ALF“ fehlgeschlagen: Der Ordner ist nicht erreichbar.',
+      ]);
+    });
+  });
+
   describe('Kodi', () => {
     const refreshing = job({
       id: 'k',

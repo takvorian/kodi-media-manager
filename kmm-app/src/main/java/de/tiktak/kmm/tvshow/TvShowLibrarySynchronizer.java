@@ -9,8 +9,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.IntPredicate;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Component;
@@ -28,11 +30,13 @@ import lombok.RequiredArgsConstructor;
 /**
  * Reconciles the TV shows of a source with the scan result: new TV shows and episodes are created,
  * vanished ones removed. Details come from the NFOs; known entries are only updated
- * if their NFO changed since it was last read.
+ * if their NFO changed since it was last read. A single TV show or one of its seasons can be reconciled on its own.
  */
 @Component
 @RequiredArgsConstructor
 class TvShowLibrarySynchronizer {
+
+    private static final IntPredicate ALL_SEASONS = season -> true;
 
     private final TvShowRepository showRepository;
     private final EpisodeRepository episodeRepository;
@@ -63,7 +67,8 @@ class TvShowLibrarySynchronizer {
             if (isNew) {
                 outcome.details.addedShow(showEntry(show, show.getId()));
             }
-            synchronizeEpisodes(show, scanned, knownEpisodes.getOrDefault(show.getId(), List.of()), outcome);
+            synchronizeEpisodes(show, scanned, knownEpisodes.getOrDefault(show.getId(), List.of()), ALL_SEASONS,
+                    outcome);
         }
         for (TvShow removed : knownShows.values()) {
             List<Episode> episodes = knownEpisodes.getOrDefault(removed.getId(), List.of());
@@ -74,9 +79,28 @@ class TvShowLibrarySynchronizer {
             outcome.details.removedShow(showEntry(removed, null));
         }
         sourceService.markScanned(sourceId, clock.instant());
-        return new TvShowScanResult(sourceId, outcome.showsAdded, outcome.showsRemoved, outcome.added,
-                outcome.updated, outcome.removed, outcome.unchanged, outcome.nfoErrors, unrecognizedFiles,
-                outcome.details.build(), outcome.newWithoutStreams, List.copyOf(outcome.showsWithNewEpisodes));
+        return outcome.result(sourceId, unrecognizedFiles);
+    }
+
+    /**
+     * Reconciles one known TV show with its folder; with a season only the episodes of that season. Other TV shows
+     * of the source stay untouched, and the scan time of the source does not change.
+     *
+     * @throws TvShowProblemException if the TV show no longer exists
+     */
+    @Transactional
+    TvShowScanResult synchronizeShow(long showId, ScannedTvShow scanned, OptionalInt season,
+                                     List<String> unrecognizedFiles) {
+        TvShow show = showRepository.findById(showId).orElseThrow(() -> TvShowProblemException.showNotFound(showId));
+        IntPredicate inScope = season.isPresent() ? number -> number == season.getAsInt() : ALL_SEASONS;
+        List<Episode> known = episodeRepository.findByTvShowIdOrderBySeasonAscEpisodeAsc(showId).stream()
+                .filter(episode -> inScope.test(episode.getSeason()))
+                .toList();
+        Outcome outcome = new Outcome();
+        synchronizeShowNfo(show, scanned, outcome);
+        show.fillMissingFromName(scanned.candidate().year(), scanned.candidate().imdbId());
+        synchronizeEpisodes(show, scanned, known, inScope, outcome);
+        return outcome.result(show.getSourceId(), unrecognizedFiles);
     }
 
     /** Returns the modification times of the NFOs read last, so that the scan only reads changed ones. */
@@ -111,11 +135,15 @@ class TvShowLibrarySynchronizer {
         show.markNfoSynchronized(nfo.get().modifiedAt());
     }
 
-    private void synchronizeEpisodes(TvShow show, ScannedTvShow scanned, List<Episode> known, Outcome outcome) {
+    private void synchronizeEpisodes(TvShow show, ScannedTvShow scanned, List<Episode> known, IntPredicate seasons,
+                                     Outcome outcome) {
         Map<EpisodeKey, Episode> remaining = new HashMap<>();
         known.forEach(episode -> remaining.put(EpisodeKey.of(episode), episode));
         List<Episode> created = new ArrayList<>();
-        for (EpisodeCandidate candidate : scanned.candidate().episodes()) {
+        List<EpisodeCandidate> candidates = scanned.candidate().episodes().stream()
+                .filter(candidate -> seasons.test(candidate.number().season()))
+                .toList();
+        for (EpisodeCandidate candidate : candidates) {
             TvNfoState nfo = scanned.episodeNfos().get(candidate.file());
             NfoContent content = new NfoContent(nfo, scanned.loadedEpisodeNfo(candidate.file(), nfo));
             for (int number : candidate.number().episodes()) {
@@ -239,5 +267,10 @@ class TvShowLibrarySynchronizer {
         private final List<Long> newWithoutStreams = new ArrayList<>();
         private final Set<Long> showsWithNewEpisodes = new LinkedHashSet<>();
         private final ScanDetails.Builder details = new ScanDetails.Builder();
+
+        private TvShowScanResult result(long sourceId, List<String> unrecognizedFiles) {
+            return new TvShowScanResult(sourceId, showsAdded, showsRemoved, added, updated, removed, unchanged,
+                    nfoErrors, unrecognizedFiles, details.build(), newWithoutStreams, List.copyOf(showsWithNewEpisodes));
+        }
     }
 }

@@ -12,7 +12,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { RouterLink } from '@angular/router';
-import { translate, TranslocoPipe, TranslocoService } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { Observable, filter } from 'rxjs';
 
 import { LanguageService } from '../i18n/language.service';
@@ -49,11 +49,11 @@ import {
   MediaType,
   SCAN_JOB_KEY_PREFIX,
   SOURCE_MEDIA_TYPES,
-  ScanResult,
   autoScrapeJobKey,
   scanJobKey,
 } from './media-source';
-import { finishedJobSummary, joinParts, unsuccessfulJobSummary } from './job-summary';
+import { joinParts, unsuccessfulJobSummary } from './job-summary';
+import { scanCounts, scanSummary } from './scan-summary';
 import { MediaSourceService } from './media-source.service';
 import { scanReportSections } from './scan-report';
 import { ScrapeReport, autoScrapeSummary, hasScrapeDetails } from './scrape-report';
@@ -62,7 +62,6 @@ import { localize } from '../i18n/localized-text';
 import { LocalizedPipe } from '../i18n/localized.pipe';
 
 const SNACKBAR_DURATION_MS = 5000;
-const SCAN_COUNTS = 'sources.scanCounts';
 
 @Component({
   selector: 'app-source-list',
@@ -360,31 +359,4 @@ export class SourceList {
   private notify(message: string): void {
     this.snackBar.open(message, 'OK', { duration: SNACKBAR_DURATION_MS });
   }
-}
-
-function scanSummary(job: Job): string {
-  return job.status === 'SUCCEEDED'
-    ? finishedJobSummary(job, scanCounts(job))
-    : unsuccessfulJobSummary(job);
-}
-
-/** The counts of a successful scan in the active language; the optional ones only if they are not zero. */
-function scanCounts(job: Job): string[] {
-  const result = job.result as ScanResult;
-  const unrecognized = result.unrecognizedFiles?.length ?? 0;
-  return [
-    translate(`${SCAN_COUNTS}.counts`, {
-      added: result.added,
-      updated: result.updated,
-      removed: result.removed,
-      unchanged: result.unchanged,
-    }),
-    ...optionalCount('newShows', result.showsAdded ?? 0),
-    ...optionalCount('nfoErrors', result.nfoErrors),
-    ...optionalCount('unrecognized', unrecognized),
-  ];
-}
-
-function optionalCount(key: string, count: number): string[] {
-  return count > 0 ? [translate(`${SCAN_COUNTS}.${key}`, { count })] : [];
 }
