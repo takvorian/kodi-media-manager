@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.17 - 2026-11-10
+- Refresh TV shows and seasons in Kodi with their episodes (39a2620)
+
 ## v0.16 - 2026-11-10
 - Find folders emptied by the files of several movies (32f707a)
 - Describe removing in the manual (9c46ff9)
