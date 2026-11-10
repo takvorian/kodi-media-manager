@@ -2,9 +2,12 @@ package de.tiktak.kmm.scanner;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 class TvShowFilesTest {
 
@@ -28,6 +31,20 @@ class TvShowFilesTest {
                 .isEqualTo(SHOW.resolve("season-specials-poster.jpg"));
         assertThat(TvShowFiles.seasonArtworkCandidates(SHOW, null, "banner")).first()
                 .isEqualTo(SHOW.resolve("season-all-banner.jpg"));
+    }
+
+    @Test
+    void findsTheExistingArtworkOfASeason(@TempDir Path show) throws IOException {
+        Path poster = Files.createFile(show.resolve("season01-poster.jpg"));
+        Path banner = Files.createFile(show.resolve("Season01-Banner.PNG"));
+        Path specials = Files.createFile(show.resolve("season-specials-poster.jpg"));
+        Files.createFile(show.resolve("season10-poster.jpg"));
+        Files.createFile(show.resolve("season01-notes.txt"));
+        Files.createFile(show.resolve("season01-.jpg"));
+        Files.createDirectory(show.resolve("season01-extras.jpg"));
+
+        assertThat(TvShowFiles.seasonArtworkFiles(show, 1)).containsExactlyInAnyOrder(banner, poster);
+        assertThat(TvShowFiles.seasonArtworkFiles(show, 0)).containsExactly(specials);
     }
 
     @Test

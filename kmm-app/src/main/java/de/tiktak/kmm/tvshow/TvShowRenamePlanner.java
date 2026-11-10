@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.scanner.naming.CompanionNames;
 import de.tiktak.kmm.scanner.naming.NamePattern;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.EpisodeFile;
 import de.tiktak.kmm.tvshow.TvShowRenamePlan.FileRename;
@@ -33,9 +34,6 @@ import de.tiktak.kmm.tvshow.TvShowRenamePlan.Status;
  * </ul>
  */
 final class TvShowRenamePlanner {
-
-    private static final String NAME_SEPARATORS = ".-_ ";
-    private static final char EXTENSION_SEPARATOR = '.';
 
     private TvShowRenamePlanner() {
     }
@@ -77,7 +75,7 @@ final class TvShowRenamePlanner {
         Map<Path, List<String>> listings = new HashMap<>();
         Map<Path, Set<String>> baseNamesByFolder = candidate.files().stream()
                 .collect(Collectors.groupingBy(file -> file.file().getParent(),
-                        Collectors.mapping(file -> baseName(file.file()), Collectors.toSet())));
+                        Collectors.mapping(file -> CompanionNames.baseName(file.file()), Collectors.toSet())));
         List<EpisodeFile> plans = new ArrayList<>();
         for (CandidateFile file : candidate.files()) {
             TvNameValues values = candidate.values().withEpisodeValues(file.episodes());
@@ -92,11 +90,10 @@ final class TvShowRenamePlanner {
                         LocalizedText.of("tvShow.rename.episodeFileInvalid")));
                 continue;
             }
-            String base = baseName(file.file());
+            String base = CompanionNames.baseName(file.file());
             Set<String> others = baseNamesByFolder.get(folder);
             List<FileRename> renames = listing(listings, folder).stream()
-                    .filter(candidateName -> belongsTo(candidateName, base) && others.stream().noneMatch(
-                            other -> other.length() > base.length() && belongsTo(candidateName, other)))
+                    .filter(candidateName -> CompanionNames.belongsOnlyTo(candidateName, base, others))
                     .map(candidateName -> new FileRename(candidateName, name.getFirst()
                             + candidateName.substring(base.length())))
                     .toList();
@@ -162,18 +159,6 @@ final class TvShowRenamePlanner {
                 throw new UncheckedIOException(e);
             }
         });
-    }
-
-    private static boolean belongsTo(String fileName, String baseName) {
-        return fileName.equals(baseName) || (fileName.length() > baseName.length()
-                && fileName.regionMatches(true, 0, baseName, 0, baseName.length())
-                && NAME_SEPARATORS.indexOf(fileName.charAt(baseName.length())) >= 0);
-    }
-
-    private static String baseName(Path file) {
-        String name = file.getFileName().toString();
-        int extension = name.lastIndexOf(EXTENSION_SEPARATOR);
-        return extension > 0 ? name.substring(0, extension) : name;
     }
 
     private static String label(List<TvNameValues.EpisodeValues> episodes) {
