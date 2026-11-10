@@ -48,14 +48,19 @@ export class KodiService {
     return this.http.post<Job>(`${KODI_URL}/movies/refresh`, { movieIds });
   }
 
-  /** Refreshes the selection (without episodes) on all Kodi devices; runs as a job. */
+  /** Refreshes the selection with all episodes on all Kodi devices; runs as a job. */
   refreshTvShows(showIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${KODI_URL}/tvshows/refresh`, { showIds });
   }
 
-  /** Refreshes the TV show (without episodes) on all Kodi devices. */
-  refreshTvShow(showId: number): Observable<KodiSyncResult[]> {
-    return this.http.post<KodiSyncResult[]>(`${KODI_URL}/tvshows/${showId}/refresh`, null);
+  /** Refreshes the TV show with all episodes on all Kodi devices; runs as a job with the results as its result. */
+  refreshTvShow(showId: number): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/tvshows/${showId}/refresh`, null);
+  }
+
+  /** Refreshes the episodes of the season on all Kodi devices; runs as a job like `refreshTvShow`. */
+  refreshSeason(showId: number, season: number): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/tvshows/${showId}/seasons/${season}/refresh`, null);
   }
 
   /** Refreshes the episode on all Kodi devices. */

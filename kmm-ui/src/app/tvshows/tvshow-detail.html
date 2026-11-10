@@ -11,7 +11,7 @@
         matButton
         type="button"
         class="kodi-refresh-button"
-        [disabled]="refreshingKodi()"
+        [disabled]="!!kodiJob()"
         (click)="refreshInKodi()"
       >
         {{ 'tvshows.refreshInKodi' | transloco }}
@@ -58,6 +58,15 @@
       </button>
     </div>
   </div>
+
+  @if (kodiJob(); as job) {
+    <p class="hint kodi-progress">
+      {{
+        'tvshows.detail.kodiProgress'
+          | transloco: { title: (job.title | localized), done: job.done, total: job.total }
+      }}
+    </p>
+  }
 
   @if (scrapeJob(); as running) {
     <app-scrape-progress [job]="running" />
@@ -203,6 +212,15 @@
                 (click)="probeSeason(group)"
               >
                 {{ 'tvshows.probeStreams' | transloco }}
+              </button>
+              <button
+                matButton
+                type="button"
+                class="season-kodi-button"
+                [disabled]="!!kodiJob()"
+                (click)="refreshSeasonInKodi(group)"
+              >
+                {{ 'tvshows.refreshInKodi' | transloco }}
               </button>
               <button
                 matButton

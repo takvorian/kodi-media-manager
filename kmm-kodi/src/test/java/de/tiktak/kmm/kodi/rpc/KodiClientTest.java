@@ -238,6 +238,28 @@ class KodiClientTest {
     }
 
     @Test
+    void readsAllEpisodesOfATvShowPageByPage() {
+        kodi.respond("VideoLibrary.GetEpisodes", """
+                {"limits": {"total": 2}, "episodes": [{"episodeid": 12, "season": 1, "episode": 2,
+                  "file": "smb://nas/serien/Lost/S1/Lost S01E01E02.mkv"}]}
+                """);
+
+        List<KodiEpisode> episodes = client.episodesOf(kodi.endpoint(), 4);
+
+        assertThat(episodes).hasSize(2).first().satisfies(episode -> {
+            assertThat(episode.id()).isEqualTo(12);
+            assertThat(episode.is("SMB://nas/serien/Lost/S1/Lost S01E01E02.mkv", 1, 2)).isTrue();
+            assertThat(episode.is("smb://nas/serien/Lost/S1/Lost S01E01E02.mkv", 1, 1)).isFalse();
+            assertThat(episode.is("smb://nas/serien/Lost/S1/Lost S01E03.mkv", 1, 2)).isFalse();
+        });
+        assertThat(kodi.calls()).extracting(call -> call.params().path("limits").path("start").asInt())
+                .containsExactly(0, 1);
+        assertThat(kodi.calls().getFirst().params().path("tvshowid").asInt()).isEqualTo(4);
+        kodi.respond("VideoLibrary.GetEpisodes", "{\"limits\": {\"total\": 3}}");
+        assertThat(client.episodesOf(kodi.endpoint(), 4)).isEmpty();
+    }
+
+    @Test
     void readsEpisodePlaybacksAndStopsOnAnEmptyPage() {
         kodi.respond("VideoLibrary.GetEpisodes", """
                 {"limits": {"total": 1}, "episodes": [{"episodeid": 12, "season": 1, "episode": 2, "playcount": 0,

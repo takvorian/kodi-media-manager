@@ -85,6 +85,18 @@ export function kodiSyncSummary(results: readonly KodiSyncResult[]): string {
   return results.map((result) => `${result.host}: ${localize(result.message)}`).join(' ');
 }
 
+/** Prefix of the job key for refreshing a TV show or season; must match KodiBatchRefreshService.TV_SHOW_JOB_KEY_PREFIX. */
+export const KODI_TV_SHOW_JOB_KEY_PREFIX = 'kodi-tvshow:';
+
+export function kodiTvShowJobKey(showId: number): string {
+  return `${KODI_TV_SHOW_JOB_KEY_PREFIX}${showId}`;
+}
+
+/** The results of all devices a finished refresh job of a TV show or season delivers. */
+export function kodiJobResults(job: Job): KodiSyncResult[] {
+  return Array.isArray(job.result) ? (job.result as KodiSyncResult[]) : [];
+}
+
 /** Prefix of the job key for fetching the watched status; must match KodiPlaybackService.JOB_KEY_PREFIX. */
 export const KODI_PLAYBACK_JOB_KEY_PREFIX = 'kodi-playback:';
 

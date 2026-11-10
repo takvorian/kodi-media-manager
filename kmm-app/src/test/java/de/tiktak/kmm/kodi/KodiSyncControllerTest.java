@@ -6,6 +6,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 
 import java.time.Instant;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.UUID;
 
 import org.junit.jupiter.api.Test;
@@ -84,15 +85,30 @@ class KodiSyncControllerTest {
     }
 
     @Test
-    void refreshesTvShowsAndEpisodes() {
-        when(syncService.refreshTvShow(7)).thenReturn(List.of(
-                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, refreshed("Lost"), NOW)));
-        when(syncService.refreshEpisode(12)).thenReturn(List.of());
+    void refreshesATvShowOrOneOfItsSeasonsWithTheEpisodesAsAJob() {
+        when(batchRefreshService.startTvShow(7, OptionalInt.empty())).thenReturn(job(JOB_1));
+        when(batchRefreshService.startTvShow(7, OptionalInt.of(0))).thenReturn(job(JOB_2));
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/refresh").with(csrf()))
-                .hasStatusOk().bodyJson().extractingPath("$[0].message.args.title").isEqualTo("Lost");
+                .hasStatus(202).hasHeader("Location", "/api/v1/jobs/" + JOB_1)
+                .bodyJson().extractingPath("$.id").isEqualTo(JOB_1);
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/seasons/0/refresh").with(csrf()))
+                .hasStatus(202).bodyJson().extractingPath("$.id").isEqualTo(JOB_2);
+    }
+
+    @Test
+    void rejectsANegativeSeason() {
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/seasons/-1/refresh").with(csrf()))
+                .hasStatus(400);
+    }
+
+    @Test
+    void refreshesAnEpisode() {
+        when(syncService.refreshEpisode(12)).thenReturn(List.of(
+                new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, refreshed("Lost S01E02"), NOW)));
+
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/12/refresh").with(csrf()))
-                .hasStatusOk().bodyJson().isEqualTo("[]");
+                .hasStatusOk().bodyJson().extractingPath("$[0].message.args.title").isEqualTo("Lost S01E02");
     }
 
     @Test

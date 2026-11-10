@@ -212,7 +212,7 @@ describe('TvShowList', () => {
 
     expect(confirmMessages[0]).toMatch(/^Scrape 1 TV show\? KMM adds missing metadata/);
     expect(confirmMessages[1]).toBe(
-      'Refresh 2 TV shows on all Kodi devices? Their episodes stay untouched.',
+      'Refresh 2 TV shows with all their episodes on all Kodi devices?',
     );
   });
 

@@ -280,25 +280,90 @@ describe('TvShowDetail', () => {
     expect(input('title').value).toBe('ALF (neu)');
   });
 
-  it('refreshes the show in Kodi on request', async () => {
-    await load(alf);
+  describe('Kodi', () => {
+    const refreshing = job({
+      id: 'k',
+      key: 'kodi-tvshow:3',
+      title: literal('„ALF“ in Kodi aktualisieren'),
+      done: 1,
+      total: 3,
+    });
 
-    element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
-    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' }).flush([
-      {
-        hostId: 1,
-        host: 'Wohnzimmer',
-        outcome: 'REFRESHED',
-        message: literal('„ALF“ aktualisiert.'),
-        at: '',
-      },
-    ]);
-    element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
-    httpTesting
-      .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })
-      .flush({ detail: 'Serie nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+    function kodiButtons(): HTMLButtonElement[] {
+      return [
+        element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!,
+        ...element().querySelectorAll<HTMLButtonElement>('.season-kodi-button'),
+      ];
+    }
 
-    expect(snackBarMessages).toEqual(['Wohnzimmer: „ALF“ aktualisiert.', 'Serie nicht gefunden']);
+    it('refreshes the show with its episodes as a job and reports the result of every host', async () => {
+      await load(alf);
+
+      element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })
+        .flush(refreshing);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(element().querySelector('.kodi-progress')?.textContent).toContain(
+        '„ALF“ in Kodi aktualisieren: 1 von 3 Episoden',
+      );
+      kodiButtons().forEach((button) => expect(button.disabled).toBe(true));
+
+      events.emit({
+        ...refreshing,
+        status: 'SUCCEEDED',
+        done: 3,
+        result: [
+          {
+            hostId: 1,
+            host: 'Wohnzimmer',
+            outcome: 'REFRESHED',
+            message: literal('„ALF“ und 3 Episoden aktualisiert.'),
+            at: '',
+          },
+        ],
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(snackBarMessages).toEqual(['Wohnzimmer: „ALF“ und 3 Episoden aktualisiert.']);
+      expect(element().querySelector('.kodi-progress')).toBeNull();
+      kodiButtons().forEach((button) => expect(button.disabled).toBe(false));
+    });
+
+    it('refreshes the episodes of one season', async () => {
+      await load(alf);
+
+      element().querySelectorAll<HTMLButtonElement>('.season-kodi-button')[1].click();
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/seasons/1/refresh' })
+        .flush(refreshing);
+      events.emit({
+        ...refreshing,
+        status: 'FAILED',
+        message: literal('Kodi antwortet nicht.'),
+      });
+
+      expect(snackBarMessages).toEqual([
+        '„ALF“ in Kodi aktualisieren fehlgeschlagen: Kodi antwortet nicht.',
+      ]);
+    });
+
+    it('reports a refresh that cannot be started', async () => {
+      await load(alf);
+
+      element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!.click();
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' })
+        .flush(
+          { detail: 'Kein Kodi-Gerät eingerichtet.' },
+          { status: 409, statusText: 'Conflict' },
+        );
+
+      expect(snackBarMessages).toEqual(['Kein Kodi-Gerät eingerichtet.']);
+    });
   });
 
   it('loads the images of a season when it is opened', async () => {

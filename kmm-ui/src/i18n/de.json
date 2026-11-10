@@ -369,7 +369,7 @@
       "confirmScrape": "{count, plural, one {# Serie} other {# Serien}} scrapen? KMM ergänzt fehlende Metadaten, Episodenangaben, Bilder, Trailer, Titelmusik und Bewertungen und schreibt sie in die Medienordner. Vorhandenes bleibt. Ist „Serien nach dem Scrapen umbenennen“ eingeschaltet, werden sie auch umbenannt.",
       "confirmRatings": "Bewertungen für {count} Serien aktualisieren und leere Felder füllen (Trakt, OMDb)? Die NFOs werden dabei geschrieben.",
       "confirmThemes": "Für {count} Serien fehlende Titelmusik holen? Sie wird als theme.mp3 im Ordner gespeichert.",
-      "confirmKodi": "{count, plural, one {# Serie} other {# Serien}} auf allen Kodi-Geräten aktualisieren? Ihre Episoden bleiben dabei unberührt.",
+      "confirmKodi": "{count, plural, one {# Serie} other {# Serien}} mit allen Episoden auf allen Kodi-Geräten aktualisieren?",
       "confirmTrailers": "Für {count} Serien fehlende Trailer holen? Die NFOs werden dabei geschrieben.",
       "filterNameRequired": "Bitte einen Namen für den Filter eingeben.",
       "filterSaved": "Filter „{name}“ gespeichert.",
@@ -386,6 +386,7 @@
       "seasonsAndEpisodes": "Staffeln und Episoden",
       "noEpisodes": "Keine Episoden gefunden.",
       "seasonStreamsProgress": "{title}: {done} von {total} Dateien …",
+      "kodiProgress": "{title}: {done} von {total} Episoden …",
       "episodeCount": "{count} Episoden",
       "scrapeSeason": "Staffel scrapen",
       "refetchSeason": "Staffel neu holen",
@@ -1490,6 +1491,9 @@
       },
       "sync": {
         "refreshed": "„{title}“ aktualisiert.",
+        "tvShowRefreshed": "„{title}“ und {count, plural, one {# Episode} other {# Episoden}} aktualisiert.",
+        "seasonRefreshed": "{count, plural, one {# Episode} other {# Episoden}} der Staffel {season} von „{title}“ aktualisiert.",
+        "unknownEpisodesScan": "{refreshed} {count, plural, one {# Episode ist} other {# Episoden sind}} in Kodi noch unbekannt; Kodi liest {directory} ein.",
         "scanUnknown": "„{title}“ ist in Kodi noch unbekannt; Kodi liest {directory} ein.",
         "noSource": "Kodi hat keine Quelle für {directory} und findet dort vermutlich nichts. Prüfe die Pfad-Zuordnung von „{host}“. Quellen in Kodi: {sources}.",
         "renamed": "Kodi liest {directory} ein und entfernt die alten Einträge aus {previous}.",
@@ -1513,6 +1517,10 @@
       "batch": {
         "refreshTvShows": "{count, plural, one {# Serie} other {# Serien}} in Kodi aktualisieren",
         "refreshMovies": "{count, plural, one {# Film} other {# Filme}} in Kodi aktualisieren"
+      },
+      "job": {
+        "refreshTvShow": "„{title}“ in Kodi aktualisieren",
+        "refreshSeason": "Staffel {season} von „{title}“ in Kodi aktualisieren"
       }
     },
     "movie": {

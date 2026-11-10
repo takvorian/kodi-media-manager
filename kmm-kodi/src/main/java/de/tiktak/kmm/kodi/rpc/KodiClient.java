@@ -186,6 +186,26 @@ public class KodiClient {
         return Optional.empty();
     }
 
+    /** @return all episodes Kodi knows of the TV show */
+    public List<KodiEpisode> episodesOf(KodiEndpoint endpoint, int tvShowId) {
+        List<KodiEpisode> episodes = new ArrayList<>();
+        int total;
+        do {
+            int start = episodes.size();
+            JsonNode result = call(endpoint, "VideoLibrary.GetEpisodes", Map.of("tvshowid", tvShowId,
+                    "properties", List.of("file", "season", "episode"),
+                    "limits", Map.of("start", start, "end", start + PAGE_SIZE)));
+            JsonNode items = result.path("episodes");
+            items.forEach(item -> episodes.add(new KodiEpisode(item.path("episodeid").asInt(),
+                    item.path("file").asString(), item.path("season").asInt(-1), item.path("episode").asInt(-1))));
+            total = result.path("limits").path("total").asInt(0);
+            if (items.isEmpty()) {
+                break;
+            }
+        } while (episodes.size() < total);
+        return episodes;
+    }
+
     /** Kodi rereads {@code tvshow.nfo} and the images of the TV show, but not the episodes. */
     public void refreshTvShow(KodiEndpoint endpoint, int tvShowId) {
         call(endpoint, "VideoLibrary.RefreshTVShow",

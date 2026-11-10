@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
@@ -18,6 +19,7 @@ import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
+import de.tiktak.kmm.kodi.rpc.KodiEpisode;
 import de.tiktak.kmm.kodi.rpc.KodiException;
 import de.tiktak.kmm.kodi.rpc.KodiLibraryScheduler;
 import de.tiktak.kmm.kodi.rpc.KodiSources;
@@ -30,6 +32,7 @@ import de.tiktak.kmm.movie.MovieSetProblemException;
 import de.tiktak.kmm.movie.MovieSetService;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.EpisodeSummary;
 import de.tiktak.kmm.tvshow.TvShowDetails;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
 import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
@@ -67,11 +70,6 @@ public class KodiSyncService {
         return refreshMovie(movieId, hostService.targets(), properties.scanWaitInteractive());
     }
 
-    /** Updates the TV show (without its episodes) on all Kodi devices. */
-    public List<KodiSyncResult> refreshTvShow(long showId) {
-        return refreshTvShow(showId, hostService.targets(), properties.scanWaitInteractive());
-    }
-
     /** Updates the episode on all Kodi devices. */
     public List<KodiSyncResult> refreshEpisode(long episodeId) {
         return refreshEpisode(episodeId, hostService.targets(), properties.scanWaitInteractive());
@@ -92,7 +90,7 @@ public class KodiSyncService {
     void refreshTvShowOnRealtimeHosts(long showId) {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {
-            refreshTvShow(showId, targets);
+            refreshTvShow(showId, targets, properties.scanWaitBackground());
         }
     }
 
@@ -179,11 +177,6 @@ public class KodiSyncService {
         return refreshMovie(movieId, targets, properties.scanWaitBackground());
     }
 
-    /** For jobs and the realtime sync: they may wait longer for Kodi to finish a running scan. */
-    List<KodiSyncResult> refreshTvShow(long showId, List<KodiTarget> targets) {
-        return refreshTvShow(showId, targets, properties.scanWaitBackground());
-    }
-
     private List<KodiSyncResult> refreshMovie(long movieId, List<KodiTarget> targets, Duration maxWait) {
         MovieDetails movie = metadataService.findDetails(movieId);
         return syncAll(targets, target -> refresh(target, movie, maxWait));
@@ -192,6 +185,24 @@ public class KodiSyncService {
     private List<KodiSyncResult> refreshTvShow(long showId, List<KodiTarget> targets, Duration maxWait) {
         TvShowDetails show = tvShowService.findShow(showId);
         return syncAll(targets, target -> refresh(target, show, maxWait));
+    }
+
+    /**
+     * Updates the TV show with all its episodes, or only the episodes of one season, episode by episode, so Kodi keeps
+     * its IDs, resume points and watched status. Kodi finds episodes it does not know yet by one scan of the TV show
+     * folder.
+     *
+     * @param season   season number, or empty for the whole TV show including {@code tvshow.nfo}
+     * @param progress learns about every episode handled on every device
+     */
+    List<KodiSyncResult> refreshTvShowWithEpisodes(long showId, OptionalInt season, List<KodiTarget> targets,
+                                                   KodiProgress progress) {
+        TvShowDetails show = tvShowService.findShow(showId);
+        List<EpisodeSummary> episodes = show.episodes().stream()
+                .filter(episode -> season.isEmpty() || episode.season() == season.getAsInt())
+                .toList();
+        Steps steps = new Steps(targets.size() * episodes.size(), progress);
+        return syncAll(targets, target -> refresh(target, show, season, episodes, steps));
     }
 
     private List<KodiSyncResult> refreshEpisode(long episodeId, List<KodiTarget> targets, Duration maxWait) {
@@ -232,6 +243,48 @@ public class KodiSyncService {
             return refreshed(title);
         }
         return scanUnknown(target, title, kodiDirectory.get(), maxWait);
+    }
+
+    private Outcome refresh(KodiTarget target, TvShowDetails show, OptionalInt season, List<EpisodeSummary> episodes,
+                            Steps steps) {
+        String title = show.metadata().title();
+        Duration maxWait = properties.scanWaitBackground();
+        Optional<String> kodiDirectory = target.pathMapper().toKodiDirectory(show.directoryPath());
+        if (kodiDirectory.isEmpty()) {
+            steps.skip(episodes.size());
+            return notMapped(show.directoryPath());
+        }
+        Optional<Integer> kodiShowId = kodiClient.findTvShow(target.endpoint(), kodiDirectory.get());
+        if (kodiShowId.isEmpty()) {
+            steps.skip(episodes.size());
+            return scanUnknown(target, title, kodiDirectory.get(), maxWait);
+        }
+        if (season.isEmpty()) {
+            kodiClient.refreshTvShow(target.endpoint(), kodiShowId.get());
+        }
+        List<KodiEpisode> known = kodiClient.episodesOf(target.endpoint(), kodiShowId.get());
+        int refreshed = 0;
+        for (EpisodeSummary episode : episodes) {
+            Optional<Integer> kodiEpisodeId = target.pathMapper().toKodiPath(episode.filePath())
+                    .flatMap(file -> known.stream()
+                            .filter(candidate -> candidate.is(file, episode.season(), episode.episode()))
+                            .map(KodiEpisode::id)
+                            .findFirst());
+            kodiEpisodeId.ifPresent(id -> kodiClient.refreshEpisode(target.endpoint(), id));
+            refreshed += kodiEpisodeId.isPresent() ? 1 : 0;
+            steps.next();
+        }
+        LocalizedText message = season.isEmpty()
+                ? LocalizedText.of("kodi.sync.tvShowRefreshed").with("title", title).with("count", refreshed)
+                : LocalizedText.of("kodi.sync.seasonRefreshed").with("title", title)
+                        .with("season", season.getAsInt()).with("count", refreshed);
+        int unknown = episodes.size() - refreshed;
+        if (unknown == 0) {
+            return new Outcome(KodiSyncOutcome.REFRESHED, message);
+        }
+        return scanWithSourceCheck(target, kodiDirectory.get(), maxWait,
+                LocalizedText.of("kodi.sync.unknownEpisodesScan").with("refreshed", message)
+                        .with("count", unknown).with("directory", kodiDirectory.get()));
     }
 
     /** Kodi finds an episode it does not know yet by scanning the TV show folder. */
@@ -440,6 +493,28 @@ public class KodiSyncService {
     }
 
     private record Outcome(KodiSyncOutcome outcome, LocalizedText message) {
+    }
+
+    /** Counts the episodes of all devices; a device that is skipped counts its episodes as done. */
+    private static final class Steps {
+
+        private final int total;
+        private final KodiProgress progress;
+        private int done;
+
+        private Steps(int total, KodiProgress progress) {
+            this.total = total;
+            this.progress = progress;
+        }
+
+        void next() {
+            skip(1);
+        }
+
+        void skip(int count) {
+            done += count;
+            progress.report(done, total);
+        }
     }
 
     @FunctionalInterface

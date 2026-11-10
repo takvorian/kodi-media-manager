@@ -14,8 +14,10 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -51,6 +53,7 @@ import de.tiktak.kmm.scanner.DiscFormat;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.EpisodeSummary;
 import de.tiktak.kmm.tvshow.TvShowDetails;
 import de.tiktak.kmm.tvshow.TvShowMetadata;
 import de.tiktak.kmm.tvshow.TvShowMetadataService;
@@ -359,9 +362,10 @@ class KodiSyncServiceTest {
     void refreshesATvShowKodiKnowsAndScansUnknownOnes() {
         givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, true));
         givenShow();
-        kodi.respond("VideoLibrary.GetTVShows", "{\"tvshows\": [{\"tvshowid\": 4, \"file\": \"smb://nas/serien/Lost/\"}]}");
+        givenKnownShow();
 
-        assertThat(service.refreshTvShow(SHOW_ID)).singleElement().satisfies(result -> {
+        service.refreshTvShowOnRealtimeHosts(SHOW_ID);
+        assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.REFRESHED);
             assertThat(result.message()).isEqualTo(refreshed("Lost"));
         });
@@ -404,7 +408,8 @@ class KodiSyncServiceTest {
         givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, false));
         givenShow();
 
-        assertThat(service.refreshTvShow(SHOW_ID)).singleElement().satisfies(result ->
+        assertThat(service.refreshTvShowWithEpisodes(SHOW_ID, OptionalInt.empty(), hostService.targets(),
+                KodiProgress.NONE)).singleElement().satisfies(result ->
                 assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.NOT_MAPPED));
         service.refreshTvShowOnRealtimeHosts(SHOW_ID);
         service.refreshEpisodeOnRealtimeHosts(9);
@@ -421,12 +426,118 @@ class KodiSyncServiceTest {
                         .with("kind", "tvShow")));
     }
 
-    private void givenShow() {
+    @Test
+    void refreshesATvShowWithEachEpisodeKodiKnows() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"), episode(1, 2, "S1/Lost S01E02.mkv"),
+                episode(2, 1, "S2/Lost S02E01.mkv"));
+        givenKnownShow();
+        givenKodiEpisodes("""
+                {"episodeid": 21, "file": "smb://nas/serien/Lost/S1/Lost S01E01.mkv", "season": 1, "episode": 1},
+                {"episodeid": 22, "file": "smb://nas/serien/Lost/S1/Lost S01E02.mkv", "season": 1, "episode": 2},
+                {"episodeid": 31, "file": "smb://nas/serien/Lost/S2/Lost S02E01.mkv", "season": 2, "episode": 1}""");
+        List<String> progress = new ArrayList<>();
+
+        assertThat(service.refreshTvShowWithEpisodes(SHOW_ID, OptionalInt.empty(), hostService.targets(),
+                (done, total) -> progress.add(done + "/" + total))).singleElement().satisfies(result -> {
+            assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.REFRESHED);
+            assertThat(result.message()).isEqualTo(LocalizedText.of("kodi.sync.tvShowRefreshed")
+                    .with("title", "Lost").with("count", 3));
+        });
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow",
+                "VideoLibrary.GetEpisodes", "VideoLibrary.RefreshEpisode", "VideoLibrary.RefreshEpisode",
+                "VideoLibrary.RefreshEpisode");
+        assertThat(kodi.calls().get(2).params().path("tvshowid").asInt()).isEqualTo(4);
+        assertThat(refreshedEpisodeIds()).containsExactly(21, 22, 31);
+        assertThat(progress).containsExactly("1/3", "2/3", "3/3");
+    }
+
+    @Test
+    void refreshesOnlyTheEpisodesOfASeasonAndTellsMultiEpisodesApart() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"), episode(2, 1, "S2/Lost S02E01-E02.mkv"),
+                episode(2, 2, "S2/Lost S02E01-E02.mkv"));
+        givenKnownShow();
+        givenKodiEpisodes("""
+                {"episodeid": 21, "file": "smb://nas/serien/Lost/S1/Lost S01E01.mkv", "season": 1, "episode": 1},
+                {"episodeid": 32, "file": "smb://nas/serien/Lost/S2/Lost S02E01-E02.mkv", "season": 2, "episode": 2},
+                {"episodeid": 31, "file": "smb://nas/serien/Lost/S2/Lost S02E01-E02.mkv", "season": 2, "episode": 1}""");
+
+        assertThat(service.refreshTvShowWithEpisodes(SHOW_ID, OptionalInt.of(2), hostService.targets(),
+                KodiProgress.NONE)).singleElement().satisfies(result -> assertThat(result.message())
+                .isEqualTo(LocalizedText.of("kodi.sync.seasonRefreshed").with("title", "Lost").with("season", 2)
+                        .with("count", 2)));
+        assertThat(kodi.methods()).as("the TV show itself stays as it is")
+                .doesNotContain("VideoLibrary.RefreshTVShow");
+        assertThat(refreshedEpisodeIds()).containsExactly(31, 32);
+    }
+
+    @Test
+    void scansTheShowFolderOnceForEpisodesKodiDoesNotKnow() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"), episode(1, 2, "S1/Lost S01E02.mkv"),
+                episode(1, 3, "S1/Lost S01E03.mkv"));
+        givenKnownShow();
+        givenKodiEpisodes("""
+                {"episodeid": 21, "file": "smb://nas/serien/Lost/S1/Lost S01E01.mkv", "season": 1, "episode": 1}""");
+
+        assertThat(service.refreshTvShowWithEpisodes(SHOW_ID, OptionalInt.empty(), hostService.targets(),
+                KodiProgress.NONE)).singleElement().satisfies(result -> {
+            assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.SCAN_STARTED);
+            assertThat(result.message()).isEqualTo(LocalizedText.of("kodi.sync.unknownEpisodesScan")
+                    .with("refreshed", LocalizedText.of("kodi.sync.tvShowRefreshed").with("title", "Lost")
+                            .with("count", 1))
+                    .with("count", 2).with("directory", "smb://nas/serien/Lost/"));
+        });
+        assertThat(kodi.methods()).filteredOn("VideoLibrary.Scan"::equals).hasSize(1);
+        assertThat(kodi.calls().getLast().params().path("directory").asString()).isEqualTo("smb://nas/serien/Lost/");
+    }
+
+    @Test
+    void scansTheShowFolderOfAShowKodiDoesNotKnowAndCountsItsEpisodesAsDone() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false),
+                target(2, "Küche", kodi.endpoint(), FILME, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"), episode(1, 2, "S1/Lost S01E02.mkv"));
+        kodi.respond("VideoLibrary.GetTVShows", "{\"limits\": {\"total\": 0}}");
+        List<String> progress = new ArrayList<>();
+
+        assertThat(service.refreshTvShowWithEpisodes(SHOW_ID, OptionalInt.empty(), hostService.targets(),
+                (done, total) -> progress.add(done + "/" + total)))
+                .extracting(KodiSyncResult::outcome)
+                .containsExactly(KodiSyncOutcome.SCAN_STARTED, KodiSyncOutcome.NOT_MAPPED);
+        assertThat(kodi.methods()).doesNotContain("VideoLibrary.GetEpisodes", "VideoLibrary.RefreshEpisode");
+        assertThat(progress).containsExactly("2/4", "4/4");
+    }
+
+    private void givenShow(EpisodeSummary... episodes) {
         TvShowDetails show = mock(TvShowDetails.class);
         when(show.directoryPath()).thenReturn(SERIES_LIBRARY.resolve("Lost").toString());
         when(show.metadata()).thenReturn(new TvShowMetadata("Lost", null, null, null, null, null, null, null, null,
                 List.of(), List.of(), List.of(), null, null, null, null));
+        lenient().when(show.episodes()).thenReturn(List.of(episodes));
         lenient().when(tvShowService.findShow(SHOW_ID)).thenReturn(show);
+    }
+
+    private void givenKnownShow() {
+        kodi.respond("VideoLibrary.GetTVShows",
+                "{\"tvshows\": [{\"tvshowid\": 4, \"file\": \"smb://nas/serien/Lost/\"}]}");
+    }
+
+    private void givenKodiEpisodes(String episodes) {
+        kodi.respond("VideoLibrary.GetEpisodes", "{\"limits\": {\"total\": %d}, \"episodes\": [%s]}"
+                .formatted(episodes.split("episodeid").length - 1, episodes));
+    }
+
+    private List<Integer> refreshedEpisodeIds() {
+        return kodi.calls().stream()
+                .filter(call -> call.method().equals("VideoLibrary.RefreshEpisode"))
+                .map(call -> call.params().path("episodeid").asInt())
+                .toList();
+    }
+
+    private static EpisodeSummary episode(int season, int episode, String relativeFile) {
+        return new EpisodeSummary(season * 100L + episode, season, episode, "Folge", null,
+                SERIES_LIBRARY.resolve("Lost").resolve(relativeFile).toString(), null);
     }
 
     @Test

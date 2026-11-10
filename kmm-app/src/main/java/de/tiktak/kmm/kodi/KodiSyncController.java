@@ -2,6 +2,7 @@ package de.tiktak.kmm.kodi;
 
 import java.net.URI;
 import java.util.List;
+import java.util.OptionalInt;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,6 +16,7 @@ import de.tiktak.kmm.job.JobSnapshot;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.PositiveOrZero;
 import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 
@@ -43,15 +45,23 @@ public class KodiSyncController {
         return accepted(batchRefreshService.startMovies(movies.movieIds()));
     }
 
-    /** Updates the selected TV shows without their episodes as a job. */
+    /** Updates the selected TV shows with their episodes as a job. */
     @PostMapping("/tvshows/refresh")
     public ResponseEntity<JobSnapshot> refreshTvShows(@Valid @RequestBody TvShows shows) {
         return accepted(batchRefreshService.startTvShows(shows.showIds()));
     }
 
+    /** Updates the TV show with all its episodes as a job; the job result are the results of all devices. */
     @PostMapping("/tvshows/{showId}/refresh")
-    public List<KodiSyncResult> refreshTvShow(@PathVariable long showId) {
-        return syncService.refreshTvShow(showId);
+    public ResponseEntity<JobSnapshot> refreshTvShow(@PathVariable long showId) {
+        return accepted(batchRefreshService.startTvShow(showId, OptionalInt.empty()));
+    }
+
+    /** Updates the episodes of a season as a job; the job result are the results of all devices. */
+    @PostMapping("/tvshows/{showId}/seasons/{season}/refresh")
+    public ResponseEntity<JobSnapshot> refreshSeason(@PathVariable long showId,
+                                                     @PathVariable @PositiveOrZero int season) {
+        return accepted(batchRefreshService.startTvShow(showId, OptionalInt.of(season)));
     }
 
     @PostMapping("/episodes/{episodeId}/refresh")

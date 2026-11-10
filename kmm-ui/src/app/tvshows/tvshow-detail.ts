@@ -12,10 +12,15 @@ import { TranslocoPipe, TranslocoService, translate } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 import { EMPTY, Observable, filter, finalize, map, of, switchMap } from 'rxjs';
 
-import { Job } from '../jobs/job';
+import { Job, unsuccessfulJobSummary } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { KodiService } from '../kodi/kodi.service';
-import { kodiSyncSnackBarConfig, kodiSyncSummary } from '../kodi/kodi';
+import {
+  kodiJobResults,
+  kodiSyncSnackBarConfig,
+  kodiSyncSummary,
+  kodiTvShowJobKey,
+} from '../kodi/kodi';
 import { ArtworkSource } from '../movies/artwork';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { Attribution, ScraperInfo } from '../movies/scraper';
@@ -142,7 +147,6 @@ export class TvShowDetail {
       : [],
   );
   protected readonly searchingOnline = signal(false);
-  protected readonly refreshingKodi = signal(false);
   protected readonly renaming = signal(false);
   protected readonly removing = signal(false);
   /** Keeps running when leaving the page and coming back. */
@@ -153,6 +157,10 @@ export class TvShowDetail {
   /** Re-reading the technical details of a season; writes episode NFOs like scraping does. */
   protected readonly seasonStreamsJob = computed(() =>
     this.jobStore.runningJob(seasonStreamDetailsJobKey(this.id())),
+  );
+  /** Refreshing the TV show or one of its seasons with the episodes in Kodi. */
+  protected readonly kodiJob = computed(() =>
+    this.jobStore.runningJob(kodiTvShowJobKey(this.id())),
   );
   /** Counts finished runs; theme music and artwork load by themselves and are rebuilt with it. */
   protected readonly scrapeRuns = signal(0);
@@ -198,6 +206,12 @@ export class TvShowDetail {
         takeUntilDestroyed(),
       )
       .subscribe((job) => this.notify(streamDetailsSummary(job)));
+    this.jobStore.completed
+      .pipe(
+        filter((job) => job.key === kodiTvShowJobKey(this.id())),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => this.showKodiResults(job));
     this.jobStore.completed
       .pipe(
         filter((job) => job.key === tvShowScrapeJobKey(this.id())),
@@ -316,19 +330,30 @@ export class TvShowDetail {
     return episodeCode(episode.season, episode.episode);
   }
 
-  /** Makes Kodi re-read the NFO and artwork of the TV show, independent of the real-time sync. */
+  /** Makes Kodi re-read the TV show and all its episodes, independent of the real-time sync. */
   protected refreshInKodi(): void {
-    this.refreshingKodi.set(true);
-    this.kodiService.refreshTvShow(this.id()).subscribe({
-      next: (results) => {
-        this.refreshingKodi.set(false);
-        this.snackBar.open(kodiSyncSummary(results), 'OK', kodiSyncSnackBarConfig(results));
-      },
-      error: (error: unknown) => {
-        this.refreshingKodi.set(false);
-        this.notify(problemMessage(error));
-      },
+    this.startKodiJob(this.kodiService.refreshTvShow(this.id()));
+  }
+
+  /** Makes Kodi re-read the episodes of the season. */
+  protected refreshSeasonInKodi(group: SeasonWithEpisodes): void {
+    this.startKodiJob(this.kodiService.refreshSeason(this.id(), group.season.number));
+  }
+
+  private startKodiJob(start: Observable<Job>): void {
+    start.subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
     });
+  }
+
+  private showKodiResults(job: Job): void {
+    if (job.status !== 'SUCCEEDED') {
+      this.notify(unsuccessfulJobSummary(job));
+      return;
+    }
+    const results = kodiJobResults(job);
+    this.snackBar.open(kodiSyncSummary(results), 'OK', kodiSyncSnackBarConfig(results));
   }
 
   protected toggleOnlineSearch(): void {

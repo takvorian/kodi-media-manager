@@ -369,7 +369,7 @@
       "confirmScrape": "Scrape {count, plural, one {# TV show} other {# TV shows}}? KMM adds missing metadata, episode details, artwork, trailers, theme music and ratings and writes them to the media folders. Existing data stays. If “Rename TV shows after scraping” is on, they are renamed as well.",
       "confirmRatings": "Refresh the ratings of {count, plural, one {# TV show} other {# TV shows}} and fill empty fields (Trakt, OMDb)? The NFOs will be written.",
       "confirmThemes": "Fetch missing theme music for {count, plural, one {# TV show} other {# TV shows}}? It is saved as theme.mp3 in the folder.",
-      "confirmKodi": "Refresh {count, plural, one {# TV show} other {# TV shows}} on all Kodi devices? Their episodes stay untouched.",
+      "confirmKodi": "Refresh {count, plural, one {# TV show} other {# TV shows}} with all their episodes on all Kodi devices?",
       "confirmTrailers": "Fetch missing trailers for {count, plural, one {# TV show} other {# TV shows}}? The NFOs will be written.",
       "filterNameRequired": "Please enter a name for the filter.",
       "filterSaved": "Filter “{name}” saved.",
@@ -386,6 +386,7 @@
       "seasonsAndEpisodes": "Seasons and episodes",
       "noEpisodes": "No episodes found.",
       "seasonStreamsProgress": "{title}: {done} of {total} files …",
+      "kodiProgress": "{title}: {done} of {total} episodes …",
       "episodeCount": "{count, plural, one {# episode} other {# episodes}}",
       "scrapeSeason": "Scrape season",
       "refetchSeason": "Refetch season",
@@ -1490,6 +1491,9 @@
       },
       "sync": {
         "refreshed": "“{title}” updated.",
+        "tvShowRefreshed": "“{title}” and {count, plural, one {# episode} other {# episodes}} updated.",
+        "seasonRefreshed": "{count, plural, one {# episode} other {# episodes}} of season {season} of “{title}” updated.",
+        "unknownEpisodesScan": "{refreshed} Kodi does not know {count, plural, one {# episode} other {# episodes}} yet and is scanning {directory}.",
         "scanUnknown": "“{title}” is not yet known to Kodi; Kodi is scanning {directory}.",
         "noSource": "Kodi has no source for {directory} and will probably find nothing there. Check the path mapping of “{host}”. Sources in Kodi: {sources}.",
         "renamed": "Kodi is scanning {directory} and removes the old entries from {previous}.",
@@ -1513,6 +1517,10 @@
       "batch": {
         "refreshTvShows": "{count, plural, one {Update # TV show in Kodi} other {Update # TV shows in Kodi}}",
         "refreshMovies": "{count, plural, one {Update # movie in Kodi} other {Update # movies in Kodi}}"
+      },
+      "job": {
+        "refreshTvShow": "Update “{title}” in Kodi",
+        "refreshSeason": "Update season {season} of “{title}” in Kodi"
       }
     },
     "movie": {

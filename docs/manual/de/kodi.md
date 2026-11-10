@@ -51,7 +51,8 @@ Entfernst du Filme, Serien, Staffeln oder Episoden mit den Knöpfen **Entfernen*
 ## Von Hand aktualisieren
 
 - **In Kodi aktualisieren** in Film-, Serien- und Episodenansicht wirkt auf alle Geräte.
-- **In Kodi aktualisieren** in der Film- und Serienliste macht dasselbe für die Auswahl. Bei Serien liest Kodi nur die Serie neu ein, nicht ihre Episoden. Antwortet ein Gerät nicht, überspringt KMM es für den Rest des Laufs.
+- In der Serienansicht liest Kodi die Serie und jede ihrer Episoden neu ein. Dasselbe gibt es je Staffel, dann nur für deren Episoden. KMM schickt jede Episode einzeln an Kodi, so behält Kodi Gesehen-Status und Wiedergabe-Positionen. Episoden, die Kodi noch nicht kennt, holt ein Scan des Serienordners. Den Fortschritt zeigt KMM oben in der Serienansicht, das Ergebnis je Gerät als Meldung.
+- **In Kodi aktualisieren** in der Film- und Serienliste macht dasselbe für die Auswahl, bei Serien ebenfalls mit allen Episoden. Antwortet ein Gerät nicht, überspringt KMM es für den Rest des Laufs.
 - **Kodi-Scan** bei einer [Quelle](sources.md) lässt alle Geräte die Quelle durchsuchen.
 
 Beides funktioniert auch ohne Echtzeit-Sync.
