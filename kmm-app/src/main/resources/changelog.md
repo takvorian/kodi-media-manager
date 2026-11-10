@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.19 - 2026-11-10
+- Use chapter links in the TV show manual (bb41448)
+- Scan TV shows and seasons in KMM (a85d3a5)
+- Switch Kodi devices on and off (4cb1795)
+
 ## v0.18 - 2026-11-10
 - Keep header and status line of detail pages in view (0e399dd)
 - Scan TV shows and seasons in Kodi (cae9be1)
