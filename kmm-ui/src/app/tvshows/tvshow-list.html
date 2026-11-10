@@ -125,6 +125,15 @@
     >
       {{ 'tvshows.refreshInKodi' | transloco }}
     </button>
+    <button
+      matButton
+      type="button"
+      class="scan-kodi-button"
+      [disabled]="!!batchJob()"
+      (click)="scanChosenInKodi()"
+    >
+      {{ 'tvshows.scanInKodi' | transloco }}
+    </button>
     <app-language-select
       class="language-chosen"
       [label]="'tvshows.list.changeLanguage' | transloco"

@@ -51,6 +51,14 @@ public class KodiBatchRefreshService {
                         targets, KodiProgress.NONE)));
     }
 
+    /** @throws KodiProblemException if no Kodi device is set up */
+    public JobSnapshot startTvShowScans(List<Long> showIds) {
+        Run run = new Run(requireTargets());
+        return showBatch.startFill(LocalizedText.of("kodi.batch.scanTvShows"), showIds,
+                showId -> run.refresh(targets -> syncService.scanTvShow(showId, OptionalInt.empty(), targets,
+                        KodiProgress.NONE)));
+    }
+
     /**
      * Updates the TV show with all its episodes, or only the episodes of one season, as a job with one step per
      * episode. Its result are the {@link KodiSyncResult}s of all devices.
@@ -66,6 +74,23 @@ public class KodiBatchRefreshService {
                 : LocalizedText.of("kodi.job.refreshSeason").with("title", title).with("season", season.getAsInt());
         return jobService.submit(TV_SHOW_JOB_KEY_PREFIX + showId, jobTitle,
                 context -> syncService.refreshTvShowWithEpisodes(showId, season, targets, progressOf(context)));
+    }
+
+    /**
+     * Kodi scans the folder of the TV show or season for new episodes and cleans it up, as a job with one step per
+     * device. Its result are the {@link KodiSyncResult}s of all devices.
+     *
+     * @param season season number, or empty for the whole TV show
+     * @throws KodiProblemException if no Kodi device is set up
+     */
+    public JobSnapshot startTvShowScan(long showId, OptionalInt season) {
+        List<KodiTarget> targets = requireTargets();
+        String title = tvShowService.findShow(showId).metadata().title();
+        LocalizedText jobTitle = season.isEmpty()
+                ? LocalizedText.of("kodi.job.scanTvShow").with("title", title)
+                : LocalizedText.of("kodi.job.scanSeason").with("title", title).with("season", season.getAsInt());
+        return jobService.submit(TV_SHOW_JOB_KEY_PREFIX + showId, jobTitle,
+                context -> syncService.scanTvShow(showId, season, targets, progressOf(context)));
     }
 
     private static KodiProgress progressOf(JobContext context) {

@@ -58,10 +58,20 @@ describe('KodiService', () => {
     service.scanSource(1).subscribe();
     service.refreshTvShow(3).subscribe();
     service.refreshSeason(3, 0).subscribe();
+    service.scanTvShow(3).subscribe();
+    service.scanSeason(3, 2).subscribe();
+    service.scanTvShows([3, 4]).subscribe();
     service.refreshEpisode(12).subscribe();
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/movies/5/refresh' }).flush([]);
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/sources/1/scan' }).flush([]);
     httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/refresh' }).flush({});
+    httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/scan' }).flush({});
+    httpTesting
+      .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/seasons/2/scan' })
+      .flush({});
+    expect(
+      httpTesting.expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/scan' }).request.body,
+    ).toEqual({ showIds: [3, 4] });
     httpTesting
       .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/seasons/0/refresh' })
       .flush({});

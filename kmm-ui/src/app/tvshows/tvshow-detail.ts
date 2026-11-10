@@ -158,7 +158,7 @@ export class TvShowDetail {
   protected readonly seasonStreamsJob = computed(() =>
     this.jobStore.runningJob(seasonStreamDetailsJobKey(this.id())),
   );
-  /** Refreshing the TV show or one of its seasons with the episodes in Kodi. */
+  /** Refreshing or scanning the TV show or one of its seasons in Kodi. */
   protected readonly kodiJob = computed(() =>
     this.jobStore.runningJob(kodiTvShowJobKey(this.id())),
   );
@@ -338,6 +338,16 @@ export class TvShowDetail {
   /** Makes Kodi re-read the episodes of the season. */
   protected refreshSeasonInKodi(group: SeasonWithEpisodes): void {
     this.startKodiJob(this.kodiService.refreshSeason(this.id(), group.season.number));
+  }
+
+  /** Kodi looks for new episodes in the TV show folder and then removes entries whose files are gone. */
+  protected scanInKodi(): void {
+    this.startKodiJob(this.kodiService.scanTvShow(this.id()));
+  }
+
+  /** Like `scanInKodi` for the season folder. */
+  protected scanSeasonInKodi(group: SeasonWithEpisodes): void {
+    this.startKodiJob(this.kodiService.scanSeason(this.id(), group.season.number));
   }
 
   private startKodiJob(start: Observable<Job>): void {

@@ -212,6 +212,37 @@ class KodiBatchRefreshServiceTest {
     }
 
     @Test
+    void scansTvShowsAsABatch() {
+        when(hostService.targets()).thenReturn(List.of(LIVING_ROOM));
+        service.startTvShowScans(List.of(7L));
+        verify(showBatch).startFill(eq(LocalizedText.of("kodi.batch.scanTvShows")), eq(List.of(7L)), change.capture());
+        when(syncService.scanTvShow(7, OptionalInt.empty(), List.of(LIVING_ROOM), KodiProgress.NONE))
+                .thenReturn(List.of(result(LIVING_ROOM, KodiSyncOutcome.SCAN_STARTED)));
+
+        assertThat(change.getValue().test(7)).isTrue();
+    }
+
+    @Test
+    void scansATvShowOrASeasonAsAJobOfItsOwn() {
+        givenShow("Lost");
+        List<KodiSyncResult> results = List.of(result(LIVING_ROOM, KodiSyncOutcome.SCAN_STARTED));
+        doAnswer(invocation -> {
+            invocation.<KodiProgress>getArgument(3).report(1, 1);
+            return results;
+        }).when(syncService).scanTvShow(eq(7L), any(), eq(List.of(LIVING_ROOM)), any());
+
+        service.startTvShowScan(7, OptionalInt.empty());
+        service.startTvShowScan(7, OptionalInt.of(2));
+
+        verify(jobService).submit(eq("kodi-tvshow:7"),
+                eq(LocalizedText.of("kodi.job.scanTvShow").with("title", "Lost")), task.capture());
+        verify(jobService).submit(eq("kodi-tvshow:7"),
+                eq(LocalizedText.of("kodi.job.scanSeason").with("title", "Lost").with("season", 2)), any());
+        assertThat(task.getValue().run(context)).isEqualTo(results);
+        verify(context).reportProgress(1, 1);
+    }
+
+    @Test
     void rejectsATvShowRefreshWithoutAnyHost() {
         when(hostService.targets()).thenReturn(List.of());
 

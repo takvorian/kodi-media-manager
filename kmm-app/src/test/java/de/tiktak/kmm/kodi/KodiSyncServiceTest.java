@@ -509,10 +509,93 @@ class KodiSyncServiceTest {
         assertThat(progress).containsExactly("2/4", "4/4");
     }
 
+    @Test
+    void scansTheShowFolderAndThenCleansIt() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"));
+        List<String> progress = new ArrayList<>();
+
+        assertThat(service.scanTvShow(SHOW_ID, OptionalInt.empty(), hostService.targets(),
+                (done, total) -> progress.add(done + "/" + total))).singleElement().satisfies(result -> {
+            assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.SCAN_STARTED);
+            assertThat(result.message()).isEqualTo(LocalizedText.of("kodi.sync.scanTvShow").with("title", "Lost")
+                    .with("directory", "smb://nas/serien/Lost/"));
+        });
+        assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+                "XBMC.GetInfoBooleans", "VideoLibrary.Clean");
+        assertThat(kodi.calls().get(2).params().path("directory").asString()).isEqualTo("smb://nas/serien/Lost/");
+        JsonNode clean = kodi.calls().getLast().params();
+        assertThat(clean.path("directory").asString()).isEqualTo("smb://nas/serien/Lost/");
+        assertThat(clean.path("content").asString()).isEqualTo("tvshows");
+        assertThat(progress).containsExactly("1/1");
+    }
+
+    @Test
+    void scansTheSeasonFolderKodiAlreadyKnows() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"), episode(2, 1, "S2/Lost S02E01.mkv"),
+                episode(2, 2, "S2/Lost S02E02.mkv"));
+        givenKnownShow();
+        givenKodiEpisodes("""
+                {"episodeid": 31, "file": "smb://nas/serien/Lost/S2/Lost S02E01.mkv", "season": 2, "episode": 1}""");
+
+        service.scanTvShow(SHOW_ID, OptionalInt.of(2), hostService.targets(), KodiProgress.NONE);
+
+        assertThat(callsOf("VideoLibrary.Scan", "VideoLibrary.Clean"))
+                .containsOnly("smb://nas/serien/Lost/S2/");
+    }
+
+    @Test
+    void scansTheShowFolderForASeasonFolderKodiDoesNotKnowYet() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"), episode(2, 1, "S2/Lost S02E01.mkv"));
+        givenKnownShow();
+        givenKodiEpisodes("""
+                {"episodeid": 21, "file": "smb://nas/serien/Lost/S1/Lost S01E01.mkv", "season": 1, "episode": 1}""");
+
+        service.scanTvShow(SHOW_ID, OptionalInt.of(2), hostService.targets(), KodiProgress.NONE);
+
+        assertThat(callsOf("VideoLibrary.Scan", "VideoLibrary.Clean"))
+                .as("Kodi would take the new season folder for a TV show of its own")
+                .containsOnly("smb://nas/serien/Lost/");
+    }
+
+    @Test
+    void scansTheShowFolderForASeasonSpreadOverSeveralFolders() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"), episode(1, 2, "Lost S01E02.mkv"));
+
+        service.scanTvShow(SHOW_ID, OptionalInt.of(1), hostService.targets(), KodiProgress.NONE);
+
+        assertThat(callsOf("VideoLibrary.Scan", "VideoLibrary.Clean")).containsOnly("smb://nas/serien/Lost/");
+        assertThat(kodi.methods()).doesNotContain("VideoLibrary.GetTVShows");
+    }
+
+    @Test
+    void scansNothingOnADeviceWithoutPathMapping() {
+        givenHosts(target(1, "Küche", kodi.endpoint(), FILME, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"));
+        List<String> progress = new ArrayList<>();
+
+        assertThat(service.scanTvShow(SHOW_ID, OptionalInt.empty(), hostService.targets(),
+                (done, total) -> progress.add(done + "/" + total)))
+                .extracting(KodiSyncResult::outcome).containsExactly(KodiSyncOutcome.NOT_MAPPED);
+        assertThat(kodi.methods()).isEmpty();
+        assertThat(progress).containsExactly("1/1");
+    }
+
+    private List<String> callsOf(String... methods) {
+        List<String> wanted = List.of(methods);
+        return kodi.calls().stream()
+                .filter(call -> wanted.contains(call.method()))
+                .map(call -> call.params().path("directory").asString())
+                .toList();
+    }
+
     private void givenShow(EpisodeSummary... episodes) {
         TvShowDetails show = mock(TvShowDetails.class);
         when(show.directoryPath()).thenReturn(SERIES_LIBRARY.resolve("Lost").toString());
-        when(show.metadata()).thenReturn(new TvShowMetadata("Lost", null, null, null, null, null, null, null, null,
+        lenient().when(show.metadata()).thenReturn(new TvShowMetadata("Lost", null, null, null, null, null, null, null, null,
                 List.of(), List.of(), List.of(), null, null, null, null));
         lenient().when(show.episodes()).thenReturn(List.of(episodes));
         lenient().when(tvShowService.findShow(SHOW_ID)).thenReturn(show);

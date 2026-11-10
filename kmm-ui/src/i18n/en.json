@@ -307,6 +307,7 @@
   },
   "tvshows": {
     "refreshInKodi": "Refresh in Kodi",
+    "scanInKodi": "Scan in Kodi",
     "scrape": "Scrape",
     "saveFirst": "Please save the changes first.",
     "savedTo": "Saved and written to {path}.",
@@ -370,6 +371,7 @@
       "confirmRatings": "Refresh the ratings of {count, plural, one {# TV show} other {# TV shows}} and fill empty fields (Trakt, OMDb)? The NFOs will be written.",
       "confirmThemes": "Fetch missing theme music for {count, plural, one {# TV show} other {# TV shows}}? It is saved as theme.mp3 in the folder.",
       "confirmKodi": "Refresh {count, plural, one {# TV show} other {# TV shows}} with all their episodes on all Kodi devices?",
+      "confirmKodiScan": "Kodi will look for new episodes in the folders of {count, plural, one {# TV show} other {# TV shows}} on all Kodi devices and clean them up afterwards. Continue?",
       "confirmTrailers": "Fetch missing trailers for {count, plural, one {# TV show} other {# TV shows}}? The NFOs will be written.",
       "filterNameRequired": "Please enter a name for the filter.",
       "filterSaved": "Filter “{name}” saved.",
@@ -386,7 +388,7 @@
       "seasonsAndEpisodes": "Seasons and episodes",
       "noEpisodes": "No episodes found.",
       "seasonStreamsProgress": "{title}: {done} of {total} files …",
-      "kodiProgress": "{title}: {done} of {total} episodes …",
+      "kodiProgress": "{title} … ({done}/{total})",
       "episodeCount": "{count, plural, one {# episode} other {# episodes}}",
       "scrapeSeason": "Scrape season",
       "refetchSeason": "Refetch season",
@@ -1500,6 +1502,7 @@
         "setNotInKodi": "The movie set “{name}” is not yet known to Kodi.",
         "setUpdated": "Movie set “{name}” updated.",
         "scanSource": "{kind, select, tvShow {Kodi is looking for new TV shows and episodes in {directory}.} other {Kodi is looking for new movies in {directory}.}}",
+        "scanTvShow": "Kodi is looking for new episodes of “{title}” in {directory} and then removes entries whose files are gone.",
         "notMapped": "No path mapping for {path}.",
         "removed": "“{title}” removed from Kodi.",
         "notInKodi": "Kodi does not know “{title}”; nothing to remove.",
@@ -1516,11 +1519,14 @@
       },
       "batch": {
         "refreshTvShows": "{count, plural, one {Update # TV show in Kodi} other {Update # TV shows in Kodi}}",
+        "scanTvShows": "{count, plural, one {Scan # TV show in Kodi} other {Scan # TV shows in Kodi}}",
         "refreshMovies": "{count, plural, one {Update # movie in Kodi} other {Update # movies in Kodi}}"
       },
       "job": {
         "refreshTvShow": "Update “{title}” in Kodi",
-        "refreshSeason": "Update season {season} of “{title}” in Kodi"
+        "refreshSeason": "Update season {season} of “{title}” in Kodi",
+        "scanTvShow": "Scan “{title}” in Kodi",
+        "scanSeason": "Scan season {season} of “{title}” in Kodi"
       }
     },
     "movie": {

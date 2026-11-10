@@ -18,4 +18,10 @@ public record KodiEpisode(int id, String file, int season, int episode) {
     public boolean is(String file, int season, int episode) {
         return this.season == season && this.episode == episode && KodiFiles.matches(this.file, file);
     }
+
+    /** @param directory directory as Kodi sees it, with a trailing separator */
+    public boolean liesIn(String directory) {
+        return KodiFiles.parts(file).stream()
+                .anyMatch(part -> KodiFiles.directoryOf(part).equalsIgnoreCase(directory));
+    }
 }

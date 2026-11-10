@@ -9,7 +9,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
@@ -205,6 +207,29 @@ public class KodiSyncService {
         return syncAll(targets, target -> refresh(target, show, season, episodes, steps));
     }
 
+    /**
+     * Kodi scans the folder of the TV show, or of one season, for new episodes and then removes the entries whose
+     * files no longer exist there. Kodi takes a season folder it does not know yet for a TV show of its own, so then
+     * it scans the TV show folder instead.
+     *
+     * @param season   season number, or empty for the whole TV show
+     * @param progress learns about every device that is done
+     */
+    List<KodiSyncResult> scanTvShow(long showId, OptionalInt season, List<KodiTarget> targets,
+                                    KodiProgress progress) {
+        TvShowDetails show = tvShowService.findShow(showId);
+        Optional<String> seasonDirectory = season.isEmpty() ? Optional.empty()
+                : seasonDirectory(show, season.getAsInt());
+        Steps steps = new Steps(targets.size(), progress);
+        return syncAll(targets, target -> {
+            try {
+                return scan(target, show, seasonDirectory);
+            } finally {
+                steps.next();
+            }
+        });
+    }
+
     private List<KodiSyncResult> refreshEpisode(long episodeId, List<KodiTarget> targets, Duration maxWait) {
         EpisodeDetails episode = tvShowService.findEpisode(episodeId);
         TvShowDetails show = tvShowService.findShow(episode.tvShowId());
@@ -344,6 +369,44 @@ public class KodiSyncService {
         }
         return new Outcome(KodiSyncOutcome.REMOVED, LocalizedText.of("kodi.sync.episodesRemoved")
                 .with("title", showTitle).with("count", removedCount));
+    }
+
+    private Outcome scan(KodiTarget target, TvShowDetails show, Optional<String> seasonDirectory) {
+        Optional<String> showDirectory = target.pathMapper().toKodiDirectory(show.directoryPath());
+        if (showDirectory.isEmpty()) {
+            return notMapped(show.directoryPath());
+        }
+        String directory = seasonDirectory.flatMap(target.pathMapper()::toKodiDirectory)
+                .filter(candidate -> kodiKnowsFolder(target, showDirectory.get(), candidate))
+                .orElse(showDirectory.get());
+        Duration maxWait = properties.scanWaitBackground();
+        Outcome outcome = scanWithSourceCheck(target, directory, maxWait,
+                LocalizedText.of("kodi.sync.scanTvShow").with("title", show.metadata().title())
+                        .with("directory", directory));
+        scheduler.cleanTvShows(target.endpoint(), directory, maxWait);
+        return outcome;
+    }
+
+    private boolean kodiKnowsFolder(KodiTarget target, String showDirectory, String directory) {
+        return kodiClient.findTvShow(target.endpoint(), showDirectory)
+                .map(showId -> kodiClient.episodesOf(target.endpoint(), showId).stream()
+                        .anyMatch(episode -> episode.liesIn(directory)))
+                .orElse(false);
+    }
+
+    /** @return the folder below the TV show folder that holds all episodes of the season, if there is one */
+    private static Optional<String> seasonDirectory(TvShowDetails show, int season) {
+        Set<Path> directories = show.episodes().stream()
+                .filter(episode -> episode.season() == season)
+                .map(episode -> Path.of(episode.filePath()).getParent())
+                .collect(Collectors.toSet());
+        Path showDirectory = Path.of(show.directoryPath());
+        return directories.size() == 1
+                ? directories.stream()
+                        .filter(directory -> directory.startsWith(showDirectory) && !directory.equals(showDirectory))
+                        .map(Path::toString)
+                        .findFirst()
+                : Optional.empty();
     }
 
     private Outcome scanUnknown(KodiTarget target, String title, String kodiDirectory, Duration maxWait) {
@@ -495,7 +558,7 @@ public class KodiSyncService {
     private record Outcome(KodiSyncOutcome outcome, LocalizedText message) {
     }
 
-    /** Counts the episodes of all devices; a device that is skipped counts its episodes as done. */
+    /** Counts the steps of all devices; a device that is skipped counts its steps as done. */
     private static final class Steps {
 
         private final int total;

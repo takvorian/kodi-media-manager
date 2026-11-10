@@ -97,6 +97,23 @@ class KodiSyncControllerTest {
     }
 
     @Test
+    void scansTvShowsAndSeasonsAsJobs() {
+        when(batchRefreshService.startTvShowScans(List.of(7L))).thenReturn(job(JOB_1));
+        when(batchRefreshService.startTvShowScan(7, OptionalInt.empty())).thenReturn(job(JOB_1));
+        when(batchRefreshService.startTvShowScan(7, OptionalInt.of(1))).thenReturn(job(JOB_2));
+
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/scan").with(csrf())
+                .contentType("application/json").content("{\"showIds\": [7]}"))
+                .hasStatus(202).bodyJson().extractingPath("$.id").isEqualTo(JOB_1);
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/scan").with(csrf()))
+                .hasStatus(202).hasHeader("Location", "/api/v1/jobs/" + JOB_1);
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/seasons/1/scan").with(csrf()))
+                .hasStatus(202).bodyJson().extractingPath("$.id").isEqualTo(JOB_2);
+        assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/seasons/-1/scan").with(csrf()))
+                .hasStatus(400);
+    }
+
+    @Test
     void rejectsANegativeSeason() {
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/tvshows/7/seasons/-1/refresh").with(csrf()))
                 .hasStatus(400);

@@ -63,6 +63,21 @@ export class KodiService {
     return this.http.post<Job>(`${KODI_URL}/tvshows/${showId}/seasons/${season}/refresh`, null);
   }
 
+  /** Lets all Kodi devices scan the folders of the selection for new episodes and clean them up; runs as a job. */
+  scanTvShows(showIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/tvshows/scan`, { showIds });
+  }
+
+  /** Lets all Kodi devices scan the TV show folder and clean it up; runs as a job with the results as its result. */
+  scanTvShow(showId: number): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/tvshows/${showId}/scan`, null);
+  }
+
+  /** Like `scanTvShow` for the season folder; Kodi scans the TV show folder if it does not know that one yet. */
+  scanSeason(showId: number, season: number): Observable<Job> {
+    return this.http.post<Job>(`${KODI_URL}/tvshows/${showId}/seasons/${season}/scan`, null);
+  }
+
   /** Refreshes the episode on all Kodi devices. */
   refreshEpisode(episodeId: number): Observable<KodiSyncResult[]> {
     return this.http.post<KodiSyncResult[]>(`${KODI_URL}/episodes/${episodeId}/refresh`, null);

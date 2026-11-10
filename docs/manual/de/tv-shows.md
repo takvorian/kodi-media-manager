@@ -41,7 +41,7 @@ Fortschritt und Bericht erscheinen oben in der Serienansicht. Solange eine Staff
 
 **Technische Angaben auslesen** liest alle Episoden der Staffel mit ffprobe neu aus, auch solche, die schon Angaben haben. Sprachen der Spuren aus der NFO bleiben dabei erhalten, wie bei den [technischen Angaben](movies.md#technical-details) von Filmen. Den Fortschritt zeigt KMM über den Staffeln, das Ergebnis als Meldung. Solange das läuft, sind die Scrapen-Knöpfe der Serie gesperrt, denn beide schreiben in dieselben NFOs.
 
-**In Kodi aktualisieren** bei einer Staffel lässt Kodi alle Episoden dieser Staffel neu einlesen; der Knopf oben in der Serienansicht macht das für die Serie und alle Episoden (siehe [Kodi](kodi.md#von-hand-aktualisieren)).
+**In Kodi aktualisieren** bei einer Staffel lässt Kodi alle Episoden dieser Staffel neu einlesen; der Knopf oben in der Serienansicht macht das für die Serie und alle Episoden. **In Kodi scannen** lässt Kodi im Ordner der Staffel oder Serie nach neuen Episoden suchen und danach Einträge entfernen, deren Dateien fehlen (siehe [Kodi](kodi.md#von-hand-aktualisieren)).
 
 ## Online-Suche für Serien
 

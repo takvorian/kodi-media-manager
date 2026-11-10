@@ -19,6 +19,15 @@
       <button
         matButton
         type="button"
+        class="kodi-scan-button"
+        [disabled]="!!kodiJob()"
+        (click)="scanInKodi()"
+      >
+        {{ 'tvshows.scanInKodi' | transloco }}
+      </button>
+      <button
+        matButton
+        type="button"
         class="rename-button"
         [disabled]="renaming()"
         (click)="renameShow()"
@@ -221,6 +230,15 @@
                 (click)="refreshSeasonInKodi(group)"
               >
                 {{ 'tvshows.refreshInKodi' | transloco }}
+              </button>
+              <button
+                matButton
+                type="button"
+                class="season-kodi-scan-button"
+                [disabled]="!!kodiJob()"
+                (click)="scanSeasonInKodi(group)"
+              >
+                {{ 'tvshows.scanInKodi' | transloco }}
               </button>
               <button
                 matButton

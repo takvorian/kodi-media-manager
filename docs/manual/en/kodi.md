@@ -53,9 +53,10 @@ When you remove movies, TV shows, seasons or episodes with the **Remove** button
 - **Refresh in Kodi** in the movie, TV show and episode views affects all devices.
 - In the TV show view, Kodi reads the TV show and each of its episodes again. The same exists per season, then only for its episodes. KMM sends every episode to Kodi on its own, so Kodi keeps the watched status and resume points. Episodes Kodi does not know yet are picked up by a scan of the TV show folder. KMM shows the progress at the top of the TV show view and the result per device as a message.
 - **Refresh in Kodi** in the movie and TV show lists does the same for the selection, for TV shows likewise with all episodes. If a device does not respond, KMM skips it for the rest of the run.
+- **Scan in Kodi** in the TV show view makes all devices look for new episodes in the TV show folder. Afterwards Kodi removes entries from this folder whose files are gone. Kodi does not read known episodes again, that is what **Refresh in Kodi** does. For a season, Kodi scans only its folder if all its episodes lie in one common subfolder and Kodi already knows it. Otherwise Kodi scans the whole TV show folder, because Kodi would take an unknown season folder for a TV show of its own. The TV show list has the same button for the selection.
 - **Kodi scan** for a [source](sources.md) makes all devices scan the source.
 
-Both also work without real-time sync.
+All of this also works without real-time sync.
 
 ## When Kodi is busy reading
 

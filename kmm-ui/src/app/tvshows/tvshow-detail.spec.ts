@@ -292,7 +292,9 @@ describe('TvShowDetail', () => {
     function kodiButtons(): HTMLButtonElement[] {
       return [
         element().querySelector<HTMLButtonElement>('.kodi-refresh-button')!,
+        element().querySelector<HTMLButtonElement>('.kodi-scan-button')!,
         ...element().querySelectorAll<HTMLButtonElement>('.season-kodi-button'),
+        ...element().querySelectorAll<HTMLButtonElement>('.season-kodi-scan-button'),
       ];
     }
 
@@ -307,7 +309,7 @@ describe('TvShowDetail', () => {
       await fixture.whenStable();
 
       expect(element().querySelector('.kodi-progress')?.textContent).toContain(
-        '„ALF“ in Kodi aktualisieren: 1 von 3 Episoden',
+        '„ALF“ in Kodi aktualisieren … (1/3)',
       );
       kodiButtons().forEach((button) => expect(button.disabled).toBe(true));
 
@@ -349,6 +351,36 @@ describe('TvShowDetail', () => {
       expect(snackBarMessages).toEqual([
         '„ALF“ in Kodi aktualisieren fehlgeschlagen: Kodi antwortet nicht.',
       ]);
+    });
+
+    it('scans the folder of the show or of a season as a job', async () => {
+      await load(alf);
+
+      element().querySelector<HTMLButtonElement>('.kodi-scan-button')!.click();
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/scan' })
+        .flush({ ...refreshing, title: literal('„ALF“ in Kodi scannen'), total: 1, done: 0 });
+      events.emit({
+        ...refreshing,
+        status: 'SUCCEEDED',
+        result: [
+          {
+            hostId: 1,
+            host: 'Wohnzimmer',
+            outcome: 'SCAN_STARTED',
+            message: literal('Kodi sucht nach neuen Episoden.'),
+            at: '',
+          },
+        ],
+      });
+      fixture.detectChanges();
+      await fixture.whenStable();
+      element().querySelectorAll<HTMLButtonElement>('.season-kodi-scan-button')[1].click();
+      httpTesting
+        .expectOne({ method: 'POST', url: '/api/v1/kodi/tvshows/3/seasons/1/scan' })
+        .flush(refreshing);
+
+      expect(snackBarMessages).toEqual(['Wohnzimmer: Kodi sucht nach neuen Episoden.']);
     });
 
     it('reports a refresh that cannot be started', async () => {

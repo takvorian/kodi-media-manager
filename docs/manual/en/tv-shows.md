@@ -41,7 +41,7 @@ Progress and report appear at the top of the TV show view. While a season or the
 
 **Read technical details** reads all episodes of the season again with ffprobe, including those that already have details. The track languages from the NFO are kept, as with the [technical details](movies.md#technical-details) of movies. KMM shows the progress above the seasons and the result as a message. While this is running, the scrape buttons of the TV show are locked, because both write to the same NFOs.
 
-**Refresh in Kodi** on a season makes Kodi read all episodes of that season again; the button at the top of the TV show view does this for the TV show and all episodes (see [Kodi](kodi.md#updating-manually)).
+**Refresh in Kodi** on a season makes Kodi read all episodes of that season again; the button at the top of the TV show view does this for the TV show and all episodes. **Scan in Kodi** makes Kodi look for new episodes in the folder of the season or TV show and then remove entries whose files are gone (see [Kodi](kodi.md#updating-manually)).
 
 ## Online search for TV shows
 

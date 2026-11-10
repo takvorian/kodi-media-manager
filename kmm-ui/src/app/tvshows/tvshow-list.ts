@@ -332,6 +332,19 @@ export class TvShowList {
     });
   }
 
+  protected scanChosenInKodi(): void {
+    const ids = [...this.chosen()];
+    if (
+      !this.confirm(this.transloco.translate('tvshows.list.confirmKodiScan', { count: ids.length }))
+    ) {
+      return;
+    }
+    this.kodiService.scanTvShows(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   /** Enters the best proposal for the selected TV shows without a trailer; existing ones stay. */
   protected fillMissingTrailers(): void {
     const showIds = [...this.chosen()];

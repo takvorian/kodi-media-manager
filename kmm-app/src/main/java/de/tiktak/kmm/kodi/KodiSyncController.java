@@ -64,6 +64,25 @@ public class KodiSyncController {
         return accepted(batchRefreshService.startTvShow(showId, OptionalInt.of(season)));
     }
 
+    /** Selected TV shows: Kodi scans their folders for new episodes and cleans them up, as a job. */
+    @PostMapping("/tvshows/scan")
+    public ResponseEntity<JobSnapshot> scanTvShows(@Valid @RequestBody TvShows shows) {
+        return accepted(batchRefreshService.startTvShowScans(shows.showIds()));
+    }
+
+    /** Kodi scans the TV show folder for new episodes and cleans it up, as a job. */
+    @PostMapping("/tvshows/{showId}/scan")
+    public ResponseEntity<JobSnapshot> scanTvShow(@PathVariable long showId) {
+        return accepted(batchRefreshService.startTvShowScan(showId, OptionalInt.empty()));
+    }
+
+    /** Kodi scans the season folder, or the TV show folder, for new episodes and cleans it up, as a job. */
+    @PostMapping("/tvshows/{showId}/seasons/{season}/scan")
+    public ResponseEntity<JobSnapshot> scanSeason(@PathVariable long showId,
+                                                  @PathVariable @PositiveOrZero int season) {
+        return accepted(batchRefreshService.startTvShowScan(showId, OptionalInt.of(season)));
+    }
+
     @PostMapping("/episodes/{episodeId}/refresh")
     public List<KodiSyncResult> refreshEpisode(@PathVariable long episodeId) {
         return syncService.refreshEpisode(episodeId);
