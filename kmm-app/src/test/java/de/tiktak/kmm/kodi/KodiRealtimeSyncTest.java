@@ -6,6 +6,7 @@ import static org.mockito.Mockito.timeout;
 import static org.mockito.Mockito.verify;
 
 import java.time.Duration;
+import java.util.List;
 
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -15,11 +16,14 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
+import de.tiktak.kmm.movie.MovieRemovedEvent;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSetChangedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
+import de.tiktak.kmm.tvshow.EpisodesRemovedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
+import de.tiktak.kmm.tvshow.TvShowRemovedEvent;
 import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
 
@@ -105,5 +109,20 @@ class KodiRealtimeSyncTest {
         verify(syncService, timeout(WAIT_MILLIS)).refreshEpisodeOnRealtimeHosts(12);
         verify(syncService, timeout(WAIT_MILLIS)).scanSourceOnRealtimeHosts(6);
         verify(syncService, never()).scanSourceOnRealtimeHosts(5);
+    }
+
+    @Test
+    void removesRemovedEntriesFromKodi() {
+        realtimeSync.onMovieRemoved(new MovieRemovedEvent("Heat", "/filme/Heat.mkv"));
+        realtimeSync.onTvShowRemoved(new TvShowRemovedEvent("Lost", "/serien/Lost"));
+        realtimeSync.onEpisodesRemoved(new EpisodesRemovedEvent("ALF",
+                List.of(new EpisodesRemovedEvent.RemovedEpisode("/serien/ALF/S01E01E02.avi", 1, 1),
+                        new EpisodesRemovedEvent.RemovedEpisode("/serien/ALF/S01E01E02.avi", 1, 2))));
+
+        verify(syncService, timeout(WAIT_MILLIS)).removeMovieOnRealtimeHosts("Heat", "/filme/Heat.mkv");
+        verify(syncService, timeout(WAIT_MILLIS)).removeTvShowOnRealtimeHosts("Lost", "/serien/Lost");
+        verify(syncService, timeout(WAIT_MILLIS)).removeEpisodesOnRealtimeHosts("ALF",
+                List.of(new KodiEpisodeRef("/serien/ALF/S01E01E02.avi", 1, 1),
+                        new KodiEpisodeRef("/serien/ALF/S01E01E02.avi", 1, 2)));
     }
 }

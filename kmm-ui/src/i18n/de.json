@@ -1785,6 +1785,41 @@
           "detail": "Der Filter hat zu viele oder zu lange Bedingungen."
         }
       }
+    },
+    "removal": {
+      "deleteFailed": "„{file}“ konnte nicht gelöscht werden: {reason}",
+      "entry": {
+        "episode": "{show} {code} – {title}",
+        "tvShow": "„{title}“ mit {count, plural, one {# Episode} other {# Episoden}}"
+      },
+      "note": {
+        "multiEpisode": "„{file}“ enthält mehrere Episoden; sie werden alle entfernt.",
+        "otherSeason": "„{file}“ enthält auch Episoden der Staffel {season}; sie werden ebenfalls entfernt.",
+        "unknownFiles": "Der Serienordner enthält {count, plural, one {# Datei} other {# Dateien}}, die KMM nicht kennt: {files}",
+        "missingFiles": "{count, plural, one {# Datei gibt es nicht mehr} other {# Dateien gibt es nicht mehr}}: {files}",
+        "outsideSource": "„{path}“ liegt nicht in der Quelle „{source}“; es können keine Dateien gelöscht werden.",
+        "sourceItself": "Der Ordner „{folder}“ ist die Quelle selbst; es können keine Dateien gelöscht werden.",
+        "unreadable": "Der Ordner „{folder}“ lässt sich nicht lesen ({reason}); es können keine Dateien gelöscht werden.",
+        "folderKept": "Der Ordner „{folder}“ enthält noch {count, plural, one {# andere Datei} other {# andere Dateien}} und bleibt erhalten.",
+        "sharedDiscFolder": "Der Ordner „{folder}“ enthält auch andere Filme; es können keine Dateien gelöscht werden."
+      },
+      "job": {
+        "entry": "{mode, select, files {„{title}“ mit Dateien löschen} other {„{title}“ aus der Bibliothek entfernen}}",
+        "season": "{mode, select, files {Staffel {season} von „{title}“ mit Dateien löschen} other {Staffel {season} von „{title}“ aus der Bibliothek entfernen}}",
+        "movies": "{mode, select, files {{count, plural, one {# Film mit Dateien löschen} other {# Filme mit Dateien löschen}}} other {{count, plural, one {# Film aus der Bibliothek entfernen} other {# Filme aus der Bibliothek entfernen}}}}"
+      },
+      "progress": {
+        "files": "Dateien werden gelöscht",
+        "library": "Wird aus der Bibliothek entfernt"
+      },
+      "filesBlocked": {
+        "title": "Dateien können nicht gelöscht werden",
+        "detail": "Einige Dateien liegen nicht in der Quelle oder lassen sich nicht lesen. Entferne den Eintrag nur aus der Bibliothek."
+      },
+      "seasonNotFound": {
+        "title": "Staffel nicht gefunden",
+        "detail": "„{title}“ hat keine Episoden in Staffel {season}."
+      }
     }
   }
 }

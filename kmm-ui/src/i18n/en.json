@@ -1785,6 +1785,41 @@
           "detail": "The filter has too many or too long conditions."
         }
       }
+    },
+    "removal": {
+      "deleteFailed": "“{file}” could not be deleted: {reason}",
+      "entry": {
+        "episode": "{show} {code} – {title}",
+        "tvShow": "“{title}” with {count, plural, one {# episode} other {# episodes}}"
+      },
+      "note": {
+        "multiEpisode": "“{file}” contains several episodes; they are all removed.",
+        "otherSeason": "“{file}” also contains episodes of season {season}; they are removed as well.",
+        "unknownFiles": "The TV show folder contains {count, plural, one {# file} other {# files}} KMM does not know: {files}",
+        "missingFiles": "{count, plural, one {# file no longer exists} other {# files no longer exist}}: {files}",
+        "outsideSource": "“{path}” is not inside the source “{source}”; no files can be deleted.",
+        "sourceItself": "The folder “{folder}” is the source itself; no files can be deleted.",
+        "unreadable": "The folder “{folder}” cannot be read ({reason}); no files can be deleted.",
+        "folderKept": "The folder “{folder}” still contains {count, plural, one {# other file} other {# other files}} and is kept.",
+        "sharedDiscFolder": "The folder “{folder}” also contains other movies; no files can be deleted."
+      },
+      "job": {
+        "entry": "{mode, select, files {Delete “{title}” with its files} other {Remove “{title}” from the library}}",
+        "season": "{mode, select, files {Delete season {season} of “{title}” with its files} other {Remove season {season} of “{title}” from the library}}",
+        "movies": "{mode, select, files {{count, plural, one {Delete # movie with its files} other {Delete # movies with their files}}} other {{count, plural, one {Remove # movie from the library} other {Remove # movies from the library}}}}"
+      },
+      "progress": {
+        "files": "Deleting files",
+        "library": "Removing from the library"
+      },
+      "filesBlocked": {
+        "title": "Files cannot be deleted",
+        "detail": "Some files are not inside the source or cannot be read. Remove the entry from the library only."
+      },
+      "seasonNotFound": {
+        "title": "Season not found",
+        "detail": "“{title}” has no episodes in season {season}."
+      }
     }
   }
 }

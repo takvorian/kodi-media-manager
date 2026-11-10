@@ -273,6 +273,11 @@ public class TvShow {
         return Path.of(directoryPath);
     }
 
+    /** Forgets the details of a season, e.g. its title, once it has no episodes left. */
+    void removeSeason(int number) {
+        seasons.removeIf(season -> season.getNumber() == number);
+    }
+
     /** After renaming: the TV show folder is now located there. */
     void relocate(String newDirectoryPath) {
         this.directoryPath = Objects.requireNonNull(newDirectoryPath, "newDirectoryPath must not be null");

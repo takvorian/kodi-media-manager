@@ -1,5 +1,6 @@
 package de.tiktak.kmm.kodi;
 
+import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -8,11 +9,14 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
+import de.tiktak.kmm.movie.MovieRemovedEvent;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSetChangedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.tvshow.EpisodeFilesChangedEvent;
+import de.tiktak.kmm.tvshow.EpisodesRemovedEvent;
 import de.tiktak.kmm.tvshow.TvShowFilesChangedEvent;
+import de.tiktak.kmm.tvshow.TvShowRemovedEvent;
 import de.tiktak.kmm.tvshow.TvShowRenamedEvent;
 import de.tiktak.kmm.tvshow.TvShowSourceScannedEvent;
 
@@ -62,6 +66,25 @@ class KodiRealtimeSync implements DisposableBean {
     @TransactionalEventListener(fallbackExecution = true)
     void onTvShowRenamed(TvShowRenamedEvent event) {
         executor.execute(() -> syncService.syncRenamedTvShowOnRealtimeHosts(event));
+    }
+
+    /** Kodi finds removed entries by their files in its own library, even when the files are gone. */
+    @TransactionalEventListener(fallbackExecution = true)
+    void onMovieRemoved(MovieRemovedEvent event) {
+        executor.execute(() -> syncService.removeMovieOnRealtimeHosts(event.title(), event.filePath()));
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    void onTvShowRemoved(TvShowRemovedEvent event) {
+        executor.execute(() -> syncService.removeTvShowOnRealtimeHosts(event.title(), event.directory()));
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    void onEpisodesRemoved(EpisodesRemovedEvent event) {
+        List<KodiEpisodeRef> episodes = event.episodes().stream()
+                .map(episode -> new KodiEpisodeRef(episode.filePath(), episode.season(), episode.episode()))
+                .toList();
+        executor.execute(() -> syncService.removeEpisodesOnRealtimeHosts(event.showTitle(), episodes));
     }
 
     @TransactionalEventListener(fallbackExecution = true)
