@@ -62,6 +62,19 @@ class RemovalFilesTest {
     }
 
     @Test
+    void findsAFolderEmptiedByTheFilesOfSeveralMovies() throws IOException {
+        Path source = temp.resolve("filme");
+        Path heat = file(source.resolve("Sammlung/Heat.mkv"));
+        Path ronin = file(source.resolve("Sammlung/Ronin.mkv"));
+        RemovalFiles files = new RemovalFiles();
+
+        files.scope(source, "Filme", source).addWithCompanions(heat, List.of("Ronin"));
+        files.scope(source, "Filme", source).addWithCompanions(ronin, List.of("Heat"));
+
+        assertThat(files.plan(ENTRIES).directories()).containsExactly(source.resolve("Sammlung").toString());
+    }
+
+    @Test
     void acceptsFilesDirectlyInTheSource() throws IOException {
         Path source = temp.resolve("filme");
         Path video = file(source.resolve("Heat.mkv"));

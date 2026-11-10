@@ -43,9 +43,17 @@ public final class RemovalFiles {
      * @param stop       empty folders are removed up to this folder exclusively
      */
     public Scope scope(Path sourceRoot, String sourceName, Path stop) {
-        Scope scope = new Scope(sourceRoot.toAbsolutePath().normalize(), sourceName, stop.toAbsolutePath().normalize());
-        files.computeIfAbsent(scope, key -> new TreeSet<>());
-        return scope;
+        Path root = sourceRoot.toAbsolutePath().normalize();
+        Path normalizedStop = stop.toAbsolutePath().normalize();
+        // One scope per root and stop, so the emptied folders are found across all files, e.g. of a selection.
+        return files.keySet().stream()
+                .filter(scope -> scope.root.equals(root) && scope.stop.equals(normalizedStop))
+                .findFirst()
+                .orElseGet(() -> {
+                    Scope scope = new Scope(root, sourceName, normalizedStop);
+                    files.put(scope, new TreeSet<>());
+                    return scope;
+                });
     }
 
     public void note(LocalizedText note) {
