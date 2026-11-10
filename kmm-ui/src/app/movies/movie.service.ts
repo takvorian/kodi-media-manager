@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { MovieFilter, MovieFilterValues } from '../filters/movie-filter';
 import { Job } from '../jobs/job';
 import { ListSort, SORT_BY_TITLE as TITLE_ORDER, withSort } from '../shared/list-sort';
+import { RemovalPlan } from '../shared/removal';
 import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
 import { MovieBatchEdit } from './movie-batch';
 import { CollectionReference, MovieScrapeProposal, ScrapeCandidate, ScraperInfo } from './scraper';
@@ -135,5 +136,25 @@ export class MovieService {
 
   fillMissingTrailers(movieIds: readonly number[]): Observable<Job> {
     return this.http.post<Job>(`${MOVIES_URL}/trailers/fill`, { movieIds });
+  }
+
+  /** What removing the movie would comprise; changes nothing. */
+  removalPlan(movieId: number): Observable<RemovalPlan> {
+    return this.http.get<RemovalPlan>(`${MOVIES_URL}/${movieId}/removal`);
+  }
+
+  /** Removes the movie from the library, with `deleteFiles` also its files for good, as a job. */
+  remove(movieId: number, deleteFiles: boolean): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/${movieId}/removal`, { deleteFiles });
+  }
+
+  /** What removing the movies would comprise; changes nothing. */
+  selectionRemovalPlan(movieIds: readonly number[]): Observable<RemovalPlan> {
+    return this.http.post<RemovalPlan>(`${MOVIES_URL}/removal/plan`, { movieIds });
+  }
+
+  /** Removes the movies from the library, with `deleteFiles` also their files for good, as a job. */
+  removeSelection(movieIds: readonly number[], deleteFiles: boolean): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/removal`, { movieIds, deleteFiles });
   }
 }

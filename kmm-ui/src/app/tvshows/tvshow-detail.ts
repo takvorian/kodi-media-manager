@@ -7,7 +7,7 @@ import { MatExpansionModule } from '@angular/material/expansion';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService, translate } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 import { EMPTY, Observable, filter, finalize, map, of, switchMap } from 'rxjs';
@@ -32,6 +32,7 @@ import { CONFIRM } from '../shared/confirm';
 import { batchSummary } from '../filters/batch';
 import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
+import { RemovalPlan, RemovalService, isRemovalJob } from '../shared/removal';
 import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { TvPeople } from './tv-people';
@@ -107,6 +108,8 @@ export class TvShowDetail {
   private readonly confirm = inject(CONFIRM);
   private readonly jobStore = inject(JobStore);
   private readonly transloco = inject(TranslocoService);
+  private readonly removal = inject(RemovalService);
+  private readonly router = inject(Router);
 
   /** TV show ID from the route `/tvshows/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -141,6 +144,7 @@ export class TvShowDetail {
   protected readonly searchingOnline = signal(false);
   protected readonly refreshingKodi = signal(false);
   protected readonly renaming = signal(false);
+  protected readonly removing = signal(false);
   /** Keeps running when leaving the page and coming back. */
   protected readonly scrapeJob = computed(() =>
     this.jobStore.runningJob(tvShowScrapeJobKey(this.id())),
@@ -204,6 +208,45 @@ export class TvShowDetail {
         this.scrapeRuns.update((runs) => runs + 1);
         this.show.reload();
       });
+    // Removed seasons and episodes, also of an episode page that came back here.
+    this.jobStore.completed
+      .pipe(filter(isRemovalJob), takeUntilDestroyed())
+      .subscribe(() => this.show.reload());
+  }
+
+  /** Removes all episodes of the season after asking how; the TV show reloads when the job is done. */
+  protected removeSeason(group: SeasonWithEpisodes): void {
+    const season = group.season.number;
+    this.startRemoval(
+      this.transloco.translate('removal.title.season', {
+        season,
+        title: this.show.value()?.metadata.title ?? '',
+      }),
+      this.tvShowService.seasonRemovalPlan(this.id(), season),
+      (deleteFiles) => this.tvShowService.removeSeason(this.id(), season, deleteFiles),
+    ).subscribe();
+  }
+
+  /** Removes the TV show with all episodes after asking how, then goes back to the list. */
+  protected removeShow(): void {
+    this.startRemoval(
+      this.transloco.translate('removal.title.tvShow', {
+        title: this.show.value()?.metadata.title ?? '',
+      }),
+      this.tvShowService.showRemovalPlan(this.id()),
+      (deleteFiles) => this.tvShowService.removeShow(this.id(), deleteFiles),
+    ).subscribe(() => void this.router.navigate(['/tvshows']));
+  }
+
+  private startRemoval(
+    title: string,
+    plan: Observable<RemovalPlan>,
+    remove: (deleteFiles: boolean) => Observable<Job>,
+  ): Observable<Job> {
+    this.removing.set(true);
+    return this.removal
+      .remove({ title, helpChapter: 'tv-shows', plan, remove })
+      .pipe(finalize(() => this.removing.set(false)));
   }
 
   /** Adds everything missing like scraping a source does, only for this TV show. */

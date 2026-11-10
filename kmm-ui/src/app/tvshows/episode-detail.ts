@@ -6,9 +6,10 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
+import { finalize } from 'rxjs';
 
 import {
   KodiPlaybackResult,
@@ -20,6 +21,7 @@ import { KodiService } from '../kodi/kodi.service';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { problemMessage } from '../shared/problem-message';
+import { RemovalService } from '../shared/removal';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
 import { TvPeople } from './tv-people';
 import { EpisodeDetails, episodeCode } from './tvshow';
@@ -55,6 +57,8 @@ export class EpisodeDetail {
   private readonly kodiService = inject(KodiService);
   private readonly mediaInfoService = inject(MediaInfoService);
   private readonly transloco = inject(TranslocoService);
+  private readonly removal = inject(RemovalService);
+  private readonly router = inject(Router);
 
   /** Episode ID from the route `/episodes/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -65,6 +69,7 @@ export class EpisodeDetail {
   protected readonly refreshingKodi = signal(false);
   protected readonly importingPlayback = signal(false);
   protected readonly probingStreams = signal(false);
+  protected readonly removing = signal(false);
   protected readonly artwork = computed(() => this.artworkService.forEpisode(this.id()));
   protected readonly episode = rxResource({
     params: () => this.id(),
@@ -128,6 +133,23 @@ export class EpisodeDetail {
     if (this.episode.hasValue()) {
       this.form.reset(toEpisodeFormValue(this.episode.value().metadata));
     }
+  }
+
+  /**
+   * Removes the episode after asking how, with a multi-episode file all its episodes; then goes back to the TV show,
+   * which reloads when the job is done.
+   */
+  protected remove(details: EpisodeDetails): void {
+    this.removing.set(true);
+    this.removal
+      .remove({
+        title: this.transloco.translate('removal.title.episode'),
+        helpChapter: 'tv-shows',
+        plan: this.tvShowService.episodeRemovalPlan(this.id()),
+        remove: (deleteFiles) => this.tvShowService.removeEpisode(this.id(), deleteFiles),
+      })
+      .pipe(finalize(() => this.removing.set(false)))
+      .subscribe(() => void this.router.navigate(['/tvshows', details.tvShowId]));
   }
 
   /** Makes Kodi re-read the NFO and thumbnail of the episode, independent of the real-time sync. */

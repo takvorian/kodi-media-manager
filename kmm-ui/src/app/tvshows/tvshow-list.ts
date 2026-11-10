@@ -35,6 +35,7 @@ import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { KodiService } from '../kodi/kodi.service';
 import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
+import { isRemovalJob } from '../shared/removal';
 import { MediaSourceService } from '../sources/media-source.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
 import { ScrapeReport } from '../sources/scrape-report';
@@ -202,6 +203,10 @@ export class TvShowList {
         this.scrapeReport.set(job);
         this.shows.reload();
       });
+    // TV shows removed on their detail page, which comes back here.
+    this.jobStore.completed
+      .pipe(where(isRemovalJob), takeUntilDestroyed())
+      .subscribe(() => this.shows.reload());
   }
 
   protected isChosen(showId: number): boolean {

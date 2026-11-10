@@ -119,6 +119,15 @@
     >
       {{ 'movies.actions.refreshInKodi' | transloco }}
     </button>
+    <button
+      matButton
+      type="button"
+      class="remove-chosen-button"
+      [disabled]="!!batchJob()"
+      (click)="removeChosen()"
+    >
+      {{ 'removal.button.selection' | transloco }}
+    </button>
     <app-language-select
       class="language-chosen"
       [label]="'movies.language.change' | transloco"

@@ -1040,6 +1040,40 @@
       "unknownError": "Unbekannter Fehler"
     }
   },
+  "removal": {
+    "title": {
+      "episode": "Episode entfernen",
+      "season": "Staffel {season} von „{title}“ entfernen",
+      "tvShow": "„{title}“ entfernen",
+      "movie": "„{title}“ entfernen",
+      "movies": "{count, plural, one {# Film} other {# Filme}} entfernen"
+    },
+    "button": {
+      "episode": "Entfernen",
+      "season": "Staffel entfernen",
+      "tvShow": "Serie entfernen",
+      "movie": "Entfernen",
+      "selection": "Auswahl entfernen"
+    },
+    "entries": "Betroffene Einträge",
+    "mode": {
+      "label": "Wie soll entfernt werden?",
+      "library": "Nur aus der Bibliothek",
+      "libraryHint": "Der Eintrag verschwindet aus KMM und Kodi. Die Dateien bleiben; der nächste Scan nimmt ihn wieder auf.",
+      "files": "Auch Dateien löschen"
+    },
+    "filesBlocked": "Die Dateien können hier nicht gelöscht werden, siehe Hinweise.",
+    "warning": "Die Dateien werden endgültig gelöscht, ohne Papierkorb. Das lässt sich nicht rückgängig machen.",
+    "noFiles": "Es gibt keine Dateien zum Löschen.",
+    "files": "{count, plural, one {Diese Datei wird gelöscht:} other {Diese # Dateien werden gelöscht:}}",
+    "confirm": "Entfernen",
+    "confirmDelete": "Endgültig löschen",
+    "summary": {
+      "removed": "{count, plural, one {# Eintrag} other {# Einträge}} entfernt.",
+      "deleted": "{count, plural, one {# Datei} other {# Dateien}} gelöscht.",
+      "failures": "{count, plural, one {# Datei konnte} other {# Dateien konnten}} nicht gelöscht werden: {failures}"
+    }
+  },
   "server": {
     "backup": {
       "import": {

@@ -26,6 +26,15 @@
         {{ 'common.rename' | transloco }}
       </button>
       <button
+        matButton
+        type="button"
+        class="remove-show-button"
+        [disabled]="removing() || !!scrapeJob()"
+        (click)="removeShow()"
+      >
+        {{ 'removal.button.tvShow' | transloco }}
+      </button>
+      <button
         matButton="tonal"
         type="button"
         class="scrape-button"
@@ -194,6 +203,15 @@
                 (click)="probeSeason(group)"
               >
                 {{ 'tvshows.probeStreams' | transloco }}
+              </button>
+              <button
+                matButton
+                type="button"
+                class="season-remove-button"
+                [disabled]="removing() || !!scrapeJob() || !!seasonStreamsJob()"
+                (click)="removeSeason(group)"
+              >
+                {{ 'removal.button.season' | transloco }}
               </button>
             </div>
             <ul class="episodes">

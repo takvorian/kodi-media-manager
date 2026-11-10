@@ -1040,6 +1040,40 @@
       "unknownError": "Unknown error"
     }
   },
+  "removal": {
+    "title": {
+      "episode": "Remove episode",
+      "season": "Remove season {season} of “{title}”",
+      "tvShow": "Remove “{title}”",
+      "movie": "Remove “{title}”",
+      "movies": "Remove {count, plural, one {# movie} other {# movies}}"
+    },
+    "button": {
+      "episode": "Remove",
+      "season": "Remove season",
+      "tvShow": "Remove TV show",
+      "movie": "Remove",
+      "selection": "Remove selection"
+    },
+    "entries": "Affected entries",
+    "mode": {
+      "label": "How should it be removed?",
+      "library": "From the library only",
+      "libraryHint": "The entry disappears from KMM and Kodi. The files stay; the next scan adds it again.",
+      "files": "Delete the files as well"
+    },
+    "filesBlocked": "The files cannot be deleted here, see the notes.",
+    "warning": "The files are deleted for good, without a recycle bin. This cannot be undone.",
+    "noFiles": "There are no files to delete.",
+    "files": "{count, plural, one {This file is deleted:} other {These # files are deleted:}}",
+    "confirm": "Remove",
+    "confirmDelete": "Delete for good",
+    "summary": {
+      "removed": "{count, plural, one {# entry} other {# entries}} removed.",
+      "deleted": "{count, plural, one {# file} other {# files}} deleted.",
+      "failures": "{count, plural, one {# file} other {# files}} could not be deleted: {failures}"
+    }
+  },
   "server": {
     "backup": {
       "import": {

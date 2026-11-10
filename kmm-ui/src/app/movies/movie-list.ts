@@ -35,6 +35,7 @@ import { KodiService } from '../kodi/kodi.service';
 import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
 import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
+import { RemovalService, isRemovalJob } from '../shared/removal';
 import { MediaSourceService } from '../sources/media-source.service';
 import { ScrapeProgress } from '../sources/scrape-progress';
 import { ScrapeReport } from '../sources/scrape-report';
@@ -95,6 +96,7 @@ export class MovieList {
   private readonly snackBar = inject(MatSnackBar);
   private readonly confirm = inject(CONFIRM);
   private readonly jobStore = inject(JobStore);
+  private readonly removal = inject(RemovalService);
   private readonly transloco = inject(TranslocoService);
 
   protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
@@ -205,6 +207,10 @@ export class MovieList {
         this.scrapeReport.set(job);
         this.movies.reload();
       });
+    // Also movies removed on their detail page, which comes back here.
+    this.jobStore.completed
+      .pipe(where(isRemovalJob), takeUntilDestroyed())
+      .subscribe(() => this.movies.reload());
   }
 
   protected isChosen(movieId: number): boolean {
@@ -311,6 +317,19 @@ export class MovieList {
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => this.notify(problemMessage(error)),
     });
+  }
+
+  /** Removes the chosen movies after asking how; the list reloads when the job is done. */
+  protected removeChosen(): void {
+    const ids = this.chosenIds();
+    this.removal
+      .remove({
+        title: this.transloco.translate('removal.title.movies', { count: ids.length }),
+        helpChapter: 'movies',
+        plan: this.movieService.selectionRemovalPlan(ids),
+        remove: (deleteFiles) => this.movieService.removeSelection(ids, deleteFiles),
+      })
+      .subscribe(() => this.clearChosen());
   }
 
   /** Asks whether the texts are fetched again in the new language; the language changes either way. */

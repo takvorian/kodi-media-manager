@@ -44,6 +44,15 @@
         {{ 'common.rename' | transloco }}
       </button>
       <button
+        matButton
+        type="button"
+        class="remove-button"
+        [disabled]="removing()"
+        (click)="remove(details)"
+      >
+        {{ 'removal.button.movie' | transloco }}
+      </button>
+      <button
         matButton="tonal"
         type="button"
         class="scrape-button"

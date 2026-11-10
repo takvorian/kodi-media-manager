@@ -19,7 +19,7 @@ import { FILTERS_URL, SavedFilter } from '../filters/saved-filter.service';
 import { Job } from '../jobs/job';
 import { JobStore } from '../jobs/job-store';
 import { CONFIRM } from '../shared/confirm';
-import { flushWhenRequested } from '../shared/testing';
+import { REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
 import { MoviePage, MovieSummary } from './movie';
 import { localDateTime } from '../shared/date-time';
 import { DEFAULT_PAGE_SIZE, MovieList, SEARCH_DEBOUNCE_MS } from './movie-list';
@@ -116,6 +116,7 @@ describe('MovieList', () => {
             update: (job: Job) => updated.push(job),
           },
         },
+        answerDialogs(() => ({ deleteFiles: true })),
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -582,5 +583,52 @@ describe('MovieList', () => {
     const request = await respond(page([ronin], 120));
 
     expect(request.request.params.get('page')).toBe('1');
+  });
+
+  it('removes the chosen movies after asking and reloads the list when the job is done', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.remove-chosen-button')!.click();
+    const plan = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/removal/plan` });
+    expect(plan.request.body).toEqual({ movieIds: [heat.id] });
+    plan.flush(REMOVAL_PLAN);
+    const start = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/removal` });
+    expect(start.request.body).toEqual({ movieIds: [heat.id], deleteFiles: true });
+    const removal = {
+      id: 'r',
+      key: 'removal:movie:1',
+      title: literal('„Heat“ mit Dateien löschen'),
+      status: 'RUNNING',
+    } as Job;
+    start.flush(removal);
+    fixture.detectChanges();
+
+    expect(updated).toEqual([removal]);
+    expect(element().querySelector('.remove-chosen-button')).toBeNull();
+
+    completed.next({
+      ...removal,
+      status: 'SUCCEEDED',
+      result: { removedEntries: 1, deletedFiles: 2, failures: [] },
+    });
+    fixture.detectChanges();
+    await new Promise((resolve) => setTimeout(resolve));
+    expectMovies().flush(page([ronin]));
+
+    expect(snackBarMessages).toEqual(['1 Eintrag entfernt. 2 Dateien gelöscht.']);
+  });
+
+  it('names the remove button in English', async () => {
+    await respond(page([heat]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(element().querySelector('.remove-chosen-button')?.textContent?.trim()).toBe(
+      'Remove selection',
+    );
   });
 });

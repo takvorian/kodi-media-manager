@@ -6,7 +6,7 @@ import { MatCardModule } from '@angular/material/card';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
 import { EMPTY, filter, finalize, map, of, switchMap } from 'rxjs';
@@ -28,6 +28,7 @@ import { CONFIRM } from '../shared/confirm';
 import { batchSummary } from '../filters/batch';
 import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
+import { RemovalService } from '../shared/removal';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
 import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
@@ -90,6 +91,8 @@ export class MovieDetail {
   private readonly confirm = inject(CONFIRM);
   private readonly jobStore = inject(JobStore);
   private readonly transloco = inject(TranslocoService);
+  private readonly removal = inject(RemovalService);
+  private readonly router = inject(Router);
 
   /** Movie ID from the route {@code /movies/:id}. */
   readonly id = input.required({ transform: numberAttribute });
@@ -103,6 +106,7 @@ export class MovieDetail {
   protected readonly importingPlayback = signal(false);
   protected readonly probingStreams = signal(false);
   protected readonly renaming = signal(false);
+  protected readonly removing = signal(false);
   /** Keeps running when the user leaves the page and comes back. */
   protected readonly scrapeJob = computed(() =>
     this.jobStore.runningJob(movieScrapeJobKey(this.id())),
@@ -237,6 +241,20 @@ export class MovieDetail {
     this.adoptedCollection.set(proposal.collection);
     this.searchingOnline.set(false);
     this.notifyTranslated('movies.detail.adopted', { scraper: proposal.scraperName });
+  }
+
+  /** Removes the movie after asking how, then goes back to the list, which reloads when the job is done. */
+  protected remove(details: MovieDetails): void {
+    this.removing.set(true);
+    this.removal
+      .remove({
+        title: this.transloco.translate('removal.title.movie', { title: details.metadata.title }),
+        helpChapter: 'movies',
+        plan: this.movieService.removalPlan(this.id()),
+        remove: (deleteFiles) => this.movieService.remove(this.id(), deleteFiles),
+      })
+      .pipe(finalize(() => this.removing.set(false)))
+      .subscribe(() => void this.router.navigate(['/movies']));
   }
 
   /** Makes Kodi read the movie's NFO and artwork again, independently of the real-time sync. */

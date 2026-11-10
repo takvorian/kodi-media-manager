@@ -2,13 +2,14 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 
 import { provideI18nTesting } from '../i18n/testing';
 import { EpisodeDetail } from './episode-detail';
 import { EpisodeDetails } from './tvshow';
-import { flushWhenRequested } from '../shared/testing';
+import { REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
+import { job } from '../jobs/fake-job-events';
 import { EPISODES_URL } from './tvshow.service';
 import { literal } from '../i18n/localized-text';
 
@@ -75,6 +76,7 @@ describe('EpisodeDetail', () => {
           provide: MatSnackBar,
           useValue: { open: (message: string) => snackBarMessages.push(message) },
         },
+        answerDialogs(() => ({ deleteFiles: true })),
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -269,5 +271,27 @@ describe('EpisodeDetail', () => {
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();
+  });
+
+  it('removes the episode after asking and goes back to the TV show', async () => {
+    await load(gestatten);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    element().querySelector<HTMLButtonElement>('.remove-button')!.click();
+    httpTesting.expectOne({ method: 'GET', url: `${EPISODES_URL}/12/removal` }).flush(REMOVAL_PLAN);
+    const start = httpTesting.expectOne({ method: 'POST', url: `${EPISODES_URL}/12/removal` });
+    start.flush(job({ key: 'removal:episode:12' }));
+
+    expect(start.request.body).toEqual({ deleteFiles: true });
+    expect(navigate).toHaveBeenCalledWith(['/tvshows', 3]);
+  });
+
+  it('names the remove button in English', async () => {
+    await load(gestatten);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(element().querySelector('.remove-button')?.textContent?.trim()).toBe('Remove');
   });
 });

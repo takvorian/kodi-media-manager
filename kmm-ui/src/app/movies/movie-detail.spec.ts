@@ -9,7 +9,7 @@ import {
 } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { of } from 'rxjs';
 import { TranslocoService } from '@jsverse/transloco';
 
@@ -21,7 +21,7 @@ import { MOVIES_URL } from './movie.service';
 import { MovieRenamePlan } from './movie-rename';
 import { CollectionReference } from './scraper';
 import { CONFIRM } from '../shared/confirm';
-import { NO_THEME, flushWhenRequested } from '../shared/testing';
+import { NO_THEME, REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
 import { ThemeService } from '../shared/theme';
 import { literal } from '../i18n/localized-text';
 
@@ -105,6 +105,7 @@ describe('MovieDetail', () => {
             return confirmAnswer;
           },
         },
+        answerDialogs(() => ({ deleteFiles: false })),
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -844,5 +845,27 @@ describe('MovieDetail', () => {
 
       expect(languageSelect().disabled()).toBe(false);
     });
+  });
+
+  it('removes the movie from the library after asking and goes back to the list', async () => {
+    await load(heat);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    button('.remove-button').click();
+    httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5/removal` }).flush(REMOVAL_PLAN);
+    const start = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/5/removal` });
+    start.flush(job({ key: 'removal:movie:5' }));
+
+    expect(start.request.body).toEqual({ deleteFiles: false });
+    expect(navigate).toHaveBeenCalledWith(['/movies']);
+  });
+
+  it('names the remove button in English', async () => {
+    await load(heat);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(button('.remove-button').textContent?.trim()).toBe('Remove');
   });
 });

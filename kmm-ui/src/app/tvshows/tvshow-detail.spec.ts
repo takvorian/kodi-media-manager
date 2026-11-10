@@ -6,14 +6,14 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { of } from 'rxjs';
 
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
 
 import { ScraperInfo } from '../movies/scraper';
-import { NO_THEME, flushWhenRequested } from '../shared/testing';
+import { NO_THEME, REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
 import { ThemeService } from '../shared/theme';
 import { TvShowDetails, TvShowProposal } from './tvshow';
 import { TvShowDetail } from './tvshow-detail';
@@ -156,6 +156,7 @@ describe('TvShowDetail', () => {
             return confirmAnswer;
           },
         },
+        answerDialogs(() => ({ deleteFiles: true })),
       ],
     });
     httpTesting = TestBed.inject(HttpTestingController);
@@ -914,5 +915,53 @@ describe('TvShowDetail', () => {
 
       expect(languageSelect().disabled()).toBe(false);
     });
+  });
+
+  it('removes a season after asking and reloads the TV show when the job is done', async () => {
+    await load(alf);
+
+    element().querySelectorAll<HTMLButtonElement>('.season-remove-button')[1].click();
+    httpTesting
+      .expectOne({ method: 'GET', url: `${TVSHOWS_URL}/3/seasons/1/removal` })
+      .flush(REMOVAL_PLAN);
+    const start = httpTesting.expectOne({
+      method: 'POST',
+      url: `${TVSHOWS_URL}/3/seasons/1/removal`,
+    });
+    const removal = job({ id: 'removal', key: 'removal:season:3:1' });
+    start.flush(removal);
+    events.emit({
+      ...removal,
+      status: 'SUCCEEDED',
+      result: { removedEntries: 2, deletedFiles: 3, failures: [] },
+    });
+    await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, alf);
+    await fixture.whenStable();
+
+    expect(start.request.body).toEqual({ deleteFiles: true });
+    expect(snackBarMessages).toEqual(['2 Einträge entfernt. 3 Dateien gelöscht.']);
+  });
+
+  it('removes the TV show after asking and goes back to the list', async () => {
+    await load(alf);
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+
+    element().querySelector<HTMLButtonElement>('.remove-show-button')!.click();
+    httpTesting.expectOne({ method: 'GET', url: `${TVSHOWS_URL}/3/removal` }).flush(REMOVAL_PLAN);
+    const start = httpTesting.expectOne({ method: 'POST', url: `${TVSHOWS_URL}/3/removal` });
+    start.flush(job({ key: 'removal:tvshow:3' }));
+
+    expect(start.request.body).toEqual({ deleteFiles: true });
+    expect(navigate).toHaveBeenCalledWith(['/tvshows']);
+  });
+
+  it('names the remove buttons in English', async () => {
+    await load(alf);
+
+    TestBed.inject(TranslocoService).setActiveLang('en');
+    await fixture.whenStable();
+
+    expect(texts('.remove-show-button')).toEqual(['Remove TV show']);
+    expect(texts('.season-remove-button')).toEqual(['Remove season', 'Remove season']);
   });
 });

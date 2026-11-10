@@ -38,6 +38,15 @@
       >
         {{ 'tvshows.probeStreams' | transloco }}
       </button>
+      <button
+        matButton
+        type="button"
+        class="remove-button"
+        [disabled]="removing()"
+        (click)="remove(details)"
+      >
+        {{ 'removal.button.episode' | transloco }}
+      </button>
     </div>
   </div>
 

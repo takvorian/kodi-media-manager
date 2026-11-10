@@ -5,6 +5,7 @@ import { Observable } from 'rxjs';
 import { TvShowFilter, TvShowFilterValues } from '../filters/tvshow-filter';
 import { Job } from '../jobs/job';
 import { ListSort, SORT_BY_TITLE as TITLE_ORDER, withSort } from '../shared/list-sort';
+import { RemovalPlan } from '../shared/removal';
 import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import {
   EpisodeDetails,
@@ -155,5 +156,35 @@ export class TvShowService {
   /** Saves the metadata; the backend writes them to the NFO of the episode at the same time. */
   updateEpisode(episodeId: number, metadata: EpisodeMetadata): Observable<EpisodeDetails> {
     return this.http.put<EpisodeDetails>(`${EPISODES_URL}/${episodeId}/metadata`, metadata);
+  }
+
+  /** What removing the episode would comprise, with a multi-episode file all its episodes; changes nothing. */
+  episodeRemovalPlan(episodeId: number): Observable<RemovalPlan> {
+    return this.http.get<RemovalPlan>(`${EPISODES_URL}/${episodeId}/removal`);
+  }
+
+  /** Removes the episode from the library, with `deleteFiles` also its files for good, as a job. */
+  removeEpisode(episodeId: number, deleteFiles: boolean): Observable<Job> {
+    return this.http.post<Job>(`${EPISODES_URL}/${episodeId}/removal`, { deleteFiles });
+  }
+
+  seasonRemovalPlan(showId: number, season: number): Observable<RemovalPlan> {
+    return this.http.get<RemovalPlan>(`${TVSHOWS_URL}/${showId}/seasons/${season}/removal`);
+  }
+
+  /** Removes all episodes of the season, with `deleteFiles` also their files and the season artwork. */
+  removeSeason(showId: number, season: number, deleteFiles: boolean): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/seasons/${season}/removal`, {
+      deleteFiles,
+    });
+  }
+
+  showRemovalPlan(showId: number): Observable<RemovalPlan> {
+    return this.http.get<RemovalPlan>(`${TVSHOWS_URL}/${showId}/removal`);
+  }
+
+  /** Removes the TV show with all episodes, with `deleteFiles` also its whole folder. */
+  removeShow(showId: number, deleteFiles: boolean): Observable<Job> {
+    return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/removal`, { deleteFiles });
   }
 }

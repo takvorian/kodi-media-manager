@@ -1,7 +1,9 @@
 import { HttpTestingController } from '@angular/common/http/testing';
+import { Provider } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { MatDialog } from '@angular/material/dialog';
 import { TranslocoService } from '@jsverse/transloco';
-import { firstValueFrom } from 'rxjs';
+import { firstValueFrom, of } from 'rxjs';
 
 import { UiLanguage } from '../i18n/ui-language';
 import { ThemeInfo } from './theme';
@@ -44,3 +46,20 @@ export async function switchLanguage(language: UiLanguage): Promise<void> {
   await firstValueFrom(transloco.load(language));
   transloco.setActiveLang(language);
 }
+
+/** Dialogs that close right away with the given answer, as if the user had chosen it. */
+export function answerDialogs(answer: () => unknown): Provider {
+  return {
+    provide: MatDialog,
+    useValue: { open: () => ({ afterClosed: () => of(answer()) }) },
+  };
+}
+
+/** A preview of a removal for the views that offer removing. */
+export const REMOVAL_PLAN = {
+  entries: [{ key: 'literal', args: { text: 'Eintrag' } }],
+  files: ['/media/datei.mkv'],
+  directories: [],
+  notes: [],
+  canDeleteFiles: true,
+};
