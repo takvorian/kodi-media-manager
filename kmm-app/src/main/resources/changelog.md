@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.20 - 2026-11-11
+- Scan single movies and keep movies whose video file was replaced (007b40d)
+
 ## v0.19 - 2026-11-10
 - Use chapter links in the TV show manual (bb41448)
 - Scan TV shows and seasons in KMM (a85d3a5)
