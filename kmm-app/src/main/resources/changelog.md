@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.21 - 2026-11-11
+- Add a login page and remember the state of the movie and TV show lists (5956e09)
+
 ## v0.20 - 2026-11-11
 - Scan single movies and keep movies whose video file was replaced (007b40d)
 
