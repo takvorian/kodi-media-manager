@@ -10,6 +10,7 @@ import java.nio.file.Path;
 import java.nio.file.attribute.FileTime;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Comparator;
 import java.util.Map;
 
 import org.junit.jupiter.api.AfterEach;
@@ -147,6 +148,47 @@ class MovieLibraryIntegrationTest {
     }
 
     @Test
+    void scansTheFolderOfASingleMovieAndKeepsTheEntryWhenItsVideoFileIsReplaced() throws IOException {
+        Path avi = createFile("Don Camillo/Don Camillo (1952).avi");
+        Files.writeString(library.resolve("Don Camillo/Don Camillo (1952).nfo"),
+                "<movie><title>Don Camillo – aus der NFO</title><playcount>1</playcount></movie>");
+        createFile("Heat (1995)/Heat (1995).mkv");
+        long sourceId = createSource();
+        scan(sourceId);
+        long camilloId = idOfFile(sourceId, "Don Camillo (1952).avi");
+        long heatId = idOfFile(sourceId, "Heat (1995).mkv");
+        Files.delete(avi);
+        createFile("Don Camillo/Don Camillo (1952).mkv");
+        createFile("Ronin (1998)/Ronin (1998).mkv");
+
+        JsonNode replaced = awaitResult(startJob(mockMvc.post().uri(MovieFolderScanController.MOVIE_SCAN_PATH,
+                camilloId).with(csrf()).exchange()));
+        assertThat(replaced.get("updated").asInt()).isOne();
+        assertThat(replaced.get("added").asInt()).isZero();
+        assertThat(replaced.get("removed").asInt()).isZero();
+        assertThat(mockMvc.get().uri(MovieController.MOVIE_PATH, camilloId)).bodyJson().isLenientlyEqualTo("""
+                {"metadata": {"title": "Don Camillo – aus der NFO"}, "supplement": {"playCount": 1}}
+                """);
+        assertThat(movieRepository.findById(camilloId)).hasValueSatisfying(
+                movie -> assertThat(movie.getFilePath()).endsWith("Don Camillo (1952).mkv"));
+        assertThat(movieRepository.findBySourceId(sourceId)).as("other folders stay untouched").hasSize(2);
+
+        deleteRecursively(library.resolve("Don Camillo"));
+        JsonNode failed = awaitJob(startJob(mockMvc.post().uri(MovieFolderScanController.MOVIE_SCAN_PATH, camilloId)
+                .with(csrf()).exchange()));
+        assertThat(failed.get("status").asString()).isEqualTo("FAILED");
+        assertThat(failed.get("message").get("key").asString()).isEqualTo("movie.folderScan.unreachable");
+        assertThat(movieRepository.findById(camilloId)).isPresent();
+
+        JsonNode batch = awaitResult(startJob(mockMvc.post().uri(MovieFolderScanController.MOVIES_SCAN_PATH)
+                .with(csrf()).contentType(JSON).content("{\"movieIds\": [%d, %d]}".formatted(heatId, camilloId))
+                .exchange()));
+        assertThat(batch.get("unchanged").asInt()).isOne();
+        assertThat(batch.get("failed").asInt()).isOne();
+        assertThat(mockMvc.post().uri(MovieFolderScanController.MOVIE_SCAN_PATH, 999L).with(csrf())).hasStatus(404);
+    }
+
+    @Test
     void rejectsScanOfUnknownSource() {
         assertThat(mockMvc.post().uri(LibraryScanController.SCAN_PATH, 999L).with(csrf())).hasStatus(404);
     }
@@ -182,10 +224,33 @@ class MovieLibraryIntegrationTest {
         return objectMapper.readTree(result.getResponse().getContentAsByteArray());
     }
 
+    private long idOfFile(long sourceId, String fileName) {
+        return movieRepository.findBySourceId(sourceId).stream()
+                .filter(movie -> movie.getFilePath().endsWith(fileName))
+                .findFirst().orElseThrow().getId();
+    }
+
+    private String startJob(MvcTestResult result) {
+        assertThat(result).hasStatus(HttpStatus.ACCEPTED);
+        return objectMapper.readTree(result.getResponse().getContentAsByteArray()).get("id").asString();
+    }
+
+    private JsonNode awaitJob(String jobId) {
+        return await().atMost(JOB_TIMEOUT).pollInSameThread()
+                .until(() -> readJob(jobId), node -> !"RUNNING".equals(node.get("status").asString()));
+    }
+
+    private static void deleteRecursively(Path directory) throws IOException {
+        try (var paths = Files.walk(directory)) {
+            for (Path path : paths.sorted(Comparator.reverseOrder()).toList()) {
+                Files.delete(path);
+            }
+        }
+    }
+
     private JsonNode awaitResult(String jobId) {
         // Query in the test thread so that the security context of @WithMockUser applies.
-        JsonNode job = await().atMost(JOB_TIMEOUT).pollInSameThread()
-                .until(() -> readJob(jobId), node -> !"RUNNING".equals(node.get("status").asString()));
+        JsonNode job = awaitJob(jobId);
         assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
         return job.get("result");
     }

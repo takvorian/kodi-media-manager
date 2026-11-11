@@ -20,8 +20,10 @@ import {
   kodiSyncSummary,
 } from '../kodi/kodi';
 import { KodiService } from '../kodi/kodi.service';
+import { newFilesStreamDetailsJobKey } from '../media-info/media-info';
 import { MediaInfoService } from '../media-info/media-info.service';
 import { SettingsService } from '../settings/settings.service';
+import { scanSummary } from '../sources/scan-summary';
 import { ScrapeProgress } from '../sources/scrape-progress';
 import { ScrapeReport } from '../sources/scrape-report';
 import { CONFIRM } from '../shared/confirm';
@@ -34,7 +36,7 @@ import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { MovieDetails } from './movie';
 import { MovieArtwork } from './movie-artwork';
-import { MOVIE_BATCH_JOB_KEY, movieScrapeJobKey } from './movie-batch';
+import { MOVIE_BATCH_JOB_KEY, movieScanJobKey, movieScrapeJobKey } from './movie-batch';
 import {
   MAX_YEAR,
   MIN_YEAR,
@@ -112,6 +114,10 @@ export class MovieDetail {
     this.jobStore.runningJob(movieScrapeJobKey(this.id())),
   );
   protected readonly scrapeReport = signal<Job | null>(null);
+  /** Scanning the folder of the movie in KMM. */
+  protected readonly scanJob = computed(() => this.jobStore.runningJob(movieScanJobKey(this.id())));
+  /** After a scan ffprobe may read a replaced file; the view then shows the new technical details. */
+  private readonly awaitingStreams = signal(false);
   /** Counts finished runs; theme music and artwork load by themselves and are rebuilt with it. */
   protected readonly scrapeRuns = signal(0);
   private readonly changingLanguage = signal(false);
@@ -163,6 +169,30 @@ export class MovieDetail {
       });
     this.jobStore.completed
       .pipe(
+        filter((job) => job.key === movieScanJobKey(this.id())),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.notify(scanSummary(job));
+        this.awaitingStreams.set(job.status === 'SUCCEEDED');
+        this.movie.reload();
+      });
+    this.jobStore.completed
+      .pipe(
+        filter(
+          (job) =>
+            this.awaitingStreams() &&
+            this.movie.hasValue() &&
+            job.key === newFilesStreamDetailsJobKey(this.movie.value().sourceId),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe(() => {
+        this.awaitingStreams.set(false);
+        this.movie.reload();
+      });
+    this.jobStore.completed
+      .pipe(
         filter((job) => job.key === movieScrapeJobKey(this.id())),
         takeUntilDestroyed(),
       )
@@ -171,6 +201,14 @@ export class MovieDetail {
         this.scrapeRuns.update((runs) => runs + 1);
         this.movie.reload();
       });
+  }
+
+  /** Reads the folder of the movie again, e.g. after its video file was replaced by a converted one. */
+  protected scan(): void {
+    this.movieService.scanMovie(this.id()).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
   }
 
   /** Adds everything missing like scraping a source does, only for this movie. */

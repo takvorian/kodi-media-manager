@@ -23,6 +23,8 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.Captor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import de.tiktak.kmm.nfo.MovieNfo;
 import de.tiktak.kmm.nfo.MovieNfoSupplement;
@@ -56,6 +58,9 @@ class MovieLibrarySynchronizerTest {
     @Mock
     private MovieSets movieSets;
 
+    @Mock
+    private ApplicationEventPublisher events;
+
     @Captor
     private ArgumentCaptor<List<Movie>> moviesCaptor;
 
@@ -65,7 +70,7 @@ class MovieLibrarySynchronizerTest {
     void setUp() {
         Clock clock = Clock.fixed(NOW, ZoneOffset.UTC);
         synchronizer = new MovieLibrarySynchronizer(movieRepository, sourceService, nfoFiles,
-                new MovieNfoSync(nfoFiles, movieSets, clock), clock);
+                new MovieNfoSync(nfoFiles, movieSets, clock), clock, events);
     }
 
     @Test
@@ -96,6 +101,72 @@ class MovieLibrarySynchronizerTest {
         verify(movieRepository).deleteAll(moviesCaptor.capture());
         assertThat(moviesCaptor.getValue()).containsExactly(vanished);
         assertThat(heat.getTitle()).isEqualTo("Heat (bearbeitet)");
+    }
+
+    @Test
+    void keepsTheEntryWhenANewVideoFileReplacesTheOldOneNextToItsNfo() {
+        Movie camillo = movie("Don Camillo.avi", "Don Camillo");
+        ReflectionTestUtils.setField(camillo, "id", 9L);
+        camillo.markNfoSynchronized(NFO_TIME);
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(camillo));
+
+        ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(scannedWithNfo("Don Camillo.mkv",
+                "Don Camillo", null)));
+
+        assertThat(result).usingRecursiveComparison().ignoringFields("details", "newWithoutStreams")
+                .isEqualTo(new ScanResult(SOURCE_ID, 0, 1, 0, 0, 0));
+        assertThat(result.newWithoutStreams()).as("the old technical details are read again").containsExactly(9L);
+        assertThat(result.details().updated()).extracting(ScanEntry::id).containsExactly(9L);
+        assertThat(camillo.getFilePath()).isEqualTo(ROOT.resolve("Don Camillo.mkv").toString());
+        assertThat(camillo.getTitle()).isEqualTo("Don Camillo");
+        verify(events).publishEvent(new MovieFileReplacedEvent(9L, SOURCE_ID,
+                ROOT.resolve("Don Camillo.avi").toString()));
+        verify(movieRepository).deleteAll(moviesCaptor.capture());
+        assertThat(moviesCaptor.getValue()).isEmpty();
+        verify(nfoFiles, never()).read(any());
+    }
+
+    @Test
+    void replacesTheFileOfAMovieInItsOwnFolderByTheFolderNfo() {
+        Movie camillo = movie("Camillo/camillo-xvid.avi", "Don Camillo");
+        ReflectionTestUtils.setField(camillo, "id", 9L);
+        camillo.markNfoSynchronized(NFO_TIME);
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(camillo));
+        ScannedMovie scanned = new ScannedMovie(candidate("Camillo/Don Camillo (1952).mkv", "Don Camillo", 1952),
+                Optional.of(new NfoFileState(ROOT.resolve("Camillo/movie.nfo"), NFO_TIME)));
+
+        ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(scanned));
+
+        assertThat(result.added()).isZero();
+        assertThat(result.removed()).isZero();
+        assertThat(camillo.getFilePath()).isEqualTo(ROOT.resolve("Camillo/Don Camillo (1952).mkv").toString());
+    }
+
+    @Test
+    void doesNotTieANewFileWithoutNfoToAVanishedMovie() {
+        Movie camillo = movie("Don Camillo.avi", "Don Camillo");
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(camillo));
+
+        ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(scanned("Don Camillo.mkv", "Don Camillo",
+                null)));
+
+        assertThat(result.added()).isOne();
+        assertThat(result.removed()).isOne();
+        verify(events, never()).publishEvent(any());
+    }
+
+    @Test
+    void doesNotTieANewFileToAVanishedMovieWithAnotherNfo() {
+        Movie ronin = movie("Ronin.avi", "Ronin");
+        ronin.markNfoSynchronized(NFO_TIME);
+        when(movieRepository.findBySourceId(SOURCE_ID)).thenReturn(List.of(ronin));
+        ScannedMovie heat = scannedWithNfo("Heat.mkv", "Heat", null);
+        when(nfoFiles.read(heat.nfo().orElseThrow())).thenReturn(nfo("Heat", 1995, null));
+
+        ScanResult result = synchronizer.synchronize(SOURCE_ID, List.of(heat));
+
+        assertThat(result.added()).isOne();
+        assertThat(result.removed()).isOne();
     }
 
     @Test

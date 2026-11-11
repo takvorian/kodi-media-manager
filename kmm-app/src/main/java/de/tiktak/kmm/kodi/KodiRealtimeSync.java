@@ -8,6 +8,8 @@ import org.springframework.beans.factory.DisposableBean;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import de.tiktak.kmm.movie.MovieFileReplacedEvent;
+import de.tiktak.kmm.movie.MovieFolderScannedEvent;
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
 import de.tiktak.kmm.movie.MovieRemovedEvent;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
@@ -36,6 +38,7 @@ class KodiRealtimeSync implements DisposableBean {
     private final Debouncer<Long> sources;
     private final Debouncer<Long> tvShows;
     private final Debouncer<Long> episodes;
+    private final Debouncer<MovieFileReplacedEvent> replacedMovies;
 
     private final KodiSyncService syncService;
 
@@ -45,6 +48,8 @@ class KodiRealtimeSync implements DisposableBean {
         this.sources = new Debouncer<>(executor, properties.syncDelay(), syncService::scanSourceOnRealtimeHosts);
         this.tvShows = new Debouncer<>(executor, properties.syncDelay(), syncService::refreshTvShowOnRealtimeHosts);
         this.episodes = new Debouncer<>(executor, properties.syncDelay(), syncService::refreshEpisodeOnRealtimeHosts);
+        this.replacedMovies = new Debouncer<>(executor, properties.syncDelay(),
+                syncService::syncReplacedMovieOnRealtimeHosts);
     }
 
     /** Only after a successful save; without a transaction (images) right away. */
@@ -57,6 +62,15 @@ class KodiRealtimeSync implements DisposableBean {
     @TransactionalEventListener(fallbackExecution = true)
     void onMovieRenamed(MovieRenamedEvent event) {
         executor.execute(() -> syncService.syncRenamedMovieOnRealtimeHosts(event));
+    }
+
+    /**
+     * Delayed like a source scan, so that ffprobe has written the technical details of the new file to the NFO
+     * before Kodi reads it.
+     */
+    @TransactionalEventListener(fallbackExecution = true)
+    void onMovieFileReplaced(MovieFileReplacedEvent event) {
+        replacedMovies.submit(event);
     }
 
     @TransactionalEventListener(fallbackExecution = true)
@@ -92,6 +106,14 @@ class KodiRealtimeSync implements DisposableBean {
     void onSourceScanned(MovieSourceScannedEvent event) {
         if (event.added() > 0) {
             sources.submit(event.sourceId());
+        }
+    }
+
+    /** Only the folder of the movie, not the whole source. */
+    @TransactionalEventListener(fallbackExecution = true)
+    void onMovieFolderScanned(MovieFolderScannedEvent event) {
+        if (event.moviesChanged()) {
+            executor.execute(() -> syncService.scanMovieFolderOnRealtimeHosts(event.directory()));
         }
     }
 

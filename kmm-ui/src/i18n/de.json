@@ -822,6 +822,7 @@
   "movies": {
     "actions": {
       "refreshInKodi": "In Kodi aktualisieren",
+      "scan": "Scannen",
       "scrape": "Scrapen",
       "saveFirst": "Bitte die Änderungen zuerst speichern."
     },
@@ -863,6 +864,7 @@
       "loadError": "Der Film konnte nicht geladen werden.",
       "loading": "Lade Film …",
       "importPlayback": "Gesehen-Status aus Kodi",
+      "scanRunning": "Scan läuft …",
       "probeStreams": "Technische Angaben auslesen",
       "searchOnline": "Online suchen",
       "closeSearch": "Suche schließen",
@@ -936,6 +938,7 @@
       "confirmThemes": "Für {count, plural, one {# Film} other {# Filme}} fehlende Titelmusik holen? Sie wird als theme.mp3 im Ordner gespeichert.",
       "confirmTrailers": "Für {count, plural, one {# Film} other {# Filme}} fehlende Trailer holen? Die NFOs werden dabei geschrieben.",
       "confirmKodiRefresh": "{count, plural, one {# Film} other {# Filme}} auf allen Kodi-Geräten aktualisieren?",
+      "confirmScan": "Die Ordner von {count, plural, one {# Film} other {# Filmen}} werden neu eingelesen: Ersetzte Videodateien werden übernommen, neue Filme kommen dazu, Filme ohne Datei werden aus der Bibliothek entfernt. Fortfahren?",
       "enterFilterName": "Bitte einen Namen für den Filter eingeben.",
       "filterSaved": "Filter „{name}“ gespeichert.",
       "confirmDeleteFilter": "Filter „{name}“ löschen?",
@@ -1517,9 +1520,11 @@
         "scanUnknown": "„{title}“ ist in Kodi noch unbekannt; Kodi liest {directory} ein.",
         "noSource": "Kodi hat keine Quelle für {directory} und findet dort vermutlich nichts. Prüfe die Pfad-Zuordnung von „{host}“. Quellen in Kodi: {sources}.",
         "renamed": "Kodi liest {directory} ein und entfernt die alten Einträge aus {previous}.",
+        "replaced": "„{title}“ hat eine neue Videodatei: Kodi entfernt den alten Eintrag und liest {directory} ein.",
         "setNotInKodi": "Das Filmset „{name}“ ist in Kodi noch unbekannt.",
         "setUpdated": "Filmset „{name}“ aktualisiert.",
         "scanSource": "{kind, select, tvShow {Kodi sucht in {directory} nach neuen Serien und Episoden.} other {Kodi sucht in {directory} nach neuen Filmen.}}",
+        "scanMovieFolder": "Kodi sucht in {directory} nach neuen Filmen und entfernt danach Einträge, deren Dateien fehlen.",
         "scanTvShow": "Kodi sucht in {directory} nach neuen Episoden von „{title}“ und entfernt danach Einträge, deren Dateien fehlen.",
         "notMapped": "Keine Pfad-Zuordnung für {path}.",
         "removed": "„{title}“ aus Kodi entfernt.",
@@ -1572,7 +1577,16 @@
         },
         "language": {
           "jobTitle": "{count, plural, one {Sprache von # Film ändern} other {Sprache von # Filmen ändern}}"
+        },
+        "scan": {
+          "jobTitle": "{count, plural, one {# Film scannen} other {# Filme scannen}}"
         }
+      },
+      "folderScan": {
+        "title": "Film kann nicht gescannt werden",
+        "unreachable": "Der Ordner „{path}“ von „{title}“ ist nicht erreichbar. Aus der Bibliothek wurde nichts entfernt.",
+        "noVideoFiles": "Der Ordner „{path}“ von „{title}“ enthält keine Videodateien. Aus der Bibliothek wurde nichts entfernt.",
+        "jobTitle": "Scan „{title}“"
       },
       "scan": {
         "jobTitle": "Scan „{source}“",

@@ -320,6 +320,30 @@ class MovieDirectoryScannerTest {
     }
 
     @Test
+    void scansOnlyTheFolderOfOneMovieLikeAPassOverEverything() throws IOException {
+        Path camillo = file("Don Camillo/Don Camillo (1952).mkv");
+        file("Don Camillo/Extras/Interview-trailer.mkv");
+        file("Heat (1995)/Heat (1995).mkv");
+        file("The.Matrix.1999.mkv");
+
+        List<MovieCandidate> candidates = scanner.scanFolder(root, root.resolve("Don Camillo"));
+
+        assertThat(candidates).singleElement().satisfies(candidate -> {
+            assertThat(candidate.file()).isEqualTo(camillo);
+            assertThat(candidate.title()).isEqualTo(scanner.scan(root).getFirst().title());
+        });
+    }
+
+    @Test
+    void scansOnlyTheFilesAndDiscFoldersDirectlyInTheRootForAMovieThere() throws IOException {
+        Path matrix = file("The.Matrix.1999.mkv");
+        Path dvd = file("VIDEO_TS/VIDEO_TS.IFO");
+        file("Heat (1995)/Heat (1995).mkv");
+
+        assertThat(scanner.scanFolder(root, root)).extracting(MovieCandidate::file).containsExactly(matrix, dvd);
+    }
+
+    @Test
     void recognizesDiscFolderDirectlyInTheRoot() throws IOException {
         Path marker = file("VIDEO_TS/VIDEO_TS.IFO");
 

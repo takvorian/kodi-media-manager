@@ -649,6 +649,86 @@ describe('MovieDetail', () => {
       expect(snackBarMessages).toEqual(['Ordnermuster: kaputt']);
     });
   });
+  describe('scan', () => {
+    const scanning = job({
+      id: 'scan',
+      key: 'movie-scan:5',
+      title: literal('Scan „Heat“'),
+      status: 'RUNNING',
+    });
+
+    const probing = job({
+      id: 'probe',
+      key: 'stream-details-new:1',
+      title: literal('Neue Dateien'),
+      status: 'SUCCEEDED',
+    });
+
+    async function reloadMovie(): Promise<void> {
+      await flushWhenRequested(fixture, httpTesting, `${MOVIES_URL}/5`, heat);
+      for (let pass = 0; pass < 3; pass++) {
+        fixture.detectChanges();
+        await Promise.resolve();
+        httpTesting.match(`${MOVIES_URL}/5/artwork`).forEach((request) => request.flush([]));
+      }
+      await fixture.whenStable();
+    }
+
+    it('scans the folder of the movie and reloads it with a summary', async () => {
+      await load(heat);
+
+      button('.scan-button').click();
+      httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/5/scan` }).flush(scanning);
+      fixture.detectChanges();
+      expect(element().querySelector('.detail-status .scan-progress')?.textContent?.trim()).toBe(
+        'Scan läuft …',
+      );
+      expect(button('.scan-button').disabled).toBe(true);
+
+      events.emit({
+        ...scanning,
+        status: 'SUCCEEDED',
+        result: { sourceId: 1, added: 0, updated: 1, removed: 0, unchanged: 0, nfoErrors: 0 },
+      });
+      await reloadMovie();
+
+      expect(snackBarMessages).toEqual([
+        'Scan „Heat“ abgeschlossen: 0 neu, 1 aktualisiert, 0 entfernt, 0 unverändert.',
+      ]);
+      events.emit({ ...probing, status: 'RUNNING' });
+      events.emit(probing);
+      await reloadMovie();
+      httpTesting.verify();
+    });
+
+    it('does not reload for reading new files without a scan of its own', async () => {
+      await load(heat);
+
+      events.emit({ ...probing, status: 'RUNNING' });
+      events.emit(probing);
+      fixture.detectChanges();
+
+      httpTesting.expectNone(`${MOVIES_URL}/5`);
+    });
+
+    it('reports a folder that cannot be reached', async () => {
+      await load(heat);
+
+      button('.scan-button').click();
+      httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/5/scan` }).flush(scanning);
+      events.emit({
+        ...scanning,
+        status: 'FAILED',
+        message: literal('Der Ordner ist nicht erreichbar.'),
+      });
+      await reloadMovie();
+
+      expect(snackBarMessages).toEqual([
+        'Scan „Heat“ fehlgeschlagen: Der Ordner ist nicht erreichbar.',
+      ]);
+    });
+  });
+
   describe('scraping', () => {
     const running = job({
       id: 's',

@@ -117,6 +117,16 @@ export class MovieService {
     return this.http.post<Job>(`${MOVIES_URL}/themes/fill`, { movieIds });
   }
 
+  /** Reads the folder of the movie again, like a source scan: a replaced video file is taken over. */
+  scanMovie(movieId: number): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/${movieId}/scan`, null);
+  }
+
+  /** Scans the folders of the selected movies one after another as one job. */
+  scanMovies(movieIds: readonly number[]): Observable<Job> {
+    return this.http.post<Job>(`${MOVIES_URL}/scan`, { movieIds });
+  }
+
   autoScrape(movieId: number): Observable<Job> {
     return this.http.post<Job>(`${MOVIES_URL}/${movieId}/auto-scrape`, null);
   }

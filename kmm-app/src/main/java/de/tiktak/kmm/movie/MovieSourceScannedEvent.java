@@ -7,7 +7,8 @@ import java.util.List;
  *
  * @param added             newly found movies
  * @param removed           movies that have disappeared
- * @param newWithoutStreams IDs of the newly found movies without stream details in the NFO
+ * @param newWithoutStreams IDs of the newly found movies without stream details in the NFO and of the
+ *                          movies whose video file was replaced; ffprobe reads them if enabled
  */
 public record MovieSourceScannedEvent(long sourceId, int added, int removed, List<Long> newWithoutStreams) {
 

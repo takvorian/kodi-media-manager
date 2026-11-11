@@ -3,6 +3,7 @@ package de.tiktak.kmm.mediainfo;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import de.tiktak.kmm.movie.MovieFolderScannedEvent;
 import de.tiktak.kmm.movie.MovieSourceScannedEvent;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.tvshow.TvShowFolderScannedEvent;
@@ -20,6 +21,11 @@ class NewFilesStreamDetails {
 
     @TransactionalEventListener(fallbackExecution = true)
     void onMovieSourceScanned(MovieSourceScannedEvent event) {
+        service.startNewFiles(event.sourceId(), MediaType.MOVIE, event.newWithoutStreams());
+    }
+
+    @TransactionalEventListener(fallbackExecution = true)
+    void onMovieFolderScanned(MovieFolderScannedEvent event) {
         service.startNewFiles(event.sourceId(), MediaType.MOVIE, event.newWithoutStreams());
     }
 

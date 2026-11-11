@@ -37,6 +37,7 @@ import de.tiktak.kmm.kodi.rpc.KodiClient;
 import de.tiktak.kmm.kodi.rpc.KodiEndpoint;
 import de.tiktak.kmm.kodi.rpc.KodiLibraryScheduler;
 import de.tiktak.kmm.movie.MovieDetails;
+import de.tiktak.kmm.movie.MovieFileReplacedEvent;
 import de.tiktak.kmm.movie.MovieMetadata;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
@@ -241,6 +242,56 @@ class KodiSyncServiceTest {
 
         verifyNoInteractions(metadataService, sourceService);
         assertThat(kodi.calls()).isEmpty();
+    }
+
+    @Test
+    void removesTheOldFileFromKodiAndScansTheFolderWhenTheVideoFileWasReplaced() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true),
+                target(2, "Manuell", kodi.endpoint(), FILME, false));
+        givenMovie("Heat (1995)/Heat (1995).mkv", DiscFormat.FILE);
+        kodi.respond("VideoLibrary.GetMovies", """
+                {"movies": [{"movieid": 7, "file": "smb://nas/filme/Heat (1995)/Heat (1995).avi"}]}""");
+
+        service.syncReplacedMovieOnRealtimeHosts(new MovieFileReplacedEvent(MOVIE_ID, 3,
+                LIBRARY.resolve("Heat (1995)/Heat (1995).avi").toString()));
+
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetMovies", "VideoLibrary.RemoveMovie",
+                "Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan");
+        assertThat(kodi.calls().get(1).params().path("movieid").asInt()).isEqualTo(7);
+        assertThat(kodi.calls().get(4).params().path("directory").asString())
+                .isEqualTo("smb://nas/filme/Heat (1995)/");
+        assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> assertThat(result.message())
+                .isEqualTo(LocalizedText.of("kodi.sync.replaced").with("title", "Heat")
+                        .with("directory", "smb://nas/filme/Heat (1995)/")));
+        assertThat(syncLog.lastResult(2)).isEmpty();
+    }
+
+    @Test
+    void letsKodiScanAndCleanTheFolderOfAScannedMovie() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true),
+                target(2, "Manuell", kodi.endpoint(), FILME, false));
+
+        service.scanMovieFolderOnRealtimeHosts(LIBRARY.resolve("Heat (1995)").toString());
+
+        assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
+                "XBMC.GetInfoBooleans", "VideoLibrary.Clean");
+        assertThat(kodi.calls().get(4).params().path("directory").asString())
+                .isEqualTo("smb://nas/filme/Heat (1995)/");
+        assertThat(syncLog.lastResult(1)).hasValueSatisfying(result -> assertThat(result.message())
+                .isEqualTo(LocalizedText.of("kodi.sync.scanMovieFolder")
+                        .with("directory", "smb://nas/filme/Heat (1995)/")));
+    }
+
+    @Test
+    void scansTheFolderEvenIfKodiDoesNotKnowTheReplacedFile() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), FILME, true));
+        givenMovie("Heat (1995)/Heat (1995).mkv", DiscFormat.FILE);
+        kodi.respond("VideoLibrary.GetMovies", "{\"limits\": {\"total\": 0}}");
+
+        service.syncReplacedMovieOnRealtimeHosts(new MovieFileReplacedEvent(MOVIE_ID, 3,
+                LIBRARY.resolve("Heat (1995)/Heat (1995).avi").toString()));
+
+        assertThat(kodi.methods()).doesNotContain("VideoLibrary.RemoveMovie").contains("VideoLibrary.Scan");
     }
 
     @Test

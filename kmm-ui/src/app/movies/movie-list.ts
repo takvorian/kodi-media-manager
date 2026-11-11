@@ -342,6 +342,18 @@ export class MovieList {
     });
   }
 
+  /** Reads the folders of the selected movies again, one after another as one job. */
+  protected scanChosen(): void {
+    const ids = this.chosenIds();
+    if (!this.confirmTranslated('movies.list.confirmScan', { count: ids.length })) {
+      return;
+    }
+    this.movieService.scanMovies(ids).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => this.notify(problemMessage(error)),
+    });
+  }
+
   /** Makes Kodi read the NFOs and artwork of the selection again, independently of the real-time sync. */
   protected refreshChosenInKodi(): void {
     const ids = this.chosenIds();

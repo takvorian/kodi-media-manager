@@ -4,7 +4,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -58,6 +61,10 @@ public class StreamDetailsService {
     private final EpisodeStreamDetailsService episodes;
     private final MediaProbes probes;
     private final JobService jobService;
+    /** IDs per source that the job for new files still has to read; guarded by itself. */
+    private final Map<Long, Set<Long>> pendingNewFiles = new HashMap<>();
+    /** Sources whose job for new files is running; guarded by {@link #pendingNewFiles}. */
+    private final Set<Long> newFilesRunning = new HashSet<>();
 
     /**
      * @throws MediaInfoProblemException if ffprobe cannot read the file
@@ -107,23 +114,66 @@ public class StreamDetailsService {
     }
 
     /**
-     * Reads newly found files if that is enabled; if such a job is already running for the
-     * source, the next scan picks up the rest.
+     * Reads newly found files if that is enabled. If such a job is already running for the source, it takes the
+     * files over before it ends, so that e.g. a batch scan of many movies loses none.
      */
     void startNewFiles(long sourceId, MediaType mediaType, Collection<Long> ids) {
         if (ids.isEmpty() || !probes.probeNewFiles()) {
             return;
         }
         MediaSource source = sourceService.require(sourceId);
-        Set<Long> wanted = Set.copyOf(ids);
-        List<Entry> entries = entries(source, true, wanted::contains);
+        synchronized (pendingNewFiles) {
+            pendingNewFiles.computeIfAbsent(sourceId, key -> new LinkedHashSet<>()).addAll(ids);
+            if (!newFilesRunning.add(sourceId)) {
+                log.debug("Queued {} new {} file(s) for the running job of source {}", ids.size(), mediaType,
+                        sourceId);
+                return;
+            }
+        }
         LocalizedText title = LocalizedText.of("mediaInfo.newFiles.jobTitle").with("source", source.getName());
         try {
-            jobService.submit(NEW_FILES_JOB_KEY_PREFIX + sourceId, title, context -> run(sourceId, entries, context));
+            jobService.submit(NEW_FILES_JOB_KEY_PREFIX + sourceId, title, context -> runNewFiles(source, context));
         } catch (JobAlreadyRunningException e) {
+            forgetNewFiles(sourceId);
             log.info("Stream details of new files in source {} are already being read", sourceId);
         }
-        log.debug("Reading stream details of {} new {} file(s)", entries.size(), mediaType);
+    }
+
+    /** Reads the queued files of the source until no more arrive; a cancelled or failed job drops the rest. */
+    private StreamDetailsJobResult runNewFiles(MediaSource source, JobContext context) {
+        long sourceId = source.getId();
+        StreamDetailsJobResult total = new StreamDetailsJobResult(sourceId, 0, 0, 0, List.of());
+        try {
+            while (true) {
+                Set<Long> wanted;
+                synchronized (pendingNewFiles) {
+                    wanted = pendingNewFiles.remove(sourceId);
+                    if (wanted == null) {
+                        newFilesRunning.remove(sourceId);
+                        return total;
+                    }
+                }
+                total = combined(total, run(sourceId, entries(source, true, wanted::contains), context));
+            }
+        } catch (RuntimeException e) {
+            forgetNewFiles(sourceId);
+            throw e;
+        }
+    }
+
+    private void forgetNewFiles(long sourceId) {
+        synchronized (pendingNewFiles) {
+            pendingNewFiles.remove(sourceId);
+            newFilesRunning.remove(sourceId);
+        }
+    }
+
+    private static StreamDetailsJobResult combined(StreamDetailsJobResult first, StreamDetailsJobResult second) {
+        List<LocalizedText> failures = new ArrayList<>(first.failures());
+        failures.addAll(second.failures());
+        return new StreamDetailsJobResult(first.sourceId(), first.updated() + second.updated(),
+                first.skipped() + second.skipped(), first.failed() + second.failed(),
+                failures.subList(0, Math.min(failures.size(), MAX_LISTED_FAILURES)));
     }
 
     /**

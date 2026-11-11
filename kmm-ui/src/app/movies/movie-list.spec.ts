@@ -498,6 +498,25 @@ describe('MovieList', () => {
     expect(updated).toEqual([job]);
   });
 
+  it('scans the folders of the chosen movies as a job after asking', async () => {
+    await respond(page([heat, ronin]));
+    element().querySelector<HTMLInputElement>('.choose input')!.click();
+    fixture.detectChanges();
+
+    element().querySelector<HTMLButtonElement>('.scan-button')!.click();
+    const scan = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/scan` });
+    expect(scan.request.body).toEqual({ movieIds: [heat.id] });
+    const job = {
+      id: 's',
+      key: 'movies-batch',
+      title: literal('1 Film scannen'),
+      status: 'RUNNING',
+    } as Job;
+    scan.flush(job);
+
+    expect(updated).toEqual([job]);
+  });
+
   it('refreshes the chosen movies in Kodi as a job', async () => {
     await respond(page([heat, ronin]));
     element().querySelector<HTMLInputElement>('.choose input')!.click();

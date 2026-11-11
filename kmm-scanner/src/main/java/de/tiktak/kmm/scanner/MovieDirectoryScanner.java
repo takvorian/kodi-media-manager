@@ -69,6 +69,32 @@ public class MovieDirectoryScanner {
         return List.copyOf(candidates);
     }
 
+    /**
+     * Searches only the folder of one movie below the root, with the same result for its movies as a pass over
+     * everything. For the root itself these are its files and a disc folder directly in it, without the other
+     * subfolders.
+     *
+     * @throws UncheckedIOException if the folder cannot be read
+     */
+    public List<MovieCandidate> scanFolder(Path root, Path directory) {
+        Objects.requireNonNull(root, "root must not be null");
+        Objects.requireNonNull(directory, "directory must not be null");
+        if (directory.equals(root)) {
+            return scan(root, (directories, scan) -> directories.stream()
+                    .filter(MovieDirectoryScanner::isDiscDirectory)
+                    .map(scan)
+                    .toList());
+        }
+        List<MovieCandidate> candidates = new ArrayList<>(walk(root, directory, Integer.MAX_VALUE).candidates());
+        candidates.sort(BY_FILE);
+        return List.copyOf(candidates);
+    }
+
+    private static boolean isDiscDirectory(Path directory) {
+        String name = directory.getFileName().toString();
+        return name.equalsIgnoreCase(DVD_DIRECTORY) || name.equalsIgnoreCase(BLURAY_DIRECTORY);
+    }
+
     private CollectingVisitor walk(Path root, Path start, int maxDepth) {
         CollectingVisitor visitor = new CollectingVisitor(root);
         try {

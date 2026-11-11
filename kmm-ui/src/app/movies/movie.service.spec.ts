@@ -122,6 +122,16 @@ describe('MovieService', () => {
     batch.flush({});
   });
 
+  it('scans the folders of movies as jobs', () => {
+    service.scanMovie(3).subscribe();
+    service.scanMovies([3, 4]).subscribe();
+
+    httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/3/scan` }).flush({});
+    const batch = httpTesting.expectOne({ method: 'POST', url: `${MOVIES_URL}/scan` });
+    expect(batch.request.body).toEqual({ movieIds: [3, 4] });
+    batch.flush({});
+  });
+
   it('loads a proposal for a search result', () => {
     service.proposal(5, 'tmdb', '949').subscribe();
 

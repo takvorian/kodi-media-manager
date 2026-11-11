@@ -36,6 +36,7 @@ Einige Felder im Detail:
 
 | Knopf | Was passiert |
 |---|---|
+| **Scannen** | Liest den Ordner dieses Films neu ein, siehe [Einen Film scannen](movies.md#scan). |
 | **In Kodi aktualisieren** | Kodi liest diesen Film sofort neu ein. |
 | **Gesehen-Status aus Kodi** | Holt Wiedergaben und eigene Bewertung aus Kodi. |
 | **Technische Angaben auslesen** | Liest die Datei mit ffprobe aus. |
@@ -43,6 +44,16 @@ Einige Felder im Detail:
 | **Scrapen** | Ergänzt alles Fehlende nur für diesen Film, siehe [Scrapen](scraping.md#automatisches-scrapen). |
 | **Online suchen** | Sucht den Film bei einem Anbieter, siehe [Scrapen](scraping.md#online-suche). |
 | **Entfernen** | Entfernt den Film, siehe [Entfernen](movies.md#remove). |
+
+<a id="scan"></a>
+
+## Einen Film scannen
+
+**Scannen** in der Filmansicht liest nur den Ordner dieses Films neu ein, nicht die ganze Quelle. In der Filmliste scannst du so mehrere ausgewählte Filme auf einmal. Es passiert dasselbe wie beim [Scan einer Quelle](sources.md): Neue Filme im Ordner kommen dazu, Filme ohne Datei werden aus der Bibliothek entfernt, und geänderte NFOs werden übernommen. Kodi-Geräte mit [Echtzeit-Sync](kodi.md#real-time-sync) durchsuchen danach den Ordner und entfernen Einträge, deren Dateien fehlen.
+
+**Videodatei ersetzt:** Hast du die Videodatei eines Films ausgetauscht, zum Beispiel aus `Film.avi` und `Film.srt` eine `Film.mkv` mit eingebautem Untertitel gemacht, behält KMM den Eintrag mit allen Angaben. Daran erkennt KMM den Austausch: Die neue Datei gehört zur NFO der alten. Das ist der Fall, wenn sie gleich heißt oder der Film einen eigenen Ordner mit `movie.nfo` hat. Die technischen Angaben stammen noch von der alten Datei. KMM liest sie deshalb neu aus, wenn in den [Einstellungen](settings.md#technische-angaben) das Auslesen nach dem Scan eingeschaltet ist, sonst mit **Technische Angaben auslesen**. Kodi-Geräte mit Echtzeit-Sync entfernen den alten Eintrag und lesen den Film neu ein; Gesehen-Status und Bewertung kommen dabei aus der NFO. Das gilt genauso beim Scan der ganzen Quelle.
+
+Ist der Ordner nicht erreichbar oder enthält er keine Videodateien mehr, meldet KMM das und entfernt nichts. Einen Film, den es nicht mehr gibt, entfernst du über [Entfernen](movies.md#remove).
 
 <a id="technical-details"></a>
 

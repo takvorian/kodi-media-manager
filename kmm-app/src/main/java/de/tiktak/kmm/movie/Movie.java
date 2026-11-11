@@ -386,6 +386,13 @@ public class Movie {
         this.filePathHash = FilePathHash.of(newFilePath);
     }
 
+    /** The video file was exchanged in place, e.g. converted to another container. */
+    void replaceFile(String newFilePath, DiscFormat newDiscFormat, int newPartCount) {
+        relocate(newFilePath);
+        this.discFormat = Objects.requireNonNull(newDiscFormat, "newDiscFormat must not be null");
+        this.partCount = newPartCount;
+    }
+
     void markNfoRead() {
         this.nfoRead = true;
     }

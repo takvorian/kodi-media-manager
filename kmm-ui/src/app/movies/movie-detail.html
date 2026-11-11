@@ -15,6 +15,15 @@
         <button
           matButton
           type="button"
+          class="scan-button"
+          [disabled]="!!scanJob()"
+          (click)="scan()"
+        >
+          {{ 'movies.actions.scan' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
           class="kodi-refresh-button"
           [disabled]="refreshingKodi()"
           (click)="refreshInKodi()"
@@ -331,8 +340,11 @@
     </div>
   </form>
 
-  @if (scrapeJob() || languageJob()) {
+  @if (scanJob() || scrapeJob() || languageJob()) {
     <footer class="detail-status">
+      @if (scanJob()) {
+        <p class="hint scan-progress">{{ 'movies.detail.scanRunning' | transloco }}</p>
+      }
       @if (languageJob()) {
         <p class="hint language-running">{{ 'movies.language.running' | transloco }}</p>
       }

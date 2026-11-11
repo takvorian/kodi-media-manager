@@ -13,6 +13,11 @@ export function movieScrapeJobKey(movieId: number): string {
   return `movie-scrape:${movieId}`;
 }
 
+/** Job key for scanning the folder of a movie; must match MovieFolderScanService.JOB_KEY_PREFIX. */
+export function movieScanJobKey(movieId: number): string {
+  return `movie-scan:${movieId}`;
+}
+
 /** A batch field whose label is translated each time it is read, so it follows a language switch. */
 function translatedField(key: BatchFieldKey, labelKey: string): BatchField {
   return {

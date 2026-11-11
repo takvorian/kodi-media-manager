@@ -36,6 +36,7 @@ Some fields in detail:
 
 | Button | What happens |
 |---|---|
+| **Scan** | Reads the folder of this movie again, see [Scanning a movie](movies.md#scan). |
 | **Refresh in Kodi** | Kodi reads this movie again right away. |
 | **Watched status from Kodi** | Fetches play counts and your own rating from Kodi. |
 | **Read technical details** | Reads the file with ffprobe. |
@@ -43,6 +44,16 @@ Some fields in detail:
 | **Scrape** | Fills in everything missing, for this movie only, see [Scraping](scraping.md#automatic-scraping). |
 | **Search online** | Searches for the movie at a provider, see [Scraping](scraping.md#online-search). |
 | **Remove** | Removes the movie, see [Removing](movies.md#remove). |
+
+<a id="scan"></a>
+
+## Scanning a movie
+
+**Scan** in the movie view reads only the folder of this movie again, not the whole source. In the movie list you can scan several selected movies at once. The same happens as when [scanning a source](sources.md): new movies in the folder are added, movies without a file are removed from the library, and changed NFOs are taken over. Kodi devices with [real-time sync](kodi.md#real-time-sync) then look through the folder and remove entries whose files are gone.
+
+**Replaced video file:** If you have exchanged the video file of a movie, for example turned `Movie.avi` and `Movie.srt` into a `Movie.mkv` with a built-in subtitle, KMM keeps the entry with all its details. This is how KMM recognizes the exchange: the new file belongs to the NFO of the old one. That is the case if it has the same name or if the movie has a folder of its own with a `movie.nfo`. The technical details still come from the old file. KMM therefore reads them again if reading after the scan is switched on in the [settings](settings.md#technical-details), otherwise use **Read technical details**. Kodi devices with real-time sync remove the old entry and read the movie again; watched status and rating come from the NFO. The same applies when the whole source is scanned.
+
+If the folder cannot be reached or no longer contains any video files, KMM reports this and removes nothing. You remove a movie that no longer exists with [Removing](movies.md#remove).
 
 <a id="technical-details"></a>
 

@@ -113,6 +113,15 @@
     <button
       matButton
       type="button"
+      class="scan-button"
+      [disabled]="!!batchJob()"
+      (click)="scanChosen()"
+    >
+      {{ 'movies.actions.scan' | transloco }}
+    </button>
+    <button
+      matButton
+      type="button"
       class="refresh-kodi-button"
       [disabled]="!!batchJob()"
       (click)="refreshChosenInKodi()"

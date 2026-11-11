@@ -85,13 +85,14 @@ public class MovieScanService {
         Progress progress = new Progress(context, candidates.size(), CHECKING_NFOS_MESSAGE);
         return ParallelReads.map(candidates, PARALLEL_READS, "movie-nfo-", candidate -> {
             context.throwIfCancellationRequested();
-            ScannedMovie scanned = withNfo(candidate, knownNfos);
+            ScannedMovie scanned = withNfo(nfoFiles, candidate, knownNfos);
             progress.done();
             return scanned;
         });
     }
 
-    private ScannedMovie withNfo(MovieCandidate candidate, Map<String, Instant> knownNfos) {
+    /** Finds the NFO of the candidate and reads it right away unless it is unchanged since the last scan. */
+    static ScannedMovie withNfo(MovieNfoFiles nfoFiles, MovieCandidate candidate, Map<String, Instant> knownNfos) {
         CompanionFiles companionFiles = CompanionFiles.of(candidate.file(), candidate.format(), candidate.partCount());
         Optional<NfoFileState> nfo = nfoFiles.find(companionFiles);
         String path = new ScannedMovie(candidate, nfo).path();

@@ -9,6 +9,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -97,6 +98,27 @@ class StreamDetailsServiceTest {
         verify(episodes).changeStreamDetails(2L, PROBED);
         verify(episodes).changeStreamDetails(3L, PROBED);
         verify(episodes, never()).changeStreamDetails(1L, PROBED);
+    }
+
+    @Test
+    void readsFilesThatArriveWhileTheJobForNewFilesIsRunningInTheSameJob() {
+        givenTvSource();
+        when(probes.probeNewFiles()).thenReturn(true);
+        when(episodes.findBySource(SOURCE_ID)).thenReturn(List.of(episode(1, 1, LOST, false),
+                episode(3, 3, LOST_3, false)));
+
+        service.startNewFiles(SOURCE_ID, MediaType.TV_SHOW, List.of(1L));
+        service.startNewFiles(SOURCE_ID, MediaType.TV_SHOW, List.of(3L));
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("stream-details-new:7"), any(LocalizedText.class), task.capture());
+        assertThat(task.getValue().run(mock(JobContext.class)))
+                .isEqualTo(new StreamDetailsJobResult(SOURCE_ID, 2, 0, 0, List.of()));
+        verify(episodes).changeStreamDetails(1L, PROBED);
+        verify(episodes).changeStreamDetails(3L, PROBED);
+
+        service.startNewFiles(SOURCE_ID, MediaType.TV_SHOW, List.of(3L));
+        verify(jobService, times(2)).submit(eq("stream-details-new:7"), any(LocalizedText.class), any());
     }
 
     @Test

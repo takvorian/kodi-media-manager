@@ -26,6 +26,7 @@ import de.tiktak.kmm.kodi.rpc.KodiException;
 import de.tiktak.kmm.kodi.rpc.KodiLibraryScheduler;
 import de.tiktak.kmm.kodi.rpc.KodiSources;
 import de.tiktak.kmm.movie.MovieDetails;
+import de.tiktak.kmm.movie.MovieFileReplacedEvent;
 import de.tiktak.kmm.movie.MovieMetadataService;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSetChangedEvent;
@@ -115,6 +116,18 @@ public class KodiSyncService {
         }
     }
 
+    /**
+     * After the video file of a movie was replaced in place: Kodi forgets the entry of the old file and scans the
+     * folder for the new one. Watched status and rating come back from the NFO.
+     */
+    void syncReplacedMovieOnRealtimeHosts(MovieFileReplacedEvent event) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (!targets.isEmpty()) {
+            MovieDetails movie = metadataService.findDetails(event.movieId());
+            syncAll(targets, target -> syncReplaced(target, movie, event.previousFilePath()));
+        }
+    }
+
     /** After renaming a TV show as for movies: scan the new folder, clean the old one. */
     void syncRenamedTvShowOnRealtimeHosts(TvShowRenamedEvent event) {
         List<KodiTarget> targets = realtimeTargets();
@@ -172,6 +185,14 @@ public class KodiSyncService {
         List<KodiTarget> targets = realtimeTargets();
         if (!targets.isEmpty()) {
             scanTvShow(showId, season, targets, KodiProgress.NONE);
+        }
+    }
+
+    /** After KMM scanned the folder of a movie: Kodi scans the folder and cleans it up. */
+    void scanMovieFolderOnRealtimeHosts(String directory) {
+        List<KodiTarget> targets = realtimeTargets();
+        if (!targets.isEmpty()) {
+            syncAll(targets, target -> scanMovieFolder(target, directory));
         }
     }
 
@@ -379,6 +400,18 @@ public class KodiSyncService {
                 .with("title", showTitle).with("count", removedCount));
     }
 
+    private Outcome scanMovieFolder(KodiTarget target, String localDirectory) {
+        Optional<String> directory = target.pathMapper().toKodiDirectory(localDirectory);
+        if (directory.isEmpty()) {
+            return notMapped(localDirectory);
+        }
+        Duration maxWait = properties.scanWaitBackground();
+        Outcome outcome = scanWithSourceCheck(target, directory.get(), maxWait,
+                LocalizedText.of("kodi.sync.scanMovieFolder").with("directory", directory.get()));
+        scheduler.cleanMovies(target.endpoint(), directory.get(), maxWait);
+        return outcome;
+    }
+
     private Outcome scan(KodiTarget target, TvShowDetails show, Optional<String> seasonDirectory) {
         Optional<String> showDirectory = target.pathMapper().toKodiDirectory(show.directoryPath());
         if (showDirectory.isEmpty()) {
@@ -449,6 +482,19 @@ public class KodiSyncService {
                 .with("directory", kodiDirectory)
                 .with("host", target.name())
                 .with("sources", sources.describe()));
+    }
+
+    private Outcome syncReplaced(KodiTarget target, MovieDetails movie, String previousFilePath) {
+        Optional<String> previous = target.pathMapper().toKodiPath(previousFilePath);
+        Optional<String> directory = target.pathMapper().toKodiDirectory(movieDirectory(movie));
+        if (previous.isEmpty() || directory.isEmpty()) {
+            return notMapped(movie.filePath());
+        }
+        kodiClient.findMovie(target.endpoint(), previous.get())
+                .ifPresent(kodiMovieId -> kodiClient.removeMovie(target.endpoint(), kodiMovieId));
+        return scanWithSourceCheck(target, directory.get(), properties.scanWaitBackground(),
+                LocalizedText.of("kodi.sync.replaced").with("title", movie.metadata().title())
+                        .with("directory", directory.get()));
     }
 
     private Outcome syncRenamed(KodiTarget target, String localDirectory, String localPrevious, Clean clean) {

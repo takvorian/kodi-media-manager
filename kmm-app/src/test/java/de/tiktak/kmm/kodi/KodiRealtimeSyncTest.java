@@ -15,7 +15,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import de.tiktak.kmm.movie.MovieFileReplacedEvent;
 import de.tiktak.kmm.movie.MovieFilesChangedEvent;
+import de.tiktak.kmm.movie.MovieFolderScannedEvent;
 import de.tiktak.kmm.movie.MovieRemovedEvent;
 import de.tiktak.kmm.movie.MovieRenamedEvent;
 import de.tiktak.kmm.movie.MovieSetChangedEvent;
@@ -86,6 +88,26 @@ class KodiRealtimeSyncTest {
         realtimeSync.onTvShowRenamed(event);
 
         verify(syncService, timeout(WAIT_MILLIS)).syncRenamedTvShowOnRealtimeHosts(event);
+    }
+
+    @Test
+    void syncsAReplacedMovieFileOnceAfterTheDelay() {
+        MovieFileReplacedEvent event = new MovieFileReplacedEvent(5, 3, "/filme/Heat/Heat.avi");
+
+        realtimeSync.onMovieFileReplaced(event);
+        realtimeSync.onMovieFileReplaced(event);
+
+        verify(syncService, timeout(WAIT_MILLIS).times(1)).syncReplacedMovieOnRealtimeHosts(event);
+        verify(syncService, after(300).times(1)).syncReplacedMovieOnRealtimeHosts(event);
+    }
+
+    @Test
+    void scansAMovieFolderOnlyWhenMoviesWereAddedOrRemoved() {
+        realtimeSync.onMovieFolderScanned(new MovieFolderScannedEvent(3, "/filme/Heat", 0, 0, List.of()));
+        realtimeSync.onMovieFolderScanned(new MovieFolderScannedEvent(3, "/filme/Ronin", 0, 1, List.of()));
+
+        verify(syncService, timeout(WAIT_MILLIS)).scanMovieFolderOnRealtimeHosts("/filme/Ronin");
+        verify(syncService, never()).scanMovieFolderOnRealtimeHosts("/filme/Heat");
     }
 
     @Test
