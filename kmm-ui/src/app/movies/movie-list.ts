@@ -1,5 +1,5 @@
 import { NgTemplateOutlet } from '@angular/common';
-import { Component, computed, inject, signal } from '@angular/core';
+import { Component, computed, effect, inject, signal, untracked } from '@angular/core';
 import { rxResource, takeUntilDestroyed, toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
@@ -32,7 +32,8 @@ import { CONFIRM } from '../shared/confirm';
 import { localDateTime } from '../shared/date-time';
 import { ExportMenu } from '../shared/export-menu';
 import { KodiService } from '../kodi/kodi.service';
-import { ListSort, SORT_BY_TITLE, listSortOf } from '../shared/list-sort';
+import { ListSort, listSortOf } from '../shared/list-sort';
+import { ListState, PAGE_SIZES, bindListState, initialListState } from '../shared/list-state';
 import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
 import { problemMessage } from '../shared/problem-message';
 import { RemovalService, isRemovalJob } from '../shared/removal';
@@ -45,7 +46,7 @@ import { MOVIES_URL, MovieService } from './movie.service';
 import { LocalizedPipe } from '../i18n/localized.pipe';
 
 export const SEARCH_DEBOUNCE_MS = 300;
-export const DEFAULT_PAGE_SIZE = 50;
+export { DEFAULT_PAGE_SIZE } from '../shared/list-state';
 
 /** Translation key of the label of each disc format. */
 const DISC_FORMAT_KEYS: Record<DiscFormat, string> = {
@@ -99,19 +100,25 @@ export class MovieList {
   private readonly removal = inject(RemovalService);
   private readonly transloco = inject(TranslocoService);
 
-  protected readonly pageSizes = [25, DEFAULT_PAGE_SIZE, 100];
+  /** Page, sorting, search and filter from the address, e.g. when coming back from a detail page. */
+  private readonly initial = initialListState();
+  protected readonly pageSizes = [...PAGE_SIZES];
   protected readonly columns = ['select', 'title', 'year', 'discFormat', 'addedAt', 'filePath'];
   protected readonly predefined = PREDEFINED_MOVIE_FILTERS;
   protected readonly filterFields = MOVIE_FILTER_FIELDS;
   protected readonly batchFields = MOVIE_BATCH_FIELDS;
-  protected readonly searchInput = signal('');
-  protected readonly pageIndex = signal(0);
-  protected readonly pageSize = signal(DEFAULT_PAGE_SIZE);
-  protected readonly sort = signal<ListSort>(SORT_BY_TITLE);
+  protected readonly searchInput = signal(this.initial.search);
+  protected readonly pageIndex = signal(this.initial.page);
+  protected readonly pageSize = signal(this.initial.size);
+  protected readonly sort = signal<ListSort>(this.initial.sort);
   protected readonly localDateTime = localDateTime;
-  protected readonly filter = signal<MovieFilter>(ALL_MOVIES);
+  protected readonly filter = signal<MovieFilter>(
+    this.filterOf(this.initial.selection) ?? ALL_MOVIES,
+  );
   /** Chosen entry of the filter selection: `all`, `predefined:<index>` or `saved:<ID>`. */
-  protected readonly selection = signal(ALL);
+  protected readonly selection = signal(this.initial.selection);
+  /** A saved filter from the address is shown once the saved filters are loaded; the list waits for it. */
+  private readonly awaitingSaved = signal(this.initial.selection.startsWith(SAVED));
   protected readonly editing = signal(false);
   protected readonly filterName = signal('');
   /** Movies chosen for the batch edit, also across pages. */
@@ -139,13 +146,20 @@ export class MovieList {
     stream: () => this.sourceService.findAll(),
   });
 
+  /** A new search starts on the first page; one from the address keeps the page of the address. */
+  private appliedSearch = this.initial.search;
   private readonly search = toSignal(
     toObservable(this.searchInput).pipe(
       debounceTime(SEARCH_DEBOUNCE_MS),
       distinctUntilChanged(),
-      tap(() => this.pageIndex.set(0)),
+      tap((search) => {
+        if (search !== this.appliedSearch) {
+          this.appliedSearch = search;
+          this.pageIndex.set(0);
+        }
+      }),
     ),
-    { initialValue: '' },
+    { initialValue: this.initial.search },
   );
 
   protected readonly exportEndpoint = `${MOVIES_URL}/export`;
@@ -167,7 +181,7 @@ export class MovieList {
   );
 
   protected readonly movies = rxResource({
-    params: () => this.query(),
+    params: () => (this.awaitingSaved() ? undefined : this.query()),
     stream: ({ params }) =>
       this.movieService.queryMovies(params.filter, params.page, params.size, params.sort),
   });
@@ -187,7 +201,26 @@ export class MovieList {
     return this.savedFilters.value().find((saved) => saved.id === id) ?? null;
   });
 
+  private readonly listState = computed<ListState>(() => ({
+    page: this.pageIndex(),
+    size: this.pageSize(),
+    sort: this.sort(),
+    search: this.search(),
+    selection: this.selection(),
+  }));
+
   constructor() {
+    bindListState(
+      'movies',
+      this.listState,
+      (state) => this.applyState(state),
+      computed(() => this.movies.hasValue()),
+    );
+    effect(() => {
+      if (this.awaitingSaved() && !this.savedFilters.isLoading()) {
+        untracked(() => this.applySaved());
+      }
+    });
     this.jobStore.connect();
     this.jobStore.completed
       .pipe(
@@ -453,6 +486,40 @@ export class MovieList {
 
   protected predefinedKey(index: number): string {
     return PREDEFINED + index;
+  }
+
+  /** Shows the state of a new address, e.g. after a click on the list in the navigation. */
+  private applyState(state: ListState): void {
+    this.searchInput.set(state.search);
+    this.appliedSearch = state.search;
+    this.sort.set(state.sort);
+    this.pageSize.set(state.size);
+    this.selection.set(state.selection);
+    this.filterName.set('');
+    this.filter.set(this.filterOf(state.selection) ?? ALL_MOVIES);
+    this.awaitingSaved.set(state.selection.startsWith(SAVED));
+    this.pageIndex.set(state.page);
+  }
+
+  /** The filter of a selection; `null` for a saved filter, which needs the loaded saved filters. */
+  private filterOf(selection: string): MovieFilter | null {
+    if (selection.startsWith(PREDEFINED)) {
+      return this.predefined[Number(selection.substring(PREDEFINED.length))]?.filter ?? ALL_MOVIES;
+    }
+    return selection.startsWith(SAVED) ? null : ALL_MOVIES;
+  }
+
+  /** Shows the saved filter from the address; one deleted meanwhile shows everything. */
+  private applySaved(): void {
+    const saved = this.selectedSaved();
+    this.awaitingSaved.set(false);
+    if (saved) {
+      this.filter.set(saved.definition as MovieFilter);
+      this.filterName.set(saved.name);
+    } else {
+      this.selection.set(ALL);
+      this.filter.set(ALL_MOVIES);
+    }
   }
 
   private applyFilter(filter: MovieFilter): void {

@@ -29,6 +29,7 @@ import { createEpisodeMetadataForm, toEpisodeFormValue, toEpisodeMetadata } from
 import { SHORT_DATE_TIME } from './tv-date-formats';
 import { TvShowArtworkService } from './tvshow-artwork.service';
 import { TvShowService } from './tvshow.service';
+import { ListReturn } from '../shared/list-state';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -59,6 +60,8 @@ export class EpisodeDetail {
   private readonly transloco = inject(TranslocoService);
   private readonly removal = inject(RemovalService);
   private readonly router = inject(Router);
+  /** Back to the list as it was left: page, filter and sorting. */
+  protected readonly listParams = inject(ListReturn).queryParams('tvshows');
 
   /** Episode ID from the route `/episodes/:id`. */
   readonly id = input.required({ transform: numberAttribute });

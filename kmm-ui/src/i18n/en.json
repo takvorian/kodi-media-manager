@@ -91,6 +91,17 @@
     "pageHelp": "Help for this page",
     "pageHelpTitle": "Help for this page (new tab)"
   },
+  "auth": {
+    "title": "Sign in",
+    "username": "User name",
+    "password": "Password",
+    "rememberMe": "Stay signed in",
+    "rememberMeHint": "For 30 days on this device, until you sign out.",
+    "signIn": "Sign in",
+    "expired": "The login page has expired. Reload the page and try again.",
+    "logout": "Sign out",
+    "logoutTitle": "Signed in as {username} – sign out"
+  },
   "language": {
     "switch": "Interface language"
   },
@@ -123,7 +134,8 @@
     "migration": "Ember import",
     "backup": "Backup",
     "system": "System",
-    "help": "Help"
+    "help": "Help",
+    "login": "Sign in"
   },
   "paginator": {
     "itemsPerPage": "Items per page:",
@@ -1245,6 +1257,10 @@
         "title": "Request rejected",
         "csrf": "The server rejected the request because the security cookie is missing or does not match. Reload the page. If that does not help, delete the cookies of this address in the browser.",
         "permission": "You are not allowed to do this."
+      },
+      "login": {
+        "title": "Login failed",
+        "failed": "The user name or password is wrong."
       }
     },
     "tvShow": {

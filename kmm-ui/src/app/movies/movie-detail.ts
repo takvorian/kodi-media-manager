@@ -52,6 +52,7 @@ import { MovieRenameService } from './movie-rename.service';
 import { localize } from '../i18n/localized-text';
 import { CollectionReference } from './scraper';
 import { HelpLink } from '../shared/help-link';
+import { ListReturn } from '../shared/list-state';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -95,6 +96,8 @@ export class MovieDetail {
   private readonly transloco = inject(TranslocoService);
   private readonly removal = inject(RemovalService);
   private readonly router = inject(Router);
+  /** Back to the list as it was left: page, filter and sorting. */
+  protected readonly listParams = inject(ListReturn).queryParams('movies');
 
   /** Movie ID from the route {@code /movies/:id}. */
   readonly id = input.required({ transform: numberAttribute });
@@ -292,7 +295,7 @@ export class MovieDetail {
         remove: (deleteFiles) => this.movieService.remove(this.id(), deleteFiles),
       })
       .pipe(finalize(() => this.removing.set(false)))
-      .subscribe(() => void this.router.navigate(['/movies']));
+      .subscribe(() => void this.router.navigate(['/movies'], { queryParams: this.listParams() }));
   }
 
   /** Makes Kodi read the movie's NFO and artwork again, independently of the real-time sync. */

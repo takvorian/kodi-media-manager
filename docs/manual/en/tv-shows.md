@@ -2,7 +2,7 @@
 
 ## The TV show list
 
-The **TV shows** page works like the [movie list](movies.md#the-movie-list): with search, [filters](filters.md), selection, [export](export.md), sorting via the column headers, and a pagination bar above and below the list.
+The **TV shows** page works like the [movie list](movies.md#the-movie-list): with search, [filters](filters.md), selection, [export](export.md), sorting via the column headers, and a pagination bar above and below the list. Like the movie list, it keeps its page, filter and position when you come back from a TV show or episode.
 
 ## The TV show view
 

@@ -69,6 +69,7 @@ import { TvShowOnlineSearch, TvShowScrapedProposal } from './tvshow-online-searc
 import { TVSHOWS_URL, TvShowService } from './tvshow.service';
 import { localize } from '../i18n/localized-text';
 import { LocalizedPipe } from '../i18n/localized.pipe';
+import { ListReturn } from '../shared/list-state';
 
 const SNACKBAR_DURATION_MS = 5000;
 
@@ -116,6 +117,8 @@ export class TvShowDetail {
   private readonly transloco = inject(TranslocoService);
   private readonly removal = inject(RemovalService);
   private readonly router = inject(Router);
+  /** Back to the list as it was left: page, filter and sorting. */
+  protected readonly listParams = inject(ListReturn).queryParams('tvshows');
 
   /** TV show ID from the route `/tvshows/:id`. */
   readonly id = input.required({ transform: numberAttribute });
@@ -263,7 +266,7 @@ export class TvShowDetail {
       }),
       this.tvShowService.showRemovalPlan(this.id()),
       (deleteFiles) => this.tvShowService.removeShow(this.id(), deleteFiles),
-    ).subscribe(() => void this.router.navigate(['/tvshows']));
+    ).subscribe(() => void this.router.navigate(['/tvshows'], { queryParams: this.listParams() }));
   }
 
   private startRemoval(

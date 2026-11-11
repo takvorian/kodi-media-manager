@@ -10,7 +10,7 @@ import {
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 import { Subject, of } from 'rxjs';
 
@@ -131,6 +131,26 @@ describe('TvShowList', () => {
     await fixture.whenStable();
     return request;
   }
+
+  it('opens page, search and predefined filter from the address and keeps them in it', async () => {
+    fixture.destroy();
+    const router = TestBed.inject(Router);
+    await router.navigateByUrl('/?page=2&q=alf&filter=predefined:1');
+    fixture = TestBed.createComponent(TvShowList);
+
+    const request = await respond(page([alf], 80));
+
+    expect(request.request.params.get('page')).toBe('1');
+    expect(request.request.body.search).toBe('alf');
+    expect(request.request.body.conditions).toEqual([
+      { field: 'STATUS', operator: 'IS', value: 'Continuing' },
+    ]);
+    expect(router.url).toBe('/?page=2&q=alf&filter=predefined:1');
+
+    element().querySelector<HTMLButtonElement>('.mat-mdc-paginator-navigation-previous')!.click();
+    await respond(page([alf], 80));
+    expect(router.url).toBe('/?q=alf&filter=predefined:1');
+  });
 
   it('sorts by a column header and starts again at the first page', async () => {
     await respond(page([alf]));

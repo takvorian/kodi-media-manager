@@ -1,5 +1,5 @@
 .toolbar {
-  gap: 24px;
+  gap: 16px;
 }
 
 .title {
@@ -8,7 +8,7 @@
 }
 
 .app-version {
-  margin-left: -16px;
+  margin-left: -8px;
   font: var(--mat-sys-label-small);
   color: var(--mat-sys-on-surface-variant);
   text-decoration: none;
@@ -26,6 +26,11 @@
 .page-help {
   margin-left: auto;
   font-weight: 700;
+}
+
+.logout {
+  margin-left: -8px;
+  color: var(--mat-sys-on-surface-variant);
 }
 
 .active {

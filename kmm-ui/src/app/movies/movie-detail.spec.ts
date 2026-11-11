@@ -24,6 +24,7 @@ import { CONFIRM } from '../shared/confirm';
 import { NO_THEME, REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
 import { ThemeService } from '../shared/theme';
 import { literal } from '../i18n/localized-text';
+import { ListReturn } from '../shared/list-state';
 
 describe('MovieDetail', () => {
   const heat: MovieDetails = {
@@ -170,6 +171,15 @@ describe('MovieDetail', () => {
     );
     expect(element().querySelector('.audios')?.textContent?.trim()).toBe('deu · DTS · 5.1');
     expect(element().querySelector('.subtitles')?.textContent?.trim()).toBe('deu (erzwungen)');
+  });
+
+  it('goes back to the list as it was left', async () => {
+    TestBed.inject(ListReturn).remember('movies', { page: 3, q: 'heat' });
+    await load(heat);
+
+    expect(element().querySelector('.back-link')?.getAttribute('href')).toBe(
+      '/movies?page=3&q=heat',
+    );
   });
 
   it('switches to English at runtime', async () => {
@@ -930,6 +940,7 @@ describe('MovieDetail', () => {
   it('removes the movie from the library after asking and goes back to the list', async () => {
     await load(heat);
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    TestBed.inject(ListReturn).remember('movies', { page: 3, filter: 'saved:7' });
 
     button('.remove-button').click();
     httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5/removal` }).flush(REMOVAL_PLAN);
@@ -937,7 +948,9 @@ describe('MovieDetail', () => {
     start.flush(job({ key: 'removal:movie:5' }));
 
     expect(start.request.body).toEqual({ deleteFiles: false });
-    expect(navigate).toHaveBeenCalledWith(['/movies']);
+    expect(navigate).toHaveBeenCalledWith(['/movies'], {
+      queryParams: { page: 3, filter: 'saved:7' },
+    });
   });
 
   it('names the remove button in English', async () => {

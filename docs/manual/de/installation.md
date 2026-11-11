@@ -35,6 +35,17 @@ Nach der Installation ist KMM nur auf dem eigenen Rechner erreichbar und fragt n
 
 Mache KMM **nie ohne Anmeldung** im Netz erreichbar, sonst kann jeder im Netz deine Medienordner verändern.
 
+<a id="login"></a>
+### Anmelden
+
+Ist die Anmeldung eingeschaltet, zeigt KMM eine eigene Anmeldeseite mit Benutzername und Passwort. Nach dem Anmelden kommst du auf die Seite zurück, die du aufrufen wolltest.
+
+- Ohne **Angemeldet bleiben** gilt die Anmeldung, bis du den Browser schließt oder KMM neu startet.
+- Mit **Angemeldet bleiben** bleibst du auf diesem Gerät 30 Tage angemeldet, auch über einen Neustart oder ein Update von KMM hinweg. Änderst du das Passwort, musst du dich überall neu anmelden.
+- **Abmelden** oben rechts beendet die Anmeldung auf diesem Gerät.
+
+Skripte und Programme können die Schnittstelle weiter mit Benutzername und Passwort aufrufen (HTTP Basic), zum Beispiel `curl -u admin:passwort http://<Server>:8080/api/v1/movies`.
+
 ### Zusatzprogramme
 
 Zwei Funktionen brauchen Programme, die nicht im Installer enthalten sind:
@@ -44,7 +55,7 @@ Zwei Funktionen brauchen Programme, die nicht im Installer enthalten sind:
 
 ## Docker
 
-Im Docker-Image sind FFmpeg und yt-dlp schon enthalten. KMM läuft dort mit einer MariaDB-Datenbank und immer mit Anmeldung.
+Im Docker-Image sind FFmpeg und yt-dlp schon enthalten. KMM läuft dort mit einer MariaDB-Datenbank und immer mit [Anmeldung](installation.md#login).
 
 ```bash
 cd docker

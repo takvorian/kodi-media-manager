@@ -1,8 +1,10 @@
 import { Routes } from '@angular/router';
 
+import { authGuard, loginPageGuard } from './auth/auth.guard';
 import { DEFAULT_HELP_CHAPTER } from './help/help';
 
-export const routes: Routes = [
+/** All pages of KMM; they need a signed-in user. */
+const pages: Routes = [
   { path: '', pathMatch: 'full', redirectTo: 'movies' },
   {
     path: 'movies',
@@ -86,4 +88,14 @@ export const routes: Routes = [
     loadComponent: () => import('./help/help-page').then((m) => m.HelpPage),
   },
   { path: '**', redirectTo: 'movies' },
+];
+
+export const routes: Routes = [
+  {
+    path: 'login',
+    title: 'pageTitle.login',
+    canActivate: [loginPageGuard],
+    loadComponent: () => import('./auth/login-page').then((m) => m.LoginPage),
+  },
+  { path: '', canActivateChild: [authGuard], children: pages },
 ];

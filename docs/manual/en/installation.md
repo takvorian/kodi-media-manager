@@ -35,6 +35,17 @@ After installation, KMM can only be reached from your own computer and does not 
 
 **Never** make KMM reachable on the network **without login**, otherwise anyone on the network can change your media folders.
 
+<a id="login"></a>
+### Signing in
+
+With login turned on, KMM shows its own sign-in page with user name and password. After signing in you return to the page you wanted to open.
+
+- Without **Stay signed in**, the login lasts until you close the browser or KMM restarts.
+- With **Stay signed in**, you stay signed in on this device for 30 days, even across a restart or an update of KMM. If you change the password, you have to sign in again everywhere.
+- **Sign out** at the top right ends the login on this device.
+
+Scripts and programs can still call the API with user name and password (HTTP Basic), for example `curl -u admin:password http://<server>:8080/api/v1/movies`.
+
 ### Additional programs
 
 Two features need programs that are not included in the installer:
@@ -44,7 +55,7 @@ Two features need programs that are not included in the installer:
 
 ## Docker
 
-The Docker image already includes FFmpeg and yt-dlp. There, KMM runs with a MariaDB database and always requires a login.
+The Docker image already includes FFmpeg and yt-dlp. There, KMM runs with a MariaDB database and always requires a [login](installation.md#login).
 
 ```bash
 cd docker

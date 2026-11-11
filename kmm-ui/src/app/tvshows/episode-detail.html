@@ -1,5 +1,7 @@
 @if (episode.error()) {
-  <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
+  <a matButton routerLink="/tvshows" [queryParams]="listParams()" class="back-link">{{
+    'tvshows.backToList' | transloco
+  }}</a>
   <p class="error">{{ 'tvshows.episode.loadError' | transloco }}</p>
 } @else if (episode.hasValue()) {
   @let details = episode.value();

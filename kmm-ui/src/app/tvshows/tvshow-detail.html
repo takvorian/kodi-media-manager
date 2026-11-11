@@ -1,10 +1,14 @@
 @if (show.error()) {
-  <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
+  <a matButton routerLink="/tvshows" [queryParams]="listParams()" class="back-link">{{
+    'tvshows.backToList' | transloco
+  }}</a>
   <p class="error">{{ 'tvshows.detail.loadError' | transloco }}</p>
 } @else if (show.hasValue()) {
   @let details = show.value();
   <header class="detail-header">
-    <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
+    <a matButton routerLink="/tvshows" [queryParams]="listParams()" class="back-link">{{
+      'tvshows.backToList' | transloco
+    }}</a>
     <div class="title-row">
       <h2 class="page-title">{{ details.metadata.title }}</h2>
       <div class="title-actions">
@@ -500,6 +504,8 @@
     </footer>
   }
 } @else {
-  <a matButton routerLink="/tvshows" class="back-link">{{ 'tvshows.backToList' | transloco }}</a>
+  <a matButton routerLink="/tvshows" [queryParams]="listParams()" class="back-link">{{
+    'tvshows.backToList' | transloco
+  }}</a>
   <p class="loading">{{ 'tvshows.detail.loading' | transloco }}</p>
 }

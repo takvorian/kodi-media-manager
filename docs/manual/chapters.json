@@ -7,7 +7,7 @@
   {
     "slug": "installation",
     "title": { "de": "Installation und Start", "en": "Installation and start" },
-    "routes": ["/system"]
+    "routes": ["/system", "/login"]
   },
   {
     "slug": "getting-started",

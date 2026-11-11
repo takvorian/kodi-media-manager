@@ -52,6 +52,15 @@ export class JobStore {
     );
   }
 
+  /**
+   * Closes the SSE connection, e.g. on signing out; the browser would not reconnect after a 401 anyway. The next
+   * {@link connect} opens a new one.
+   */
+  disconnect(): void {
+    this.eventSource?.close();
+    this.eventSource = null;
+  }
+
   /** Takes over a job that came e.g. as the answer to a start call. */
   update(job: Job): void {
     const previous = this.jobsById().get(job.id);

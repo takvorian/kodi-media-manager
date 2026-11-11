@@ -1,11 +1,13 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { provideRouter, Router } from '@angular/router';
 import { Subject, of, throwError, Observable } from 'rxjs';
 import { RouterTestingHarness } from '@angular/router/testing';
 
 import { App } from './app';
+import { AuthService, AuthStatus } from './auth/auth.service';
 import { provideI18nTesting } from './i18n/testing';
 import { LanguageService } from './i18n/language.service';
 import { FakeJobEvents } from './jobs/fake-job-events';
@@ -14,9 +16,26 @@ import { SystemInfoService } from './system/system-info.service';
 
 describe('App', () => {
   let systemInfo$: Observable<unknown>;
+  let auth: {
+    load: () => Observable<AuthStatus>;
+    signedIn: ReturnType<typeof signal<boolean>>;
+    username: ReturnType<typeof signal<string | null>>;
+    logout: () => Observable<unknown>;
+    logouts: number;
+  };
 
   beforeEach(() => {
     systemInfo$ = of({ version: 'v0.7' });
+    auth = {
+      load: () => of({ securityEnabled: true, authenticated: auth.signedIn(), username: 'admin' }),
+      signedIn: signal(true),
+      username: signal<string | null>('admin'),
+      logout: () => {
+        auth.logouts++;
+        return of(null);
+      },
+      logouts: 0,
+    };
     TestBed.configureTestingModule({
       providers: [
         provideRouter(routes),
@@ -25,6 +44,7 @@ describe('App', () => {
         provideI18nTesting(),
         new FakeJobEvents().provider(),
         { provide: SystemInfoService, useValue: { load: () => systemInfo$ } },
+        { provide: AuthService, useValue: auth },
       ],
     });
   });
@@ -103,6 +123,51 @@ describe('App', () => {
     await TestBed.inject(Router).navigateByUrl('/tags');
     fixture.detectChanges();
     expect(link()?.getAttribute('href')).toBe('/help/tags');
+  });
+
+  it('signs out with the button in the toolbar', async () => {
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+    const navigate = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+
+    const logout = element.querySelector<HTMLButtonElement>('.logout');
+    expect(logout?.getAttribute('title')).toBe('Als admin angemeldet – abmelden');
+    logout!.click();
+
+    expect(auth.logouts).toBe(1);
+    expect(navigate).toHaveBeenCalledWith('/login');
+  });
+
+  it('shows no sign-out button when login is disabled', async () => {
+    auth.username.set(null);
+    const fixture = TestBed.createComponent(App);
+    await fixture.whenStable();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('.logout')).toBeNull();
+  });
+
+  it('hides the navigation and the jobs on the login page', async () => {
+    auth.signedIn.set(false);
+    const fixture = TestBed.createComponent(App);
+    await TestBed.inject(Router).navigateByUrl('/login');
+    await fixture.whenStable();
+    const element = fixture.nativeElement as HTMLElement;
+
+    expect(element.querySelector('nav')).toBeNull();
+    expect(element.querySelector('.app-version')).toBeNull();
+    expect(element.querySelector('.logout')).toBeNull();
+    expect(element.querySelector('app-job-indicator')).toBeNull();
+    expect(element.querySelector('.language-switch')).not.toBeNull();
+  });
+
+  it('opens the login page instead of a page when nobody is signed in', async () => {
+    auth.signedIn.set(false);
+    const harness = await RouterTestingHarness.create();
+
+    await harness.navigateByUrl('/tags');
+
+    expect(TestBed.inject(Router).url).toBe('/login?returnUrl=%2Ftags');
   });
 
   it('redirects the start page and unknown routes to the movie list', async () => {

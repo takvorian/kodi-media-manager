@@ -4,6 +4,8 @@
 
 The **Movies** page shows all movies with title, year, format, date added and file. Clicking a column header sorts the list by that column; clicking it again reverses the order. With **Added**, for example, you see the newest movies first. The pagination bar sits above and below the list. At the top you can search by title and choose a [filter](filters.md). Use the checkboxes on the left to select movies for [batch actions](filters.md#batch-edit), and use **Export** to download the current list as an [export](export.md).
 
+The list keeps its page, sorting, search and filter in the address. When you go from the movie view back to the list with **Back**, you are on the same page at the same position. Reloading and the browser's back button keep the list too, and you can bookmark a filtered list.
+
 ![The movie list](../images/movie-list.png)
 
 ## The movie view

@@ -1,8 +1,14 @@
-import { provideHttpClient, withFetch, withXsrfConfiguration } from '@angular/common/http';
+import {
+  provideHttpClient,
+  withFetch,
+  withInterceptors,
+  withXsrfConfiguration,
+} from '@angular/common/http';
 import { ApplicationConfig, provideBrowserGlobalErrorListeners } from '@angular/core';
 import { provideRouter, withComponentInputBinding } from '@angular/router';
 
 import { routes } from './app.routes';
+import { authInterceptor } from './auth/auth.interceptor';
 import { provideI18n } from './i18n/provide-i18n';
 
 export const appConfig: ApplicationConfig = {
@@ -13,6 +19,7 @@ export const appConfig: ApplicationConfig = {
     provideHttpClient(
       withFetch(),
       withXsrfConfiguration({ cookieName: 'KMM-XSRF-TOKEN', headerName: 'X-KMM-XSRF-TOKEN' }),
+      withInterceptors([authInterceptor]),
     ),
     provideI18n(),
   ],

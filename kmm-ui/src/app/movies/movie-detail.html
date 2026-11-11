@@ -1,12 +1,12 @@
 @if (movie.error()) {
-  <a matButton routerLink="/movies" class="back-link">{{
+  <a matButton routerLink="/movies" [queryParams]="listParams()" class="back-link">{{
     'movies.detail.backToList' | transloco
   }}</a>
   <p class="error">{{ 'movies.detail.loadError' | transloco }}</p>
 } @else if (movie.hasValue()) {
   @let details = movie.value();
   <header class="detail-header">
-    <a matButton routerLink="/movies" class="back-link">{{
+    <a matButton routerLink="/movies" [queryParams]="listParams()" class="back-link">{{
       'movies.detail.backToList' | transloco
     }}</a>
     <div class="title-row">
@@ -354,7 +354,7 @@
     </footer>
   }
 } @else {
-  <a matButton routerLink="/movies" class="back-link">{{
+  <a matButton routerLink="/movies" [queryParams]="listParams()" class="back-link">{{
     'movies.detail.backToList' | transloco
   }}</a>
   <p class="loading">{{ 'movies.detail.loading' | transloco }}</p>

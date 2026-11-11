@@ -1,0 +1,45 @@
+<mat-card appearance="outlined" class="login">
+  <mat-card-header>
+    <mat-card-title class="login-title">{{ 'auth.title' | transloco }}</mat-card-title>
+    <mat-card-subtitle>{{ appName }}</mat-card-subtitle>
+  </mat-card-header>
+  <form [formGroup]="form" (ngSubmit)="signIn()">
+    <mat-card-content class="fields">
+      <mat-form-field>
+        <mat-label>{{ 'auth.username' | transloco }}</mat-label>
+        <input
+          matInput
+          class="username"
+          formControlName="username"
+          autocomplete="username"
+          autocapitalize="none"
+          spellcheck="false"
+          required
+        />
+      </mat-form-field>
+      <mat-form-field>
+        <mat-label>{{ 'auth.password' | transloco }}</mat-label>
+        <input
+          matInput
+          class="password"
+          type="password"
+          formControlName="password"
+          autocomplete="current-password"
+          required
+        />
+      </mat-form-field>
+      <mat-checkbox class="remember-me" formControlName="rememberMe">{{
+        'auth.rememberMe' | transloco
+      }}</mat-checkbox>
+      <p class="hint remember-me-hint">{{ 'auth.rememberMeHint' | transloco }}</p>
+      @if (error(); as message) {
+        <p class="error login-error" role="alert">{{ message }}</p>
+      }
+    </mat-card-content>
+    <mat-card-actions align="end">
+      <button matButton="filled" class="sign-in" type="submit" [disabled]="signingIn()">
+        {{ 'auth.signIn' | transloco }}
+      </button>
+    </mat-card-actions>
+  </form>
+</mat-card>

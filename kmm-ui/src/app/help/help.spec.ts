@@ -17,6 +17,7 @@ const CHAPTER = {
 describe('help', () => {
   it('finds a chapter for every page of the application', () => {
     const pages = routes
+      .flatMap((route) => route.children ?? [route])
       .map((route) => route.path ?? '')
       .filter((path) => path !== '' && path !== '**' && !path.startsWith('help'))
       .map((path) => `/${path.replace(/:[a-z]+/g, '1')}`);

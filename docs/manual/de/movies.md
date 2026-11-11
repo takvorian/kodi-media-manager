@@ -4,6 +4,8 @@
 
 Die Seite **Filme** zeigt alle Filme mit Titel, Jahr, Format, Hinzugefügt und Datei. Ein Klick auf einen Spaltenkopf sortiert die Liste danach, ein zweiter dreht die Richtung um. So siehst du zum Beispiel mit **Hinzugefügt** die neuesten Filme zuerst. Die Seitenleiste steht über und unter der Liste. Oben kannst du nach dem Titel suchen und einen [Filter](filters.md) wählen. Über die Häkchen links wählst du Filme für [Stapel-Aktionen](filters.md#batch-edit) aus, und über **Exportieren** lädst du die aktuelle Liste als [Export](export.md) herunter.
 
+Die Liste merkt sich Seite, Sortierung, Suche und Filter in der Adresse. Gehst du aus der Filmansicht mit **Zurück** wieder zur Liste, stehst du auf derselben Seite an derselben Stelle. Auch Neuladen und die Zurück-Taste des Browsers behalten die Liste bei, und eine gefilterte Liste kannst du als Lesezeichen speichern.
+
 ![Die Filmliste](../images/movie-list.png)
 
 ## Die Filmansicht

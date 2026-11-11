@@ -2,7 +2,7 @@
 
 ## Die Serienliste
 
-Die Seite **Serien** funktioniert wie die [Filmliste](movies.md#die-filmliste), mit Suche, [Filtern](filters.md), Auswahl, [Export](export.md), Sortierung über die Spaltenköpfe und Seitenleiste über und unter der Liste.
+Die Seite **Serien** funktioniert wie die [Filmliste](movies.md#die-filmliste), mit Suche, [Filtern](filters.md), Auswahl, [Export](export.md), Sortierung über die Spaltenköpfe und Seitenleiste über und unter der Liste. Wie die Filmliste merkt sie sich Seite, Filter und Position, wenn du aus einer Serie oder Episode zurückkommst.
 
 ## Die Serienansicht
 

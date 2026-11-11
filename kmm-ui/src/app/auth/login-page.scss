@@ -1,0 +1,35 @@
+:host {
+  display: flex;
+  justify-content: center;
+  padding-top: 8vh;
+}
+
+.login {
+  width: 100%;
+  max-width: 400px;
+}
+
+.login-title {
+  font: var(--mat-sys-headline-small);
+}
+
+.fields {
+  display: flex;
+  flex-direction: column;
+  padding-top: 16px;
+}
+
+.remember-me {
+  margin-left: -8px;
+}
+
+.hint {
+  margin: 0 0 8px 32px;
+  font: var(--mat-sys-body-small);
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.error {
+  margin: 8px 0 0;
+  color: var(--mat-sys-error);
+}

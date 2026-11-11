@@ -21,6 +21,7 @@ import { TVSHOWS_URL, TV_SHOW_SCRAPERS_URL } from './tvshow.service';
 import { TvShowRenamePlan } from './tv-rename';
 import { CONFIRM } from '../shared/confirm';
 import { literal } from '../i18n/localized-text';
+import { ListReturn } from '../shared/list-state';
 
 describe('TvShowDetail', () => {
   const alf: TvShowDetails = {
@@ -242,6 +243,15 @@ describe('TvShowDetail', () => {
     expect(element().textContent).toContain('TVDB 7,3/10');
     expect(input('genres').value).toBe('Komödie, Familie');
     expect(input('tvdbId').value).toBe('78020');
+  });
+
+  it('goes back to the list as it was left', async () => {
+    TestBed.inject(ListReturn).remember('tvshows', { filter: 'predefined:1' });
+    await load(alf);
+
+    expect(element().querySelector('.back-link')?.getAttribute('href')).toBe(
+      '/tvshows?filter=predefined:1',
+    );
   });
 
   it('switches the texts to English at runtime', async () => {
@@ -1099,6 +1109,7 @@ describe('TvShowDetail', () => {
   it('removes the TV show after asking and goes back to the list', async () => {
     await load(alf);
     const navigate = vi.spyOn(TestBed.inject(Router), 'navigate').mockResolvedValue(true);
+    TestBed.inject(ListReturn).remember('tvshows', { page: 3, filter: 'saved:7' });
 
     element().querySelector<HTMLButtonElement>('.remove-show-button')!.click();
     httpTesting.expectOne({ method: 'GET', url: `${TVSHOWS_URL}/3/removal` }).flush(REMOVAL_PLAN);
@@ -1106,7 +1117,9 @@ describe('TvShowDetail', () => {
     start.flush(job({ key: 'removal:tvshow:3' }));
 
     expect(start.request.body).toEqual({ deleteFiles: true });
-    expect(navigate).toHaveBeenCalledWith(['/tvshows']);
+    expect(navigate).toHaveBeenCalledWith(['/tvshows'], {
+      queryParams: { page: 3, filter: 'saved:7' },
+    });
   });
 
   it('names the remove buttons in English', async () => {

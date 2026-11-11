@@ -1,21 +1,23 @@
 <mat-toolbar class="toolbar">
   <h1 class="title">{{ title }}</h1>
-  @if (systemInfo.hasValue()) {
-    <a class="app-version" routerLink="/system" [title]="'app.versionTitle' | transloco">{{
-      systemInfo.value().version
-    }}</a>
-  }
-  <nav class="navigation">
-    @for (item of navigation; track item.path) {
-      <a
-        matButton
-        [routerLink]="item.path"
-        routerLinkActive="active"
-        ariaCurrentWhenActive="page"
-        >{{ item.label | transloco }}</a
-      >
+  @if (signedIn()) {
+    @if (systemInfo.hasValue()) {
+      <a class="app-version" routerLink="/system" [title]="'app.versionTitle' | transloco">{{
+        systemInfo.value().version
+      }}</a>
     }
-  </nav>
+    <nav class="navigation">
+      @for (item of navigation; track item.path) {
+        <a
+          matButton
+          [routerLink]="item.path"
+          routerLinkActive="active"
+          ariaCurrentWhenActive="page"
+          >{{ item.label | transloco }}</a
+        >
+      }
+    </nav>
+  }
   <app-language-switch />
   <a
     matButton
@@ -27,8 +29,21 @@
     [attr.aria-label]="'app.pageHelp' | transloco"
     >?</a
   >
+  @if (signedIn() && username(); as name) {
+    <button
+      matButton
+      class="logout"
+      type="button"
+      [title]="'auth.logoutTitle' | transloco: { username: name }"
+      (click)="logout()"
+    >
+      {{ 'auth.logout' | transloco }}
+    </button>
+  }
 </mat-toolbar>
-<app-job-indicator />
+@if (signedIn()) {
+  <app-job-indicator />
+}
 
 <main class="content">
   <router-outlet />

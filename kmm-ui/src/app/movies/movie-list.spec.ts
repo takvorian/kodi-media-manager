@@ -9,7 +9,7 @@ import {
 } from '@angular/common/http/testing';
 import { signal } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { Subject, of } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
@@ -590,6 +590,92 @@ describe('MovieList', () => {
     element().querySelector<HTMLButtonElement>('.clear-chosen-button')!.click();
     fixture.detectChanges();
     expect(element().querySelector('.batch-editor')).toBeNull();
+  });
+
+  /** Opens the list with an address, e.g. when coming back from a detail page. */
+  async function openWith(url: string): Promise<void> {
+    fixture.destroy();
+    await TestBed.inject(Router).navigateByUrl(url);
+    fixture = TestBed.createComponent(MovieList);
+  }
+
+  /** Waits for the movies that are only asked for once the saved filters are there. */
+  async function requestedMovies(): Promise<TestRequest> {
+    for (let round = 0; round < 10; round++) {
+      const requests = httpTesting.match((request) => request.url === `${MOVIES_URL}/query`);
+      if (requests.length > 0) {
+        return requests[0];
+      }
+      fixture.detectChanges();
+      await new Promise((resolve) => setTimeout(resolve));
+    }
+    throw new Error('No request for the movies');
+  }
+
+  it('opens page, sorting, search and saved filter from the address', async () => {
+    await openWith('/?page=3&size=25&sort=releaseYear,desc&q=heat&filter=saved:7');
+
+    fixture.detectChanges();
+    expect(httpTesting.match((request) => request.url === `${MOVIES_URL}/query`)).toHaveLength(0);
+    httpTesting.expectOne((request) => request.url === FILTERS_URL).flush([unseen]);
+    const request = await requestedMovies();
+    request.flush(page([heat], 200));
+    await fixture.whenStable();
+
+    expect(request.request.params.get('page')).toBe('2');
+    expect(request.request.params.get('size')).toBe('25');
+    expect(request.request.params.getAll('sort')).toEqual([
+      'releaseYear,desc',
+      'title,asc,ignorecase',
+    ]);
+    expect(request.request.body.search).toBe('heat');
+    expect(request.request.body.conditions).toEqual(unseen.definition.conditions);
+    expect(element().querySelector<HTMLInputElement>('input[name="search"]')!.value).toBe('heat');
+    expect(TestBed.inject(Router).url).toBe(
+      '/?page=3&size=25&sort=releaseYear,desc&q=heat&filter=saved:7',
+    );
+  });
+
+  it('shows everything when the saved filter from the address no longer exists', async () => {
+    await openWith('/?filter=saved:99');
+
+    fixture.detectChanges();
+    httpTesting.expectOne((request) => request.url === FILTERS_URL).flush([unseen]);
+    const request = await requestedMovies();
+    request.flush(page([heat]));
+    await fixture.whenStable();
+
+    expect(request.request.body.conditions).toEqual([]);
+    expect(TestBed.inject(Router).url).toBe('/');
+  });
+
+  it('writes page, sorting and search into the address', async () => {
+    const router = TestBed.inject(Router);
+    await respond(page([heat], 120));
+    expect(router.url).toBe('/');
+
+    element().querySelector<HTMLButtonElement>('.mat-mdc-paginator-navigation-next')!.click();
+    await respond(page([ronin], 120));
+    expect(router.url).toBe('/?page=2');
+
+    element().querySelector<HTMLElement>('th.mat-column-year .mat-sort-header-container')!.click();
+    await respond(page([ronin], 120));
+    expect(router.url).toBe('/?sort=releaseYear,asc');
+
+    await typeSearch('ron');
+    await respond(page([ronin]));
+    expect(router.url).toBe('/?sort=releaseYear,asc&q=ron');
+  });
+
+  it('shows the plain list again when the address changes to it', async () => {
+    await openWith('/?page=2&filter=predefined:3');
+    await respond(page([ronin], 120));
+
+    await TestBed.inject(Router).navigateByUrl('/');
+    const request = await respond(page([heat, ronin]));
+
+    expect(request.request.params.get('page')).toBe('0');
+    expect(request.request.body.conditions).toEqual([]);
   });
 
   it('loads another page when paging', async () => {

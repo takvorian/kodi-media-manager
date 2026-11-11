@@ -91,6 +91,17 @@
     "pageHelp": "Hilfe zu dieser Seite",
     "pageHelpTitle": "Hilfe zu dieser Seite (neuer Tab)"
   },
+  "auth": {
+    "title": "Anmelden",
+    "username": "Benutzername",
+    "password": "Passwort",
+    "rememberMe": "Angemeldet bleiben",
+    "rememberMeHint": "30 Tage auf diesem Gerät, bis du dich abmeldest.",
+    "signIn": "Anmelden",
+    "expired": "Die Anmeldeseite ist abgelaufen. Lade die Seite neu und versuche es noch einmal.",
+    "logout": "Abmelden",
+    "logoutTitle": "Als {username} angemeldet – abmelden"
+  },
   "language": {
     "switch": "Sprache der Oberfläche"
   },
@@ -123,7 +134,8 @@
     "migration": "Ember-Import",
     "backup": "Sicherung",
     "system": "System",
-    "help": "Hilfe"
+    "help": "Hilfe",
+    "login": "Anmelden"
   },
   "paginator": {
     "itemsPerPage": "Einträge pro Seite:",
@@ -1245,6 +1257,10 @@
         "title": "Anfrage abgelehnt",
         "csrf": "Der Server hat die Anfrage abgelehnt, weil das Sicherheits-Cookie fehlt oder nicht passt. Lade die Seite neu. Hilft das nicht, lösche die Cookies dieser Adresse im Browser.",
         "permission": "Für diese Aktion fehlt die Berechtigung."
+      },
+      "login": {
+        "title": "Anmeldung fehlgeschlagen",
+        "failed": "Benutzername oder Passwort ist falsch."
       }
     },
     "tvShow": {
