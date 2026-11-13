@@ -123,6 +123,16 @@ public class TvShowArtworkService {
                 show.episodes().stream().filter(episode -> episode.season() == season).toList());
     }
 
+    /**
+     * Like {@link #fillMissing(long)}, but only for the still of one episode. The images of the show and its seasons
+     * stay as they are.
+     */
+    public ArtworkFillResult fillMissingEpisode(long showId, long episodeId) {
+        TvShowDetails show = metadataService.findShow(showId);
+        return fillMissing(show, List.of(),
+                show.episodes().stream().filter(episode -> episode.id() == episodeId).toList());
+    }
+
     /** @param targets the show ({@code null}) and season numbers whose images are supplemented */
     private ArtworkFillResult fillMissing(TvShowDetails show, List<Integer> targets, List<EpisodeSummary> episodes) {
         long showId = show.id();

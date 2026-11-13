@@ -91,6 +91,13 @@ export class TvShowService {
   }
 
   /** Scrapes one season; with `overwrite` the titles and texts of its episodes are replaced. */
+  /** Scrapes one episode; with `overwrite` its title and texts are replaced. */
+  autoScrapeEpisode(episodeId: number, overwrite: boolean): Observable<Job> {
+    return this.http.post<Job>(`${EPISODES_URL}/${episodeId}/auto-scrape`, null, {
+      params: { overwrite },
+    });
+  }
+
   autoScrapeSeason(showId: number, season: number, overwrite: boolean): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/${showId}/seasons/${season}/auto-scrape`, null, {
       params: { overwrite },

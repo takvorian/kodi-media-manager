@@ -59,4 +59,9 @@ final class AutoScrapeTexts {
     static LocalizedText season(int season, String title) {
         return LocalizedText.of("autoScrape.season").with("season", season).with("title", title);
     }
+
+    /** @param episode the episode number as in file names, such as {@code S01E02} */
+    static LocalizedText episode(String episode, String title) {
+        return LocalizedText.of("autoScrape.episode").with("episode", episode).with("title", title);
+    }
 }

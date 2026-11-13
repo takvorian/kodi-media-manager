@@ -35,6 +35,7 @@ public class AutoScrapeController {
     public static final String TV_SHOW_PATH = TvShowController.SHOW_PATH + "/auto-scrape";
     public static final String TV_SEASON_PATH = TvShowController.SHOW_PATH + "/seasons/{season}/auto-scrape";
     public static final String TV_SHOWS_PATH = TvShowController.SHOWS_PATH + "/auto-scrape";
+    public static final String EPISODE_PATH = TvShowController.EPISODE_PATH + "/auto-scrape";
     static final int MAX_ENTRIES = 20_000;
 
     private final AutoScrapeService autoScrapeService;
@@ -64,6 +65,13 @@ public class AutoScrapeController {
     public ResponseEntity<JobSnapshot> startTvSeason(@PathVariable long showId, @PathVariable @PositiveOrZero int season,
             @RequestParam(defaultValue = "false") boolean overwrite) {
         return accepted(autoScrapeService.startTvSeason(showId, season, overwrite));
+    }
+
+    /** @param overwrite whether title and texts of the episode are replaced by those of the provider */
+    @PostMapping(EPISODE_PATH)
+    public ResponseEntity<JobSnapshot> startEpisode(@PathVariable long episodeId,
+            @RequestParam(defaultValue = "false") boolean overwrite) {
+        return accepted(autoScrapeService.startEpisode(episodeId, overwrite));
     }
 
     @PostMapping(TV_SHOWS_PATH)

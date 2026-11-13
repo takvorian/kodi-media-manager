@@ -15,4 +15,16 @@ class IsoLanguagesTest {
         assertThat(IsoLanguages.toTerminology(code)).isEqualTo(terminology);
         assertThat(IsoLanguages.englishName(code)).isEqualTo(name);
     }
+
+    @ParameterizedTest
+    @CsvSource(nullValues = "null", value = {
+            "gsw, null, gsw, Swiss German", "NDS, null, nds, Low German", "ger, deu, deu, German",
+            "sdh, null, sdh, Southern Kurdish", "mul, null, null, null", "zxx, null, null, null",
+            "qaa, null, null, null", "dts, null, null, null"})
+    void acceptsLanguagesWithOnlyAThreeLetterCodeInStreamsButNotInFileNames(String code, String terminology,
+            String streamLanguage, String name) {
+        assertThat(IsoLanguages.toTerminology(code)).isEqualTo(terminology);
+        assertThat(IsoLanguages.streamLanguage(code)).isEqualTo(streamLanguage);
+        assertThat(IsoLanguages.englishName(code)).isEqualTo(name);
+    }
 }

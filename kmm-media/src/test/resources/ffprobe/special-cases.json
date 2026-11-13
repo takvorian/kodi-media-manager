@@ -55,6 +55,13 @@
             "disposition": { "forced": 0, "attached_pic": 0 }
         },
         {
+            "codec_name": "aac",
+            "codec_type": "audio",
+            "channels": 2,
+            "disposition": { "forced": 0, "attached_pic": 0 },
+            "tags": { "language": "gsw" }
+        },
+        {
             "codec_name": "hdmv_pgs_subtitle",
             "codec_type": "subtitle",
             "disposition": { "forced": 1, "attached_pic": 0 },

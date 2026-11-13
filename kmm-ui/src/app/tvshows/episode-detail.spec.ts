@@ -9,7 +9,8 @@ import { provideI18nTesting } from '../i18n/testing';
 import { EpisodeDetail } from './episode-detail';
 import { EpisodeDetails } from './tvshow';
 import { REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
-import { job } from '../jobs/fake-job-events';
+import { FakeJobEvents, job } from '../jobs/fake-job-events';
+import { CONFIRM } from '../shared/confirm';
 import { EPISODES_URL } from './tvshow.service';
 import { literal } from '../i18n/localized-text';
 
@@ -62,9 +63,15 @@ describe('EpisodeDetail', () => {
   let fixture: ComponentFixture<EpisodeDetail>;
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
+  let confirmMessages: string[];
+  let confirmAnswer: boolean;
+  let events: FakeJobEvents;
 
   beforeEach(() => {
     snackBarMessages = [];
+    confirmMessages = [];
+    confirmAnswer = true;
+    events = new FakeJobEvents();
     TestBed.configureTestingModule({
       imports: [EpisodeDetail],
       providers: [
@@ -72,6 +79,14 @@ describe('EpisodeDetail', () => {
         provideHttpClient(),
         provideHttpClientTesting(),
         provideRouter([]),
+        events.provider(),
+        {
+          provide: CONFIRM,
+          useValue: (message: string) => {
+            confirmMessages.push(message);
+            return confirmAnswer;
+          },
+        },
         {
           provide: MatSnackBar,
           useValue: { open: (message: string) => snackBarMessages.push(message) },
@@ -100,6 +115,121 @@ describe('EpisodeDetail', () => {
     await flushWhenRequested(fixture, httpTesting, `${EPISODES_URL}/12/artwork`, []);
     await fixture.whenStable();
   }
+
+  describe('scraping', () => {
+    const running = job({
+      id: 'e',
+      key: 'tvshow-scrape:3',
+      title: literal('Episode S01E16 von „ALF“ scrapen'),
+      done: 0,
+      total: 4,
+    });
+    const finished = {
+      ...running,
+      status: 'SUCCEEDED' as const,
+      result: {
+        shows: 1,
+        episodesUpdated: 1,
+        scraped: 0,
+        unmatched: 0,
+        imagesSaved: 1,
+        unmatchedEntries: [],
+        failures: [],
+        warnings: [],
+      },
+    };
+
+    function button(selector: string): HTMLButtonElement {
+      return element().querySelector<HTMLButtonElement>(selector)!;
+    }
+
+    it('scrapes only this episode', async () => {
+      await load(gestatten);
+
+      button('.scrape-button').click();
+
+      httpTesting
+        .expectOne({ method: 'POST', url: `${EPISODES_URL}/12/auto-scrape?overwrite=false` })
+        .flush(running);
+      expect(confirmMessages).toEqual([]);
+    });
+
+    it('refetches the texts only after confirmation', async () => {
+      await load(gestatten);
+
+      confirmAnswer = false;
+      button('.refetch-button').click();
+      confirmAnswer = true;
+      button('.refetch-button').click();
+
+      httpTesting
+        .expectOne({ method: 'POST', url: `${EPISODES_URL}/12/auto-scrape?overwrite=true` })
+        .flush(running);
+      expect(confirmMessages).toHaveLength(2);
+      expect(confirmMessages[0]).toContain('S01E16');
+    });
+
+    it('asks to save unsaved changes first', async () => {
+      await load(gestatten);
+      input('title').value = 'Geändert';
+      input('title').dispatchEvent(new Event('input'));
+
+      button('.scrape-button').click();
+
+      httpTesting.expectNone(`${EPISODES_URL}/12/auto-scrape?overwrite=false`);
+      expect(snackBarMessages).toHaveLength(1);
+    });
+
+    it('locks the buttons and the form while the TV show is scraped', async () => {
+      await load(gestatten);
+
+      events.emit(running);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      expect(button('.scrape-button').disabled).toBe(true);
+      expect(button('.refetch-button').disabled).toBe(true);
+      expect(input('title').disabled).toBe(true);
+      expect(element().querySelector('app-scrape-progress')).not.toBeNull();
+    });
+
+    it('reloads the episode and shows the report when its scrape is done', async () => {
+      await load(gestatten);
+      button('.scrape-button').click();
+      httpTesting
+        .expectOne({ method: 'POST', url: `${EPISODES_URL}/12/auto-scrape?overwrite=false` })
+        .flush(running);
+
+      events.emit(finished);
+      await flushWhenRequested(fixture, httpTesting, `${EPISODES_URL}/12`, {
+        ...gestatten,
+        metadata: { ...gestatten.metadata, title: 'Gestatten, ALF' },
+      });
+      for (let pass = 0; pass < 3; pass++) {
+        fixture.detectChanges();
+        await Promise.resolve();
+        httpTesting.match(`${EPISODES_URL}/12/artwork`).forEach((request) => request.flush([]));
+      }
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(input('title').value).toBe('Gestatten, ALF');
+      expect(input('title').disabled).toBe(false);
+      expect(element().querySelector('.scrape-report')).not.toBeNull();
+    });
+
+    it('does not reload for a scrape started elsewhere', async () => {
+      await load(gestatten);
+
+      events.emit(running);
+      events.emit(finished);
+      fixture.detectChanges();
+      await fixture.whenStable();
+
+      httpTesting.expectNone(`${EPISODES_URL}/12`);
+      expect(element().querySelector('.scrape-report')).toBeNull();
+    });
+  });
 
   it('shows the episode with crew, viewing state and a shortened cast', async () => {
     await load(gestatten);

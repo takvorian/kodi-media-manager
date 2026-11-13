@@ -15,6 +15,24 @@
       </h2>
       <div class="title-actions">
         <button
+          matButton="tonal"
+          type="button"
+          class="scrape-button"
+          [disabled]="!!scrapeJob()"
+          (click)="scrape(details, false)"
+        >
+          {{ 'tvshows.scrape' | transloco }}
+        </button>
+        <button
+          matButton
+          type="button"
+          class="refetch-button"
+          [disabled]="!!scrapeJob()"
+          (click)="scrape(details, true)"
+        >
+          {{ 'tvshows.episode.refetch' | transloco }}
+        </button>
+        <button
           matButton
           type="button"
           class="kodi-refresh-button"
@@ -52,7 +70,14 @@
         </button>
       </div>
     </div>
+    @if (scrapeJob(); as running) {
+      <app-scrape-progress [job]="running" />
+    }
   </header>
+
+  @if (scrapeReport(); as report) {
+    <app-scrape-report [job]="report" (closed)="scrapeReport.set(null)" />
+  }
 
   <mat-card appearance="outlined" class="file-card">
     <mat-card-content>
@@ -110,7 +135,9 @@
       <mat-card-title>{{ 'tvshows.episode.thumbnail' | transloco }}</mat-card-title>
     </mat-card-header>
     <mat-card-content>
-      <app-artwork-gallery [source]="artwork()" />
+      @for (version of [scrapeRuns()]; track version) {
+        <app-artwork-gallery [source]="artwork()" />
+      }
     </mat-card-content>
   </mat-card>
 

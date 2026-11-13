@@ -30,6 +30,8 @@ import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.ScanEntry;
+import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.EpisodeScope;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome.Status;
 import de.tiktak.kmm.tvshow.TvShowDetails;
@@ -161,7 +163,7 @@ class TvAutoScrapeRunnerTest {
     @Test
     void scrapesASeasonWithoutTheStepsForTheWholeShow() {
         givenShow(2L, "Lost");
-        when(scrapeService.refetchSeason(2L, 3))
+        when(scrapeService.refetch(2L, EpisodeScope.season(3)))
                 .thenReturn(new TvShowAutoScrapeOutcome(Status.ALREADY_IDENTIFIED, 2, List.of("/lost/x.nfo")));
         when(streamDetails.probeSeasonAfterScrape(2L, 3)).thenReturn(List.of(LocalizedText.literal("ffprobe fehlt")));
         when(artworkService.fillMissingSeason(2L, 3)).thenReturn(new ArtworkFillResult(1, List.of(LocalizedText.literal("POSTER: 404"))));
@@ -189,7 +191,7 @@ class TvAutoScrapeRunnerTest {
     @Test
     void reportsSeasonFailuresAndSkipsProbingWhenNothingChanged() {
         givenShow(2L, "Lost");
-        when(scrapeService.scrapeSeasonMissing(2L, 1))
+        when(scrapeService.scrapeMissing(2L, EpisodeScope.season(1)))
                 .thenReturn(new TvShowAutoScrapeOutcome(Status.NO_MATCH, 0, List.of()));
         when(artworkService.fillMissingSeason(2L, 1)).thenThrow(new ErrorResponseException(HttpStatus.BAD_GATEWAY));
 
@@ -200,7 +202,7 @@ class TvAutoScrapeRunnerTest {
                 LocalizedTexts.of(new ErrorResponseException(HttpStatus.BAD_GATEWAY))));
         verify(streamDetails, never()).probeSeasonAfterScrape(anyLong(), anyInt());
 
-        when(scrapeService.scrapeSeasonMissing(2L, 1)).thenThrow(new IllegalStateException("kaputt"));
+        when(scrapeService.scrapeMissing(2L, EpisodeScope.season(1))).thenThrow(new IllegalStateException("kaputt"));
         assertThat(runner.runSeason(2L, 1, false, context).failures())
                 .containsExactly(failure("Lost", AutoScrapeTexts.UNEXPECTED_ERROR));
     }
@@ -208,13 +210,36 @@ class TvAutoScrapeRunnerTest {
     @Test
     void stopsASeasonWhenCancelled() {
         givenShow(2L, "Lost");
-        when(scrapeService.scrapeSeasonMissing(2L, 1))
+        when(scrapeService.scrapeMissing(2L, EpisodeScope.season(1)))
                 .thenReturn(new TvShowAutoScrapeOutcome(Status.ALREADY_IDENTIFIED, 0, List.of()));
         doThrow(new JobCancelledException()).when(context).throwIfCancellationRequested();
 
         assertThatExceptionOfType(JobCancelledException.class)
                 .isThrownBy(() -> runner.runSeason(2L, 1, false, context));
         verify(artworkService, never()).fillMissingSeason(anyLong(), anyInt());
+    }
+
+    @Test
+    void scrapesAnEpisodeWithItsFileStillAndSeasonRenaming() {
+        EpisodeDetails episode = new EpisodeDetails(11L, 2L, "Lost", "/lost/S03E04.mkv", 3, 4, null, null, null,
+                null);
+        when(scrapeService.refetch(2L, EpisodeScope.file("/lost/S03E04.mkv")))
+                .thenReturn(new TvShowAutoScrapeOutcome(Status.ALREADY_IDENTIFIED, 1, List.of()));
+        when(streamDetails.probeEpisodeAfterScrape(11L)).thenReturn(List.of());
+        when(artworkService.fillMissingEpisode(2L, 11L)).thenReturn(new ArtworkFillResult(1, List.of()));
+        when(renameService.renameSeasonIfEnabled(2L, 3, TvRenameTrigger.SCRAPE)).thenReturn(Optional.empty());
+
+        TvAutoScrapeResult result = runner.runEpisode(episode, true, context);
+
+        assertThat(result.episodesUpdated()).isEqualTo(1);
+        assertThat(result.imagesSaved()).isEqualTo(1);
+        assertThat(result.failures()).isEmpty();
+        assertThat(TvAutoScrapeRunner.episodeCode(episode)).isEqualTo("S03E04");
+        verify(context).reportProgress(0, 4, AutoScrapeTexts.episode("S03E04", "Lost"));
+        verify(streamDetails).probeEpisodeAfterScrape(11L);
+        verify(renameService).renameSeasonIfEnabled(2L, 3, TvRenameTrigger.SCRAPE);
+        verify(artworkService, never()).fillMissingSeason(anyLong(), anyInt());
+        verify(trailerService, never()).fillMissing(anyLong());
     }
 
     @Test

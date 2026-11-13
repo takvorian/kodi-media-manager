@@ -5,6 +5,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 
 import org.springframework.stereotype.Component;
 import org.springframework.web.ErrorResponseException;
@@ -16,6 +17,8 @@ import de.tiktak.kmm.job.JobCancelledException;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.tvshow.EpisodeDetails;
+import de.tiktak.kmm.tvshow.EpisodeScope;
 import de.tiktak.kmm.source.ScanEntry;
 import de.tiktak.kmm.tvshow.TvShowAutoScrapeOutcome;
 import de.tiktak.kmm.tvshow.TvShowDetails;
@@ -42,7 +45,7 @@ import lombok.extern.slf4j.Slf4j;
 class TvAutoScrapeRunner {
 
     static final int MAX_LISTED_ENTRIES = 100;
-    private static final int SEASON_STEPS = 4;
+    private static final int PART_STEPS = 4;
 
     private final TvShowQueryService queryService;
     private final TvShowMetadataService metadataService;
@@ -76,6 +79,13 @@ class TvAutoScrapeRunner {
         return show.metadata().title();
     }
 
+    /**
+     * @throws ErrorResponseException if the episode does not exist
+     */
+    EpisodeDetails episode(long episodeId) {
+        return metadataService.findEpisode(episodeId);
+    }
+
     TvAutoScrapeResult run(List<Long> showIds, JobContext context) {
         Progress progress = new Progress();
         for (int index = 0; index < showIds.size(); index++) {
@@ -101,27 +111,53 @@ class TvAutoScrapeRunner {
      * @param overwrite whether titles and texts of the episodes are replaced by those of the provider
      */
     TvAutoScrapeResult runSeason(long showId, int season, boolean overwrite, JobContext context) {
-        Progress progress = new Progress();
         String title = title(showId);
-        LocalizedText label = AutoScrapeTexts.season(season, title);
-        context.reportProgress(0, SEASON_STEPS, label);
+        return runPart(new Part(showId, season, title, AutoScrapeTexts.season(season, title),
+                EpisodeScope.season(season), () -> streamDetails.probeSeasonAfterScrape(showId, season),
+                () -> artworkService.fillMissingSeason(showId, season)), overwrite, context);
+    }
+
+    /**
+     * Scrapes a single episode like a season: its texts (with all episodes of its file, which share the NFO),
+     * technical details, its still and renaming. Renaming covers its season, so the file gets a name that fits the
+     * others.
+     *
+     * @param overwrite whether title and texts of the episode are replaced by those of the provider
+     */
+    TvAutoScrapeResult runEpisode(EpisodeDetails episode, boolean overwrite, JobContext context) {
+        long showId = episode.tvShowId();
+        return runPart(new Part(showId, episode.season(), episode.showTitle(),
+                AutoScrapeTexts.episode(episodeCode(episode), episode.showTitle()),
+                EpisodeScope.file(episode.filePath()), () -> streamDetails.probeEpisodeAfterScrape(episode.id()),
+                () -> artworkService.fillMissingEpisode(showId, episode.id())), overwrite, context);
+    }
+
+    /** @return the episode number as in file names, such as {@code S01E02} */
+    static String episodeCode(EpisodeDetails episode) {
+        return "S%02dE%02d".formatted(episode.season(), episode.episode());
+    }
+
+    private TvAutoScrapeResult runPart(Part part, boolean overwrite, JobContext context) {
+        Progress progress = new Progress();
+        String title = part.title();
+        context.reportProgress(0, PART_STEPS, part.label());
         try {
-            TvShowAutoScrapeOutcome outcome = overwrite ? scrapeService.refetchSeason(showId, season)
-                    : scrapeService.scrapeSeasonMissing(showId, season);
-            if (count(outcome, showId, title, progress)) {
+            TvShowAutoScrapeOutcome outcome = overwrite ? scrapeService.refetch(part.showId(), part.scope())
+                    : scrapeService.scrapeMissing(part.showId(), part.scope());
+            if (count(outcome, part.showId(), title, progress)) {
                 context.throwIfCancellationRequested();
-                context.reportProgress(1, SEASON_STEPS, label);
-                streamDetails.probeSeasonAfterScrape(showId, season).forEach(
+                context.reportProgress(1, PART_STEPS, part.label());
+                part.probe().get().forEach(
                         failure -> progress.failed(title, AutoScrapeTexts.technicalDetails(failure)));
             }
             context.throwIfCancellationRequested();
-            context.reportProgress(2, SEASON_STEPS, label);
-            ArtworkFillResult artwork = artworkService.fillMissingSeason(showId, season);
+            context.reportProgress(2, PART_STEPS, part.label());
+            ArtworkFillResult artwork = part.artwork().get();
             progress.imagesSaved += artwork.saved();
             artwork.warnings().forEach(progress::warn);
             context.throwIfCancellationRequested();
-            context.reportProgress(3, SEASON_STEPS, label);
-            renameService.renameSeasonIfEnabled(showId, season, TvRenameTrigger.SCRAPE)
+            context.reportProgress(3, PART_STEPS, part.label());
+            renameService.renameSeasonIfEnabled(part.showId(), part.season(), TvRenameTrigger.SCRAPE)
                     .filter(TvAutoScrapeRunner::notRenamed)
                     .ifPresent(plan -> progress.warn(AutoScrapeTexts.notRenamed(title, plan.message())));
         } catch (ErrorResponseException e) {
@@ -129,14 +165,25 @@ class TvAutoScrapeRunner {
         } catch (JobCancelledException e) {
             throw e;
         } catch (RuntimeException e) {
-            log.warn("Auto-scraping season {} of TV show {} failed", season, showId, e);
+            log.warn("Auto-scraping {} of TV show {} failed", part.scope(), part.showId(), e);
             progress.failed(title, AutoScrapeTexts.UNEXPECTED_ERROR);
         }
-        context.reportProgress(SEASON_STEPS, SEASON_STEPS);
+        context.reportProgress(PART_STEPS, PART_STEPS);
         TvAutoScrapeResult result = progress.toResult(1);
-        log.info("Auto-scraped season {} of TV show {}: {} episodes, {} images, {} failures", season, showId,
+        log.info("Auto-scraped {} of TV show {}: {} episodes, {} images, {} failures", part.scope(), part.showId(),
                 result.episodesUpdated(), result.imagesSaved(), result.failures().size());
         return result;
+    }
+
+    /**
+     * A season or an episode of a TV show; what concerns the whole TV show is left out.
+     *
+     * @param season  the season whose files are renamed
+     * @param probe   reads missing technical details and returns the failures
+     * @param artwork fetches the missing images
+     */
+    private record Part(long showId, int season, String title, LocalizedText label, EpisodeScope scope,
+            Supplier<List<LocalizedText>> probe, Supplier<ArtworkFillResult> artwork) {
     }
 
     /** @return whether something changed in the TV show or its episodes */

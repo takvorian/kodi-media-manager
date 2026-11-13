@@ -243,6 +243,16 @@ public class StreamDetailsService {
                 .map(ShowStreamDetailsResult::failures).orElse(List.of());
     }
 
+    /**
+     * Like {@link #probeEpisodesAfterScrape(long)}, but only for the file of one episode.
+     *
+     * @return the error message if the file could not be read
+     */
+    public List<LocalizedText> probeEpisodeAfterScrape(long episodeId) {
+        return probeEpisodesIfEnabled(List.of(episodes.find(episodeId)))
+                .map(ShowStreamDetailsResult::failures).orElse(List.of());
+    }
+
     StreamDetailsJobResult run(long sourceId, List<Entry> entries, JobContext context) {
         List<Entry> wanted = entries.stream().filter(Entry::wanted).toList();
         Tally tally = new Tally(context, wanted.size());

@@ -1,5 +1,5 @@
 import { Component, computed, effect, inject, input, numberAttribute, signal } from '@angular/core';
-import { rxResource } from '@angular/core/rxjs-interop';
+import { rxResource, takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -9,7 +9,7 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { Router, RouterLink } from '@angular/router';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 import { TranslocoDatePipe } from '@jsverse/transloco-locale';
-import { finalize } from 'rxjs';
+import { filter, finalize } from 'rxjs';
 
 import {
   KodiPlaybackResult,
@@ -17,17 +17,23 @@ import {
   kodiSyncSnackBarConfig,
   kodiSyncSummary,
 } from '../kodi/kodi';
+import { Job } from '../jobs/job';
+import { JobStore } from '../jobs/job-store';
 import { KodiService } from '../kodi/kodi.service';
 import { ArtworkGallery } from '../movies/artwork-gallery';
 import { MediaInfoService } from '../media-info/media-info.service';
+import { CONFIRM } from '../shared/confirm';
 import { problemMessage } from '../shared/problem-message';
 import { RemovalService } from '../shared/removal';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
+import { ScrapeProgress } from '../sources/scrape-progress';
+import { ScrapeReport } from '../sources/scrape-report';
 import { TvPeople } from './tv-people';
 import { EpisodeDetails, episodeCode } from './tvshow';
 import { createEpisodeMetadataForm, toEpisodeFormValue, toEpisodeMetadata } from './tvshow-forms';
 import { SHORT_DATE_TIME } from './tv-date-formats';
 import { TvShowArtworkService } from './tvshow-artwork.service';
+import { tvShowScrapeJobKey } from './tvshow-batch';
 import { TvShowService } from './tvshow.service';
 import { ListReturn } from '../shared/list-state';
 
@@ -43,6 +49,8 @@ const SNACKBAR_DURATION_MS = 5000;
     MatCardModule,
     MatFormFieldModule,
     MatInputModule,
+    ScrapeProgress,
+    ScrapeReport,
     StreamDetailsView,
     TranslocoDatePipe,
     TranslocoPipe,
@@ -60,6 +68,8 @@ export class EpisodeDetail {
   private readonly transloco = inject(TranslocoService);
   private readonly removal = inject(RemovalService);
   private readonly router = inject(Router);
+  private readonly confirm = inject(CONFIRM);
+  private readonly jobStore = inject(JobStore);
   /** Back to the list as it was left: page, filter and sorting. */
   protected readonly listParams = inject(ListReturn).queryParams('tvshows');
 
@@ -79,18 +89,55 @@ export class EpisodeDetail {
     stream: ({ params }) => this.tvShowService.findEpisode(params),
   });
 
+  /** Scraping shares the job of the TV show, so the season or the whole TV show blocks it, too. */
+  protected readonly scrapeJob = computed(() =>
+    this.episode.hasValue()
+      ? this.jobStore.runningJob(tvShowScrapeJobKey(this.episode.value().tvShowId))
+      : undefined,
+  );
+  protected readonly scrapeReport = signal<Job | null>(null);
+  /** Counts finished scrapes so the artwork is loaded again. */
+  protected readonly scrapeRuns = signal(0);
+  /** Only a scrape started here reloads the episode; the TV show may have been scraped in another tab. */
+  private readonly scraping = signal(false);
+
   /** Own signal, so changes outside the metadata (watched status) do not reset the form. */
   private readonly metadata = computed(() =>
     this.episode.hasValue() ? this.episode.value().metadata : null,
   );
 
   constructor() {
+    this.jobStore.connect();
     effect(() => {
       const metadata = this.metadata();
       if (metadata) {
         this.form.reset(toEpisodeFormValue(metadata));
       }
     });
+    // The form is reloaded at the end; input made during the run would be lost.
+    effect(() => {
+      if (this.scrapeJob()) {
+        this.form.disable();
+      } else {
+        this.form.enable();
+      }
+    });
+    this.jobStore.completed
+      .pipe(
+        filter(
+          (job) =>
+            this.scraping() &&
+            this.episode.hasValue() &&
+            job.key === tvShowScrapeJobKey(this.episode.value().tvShowId),
+        ),
+        takeUntilDestroyed(),
+      )
+      .subscribe((job) => {
+        this.scraping.set(false);
+        this.scrapeReport.set(job);
+        this.scrapeRuns.update((runs) => runs + 1);
+        this.episode.reload();
+      });
   }
 
   protected code(details: EpisodeDetails): string {
@@ -111,6 +158,34 @@ export class EpisodeDetail {
       },
       error: (error: unknown) => {
         this.saving.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
+  /**
+   * Scrapes the episode like a season: empty fields and a missing still, with `overwrite` after confirmation also a
+   * new title and texts.
+   */
+  protected scrape(details: EpisodeDetails, overwrite: boolean): void {
+    if (this.form.dirty) {
+      this.notify(this.transloco.translate('tvshows.saveFirst'));
+      return;
+    }
+    if (
+      overwrite &&
+      !this.confirm(
+        this.transloco.translate('tvshows.episode.confirmRefetch', { code: this.code(details) }),
+      )
+    ) {
+      return;
+    }
+    this.scrapeReport.set(null);
+    this.scraping.set(true);
+    this.tvShowService.autoScrapeEpisode(this.id(), overwrite).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => {
+        this.scraping.set(false);
         this.notify(problemMessage(error));
       },
     });

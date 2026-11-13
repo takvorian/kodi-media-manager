@@ -441,6 +441,8 @@
       "thumbnail": "Standbild",
       "streams": "Technik",
       "probed": "Technische Angaben ausgelesen.",
+      "refetch": "Neu holen",
+      "confirmRefetch": "Titel und Texte von {code} werden durch die des Anbieters ersetzt, auch von Hand geänderte. Fortfahren?",
       "loading": "Lade Episode …"
     },
     "people": {
@@ -1385,9 +1387,12 @@
         "movies": "{count, plural, one {# Film} other {# Filme}} scrapen",
         "tvShows": "{count, plural, one {# Serie} other {# Serien}} scrapen",
         "season": "Staffel {season} von „{title}“ scrapen",
-        "seasonRefetch": "Staffel {season} von „{title}“ neu holen"
+        "seasonRefetch": "Staffel {season} von „{title}“ neu holen",
+        "episode": "Episode {episode} von „{title}“ scrapen",
+        "episodeRefetch": "Episode {episode} von „{title}“ neu holen"
       },
       "season": "Staffel {season} von „{title}“",
+      "episode": "Episode {episode} von „{title}“",
       "unexpectedError": "unerwarteter Fehler",
       "noMetadataScraper": "Kein Metadaten-Scraper ist eingerichtet; es werden nur Bilder geholt.",
       "noTvShowScraper": "Kein Serien-Scraper ist eingerichtet; es werden nur Bilder geholt.",

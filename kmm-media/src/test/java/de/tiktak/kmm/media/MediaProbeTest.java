@@ -56,7 +56,8 @@ class MediaProbeTest {
         assertThat(details.audios()).extracting(StreamDetails.Audio::codec, StreamDetails.Audio::language)
                 .containsExactly(tuple("dtshd_ma", "eng"),
                         tuple("dtshd_hra", "fra"),
-                        tuple("truehd", null));
+                        tuple("truehd", null),
+                        tuple("aac", "gsw"));
         assertThat(details.subtitles()).containsExactly(new StreamDetails.Subtitle("deu", true),
                 new StreamDetails.Subtitle("deu", true));
     }

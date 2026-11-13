@@ -441,6 +441,8 @@
       "thumbnail": "Thumbnail",
       "streams": "Technical details",
       "probed": "Technical details read.",
+      "refetch": "Refetch",
+      "confirmRefetch": "The title and texts of {code} will be replaced by those of the provider, even ones changed by hand. Continue?",
       "loading": "Loading episode …"
     },
     "people": {
@@ -1385,9 +1387,12 @@
         "movies": "Scrape {count, plural, one {# movie} other {# movies}}",
         "tvShows": "Scrape {count, plural, one {# TV show} other {# TV shows}}",
         "season": "Scrape season {season} of “{title}”",
-        "seasonRefetch": "Fetch season {season} of “{title}” again"
+        "seasonRefetch": "Fetch season {season} of “{title}” again",
+        "episode": "Scrape episode {episode} of “{title}”",
+        "episodeRefetch": "Fetch episode {episode} of “{title}” again"
       },
       "season": "Season {season} of “{title}”",
+      "episode": "Episode {episode} of “{title}”",
       "unexpectedError": "unexpected error",
       "noMetadataScraper": "No metadata scraper is set up; only images are fetched.",
       "noTvShowScraper": "No TV show scraper is set up; only images are fetched.",

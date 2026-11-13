@@ -26,6 +26,7 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.theme.ThemeService;
+import de.tiktak.kmm.tvshow.EpisodeDetails;
 import de.tiktak.kmm.web.LocalizedTexts;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -55,6 +56,8 @@ public class AutoScrapeService {
     static final String TV_SHOWS_TITLE = "autoScrape.jobTitle.tvShows";
     static final String SEASON_TITLE = "autoScrape.jobTitle.season";
     static final String SEASON_REFETCH_TITLE = "autoScrape.jobTitle.seasonRefetch";
+    static final String EPISODE_TITLE = "autoScrape.jobTitle.episode";
+    static final String EPISODE_REFETCH_TITLE = "autoScrape.jobTitle.episodeRefetch";
 
     private final MediaSourceService sourceService;
     private final MovieQueryService queryService;
@@ -123,6 +126,20 @@ public class AutoScrapeService {
                 LocalizedText.of(overwrite ? SEASON_REFETCH_TITLE : SEASON_TITLE).with("season", season)
                         .with("title", title),
                 context -> tvRunner.runSeason(showId, season, overwrite, context));
+    }
+
+    /**
+     * Scrapes a single episode. It shares the job key with its TV show so both do not run at the same time.
+     *
+     * @param overwrite whether title and texts of the episode are replaced by those of the provider
+     * @throws ErrorResponseException if the episode does not exist
+     */
+    public JobSnapshot startEpisode(long episodeId, boolean overwrite) {
+        EpisodeDetails episode = tvRunner.episode(episodeId);
+        return jobService.submit(TV_SHOW_JOB_KEY_PREFIX + episode.tvShowId(),
+                LocalizedText.of(overwrite ? EPISODE_REFETCH_TITLE : EPISODE_TITLE)
+                        .with("episode", TvAutoScrapeRunner.episodeCode(episode)).with("title", episode.showTitle()),
+                context -> tvRunner.runEpisode(episode, overwrite, context));
     }
 
     /** Scrapes the selected TV shows one after the other. */

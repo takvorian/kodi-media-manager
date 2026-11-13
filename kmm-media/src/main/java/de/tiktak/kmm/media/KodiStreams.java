@@ -54,19 +54,19 @@ final class KodiStreams {
         return new StreamDetails.Video(videoCodec(stream), aspect(stream), stream.width(), stream.height(),
                 durationSeconds == null ? null : (int) Math.round(durationSeconds),
                 kilobits(videoBitRate(stream, media, audioBitRate)), scanType(stream.fieldOrder()),
-                stereoMode(stream.stereoMode()), IsoLanguages.toTerminology(stream.language()), hdrType(stream), null,
+                stereoMode(stream.stereoMode()), IsoLanguages.streamLanguage(stream.language()), hdrType(stream), null,
                 null, fileSize);
     }
 
     private static StreamDetails.Audio audio(ProbedMedia.Stream stream) {
-        return new StreamDetails.Audio(audioCodec(stream), IsoLanguages.toTerminology(stream.language()),
+        return new StreamDetails.Audio(audioCodec(stream), IsoLanguages.streamLanguage(stream.language()),
                 stream.channels(), kilobits(stream.bitRate()));
     }
 
     private static StreamDetails.Subtitle subtitle(ProbedMedia.Stream stream) {
         boolean forced = stream.forced()
                 || stream.title() != null && stream.title().toLowerCase(Locale.ROOT).contains(FORCED);
-        return new StreamDetails.Subtitle(IsoLanguages.toTerminology(stream.language()), forced);
+        return new StreamDetails.Subtitle(IsoLanguages.streamLanguage(stream.language()), forced);
     }
 
     private static String videoCodec(ProbedMedia.Stream stream) {

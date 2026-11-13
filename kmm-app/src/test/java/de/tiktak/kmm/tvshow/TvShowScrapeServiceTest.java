@@ -2,13 +2,18 @@ package de.tiktak.kmm.tvshow;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.nio.file.Path;
 import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -125,5 +130,41 @@ class TvShowScrapeServiceTest {
 
         when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(unconfigured));
         assertThat(service.scrapeMissing(7).status()).isEqualTo(TvShowAutoScrapeOutcome.Status.NO_SCRAPER);
+    }
+
+    @Test
+    void scrapesOnlyTheEpisodesOfOneFileAndLeavesTheShowNfoAlone() {
+        TvShow show = new TvShow(1, SHOW_DIRECTORY, "Lost", null);
+        ReflectionTestUtils.setField(show, "id", 7L);
+        Episode first = new Episode(7, Path.of(SHOW_DIRECTORY, "Lost S01E01.mkv").toString(), 1, 1, "Episode 1");
+        Episode second = new Episode(7, Path.of(SHOW_DIRECTORY, "Lost S01E02.mkv").toString(), 1, 2, "Episode 2");
+        ReflectionTestUtils.setField(first, "id", 1L);
+        ReflectionTestUtils.setField(second, "id", 2L);
+        when(showRepository.findById(7L)).thenReturn(Optional.of(show));
+        when(episodeRepository.findByTvShowIdOrderBySeasonAscEpisodeAsc(7)).thenReturn(List.of(first, second));
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(scraper));
+        when(scraper.id()).thenReturn("tvdb");
+        when(scraper.scrape(any())).thenReturn(Optional.of(TvShowResult.builder().title("Lost")
+                .uniqueIds(Map.of("tvdb", "73739"))
+                .actors(List.of(new CastMember("Matthew Fox", null, null)))
+                .episodes(List.of(EpisodeResult.builder().season(1).episode(1).title("Pilot").build(),
+                        EpisodeResult.builder().season(1).episode(2).title("Pilot 2").build()))
+                .build()));
+        when(scraper.episodeDetails(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(nfoFiles.writeEpisodes(any(), any()))
+                .thenReturn(new TvNfoState(Path.of(SHOW_DIRECTORY, "Lost S01E02.nfo"), Instant.EPOCH));
+        TvShowMetadataService metadataService = mock(TvShowMetadataService.class);
+        when(metadataService.currentMetadata(7)).thenReturn(show.metadata());
+        TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
+                nfoFiles, mock(TvNfoSync.class), new TvShowResultCache(Clock.systemUTC()), metadataService,
+                new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
+
+        TvShowAutoScrapeOutcome outcome = service.scrapeMissing(7, EpisodeScope.file(second.getFilePath()));
+
+        assertThat(outcome.episodesUpdated()).isEqualTo(1);
+        assertThat(second.getTitle()).isEqualTo("Pilot 2");
+        assertThat(first.getTitle()).isEqualTo("Episode 1");
+        verify(nfoFiles).writeEpisodes(eq(second.file()), any());
+        verify(nfoFiles, never()).writeShow(any(), any());
     }
 }

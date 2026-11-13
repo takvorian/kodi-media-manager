@@ -57,6 +57,7 @@ import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
 import de.tiktak.kmm.source.ScanEntry;
 import de.tiktak.kmm.theme.ThemeService;
+import de.tiktak.kmm.tvshow.EpisodeDetails;
 
 @ExtendWith(MockitoExtension.class)
 class AutoScrapeServiceTest {
@@ -208,6 +209,26 @@ class AutoScrapeServiceTest {
                 .with("season", 2).with("title", "Lost")), task.capture());
         verify(jobService).submit(eq("tvshow-scrape:7"), eq(LocalizedText.of(AutoScrapeService.SEASON_TITLE)
                 .with("season", 2).with("title", "Lost")), any());
+        assertThat(task.getValue().run(context)).isEqualTo(result);
+    }
+
+    @Test
+    void scrapesAnEpisodeUnderTheKeyOfItsShow() {
+        TvAutoScrapeResult result = new TvAutoScrapeResult(1, 0, 0, 1, 0, 0, 0, 0, List.of(), List.of(), List.of());
+        RecordingContext context = new RecordingContext(false);
+        EpisodeDetails episode = new EpisodeDetails(11L, 7L, "Lost", "/lost/S02E05.mkv", 2, 5, null, null, null,
+                null);
+        when(tvRunner.episode(11L)).thenReturn(episode);
+        when(tvRunner.runEpisode(episode, true, context)).thenReturn(result);
+
+        service.startEpisode(11L, true);
+        service.startEpisode(11L, false);
+
+        ArgumentCaptor<JobTask<?>> task = ArgumentCaptor.forClass(JobTask.class);
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq(LocalizedText.of(AutoScrapeService.EPISODE_REFETCH_TITLE)
+                .with("episode", "S02E05").with("title", "Lost")), task.capture());
+        verify(jobService).submit(eq("tvshow-scrape:7"), eq(LocalizedText.of(AutoScrapeService.EPISODE_TITLE)
+                .with("episode", "S02E05").with("title", "Lost")), any());
         assertThat(task.getValue().run(context)).isEqualTo(result);
     }
 
