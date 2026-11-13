@@ -62,7 +62,7 @@ Which episode order applies (aired, DVD or absolute) is set under [Settings](set
 
 Clicking an episode opens its view with file, NFO, thumbnail, technical details and a form. It also has **Refresh in Kodi**, **Watched status from Kodi** and **Read technical details**.
 
-**Scrape** and **Refetch** work like **Scrape season** and **Refetch season** (see [Scraping a season](#scrape-season)), but only for this episode: **Scrape** fills empty fields and fetches a missing thumbnail, **Refetch** replaces the title and plot with those of the provider after asking. The TV show and its seasons stay unchanged. If renaming on scrape is turned on, KMM then checks the file names of the whole season.
+**Scrape** and **Refetch** work like **Scrape season** and **Refetch season** (see [Scraping a season](tv-shows.md#scrape-season)), but only for this episode: **Scrape** fills empty fields and fetches a missing thumbnail, **Refetch** replaces the title and plot with those of the provider after asking. The TV show and its seasons stay unchanged. If renaming on scrape is turned on, KMM then checks the file names of the whole season.
 
 If several episodes share a file, KMM writes the NFO for all episodes of that file.
 

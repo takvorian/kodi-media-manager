@@ -62,7 +62,7 @@ Welche Reihenfolge der Episoden gilt (Ausstrahlung, DVD oder absolut), stellst d
 
 Ein Klick auf eine Episode öffnet ihre Ansicht mit Datei, NFO, Standbild, technischen Angaben und einem Formular. Dort gibt es auch **In Kodi aktualisieren**, **Gesehen-Status aus Kodi** und **Technische Angaben auslesen**.
 
-**Scrapen** und **Neu holen** arbeiten wie **Staffel scrapen** und **Staffel neu holen** (siehe [Eine Staffel scrapen](#scrape-season)), aber nur für diese Episode: **Scrapen** füllt leere Felder und holt ein fehlendes Standbild, **Neu holen** ersetzt nach einer Rückfrage Titel und Inhaltsangabe durch die des Anbieters. Die Serie und ihre Staffeln bleiben unverändert. Ist das Umbenennen beim Scrapen eingeschaltet, prüft KMM danach die Dateinamen der ganzen Staffel.
+**Scrapen** und **Neu holen** arbeiten wie **Staffel scrapen** und **Staffel neu holen** (siehe [Eine Staffel scrapen](tv-shows.md#scrape-season)), aber nur für diese Episode: **Scrapen** füllt leere Felder und holt ein fehlendes Standbild, **Neu holen** ersetzt nach einer Rückfrage Titel und Inhaltsangabe durch die des Anbieters. Die Serie und ihre Staffeln bleiben unverändert. Ist das Umbenennen beim Scrapen eingeschaltet, prüft KMM danach die Dateinamen der ganzen Staffel.
 
 Teilen sich mehrere Episoden eine Datei, schreibt KMM die NFO für alle Episoden dieser Datei.
 
