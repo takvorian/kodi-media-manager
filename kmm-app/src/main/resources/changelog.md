@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.22 - 2026-11-14
+- Link the season scrape section as a chapter link in the manual (7f07f74)
+- Keep stream languages without a two-letter code and scrape single episodes (0cad59c)
+
 ## v0.21 - 2026-11-11
 - Add a login page and remember the state of the movie and TV show lists (5956e09)
 
