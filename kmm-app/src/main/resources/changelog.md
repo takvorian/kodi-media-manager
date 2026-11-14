@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.23 - 2026-11-14
+- Remove episodes with vanished files from Kodi before scanning a show (9ce9058)
+
 ## v0.22 - 2026-11-14
 - Link the season scrape section as a chapter link in the manual (7f07f74)
 - Keep stream languages without a two-letter code and scrape single episodes (0cad59c)
