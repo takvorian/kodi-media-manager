@@ -1,6 +1,7 @@
 package de.tiktak.kmm.kodi.rpc;
 
 import java.io.IOException;
+import java.net.URLDecoder;
 import java.net.http.HttpClient;
 import java.net.http.HttpConnectTimeoutException;
 import java.net.http.HttpRequest;
@@ -40,6 +41,7 @@ public class KodiClient {
     private static final int UNAUTHORIZED = 401;
     private static final String DEFAULT_NAME = "Kodi";
     private static final String IS_SCANNING_VIDEO = "Library.IsScanningVideo";
+    private static final String IMAGE_PROTOCOL = "image://";
     /** Entries per request when reading whole sources; keeps responses over slow connections small. */
     static final int PAGE_SIZE = 500;
     private static final DateTimeFormatter KODI_DATE_TIME = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
@@ -143,9 +145,16 @@ public class KodiClient {
         }
     }
 
-    /** Kodi rereads the NFO and images of the movie. */
+    /**
+     * Kodi rereads the NFO and images of the movie. Like for {@link #refreshTvShow TV shows} its cached images are
+     * removed, so a poster replaced under the same path shows up.
+     */
     public void refreshMovie(KodiEndpoint endpoint, int movieId) {
+        JsonNode art = call(endpoint, "VideoLibrary.GetMovieDetails",
+                Map.of("movieid", movieId, "properties", List.of("art"))).path("moviedetails").path("art");
+        List<String> images = textureUrls(List.of(art));
         call(endpoint, "VideoLibrary.RefreshMovie", Map.of("movieid", movieId, "ignorenfo", false));
+        removeTextures(endpoint, images);
     }
 
     /**
@@ -206,10 +215,53 @@ public class KodiClient {
         return episodes;
     }
 
-    /** Kodi rereads {@code tvshow.nfo} and the images of the TV show, but not the episodes. */
+    /**
+     * Kodi rereads {@code tvshow.nfo} and the images of the TV show, but not the episodes. An image replaced under the
+     * same path, such as {@code poster.jpg}, stays in Kodi's texture cache, so the old one would still show up in
+     * widgets like "In progress TV shows"; the cached images of the TV show and its seasons are therefore removed.
+     */
     public void refreshTvShow(KodiEndpoint endpoint, int tvShowId) {
+        List<String> images = tvShowImages(endpoint, tvShowId);
         call(endpoint, "VideoLibrary.RefreshTVShow",
                 Map.of("tvshowid", tvShowId, "ignorenfo", false, "refreshepisodes", false));
+        removeTextures(endpoint, images);
+    }
+
+    private List<String> tvShowImages(KodiEndpoint endpoint, int tvShowId) {
+        Map<String, Object> params = Map.of("tvshowid", tvShowId, "properties", List.of("art"));
+        List<JsonNode> arts = new ArrayList<>();
+        arts.add(call(endpoint, "VideoLibrary.GetTVShowDetails", params).path("tvshowdetails").path("art"));
+        call(endpoint, "VideoLibrary.GetSeasons", params).path("seasons")
+                .forEach(season -> arts.add(season.path("art")));
+        return textureUrls(arts);
+    }
+
+    /** @param arts the {@code art} objects of library items */
+    private static List<String> textureUrls(List<JsonNode> arts) {
+        List<String> images = new ArrayList<>();
+        for (JsonNode art : arts) {
+            for (JsonNode image : art) {
+                String url = textureUrl(image.asString(""));
+                if (!url.isEmpty() && !images.contains(url)) {
+                    images.add(url);
+                }
+            }
+        }
+        return images;
+    }
+
+    /**
+     * @param art image as Kodi's library returns it, such as {@code image://smb%3a%2f%2fnas%2fposter.jpg/}
+     * @return the URL under which Kodi's texture cache keeps it: for a plain file its decoded path, otherwise the
+     * image URL as it is
+     */
+    static String textureUrl(String art) {
+        if (!art.startsWith(IMAGE_PROTOCOL)) {
+            return art;
+        }
+        String file = art.substring(IMAGE_PROTOCOL.length(), art.endsWith("/") ? art.length() - 1 : art.length());
+        boolean plainFile = !file.contains("@") && !file.contains("?") && !file.contains("/");
+        return plainFile ? URLDecoder.decode(file, StandardCharsets.UTF_8) : art;
     }
 
     /** Kodi rereads the NFO and thumbnail of the episode. */

@@ -89,7 +89,7 @@ class KodiSyncIntegrationTest {
                 .hasStatusOk();
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshMovie"));
         assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
-                "VideoLibrary.GetMovies", "VideoLibrary.RefreshMovie");
+                "VideoLibrary.GetMovies", "VideoLibrary.GetMovieDetails", "VideoLibrary.RefreshMovie");
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/movies/{id}/refresh", movieId).with(csrf()))
                 .hasStatusOk().bodyJson().isLenientlyEqualTo("""
@@ -127,7 +127,8 @@ class KodiSyncIntegrationTest {
                 .hasStatusOk();
         await().atMost(TIMEOUT).until(() -> kodi.methods().contains("VideoLibrary.RefreshEpisode"));
         assertThat(kodi.methods()).containsExactly("Files.GetSources", "XBMC.GetInfoBooleans", "VideoLibrary.Scan",
-                "VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow", "VideoLibrary.GetEpisodes",
+                "VideoLibrary.GetTVShows", "VideoLibrary.GetTVShowDetails", "VideoLibrary.GetSeasons",
+                "VideoLibrary.RefreshTVShow", "VideoLibrary.GetEpisodes",
                 "VideoLibrary.RefreshEpisode");
 
         assertThat(mockMvc.post().uri(KodiSyncController.BASE_PATH + "/episodes/{id}/refresh", episodeId)

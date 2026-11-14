@@ -92,8 +92,23 @@ class KodiClientTest {
     void refreshesAMovieWithItsNfo() {
         client.refreshMovie(kodi.endpoint(), 8);
 
-        assertThat(kodi.methods()).containsExactly("VideoLibrary.RefreshMovie");
-        assertThat(kodi.calls().getFirst().params()).isEqualTo(json("{\"movieid\": 8, \"ignorenfo\": false}"));
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetMovieDetails", "VideoLibrary.RefreshMovie");
+        assertThat(kodi.calls().get(1).params()).isEqualTo(json("{\"movieid\": 8, \"ignorenfo\": false}"));
+    }
+
+    @Test
+    void removesTheCachedImagesOfAMovieWhenRefreshingIt() {
+        kodi.respond("VideoLibrary.GetMovieDetails", """
+                {"moviedetails": {"movieid": 8, "art": {
+                  "poster": "image://smb%3a%2f%2fnas%2ffilme%2fHeat%2fHeat-poster.jpg/"}}}
+                """);
+
+        client.refreshMovie(kodi.endpoint(), 8);
+
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetMovieDetails", "VideoLibrary.RefreshMovie",
+                "Textures.GetTextures");
+        assertThat(kodi.calls().get(2).params().path("filter").path("or").get(0).path("value").asString())
+                .isEqualTo("smb://nas/filme/Heat/Heat-poster.jpg");
     }
 
     @Test
@@ -301,11 +316,43 @@ class KodiClientTest {
         client.refreshTvShow(kodi.endpoint(), 7);
         client.refreshEpisode(kodi.endpoint(), 12);
 
-        assertThat(kodi.calls().get(0).method()).isEqualTo("VideoLibrary.RefreshTVShow");
-        assertThat(kodi.calls().get(0).params())
+        assertThat(kodi.calls()).extracting(call -> call.method()).containsExactly("VideoLibrary.GetTVShowDetails",
+                "VideoLibrary.GetSeasons", "VideoLibrary.RefreshTVShow", "VideoLibrary.RefreshEpisode");
+        assertThat(kodi.calls().get(2).params())
                 .isEqualTo(json("{\"tvshowid\": 7, \"ignorenfo\": false, \"refreshepisodes\": false}"));
-        assertThat(kodi.calls().get(1).method()).isEqualTo("VideoLibrary.RefreshEpisode");
-        assertThat(kodi.calls().get(1).params().path("episodeid").asInt()).isEqualTo(12);
+        assertThat(kodi.calls().get(3).params().path("episodeid").asInt()).isEqualTo(12);
+    }
+
+    @Test
+    void removesTheCachedImagesOfTheTvShowAndItsSeasonsWhenRefreshingIt() {
+        kodi.respond("VideoLibrary.GetTVShowDetails", """
+                {"tvshowdetails": {"tvshowid": 7, "art": {
+                  "poster": "image://smb%3a%2f%2fnas%2fserien%2fLost%2fposter.jpg/",
+                  "fanart": "image://smb%3a%2f%2fnas%2fserien%2fLost%2ffanart.jpg/"}}}
+                """);
+        kodi.respond("VideoLibrary.GetSeasons", """
+                {"seasons": [{"seasonid": 1, "art": {
+                  "poster": "image://smb%3a%2f%2fnas%2fserien%2fLost%2fseason01-poster.jpg/",
+                  "tvshow.poster": "image://smb%3a%2f%2fnas%2fserien%2fLost%2fposter.jpg/"}}]}
+                """);
+
+        client.refreshTvShow(kodi.endpoint(), 7);
+
+        assertThat(kodi.calls()).extracting(call -> call.method()).containsExactly("VideoLibrary.GetTVShowDetails",
+                "VideoLibrary.GetSeasons", "VideoLibrary.RefreshTVShow", "Textures.GetTextures");
+        assertThat(kodi.calls().get(3).params().path("filter").path("or")).extracting(rule -> rule.path("value")
+                .asString()).containsExactly("smb://nas/serien/Lost/poster.jpg", "smb://nas/serien/Lost/fanart.jpg",
+                "smb://nas/serien/Lost/season01-poster.jpg");
+    }
+
+    @Test
+    void findsTheTextureUrlOfAnImage() {
+        assertThat(KodiClient.textureUrl("image://smb%3a%2f%2fnas%2fLost%20(2004)%2fposter.jpg/"))
+                .isEqualTo("smb://nas/Lost (2004)/poster.jpg");
+        assertThat(KodiClient.textureUrl("https://image.tmdb.org/poster.jpg"))
+                .isEqualTo("https://image.tmdb.org/poster.jpg");
+        assertThat(KodiClient.textureUrl("image://video@smb%3a%2f%2fnas%2fa.mkv/"))
+                .as("embedded image").isEqualTo("image://video@smb%3a%2f%2fnas%2fa.mkv/");
     }
 
     @Test

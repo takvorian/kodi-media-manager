@@ -154,7 +154,8 @@ class KodiSyncServiceTest {
 
         assertThat(results).containsExactly(
                 new KodiSyncResult(1, "Wohnzimmer", KodiSyncOutcome.REFRESHED, refreshed("Heat"), NOW));
-        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetMovies", "VideoLibrary.RefreshMovie");
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetMovies", "VideoLibrary.GetMovieDetails",
+                "VideoLibrary.RefreshMovie");
         assertThat(kodi.calls().get(1).params().path("movieid").asInt()).isEqualTo(7);
         assertThat(syncLog.lastResult(1)).contains(results.getFirst());
     }
@@ -422,7 +423,8 @@ class KodiSyncServiceTest {
             assertThat(result.outcome()).isEqualTo(KodiSyncOutcome.REFRESHED);
             assertThat(result.message()).isEqualTo(refreshed("Lost"));
         });
-        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow");
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.GetTVShowDetails",
+                "VideoLibrary.GetSeasons", "VideoLibrary.RefreshTVShow");
 
         kodi.respond("VideoLibrary.GetTVShows", "{\"limits\": {\"total\": 0}}");
         service.refreshTvShowOnRealtimeHosts(SHOW_ID);
@@ -497,7 +499,8 @@ class KodiSyncServiceTest {
             assertThat(result.message()).isEqualTo(LocalizedText.of("kodi.sync.tvShowRefreshed")
                     .with("title", "Lost").with("count", 3));
         });
-        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.RefreshTVShow",
+        assertThat(kodi.methods()).containsExactly("VideoLibrary.GetTVShows", "VideoLibrary.GetTVShowDetails",
+                "VideoLibrary.GetSeasons", "VideoLibrary.RefreshTVShow",
                 "VideoLibrary.GetEpisodes", "VideoLibrary.RefreshEpisode", "VideoLibrary.RefreshEpisode",
                 "VideoLibrary.RefreshEpisode");
         assertThat(kodi.calls().get(2).params().path("tvshowid").asInt()).isEqualTo(4);
