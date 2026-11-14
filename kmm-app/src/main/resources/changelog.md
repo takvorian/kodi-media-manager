@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.24 - 2026-11-14
+- Show the name of the running task in the source row (02be50c)
+- Reconnect the job event stream when it died silently (3c69f48)
+
 ## v0.23 - 2026-11-14
 - Remove episodes with vanished files from Kodi before scanning a show (9ce9058)
 
