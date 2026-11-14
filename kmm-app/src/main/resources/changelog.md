@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.25 - 2026-11-15
+- Remove cached images from Kodi when refreshing a TV show or movie (d3c7450)
+
 ## v0.24 - 2026-11-14
 - Show the name of the running task in the source row (02be50c)
 - Reconnect the job event stream when it died silently (3c69f48)
