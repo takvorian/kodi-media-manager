@@ -4,7 +4,13 @@ import { TestBed } from '@angular/core/testing';
 
 import { FakeJobEvents, job } from './fake-job-events';
 import { Job } from './job';
-import { JOB_EVENTS_URL, JOBS_URL, JobStore } from './job-store';
+import {
+  JOB_EVENTS_URL,
+  JOBS_URL,
+  JobStore,
+  SILENCE_LIMIT_MS,
+  WATCHDOG_INTERVAL_MS,
+} from './job-store';
 
 describe('JobStore', () => {
   let events: FakeJobEvents;
@@ -93,5 +99,53 @@ describe('JobStore', () => {
 
     expect(store.jobs()).toEqual([finished]);
     expect(store.runningJobs()).toEqual([]);
+  });
+
+  describe('watchdog', () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => {
+      store.disconnect();
+      vi.useRealTimers();
+    });
+
+    it('keeps a connection that shows signs of life', () => {
+      store.connect();
+
+      for (let elapsed = 0; elapsed < 3 * SILENCE_LIMIT_MS; elapsed += WATCHDOG_INTERVAL_MS) {
+        events.heartbeat();
+        vi.advanceTimersByTime(WATCHDOG_INTERVAL_MS);
+      }
+
+      expect(events.urls).toEqual([JOB_EVENTS_URL]);
+    });
+
+    it('reconnects when the connection fell silent and ends jobs that finished meanwhile', () => {
+      store.connect();
+      events.emit(job());
+
+      vi.advanceTimersByTime(SILENCE_LIMIT_MS + WATCHDOG_INTERVAL_MS);
+      events.emit(job({ status: 'SUCCEEDED' }));
+
+      expect(events.urls).toEqual([JOB_EVENTS_URL, JOB_EVENTS_URL]);
+      expect(completed.map((entry) => entry.status)).toEqual(['SUCCEEDED']);
+    });
+
+    it('reconnects when the browser gave up the connection', () => {
+      store.connect();
+
+      events.fail();
+      vi.advanceTimersByTime(WATCHDOG_INTERVAL_MS);
+
+      expect(events.urls).toEqual([JOB_EVENTS_URL, JOB_EVENTS_URL]);
+    });
+
+    it('stops watching after disconnecting', () => {
+      store.connect();
+      store.disconnect();
+
+      vi.advanceTimersByTime(2 * SILENCE_LIMIT_MS);
+
+      expect(events.urls).toEqual([JOB_EVENTS_URL]);
+    });
   });
 });

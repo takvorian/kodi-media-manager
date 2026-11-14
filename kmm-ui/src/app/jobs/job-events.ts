@@ -2,6 +2,8 @@ import { InjectionToken } from '@angular/core';
 
 /** The part of `EventSource` the application uses; replaceable in tests. */
 export interface JobEventSource {
+  /** `EventSource.CLOSED` (2) once the browser gave up the connection, e.g. after a 401. */
+  readonly readyState: number;
   addEventListener(type: string, listener: (event: MessageEvent<string>) => void): void;
   close(): void;
 }

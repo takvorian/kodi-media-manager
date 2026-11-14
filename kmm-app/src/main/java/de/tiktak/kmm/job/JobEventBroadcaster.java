@@ -20,7 +20,8 @@ import lombok.extern.slf4j.Slf4j;
 class JobEventBroadcaster {
 
     static final String JOB_EVENT = "job";
-    static final String HEARTBEAT_COMMENT = "heartbeat";
+    /** Named event instead of a comment, so the browser sees it and notices a connection that silently died. */
+    static final String HEARTBEAT_EVENT = "heartbeat";
     /** No server timeout: the browser keeps the connection and re-establishes it itself if it drops. */
     private static final long NO_TIMEOUT = 0L;
 
@@ -44,10 +45,10 @@ class JobEventBroadcaster {
         emitters.forEach(emitter -> send(emitter, event.job()));
     }
 
-    /** Keeps connections open across proxies and detects disconnected clients. */
+    /** Keeps connections open, detects disconnected clients and shows the browser that its connection still works. */
     @Scheduled(fixedRateString = "${kmm.jobs.heartbeat-interval:30s}")
     void sendHeartbeat() {
-        emitters.forEach(emitter -> sendSafely(emitter, SseEmitter.event().comment(HEARTBEAT_COMMENT)));
+        emitters.forEach(emitter -> sendSafely(emitter, SseEmitter.event().name(HEARTBEAT_EVENT).data("")));
     }
 
     int connectionCount() {
