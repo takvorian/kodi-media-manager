@@ -7,6 +7,7 @@ import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.net.ServerSocket;
 import java.net.http.HttpClient;
 import java.nio.file.Path;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -620,6 +622,47 @@ class KodiSyncServiceTest {
 
         assertThat(callsOf("VideoLibrary.Scan", "VideoLibrary.Clean")).containsOnly("smb://nas/serien/Lost/");
         assertThat(kodi.methods()).doesNotContain("VideoLibrary.GetTVShows");
+    }
+
+    @Test
+    void removesEpisodesWhoseFilesVanishedBeforeScanningTheSeason(@TempDir Path library) throws IOException {
+        Path season = Files.createDirectories(library.resolve("Lost/S1"));
+        Files.writeString(season.resolve("Lost S01E01 neu.mkv"), "neu");
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), new KodiPathMapper(
+                List.of(new KodiPathMapping(library.toString(), "smb://nas/serien/"))), false));
+        TvShowDetails show = mock(TvShowDetails.class);
+        when(show.directoryPath()).thenReturn(library.resolve("Lost").toString());
+        lenient().when(show.metadata()).thenReturn(new TvShowMetadata("Lost", null, null, null, null, null, null,
+                null, null, List.of(), List.of(), List.of(), null, null, null, null));
+        when(show.episodes()).thenReturn(List.of(new EpisodeSummary(101L, 1, 1, "Folge", null,
+                season.resolve("Lost S01E01 neu.mkv").toString(), null)));
+        when(tvShowService.findShow(SHOW_ID)).thenReturn(show);
+        givenKnownShow();
+        givenKodiEpisodes("""
+                {"episodeid": 21, "file": "smb://nas/serien/Lost/S1/Lost S01E01 alt.mkv", "season": 1, "episode": 1},
+                {"episodeid": 22, "file": "smb://nas/serien/Lost/S1/LOST S01E01 NEU.mkv", "season": 1, "episode": 1},
+                {"episodeid": 31, "file": "smb://nas/serien/Lost/S2/Lost S02E01.mkv", "season": 2, "episode": 1}""");
+
+        service.scanTvShow(SHOW_ID, OptionalInt.of(1), hostService.targets(), KodiProgress.NONE);
+
+        assertThat(kodi.calls().stream().filter(call -> call.method().equals("VideoLibrary.RemoveEpisode"))
+                .map(call -> call.params().path("episodeid").asInt()))
+                .as("only the season folder counts, and the case of a file name does not matter")
+                .containsExactly(21);
+        assertThat(kodi.methods()).endsWith("VideoLibrary.Scan", "XBMC.GetInfoBooleans", "VideoLibrary.Clean");
+    }
+
+    @Test
+    void removesNothingFromKodiWhileTheShowFolderIsUnreachable() {
+        givenHosts(target(1, "Wohnzimmer", kodi.endpoint(), SERIEN, false));
+        givenShow(episode(1, 1, "S1/Lost S01E01.mkv"));
+        givenKnownShow();
+        givenKodiEpisodes("""
+                {"episodeid": 21, "file": "smb://nas/serien/Lost/S1/Lost S01E01.mkv", "season": 1, "episode": 1}""");
+
+        service.scanTvShow(SHOW_ID, OptionalInt.empty(), hostService.targets(), KodiProgress.NONE);
+
+        assertThat(kodi.methods()).doesNotContain("VideoLibrary.RemoveEpisode");
     }
 
     @Test

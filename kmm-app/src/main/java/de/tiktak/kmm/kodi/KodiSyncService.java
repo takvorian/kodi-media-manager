@@ -1,5 +1,8 @@
 package de.tiktak.kmm.kodi;
 
+import java.io.IOException;
+import java.io.UncheckedIOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Clock;
 import java.time.Duration;
@@ -12,6 +15,7 @@ import java.util.OptionalInt;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -420,12 +424,62 @@ public class KodiSyncService {
         String directory = seasonDirectory.flatMap(target.pathMapper()::toKodiDirectory)
                 .filter(candidate -> kodiKnowsFolder(target, showDirectory.get(), candidate))
                 .orElse(showDirectory.get());
+        removeVanishedEpisodes(target, show, showDirectory.get(), directory);
         Duration maxWait = properties.scanWaitBackground();
         Outcome outcome = scanWithSourceCheck(target, directory, maxWait,
                 LocalizedText.of("kodi.sync.scanTvShow").with("title", show.metadata().title())
                         .with("directory", directory));
         scheduler.cleanTvShows(target.endpoint(), directory, maxWait);
         return outcome;
+    }
+
+    /**
+     * Removes the episodes in the directory from Kodi whose files no longer exist, such as after replacing an episode
+     * with a file of another name. Kodi's cleanup of a folder does not reliably catch them. Without access to the TV
+     * show folder, for instance while the share is offline, nothing is removed.
+     *
+     * @param kodiDirectory the folder Kodi scans, as Kodi sees it
+     */
+    private void removeVanishedEpisodes(KodiTarget target, TvShowDetails show, String kodiShowDirectory,
+                                        String kodiDirectory) {
+        Path localDirectory = Path.of(show.directoryPath());
+        if (!Files.isDirectory(localDirectory)) {
+            return;
+        }
+        Optional<Integer> kodiShowId = kodiClient.findTvShow(target.endpoint(), kodiShowDirectory);
+        if (kodiShowId.isEmpty()) {
+            return;
+        }
+        List<KodiEpisode> candidates = kodiClient.episodesOf(target.endpoint(), kodiShowId.get()).stream()
+                .filter(episode -> episode.liesBelow(kodiDirectory))
+                .toList();
+        if (candidates.isEmpty()) {
+            return;
+        }
+        Optional<Set<String>> existing = kodiFilesBelow(target, localDirectory);
+        if (existing.isEmpty()) {
+            return;
+        }
+        List<KodiEpisode> vanished = candidates.stream().filter(episode -> !episode.isAmong(existing.get())).toList();
+        vanished.forEach(episode -> kodiClient.removeEpisode(target.endpoint(), episode.id()));
+        if (!vanished.isEmpty()) {
+            log.info("Removed {} episodes of '{}' without file from Kodi host '{}': {}", vanished.size(),
+                    show.metadata().title(), target.name(), vanished.stream().map(KodiEpisode::file).toList());
+        }
+    }
+
+    /** @return all files below the local directory as Kodi sees them, or empty if the folder cannot be read */
+    private static Optional<Set<String>> kodiFilesBelow(KodiTarget target, Path localDirectory) {
+        try (Stream<Path> files = Files.walk(localDirectory)) {
+            return Optional.of(files.filter(Files::isRegularFile)
+                    .map(file -> target.pathMapper().toKodiPath(file.toString()))
+                    .flatMap(Optional::stream)
+                    .collect(Collectors.toSet()));
+        } catch (IOException | UncheckedIOException e) {
+            log.warn("Folder {} not read, so no vanished episodes are removed from Kodi: {}", localDirectory,
+                    e.getMessage());
+            return Optional.empty();
+        }
     }
 
     private boolean kodiKnowsFolder(KodiTarget target, String showDirectory, String directory) {

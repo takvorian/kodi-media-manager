@@ -1,5 +1,6 @@
 package de.tiktak.kmm.kodi.rpc;
 
+import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -23,5 +24,19 @@ public record KodiEpisode(int id, String file, int season, int episode) {
     public boolean liesIn(String directory) {
         return KodiFiles.parts(file).stream()
                 .anyMatch(part -> KodiFiles.directoryOf(part).equalsIgnoreCase(directory));
+    }
+
+    /** @param directory directory as Kodi sees it, with a trailing separator; also its subfolders count */
+    public boolean liesBelow(String directory) {
+        return KodiFiles.parts(file).stream()
+                .anyMatch(part -> part.regionMatches(true, 0, directory, 0, directory.length()));
+    }
+
+    /**
+     * @param files files as Kodi sees them
+     * @return whether its file, for a stack one of its parts, is among them
+     */
+    public boolean isAmong(Collection<String> files) {
+        return files.stream().anyMatch(candidate -> KodiFiles.matches(file, candidate));
     }
 }
