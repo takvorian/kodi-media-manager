@@ -392,6 +392,7 @@ describe('SourceList', () => {
     fixture.detectChanges();
 
     expect(element().querySelector('.scan-button')).toBeNull();
+    expect(element().querySelector('.job-title')?.textContent).toContain('Scan „Filme“');
     expect(element().querySelector('.job-message')?.textContent).toContain(
       'NFOs werden geprüft (25 %)',
     );

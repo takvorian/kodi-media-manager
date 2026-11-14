@@ -34,7 +34,7 @@ Klicke dann auf **Hinzufügen**.
 | **Umbenennen** | Öffnet die Vorschau zum [Umbenennen](renaming.md). |
 | **Entfernen** | Entfernt die Quelle und alle ihre Einträge aus KMM, nach einer Rückfrage. Deine Dateien bleiben liegen. Einzelne Filme, Serien, Staffeln oder Episoden entfernst du in deren Ansicht, siehe [Filme](movies.md#remove) und [Serien](tv-shows.md#remove). |
 
-Während eine Aufgabe läuft, zeigt die Zeile den Fortschritt und einen Knopf **Abbrechen**.
+Während eine Aufgabe läuft, zeigt die Zeile ihren Namen, den Fortschritt und einen Knopf **Abbrechen**. Nach einem Scan mit neuen Episoden oder Filmen folgt oft direkt eine zweite Aufgabe, etwa **Technische Angaben neuer Dateien**. Am Namen siehst du, dass der Scan selbst schon fertig ist.
 
 ## Sprache einer Quelle
 

@@ -36,6 +36,13 @@
   text-align: left;
 }
 
+.job-title {
+  font: var(--mat-sys-label-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .job-message {
   font: var(--mat-sys-body-small);
   color: var(--mat-sys-on-surface-variant);

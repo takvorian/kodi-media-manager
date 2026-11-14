@@ -34,7 +34,7 @@ Then click **Add**.
 | **Rename** | Opens the preview for [renaming](renaming.md). |
 | **Remove** | Removes the source and all its entries from KMM, after asking you. Your files stay where they are. You remove single movies, TV shows, seasons or episodes in their views, see [Movies](movies.md#remove) and [TV shows](tv-shows.md#remove). |
 
-While a task is running, the row shows the progress and a **Cancel** button.
+While a task is running, the row shows its name, the progress and a **Cancel** button. A scan with new episodes or movies is often followed right away by a second task, such as **Technical details of new files**. The name tells you that the scan itself has already finished.
 
 ## Language of a source
 

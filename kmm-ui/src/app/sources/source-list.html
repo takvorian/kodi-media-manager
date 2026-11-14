@@ -112,6 +112,9 @@
         @let job = runningJob(source);
         @if (job) {
           <div class="job-progress">
+            <span class="job-title" [title]="job.title | localized">{{
+              job.title | localized
+            }}</span>
             <mat-progress-bar
               [mode]="percent(job) === null ? 'indeterminate' : 'determinate'"
               [value]="percent(job) ?? 0"
