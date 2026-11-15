@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.26 - 2026-11-15
+- Choose the episode order per TV show (0880991)
+
 ## v0.25 - 2026-11-15
 - Remove cached images from Kodi when refreshing a TV show or movie (d3c7450)
 
