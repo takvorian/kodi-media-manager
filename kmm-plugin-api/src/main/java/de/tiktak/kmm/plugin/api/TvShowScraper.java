@@ -31,6 +31,27 @@ public interface TvShowScraper extends Scraper {
     Optional<TvShowResult> fetch(String providerId);
 
     /**
+     * Loads the TV show like {@link #fetch(String)}, with seasons and episodes counted in the given order.
+     *
+     * @param episodeOrder an {@link EpisodeOrder#id()} from {@link #episodeOrders(String)}, or {@code null} for the
+     *                     order from the settings
+     * @return empty if the provider does not know the ID
+     * @throws ScraperException if the provider cannot be reached or rejects the request
+     */
+    default Optional<TvShowResult> fetch(String providerId, String episodeOrder) {
+        return fetch(providerId);
+    }
+
+    /**
+     * The orders in which the provider counts the seasons and episodes of the TV show; empty if it knows only one.
+     *
+     * @throws ScraperException if the provider cannot be reached or rejects the request
+     */
+    default List<EpisodeOrder> episodeOrders(String providerId) {
+        return List.of();
+    }
+
+    /**
      * Identifies the TV show on its own, preferably via known IDs, otherwise via the unambiguously matching search
      * result.
      *

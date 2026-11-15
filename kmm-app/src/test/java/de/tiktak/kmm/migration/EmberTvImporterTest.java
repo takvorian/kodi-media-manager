@@ -8,6 +8,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.argThat;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -35,6 +36,8 @@ import de.tiktak.kmm.migration.ember.library.EmberTvLibrary;
 import de.tiktak.kmm.migration.ember.library.EmberTvShow;
 import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.plugin.api.MediaType;
+import de.tiktak.kmm.settings.KmmSettings;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.ImportedSource;
 import de.tiktak.kmm.source.MediaSource;
 import de.tiktak.kmm.source.MediaSourceService;
@@ -70,7 +73,10 @@ class EmberTvImporterTest {
 
     @BeforeEach
     void createImporter() {
-        importer = new EmberTvImporter(new EmberSourceImporter(sourceService), importService, Clock.systemUTC());
+        SettingsService settingsService = mock(SettingsService.class);
+        lenient().when(settingsService.current()).thenReturn(KmmSettings.DEFAULTS);
+        importer = new EmberTvImporter(new EmberSourceImporter(sourceService), importService, settingsService,
+                Clock.systemUTC());
     }
 
     @Test

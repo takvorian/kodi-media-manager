@@ -120,6 +120,12 @@ public class TvShowProblemException extends LocalizedProblemException {
                         .with("id", providerId), null);
     }
 
+    static TvShowProblemException unknownEpisodeOrder(Scraper scraper, String orderId) {
+        return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "unknownEpisodeOrder",
+                LocalizedText.of("tvShow.unknownEpisodeOrder.detail").with("scraper", scraper.displayName())
+                        .with("order", orderId), null);
+    }
+
     static TvShowProblemException notIdentified(Scraper scraper, String title) {
         return new TvShowProblemException(HttpStatus.UNPROCESSABLE_CONTENT, "notIdentified",
                 LocalizedText.of("tvShow.notIdentified.detail").with("title", title)

@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.SearchQuery;
@@ -15,7 +16,8 @@ import de.tiktak.kmm.plugin.api.TvShowResult;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 
 /**
- * TV show scraper based on TheTVDB (API v4) with official, DVD or absolute episode order.
+ * TV show scraper based on TheTVDB (API v4) in every episode order TVDB knows for a TV show, such as official,
+ * DVD, absolute or a streaming service's order.
  */
 @Extension
 public class TvdbTvShowScraper extends AbstractTvdbScraper implements TvShowScraper {
@@ -40,9 +42,25 @@ public class TvdbTvShowScraper extends AbstractTvdbScraper implements TvShowScra
 
     @Override
     public Optional<TvShowResult> fetch(String providerId) {
+        return fetch(providerId, null);
+    }
+
+    /** @param episodeOrder TVDB's season type such as {@code alternate}; {@code null} for the one from the settings */
+    @Override
+    public Optional<TvShowResult> fetch(String providerId, String episodeOrder) {
         TvdbApi tvdb = api();
+        String seasonType = episodeOrder == null ? settings().seasonType() : episodeOrder;
+        if (!TvdbMapper.isSeasonType(seasonType)) {
+            throw new IllegalArgumentException("Unknown TVDB episode order: " + episodeOrder);
+        }
         return tvdb.series(providerId).map(series -> new TvdbMapper(settings()).toShow(series,
-                tvdb.seriesTranslation(providerId), tvdb.episodes(providerId, false), tvdb.episodes(providerId, true)));
+                tvdb.seriesTranslation(providerId), seasonType, tvdb.episodes(providerId, seasonType, false),
+                tvdb.episodes(providerId, seasonType, true)));
+    }
+
+    @Override
+    public List<EpisodeOrder> episodeOrders(String providerId) {
+        return api().series(providerId).map(TvdbMapper::episodeOrders).orElse(List.of());
     }
 
     @Override

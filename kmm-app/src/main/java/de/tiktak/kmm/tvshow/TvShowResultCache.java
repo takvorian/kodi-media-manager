@@ -28,24 +28,25 @@ class TvShowResultCache {
     private final Map<String, Entry> entries = new ConcurrentHashMap<>();
     private final Clock clock;
 
-    Optional<TvShowResult> get(String scraperId, String providerId) {
-        Entry entry = entries.get(key(scraperId, providerId));
+    /** @param episodeOrder the provider's key of the episode order, {@code null} for the one from the settings */
+    Optional<TvShowResult> get(String scraperId, String providerId, String episodeOrder) {
+        Entry entry = entries.get(key(scraperId, providerId, episodeOrder));
         return entry != null && entry.storedAt().plus(TIME_TO_LIVE).isAfter(clock.instant())
                 ? Optional.of(entry.result()) : Optional.empty();
     }
 
-    void put(String scraperId, String providerId, TvShowResult result) {
+    void put(String scraperId, String providerId, String episodeOrder, TvShowResult result) {
         if (entries.size() >= MAX_ENTRIES) {
             entries.entrySet().stream()
                     .min(Comparator.comparing(entry -> entry.getValue().storedAt()))
                     .ifPresent(oldest -> entries.remove(oldest.getKey()));
         }
-        entries.put(key(scraperId, providerId), new Entry(result, clock.instant()));
+        entries.put(key(scraperId, providerId, episodeOrder), new Entry(result, clock.instant()));
     }
 
-    /** After a language change the TV show must be fetched again. */
-    private static String key(String scraperId, String providerId) {
-        return scraperId + ":" + providerId + ":" + ScrapeLanguage.cacheKey();
+    /** After a change of language or episode order the TV show must be fetched again. */
+    private static String key(String scraperId, String providerId, String episodeOrder) {
+        return scraperId + ":" + providerId + ":" + ScrapeLanguage.cacheKey() + ":" + episodeOrder;
     }
 
     private record Entry(TvShowResult result, Instant storedAt) {

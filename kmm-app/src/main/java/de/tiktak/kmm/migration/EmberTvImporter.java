@@ -21,6 +21,7 @@ import de.tiktak.kmm.migration.ember.library.EmberTvShowSource;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.scanner.EpisodeNameParser;
 import de.tiktak.kmm.scanner.EpisodeNumber;
+import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.tvshow.TvImportResult;
 import de.tiktak.kmm.tvshow.TvShowImportService;
 import de.tiktak.kmm.tvshow.TvShowImportService.ImportedTvShow;
@@ -42,6 +43,7 @@ class EmberTvImporter {
 
     private final EmberSourceImporter sourceImporter;
     private final TvShowImportService importService;
+    private final SettingsService settingsService;
     private final Clock clock;
     private final EpisodeNameParser episodeNameParser = new EpisodeNameParser();
 
@@ -88,7 +90,8 @@ class EmberTvImporter {
     private Optional<ImportedTvShow> importShow(TvShowImportSession session, EmberTvShow show, long sourceId,
             String directory, EmberImportProgress progress) {
         try {
-            ImportedTvShow imported = session.importShow(EmberTvShowMapper.toImport(show, sourceId, directory));
+            ImportedTvShow imported = session.importShow(EmberTvShowMapper.toImport(show, sourceId, directory,
+                    settingsService.current().tv().episodeOrdering()));
             progress.showImported(imported.result().created());
             return Optional.of(imported);
         } catch (InvalidPathException e) {

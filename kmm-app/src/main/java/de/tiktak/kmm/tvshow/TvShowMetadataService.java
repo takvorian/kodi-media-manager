@@ -89,6 +89,22 @@ public class TvShowMetadataService {
         return true;
     }
 
+    /**
+     * Changes the TV show's own episode order. It is kept in the database only; Kodi's NFOs have no place for it.
+     *
+     * @param ordering the order, or {@code null} for the one from the settings
+     * @return whether anything changed
+     */
+    @Transactional
+    public boolean changeEpisodeOrdering(long showId, TvEpisodeOrdering ordering) {
+        TvShow show = requireShow(showId);
+        if (!show.changeEpisodeOrdering(ordering)) {
+            return false;
+        }
+        log.info("Episode order of TV show {} set to {}", showId, ordering == null ? null : ordering.stored());
+        return true;
+    }
+
     /** Enters its own language into a just-created NFO. */
     @Transactional
     public void storeLanguageInNfo(long showId) {

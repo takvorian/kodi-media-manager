@@ -42,6 +42,7 @@ import { RemovalPlan, RemovalService, isRemovalJob } from '../shared/removal';
 import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { TvPeople } from './tv-people';
+import { EpisodeOrderSelect } from './episode-order-select';
 import { TvShowRenamePlan, tvRenameConfirmation } from './tv-rename';
 import { TvRenameService } from './tv-rename.service';
 import { defaultTvShowScraper } from './tv-scrapers';
@@ -50,6 +51,7 @@ import {
   EpisodeSummary,
   MissingEpisode,
   Season,
+  TvEpisodeOrdering,
   TvShowDetails,
   TvShowMetadata,
   episodeCode,
@@ -84,6 +86,7 @@ export interface SeasonWithEpisodes {
   imports: [
     LocalizedPipe,
     LanguageSelect,
+    EpisodeOrderSelect,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -177,6 +180,11 @@ export class TvShowDetail {
   protected readonly languageJob = computed(() =>
     this.changingLanguage() ? this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY) : undefined,
   );
+  private readonly changingOrdering = signal(false);
+  /** The change of the episode order of this view; the form is reloaded afterwards. */
+  protected readonly orderingJob = computed(() =>
+    this.changingOrdering() ? this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY) : undefined,
+  );
   /** Adopted match whose episode data is completed on the next save. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
@@ -192,7 +200,7 @@ export class TvShowDetail {
     });
     // The form is reloaded at the end; input made during the run would be lost.
     effect(() => {
-      if (this.scrapeJob() || this.languageJob()) {
+      if (this.scrapeJob() || this.languageJob() || this.orderingJob()) {
         this.form.disable();
       } else {
         this.form.enable();
@@ -200,11 +208,16 @@ export class TvShowDetail {
     });
     this.jobStore.completed
       .pipe(
-        filter((job) => job.key === TVSHOW_BATCH_JOB_KEY && this.changingLanguage()),
+        filter(
+          (job) =>
+            job.key === TVSHOW_BATCH_JOB_KEY &&
+            (this.changingLanguage() || this.changingOrdering()),
+        ),
         takeUntilDestroyed(),
       )
       .subscribe((job) => {
         this.changingLanguage.set(false);
+        this.changingOrdering.set(false);
         this.notify(batchSummary(job));
         this.show.reload();
       });
@@ -446,6 +459,31 @@ export class TvShowDetail {
       next: (job) => this.jobStore.update(job),
       error: (error: unknown) => {
         this.changingLanguage.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
+  /**
+   * Asks whether the episodes are fetched again in the new order right away; the order changes in any case. The
+   * files stay as they are.
+   */
+  protected changeEpisodeOrdering(ordering: TvEpisodeOrdering | null): void {
+    if (this.form.dirty) {
+      this.notify(this.transloco.translate('tvshows.saveFirst'));
+      return;
+    }
+    const change = ordering
+      ? this.transloco.translate('tvshows.ordering.changeTo', { name: ordering.name })
+      : this.transloco.translate('tvshows.ordering.changeToDefault');
+    const refetch = this.confirm(
+      `${change} ${this.transloco.translate('tvshows.ordering.refetch')}`,
+    );
+    this.changingOrdering.set(true);
+    this.tvShowService.changeEpisodeOrdering(this.id(), ordering, refetch).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => {
+        this.changingOrdering.set(false);
         this.notify(problemMessage(error));
       },
     });

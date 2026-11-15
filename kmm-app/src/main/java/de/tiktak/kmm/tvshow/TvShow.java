@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.TreeMap;
 
 import org.hibernate.Length;
@@ -104,6 +105,13 @@ public class TvShow {
     @Column(name = "metadata_language", length = 16)
     private String metadataLanguage;
 
+    /** Own episode order, {@code <scraperId>:<orderId>}; without a value the one from the settings applies. */
+    @Column(name = "episode_ordering", length = 120)
+    private String episodeOrdering;
+
+    @Column(name = "episode_ordering_name", length = 255)
+    private String episodeOrderingName;
+
     @Column(name = "user_rating")
     private Integer userRating;
 
@@ -199,6 +207,24 @@ public class TvShow {
     boolean changeMetadataLanguage(String language) {
         boolean changed = !Objects.equals(metadataLanguage, language);
         metadataLanguage = language;
+        return changed;
+    }
+
+    /** @return the own episode order, empty if the one from the settings applies */
+    public Optional<TvEpisodeOrdering> episodeOrdering() {
+        return TvEpisodeOrdering.parse(episodeOrdering, episodeOrderingName);
+    }
+
+    /**
+     * @param ordering the own order, or {@code null} for the one from the settings
+     * @return whether the order has changed
+     */
+    boolean changeEpisodeOrdering(TvEpisodeOrdering ordering) {
+        String stored = ordering == null ? null : ordering.stored();
+        String name = ordering == null ? null : ordering.name();
+        boolean changed = !Objects.equals(episodeOrdering, stored) || !Objects.equals(episodeOrderingName, name);
+        episodeOrdering = stored;
+        episodeOrderingName = name;
         return changed;
     }
 

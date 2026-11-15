@@ -17,7 +17,7 @@ import lombok.Builder;
  * @param status        e.g. {@code Continuing} or {@code Ended}
  * @param uniqueIds     IDs per provider, e.g. {@code tvdb -> 73739}, {@code imdb -> tt0411008}
  */
-@Builder
+@Builder(toBuilder = true)
 public record TvShowResult(
         String title,
         String originalTitle,

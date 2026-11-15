@@ -22,6 +22,22 @@ Das Formular speicherst du wie bei Filmen mit **Speichern**. Zusätzlich gibt es
 
 **Fehlende Episoden anzeigen** fragt den Anbieter, welche Episoden es gibt, für die du keine Datei hast. Das ist nur eine Anzeige, KMM legt dafür nichts an.
 
+<a id="episode-order"></a>
+### Episoden-Reihenfolge
+
+Manche Serien zählen Staffeln und Episoden je nach Anbieter verschieden. Eine erfundene Serie „Der große Coup“ hat bei der Ausstrahlung im Fernsehen zwei Staffeln mit je 15 Episoden, beim Streamingdienst aber vier Teile mit kürzeren Episoden. KMM ordnet die Angaben des Anbieters über die Staffel- und Episodennummer im Dateinamen zu. Die Zählung muss deshalb zu deinen Dateien passen.
+
+Unter **Episoden-Reihenfolge** in der Serienansicht wählst du die Zählung für diese Serie. Beim Öffnen der Liste fragt KMM die Anbieter, welche Zählweisen sie für die Serie kennen:
+
+- **TVDB** bietet z. B. „Aired Order“ (Ausstrahlung), „DVD Order“, „Absolute Order“ oder die Zählung eines Streamingdienstes wie „Netflix Order“.
+- **TMDB** bietet die Ausstrahlung und sogenannte Episodengruppen, z. B. „Netflix Order (Digital)“.
+
+Angeboten werden nur Anbieter, bei denen die Serie schon zugeordnet ist. Ist sie das noch nicht, scrapst du sie zuerst. **Standard (Einstellungen)** nimmt wieder die Reihenfolge aus den [Einstellungen](settings.md#serien).
+
+Nach der Auswahl fragt KMM, ob es Titel und Inhaltsangaben aller Episoden gleich in der neuen Zählung neu holen soll. **OK** überschreibt die vorhandenen Texte, auch von Hand geänderte. **Abbrechen** ändert nur die Reihenfolge, sie gilt dann ab dem nächsten Scrapen. Die Dateien selbst benennt KMM dabei nicht um.
+
+Mit einer eigenen Reihenfolge scrapt KMM die Serie immer beim Anbieter dieser Reihenfolge, auch wenn in den Einstellungen ein anderer bevorzugt ist. Die Reihenfolge steht nur in der Datenbank von KMM, nicht in der NFO, denn Kodi kennt dafür kein Feld.
+
 ## Eine Serie oder Staffel scannen
 
 Hast du neue Episoden in den Ordner einer Serie gelegt oder welche gelöscht, musst du nicht die ganze Quelle scannen. **Scannen** oben in der Serienansicht liest nur den Ordner dieser Serie neu ein: Neue Episoden kommen dazu, Episoden ohne Datei werden aus der Bibliothek entfernt, und geänderte NFOs werden übernommen. **Scannen** bei einer Staffel macht dasselbe nur für die Episoden dieser Staffel. In der Serienliste scannst du so mehrere ausgewählte Serien auf einmal.
@@ -56,7 +72,7 @@ Fortschritt und Bericht erscheinen oben in der Serienansicht. Solange eine Staff
 
 **Online suchen** arbeitet wie bei [Filmen](scraping.md#online-suche). Die Vorgabe ist TVDB. Die übernommenen Angaben landen zuerst im Formular. Beim Speichern ergänzt KMM zusätzlich die Episoden, und zwar nur deren leere Felder. Ein Hinweis über den Knöpfen sagt dir vorher, wie viele Episoden betroffen sind.
 
-Welche Reihenfolge der Episoden gilt (Ausstrahlung, DVD oder absolut), stellst du unter [Einstellungen](settings.md#serien) ein. Das wirkt nur bei TVDB, TMDB kennt nur die Ausstrahlungsreihenfolge.
+Welche Reihenfolge der Episoden gilt (Ausstrahlung, DVD oder absolut), stellst du unter [Einstellungen](settings.md#serien) ein. Das wirkt nur bei TVDB. Andere Zählweisen, etwa die eines Streamingdienstes, wählst du pro Serie unter [Episoden-Reihenfolge](tv-shows.md#episode-order).
 
 ## Die Episodenansicht
 

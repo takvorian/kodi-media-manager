@@ -12,6 +12,8 @@ import {
   EpisodeFillResult,
   EpisodeMetadata,
   MissingEpisode,
+  ScraperEpisodeOrders,
+  TvEpisodeOrdering,
   TvShowDetails,
   TvShowMetadata,
   TvShowPage,
@@ -111,6 +113,31 @@ export class TvShowService {
     refetchTexts: boolean,
   ): Observable<Job> {
     return this.http.post<Job>(`${TVSHOWS_URL}/language`, { showIds, language, refetchTexts });
+  }
+
+  /** The episode orders the providers know for the TV show; empty if it is identified at none of them. */
+  episodeOrders(showId: number): Observable<readonly ScraperEpisodeOrders[]> {
+    return this.http.get<readonly ScraperEpisodeOrders[]>(
+      `${TVSHOWS_URL}/${showId}/episode-orders`,
+    );
+  }
+
+  /**
+   * Changes the episode order as a job.
+   *
+   * @param ordering the order, `null` for the one from the settings
+   * @param refetch  whether titles and texts of all episodes are fetched again in the new order
+   */
+  changeEpisodeOrdering(
+    showId: number,
+    ordering: TvEpisodeOrdering | null,
+    refetch: boolean,
+  ): Observable<Job> {
+    return this.http.put<Job>(`${TVSHOWS_URL}/${showId}/episode-ordering`, {
+      scraperId: ordering?.scraperId ?? null,
+      orderId: ordering?.orderId ?? null,
+      refetch,
+    });
   }
 
   autoScrapeAll(showIds: readonly number[]): Observable<Job> {

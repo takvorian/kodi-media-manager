@@ -26,7 +26,7 @@ public class EmberTvLibraryReader {
     private static final String SOURCES = "SELECT idSource, strName, strPath, strLanguage FROM tvshowsource ORDER BY idSource";
     private static final String SHOWS = """
             SELECT idShow, idSource, TVShowPath, Title, strOriginalTitle, SortTitle, Premiered, Plot, Runtime, MPAA,
-                   Certification, Status, TVDB, strIMDB, strTMDB, iUserRating, Language
+                   Certification, Status, TVDB, strIMDB, strTMDB, iUserRating, Language, Ordering
             FROM tvshow ORDER BY idShow""";
     private static final String SHOW_UNIQUE_IDS = """
             SELECT media_id AS idShow, type, value FROM uniqueid WHERE media_type = 'tvshow'
@@ -139,6 +139,7 @@ public class EmberTvLibraryReader {
                     .seasonTitles(seasonTitles.get(id))
                     .userRating(EmberValues.positiveInteger(row, "iUserRating"))
                     .language(EmberValues.text(row, "Language"))
+                    .ordering(EmberValues.nullableInt(row, "Ordering"))
                     .build();
         });
     }

@@ -1,0 +1,5 @@
+{"id": "5eb730dfca7ec6001f7beb51", "name": "Netflix Order", "type": 4, "groups": [
+  {"id": "g2", "name": "Teil 2", "order": 1, "episodes": [{"id": 64465, "order": 0, "season_number": 1, "episode_number": 1}]},
+  {"id": "g1", "name": "Teil 1", "order": 0, "episodes": [
+    {"id": 64466, "order": 0, "season_number": 1, "episode_number": 2},
+    {"id": 999999, "order": 1, "season_number": 9, "episode_number": 9}]}]}

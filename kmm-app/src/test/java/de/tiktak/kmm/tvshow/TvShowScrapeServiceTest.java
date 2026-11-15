@@ -27,6 +27,7 @@ import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CastMember;
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.TvShowResult;
@@ -83,6 +84,65 @@ class TvShowScrapeServiceTest {
                 episode.getFilePath());
         assertThat(episode.getTitle()).isEqualTo("Episode 1");
         assertThat(show.extras().actors()).isEmpty();
+    }
+
+    @Test
+    void refetchesWithTheScraperAndOrderOfTheShowsOwnEpisodeOrdering() {
+        TvShow show = new TvShow(1, SHOW_DIRECTORY, "Haus des Geldes", null);
+        ReflectionTestUtils.setField(show, "id", 7L);
+        ReflectionTestUtils.setField(show, "tvdbId", "327417");
+        show.changeEpisodeOrdering(new TvEpisodeOrdering("tvdb", "alternate", "Netflix Order"));
+        Episode episode = new Episode(7, Path.of(SHOW_DIRECTORY, "S02E01.mkv").toString(), 2, 1, "Episode 1");
+        when(showRepository.findById(7L)).thenReturn(Optional.of(show));
+        when(episodeRepository.findByTvShowIdOrderBySeasonAscEpisodeAsc(7)).thenReturn(List.of(episode));
+        when(scraperRegistry.tvShowScraper("tvdb")).thenReturn(Optional.of(scraper));
+        when(scraper.id()).thenReturn("tvdb");
+        when(scraper.fetch("327417", "alternate")).thenReturn(Optional.of(TvShowResult.builder()
+                .title("Haus des Geldes").uniqueIds(Map.of("tvdb", "327417"))
+                .episodes(List.of(EpisodeResult.builder().season(2).episode(1).title("Teil 2, Folge 1").build()))
+                .build()));
+        when(scraper.episodeDetails(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        NfoException unwritable = mock(NfoException.class);
+        when(nfoFiles.writeEpisodes(any(), any())).thenThrow(unwritable);
+        TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
+                nfoFiles, mock(TvNfoSync.class), new TvShowResultCache(Clock.systemUTC()),
+                mock(TvShowMetadataService.class),
+                new TvScrapingProperties("tmdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
+
+        TvShowAutoScrapeOutcome outcome = service.refetch(7, EpisodeScope.all());
+
+        assertThat(outcome.failedFiles()).as("the episode matched in the chosen order")
+                .contains(episode.getFilePath());
+        verify(scraper, never()).fetch("327417");
+    }
+
+    @Test
+    void listsTheEpisodeOrdersOfTheScrapersThatKnowTheShow() {
+        TvShow show = new TvShow(1, SHOW_DIRECTORY, "Haus des Geldes", null);
+        ReflectionTestUtils.setField(show, "id", 7L);
+        ReflectionTestUtils.setField(show, "tvdbId", "327417");
+        when(showRepository.findById(7L)).thenReturn(Optional.of(show));
+        TvShowScraper tmdb = mock(TvShowScraper.class);
+        when(tmdb.id()).thenReturn("tmdb");
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(scraper, tmdb));
+        when(scraper.id()).thenReturn("tvdb");
+        when(scraper.displayName()).thenReturn("TheTVDB");
+        List<EpisodeOrder> orders = List.of(new EpisodeOrder("official", "Aired Order"),
+                new EpisodeOrder("alternate", "Netflix Order"));
+        when(scraper.episodeOrders("327417")).thenReturn(orders);
+        when(scraperRegistry.tvShowScraper("tvdb")).thenReturn(Optional.of(scraper));
+        TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
+                nfoFiles, mock(TvNfoSync.class), new TvShowResultCache(Clock.systemUTC()),
+                mock(TvShowMetadataService.class),
+                new TvScrapingProperties("tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
+
+        assertThat(service.episodeOrders(7)).as("without a TMDB ID TMDB is not asked").containsExactly(
+                new TvShowScrapeService.ScraperEpisodeOrders("tvdb", "TheTVDB", orders));
+        assertThat(service.requireEpisodeOrder(7, "tvdb", "alternate"))
+                .isEqualTo(new TvEpisodeOrdering("tvdb", "alternate", "Netflix Order"));
+        org.assertj.core.api.Assertions.assertThatThrownBy(() -> service.requireEpisodeOrder(7, "tvdb", "dvd"))
+                .isInstanceOfSatisfying(TvShowProblemException.class, e ->
+                        assertThat(e.localizedText().key()).isEqualTo("tvShow.unknownEpisodeOrder.detail"));
     }
 
     @Test

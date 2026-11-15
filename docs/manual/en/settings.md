@@ -25,7 +25,7 @@ Applies to movies if neither the movie nor its source has a language of its own,
 
 ## TV shows
 
-The same two fields for TV shows, plus the **Episode order**: aired, DVD/Blu-ray or absolute (without seasons). This applies to scraping and only affects TVDB.
+The same two fields for TV shows, plus the **Episode order**: aired, DVD/Blu-ray or absolute (without seasons). This applies to scraping and only affects TVDB. For single TV shows you choose another order in the TV show view, see [Episode order](tv-shows.md#episode-order).
 
 ## Technical details
 

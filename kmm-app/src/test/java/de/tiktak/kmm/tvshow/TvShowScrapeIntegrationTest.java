@@ -43,6 +43,7 @@ import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CastMember;
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ProviderRating;
@@ -271,6 +272,64 @@ class TvShowScrapeIntegrationTest {
         JsonNode failure = result.get("failures").get(0);
         assertThat(failure.get("key").asString()).isEqualTo("tvShow.batch.failure");
         assertThat(failure.get("args").get("message").get("key").asString()).isEqualTo("tvShow.notIdentified.detail");
+    }
+
+    @Test
+    void changesTheEpisodeOrderAndRefetchesTheEpisodesInIt() throws IOException {
+        TvShowScraper tvdb = mock(TvShowScraper.class);
+        when(tvdb.id()).thenReturn("tvdb");
+        when(tvdb.displayName()).thenReturn("TheTVDB");
+        when(tvdb.missingConfiguration()).thenReturn(Optional.empty());
+        when(tvdb.episodeOrders("73739")).thenReturn(List.of(new EpisodeOrder("official", "Aired Order"),
+                new EpisodeOrder("alternate", "Netflix Order")));
+        when(tvdb.fetch("73739", "alternate")).thenReturn(Optional.of(TvShowResult.builder().title("Lost")
+                .uniqueIds(Map.of("tvdb", "73739"))
+                .episodes(List.of(EpisodeResult.builder().season(1).episode(3).title("Netflix-Folge 3").build()))
+                .build()));
+        when(tvdb.episodeDetails(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(tvdb));
+        when(scraperRegistry.tvShowScraper("tvdb")).thenReturn(Optional.of(tvdb));
+        jdbcClient.sql("UPDATE tv_show SET tvdb_id = '73739'").update();
+
+        MvcTestResult orders = mockMvc.get().uri(TvShowEpisodeOrderingController.ORDERS_PATH, showId).exchange();
+
+        assertThat(orders).hasStatusOk();
+        assertThat(read(orders).get(0).get("orders").get(1).get("name").asString()).isEqualTo("Netflix Order");
+
+        JsonNode changed = changeEpisodeOrdering(Map.of("scraperId", "tvdb", "orderId", "alternate",
+                "refetch", true));
+
+        assertThat(changed.get("changed").asInt()).isEqualTo(1);
+        assertThat(jdbcClient.sql("SELECT episode_ordering FROM tv_show").query(String.class).single())
+                .isEqualTo("tvdb:alternate");
+        assertThat(Files.readString(library.resolve("Lost/Staffel 1/Lost - S01E03.nfo")))
+                .contains("<title>Netflix-Folge 3</title>");
+        assertThat(read(mockMvc.get().uri(TvShowController.SHOW_PATH, showId).exchange())
+                .get("episodeOrdering").get("name").asString()).isEqualTo("Netflix Order");
+
+        changeEpisodeOrdering(Map.of("refetch", false));
+
+        assertThat(jdbcClient.sql("SELECT episode_ordering FROM tv_show").query(String.class).optional()
+                .orElse(null)).isNull();
+    }
+
+    @Test
+    void rejectsAnIncompleteEpisodeOrder() {
+        assertThat(mockMvc.put().uri(TvShowEpisodeOrderingController.ORDERING_PATH, showId).with(csrf())
+                .contentType(JSON).content("{\"scraperId\": \"tvdb\", \"refetch\": false}").exchange())
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    private JsonNode changeEpisodeOrdering(Map<String, Object> body) {
+        MvcTestResult started = mockMvc.put().uri(TvShowEpisodeOrderingController.ORDERING_PATH, showId)
+                .with(csrf()).contentType(JSON).content(objectMapper.writeValueAsString(body)).exchange();
+        assertThat(started).hasStatus(HttpStatus.ACCEPTED);
+        String jobId = read(started).get("id").asString();
+        JsonNode job = await().atMost(JOB_TIMEOUT).pollInSameThread().until(() -> read(mockMvc.get()
+                .uri(JobController.BASE_PATH + "/" + jobId).exchange()),
+                node -> !"RUNNING".equals(node.get("status").asString()));
+        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job.get("result");
     }
 
     private JsonNode changeLanguage(String language, boolean refetchTexts) {

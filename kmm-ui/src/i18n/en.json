@@ -495,6 +495,17 @@
         "renameSelected": "Rename {count}",
         "allUnchanged": "All {count, plural, one {# TV show already has its name} other {# TV shows already have these names}}."
       }
+    },
+    "ordering": {
+      "label": "Episode order",
+      "default": "Default (settings)",
+      "hint": "Must match the season and episode numbers of the files.",
+      "loading": "Loading the orders …",
+      "none": "The TV show is not identified at any provider yet. Please scrape it first.",
+      "running": "The episode order is being changed …",
+      "changeTo": "The episode order is changed to “{name}”.",
+      "changeToDefault": "The episode order is changed to the default from the settings.",
+      "refetch": "Fetch the titles and plots of all episodes in this order now?\n\nThe files stay as they are; their season and episode numbers must match the order.\n\nOK: The existing texts are overwritten, including manually edited ones.\nCancel: Only change the order; it applies from the next scrape on."
     }
   },
   "sources": {
@@ -1327,6 +1338,10 @@
         "title": "Match not found",
         "detail": "{scraper} does not know the entry “{id}”."
       },
+      "unknownEpisodeOrder": {
+        "title": "Episode order not found",
+        "detail": "{scraper} does not know the episode order “{order}” for this TV show."
+      },
       "notIdentified": {
         "title": "TV show not identified",
         "detail": "“{title}” is not clearly identified at {scraper}. Please take it over via the online search first."
@@ -1367,7 +1382,8 @@
         "languageJobTitle": "Change the language of {count, plural, one {# TV show} other {# TV shows}}",
         "scanJobTitle": "Scan {count, plural, one {# TV show} other {# TV shows}}",
         "progress": "TV show {id}",
-        "failure": "TV show {id}: {message}"
+        "failure": "TV show {id}: {message}",
+        "episodeOrderingJobTitle": "Change the episode order"
       },
       "thumbs": {
         "scraperFailed": "{scraper}: {message}"

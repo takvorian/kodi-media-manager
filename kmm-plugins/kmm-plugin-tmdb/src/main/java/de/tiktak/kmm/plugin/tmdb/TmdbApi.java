@@ -108,6 +108,19 @@ class TmdbApi {
                 "append_to_response", "external_ids,content_ratings,credits"));
     }
 
+    /** The alternative orders of the episodes, such as a streaming service's order. */
+    Optional<JsonNode> tvEpisodeGroups(String tmdbId) {
+        if (!isTmdbId(tmdbId)) {
+            return Optional.empty();
+        }
+        return client.get("/tv/" + tmdbId + "/episode_groups", Map.of());
+    }
+
+    /** An episode group with its groups (seasons) and episodes, names in the TV show language. */
+    Optional<JsonNode> tvEpisodeGroup(String groupId) {
+        return client.get("/tv/episode_group/" + groupId, Map.of("language", settings.tvLanguage()));
+    }
+
     Optional<JsonNode> tvSeason(String tmdbId, int season) {
         if (!isTmdbId(tmdbId)) {
             return Optional.empty();

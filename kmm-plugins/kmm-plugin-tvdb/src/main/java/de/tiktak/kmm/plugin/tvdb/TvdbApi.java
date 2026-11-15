@@ -58,9 +58,13 @@ class TvdbApi {
                 .map(response -> response.path("data"));
     }
 
-    /** All episodes in the configured order, without or with translation. */
-    List<JsonNode> episodes(String tvdbId, boolean translated) {
-        String path = "/series/" + tvdbId + "/episodes/" + settings.seasonType()
+    /**
+     * All episodes in the given order, without or with translation.
+     *
+     * @param seasonType TVDB's order, such as {@code official} or {@code alternate}
+     */
+    List<JsonNode> episodes(String tvdbId, String seasonType, boolean translated) {
+        String path = "/series/" + tvdbId + "/episodes/" + seasonType
                 + (translated ? "/" + settings.language() : "");
         List<JsonNode> episodes = new ArrayList<>();
         for (int page = 0; page < MAX_EPISODE_PAGES; page++) {

@@ -163,6 +163,8 @@ UPDATE movie SET Language = 'de-DE';
 UPDATE movie SET Language = 'en-US' WHERE idMovie = 2;
 ALTER TABLE tvshow ADD COLUMN Language TEXT;
 UPDATE tvshow SET Language = 'fr-FR';
+ALTER TABLE tvshow ADD COLUMN Ordering INTEGER;
+UPDATE tvshow SET Ordering = 1;
 ALTER TABLE movie ADD COLUMN VideoSource TEXT;
 ALTER TABLE movie ADD COLUMN edition TEXT;
 ALTER TABLE movie ADD COLUMN Trailer TEXT;

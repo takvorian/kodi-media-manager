@@ -13,6 +13,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import de.tiktak.kmm.plugin.api.CastMember;
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.SearchResult;
 import de.tiktak.kmm.plugin.api.SeasonResult;
@@ -55,7 +56,8 @@ class TvdbMapper {
                 JsonNodes.text(series, "image_url").flatMap(TvdbMapper::uri).orElse(null));
     }
 
-    TvShowResult toShow(JsonNode series, Optional<JsonNode> translation, List<JsonNode> episodes,
+    /** @param seasonType TVDB's order the episodes were fetched in, such as {@code official} */
+    TvShowResult toShow(JsonNode series, Optional<JsonNode> translation, String seasonType, List<JsonNode> episodes,
             List<JsonNode> translatedEpisodes) {
         Optional<LocalDate> firstAired = date(series, "firstAired");
         String originalName = JsonNodes.text(series, "name").orElse("");
@@ -77,7 +79,7 @@ class TvdbMapper {
                 .studios(network(series).stream().toList())
                 .actors(actors(series))
                 .uniqueIds(showIds(series))
-                .seasons(seasons(series))
+                .seasons(seasons(series, seasonType))
                 .episodes(episodes.stream()
                         .map(episode -> toEpisode(episode, translated.get(episode.path("id").asString())))
                         .toList())
@@ -140,10 +142,27 @@ class TvdbMapper {
                 .build();
     }
 
-    /** Seasons of the configured order; season titles only if TVDB knows one. */
-    private List<SeasonResult> seasons(JsonNode series) {
+    /**
+     * The orders TVDB knows for the TV show, such as {@code Aired Order} and {@code Netflix Order}.
+     */
+    static List<EpisodeOrder> episodeOrders(JsonNode series) {
+        return JsonNodes.elements(series.path("seasonTypes"))
+                .filter(type -> JsonNodes.text(type, "type").filter(TvdbMapper::isSeasonType).isPresent())
+                .map(type -> new EpisodeOrder(type.path("type").asString(),
+                        JsonNodes.text(type, "name").orElse(type.path("type").asString())))
+                .distinct()
+                .toList();
+    }
+
+    /** TVDB's keys of orders are short words; anything else would end up in the request path. */
+    static boolean isSeasonType(String seasonType) {
+        return seasonType.matches("[a-z]{1,30}");
+    }
+
+    /** Seasons of the given order; season titles only if TVDB knows one. */
+    private List<SeasonResult> seasons(JsonNode series, String seasonType) {
         return JsonNodes.elements(series.path("seasons"))
-                .filter(season -> settings.seasonType().equals(season.path("type").path("type").asString()))
+                .filter(season -> seasonType.equals(season.path("type").path("type").asString()))
                 .map(season -> new SeasonResult(season.path("number").asInt(),
                         JsonNodes.text(season, "name").orElse(null), null, null))
                 .collect(Collectors.toMap(SeasonResult::number, Function.identity(), (first, second) -> first,

@@ -22,6 +22,22 @@ You save the form with **Save**, just as for movies. In addition there are **Sta
 
 **Show missing episodes** asks the provider which episodes exist that you have no file for. This is only a display; KMM does not create anything for them.
 
+<a id="episode-order"></a>
+### Episode order
+
+Some TV shows count their seasons and episodes differently depending on the provider. A made-up show “The Big Heist” has two seasons of 15 episodes each when aired on TV, but four parts with shorter episodes on a streaming service. KMM matches the provider's data by the season and episode number in the file name, so the order must match your files.
+
+Under **Episode order** in the TV show view you choose the order for this TV show. When you open the list, KMM asks the providers which orders they know for the show:
+
+- **TVDB** offers e.g. “Aired Order”, “DVD Order”, “Absolute Order” or the order of a streaming service such as “Netflix Order”.
+- **TMDB** offers the aired order and so-called episode groups, e.g. “Netflix Order (Digital)”.
+
+Only providers at which the TV show is already identified are offered. If it is not yet, scrape it first. **Default (settings)** goes back to the order from the [Settings](settings.md#tv-shows).
+
+After you choose, KMM asks whether to fetch the titles and plots of all episodes in the new order right away. **OK** overwrites the existing texts, including manually edited ones. **Cancel** only changes the order, which then applies from the next scrape on. KMM does not rename the files.
+
+With an own order KMM always scrapes the TV show at the provider of that order, even if another one is preferred in the settings. The order is kept in KMM's database only, not in the NFO, because Kodi has no field for it.
+
 ## Scanning a TV show or season
 
 If you have added episodes to the folder of a TV show or deleted some, you do not need to scan the whole source. **Scan** at the top of the TV show view reads only the folder of this TV show again: new episodes are added, episodes without a file are removed from the library, and changed NFOs are taken over. **Scan** on a season does the same for the episodes of that season only. In the TV show list you can scan several selected TV shows at once.
@@ -56,7 +72,7 @@ Progress and report appear at the top of the TV show view. While a season or the
 
 **Search online** works as it does for [movies](scraping.md#online-search). The default is TVDB. The applied details first go into the form. When you save, KMM also completes the episodes, filling only their empty fields. A note above the buttons tells you beforehand how many episodes are affected.
 
-Which episode order applies (aired, DVD or absolute) is set under [Settings](settings.md#tv-shows). This only affects TVDB; TMDB only knows the aired order.
+Which episode order applies (aired, DVD or absolute) is set under [Settings](settings.md#tv-shows). This only affects TVDB. Other orders, such as a streaming service's, are chosen per TV show under [Episode order](tv-shows.md#episode-order).
 
 ## The episode view
 

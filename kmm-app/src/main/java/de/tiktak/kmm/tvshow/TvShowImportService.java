@@ -84,6 +84,9 @@ public class TvShowImportService {
             if (showImport.language() != null) {
                 show.changeMetadataLanguage(showImport.language());
             }
+            if (showImport.episodeOrdering() != null) {
+                show.changeEpisodeOrdering(showImport.episodeOrdering());
+            }
             show.markNfoNotRead();
             Optional<TvNfoState> nfo = nfoFiles.findShowNfo(show.directory());
             nfo.ifPresent(state -> show.markNfoSynchronized(state.modifiedAt()));

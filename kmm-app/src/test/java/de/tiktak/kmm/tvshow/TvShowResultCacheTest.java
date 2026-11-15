@@ -22,27 +22,35 @@ class TvShowResultCacheTest {
 
     @Test
     void keepsResultsPerScraperAndIdUntilTheyExpire() {
-        cache.put("tvdb", "73739", LOST);
+        cache.put("tvdb", "73739", null, LOST);
 
-        assertThat(cache.get("tvdb", "73739")).contains(LOST);
-        assertThat(cache.get("tmdb", "73739")).isEmpty();
+        assertThat(cache.get("tvdb", "73739", null)).contains(LOST);
+        assertThat(cache.get("tmdb", "73739", null)).isEmpty();
         now.set(NOW.plus(TvShowResultCache.TIME_TO_LIVE));
-        assertThat(cache.get("tvdb", "73739")).isEmpty();
+        assertThat(cache.get("tvdb", "73739", null)).isEmpty();
+    }
+
+    @Test
+    void keepsResultsPerEpisodeOrder() {
+        cache.put("tvdb", "73739", "alternate", LOST);
+
+        assertThat(cache.get("tvdb", "73739", "alternate")).contains(LOST);
+        assertThat(cache.get("tvdb", "73739", null)).isEmpty();
     }
 
     @Test
     void dropsTheOldestEntryWhenFull() {
         for (int index = 0; index < TvShowResultCache.MAX_ENTRIES; index++) {
             now.set(NOW.plusSeconds(index));
-            cache.put("tvdb", String.valueOf(index), LOST);
+            cache.put("tvdb", String.valueOf(index), null, LOST);
         }
         now.set(NOW.plusSeconds(TvShowResultCache.MAX_ENTRIES));
 
-        cache.put("tvdb", "neu", LOST);
+        cache.put("tvdb", "neu", null, LOST);
 
-        assertThat(cache.get("tvdb", "0")).isEmpty();
-        assertThat(cache.get("tvdb", "1")).contains(LOST);
-        assertThat(cache.get("tvdb", "neu")).contains(LOST);
+        assertThat(cache.get("tvdb", "0", null)).isEmpty();
+        assertThat(cache.get("tvdb", "1", null)).contains(LOST);
+        assertThat(cache.get("tvdb", "neu", null)).contains(LOST);
     }
 
     /** Clock that the test can set. */

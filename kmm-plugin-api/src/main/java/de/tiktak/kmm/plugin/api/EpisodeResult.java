@@ -15,7 +15,7 @@ import lombok.Builder;
  * @param uniqueIds  IDs of the episode per provider, e.g. {@code tvdb -> 127131}
  * @param thumb      still image of the episode or {@code null}
  */
-@Builder
+@Builder(toBuilder = true)
 public record EpisodeResult(
         int season,
         int episode,

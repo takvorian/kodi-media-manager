@@ -23,6 +23,7 @@ import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
 import de.tiktak.kmm.plugin.ScraperRegistry;
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -74,7 +75,8 @@ public class TvShowScrapeService {
     @Transactional(readOnly = true)
     public TvShowProposal proposal(long showId, String scraperId, String providerId) {
         TvShow show = requireShow(showId);
-        TvShowResult scraped = inLanguageOf(showId, () -> fetch(scraper(scraperId), providerId));
+        TvShowScraper scraper = scraper(scraperId);
+        TvShowResult scraped = inLanguageOf(showId, () -> fetch(scraper, providerId, orderOf(show, scraper)));
         Set<EpisodeKey> known = scraped.episodes().stream().map(EpisodeKey::of).collect(Collectors.toSet());
         int matched = (int) episodes(show).stream().filter(episode -> known.contains(EpisodeKey.of(episode))).count();
         return new TvShowProposal(TvShowScrapeMerger.mergeShow(show.metadata(), scraped), matched,
@@ -105,7 +107,7 @@ public class TvShowScrapeService {
         return inLanguageOf(showId, () -> {
             TvShowMetadata current = metadataService.currentMetadata(showId);
             TvShow show = requireShow(showId);
-            TvShowScraper scraper = preferredReadyScraper().orElseThrow(TvShowProblemException::noScraper);
+            TvShowScraper scraper = automaticScraper(show).orElseThrow(TvShowProblemException::noScraper);
             TvShowResult scraped = identify(scraper, show);
             String providerId = scraped.uniqueIds().get(scraper.id());
             if (providerId == null) {
@@ -145,7 +147,7 @@ public class TvShowScrapeService {
     public TvShowAutoScrapeOutcome refetch(long showId, EpisodeScope scope) {
         return inLanguageOf(showId, () -> {
             TvShow show = requireShow(showId);
-            TvShowScraper scraper = preferredReadyScraper().orElseThrow(TvShowProblemException::noScraper);
+            TvShowScraper scraper = automaticScraper(show).orElseThrow(TvShowProblemException::noScraper);
             if (knownIds(show.metadata()).isEmpty()) {
                 throw TvShowProblemException.notIdentified(scraper, show.getTitle());
             }
@@ -164,7 +166,7 @@ public class TvShowScrapeService {
      */
     private EpisodeFillResult fill(TvShow show, TvShowScraper scraper, String providerId, boolean overwrite,
             EpisodeScope scope) {
-        TvShowResult scraped = fetch(scraper, providerId);
+        TvShowResult scraped = fetch(scraper, providerId, orderOf(show, scraper));
         List<String> failedFiles = new ArrayList<>();
         fillShowExtras(show, scraped, failedFiles, overwrite, scope);
         Map<EpisodeKey, EpisodeResult> byNumber = scraped.episodes().stream()
@@ -230,7 +232,7 @@ public class TvShowScrapeService {
     private TvShowAutoScrapeOutcome scrapeMissingInLanguage(long showId, EpisodeScope scope) {
         TvShowMetadata current = metadataService.currentMetadata(showId);
         TvShow show = requireShow(showId);
-        Optional<TvShowScraper> preferred = preferredReadyScraper();
+        Optional<TvShowScraper> preferred = automaticScraper(show);
         if (preferred.isEmpty()) {
             return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_SCRAPER);
         }
@@ -245,13 +247,80 @@ public class TvShowScrapeService {
             if (providerId == null) {
                 return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_MATCH);
             }
-            cache.put(scraper.id(), providerId, scraped.get());
+            cache.put(scraper.id(), providerId, null, scraped.get());
             metadataService.updateShow(showId, TvShowScrapeMerger.mergeShow(current, scraped.get()));
             metadataService.storeLanguageInNfo(showId);
             status = TvShowAutoScrapeOutcome.Status.SCRAPED;
         }
         EpisodeFillResult filled = fill(show, scraper, providerId, false, scope);
         return new TvShowAutoScrapeOutcome(status, filled.updated(), filled.failedFiles());
+    }
+
+    /**
+     * For automatic scraping: the scraper of the TV show's own episode order if it is set up, so the episodes are
+     * numbered as in the files; otherwise the preferred one.
+     */
+    private Optional<TvShowScraper> automaticScraper(TvShow show) {
+        return show.episodeOrdering()
+                .flatMap(ordering -> scraperRegistry.tvShowScraper(ordering.scraperId()))
+                .filter(scraper -> scraper.missingConfiguration().isEmpty())
+                .or(this::preferredReadyScraper);
+    }
+
+    /** @return the TV show's own episode order at this scraper, {@code null} for the one from the settings */
+    private static String orderOf(TvShow show, TvShowScraper scraper) {
+        return show.episodeOrdering().map(ordering -> ordering.orderFor(scraper.id())).orElse(null);
+    }
+
+    /**
+     * The episode orders the set-up scrapers know for the TV show, for each scraper at which the TV show has an ID.
+     *
+     * @throws TvShowProblemException if a provider reports an error
+     */
+    @Transactional(readOnly = true)
+    public List<ScraperEpisodeOrders> episodeOrders(long showId) {
+        TvShow show = requireShow(showId);
+        Map<String, String> ids = knownIds(show.metadata());
+        List<ScraperEpisodeOrders> result = new ArrayList<>();
+        for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
+            String providerId = ids.get(scraper.id());
+            if (providerId == null || scraper.missingConfiguration().isPresent()) {
+                continue;
+            }
+            List<EpisodeOrder> orders = call(scraper, s -> s.episodeOrders(providerId));
+            if (!orders.isEmpty()) {
+                result.add(new ScraperEpisodeOrders(scraper.id(), scraper.displayName(), orders));
+            }
+        }
+        return result;
+    }
+
+    /**
+     * Checks that the scraper knows the order for the TV show and returns it with the provider's name.
+     *
+     * @throws TvShowProblemException if the scraper or the order is unknown or the provider reports an error
+     */
+    @Transactional(readOnly = true)
+    public TvEpisodeOrdering requireEpisodeOrder(long showId, String scraperId, String orderId) {
+        TvShow show = requireShow(showId);
+        TvShowScraper scraper = scraper(scraperId);
+        String providerId = knownIds(show.metadata()).get(scraper.id());
+        if (providerId == null) {
+            throw TvShowProblemException.notIdentified(scraper, show.getTitle());
+        }
+        return call(scraper, s -> s.episodeOrders(providerId)).stream()
+                .filter(order -> order.id().equals(orderId))
+                .findFirst()
+                .map(order -> new TvEpisodeOrdering(scraper.id(), order.id(), order.name()))
+                .orElseThrow(() -> TvShowProblemException.unknownEpisodeOrder(scraper, orderId));
+    }
+
+    /**
+     * @param scraperId   the scraper
+     * @param scraperName its name for display
+     * @param orders      the orders it knows for the TV show
+     */
+    public record ScraperEpisodeOrders(String scraperId, String scraperName, List<EpisodeOrder> orders) {
     }
 
     /** The configured TV show scraper, otherwise the first one set up. */
@@ -298,7 +367,11 @@ public class TvShowScrapeService {
     private EpisodeThumbs episodeThumbs(Episode episode, TvShow show) {
         List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
         List<LocalizedText> warnings = new ArrayList<>();
+        Optional<TvEpisodeOrdering> ordering = show.episodeOrdering();
         for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
+            if (ordering.isPresent() && !ordering.get().scraperId().equals(scraper.id())) {
+                continue; // its numbers follow another order and would show the stills of other episodes
+            }
             Optional<LocalizedText> missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
                 warnings.add(missing.get());
@@ -419,22 +492,28 @@ public class TvShowScrapeService {
     private TvShowResult identify(TvShowScraper scraper, TvShow show) {
         Map<String, String> ids = knownIds(show.metadata());
         String providerId = ids.get(scraper.id());
+        String order = orderOf(show, scraper);
         if (providerId != null) {
-            return fetch(scraper, providerId);
+            return fetch(scraper, providerId, order);
         }
         ScrapeRequest request = new ScrapeRequest(MediaType.TV_SHOW, show.getTitle(), show.getReleaseYear(), ids);
         TvShowResult scraped = call(scraper, s -> s.scrape(request))
                 .orElseThrow(() -> TvShowProblemException.notIdentified(scraper, show.getTitle()));
-        Optional.ofNullable(scraped.uniqueIds().get(scraper.id()))
-                .ifPresent(id -> cache.put(scraper.id(), id, scraped));
+        Optional<String> foundId = Optional.ofNullable(scraped.uniqueIds().get(scraper.id()));
+        foundId.ifPresent(id -> cache.put(scraper.id(), id, null, scraped));
+        if (order != null && foundId.isPresent()) {
+            return fetch(scraper, foundId.get(), order);
+        }
         return scraped;
     }
 
-    private TvShowResult fetch(TvShowScraper scraper, String providerId) {
-        return cache.get(scraper.id(), providerId).orElseGet(() -> {
-            TvShowResult scraped = call(scraper, s -> s.fetch(providerId))
+    /** @param episodeOrder the provider's key of the episode order, {@code null} for the one from the settings */
+    private TvShowResult fetch(TvShowScraper scraper, String providerId, String episodeOrder) {
+        return cache.get(scraper.id(), providerId, episodeOrder).orElseGet(() -> {
+            TvShowResult scraped = call(scraper, s -> episodeOrder == null ? s.fetch(providerId)
+                    : s.fetch(providerId, episodeOrder))
                     .orElseThrow(() -> TvShowProblemException.notFoundAtProvider(scraper, providerId));
-            cache.put(scraper.id(), providerId, scraped);
+            cache.put(scraper.id(), providerId, episodeOrder, scraped);
             return scraped;
         });
     }

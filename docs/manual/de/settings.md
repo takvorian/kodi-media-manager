@@ -25,7 +25,7 @@ Gilt für Filme, wenn weder der Film noch seine Quelle eine eigene Sprache haben
 
 ## Serien
 
-Dieselben beiden Felder für Serien, dazu die **Episodenreihenfolge**: Ausstrahlung, DVD/Blu-ray oder Absolut (ohne Staffeln). Das gilt für das Scrapen und wirkt nur bei TVDB.
+Dieselben beiden Felder für Serien, dazu die **Episodenreihenfolge**: Ausstrahlung, DVD/Blu-ray oder Absolut (ohne Staffeln). Das gilt für das Scrapen und wirkt nur bei TVDB. Für einzelne Serien wählst du eine andere Zählung in der Serienansicht, siehe [Episoden-Reihenfolge](tv-shows.md#episode-order).
 
 ## Technische Angaben
 

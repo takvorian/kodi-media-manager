@@ -1,6 +1,7 @@
 package de.tiktak.kmm.plugin.tmdb;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.assertj.core.api.Assertions.tuple;
 
 import java.net.URI;
@@ -13,6 +14,7 @@ import org.junit.jupiter.api.Test;
 
 import de.tiktak.kmm.plugin.api.CastMember;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ProviderRating;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -47,6 +49,34 @@ class TmdbTvShowScraperTest {
     @AfterEach
     void tearDown() {
         tmdb.close();
+    }
+
+    @Test
+    void listsTheAiredOrderAndTheEpisodeGroups() {
+        tmdb.respond("/3/tv/4607/episode_groups", "tv-4607-episode-groups.json");
+
+        assertThat(scraper.episodeOrders("4607")).containsExactly(new EpisodeOrder("aired", "Original air date"),
+                new EpisodeOrder("5eb730dfca7ec6001f7beb51", "Netflix Order (Digital)"));
+    }
+
+    @Test
+    void fetchesTheEpisodesNumberedAsInTheEpisodeGroup() {
+        tmdb.respond("/3/tv/episode_group/5eb730dfca7ec6001f7beb51", "episode-group-5eb730dfca7ec6001f7beb51.json");
+
+        TvShowResult lost = scraper.fetch("4607", "5eb730dfca7ec6001f7beb51").orElseThrow();
+
+        assertThat(lost.seasons()).extracting(SeasonResult::number, SeasonResult::title)
+                .containsExactly(tuple(1, "Teil 1"), tuple(2, "Teil 2"));
+        assertThat(lost.episodes()).extracting(EpisodeResult::season, EpisodeResult::episode, EpisodeResult::title)
+                .containsExactly(tuple(1, 1, "Gestrandet (2)"), tuple(2, 1, "Gestrandet (1)"));
+        assertThat(lost.episodes().get(1).directors()).as("details of the aired order stay")
+                .containsExactly("J. J. Abrams");
+    }
+
+    @Test
+    void fetchesTheAiredOrderWithoutEpisodeGroup() {
+        assertThat(scraper.fetch("4607", "aired").orElseThrow().episodes()).hasSize(3);
+        assertThatThrownBy(() -> scraper.fetch("4607", "../tv/1")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

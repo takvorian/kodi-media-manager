@@ -27,4 +27,9 @@
     {"id": 10, "number": 0, "type": {"type": "official"}},
     {"id": 11, "number": 1, "name": "Die Insel", "type": {"type": "official"}},
     {"number": 1, "type": {"type": "dvd"}},
-    {"number": 1, "type": {"type": "official"}}]}}
+    {"number": 1, "type": {"type": "official"}},
+    {"id": 12, "number": 2, "name": "Teil 2", "type": {"type": "alternate"}}],
+  "seasonTypes": [
+    {"id": 1, "name": "Aired Order", "type": "official", "alternateName": null},
+    {"id": 6, "name": "Netflix Order", "type": "alternate", "alternateName": null},
+    {"id": 7, "name": "Fehlerhaft", "type": "../search", "alternateName": null}]}}

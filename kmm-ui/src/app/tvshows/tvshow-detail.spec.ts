@@ -2,6 +2,7 @@ import { TestRequest } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { provideI18nTesting } from '../i18n/testing';
 import { LanguageSelect } from '../shared/language-select';
+import { EpisodeOrderSelect } from './episode-order-select';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -1078,6 +1079,78 @@ describe('TvShowDetail', () => {
       fixture.detectChanges();
 
       expect(languageSelect().disabled()).toBe(false);
+    });
+  });
+
+  describe('episode order', () => {
+    const NETFLIX = { scraperId: 'tvdb', orderId: 'alternate', name: 'Netflix Order' };
+
+    function orderSelect(): EpisodeOrderSelect {
+      return fixture.debugElement.query(By.directive(EpisodeOrderSelect)).componentInstance;
+    }
+
+    function request(): TestRequest {
+      return httpTesting.expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/episode-ordering` });
+    }
+
+    it('refetches the episodes in the chosen order when confirmed and reloads after the job', async () => {
+      await load(alf);
+      expect(orderSelect().value()).toBeNull();
+
+      orderSelect().chosen.emit(NETFLIX);
+
+      expect(confirmMessages.at(-1)).toContain('„Netflix Order“');
+      const change = request();
+      expect(change.request.body).toEqual({
+        scraperId: 'tvdb',
+        orderId: 'alternate',
+        refetch: true,
+      });
+      const running = job({ id: 'order', key: 'tvshows-batch', status: 'RUNNING' });
+      change.flush(running);
+      events.emit(running);
+      fixture.detectChanges();
+      expect(element().querySelector('.ordering-running')).not.toBeNull();
+      expect(orderSelect().disabled()).toBe(true);
+
+      events.emit(
+        job({
+          id: 'order',
+          key: 'tvshows-batch',
+          status: 'SUCCEEDED',
+          result: { changed: 1, unchanged: 0, failed: 0, failures: [] },
+        }),
+      );
+      await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, {
+        ...alf,
+        episodeOrdering: NETFLIX,
+      });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(orderSelect().value()).toEqual(NETFLIX);
+      expect(element().querySelector('.ordering-running')).toBeNull();
+    });
+
+    it('changes only the order when not confirmed', async () => {
+      await load(alf);
+      confirmAnswer = false;
+
+      orderSelect().chosen.emit(null);
+
+      expect(request().request.body).toEqual({ scraperId: null, orderId: null, refetch: false });
+    });
+
+    it('asks to save unsaved changes first', async () => {
+      await load(alf);
+      const title = element().querySelector<HTMLInputElement>('[name="title"]')!;
+      title.value = 'Geändert';
+      title.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+
+      orderSelect().chosen.emit(NETFLIX);
+
+      httpTesting.expectNone({ method: 'PUT', url: `${TVSHOWS_URL}/3/episode-ordering` });
     });
   });
 

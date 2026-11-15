@@ -19,6 +19,8 @@ import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberActor;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
 import de.tiktak.kmm.migration.ember.library.EmberStreams;
 import de.tiktak.kmm.migration.ember.library.EmberTvShow;
+import de.tiktak.kmm.settings.EpisodeOrdering;
+import de.tiktak.kmm.tvshow.TvEpisodeOrdering;
 import de.tiktak.kmm.tvshow.EpisodeImport;
 import de.tiktak.kmm.tvshow.TvActor;
 import de.tiktak.kmm.tvshow.TvRating;
@@ -42,7 +44,7 @@ class EmberTvShowMapperTest {
                 .userRating(11)
                 .build();
 
-        TvShowImport imported = EmberTvShowMapper.toImport(show, 5, DIRECTORY);
+        TvShowImport imported = EmberTvShowMapper.toImport(show, 5, DIRECTORY, EpisodeOrdering.AIRED);
 
         assertThat(imported.sourceId()).isEqualTo(5);
         assertThat(imported.directoryPath()).isEqualTo(DIRECTORY);
@@ -66,7 +68,7 @@ class EmberTvShowMapperTest {
     void usesTheDirectoryNameWithoutTitle() {
         EmberTvShow show = EmberTvShow.builder().id(1).path("\\\\nas\\serien\\Lost").build();
 
-        assertThat(EmberTvShowMapper.toImport(show, 5, DIRECTORY).metadata().title()).isEqualTo("Lost");
+        assertThat(EmberTvShowMapper.toImport(show, 5, DIRECTORY, EpisodeOrdering.AIRED).metadata().title()).isEqualTo("Lost");
         assertThat(EmberTvShowMapper.displayName(show)).isEqualTo("\\\\nas\\serien\\Lost");
     }
 
@@ -113,5 +115,16 @@ class EmberTvShowMapperTest {
         assertThat(imported.metadata().title()).isEqualTo("Episode 4");
         assertThat(imported.addedAt()).isNull();
         assertThat(imported.extras().streams().isEmpty()).isTrue();
+    }
+
+    @Test
+    void takesOverEmbersEpisodeOrderOnlyWhereItDiffersFromTheSettings() {
+        assertThat(EmberTvShowMapper.episodeOrdering(1, EpisodeOrdering.AIRED))
+                .isEqualTo(new TvEpisodeOrdering("tvdb", "dvd", "DVD Order"));
+        assertThat(EmberTvShowMapper.episodeOrdering(0, EpisodeOrdering.DVD))
+                .isEqualTo(new TvEpisodeOrdering("tvdb", "official", "Aired Order"));
+        assertThat(EmberTvShowMapper.episodeOrdering(2, EpisodeOrdering.ABSOLUTE)).isNull();
+        assertThat(EmberTvShowMapper.episodeOrdering(3, EpisodeOrdering.AIRED)).as("day of year").isNull();
+        assertThat(EmberTvShowMapper.episodeOrdering(null, EpisodeOrdering.AIRED)).isNull();
     }
 }

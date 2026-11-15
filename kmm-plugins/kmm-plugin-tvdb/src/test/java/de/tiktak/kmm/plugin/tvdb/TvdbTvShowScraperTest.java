@@ -23,6 +23,7 @@ import org.junit.jupiter.params.provider.CsvSource;
 import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.i18n.Messages;
 import de.tiktak.kmm.plugin.api.CastMember;
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -160,6 +161,32 @@ class TvdbTvShowScraperTest {
 
         assertThat(lost.seasons()).extracting(SeasonResult::number).containsExactly(1);
         assertThat(tvdb.requests()).extracting(FakeTvdbServer.Request::path).contains(SERIES + "/episodes/dvd");
+    }
+
+    @Test
+    void listsTheEpisodeOrdersTvdbKnowsForTheTvShow() {
+        assertThat(scraper.episodeOrders("73739")).containsExactly(new EpisodeOrder("official", "Aired Order"),
+                new EpisodeOrder("alternate", "Netflix Order"));
+        assertThat(scraper.episodeOrders("unbekannt")).isEmpty();
+    }
+
+    @Test
+    void fetchesTheTvShowInTheChosenEpisodeOrder() {
+        tvdb.respond(SERIES + "/episodes/alternate", "episodes-73739-page1.json");
+        tvdb.respond(SERIES + "/episodes/alternate/deu", "episodes-73739-deu.json");
+
+        TvShowResult lost = scraper.fetch("73739", "alternate").orElseThrow();
+
+        assertThat(lost.seasons()).extracting(SeasonResult::number, SeasonResult::title)
+                .containsExactly(tuple(2, "Teil 2"));
+        assertThat(tvdb.requests()).extracting(FakeTvdbServer.Request::path)
+                .contains(SERIES + "/episodes/alternate", SERIES + "/episodes/alternate/deu")
+                .doesNotContain(SERIES + "/episodes/official");
+    }
+
+    @Test
+    void rejectsAnEpisodeOrderThatIsNoTvdbKey() {
+        assertThatThrownBy(() -> scraper.fetch("73739", "../search")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test

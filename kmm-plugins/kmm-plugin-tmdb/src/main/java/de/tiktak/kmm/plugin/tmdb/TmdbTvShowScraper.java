@@ -7,6 +7,7 @@ import java.util.Set;
 
 import org.pf4j.Extension;
 
+import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.SearchQuery;
@@ -16,8 +17,8 @@ import de.tiktak.kmm.plugin.api.TvShowScraper;
 import tools.jackson.databind.JsonNode;
 
 /**
- * TV show scraper based on TMDB. TMDB only knows the aired order; the setting for DVD or absolute order has no effect
- * here.
+ * TV show scraper based on TMDB. Besides the aired order TMDB knows episode groups, such as a streaming service's
+ * order, which can be chosen per TV show; the setting for DVD or absolute order has no effect here.
  */
 @Extension
 public class TmdbTvShowScraper extends AbstractTmdbScraper implements TvShowScraper {
@@ -41,8 +42,35 @@ public class TmdbTvShowScraper extends AbstractTmdbScraper implements TvShowScra
 
     @Override
     public Optional<TvShowResult> fetch(String providerId) {
+        return fetch(providerId, null);
+    }
+
+    /**
+     * @param episodeOrder the ID of an episode group, or {@code null} or {@code aired} for the aired order
+     */
+    @Override
+    public Optional<TvShowResult> fetch(String providerId, String episodeOrder) {
         TmdbApi api = api();
-        return api.tvShow(providerId).map(show -> mapper().toShow(show, seasons(api, providerId, show)));
+        Optional<JsonNode> group = Optional.empty();
+        if (episodeOrder != null && !TmdbEpisodeGroups.AIRED.equals(episodeOrder)) {
+            if (!TmdbEpisodeGroups.isGroupId(episodeOrder)) {
+                throw new IllegalArgumentException("Unknown TMDB episode group: " + episodeOrder);
+            }
+            group = api.tvEpisodeGroup(episodeOrder);
+            if (group.isEmpty()) {
+                return Optional.empty();
+            }
+        }
+        Optional<JsonNode> episodeGroup = group;
+        return api.tvShow(providerId).map(show -> {
+            TvShowResult aired = mapper().toShow(show, seasons(api, providerId, show));
+            return episodeGroup.map(chosen -> TmdbEpisodeGroups.renumber(aired, chosen)).orElse(aired);
+        });
+    }
+
+    @Override
+    public List<EpisodeOrder> episodeOrders(String providerId) {
+        return api().tvEpisodeGroups(providerId).map(TmdbEpisodeGroups::orders).orElse(List.of());
     }
 
     @Override

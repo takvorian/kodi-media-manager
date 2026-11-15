@@ -495,6 +495,17 @@
         "renameSelected": "{count} umbenennen",
         "allUnchanged": "Alle {count} Serien heißen schon so."
       }
+    },
+    "ordering": {
+      "label": "Episoden-Reihenfolge",
+      "default": "Standard (Einstellungen)",
+      "hint": "Muss zu den Staffel- und Episodennummern der Dateien passen.",
+      "loading": "Zählweisen werden geladen …",
+      "none": "Die Serie ist noch bei keinem Anbieter zugeordnet. Bitte zuerst scrapen.",
+      "running": "Die Episoden-Reihenfolge wird geändert …",
+      "changeTo": "Die Episoden-Reihenfolge wird auf „{name}“ geändert.",
+      "changeToDefault": "Die Episoden-Reihenfolge wird auf den Standard aus den Einstellungen geändert.",
+      "refetch": "Sollen Titel und Inhaltsangaben aller Episoden jetzt in dieser Zählung neu geholt werden?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung passen.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur die Reihenfolge ändern, sie gilt ab dem nächsten Scrapen."
     }
   },
   "sources": {
@@ -1327,6 +1338,10 @@
         "title": "Treffer nicht gefunden",
         "detail": "{scraper} kennt den Eintrag „{id}“ nicht."
       },
+      "unknownEpisodeOrder": {
+        "title": "Episoden-Reihenfolge nicht gefunden",
+        "detail": "{scraper} kennt die Episoden-Reihenfolge „{order}“ für diese Serie nicht."
+      },
       "notIdentified": {
         "title": "Serie nicht zugeordnet",
         "detail": "„{title}“ ist bei {scraper} nicht eindeutig zugeordnet. Bitte zuerst über die Online-Suche übernehmen."
@@ -1367,7 +1382,8 @@
         "languageJobTitle": "Sprache von {count, plural, one {# Serie} other {# Serien}} ändern",
         "scanJobTitle": "{count, plural, one {# Serie} other {# Serien}} scannen",
         "progress": "Serie {id}",
-        "failure": "Serie {id}: {message}"
+        "failure": "Serie {id}: {message}",
+        "episodeOrderingJobTitle": "Episoden-Reihenfolge ändern"
       },
       "thumbs": {
         "scraperFailed": "{scraper}: {message}"

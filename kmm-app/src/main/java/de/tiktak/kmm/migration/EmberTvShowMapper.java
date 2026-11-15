@@ -3,14 +3,17 @@ package de.tiktak.kmm.migration;
 import java.nio.file.Path;
 import java.time.ZoneId;
 import java.util.List;
+import java.util.Map;
 
 import de.tiktak.kmm.migration.ember.library.EmberEpisode;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberActor;
 import de.tiktak.kmm.migration.ember.library.EmberMovie.EmberRating;
 import de.tiktak.kmm.migration.ember.library.EmberTvShow;
+import de.tiktak.kmm.settings.EpisodeOrdering;
 import de.tiktak.kmm.tvshow.EpisodeExtras;
 import de.tiktak.kmm.tvshow.EpisodeImport;
 import de.tiktak.kmm.tvshow.EpisodeMetadata;
+import de.tiktak.kmm.tvshow.TvEpisodeOrdering;
 import de.tiktak.kmm.tvshow.TvActor;
 import de.tiktak.kmm.tvshow.TvRating;
 import de.tiktak.kmm.tvshow.TvShowExtras;
@@ -30,10 +33,20 @@ final class EmberTvShowMapper {
     private EmberTvShowMapper() {
     }
 
+    /** Ember's episode orders, by its number, as TVDB orders, which Ember scraped them with. */
+    private static final Map<Integer, EpisodeOrdering> ORDERINGS = Map.of(0, EpisodeOrdering.AIRED,
+            1, EpisodeOrdering.DVD, 2, EpisodeOrdering.ABSOLUTE);
+    private static final Map<EpisodeOrdering, TvEpisodeOrdering> TVDB_ORDERS = Map.of(
+            EpisodeOrdering.AIRED, new TvEpisodeOrdering(TVDB, "official", "Aired Order"),
+            EpisodeOrdering.DVD, new TvEpisodeOrdering(TVDB, "dvd", "DVD Order"),
+            EpisodeOrdering.ABSOLUTE, new TvEpisodeOrdering(TVDB, "absolute", "Absolute Order"));
+
     /**
      * @param directoryPath folder of the TV show on the target system
+     * @param ordering      KMM's episode order from the settings; Ember's order of the TV show only becomes its own
+     *                      if it differs
      */
-    static TvShowImport toImport(EmberTvShow show, long sourceId, String directoryPath) {
+    static TvShowImport toImport(EmberTvShow show, long sourceId, String directoryPath, EpisodeOrdering ordering) {
         TvShowMetadata metadata = new TvShowMetadata(
                 show.title() != null ? show.title() : lastSegment(directoryPath),
                 show.originalTitle(),
@@ -52,7 +65,14 @@ final class EmberTvShowMapper {
                 show.uniqueIds().get(IMDB),
                 EmberMappings.userRating(show.userRating())).withinLimits();
         TvShowExtras extras = new TvShowExtras(actors(show.actors()), ratings(show.ratings()), show.seasonTitles());
-        return new TvShowImport(sourceId, directoryPath, metadata, extras, EmberMappings.language(show.language()));
+        return new TvShowImport(sourceId, directoryPath, metadata, extras, EmberMappings.language(show.language()),
+                episodeOrdering(show.ordering(), ordering));
+    }
+
+    /** KMM does not know Ember's order by day of year; such TV shows keep the order from the settings. */
+    static TvEpisodeOrdering episodeOrdering(Integer emberOrdering, EpisodeOrdering settings) {
+        EpisodeOrdering ordering = emberOrdering == null ? null : ORDERINGS.get(emberOrdering);
+        return ordering == null || ordering == settings ? null : TVDB_ORDERS.get(ordering);
     }
 
     /**

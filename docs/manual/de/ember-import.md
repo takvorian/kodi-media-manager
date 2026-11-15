@@ -22,6 +22,7 @@ Darunter wählst du, was du übernehmen willst:
 
 - **Serien und Episoden:** Episoden ohne Datei bleiben außen vor.
 - **Sprachen:** die jeder Quelle, jedes Films und jeder Serie, siehe [Sprache je Eintrag](scraping.md#sprache-je-quelle-und-eintrag). Eine vorhandene Quelle behält eine eigene Sprache. Bereits importierte Einträge bekommen sie durch einen neuen Import.
+- **Episoden-Reihenfolge:** die jeder Serie, wenn sie von der Reihenfolge in den Einstellungen abweicht, siehe [Episoden-Reihenfolge](tv-shows.md#episode-order). Embers Zählung nach Tag im Jahr kennt KMM nicht, solche Serien bekommen die Reihenfolge aus den Einstellungen.
 - **Einstellungen:** Sprache, Dateiendungen, ausgeschlossene Ordner und Proxy. Das Proxy-Passwort wird nicht übernommen.
 - **Kodi-Geräte** mit Zugangsdaten. Ihre Pfade laufen über die Zuordnung oben.
 

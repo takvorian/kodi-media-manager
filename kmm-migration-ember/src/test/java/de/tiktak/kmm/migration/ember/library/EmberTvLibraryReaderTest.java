@@ -50,6 +50,7 @@ class EmberTvLibraryReaderTest {
 
         assertThat(lost.sourceId()).isEqualTo(1);
         assertThat(lost.language()).isEqualTo("fr-FR");
+        assertThat(lost.ordering()).isEqualTo(1);
         assertThat(lost.path()).isEqualTo("\\\\nas\\serien\\Lost");
         assertThat(lost.title()).isEqualTo("Lost");
         assertThat(lost.originalTitle()).isEqualTo("Lost");

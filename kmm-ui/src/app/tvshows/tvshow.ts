@@ -104,6 +104,23 @@ export interface TvShowDetails {
   readonly trailer: string | null;
   /** Own language, also for the episodes; without one, that of the source or the settings applies. */
   readonly language: string | null;
+  /** Own episode order; without one, the one from the settings applies. */
+  readonly episodeOrdering?: TvEpisodeOrdering | null;
+}
+
+/** An order in which a provider counts the seasons and episodes, e.g. TVDB's „Netflix Order“. */
+export interface TvEpisodeOrdering {
+  readonly scraperId: string;
+  /** The provider's key of the order. */
+  readonly orderId: string;
+  readonly name: string;
+}
+
+/** The orders one provider knows for a TV show. */
+export interface ScraperEpisodeOrders {
+  readonly scraperId: string;
+  readonly scraperName: string;
+  readonly orders: readonly { readonly id: string; readonly name: string }[];
 }
 
 /** Editable metadata of an episode; season and episode are part of the file name. */

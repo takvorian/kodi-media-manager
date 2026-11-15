@@ -22,6 +22,7 @@ Below that, you choose what to take over:
 
 - **TV shows and episodes:** episodes without a file are left out.
 - **Languages:** those of every source, movie and TV show, see [Language per entry](scraping.md#language-per-source-and-entry). An existing source keeps its own language. Entries that were already imported get it through a new import.
+- **Episode order:** that of every TV show if it differs from the order in the settings, see [Episode order](tv-shows.md#episode-order). KMM does not know Ember's order by day of year; such TV shows get the order from the settings.
 - **Settings:** language, file extensions, excluded folders and proxy. The proxy password is not taken over.
 - **Kodi devices** with credentials. Their paths go through the mapping above.
 
