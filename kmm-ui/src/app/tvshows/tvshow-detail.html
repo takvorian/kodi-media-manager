@@ -124,26 +124,28 @@
         <dt>{{ 'fields.added' | transloco }}</dt>
         <dd>{{ details.addedAt | translocoDate: shortDateTime }}</dd>
       </dl>
-      <app-language-select
-        class="language-select"
-        [value]="details.language"
-        [defaultLabel]="'tvshows.languageDefault' | transloco"
-        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
-        (chosen)="changeLanguage($event)"
-      />
-      <app-episode-order-select
-        class="ordering-select"
-        [showId]="details.id"
-        [value]="details.episodeOrdering ?? null"
-        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
-        (chosen)="changeEpisodeOrdering($event)"
-      />
-      <app-scraper-select
-        class="scraper-select"
-        [choice]="scraperChoice.value() ?? null"
-        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
-        (chosen)="changeScraper($event)"
-      />
+      <div class="entry-selects">
+        <app-language-select
+          class="language-select"
+          [value]="details.language"
+          [defaultLabel]="'tvshows.languageDefault' | transloco"
+          [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
+          (chosen)="changeLanguage($event)"
+        />
+        <app-scraper-select
+          class="scraper-select"
+          [choice]="scraperChoice.value() ?? null"
+          [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
+          (chosen)="changeScraper($event)"
+        />
+        <app-episode-order-select
+          class="ordering-select"
+          [showId]="details.id"
+          [value]="details.episodeOrdering ?? null"
+          [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
+          (chosen)="changeEpisodeOrdering($event)"
+        />
+      </div>
     </mat-card-content>
   </mat-card>
 

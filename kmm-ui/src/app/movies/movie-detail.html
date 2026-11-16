@@ -137,19 +137,21 @@
           }
         </dd>
       </dl>
-      <app-language-select
-        class="language-select"
-        [value]="details.language"
-        [defaultLabel]="'movies.language.default' | transloco"
-        [disabled]="!!scrapeJob() || !!languageJob() || !!scraperJob()"
-        (chosen)="changeLanguage($event)"
-      />
-      <app-scraper-select
-        class="scraper-select"
-        [choice]="scraperChoice.value() ?? null"
-        [disabled]="!!scrapeJob() || !!languageJob() || !!scraperJob()"
-        (chosen)="changeScraper($event)"
-      />
+      <div class="entry-selects">
+        <app-language-select
+          class="language-select"
+          [value]="details.language"
+          [defaultLabel]="'movies.language.default' | transloco"
+          [disabled]="!!scrapeJob() || !!languageJob() || !!scraperJob()"
+          (chosen)="changeLanguage($event)"
+        />
+        <app-scraper-select
+          class="scraper-select"
+          [choice]="scraperChoice.value() ?? null"
+          [disabled]="!!scrapeJob() || !!languageJob() || !!scraperJob()"
+          (chosen)="changeScraper($event)"
+        />
+      </div>
     </mat-card-content>
   </mat-card>
 

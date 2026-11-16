@@ -32,7 +32,7 @@ Unter **Episoden-Reihenfolge** in der Serienansicht wählst du die Zählung für
 - **TVDB** bietet z. B. „Aired Order“ (Ausstrahlung), „DVD Order“, „Absolute Order“ oder die Zählung eines Streamingdienstes wie „Netflix Order“.
 - **TMDB** bietet die Ausstrahlung und sogenannte Episodengruppen, z. B. „Netflix Order (Digital)“.
 
-Hat die Serie einen eigenen [Scraper](tv-shows.md#own-scraper), bietet KMM nur dessen Zählweisen an und sucht die Serie dort, falls sie noch nicht zugeordnet ist. Sonst kommen nur Anbieter infrage, bei denen die Serie schon zugeordnet ist. Ist sie das noch nicht, scrapst du sie zuerst. **Standard (Einstellungen)** nimmt wieder die Reihenfolge aus den [Einstellungen](settings.md#serien).
+Hat die Serie einen eigenen [Scraper](tv-shows.md#own-scraper), bietet KMM nur dessen Zählweisen an und sucht die Serie dort, falls sie noch nicht zugeordnet ist. Sonst kommen nur Anbieter infrage, bei denen die Serie schon zugeordnet ist. Ist sie das noch nicht, scrapst du sie zuerst. Kennt ein Anbieter für die Serie keine andere Zählweise, steht das in der Liste. Bei TMDB ist das oft so, denn Episodengruppen gibt es nur für manche Serien. **Standard (Einstellungen)** nimmt wieder die Reihenfolge aus den [Einstellungen](settings.md#serien).
 
 Nach der Auswahl fragt KMM, ob es Titel und Inhaltsangaben aller Episoden gleich in der neuen Zählung neu holen soll. **OK** überschreibt die vorhandenen Texte, auch von Hand geänderte. **Abbrechen** ändert nur die Reihenfolge, sie gilt dann ab dem nächsten Scrapen. Die Dateien selbst benennt KMM dabei nicht um.
 

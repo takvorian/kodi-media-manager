@@ -49,6 +49,10 @@ function keyOf(ordering: Pick<TvEpisodeOrdering, 'scraperId' | 'orderId'>): stri
           <mat-optgroup [label]="group.scraperName">
             @for (order of group.orders; track order.id) {
               <mat-option [value]="group.scraperId + ':' + order.id">{{ order.name }}</mat-option>
+            } @empty {
+              <mat-option class="ordering-single" disabled>{{
+                'tvshows.ordering.single' | transloco
+              }}</mat-option>
             }
           </mat-optgroup>
         }

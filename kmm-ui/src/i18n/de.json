@@ -507,7 +507,8 @@
       "running": "Die Episoden-Reihenfolge wird geändert …",
       "changeTo": "Die Episoden-Reihenfolge wird auf „{name}“ geändert.",
       "changeToDefault": "Die Episoden-Reihenfolge wird auf den Standard aus den Einstellungen geändert.",
-      "refetch": "Sollen Titel und Inhaltsangaben aller Episoden jetzt in dieser Zählung neu geholt werden?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung passen.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur die Reihenfolge ändern, sie gilt ab dem nächsten Scrapen."
+      "refetch": "Sollen Titel und Inhaltsangaben aller Episoden jetzt in dieser Zählung neu geholt werden?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung passen.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur die Reihenfolge ändern, sie gilt ab dem nächsten Scrapen.",
+      "single": "Nur die Standard-Zählweise, dieser Anbieter kennt für die Serie keine andere."
     },
     "scraperRescrape": "Soll KMM die Serie dort jetzt neu zuordnen und Titel und Inhaltsangaben der Serie und aller Episoden neu holen?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung des Anbieters passen. Eine Episoden-Reihenfolge eines anderen Anbieters entfällt.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur den Scraper ändern, er gilt ab dem nächsten Scrapen."
   },

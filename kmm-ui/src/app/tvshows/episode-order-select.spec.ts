@@ -109,4 +109,18 @@ describe('EpisodeOrderSelect', () => {
 
     expect(document.querySelector('.ordering-none')).not.toBeNull();
   });
+
+  it('names a provider that knows the TV show but no other order', async () => {
+    await open();
+    httpTesting
+      .expectOne(`${TVSHOWS_URL}/3/episode-orders`)
+      .flush([{ scraperId: 'tmdb', scraperName: 'TMDB', orders: [] }]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+
+    expect(document.querySelector('.ordering-none')).toBeNull();
+    expect(document.querySelector('.ordering-single')?.textContent).toContain(
+      'Nur die Standard-Zählweise',
+    );
+  });
 });

@@ -344,7 +344,8 @@ public class TvShowScrapeService {
     }
 
     /**
-     * The episode orders the TV show can follow. With a scraper chosen for the TV show only those of that scraper;
+     * The episode orders the TV show can follow, per scraper; a scraper without alternative orders has an empty list.
+     * With a scraper chosen for the TV show only those of that scraper;
      * if the TV show has no ID there yet, it is identified there first. Otherwise those of every set-up scraper at
      * which the TV show has an ID.
      *
@@ -365,10 +366,9 @@ public class TvShowScrapeService {
                 if (providerId == null) {
                     continue;
                 }
-                List<EpisodeOrder> orders = call(scraper, s -> s.episodeOrders(providerId));
-                if (!orders.isEmpty()) {
-                    result.add(new ScraperEpisodeOrders(scraper.id(), scraper.displayName(), orders));
-                }
+                // Without alternatives the list stays empty; the scraper is still shown, as it knows the TV show.
+                result.add(new ScraperEpisodeOrders(scraper.id(), scraper.displayName(),
+                        call(scraper, s -> s.episodeOrders(providerId))));
             }
             return result;
         });
