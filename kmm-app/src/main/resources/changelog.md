@@ -1,5 +1,10 @@
 # Changelog
 
+## v0.27 - 2026-11-16
+- Choose the scraper per TV show and movie (22f40c0)
+- Choose the order of the scrapers per kind, globally and per source (e499f4c)
+- Show the scrapers in the settings with their keys and options (09d9d72)
+
 ## v0.26 - 2026-11-15
 - Choose the episode order per TV show (0880991)
 
