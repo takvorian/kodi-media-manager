@@ -1,6 +1,7 @@
 package de.tiktak.kmm.plugin.moviepilot;
 
 import java.text.Normalizer;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
@@ -13,6 +14,7 @@ import de.tiktak.kmm.plugin.api.EnrichmentScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 
 /**
  * German details for empty fields of movies from the movie pages of Moviepilot.de. The search of the site is closed
@@ -40,6 +42,13 @@ public class MoviepilotEnrichmentScraper implements EnrichmentScraper {
     @Override
     public String displayName() {
         return "Moviepilot";
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.number(MoviepilotSettings.REQUEST_DELAY_MS, "Pause between requests (ms)",
+                        MoviepilotSettings.DEFAULT_REQUEST_DELAY_MS));
     }
 
     @Override

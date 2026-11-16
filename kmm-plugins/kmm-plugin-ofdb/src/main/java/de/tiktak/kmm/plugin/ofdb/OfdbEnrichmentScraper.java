@@ -12,6 +12,7 @@ import de.tiktak.kmm.plugin.api.EnrichmentScraper;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 
 /**
  * German details for empty fields of movies from OFDb.de: plot, FSK, genres, countries, directors and actors. The
@@ -38,6 +39,13 @@ public class OfdbEnrichmentScraper implements EnrichmentScraper {
     @Override
     public String displayName() {
         return "OFDb";
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.number(OfdbSettings.REQUEST_DELAY_MS, "Pause between requests (ms)",
+                        OfdbSettings.DEFAULT_REQUEST_DELAY_MS));
     }
 
     @Override

@@ -1,4 +1,5 @@
 <h2 class="page-title">{{ 'settings.title' | transloco }}</h2>
+<app-settings-tabs />
 
 @if (settings.error()) {
   <p class="error">{{ 'settings.loadError' | transloco }}</p>
@@ -318,8 +319,6 @@
       </button>
     </div>
   </form>
-
-  <app-api-keys-card />
 } @else {
   <p class="loading">{{ 'settings.loading' | transloco }}</p>
 }

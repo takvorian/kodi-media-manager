@@ -21,6 +21,7 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 import de.tiktak.kmm.plugin.api.ThemeCandidate;
 import de.tiktak.kmm.plugin.api.ThemeScraper;
 import tools.jackson.core.JacksonException;
@@ -69,6 +70,15 @@ public class YouTubeThemeScraper implements ThemeScraper {
     @Override
     public String displayName() {
         return "YouTube";
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.text(YouTubeSettings.YT_DLP, "yt-dlp program", YouTubeSettings.YT_DLP),
+                SettingDefinition.text(YouTubeSettings.FFMPEG_LOCATION, "ffmpeg folder", null),
+                SettingDefinition.number(YouTubeSettings.MAX_RESULTS, "Number of results",
+                        YouTubeSettings.DEFAULT_MAX_RESULTS));
     }
 
     @Override

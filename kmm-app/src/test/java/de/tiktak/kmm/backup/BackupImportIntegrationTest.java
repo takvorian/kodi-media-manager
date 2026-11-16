@@ -37,8 +37,8 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 import de.tiktak.kmm.job.JobAlreadyRunningException;
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
-import de.tiktak.kmm.settings.ApiKey;
-import de.tiktak.kmm.settings.ApiKeyService;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
+import de.tiktak.kmm.settings.PluginSettingService;
 import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceController;
 import de.tiktak.kmm.system.DatabaseResetService;
@@ -73,7 +73,7 @@ class BackupImportIntegrationTest {
     private JdbcClient jdbcClient;
 
     @Autowired
-    private ApiKeyService apiKeyService;
+    private PluginSettingService pluginSettingService;
 
     @Autowired
     private SettingsService settingsService;
@@ -102,7 +102,7 @@ class BackupImportIntegrationTest {
                 + "<episode>1</episode><actor><name>Paul Fusco</name></actor></episodedetails>");
         scan("Filme", library.resolve("filme"), "MOVIE");
         scan("Serien", library.resolve("serien"), "TV_SHOW");
-        apiKeyService.update(Map.of(ApiKey.TMDB_API_KEY, API_KEY));
+        pluginSettingService.update("tmdb", List.of(SettingDefinition.secret("api-key", "API key")), Map.of("api-key", API_KEY));
         jdbcClient.sql("""
                 INSERT INTO kodi_host (name, address, port, username, password, realtime_sync)
                 VALUES ('Wohnzimmer', 'kodi', 8080, 'kodi', ?, TRUE)""").param(KODI_PASSWORD).update();
@@ -246,7 +246,7 @@ class BackupImportIntegrationTest {
         assertThat(report.get("credentialsKept").asBoolean()).isTrue();
         assertThat(setting("plugin.tmdb.api-key")).isEqualTo(API_KEY);
         assertThat(kodiPassword()).isEqualTo(KODI_PASSWORD);
-        assertThat(apiKeyService.view().getFirst().set()).isTrue();
+        assertThat(pluginSettingService.overlay("tmdb", Map.of())).containsKey("api-key");
     }
 
     @Test
@@ -262,14 +262,14 @@ class BackupImportIntegrationTest {
     @Test
     void restoresCredentialsFromAFileThatHasThem() throws IOException {
         byte[] backup = export(true);
-        apiKeyService.update(Map.of(ApiKey.TMDB_API_KEY, "anderer-key-12345"));
+        pluginSettingService.update("tmdb", List.of(SettingDefinition.secret("api-key", "API key")), Map.of("api-key", "anderer-key-12345"));
         jdbcClient.sql("UPDATE kodi_host SET password = 'anderes-passwort'").update();
 
         runImport(backup, "REPLACE", List.of(), false);
 
         assertThat(setting("plugin.tmdb.api-key")).isEqualTo(API_KEY);
         assertThat(kodiPassword()).isEqualTo(KODI_PASSWORD);
-        assertThat(apiKeyService.view().getFirst().hint()).endsWith(API_KEY.substring(API_KEY.length() - 4));
+        assertThat(pluginSettingService.overlay("tmdb", Map.of())).containsEntry("api-key", API_KEY);
     }
 
     @Test

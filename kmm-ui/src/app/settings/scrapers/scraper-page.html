@@ -1,0 +1,124 @@
+<h2 class="page-title">{{ 'settings.title' | transloco }}</h2>
+<app-settings-tabs />
+
+<p class="back">
+  <a routerLink="/settings/scrapers">{{ 'settings.scrapers.back' | transloco }}</a>
+</p>
+
+@if (details.error()) {
+  <p class="error">{{ 'settings.scrapers.detailsError' | transloco }}</p>
+} @else if (details.hasValue()) {
+  @let current = details.value();
+  @let plugin = current.scraper;
+  <div class="scraper-page">
+    <mat-card appearance="outlined" class="scraper-info">
+      <mat-card-header>
+        <mat-card-title>{{ plugin.displayName }}</mat-card-title>
+        <mat-card-subtitle>
+          <app-scraper-status [plugin]="plugin" />
+          @if (plugin.version) {
+            · {{ 'settings.scrapers.version' | transloco: { version: plugin.version } }}
+          }
+        </mat-card-subtitle>
+      </mat-card-header>
+      <mat-card-content>
+        @if (plugin.description) {
+          <p class="description">{{ plugin.description }}</p>
+        }
+        @for (capability of plugin.capabilities; track capability.kind) {
+          <div class="capability">
+            <span class="kind">{{ 'settings.scrapers.kind.' + capability.kind | transloco }}</span>
+            @for (mediaType of capability.mediaTypes; track mediaType; let last = $last) {
+              <span class="media-type"
+                >{{ 'settings.scrapers.mediaType.' + mediaType | transloco
+                }}{{ last ? '' : ', ' }}</span
+              >
+            }
+          </div>
+        }
+        @if (plugin.missingConfiguration; as missing) {
+          <p class="missing">{{ missing | localized }}</p>
+        }
+        @if (plugin.attribution; as attribution) {
+          <p class="attribution">
+            <a [href]="attribution.link" target="_blank" rel="noopener">{{
+              attribution.text | localized
+            }}</a>
+          </p>
+        }
+        <mat-slide-toggle
+          class="enabled-toggle"
+          [checked]="plugin.enabled"
+          [disabled]="busy()"
+          (change)="toggle(current, $event)"
+          >{{ 'settings.scrapers.enabledToggle' | transloco }}</mat-slide-toggle
+        >
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" class="scraper-settings">
+      <mat-card-header>
+        <mat-card-title>{{ 'settings.scrapers.settingsTitle' | transloco }}</mat-card-title>
+      </mat-card-header>
+      <mat-card-content>
+        @if (!plugin.enabled) {
+          <p class="hint">{{ 'settings.scrapers.settingsWhenOff' | transloco }}</p>
+        } @else if (current.settings.length === 0) {
+          <p class="hint">{{ 'settings.scrapers.noSettings' | transloco }}</p>
+        } @else {
+          <p class="hint">{{ 'settings.scrapers.settingsHint' | transloco }}</p>
+          <form [formGroup]="form" (ngSubmit)="save(current)">
+            @for (setting of current.settings; track setting.name) {
+              <div class="row setting">
+                <mat-form-field class="wide">
+                  <mat-label>{{ setting.label | localized }}</mat-label>
+                  <input
+                    matInput
+                    [type]="
+                      setting.type === 'SECRET'
+                        ? 'password'
+                        : setting.type === 'NUMBER'
+                          ? 'number'
+                          : 'text'
+                    "
+                    [formControlName]="setting.name"
+                    [name]="setting.name"
+                    [attr.autocomplete]="setting.type === 'SECRET' ? 'new-password' : 'off'"
+                    [placeholder]="placeholder(setting)"
+                  />
+                  @if (setting.type !== 'SECRET' && setting.defaultValue) {
+                    <mat-hint>{{
+                      'settings.scrapers.default' | transloco: { value: setting.defaultValue }
+                    }}</mat-hint>
+                  }
+                </mat-form-field>
+                @if (setting.type === 'SECRET' && setting.set && !deletions().has(setting.name)) {
+                  <button
+                    matButton
+                    type="button"
+                    class="remove-setting-button"
+                    (click)="remove(setting)"
+                  >
+                    {{ 'common.remove' | transloco }}
+                  </button>
+                }
+              </div>
+            }
+            <div class="actions">
+              <button
+                matButton="filled"
+                type="submit"
+                class="save-settings-button"
+                [disabled]="form.pristine || busy()"
+              >
+                {{ (busy() ? 'settings.saving' : 'common.save') | transloco }}
+              </button>
+            </div>
+          </form>
+        }
+      </mat-card-content>
+    </mat-card>
+  </div>
+} @else {
+  <p class="loading">{{ 'settings.scrapers.loading' | transloco }}</p>
+}

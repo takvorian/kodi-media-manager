@@ -2,6 +2,7 @@ package de.tiktak.kmm.plugin.tvdb;
 
 import java.net.URI;
 import java.time.Clock;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -12,6 +13,7 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.ScraperTexts;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 
 /**
  * Common base of the TVDB scrapers: identifier, setup, check of the API key and the attribution of the data source
@@ -43,6 +45,15 @@ abstract class AbstractTvdbScraper implements Scraper {
     @Override
     public String displayName() {
         return DISPLAY_NAME;
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.secret(TvdbSettings.API_KEY, "API key"),
+                SettingDefinition.secret(TvdbSettings.PIN, "Subscriber PIN"),
+                SettingDefinition.text(TvdbSettings.CERTIFICATION_COUNTRY, "Country of the age rating",
+                        TvdbSettings.DEFAULT_CERTIFICATION_COUNTRY));
     }
 
     @Override

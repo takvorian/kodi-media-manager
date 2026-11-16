@@ -14,6 +14,7 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.ScraperTexts;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 
 /**
  * Images from fanart.tv: poster, fanart, clearlogo, clearart, disc art, banner and landscape for movies, for TV shows
@@ -43,6 +44,13 @@ public class FanartTvImageScraper implements ImageScraper {
     @Override
     public String displayName() {
         return DISPLAY_NAME;
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.secret(FanartTvSettings.API_KEY, "Project key"),
+                SettingDefinition.secret(FanartTvSettings.CLIENT_KEY, "Personal key"));
     }
 
     @Override

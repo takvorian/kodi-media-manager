@@ -6,7 +6,7 @@ This is how you get from an empty installation to a well-kept library.
 
 ## 1. Enter API keys
 
-For online data you need free keys from the providers. Enter them under [Settings → API keys](settings.md#api-keys). To begin with, TMDB and, if you have TV shows, TVDB are enough.
+For online data you need free keys from the providers. Enter them under [Settings → Scrapers](settings.md#scrapers): click the provider and enter its key. To begin with, TMDB and, if you have TV shows, TVDB are enough.
 
 ## 2. Set the language
 

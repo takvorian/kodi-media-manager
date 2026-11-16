@@ -35,10 +35,10 @@ class ScraperTextsTest {
         assertThat(Messages.english(ScraperTexts.unexpectedResponse(PROVIDER)))
                 .isEqualTo("fanart.tv returned an unexpected response.");
         assertThat(Messages.english(ScraperTexts.apiKeyRejected(PROVIDER)))
-                .isEqualTo("fanart.tv rejects the API key. Please check it under Settings → API keys.");
+                .isEqualTo("fanart.tv rejects the API key. Please check it under Settings → Scrapers.");
         assertThat(Messages.english(ScraperTexts.rateLimitReached(PROVIDER)))
                 .isEqualTo("The request limit of fanart.tv has been reached. Please try again later.");
         assertThat(Messages.english(ScraperTexts.apiKeyMissing(PROVIDER)))
-                .isEqualTo("An API key for fanart.tv is missing (Settings → API keys).");
+                .isEqualTo("An API key for fanart.tv is missing (Settings → Scrapers).");
     }
 }

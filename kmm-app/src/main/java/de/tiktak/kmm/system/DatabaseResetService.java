@@ -8,7 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.support.TransactionTemplate;
 
 import de.tiktak.kmm.job.JobService;
-import de.tiktak.kmm.settings.ApiKeyService;
+import de.tiktak.kmm.settings.PluginSettingService;
 import de.tiktak.kmm.settings.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +34,7 @@ public class DatabaseResetService {
     private final JdbcClient jdbcClient;
     private final TransactionTemplate transactions;
     private final SettingsService settingsService;
-    private final ApiKeyService apiKeyService;
+    private final PluginSettingService pluginSettingService;
 
     /**
      * @param keepSettings whether settings and API keys are kept
@@ -46,7 +46,7 @@ public class DatabaseResetService {
                     .forEach(table -> jdbcClient.sql("DELETE FROM " + table).update()));
             if (!keepSettings) {
                 settingsService.reload();
-                apiKeyService.reload();
+                pluginSettingService.reload();
             }
         });
         log.warn("Database cleared, settings {}", keepSettings ? "kept" : "deleted");

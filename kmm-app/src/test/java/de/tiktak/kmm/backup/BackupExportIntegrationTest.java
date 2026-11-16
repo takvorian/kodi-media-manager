@@ -32,8 +32,8 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobStatus;
-import de.tiktak.kmm.settings.ApiKey;
-import de.tiktak.kmm.settings.ApiKeyService;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
+import de.tiktak.kmm.settings.PluginSettingService;
 import de.tiktak.kmm.system.DatabaseResetService;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.ObjectMapper;
@@ -64,7 +64,7 @@ class BackupExportIntegrationTest {
     private JdbcClient jdbcClient;
 
     @Autowired
-    private ApiKeyService apiKeyService;
+    private PluginSettingService pluginSettingService;
 
     @Autowired
     private DatabaseResetService databaseResetService;
@@ -77,7 +77,7 @@ class BackupExportIntegrationTest {
 
     @BeforeEach
     void givenData() {
-        apiKeyService.update(Map.of(ApiKey.TMDB_API_KEY, API_KEY));
+        pluginSettingService.update("tmdb", List.of(SettingDefinition.secret("api-key", "API key")), Map.of("api-key", API_KEY));
         jdbcClient.sql("""
                 INSERT INTO media_source (id, name, path, media_type, created_at)
                 VALUES (1, 'Filme', '/medien/filme', 'MOVIE', TIMESTAMP WITH TIME ZONE '2026-10-30 12:00:00+00')""")

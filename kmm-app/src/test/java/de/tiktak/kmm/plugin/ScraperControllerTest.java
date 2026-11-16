@@ -1,11 +1,14 @@
 package de.tiktak.kmm.plugin;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 
@@ -22,7 +25,9 @@ import de.tiktak.kmm.plugin.api.Attribution;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
 import de.tiktak.kmm.plugin.api.MetadataScraper;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 import de.tiktak.kmm.security.WebSecurityTestConfiguration;
+import de.tiktak.kmm.settings.PluginSettingView;
 
 @WebMvcTest(controllers = ScraperController.class, properties = "kmm.security.enabled=true")
 @Import(WebSecurityTestConfiguration.class)
@@ -34,6 +39,9 @@ class ScraperControllerTest {
 
     @MockitoBean
     private ScraperRegistry scraperRegistry;
+
+    @MockitoBean
+    private ScraperOverviewService overviewService;
 
     @Test
     void listsMetadataScrapersSortedByNameWithConfigurationHint() {
@@ -69,6 +77,51 @@ class ScraperControllerTest {
                         [{"id": "tvdb", "mediaTypes": ["TV_SHOW"], "missingConfiguration": null,
                           "attribution": {"text": {"key": "scraper.tvdb.attribution", "args": {}},
                                           "link": "https://thetvdb.com"}}]
+                        """);
+    }
+
+    @Test
+    void showsAScraperPluginWithItsSettings() {
+        ScraperOverview tvdb = new ScraperOverview("tvdb", "TheTVDB", "1.0", "TVDB", true,
+                List.of(new ScraperOverview.Capability(ScraperKind.METADATA, Set.of(MediaType.TV_SHOW))), null, null);
+        when(overviewService.details("tvdb")).thenReturn(new ScraperDetails(tvdb, List.of(new PluginSettingView(
+                "api-key", SettingDefinition.Type.SECRET, LocalizedText.of("scraper.setting.tvdb.apiKey"), null,
+                null, true, "…abcd"))));
+
+        assertThat(mockMvc.get().uri(ScraperController.PLUGIN_PATH, "tvdb"))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"scraper": {"id": "tvdb", "enabled": true,
+                                     "capabilities": [{"kind": "METADATA", "mediaTypes": ["TV_SHOW"]}]},
+                         "settings": [{"name": "api-key", "type": "SECRET", "set": true, "hint": "…abcd",
+                                       "value": null}]}
+                        """);
+    }
+
+    @Test
+    void changesTheSettingsOfAPlugin() {
+        ScraperOverview omdb = new ScraperOverview("omdb", "OMDb", "1.0", null, true, List.of(), null, null);
+        when(overviewService.changeSettings("omdb", Map.of("api-key", ""))).thenReturn(
+                new ScraperDetails(omdb, List.of()));
+
+        assertThat(mockMvc.put().uri(ScraperController.PLUGIN_PATH + "/settings", "omdb").with(csrf())
+                .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+                .content("{\"api-key\": \"\"}"))
+                .hasStatusOk();
+        verify(overviewService).changeSettings("omdb", Map.of("api-key", ""));
+    }
+
+    @Test
+    void switchesAPluginOff() {
+        ScraperOverview trakt = new ScraperOverview("trakt", "trakt", "1.0", null, false, List.of(), null, null);
+        when(overviewService.disable("trakt")).thenReturn(new ScraperDetails(trakt, List.of()));
+
+        assertThat(mockMvc.post().uri(ScraperController.PLUGIN_PATH + "/disable", "trakt").with(csrf()))
+                .hasStatusOk()
+                .bodyJson()
+                .isLenientlyEqualTo("""
+                        {"scraper": {"id": "trakt", "enabled": false}, "settings": []}
                         """);
     }
 

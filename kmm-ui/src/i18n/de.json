@@ -135,7 +135,8 @@
     "backup": "Sicherung",
     "system": "System",
     "help": "Hilfe",
-    "login": "Anmelden"
+    "login": "Anmelden",
+    "scrapers": "Scraper"
   },
   "paginator": {
     "itemsPerPage": "Einträge pro Seite:",
@@ -723,16 +724,51 @@
       "password": "Passwort",
       "passwordUnchanged": "unverändert"
     },
-    "apiKeys": {
-      "title": "API-Keys",
-      "hint": "Keys der Online-Dienste. Ein leeres Feld lässt den gespeicherten Key unverändert. Umgebungsvariablen wie <code>KMM_TMDB_API_KEY</code> füllen nur einen noch nicht gespeicherten Key beim Start.",
+    "tabs": {
+      "general": "Allgemein",
+      "scrapers": "Scraper"
+    },
+    "scrapers": {
+      "hint": "Die Anbieter, von denen KMM Metadaten, Bilder, Bewertungen, Titelmusik und Trailer holt. Ein Klick öffnet Keys und Optionen des Anbieters.",
       "help": "Wo bekomme ich die Keys?",
-      "loadError": "Die API-Keys konnten nicht geladen werden.",
+      "loadError": "Die Scraper konnten nicht geladen werden.",
+      "detailsError": "Dieser Scraper konnte nicht geladen werden.",
+      "loading": "Lade Scraper …",
+      "back": "← Alle Scraper",
+      "version": "Version {version}",
+      "status": {
+        "ready": "bereit",
+        "missing": "Einstellung fehlt",
+        "off": "ausgeschaltet"
+      },
+      "kind": {
+        "METADATA": "Metadaten",
+        "ARTWORK": "Bilder",
+        "ENRICHMENT": "Bewertungen und Details",
+        "THEME": "Titelmusik",
+        "TRAILER": "Trailer",
+        "MOVIE_SET": "Filmsets"
+      },
+      "mediaType": {
+        "MOVIE": "Filme",
+        "MOVIE_SET": "Filmsets",
+        "TV_SHOW": "Serien",
+        "TV_SEASON": "Staffeln",
+        "TV_EPISODE": "Episoden"
+      },
+      "enabledToggle": "Eingeschaltet",
+      "disableConfirm": "„{name}“ ausschalten? KMM fragt diesen Anbieter dann nicht mehr, bis du ihn wieder einschaltest.",
+      "enabled": "„{name}“ ist eingeschaltet.",
+      "disabled": "„{name}“ ist ausgeschaltet.",
+      "settingsTitle": "Keys und Optionen",
+      "settingsHint": "Ein leeres Key-Feld lässt den gespeicherten Key unverändert. Eine geleerte Option gilt wieder mit ihrem Standard. Umgebungsvariablen wie KMM_TMDB_API_KEY füllen nur einen noch nicht gespeicherten Key beim Start.",
+      "settingsWhenOff": "Die Einstellungen zeigt KMM, sobald der Scraper eingeschaltet ist.",
+      "noSettings": "Dieser Scraper braucht keine Einstellungen.",
+      "default": "Standard: {value}",
       "removing": "wird entfernt",
       "stored": "gespeichert {hint}",
       "notSet": "nicht gesetzt",
-      "save": "Keys speichern",
-      "saved": "API-Keys gespeichert."
+      "saved": "Einstellungen von „{name}“ gespeichert."
     }
   },
   "migration": {
@@ -1226,18 +1262,18 @@
       "interrupted": "Die Anfrage an {provider} wurde unterbrochen.",
       "requestInterrupted": "Die Anfrage wurde unterbrochen.",
       "unexpectedResponse": "{provider} hat eine unerwartete Antwort geliefert.",
-      "apiKeyRejected": "{provider} lehnt den API-Key ab. Bitte unter Einstellungen → API-Keys prüfen.",
+      "apiKeyRejected": "{provider} lehnt den API-Key ab. Bitte unter Einstellungen → Scraper prüfen.",
       "rateLimitReached": "Das Anfragelimit von {provider} ist erreicht. Bitte später erneut versuchen.",
-      "apiKeyMissing": "Für {provider} fehlt ein API-Key (Einstellungen → API-Keys).",
+      "apiKeyMissing": "Für {provider} fehlt ein API-Key (Einstellungen → Scraper).",
       "tvdb": {
-        "credentialsRejected": "TVDB lehnt den API-Key oder die PIN ab. Bitte unter Einstellungen → API-Keys prüfen.",
+        "credentialsRejected": "TVDB lehnt den API-Key oder die PIN ab. Bitte unter Einstellungen → Scraper prüfen.",
         "loginFailed": "Die Anmeldung bei TVDB ist fehlgeschlagen (Fehler {status}).",
         "noToken": "TVDB hat bei der Anmeldung kein Token geliefert.",
         "attribution": "Metadata provided by TheTVDB. Please consider adding missing information or subscribing."
       },
       "trakt": {
-        "clientIdRejected": "Trakt lehnt die Client-ID ab. Bitte unter Einstellungen → API-Keys prüfen.",
-        "clientIdMissing": "Für Trakt fehlt die Client-ID (Einstellungen → API-Keys)."
+        "clientIdRejected": "Trakt lehnt die Client-ID ab. Bitte unter Einstellungen → Scraper prüfen.",
+        "clientIdMissing": "Für Trakt fehlt die Client-ID (Einstellungen → Scraper)."
       },
       "omdb": {
         "dailyLimitReached": "Das Tageslimit des OMDb-API-Keys ist erreicht; morgen geht es weiter."
@@ -1256,13 +1292,45 @@
       },
       "youtube": {
         "notInitialized": "YouTube: Plugin nicht initialisiert.",
-        "ytDlpNotFound": "YouTube: yt-dlp nicht gefunden ({command}). Bitte yt-dlp installieren oder unter kmm.plugins.settings.youtube.yt-dlp angeben.",
+        "ytDlpNotFound": "YouTube: yt-dlp nicht gefunden ({command}). Bitte yt-dlp installieren oder den Pfad unter Einstellungen → Scraper → YouTube angeben.",
         "notAVideo": "„{source}“ ist kein YouTube-Video.",
         "noMp3": "yt-dlp hat keine MP3 erzeugt. Ist ffmpeg installiert?",
         "saveFailed": "Die Titelmusik konnte nicht gespeichert werden: {reason}",
         "ytDlpFailed": "yt-dlp meldet einen Fehler: {errors}",
         "ytDlpNotRunning": "yt-dlp läuft nicht: {reason}",
         "noTempDirectory": "Kein temporärer Ordner für den Download: {reason}"
+      },
+      "setting": {
+        "tmdb": {
+          "apiKey": "API-Key (v3) oder Lesezugriffs-Token (v4)",
+          "certificationCountry": "Land der Altersfreigabe (z. B. DE, US)"
+        },
+        "tvdb": {
+          "apiKey": "Projekt-Key (API v4)",
+          "pin": "Abonnenten-PIN",
+          "certificationCountry": "Land der Altersfreigabe (z. B. DE, US)"
+        },
+        "fanarttv": {
+          "apiKey": "Projekt-Key",
+          "clientKey": "Persönlicher Key"
+        },
+        "omdb": {
+          "apiKey": "API-Key"
+        },
+        "trakt": {
+          "clientId": "Client-ID"
+        },
+        "moviepilot": {
+          "requestDelayMs": "Pause zwischen Anfragen (ms)"
+        },
+        "ofdb": {
+          "requestDelayMs": "Pause zwischen Anfragen (ms)"
+        },
+        "youtube": {
+          "ytDlp": "Programm yt-dlp",
+          "ffmpegLocation": "Ordner von ffmpeg",
+          "maxResults": "Anzahl der Suchtreffer"
+        }
       }
     },
     "security": {
@@ -1444,7 +1512,9 @@
     },
     "settings": {
       "invalid": {
-        "title": "Ungültige Einstellungen"
+        "title": "Ungültige Einstellungen",
+        "unknownPluginSetting": "Das Plugin hat keine Einstellung „{name}“.",
+        "pluginSettingValue": "„{name}“ muss eine ganze Zahl ab 0 und höchstens 512 Zeichen lang sein."
       },
       "rename": {
         "pattern": {
@@ -1460,15 +1530,6 @@
       "movieSets": {
         "flatFolderMissing": "Für Set-Bilder im flachen Schema fehlt der Ordner.",
         "kodiFolderMissing": "Für Set-Bilder in Kodis Set-Ordnern fehlt der Ordner."
-      },
-      "apiKey": {
-        "tmdbApiKey": "TMDB-API-Key",
-        "tvdbApiKey": "TVDB-API-Key (v4)",
-        "tvdbPin": "TVDB-Abonnenten-PIN",
-        "fanartTvApiKey": "fanart.tv-Projekt-Key",
-        "fanartTvClientKey": "fanart.tv-Persönlicher-Key",
-        "traktClientId": "Trakt-Client-ID",
-        "omdbApiKey": "OMDb-API-Key"
       }
     },
     "kodiRpc": {

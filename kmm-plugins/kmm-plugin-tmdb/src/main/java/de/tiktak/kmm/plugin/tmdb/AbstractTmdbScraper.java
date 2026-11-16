@@ -1,5 +1,6 @@
 package de.tiktak.kmm.plugin.tmdb;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -9,6 +10,7 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.Scraper;
 import de.tiktak.kmm.plugin.api.ScraperException;
 import de.tiktak.kmm.plugin.api.ScraperTexts;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 
 /**
  * Common base of the TMDB scrapers: identifier, setup and check of the API key.
@@ -32,6 +34,14 @@ abstract class AbstractTmdbScraper implements Scraper {
     @Override
     public String displayName() {
         return DISPLAY_NAME;
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.secret(TmdbSettings.API_KEY, "API key"),
+                SettingDefinition.text(TmdbSettings.CERTIFICATION_COUNTRY, "Country of the age rating",
+                        TmdbSettings.DEFAULT_CERTIFICATION_COUNTRY));
     }
 
     @Override

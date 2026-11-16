@@ -51,7 +51,7 @@ Skripte und Programme können die Schnittstelle weiter mit Benutzername und Pass
 Zwei Funktionen brauchen Programme, die nicht im Installer enthalten sind:
 
 - **FFmpeg** für die [technischen Angaben](movies.md#technical-details): zum Beispiel mit `winget install Gyan.FFmpeg`. Den Pfad zu `ffprobe` trägst du unter [Einstellungen](settings.md#technische-angaben) ein, falls es nicht im Suchpfad liegt.
-- **yt-dlp** für [Titelmusik von YouTube](scraping.md#titelmusik): zum Beispiel mit `winget install yt-dlp.yt-dlp`. Liegt es nicht im Suchpfad, setze `KMM_YTDLP` auf das Programm und `KMM_FFMPEG_LOCATION` auf den Ordner von FFmpeg.
+- **yt-dlp** für [Titelmusik von YouTube](scraping.md#titelmusik): zum Beispiel mit `winget install yt-dlp.yt-dlp`. Liegt es nicht im Suchpfad, trage das Programm und den Ordner von FFmpeg unter [Einstellungen → Scraper → YouTube](settings.md#scrapers) ein, oder setze `KMM_YTDLP` und `KMM_FFMPEG_LOCATION`.
 
 ## Docker
 

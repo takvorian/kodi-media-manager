@@ -6,7 +6,7 @@ So kommst du von der leeren Installation zur gepflegten Bibliothek.
 
 ## 1. API-Keys eintragen
 
-Für Online-Daten brauchst du kostenlose Keys der Anbieter. Trage sie unter [Einstellungen → API-Keys](settings.md#api-keys) ein. Für den Anfang genügen TMDB und, falls du Serien hast, TVDB.
+Für Online-Daten brauchst du kostenlose Keys der Anbieter. Trage sie unter [Einstellungen → Scraper](settings.md#scrapers) ein: Klicke auf den Anbieter und gib seinen Key ein. Für den Anfang genügen TMDB und, falls du Serien hast, TVDB.
 
 ## 2. Sprache einstellen
 

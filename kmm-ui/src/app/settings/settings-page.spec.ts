@@ -2,10 +2,11 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { provideRouter } from '@angular/router';
 import { TranslocoService } from '@jsverse/transloco';
 
 import { provideI18nTesting } from '../i18n/testing';
-import { ApiKeyView, SettingsView } from './settings';
+import { SettingsView } from './settings';
 import { SettingsPage } from './settings-page';
 import { SETTINGS_URL } from './settings.service';
 
@@ -39,29 +40,6 @@ describe('SettingsPage', () => {
     },
     overridden: [],
   };
-  const keys: ApiKeyView[] = [
-    {
-      key: 'TMDB_API_KEY',
-      pluginId: 'tmdb',
-      label: { key: 'settings.apiKey.tmdbApiKey', args: {} },
-      set: true,
-      hint: '…cdef',
-    },
-    {
-      key: 'TVDB_API_KEY',
-      pluginId: 'tvdb',
-      label: { key: 'settings.apiKey.tvdbApiKey', args: {} },
-      set: false,
-      hint: null,
-    },
-    {
-      key: 'TVDB_PIN',
-      pluginId: 'tvdb',
-      label: { key: 'settings.apiKey.tvdbPin', args: {} },
-      set: true,
-      hint: null,
-    },
-  ];
 
   let fixture: ComponentFixture<SettingsPage>;
   let httpTesting: HttpTestingController;
@@ -73,6 +51,7 @@ describe('SettingsPage', () => {
       imports: [SettingsPage],
       providers: [
         provideI18nTesting(),
+        provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
         {
@@ -91,11 +70,10 @@ describe('SettingsPage', () => {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: SETTINGS_URL }).flush(view);
     await renderPendingChanges();
-    httpTesting.expectOne({ method: 'GET', url: `${SETTINGS_URL}/api-keys` }).flush(keys);
     await fixture.whenStable();
   }
 
-  /** Renders until the API key card has sent its request after the settings were loaded. */
+  /** Renders until the loaded settings are shown in the form. */
   async function renderPendingChanges(): Promise<void> {
     const renderPasses = 2;
     for (let pass = 0; pass < renderPasses; pass++) {
@@ -141,10 +119,9 @@ describe('SettingsPage', () => {
 
     expect(element().querySelector('.page-title')?.textContent).toBe('Settings');
     expect(field('proxyPassword').placeholder).toBe('unchanged');
-    expect(field('TMDB_API_KEY').placeholder).toBe('stored …cdef');
     expect(field('metadataLanguage').value).toBe('de-DE');
     expect(element().querySelector('.hint code')?.textContent).toBe('{ }');
-    expect(element().querySelector('.save-keys-button')?.textContent?.trim()).toBe('Save keys');
+    expect(element().querySelector('.settings-tabs')?.textContent).toContain('Scrapers');
   });
 
   it('saves changes and keeps the password when it is left empty', async () => {
@@ -248,49 +225,6 @@ describe('SettingsPage', () => {
       probeNewFiles: false,
     });
     request.flush(stored);
-  });
-
-  it('changes and removes API keys without showing them', async () => {
-    await load(stored);
-    expect(field('TMDB_API_KEY').placeholder).toBe('gespeichert …cdef');
-    expect(field('TVDB_API_KEY').placeholder).toBe('nicht gesetzt');
-    expect(button('.save-keys-button').disabled).toBe(true);
-
-    await type('TVDB_API_KEY', ' 0000-1111 ');
-    const removeButtons = element().querySelectorAll<HTMLButtonElement>('.remove-key-button');
-    expect(removeButtons).toHaveLength(2);
-    removeButtons[1].click();
-    fixture.detectChanges();
-    expect(field('TVDB_PIN').placeholder).toBe('wird entfernt');
-    button('.save-keys-button').click();
-
-    const request = httpTesting.expectOne({ method: 'PUT', url: `${SETTINGS_URL}/api-keys` });
-    expect(request.request.body).toEqual({ TVDB_PIN: '', TVDB_API_KEY: '0000-1111' });
-    request.flush(keys);
-    await fixture.whenStable();
-    expect(snackBarMessages).toEqual(['API-Keys gespeichert.']);
-    expect(field('TVDB_API_KEY').value).toBe('');
-  });
-
-  it('reports failures around API keys', async () => {
-    await load(stored);
-    await type('TMDB_API_KEY', 'neu');
-
-    button('.save-keys-button').click();
-    httpTesting
-      .expectOne({ method: 'PUT', url: `${SETTINGS_URL}/api-keys` })
-      .flush({ detail: 'Zu lang' }, { status: 400, statusText: 'Bad Request' });
-    expect(snackBarMessages).toEqual(['Zu lang']);
-
-    fixture = TestBed.createComponent(SettingsPage);
-    fixture.detectChanges();
-    httpTesting.expectOne({ method: 'GET', url: SETTINGS_URL }).flush(stored);
-    await renderPendingChanges();
-    httpTesting
-      .expectOne({ method: 'GET', url: `${SETTINGS_URL}/api-keys` })
-      .flush(null, { status: 500, statusText: 'Error' });
-    await fixture.whenStable();
-    expect(element().querySelector('.api-keys .error')).not.toBeNull();
   });
 
   it('sends no proxy when it is switched off', async () => {

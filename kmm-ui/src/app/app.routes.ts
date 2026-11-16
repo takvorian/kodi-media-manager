@@ -67,6 +67,17 @@ const pages: Routes = [
     loadComponent: () => import('./settings/settings-page').then((m) => m.SettingsPage),
   },
   {
+    path: 'settings/scrapers',
+    title: 'pageTitle.scrapers',
+    loadComponent: () =>
+      import('./settings/scrapers/scraper-list-page').then((m) => m.ScraperListPage),
+  },
+  {
+    path: 'settings/scrapers/:id',
+    title: 'pageTitle.scrapers',
+    loadComponent: () => import('./settings/scrapers/scraper-page').then((m) => m.ScraperPage),
+  },
+  {
     path: 'migration',
     title: 'pageTitle.migration',
     loadComponent: () => import('./migration/ember-import-page').then((m) => m.EmberImportPage),

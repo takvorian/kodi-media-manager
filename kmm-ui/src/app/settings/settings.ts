@@ -1,5 +1,3 @@
-import { LocalizedText } from '../i18n/localized-text';
-
 /** Settings that may be fixed by the server configuration. */
 export type SettingsField = 'METADATA_LANGUAGE' | 'ARTWORK_LANGUAGE' | 'PROXY';
 
@@ -50,24 +48,6 @@ export interface MovieSetSettings {
   readonly kodiImagesFolder: string | null;
   /** Assign movies to the set of their TMDB collection when scraping. */
   readonly assignOnScrape: boolean;
-}
-
-export type ApiKeyName =
-  | 'TMDB_API_KEY'
-  | 'TVDB_API_KEY'
-  | 'TVDB_PIN'
-  | 'FANARTTV_API_KEY'
-  | 'FANARTTV_CLIENT_KEY'
-  | 'TRAKT_CLIENT_ID'
-  | 'OMDB_API_KEY';
-
-/** State of an API key; the key itself is never delivered. */
-export interface ApiKeyView {
-  readonly key: ApiKeyName;
-  readonly pluginId: string;
-  readonly label: LocalizedText;
-  readonly set: boolean;
-  readonly hint: string | null;
 }
 
 /** Response of GET /api/v1/settings. */

@@ -51,7 +51,7 @@ Scripts and programs can still call the API with user name and password (HTTP Ba
 Two features need programs that are not included in the installer:
 
 - **FFmpeg** for the [technical details](movies.md#technical-details): for example with `winget install Gyan.FFmpeg`. If `ffprobe` is not on the search path, enter its path under [Settings](settings.md#technical-details).
-- **yt-dlp** for [theme music from YouTube](scraping.md#theme-music): for example with `winget install yt-dlp.yt-dlp`. If it is not on the search path, set `KMM_YTDLP` to the program and `KMM_FFMPEG_LOCATION` to the FFmpeg folder.
+- **yt-dlp** for [theme music from YouTube](scraping.md#theme-music): for example with `winget install yt-dlp.yt-dlp`. If it is not on the search path, enter the program and the FFmpeg folder under [Settings → Scrapers → YouTube](settings.md#scrapers), or set `KMM_YTDLP` and `KMM_FFMPEG_LOCATION`.
 
 ## Docker
 

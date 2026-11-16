@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.io.support.ResourcePatternResolver;
 
-import de.tiktak.kmm.settings.ApiKeyService;
+import de.tiktak.kmm.settings.PluginSettingService;
 import de.tiktak.kmm.settings.SettingsProxyAuthenticator;
 import de.tiktak.kmm.settings.SettingsProxySelector;
 import de.tiktak.kmm.plugin.api.TvShowScraper;
@@ -44,11 +44,11 @@ class PluginManagerConfiguration {
     @Bean
     PluginManager pluginManager(PluginProperties properties, HttpClient pluginHttpClient,
             ObjectProvider<BuildProperties> buildProperties, SettingsService settingsService,
-            ApiKeyService apiKeyService) throws IOException {
+            PluginSettingService pluginSettingService) throws IOException {
         Path directory = Files.createDirectories(properties.directory());
         log.info("Loading plugins from {}", directory.toAbsolutePath());
         return new KmmPluginManager(directory, new PluginContextFactory(properties, pluginHttpClient, buildProperties,
-                () -> sharedSettings(settingsService.current()), apiKeyService::overlay));
+                () -> sharedSettings(settingsService.current()), pluginSettingService::overlay));
     }
 
     /** Languages and episode ordering from the settings store; {@link ScrapeLanguage} takes precedence. */

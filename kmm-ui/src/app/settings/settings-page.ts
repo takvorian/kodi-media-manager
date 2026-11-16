@@ -11,8 +11,8 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
 import { problemMessage } from '../shared/problem-message';
-import { ApiKeysCard } from './api-keys-card';
 import { EpisodeOrdering, SettingsField, SettingsView } from './settings';
+import { SettingsTabs } from './settings-tabs';
 import { createSettingsForm, MAX_PATH_LENGTH, toFormValue, toSettings } from './settings-form';
 import { SettingsService } from './settings.service';
 import { HelpLink } from '../shared/help-link';
@@ -30,7 +30,7 @@ const SNACKBAR_DURATION_MS = 5000;
     MatFormFieldModule,
     MatInputModule,
     MatSelectModule,
-    ApiKeysCard,
+    SettingsTabs,
     TranslocoPipe,
   ],
   templateUrl: './settings-page.html',

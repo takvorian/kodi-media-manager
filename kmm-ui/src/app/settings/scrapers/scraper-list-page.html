@@ -1,0 +1,46 @@
+<h2 class="page-title">{{ 'settings.title' | transloco }}</h2>
+<app-settings-tabs />
+
+<p class="hint">
+  {{ 'settings.scrapers.hint' | transloco }}
+  <app-help-link chapter="settings" anchor="scrapers">{{
+    'settings.scrapers.help' | transloco
+  }}</app-help-link>
+</p>
+
+@if (plugins.error()) {
+  <p class="error">{{ 'settings.scrapers.loadError' | transloco }}</p>
+} @else if (plugins.hasValue()) {
+  <div class="scraper-list">
+    @for (plugin of plugins.value(); track plugin.id) {
+      <a class="scraper-entry" [routerLink]="plugin.id">
+        <mat-card appearance="outlined">
+          <mat-card-header>
+            <mat-card-title>{{ plugin.displayName }}</mat-card-title>
+            <mat-card-subtitle><app-scraper-status [plugin]="plugin" /></mat-card-subtitle>
+          </mat-card-header>
+          <mat-card-content>
+            @for (capability of plugin.capabilities; track capability.kind) {
+              <div class="capability">
+                <span class="kind">{{
+                  'settings.scrapers.kind.' + capability.kind | transloco
+                }}</span>
+                @for (mediaType of capability.mediaTypes; track mediaType; let last = $last) {
+                  <span class="media-type"
+                    >{{ 'settings.scrapers.mediaType.' + mediaType | transloco
+                    }}{{ last ? '' : ', ' }}</span
+                  >
+                }
+              </div>
+            }
+            @if (plugin.missingConfiguration; as missing) {
+              <p class="missing">{{ missing | localized }}</p>
+            }
+          </mat-card-content>
+        </mat-card>
+      </a>
+    }
+  </div>
+} @else {
+  <p class="loading">{{ 'settings.scrapers.loading' | transloco }}</p>
+}

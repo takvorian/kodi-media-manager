@@ -1,6 +1,6 @@
 # Settings
 
-Changes only take effect when you click **Save** at the bottom of the page. **Discard** restores the saved state. The API keys have their own button.
+Changes only take effect when you click **Save** at the bottom of the page. **Discard** restores the saved state. The scrapers have their own tab, see [Scrapers](settings.md#scrapers).
 
 If a field says “Fixed by the configuration”, someone has set the value through an environment variable, and it is locked here.
 
@@ -54,19 +54,39 @@ There is more on this in [Movie sets](movie-sets.md).
 
 For the case that KMM can only reach the internet through a proxy: host, port and, if needed, user name and password. Kodi is never contacted through the proxy.
 
-## API keys
+<a id="scrapers"></a>
+## Scrapers
 
-| Key | Used for | Where to get it |
-|---|---|---|
-| TMDB API key | movies, TV shows, artwork, trailers | <https://www.themoviedb.org/settings/api> |
-| TVDB API key | TV shows, artwork | <https://thetvdb.com/api-information> |
-| fanart.tv API key | artwork | <https://fanart.tv/get-an-api-key/> |
-| OMDb API key | ratings, English details | <https://www.omdbapi.com/apikey.aspx> |
-| Trakt client ID | community rating | <https://trakt.tv/oauth/applications> |
+The settings have two tabs at the top: **General** with everything described so far and **Scrapers**. Under **Scrapers** you see each provider with what it delivers (metadata, artwork, ratings and details, theme music, trailers, movie sets) and for which media, and its state:
 
-KMM stores the keys in its database and only shows their last characters. An empty field leaves the stored key unchanged; **Remove** deletes it. Finally, click **Save keys**.
+- **ready**: KMM uses it.
+- **setting missing**: usually the key is missing; below it says what exactly. KMM skips the provider until you enter it.
+- **switched off**: KMM does not ask it.
+
+A click on a provider opens its page. There you switch it on or off with **Switched on** and change its settings under **Keys and options**. Then click **Save**.
+
+<a id="api-keys"></a>
+### Keys
+
+| Provider | Key | Used for | Where to get it |
+|---|---|---|---|
+| TMDB | API key | movies, TV shows, artwork, trailers | <https://www.themoviedb.org/settings/api> |
+| TVDB | project key, with a subscription also the PIN | TV shows, artwork | <https://thetvdb.com/api-information> |
+| fanart.tv | project key, optionally a personal key | artwork | <https://fanart.tv/get-an-api-key/> |
+| OMDb | API key | ratings, English details | <https://www.omdbapi.com/apikey.aspx> |
+| Trakt | client ID | community rating | <https://trakt.tv/oauth/applications> |
+
+KMM stores the keys in its database and only shows their last characters. An empty field leaves the stored key unchanged; **Remove** deletes it.
 
 Environment variables such as `KMM_TMDB_API_KEY` only fill in a key that has not been stored yet, at startup. After that the stored key applies, and a deleted key stays deleted.
+
+### Further options
+
+- **TMDB, TVDB:** the country of the age rating, e.g. `DE` or `US`.
+- **Moviepilot, OFDb:** the pause between two requests in milliseconds, so KMM does not strain the sites.
+- **YouTube:** the yt-dlp program, the ffmpeg folder and the number of search results for theme music.
+
+The default is shown below each field. If you empty a field, the default applies again. Values from environment variables such as `KMM_YTDLP` are this default.
 
 ## Environment variables
 

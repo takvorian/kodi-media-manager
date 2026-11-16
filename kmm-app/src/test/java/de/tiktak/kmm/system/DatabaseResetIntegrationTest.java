@@ -29,9 +29,9 @@ import org.springframework.test.web.servlet.assertj.MvcTestResult;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.library.LibraryScanController;
-import de.tiktak.kmm.settings.ApiKey;
-import de.tiktak.kmm.settings.ApiKeyService;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 import de.tiktak.kmm.settings.KmmSettings;
+import de.tiktak.kmm.settings.PluginSettingService;
 import de.tiktak.kmm.settings.SettingsService;
 import de.tiktak.kmm.source.MediaSourceController;
 import tools.jackson.databind.JsonNode;
@@ -64,7 +64,7 @@ class DatabaseResetIntegrationTest {
     private SettingsService settingsService;
 
     @Autowired
-    private ApiKeyService apiKeyService;
+    private PluginSettingService pluginSettingService;
 
     @TempDir
     Path library;
@@ -87,7 +87,7 @@ class DatabaseResetIntegrationTest {
         settingsService.update(new KmmSettings("fr-FR", defaults.artworkLanguage(), defaults.videoExtensions(),
                 defaults.excludedPaths(), defaults.proxy(), defaults.tv(), defaults.mediaInfo(), defaults.rename(),
                 defaults.movieSets()));
-        apiKeyService.update(Map.of(ApiKey.values()[0], "test-key-12345678"));
+        pluginSettingService.update("tmdb", List.of(SettingDefinition.secret("api-key", "API key")), Map.of("api-key", "test-key-12345678"));
     }
 
     @AfterEach
@@ -114,7 +114,7 @@ class DatabaseResetIntegrationTest {
 
         assertThat(DatabaseResetService.LIBRARY_TABLES).allSatisfy(table -> assertThat(count(table)).isZero());
         assertThat(settingsService.current().metadataLanguage()).isEqualTo("fr-FR");
-        assertThat(apiKeyService.view().getFirst().set()).isTrue();
+        assertThat(pluginSettingService.overlay("tmdb", Map.of())).containsKey("api-key");
         assertThat(movieFile).exists();
         assertThat(movieFile.resolveSibling("Heat.nfo")).exists();
     }
@@ -125,7 +125,7 @@ class DatabaseResetIntegrationTest {
 
         assertThat(allTables()).allSatisfy(table -> assertThat(count(table)).isZero());
         assertThat(settingsService.current().metadataLanguage()).isEqualTo(KmmSettings.DEFAULTS.metadataLanguage());
-        assertThat(apiKeyService.view().getFirst().set()).isFalse();
+        assertThat(pluginSettingService.overlay("tmdb", Map.of())).doesNotContainKey("api-key");
     }
 
     @Test

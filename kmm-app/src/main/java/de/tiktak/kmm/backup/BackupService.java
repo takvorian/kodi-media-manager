@@ -19,7 +19,7 @@ import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.job.JobContext;
 import de.tiktak.kmm.job.JobService;
 import de.tiktak.kmm.job.JobSnapshot;
-import de.tiktak.kmm.settings.ApiKeyService;
+import de.tiktak.kmm.settings.PluginSettingService;
 import de.tiktak.kmm.settings.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,7 +47,7 @@ public class BackupService {
     private final TransactionTemplate transactions;
     private final Flyway flyway;
     private final SettingsService settingsService;
-    private final ApiKeyService apiKeyService;
+    private final PluginSettingService pluginSettingService;
 
     /**
      * Accepts the file and checks it. An unusable file is not kept.
@@ -127,7 +127,7 @@ public class BackupService {
         }
         if (!request.dryRun()) {
             settingsService.reload();
-            apiKeyService.reload();
+            pluginSettingService.reload();
         }
         log.info("Backup import{} finished in mode {}", request.dryRun() ? " (dry run)" : "", request.mode());
         return report;

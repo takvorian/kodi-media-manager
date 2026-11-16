@@ -135,7 +135,8 @@
     "backup": "Backup",
     "system": "System",
     "help": "Help",
-    "login": "Sign in"
+    "login": "Sign in",
+    "scrapers": "Scrapers"
   },
   "paginator": {
     "itemsPerPage": "Items per page:",
@@ -723,16 +724,51 @@
       "password": "Password",
       "passwordUnchanged": "unchanged"
     },
-    "apiKeys": {
-      "title": "API keys",
-      "hint": "Keys of the online services. An empty field leaves the stored key unchanged. Environment variables like <code>KMM_TMDB_API_KEY</code> only fill a key that is not stored yet, on start.",
+    "tabs": {
+      "general": "General",
+      "scrapers": "Scrapers"
+    },
+    "scrapers": {
+      "hint": "The providers KMM gets metadata, artwork, ratings, theme music and trailers from. A click opens the provider's keys and options.",
       "help": "Where do I get the keys?",
-      "loadError": "The API keys could not be loaded.",
+      "loadError": "The scrapers could not be loaded.",
+      "detailsError": "This scraper could not be loaded.",
+      "loading": "Loading scrapers …",
+      "back": "← All scrapers",
+      "version": "Version {version}",
+      "status": {
+        "ready": "ready",
+        "missing": "setting missing",
+        "off": "switched off"
+      },
+      "kind": {
+        "METADATA": "Metadata",
+        "ARTWORK": "Artwork",
+        "ENRICHMENT": "Ratings and details",
+        "THEME": "Theme music",
+        "TRAILER": "Trailers",
+        "MOVIE_SET": "Movie sets"
+      },
+      "mediaType": {
+        "MOVIE": "Movies",
+        "MOVIE_SET": "Movie sets",
+        "TV_SHOW": "TV shows",
+        "TV_SEASON": "Seasons",
+        "TV_EPISODE": "Episodes"
+      },
+      "enabledToggle": "Switched on",
+      "disableConfirm": "Switch off “{name}”? KMM then no longer asks this provider until you switch it on again.",
+      "enabled": "“{name}” is switched on.",
+      "disabled": "“{name}” is switched off.",
+      "settingsTitle": "Keys and options",
+      "settingsHint": "An empty key field leaves the stored key unchanged. An emptied option returns to its default. Environment variables such as KMM_TMDB_API_KEY only fill in a key not stored yet at startup.",
+      "settingsWhenOff": "KMM shows the settings as soon as the scraper is switched on.",
+      "noSettings": "This scraper needs no settings.",
+      "default": "Default: {value}",
       "removing": "will be removed",
       "stored": "stored {hint}",
       "notSet": "not set",
-      "save": "Save keys",
-      "saved": "API keys saved."
+      "saved": "Settings of “{name}” saved."
     }
   },
   "migration": {
@@ -1226,18 +1262,18 @@
       "interrupted": "The request to {provider} was interrupted.",
       "requestInterrupted": "The request was interrupted.",
       "unexpectedResponse": "{provider} returned an unexpected response.",
-      "apiKeyRejected": "{provider} rejects the API key. Please check it under Settings → API keys.",
+      "apiKeyRejected": "{provider} rejects the API key. Please check it under Settings → Scrapers.",
       "rateLimitReached": "The request limit of {provider} has been reached. Please try again later.",
-      "apiKeyMissing": "An API key for {provider} is missing (Settings → API keys).",
+      "apiKeyMissing": "An API key for {provider} is missing (Settings → Scrapers).",
       "tvdb": {
-        "credentialsRejected": "TVDB rejects the API key or the PIN. Please check them under Settings → API keys.",
+        "credentialsRejected": "TVDB rejects the API key or the PIN. Please check them under Settings → Scrapers.",
         "loginFailed": "Logging in to TVDB failed (error {status}).",
         "noToken": "TVDB returned no token when logging in.",
         "attribution": "Metadata provided by TheTVDB. Please consider adding missing information or subscribing."
       },
       "trakt": {
-        "clientIdRejected": "Trakt rejects the client ID. Please check it under Settings → API keys.",
-        "clientIdMissing": "The client ID for Trakt is missing (Settings → API keys)."
+        "clientIdRejected": "Trakt rejects the client ID. Please check it under Settings → Scrapers.",
+        "clientIdMissing": "The client ID for Trakt is missing (Settings → Scrapers)."
       },
       "omdb": {
         "dailyLimitReached": "The daily limit of the OMDb API key has been reached; it continues tomorrow."
@@ -1256,13 +1292,45 @@
       },
       "youtube": {
         "notInitialized": "YouTube: plugin not initialised.",
-        "ytDlpNotFound": "YouTube: yt-dlp not found ({command}). Please install yt-dlp or configure it under kmm.plugins.settings.youtube.yt-dlp.",
+        "ytDlpNotFound": "YouTube: yt-dlp not found ({command}). Please install yt-dlp or enter its path under Settings → Scrapers → YouTube.",
         "notAVideo": "“{source}” is not a YouTube video.",
         "noMp3": "yt-dlp did not create an MP3. Is ffmpeg installed?",
         "saveFailed": "The theme music could not be saved: {reason}",
         "ytDlpFailed": "yt-dlp reports an error: {errors}",
         "ytDlpNotRunning": "yt-dlp does not run: {reason}",
         "noTempDirectory": "No temporary folder for the download: {reason}"
+      },
+      "setting": {
+        "tmdb": {
+          "apiKey": "API key (v3) or read access token (v4)",
+          "certificationCountry": "Country of the age rating (e.g. DE, US)"
+        },
+        "tvdb": {
+          "apiKey": "Project key (API v4)",
+          "pin": "Subscriber PIN",
+          "certificationCountry": "Country of the age rating (e.g. DE, US)"
+        },
+        "fanarttv": {
+          "apiKey": "Project key",
+          "clientKey": "Personal key"
+        },
+        "omdb": {
+          "apiKey": "API key"
+        },
+        "trakt": {
+          "clientId": "Client ID"
+        },
+        "moviepilot": {
+          "requestDelayMs": "Pause between requests (ms)"
+        },
+        "ofdb": {
+          "requestDelayMs": "Pause between requests (ms)"
+        },
+        "youtube": {
+          "ytDlp": "yt-dlp program",
+          "ffmpegLocation": "ffmpeg folder",
+          "maxResults": "Number of search results"
+        }
       }
     },
     "security": {
@@ -1444,7 +1512,9 @@
     },
     "settings": {
       "invalid": {
-        "title": "Invalid settings"
+        "title": "Invalid settings",
+        "unknownPluginSetting": "The plugin has no setting “{name}”.",
+        "pluginSettingValue": "“{name}” must be a whole number of at least 0 and at most 512 characters long."
       },
       "rename": {
         "pattern": {
@@ -1460,15 +1530,6 @@
       "movieSets": {
         "flatFolderMissing": "The folder for set artwork in the flat scheme is missing.",
         "kodiFolderMissing": "The folder for set artwork in Kodi's set folders is missing."
-      },
-      "apiKey": {
-        "tmdbApiKey": "TMDB API key",
-        "tvdbApiKey": "TVDB API key (v4)",
-        "tvdbPin": "TVDB subscriber PIN",
-        "fanartTvApiKey": "fanart.tv project key",
-        "fanartTvClientKey": "fanart.tv personal key",
-        "traktClientId": "Trakt client ID",
-        "omdbApiKey": "OMDb API key"
       }
     },
     "kodiRpc": {

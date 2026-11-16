@@ -1,5 +1,6 @@
 package de.tiktak.kmm.plugin.api;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
@@ -36,6 +37,14 @@ public interface Scraper extends ExtensionPoint {
      */
     default Optional<LocalizedText> missingConfiguration() {
         return Optional.empty();
+    }
+
+    /**
+     * Settings of the plugin the user can change in KMM, e.g. its API key. All scrapers of a plugin share the settings,
+     * so it is enough if one of them declares them.
+     */
+    default List<SettingDefinition> settingDefinitions() {
+        return List.of();
     }
 
     /**

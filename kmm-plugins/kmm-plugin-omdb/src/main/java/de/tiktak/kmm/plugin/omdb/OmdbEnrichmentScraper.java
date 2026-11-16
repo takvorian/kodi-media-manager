@@ -24,6 +24,7 @@ import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ProviderRating;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperTexts;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -60,6 +61,12 @@ public class OmdbEnrichmentScraper implements EnrichmentScraper {
     @Override
     public String displayName() {
         return "OMDb";
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.secret(OmdbSettings.API_KEY, "API key"));
     }
 
     @Override

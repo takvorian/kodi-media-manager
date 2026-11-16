@@ -15,6 +15,7 @@ import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.PluginContext;
 import de.tiktak.kmm.plugin.api.ProviderRating;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
+import de.tiktak.kmm.plugin.api.SettingDefinition;
 import tools.jackson.databind.JsonNode;
 
 /**
@@ -44,6 +45,12 @@ public class TraktEnrichmentScraper implements EnrichmentScraper {
     @Override
     public String displayName() {
         return "Trakt";
+    }
+
+    @Override
+    public List<SettingDefinition> settingDefinitions() {
+        return List.of(
+                SettingDefinition.secret(TraktSettings.CLIENT_ID, "Client ID"));
     }
 
     @Override
