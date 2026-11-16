@@ -12,14 +12,15 @@ import java.net.URI;
 import java.util.List;
 import java.util.Optional;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.plugin.ScraperPriorityTesting;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MovieSetResult;
 import de.tiktak.kmm.plugin.api.MovieSetScraper;
@@ -38,8 +39,13 @@ class MovieSetScrapeServiceTest {
     @Mock
     private MovieSetService setService;
 
-    @InjectMocks
     private MovieSetScrapeService service;
+
+    @BeforeEach
+    void setUp() {
+        service = new MovieSetScrapeService(scraperRegistry, ScraperPriorityTesting.defaults(scraperRegistry),
+                setService);
+    }
 
     @Test
     void searchesCollectionsWithTheFirstReadyScraper() {
@@ -117,6 +123,7 @@ class MovieSetScrapeServiceTest {
 
     private static MovieSetScraper scraper(Optional<LocalizedText> missingConfiguration) {
         MovieSetScraper scraper = mock(MovieSetScraper.class);
+        lenient().when(scraper.id()).thenReturn(missingConfiguration.isPresent() ? "unconfigured" : "tmdb");
         lenient().when(scraper.displayName()).thenReturn("TMDB");
         lenient().when(scraper.missingConfiguration()).thenReturn(missingConfiguration);
         return scraper;

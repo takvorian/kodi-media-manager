@@ -72,12 +72,12 @@ class TvShowTrailerServiceTest {
     void searchesTrailersByAllProviderIdsInTheTvArtworkLanguage() {
         givenIds();
         TrailerOptions options = options(TRAILER);
-        when(trailerFinder.find(any(), eq(KmmSettings.DEFAULTS.tv().artworkLanguage()))).thenReturn(options);
+        when(trailerFinder.find(any(), eq(KmmSettings.DEFAULTS.tv().artworkLanguage()), any())).thenReturn(options);
 
         assertThat(service.candidates(SHOW_ID)).isEqualTo(options);
 
         ArgumentCaptor<ScrapeRequest> request = ArgumentCaptor.forClass(ScrapeRequest.class);
-        verify(trailerFinder).find(request.capture(), any());
+        verify(trailerFinder).find(request.capture(), any(), any());
         assertThat(request.getValue()).isEqualTo(new ScrapeRequest(MediaType.TV_SHOW, "Lost", 2004,
                 Map.of("tvdb", "73739", "tmdb", "4607", "imdb", "tt0411008")));
     }
@@ -116,7 +116,7 @@ class TvShowTrailerServiceTest {
     @Test
     void fillsAMissingTrailerWithTheBestCandidate() {
         givenIds();
-        when(trailerFinder.find(any(), any())).thenReturn(options(TRAILER, "https://example.org/teaser.mp4"));
+        when(trailerFinder.find(any(), any(), any())).thenReturn(options(TRAILER, "https://example.org/teaser.mp4"));
 
         assertThat(service.fillMissing(SHOW_ID)).isTrue();
 
@@ -150,7 +150,7 @@ class TvShowTrailerServiceTest {
         verifyNoInteractions(trailerFinder);
 
         givenIds();
-        when(trailerFinder.find(any(), any())).thenReturn(options());
+        when(trailerFinder.find(any(), any(), any())).thenReturn(options());
 
         assertThat(service.fillMissing(SHOW_ID)).isFalse();
         verify(metadataService, never()).changeTrailer(anyLong(), any());

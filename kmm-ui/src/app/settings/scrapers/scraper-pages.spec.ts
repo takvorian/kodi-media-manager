@@ -8,10 +8,10 @@ import { provideRouter } from '@angular/router';
 
 import { provideI18nTesting } from '../../i18n/testing';
 import { CONFIRM } from '../../shared/confirm';
-import { SCRAPER_PLUGINS_URL } from './scraper-admin.service';
+import { SCRAPER_PLUGINS_URL, SCRAPER_PRIORITIES_URL } from './scraper-admin.service';
 import { ScraperListPage } from './scraper-list-page';
 import { ScraperPage } from './scraper-page';
-import { ScraperPlugin, ScraperPluginDetails } from './scraper-plugin';
+import { ScraperPlugin, ScraperPluginDetails, ScraperPriority } from './scraper-plugin';
 
 const TVDB: ScraperPlugin = {
   id: 'tvdb',
@@ -69,6 +69,26 @@ const DETAILS: ScraperPluginDetails = {
   ],
 };
 
+const PRIORITIES: ScraperPriority[] = [
+  {
+    kind: 'METADATA',
+    mediaType: 'MOVIE',
+    inherited: false,
+    entries: [
+      { scraperId: 'tmdb', displayName: 'TMDB', enabled: true, missingConfiguration: null },
+    ],
+  },
+  {
+    kind: 'METADATA',
+    mediaType: 'TV_SHOW',
+    inherited: false,
+    entries: [
+      { scraperId: 'tvdb', displayName: 'TheTVDB', enabled: true, missingConfiguration: null },
+      { scraperId: 'tmdb', displayName: 'TMDB', enabled: true, missingConfiguration: null },
+    ],
+  },
+];
+
 describe('scraper settings pages', () => {
   let httpTesting: HttpTestingController;
   let snackBarMessages: string[];
@@ -104,6 +124,7 @@ describe('scraper settings pages', () => {
       const fixture = TestBed.createComponent(ScraperListPage);
       fixture.detectChanges();
       httpTesting.expectOne(SCRAPER_PLUGINS_URL).flush([TVDB, TRAKT]);
+      httpTesting.expectOne(SCRAPER_PRIORITIES_URL).flush(PRIORITIES);
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -119,11 +140,48 @@ describe('scraper settings pages', () => {
       const fixture = TestBed.createComponent(ScraperListPage);
       fixture.detectChanges();
       httpTesting.expectOne(SCRAPER_PLUGINS_URL).flush(null, { status: 500, statusText: 'Error' });
+      httpTesting.expectOne(SCRAPER_PRIORITIES_URL).flush(PRIORITIES);
       await fixture.whenStable();
       fixture.detectChanges();
 
       expect(text(fixture)).toContain('Die Scraper konnten nicht geladen werden.');
     });
+  });
+
+  it('orders the TV show scrapers and saves the order of all kinds', async () => {
+    const fixture = TestBed.createComponent(ScraperListPage);
+    fixture.detectChanges();
+    httpTesting.expectOne(SCRAPER_PLUGINS_URL).flush([TVDB]);
+    httpTesting.expectOne(SCRAPER_PRIORITIES_URL).flush(PRIORITIES);
+    await fixture.whenStable();
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelectorAll('.entry')).toHaveLength(1);
+
+    element.querySelectorAll<HTMLElement>('.media-type-toggle button')[1].click();
+    fixture.detectChanges();
+    expect(element.querySelector('.entries')?.textContent).toMatch(/TheTVDB.*TMDB/);
+    element.querySelectorAll<HTMLButtonElement>('.entry .up')[1].click();
+    fixture.detectChanges();
+    element.querySelector<HTMLInputElement>('.entry .enabled input')!.click();
+    fixture.detectChanges();
+    element.querySelector<HTMLButtonElement>('.save-priorities-button')!.click();
+
+    const request = httpTesting.expectOne({ method: 'PUT', url: SCRAPER_PRIORITIES_URL });
+    expect(request.request.body).toEqual([
+      {
+        kind: 'METADATA',
+        mediaType: 'TV_SHOW',
+        inherit: false,
+        entries: [
+          { scraperId: 'tmdb', enabled: false },
+          { scraperId: 'tvdb', enabled: true },
+        ],
+      },
+    ]);
+    request.flush(PRIORITIES);
+    await fixture.whenStable();
+    expect(snackBarMessages).toEqual(['Reihenfolge gespeichert.']);
   });
 
   describe('ScraperPage', () => {

@@ -80,7 +80,7 @@ public class MovieEnrichmentService {
         MovieSupplement supplement = movie.supplement();
         Set<String> present = supplement.ratings().stream().map(MovieSupplement.Rating::source)
                 .collect(Collectors.toSet());
-        List<Enrichment> found = finder.find(MediaType.MOVIE, metadata.title(), metadata.year(), uniqueIds(metadata),
+        List<Enrichment> found = finder.find(MediaType.MOVIE, movie.getSourceId(), metadata.title(), metadata.year(), uniqueIds(metadata),
                 EnrichmentFinder.contributes(refresh, present, hasEmptyFields(metadata, supplement)));
         MovieMetadata enrichedMetadata = withEmptyFieldsFilled(metadata, found);
         MovieSupplement enrichedSupplement = withEmptyFieldsFilled(supplement, found)

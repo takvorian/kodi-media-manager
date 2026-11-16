@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.plugin.ScraperPriorityTesting;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -43,7 +44,8 @@ class TrailerFinderTest {
 
     @BeforeEach
     void setUp() {
-        finder = new TrailerFinder(scraperRegistry);
+        finder = new TrailerFinder(scraperRegistry, ScraperPriorityTesting.defaults(scraperRegistry));
+        lenient().when(scraper.id()).thenReturn("tmdb");
         lenient().when(scraper.displayName()).thenReturn("TMDB");
         lenient().when(scraper.missingConfiguration()).thenReturn(Optional.empty());
         lenient().when(scraperRegistry.trailerScrapersFor(MediaType.TV_SHOW)).thenReturn(List.of(scraper));
@@ -58,7 +60,7 @@ class TrailerFinderTest {
                 candidate("Trailer de inoffiziell", "de", "Trailer", false, 1080, "2021-01-01"),
                 candidate("Trailer de", "de", "Trailer", true, 720, null)));
 
-        TrailerOptions options = finder.find(LOST, "de");
+        TrailerOptions options = finder.find(LOST, "de", 1L);
 
         assertThat(options.candidates()).extracting(TrailerOption::name).containsExactly("Trailer de",
                 "Trailer de inoffiziell", "Trailer en", "Teaser en", "Trailer fr");
@@ -81,17 +83,20 @@ class TrailerFinderTest {
     @Test
     void reportsUnconfiguredAndFailingScrapersAsWarnings() {
         TrailerScraper unconfigured = mock(TrailerScraper.class);
+        when(unconfigured.id()).thenReturn("youtube");
+        when(unconfigured.displayName()).thenReturn("YouTube");
         when(unconfigured.missingConfiguration())
                 .thenReturn(Optional.of(LocalizedText.literal("YouTube: API-Key fehlt")));
         when(scraperRegistry.trailerScrapersFor(MediaType.TV_SHOW)).thenReturn(List.of(unconfigured, scraper));
         when(scraper.findTrailers(any())).thenThrow(new ScraperException("nicht erreichbar"));
 
-        TrailerOptions options = finder.find(LOST, "de");
+        TrailerOptions options = finder.find(LOST, "de", 1L);
 
         assertThat(options.candidates()).isEmpty();
-        assertThat(options.warnings()).containsExactly(LocalizedText.literal("YouTube: API-Key fehlt"),
+        assertThat(options.warnings()).containsExactly(
                 LocalizedText.of("trailer.warning").with("provider", "TMDB")
-                        .with("reason", LocalizedText.literal("nicht erreichbar")));
+                        .with("reason", LocalizedText.literal("nicht erreichbar")),
+                LocalizedText.literal("YouTube: API-Key fehlt"));
         verify(unconfigured, never()).findTrailers(any());
     }
 

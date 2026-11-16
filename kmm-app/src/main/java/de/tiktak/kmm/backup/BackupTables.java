@@ -23,6 +23,7 @@ final class BackupTables {
 
     static final List<BackupTable> ALL = List.of(
             BackupTable.entity(MEDIA_SOURCE, List.of("path"), Map.of()),
+            BackupTable.list("media_source_scraper", "source_id", MEDIA_SOURCE),
             BackupTable.entity(MOVIE_SET, List.of("name"), Map.of()),
             BackupTable.entity(MOVIE, List.of("file_path_hash"),
                     Map.of("source_id", MEDIA_SOURCE, "movie_set_id", MOVIE_SET)),

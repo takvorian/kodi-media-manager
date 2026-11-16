@@ -3,6 +3,7 @@ package de.tiktak.kmm.movie;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.verify;
@@ -77,12 +78,12 @@ class MovieTrailerServiceTest {
     void searchesTrailersByProviderIdsInThePreferredArtworkLanguage() {
         givenTmdbId();
         TrailerOptions options = options(GERMAN_TRAILER);
-        when(trailerFinder.find(any(), eq(KmmSettings.DEFAULTS.artworkLanguage()))).thenReturn(options);
+        when(trailerFinder.find(any(), eq(KmmSettings.DEFAULTS.artworkLanguage()), anyLong())).thenReturn(options);
 
         assertThat(service.candidates(MOVIE_ID)).isEqualTo(options);
 
         ArgumentCaptor<ScrapeRequest> request = ArgumentCaptor.forClass(ScrapeRequest.class);
-        verify(trailerFinder).find(request.capture(), any());
+        verify(trailerFinder).find(request.capture(), any(), anyLong());
         assertThat(request.getValue().mediaType()).isEqualTo(MediaType.MOVIE);
         assertThat(request.getValue().uniqueIds()).isEqualTo(Map.of("tmdb", "949", "imdb", "tt0113277"));
     }
@@ -129,7 +130,7 @@ class MovieTrailerServiceTest {
     @Test
     void fillsAMissingTrailerWithTheBestCandidate() {
         givenTmdbId();
-        when(trailerFinder.find(any(), any())).thenReturn(options(GERMAN_TRAILER, "https://example.org/en.mp4"));
+        when(trailerFinder.find(any(), any(), anyLong())).thenReturn(options(GERMAN_TRAILER, "https://example.org/en.mp4"));
 
         assertThat(service.fillMissing(MOVIE_ID)).isTrue();
 
@@ -164,7 +165,7 @@ class MovieTrailerServiceTest {
         verifyNoInteractions(trailerFinder);
 
         givenTmdbId();
-        when(trailerFinder.find(any(), any())).thenReturn(options());
+        when(trailerFinder.find(any(), any(), anyLong())).thenReturn(options());
 
         assertThat(service.fillMissing(MOVIE_ID)).isFalse();
         verifyNoInteractions(supplementWriter);

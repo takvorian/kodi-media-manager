@@ -22,6 +22,8 @@ import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
+import de.tiktak.kmm.plugin.ScraperKind;
+import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.EpisodeOrder;
 import de.tiktak.kmm.plugin.api.EpisodeResult;
@@ -52,7 +54,7 @@ public class TvShowScrapeService {
     private final TvNfoSync nfoSync;
     private final TvShowResultCache cache;
     private final TvShowMetadataService metadataService;
-    private final TvScrapingProperties properties;
+    private final ScraperPriorityService priorityService;
     private final ApplicationEventPublisher events;
     private final Clock clock;
 
@@ -232,28 +234,31 @@ public class TvShowScrapeService {
     private TvShowAutoScrapeOutcome scrapeMissingInLanguage(long showId, EpisodeScope scope) {
         TvShowMetadata current = metadataService.currentMetadata(showId);
         TvShow show = requireShow(showId);
-        Optional<TvShowScraper> preferred = automaticScraper(show);
-        if (preferred.isEmpty()) {
+        List<TvShowScraper> scrapers = automaticScrapers(show);
+        if (scrapers.isEmpty()) {
             return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_SCRAPER);
         }
-        TvShowScraper scraper = preferred.get();
         Map<String, String> ids = knownIds(current);
-        String providerId = ids.get(scraper.id());
-        TvShowAutoScrapeOutcome.Status status = TvShowAutoScrapeOutcome.Status.ALREADY_IDENTIFIED;
-        if (providerId == null) {
-            ScrapeRequest request = new ScrapeRequest(MediaType.TV_SHOW, show.getTitle(), show.getReleaseYear(), ids);
-            Optional<TvShowResult> scraped = call(scraper, s -> s.scrape(request));
-            providerId = scraped.map(result -> result.uniqueIds().get(scraper.id())).orElse(null);
+        for (TvShowScraper scraper : scrapers) {
+            String providerId = ids.get(scraper.id());
+            TvShowAutoScrapeOutcome.Status status = TvShowAutoScrapeOutcome.Status.ALREADY_IDENTIFIED;
             if (providerId == null) {
-                return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_MATCH);
+                ScrapeRequest request = new ScrapeRequest(MediaType.TV_SHOW, show.getTitle(), show.getReleaseYear(),
+                        ids);
+                Optional<TvShowResult> scraped = call(scraper, s -> s.scrape(request));
+                providerId = scraped.map(result -> result.uniqueIds().get(scraper.id())).orElse(null);
+                if (providerId == null) {
+                    continue;
+                }
+                cache.put(scraper.id(), providerId, null, scraped.get());
+                metadataService.updateShow(showId, TvShowScrapeMerger.mergeShow(current, scraped.get()));
+                metadataService.storeLanguageInNfo(showId);
+                status = TvShowAutoScrapeOutcome.Status.SCRAPED;
             }
-            cache.put(scraper.id(), providerId, null, scraped.get());
-            metadataService.updateShow(showId, TvShowScrapeMerger.mergeShow(current, scraped.get()));
-            metadataService.storeLanguageInNfo(showId);
-            status = TvShowAutoScrapeOutcome.Status.SCRAPED;
+            EpisodeFillResult filled = fill(show, scraper, providerId, false, scope);
+            return new TvShowAutoScrapeOutcome(status, filled.updated(), filled.failedFiles());
         }
-        EpisodeFillResult filled = fill(show, scraper, providerId, false, scope);
-        return new TvShowAutoScrapeOutcome(status, filled.updated(), filled.failedFiles());
+        return TvShowAutoScrapeOutcome.of(TvShowAutoScrapeOutcome.Status.NO_MATCH);
     }
 
     /**
@@ -261,10 +266,26 @@ public class TvShowScrapeService {
      * numbered as in the files; otherwise the preferred one.
      */
     private Optional<TvShowScraper> automaticScraper(TvShow show) {
-        return show.episodeOrdering()
+        return automaticScrapers(show).stream().findFirst();
+    }
+
+    /**
+     * The scrapers to try one after the other for automatic scraping: only that of the TV show's own episode order
+     * if it is set up, otherwise those set up in the order of the TV show's source.
+     */
+    private List<TvShowScraper> automaticScrapers(TvShow show) {
+        Optional<TvShowScraper> ofOrdering = show.episodeOrdering()
                 .flatMap(ordering -> scraperRegistry.tvShowScraper(ordering.scraperId()))
+                .filter(scraper -> scraper.missingConfiguration().isEmpty());
+        return ofOrdering.map(List::of).orElseGet(() -> orderedScrapers(show).stream()
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())
-                .or(this::preferredReadyScraper);
+                .toList());
+    }
+
+    /** The TV show scrapers in the order of the TV show's source, without those switched off there. */
+    private List<TvShowScraper> orderedScrapers(TvShow show) {
+        return priorityService.ordered(ScraperKind.METADATA, MediaType.TV_SHOW, show.getSourceId(),
+                scraperRegistry.tvShowScrapers());
     }
 
     /** @return the TV show's own episode order at this scraper, {@code null} for the one from the settings */
@@ -323,17 +344,6 @@ public class TvShowScrapeService {
     public record ScraperEpisodeOrders(String scraperId, String scraperName, List<EpisodeOrder> orders) {
     }
 
-    /** The configured TV show scraper, otherwise the first one set up. */
-    private Optional<TvShowScraper> preferredReadyScraper() {
-        List<TvShowScraper> ready = scraperRegistry.tvShowScrapers().stream()
-                .filter(scraper -> scraper.missingConfiguration().isEmpty())
-                .toList();
-        return ready.stream()
-                .filter(scraper -> scraper.id().equals(properties.preferredTvShowScraper()))
-                .findFirst()
-                .or(() -> ready.stream().findFirst());
-    }
-
     /**
      * Episodes that the provider knows but for which there is no file.
      *
@@ -368,7 +378,7 @@ public class TvShowScrapeService {
         List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
         List<LocalizedText> warnings = new ArrayList<>();
         Optional<TvEpisodeOrdering> ordering = show.episodeOrdering();
-        for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
+        for (TvShowScraper scraper : orderedScrapers(show)) {
             if (ordering.isPresent() && !ordering.get().scraperId().equals(scraper.id())) {
                 continue; // its numbers follow another order and would show the stills of other episodes
             }

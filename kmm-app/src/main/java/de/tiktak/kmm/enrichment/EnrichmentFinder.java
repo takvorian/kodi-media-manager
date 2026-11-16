@@ -1,7 +1,6 @@
 package de.tiktak.kmm.enrichment;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -10,6 +9,8 @@ import java.util.function.Predicate;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.plugin.ScraperKind;
+import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.EnrichmentScraper;
@@ -30,20 +31,22 @@ import lombok.extern.slf4j.Slf4j;
 public class EnrichmentFinder {
 
     private final ScraperRegistry scraperRegistry;
+    private final ScraperPriorityService priorityService;
 
     /**
      * @param uniqueIds known IDs per provider; without IDs nothing is searched
      * @param wanted    which providers are asked, e.g. only those with missing ratings
+     * @param sourceId the source of the movie or TV show; its order of the providers applies
      * @return the supplements in the order of the providers
      */
-    public List<Enrichment> find(MediaType mediaType, String title, Integer year, Map<String, String> uniqueIds,
-            Predicate<EnrichmentScraper> wanted) {
+    public List<Enrichment> find(MediaType mediaType, long sourceId, String title, Integer year,
+            Map<String, String> uniqueIds, Predicate<EnrichmentScraper> wanted) {
         if (uniqueIds.isEmpty()) {
             return List.of();
         }
         List<Enrichment> found = new ArrayList<>();
-        List<EnrichmentScraper> scrapers = scraperRegistry.enrichmentScrapersFor(mediaType).stream()
-                .sorted(Comparator.comparingInt(EnrichmentScraper::order)).toList();
+        List<EnrichmentScraper> scrapers = priorityService.ordered(ScraperKind.ENRICHMENT, mediaType, sourceId,
+                scraperRegistry.enrichmentScrapersFor(mediaType));
         for (EnrichmentScraper scraper : scrapers) {
             if (scraper.missingConfiguration().isPresent() || !wanted.test(scraper)) {
                 continue;

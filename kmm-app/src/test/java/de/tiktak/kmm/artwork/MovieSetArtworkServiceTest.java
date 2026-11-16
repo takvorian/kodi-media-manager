@@ -97,7 +97,7 @@ class MovieSetArtworkServiceTest {
     void searchesCandidatesByTheTmdbCollectionId() {
         givenSet("2344");
         ArtworkCandidate candidate = candidate(ImageType.KEYART);
-        when(candidateFinder.findAll(MediaType.MOVIE_SET, TITLE, null, Map.of("tmdb", "2344")))
+        when(candidateFinder.findAll(MediaType.MOVIE_SET, null, TITLE, null, Map.of("tmdb", "2344")))
                 .thenReturn(new ArtworkSearch(Map.of(ImageType.KEYART, List.of(candidate)), WARNINGS));
 
         assertThat(service.candidates(SET_ID, ImageType.KEYART))
@@ -152,7 +152,7 @@ class MovieSetArtworkServiceTest {
         when(artworkFiles.find(eq(FLAT), eq(TITLE), any())).thenReturn(Optional.of(POSTER));
         when(artworkFiles.find(FLAT, TITLE, ImageType.FANART)).thenReturn(Optional.empty());
         ArtworkCandidate fanart = candidate(ImageType.FANART);
-        when(candidateFinder.findAll(MediaType.MOVIE_SET, TITLE, null, Map.of("tmdb", "2344")))
+        when(candidateFinder.findAll(MediaType.MOVIE_SET, null, TITLE, null, Map.of("tmdb", "2344")))
                 .thenReturn(new ArtworkSearch(Map.of(ImageType.FANART, List.of(fanart)), List.of()));
         when(downloader.download(fanart.url())).thenReturn(IMAGE);
 

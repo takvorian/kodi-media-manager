@@ -10,8 +10,11 @@ import de.tiktak.kmm.plugin.api.MediaType;
  *
  * @param originalTitle original title or {@code null}; providers often only know that one
  * @param directory     movie or TV show folder
+ * @param sourceId      the source of the movie or TV show, whose order of the providers applies; {@code null} for
+ *                      the order from the settings
  */
-record ThemeTarget(MediaType mediaType, String title, String originalTitle, Integer year, Path directory) {
+record ThemeTarget(MediaType mediaType, String title, String originalTitle, Integer year, Path directory,
+        Long sourceId) {
 
     static final String FILE_NAME = "theme.mp3";
 

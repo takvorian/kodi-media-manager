@@ -42,7 +42,7 @@ Die Sprache steht auch in der NFO als `<language>`, wie bei Ember. Sie bestimmt 
 | TelevisionTunes | Titelmusik | nein |
 | YouTube | Titelmusik, braucht yt-dlp | nein |
 
-Keys trägst du unter [Einstellungen → Scraper](settings.md#api-keys) ein. Einen Anbieter ohne Key überspringt KMM.
+Keys trägst du unter [Einstellungen → Scraper](settings.md#api-keys) ein. Einen Anbieter ohne Key überspringt KMM. In welcher Reihenfolge KMM die Anbieter fragt und welche es gar nicht fragt, legst du dort unter [Reihenfolge](settings.md#scraper-order) fest, für einzelne Quellen auch abweichend.
 
 ## Online-Suche
 

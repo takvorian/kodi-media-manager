@@ -136,7 +136,8 @@
     "system": "System",
     "help": "Hilfe",
     "login": "Anmelden",
-    "scrapers": "Scraper"
+    "scrapers": "Scraper",
+    "sourceScrapers": "Scraper der Quelle"
   },
   "paginator": {
     "itemsPerPage": "Einträge pro Seite:",
@@ -534,7 +535,8 @@
       "playback": "Gesehen-Status",
       "streamDetails": "Technische Angaben",
       "streamDetailsMissing": "Fehlende auslesen",
-      "streamDetailsAll": "Alle neu auslesen"
+      "streamDetailsAll": "Alle neu auslesen",
+      "scrapers": "Scraper"
     },
     "created": "Quelle „{name}“ angelegt.",
     "deleteConfirm": "Quelle „{name}“ und alle ihre Filme aus der Bibliothek entfernen?",
@@ -588,6 +590,12 @@
       "themes": "{count} Titelmusik gespeichert",
       "enriched": "{count} ergänzt (Bewertungen, Angaben)",
       "failures": "{count} Fehler"
+    },
+    "scrapers": {
+      "title": "Scraper der Quelle „{name}“",
+      "back": "← Alle Quellen",
+      "hint": "Hier kannst du für diese Quelle je Art eine andere Reihenfolge wählen oder Anbieter abschalten. Solange „Wie in den Einstellungen“ angehakt ist, gilt die Reihenfolge aus Einstellungen → Scraper.",
+      "help": "Mehr dazu"
     }
   },
   "kodi": {
@@ -768,7 +776,20 @@
       "removing": "wird entfernt",
       "stored": "gespeichert {hint}",
       "notSet": "nicht gesetzt",
-      "saved": "Einstellungen von „{name}“ gespeichert."
+      "saved": "Einstellungen von „{name}“ gespeichert.",
+      "priority": {
+        "title": "Reihenfolge",
+        "hint": "Je Art fragt KMM die angehakten Anbieter in dieser Reihenfolge. Der erste Metadaten-Anbieter ordnet neue Filme und Serien zu; findet er nichts, versucht es der nächste. Bei Bildern stehen innerhalb einer Sprache die Bilder des vorderen Anbieters zuerst. Einzelne Quellen können abweichen.",
+        "help": "Mehr dazu",
+        "movies": "Filme",
+        "tvShows": "Serien",
+        "loadError": "Die Reihenfolge konnte nicht geladen werden.",
+        "inherit": "Wie in den Einstellungen",
+        "up": "{name} nach oben",
+        "down": "{name} nach unten",
+        "none": "Kein Anbieter installiert.",
+        "saved": "Reihenfolge gespeichert."
+      }
     }
   },
   "migration": {

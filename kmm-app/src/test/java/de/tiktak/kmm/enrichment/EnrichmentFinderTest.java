@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.plugin.ScraperPriorityTesting;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.Enrichment;
 import de.tiktak.kmm.plugin.api.EnrichmentScraper;
@@ -45,7 +46,7 @@ class EnrichmentFinderTest {
 
     @BeforeEach
     void setUp() {
-        finder = new EnrichmentFinder(scraperRegistry);
+        finder = new EnrichmentFinder(scraperRegistry, ScraperPriorityTesting.defaults(scraperRegistry));
         lenient().when(trakt.id()).thenReturn("trakt");
         lenient().when(trakt.ratingSources()).thenReturn(Set.of("trakt"));
         lenient().when(trakt.missingConfiguration()).thenReturn(Optional.empty());
@@ -55,13 +56,14 @@ class EnrichmentFinderTest {
     @Test
     void asksOnlyWantedAndConfiguredScrapers() {
         EnrichmentScraper unconfigured = mock(EnrichmentScraper.class);
+        when(unconfigured.id()).thenReturn("omdb");
         when(unconfigured.missingConfiguration()).thenReturn(Optional.of(LocalizedText.literal("OMDb: API-Key fehlt")));
         when(scraperRegistry.enrichmentScrapersFor(MediaType.MOVIE)).thenReturn(List.of(unconfigured, trakt));
         when(trakt.findEnrichment(any())).thenReturn(Optional.of(TRAKT));
 
-        assertThat(finder.find(MediaType.MOVIE, "Heat", 1995, IDS, scraper -> true)).containsExactly(TRAKT);
-        assertThat(finder.find(MediaType.MOVIE, "Heat", 1995, IDS, scraper -> false)).isEmpty();
-        assertThat(finder.find(MediaType.MOVIE, "Heat", 1995, Map.of(), scraper -> true)).isEmpty();
+        assertThat(finder.find(MediaType.MOVIE, 1L, "Heat", 1995, IDS, scraper -> true)).containsExactly(TRAKT);
+        assertThat(finder.find(MediaType.MOVIE, 1L, "Heat", 1995, IDS, scraper -> false)).isEmpty();
+        assertThat(finder.find(MediaType.MOVIE, 1L, "Heat", 1995, Map.of(), scraper -> true)).isEmpty();
         verify(unconfigured, never()).findEnrichment(any());
     }
 
@@ -69,7 +71,7 @@ class EnrichmentFinderTest {
     void ignoresUnreachableProviders() {
         when(trakt.findEnrichment(any())).thenThrow(new ScraperException("Trakt ist nicht erreichbar"));
 
-        assertThat(finder.find(MediaType.MOVIE, "Heat", 1995, IDS, scraper -> true)).isEmpty();
+        assertThat(finder.find(MediaType.MOVIE, 1L, "Heat", 1995, IDS, scraper -> true)).isEmpty();
     }
 
     @Test
@@ -100,6 +102,7 @@ class EnrichmentFinderTest {
     void asksProvidersInTheirOrder() {
         EnrichmentScraper german = mock(EnrichmentScraper.class);
         Enrichment germanEnrichment = Enrichment.ofRatings(List.of());
+        when(german.id()).thenReturn("ofdb");
         when(german.order()).thenReturn(-1);
         when(german.missingConfiguration()).thenReturn(Optional.empty());
         when(german.findEnrichment(any())).thenReturn(Optional.of(germanEnrichment));
@@ -107,7 +110,7 @@ class EnrichmentFinderTest {
         registered.add(german);
         when(scraperRegistry.enrichmentScrapersFor(MediaType.MOVIE)).thenReturn(registered);
 
-        assertThat(finder.find(MediaType.MOVIE, "Heat", 1995, IDS, scraper -> true).getFirst())
+        assertThat(finder.find(MediaType.MOVIE, 1L, "Heat", 1995, IDS, scraper -> true).getFirst())
                 .isSameAs(germanEnrichment);
     }
 

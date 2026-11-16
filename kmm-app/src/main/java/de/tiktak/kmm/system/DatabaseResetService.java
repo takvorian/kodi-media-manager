@@ -27,7 +27,7 @@ public class DatabaseResetService {
             "episode_credit", "episode_rating", "episode", "tv_season",
             "tv_show_genre", "tv_show_studio", "tv_show_tag", "tv_show_actor", "tv_show_rating", "tv_show",
             "movie_genre", "movie_credit", "movie_rating", "movie_studio", "movie_country", "movie_tag", "movie",
-            "movie_set", "media_source", "kodi_host_path_mapping", "kodi_host", "saved_filter");
+            "movie_set", "media_source_scraper", "media_source", "kodi_host_path_mapping", "kodi_host", "saved_filter");
     static final String SETTINGS_TABLE = "app_setting";
 
     private final JobService jobService;

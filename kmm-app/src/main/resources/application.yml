@@ -91,9 +91,8 @@ kmm:
     proxy-username: ${KMM_PROXY_USERNAME:}
     proxy-password: ${KMM_PROXY_PASSWORD:}
   scraping:
-    # Metadata scraper for automatic scraping (fallback: the first one configured)
+    # Scrapers that come first until an order is chosen under Settings -> Scrapers (also per source)
     preferred-metadata-scraper: tmdb
-    # TV show scraper for automatic scraping (fallback: the first one configured)
     preferred-tv-show-scraper: tvdb
   artwork:
     max-download-size: 25MB

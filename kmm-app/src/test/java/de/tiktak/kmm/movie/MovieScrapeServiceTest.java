@@ -26,6 +26,7 @@ import org.springframework.http.HttpStatus;
 
 import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.StreamDetails;
+import de.tiktak.kmm.plugin.ScraperPriorityTesting;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -66,7 +67,7 @@ class MovieScrapeServiceTest {
 
     @BeforeEach
     void setUp() {
-        service = new MovieScrapeService(scraperRegistry, metadataService, new ScrapingProperties("tmdb"),
+        service = new MovieScrapeService(scraperRegistry, metadataService, ScraperPriorityTesting.defaults(scraperRegistry),
                 settingsService, collectionAssigner);
         MovieDetails details = new MovieDetails(MOVIE_ID, 1L, "/media/Heat.mkv", DiscFormat.FILE, 1, null, CURRENT,
                 MovieSupplement.EMPTY, StreamDetails.EMPTY, new MovieDetails.NfoInfo("/media/Heat.nfo", false, null));

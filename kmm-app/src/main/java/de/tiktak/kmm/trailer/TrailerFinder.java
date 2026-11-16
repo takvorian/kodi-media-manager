@@ -10,6 +10,8 @@ import java.util.regex.Pattern;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.plugin.ScraperKind;
+import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -30,16 +32,19 @@ public class TrailerFinder {
     private static final Pattern PLAYABLE = Pattern.compile("(?i)(plugin|https?|smb|nfs)://\\S+");
 
     private final ScraperRegistry scraperRegistry;
+    private final ScraperPriorityService priorityService;
 
     /**
      * Suggestions, the best first: preferred language, then English; trailers before teasers, official ones first.
      *
      * @param preferredLanguage preferred language (ISO 639-1), e.g. {@code de}
+     * @param sourceId          the source of the movie or TV show, whose order of the providers applies
      */
-    public TrailerOptions find(ScrapeRequest request, String preferredLanguage) {
+    public TrailerOptions find(ScrapeRequest request, String preferredLanguage, Long sourceId) {
         List<LocalizedText> warnings = new ArrayList<>();
         List<TrailerOption> options = new ArrayList<>();
-        for (TrailerScraper scraper : scraperRegistry.trailerScrapersFor(request.mediaType())) {
+        for (TrailerScraper scraper : priorityService.ordered(ScraperKind.TRAILER, request.mediaType(), sourceId,
+                scraperRegistry.trailerScrapersFor(request.mediaType()))) {
             Optional<LocalizedText> missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
                 warnings.add(missing.get());

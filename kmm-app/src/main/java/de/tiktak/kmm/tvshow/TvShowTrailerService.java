@@ -40,7 +40,8 @@ public class TvShowTrailerService {
         }
         return ScrapeLanguage.with(metadataService.scrapeLanguage(showId), () -> trailerFinder.find(
                 new ScrapeRequest(MediaType.TV_SHOW, show.getTitle(), show.getReleaseYear(), ids),
-                ScrapeLanguage.preferredImageLanguage(settingsService.current().tv().artworkLanguage())));
+                ScrapeLanguage.preferredImageLanguage(settingsService.current().tv().artworkLanguage()),
+                show.getSourceId()));
     }
 
     /**

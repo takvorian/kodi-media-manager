@@ -49,3 +49,28 @@ export interface ScraperPluginDetails {
   readonly scraper: ScraperPlugin;
   readonly settings: readonly PluginSetting[];
 }
+
+/** Kinds and media types as the server names them for orders. */
+export type PriorityMediaType = 'MOVIE' | 'TV_SHOW';
+
+export interface PriorityEntry {
+  readonly scraperId: string;
+  readonly displayName: string;
+  readonly enabled: boolean;
+  readonly missingConfiguration: LocalizedText | null;
+}
+
+/** Order of the scrapers of one kind; `inherited` only for a source that follows the settings. */
+export interface ScraperPriority {
+  readonly kind: ScraperKind;
+  readonly mediaType: PriorityMediaType;
+  readonly inherited: boolean;
+  readonly entries: readonly PriorityEntry[];
+}
+
+export interface ScraperPriorityChange {
+  readonly kind: ScraperKind;
+  readonly mediaType: PriorityMediaType;
+  readonly inherit: boolean;
+  readonly entries: readonly { readonly scraperId: string; readonly enabled: boolean }[];
+}

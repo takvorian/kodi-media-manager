@@ -136,7 +136,8 @@
     "system": "System",
     "help": "Help",
     "login": "Sign in",
-    "scrapers": "Scrapers"
+    "scrapers": "Scrapers",
+    "sourceScrapers": "Scrapers of the source"
   },
   "paginator": {
     "itemsPerPage": "Items per page:",
@@ -534,7 +535,8 @@
       "playback": "Watched status",
       "streamDetails": "Technical details",
       "streamDetailsMissing": "Read missing",
-      "streamDetailsAll": "Read all again"
+      "streamDetailsAll": "Read all again",
+      "scrapers": "Scrapers"
     },
     "created": "Source “{name}” created.",
     "deleteConfirm": "Remove source “{name}” and all its movies from the library?",
@@ -588,6 +590,12 @@
       "themes": "{count, plural, one {# theme music file} other {# theme music files}} saved",
       "enriched": "{count} enriched (ratings, details)",
       "failures": "{count, plural, one {# error} other {# errors}}"
+    },
+    "scrapers": {
+      "title": "Scrapers of the source “{name}”",
+      "back": "← All sources",
+      "hint": "Here you can choose another order per kind for this source or switch providers off. As long as “As in the settings” is ticked, the order from Settings → Scrapers applies.",
+      "help": "More about this"
     }
   },
   "kodi": {
@@ -768,7 +776,20 @@
       "removing": "will be removed",
       "stored": "stored {hint}",
       "notSet": "not set",
-      "saved": "Settings of “{name}” saved."
+      "saved": "Settings of “{name}” saved.",
+      "priority": {
+        "title": "Order",
+        "hint": "Per kind, KMM asks the ticked providers in this order. The first metadata provider identifies new movies and TV shows; if it finds nothing, the next one tries. For artwork, within one language the images of the provider further up come first. Single sources can differ.",
+        "help": "More about this",
+        "movies": "Movies",
+        "tvShows": "TV shows",
+        "loadError": "The order could not be loaded.",
+        "inherit": "As in the settings",
+        "up": "Move {name} up",
+        "down": "Move {name} down",
+        "none": "No provider installed.",
+        "saved": "Order saved."
+      }
     }
   },
   "migration": {

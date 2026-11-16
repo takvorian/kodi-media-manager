@@ -6,7 +6,10 @@ import java.util.function.Function;
 
 import org.springframework.stereotype.Service;
 
+import de.tiktak.kmm.plugin.ScraperKind;
+import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
+import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.MovieSetResult;
 import de.tiktak.kmm.plugin.api.MovieSetScraper;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -21,6 +24,7 @@ import lombok.RequiredArgsConstructor;
 public class MovieSetScrapeService {
 
     private final ScraperRegistry scraperRegistry;
+    private final ScraperPriorityService priorityService;
     private final MovieSetService setService;
 
     /**
@@ -51,7 +55,8 @@ public class MovieSetScrapeService {
     }
 
     private MovieSetScraper scraper() {
-        List<MovieSetScraper> scrapers = scraperRegistry.movieSetScrapers();
+        List<MovieSetScraper> scrapers = priorityService.ordered(ScraperKind.MOVIE_SET, MediaType.MOVIE_SET, null,
+                scraperRegistry.movieSetScrapers());
         if (scrapers.isEmpty()) {
             throw ScraperProblemException.noMovieSetScraper();
         }

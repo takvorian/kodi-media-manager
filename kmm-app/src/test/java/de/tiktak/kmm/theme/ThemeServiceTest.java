@@ -32,8 +32,8 @@ import de.tiktak.kmm.plugin.api.ThemeScraper;
 class ThemeServiceTest {
 
     private static final Path DIRECTORY = Path.of("/serien/ALF");
-    private static final ThemeTarget ALF = new ThemeTarget(MediaType.TV_SHOW, "ALF", null, 1986, DIRECTORY);
-    private static final ThemeTarget HEAT = new ThemeTarget(MediaType.MOVIE, "Heat", null, 1995, Path.of("/filme"));
+    private static final ThemeTarget ALF = new ThemeTarget(MediaType.TV_SHOW, "ALF", null, 1986, DIRECTORY, null);
+    private static final ThemeTarget HEAT = new ThemeTarget(MediaType.MOVIE, "Heat", null, 1995, Path.of("/filme"), null);
     private static final URI AUDIO = URI.create("http://televisiontunes.com/uploads/audio/Alf.mp3");
 
     @Mock

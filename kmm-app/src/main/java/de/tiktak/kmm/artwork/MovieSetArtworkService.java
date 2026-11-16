@@ -61,7 +61,7 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
         if (data.tmdbCollectionId() == null) {
             throw ArtworkProblemException.missingCollectionId();
         }
-        ArtworkSearch search = candidateFinder.findAll(MediaType.MOVIE_SET, data.name(), null,
+        ArtworkSearch search = candidateFinder.findAll(MediaType.MOVIE_SET, null, data.name(), null,
                 Map.of(TMDB, data.tmdbCollectionId()));
         return new ArtworkCandidates(search.candidatesOf(type), search.warnings());
     }
@@ -96,7 +96,7 @@ public class MovieSetArtworkService implements MovieSetArtworkFiller {
         if (missing.isEmpty()) {
             return new ArtworkFillResult(0, List.of());
         }
-        ArtworkSearch search = candidateFinder.findAll(MediaType.MOVIE_SET, data.name(), null,
+        ArtworkSearch search = candidateFinder.findAll(MediaType.MOVIE_SET, null, data.name(), null,
                 Map.of(TMDB, data.tmdbCollectionId()));
         List<LocalizedText> warnings = new ArrayList<>(search.warnings());
         int saved = 0;

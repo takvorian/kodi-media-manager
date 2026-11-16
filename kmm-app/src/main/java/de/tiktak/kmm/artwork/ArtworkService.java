@@ -62,13 +62,14 @@ public class ArtworkService {
 
     public ArtworkCandidates candidates(long movieId, ImageType type) {
         requireSupported(type);
-        MovieMetadata metadata = metadataService.findDetails(movieId).metadata();
+        MovieDetails movie = metadataService.findDetails(movieId);
+        MovieMetadata metadata = movie.metadata();
         Map<String, String> uniqueIds = uniqueIds(metadata);
         if (uniqueIds.isEmpty()) {
             throw ArtworkProblemException.missingIds();
         }
         return ScrapeLanguage.with(metadataService.scrapeLanguage(movieId),
-                () -> candidateFinder.find(type, metadata.title(), metadata.year(), uniqueIds));
+                () -> candidateFinder.find(type, movie.sourceId(), metadata.title(), metadata.year(), uniqueIds));
     }
 
     /**
@@ -101,7 +102,7 @@ public class ArtworkService {
             return new ArtworkFillResult(0, List.of());
         }
         ArtworkSearch search = ScrapeLanguage.with(metadataService.scrapeLanguage(movieId),
-                () -> candidateFinder.findAll(MediaType.MOVIE, movie.metadata().title(), movie.metadata().year(),
+                () -> candidateFinder.findAll(MediaType.MOVIE, movie.sourceId(), movie.metadata().title(), movie.metadata().year(),
                         uniqueIds));
         List<LocalizedText> warnings = new ArrayList<>(search.warnings());
         int saved = 0;

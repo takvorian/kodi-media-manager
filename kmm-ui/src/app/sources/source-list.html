@@ -160,6 +160,9 @@
               </button>
             </mat-menu>
           }
+          <a matButton class="scrapers-link" [routerLink]="['/sources', source.id, 'scrapers']">{{
+            'sources.action.scrapers' | transloco
+          }}</a>
           @if (source.mediaType === 'MOVIE') {
             <a matButton class="rename-link" [routerLink]="['/sources', source.id, 'rename']">{{
               'common.rename' | transloco

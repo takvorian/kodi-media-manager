@@ -16,6 +16,7 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.plugin.ScraperPriorityTesting;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ImageCandidate;
 import de.tiktak.kmm.plugin.api.ImageScraper;
@@ -31,10 +32,11 @@ class ArtworkCandidateFinderTest {
     private static final Map<String, String> IDS = Map.of("tmdb", "949");
 
     private final ScraperRegistry registry = mock(ScraperRegistry.class);
-    private final ArtworkCandidateFinder finder = new ArtworkCandidateFinder(registry, settings());
+    private final ArtworkCandidateFinder finder = new ArtworkCandidateFinder(registry,
+            ScraperPriorityTesting.defaults(registry), settings());
 
     @Test
-    void mergesScrapersAndSortsByLanguageThenRating() {
+    void mergesScrapersAndSortsByLanguageThenProviderThenRating() {
         ImageScraper tmdb = scraper("tmdb", "TMDB", List.of(
                 image(ImageType.POSTER, "en", 9.0, "tmdb-en"),
                 image(ImageType.POSTER, "de", 5.0, "tmdb-de"),
@@ -46,12 +48,12 @@ class ArtworkCandidateFinderTest {
                 image(ImageType.POSTER, "de", null, "fanart-de-unrated")));
         when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of(tmdb, fanart));
 
-        ArtworkCandidates result = finder.find(ImageType.POSTER, "Heat", 1995, IDS);
+        ArtworkCandidates result = finder.find(ImageType.POSTER, 1L, "Heat", 1995, IDS);
 
         assertThat(result.candidates()).extracting(candidate -> candidate.url().getPath())
-                .containsExactly("/fanart-de", "/tmdb-de", "/fanart-de-unrated", "/fanart-neutral", "/tmdb-en",
+                .containsExactly("/tmdb-de", "/fanart-de", "/fanart-de-unrated", "/fanart-neutral", "/tmdb-en",
                         "/fanart-fr");
-        assertThat(result.candidates().getFirst()).satisfies(candidate -> {
+        assertThat(result.candidates().get(1)).satisfies(candidate -> {
             assertThat(candidate.scraperId()).isEqualTo("fanarttv");
             assertThat(candidate.scraperName()).isEqualTo("fanart.tv");
         });
@@ -66,7 +68,7 @@ class ArtworkCandidateFinderTest {
                 image(ImageType.FANART, "en", 9.0, "fanart-en")));
         when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of(tmdb));
 
-        assertThat(finder.find(ImageType.FANART, "Heat", 1995, IDS).candidates())
+        assertThat(finder.find(ImageType.FANART, 1L, "Heat", 1995, IDS).candidates())
                 .extracting(candidate -> candidate.url().getPath())
                 .containsExactly("/fanart-neutral", "/fanart-de", "/fanart-en");
     }
@@ -76,7 +78,7 @@ class ArtworkCandidateFinderTest {
         ImageScraper tmdb = scraper("tmdb", "TMDB", List.of());
         when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of(tmdb));
 
-        finder.find(ImageType.POSTER, "Heat", 1995, IDS);
+        finder.find(ImageType.POSTER, 1L, "Heat", 1995, IDS);
 
         verify(tmdb).findImages(new ScrapeRequest(MediaType.MOVIE, "Heat", 1995, IDS));
     }
@@ -93,15 +95,15 @@ class ArtworkCandidateFinderTest {
         when(crashing.findImages(any())).thenThrow(new IllegalStateException("Bug"));
         when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of(working, unconfigured, failing, crashing));
 
-        ArtworkCandidates result = finder.find(ImageType.POSTER, "Heat", 1995, IDS);
+        ArtworkCandidates result = finder.find(ImageType.POSTER, 1L, "Heat", 1995, IDS);
 
         assertThat(result.candidates()).hasSize(1);
         assertThat(result.warnings()).containsExactly(
                 LocalizedText.literal("Für fanart.tv fehlt ein API-Key."),
-                LocalizedText.of("artwork.warning.provider").with("provider", "Kaputt")
-                        .with("reason", LocalizedText.literal("nicht erreichbar")),
                 LocalizedText.of("artwork.warning.provider").with("provider", "Absturz")
-                        .with("reason", LocalizedText.of("artwork.warning.unexpectedError")));
+                        .with("reason", LocalizedText.of("artwork.warning.unexpectedError")),
+                LocalizedText.of("artwork.warning.provider").with("provider", "Kaputt")
+                        .with("reason", LocalizedText.literal("nicht erreichbar")));
         verify(unconfigured, never()).findImages(any());
     }
 
@@ -113,7 +115,7 @@ class ArtworkCandidateFinderTest {
                 image(ImageType.CLEARLOGO, "en", 3.0, "logo")));
         when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of(tmdb));
 
-        ArtworkSearch search = finder.findAll(MediaType.MOVIE, "Heat", 1995, IDS);
+        ArtworkSearch search = finder.findAll(MediaType.MOVIE, 1L, "Heat", 1995, IDS);
 
         assertThat(search.candidatesOf(ImageType.POSTER)).hasSize(1);
         assertThat(search.candidatesOf(ImageType.CLEARLOGO)).hasSize(1);
@@ -125,7 +127,7 @@ class ArtworkCandidateFinderTest {
     void returnsNothingWithoutScrapers() {
         when(registry.imageScrapersFor(MediaType.MOVIE)).thenReturn(List.of());
 
-        assertThat(finder.find(ImageType.POSTER, "Heat", null, IDS).candidates()).isEmpty();
+        assertThat(finder.find(ImageType.POSTER, 1L, "Heat", null, IDS).candidates()).isEmpty();
     }
 
     private static ImageScraper scraper(String id, String name, List<ImageCandidate> images) {

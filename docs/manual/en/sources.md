@@ -31,10 +31,18 @@ Then click **Add**.
 | **Kodi scan** | Makes all Kodi devices scan this source, see [Kodi](kodi.md). |
 | **Watched status** | Fetches play counts and your own ratings from Kodi. |
 | **Technical details** | Reads the details with ffprobe: **Read missing** or **Read all again**. |
+| **Scrapers** | Sets the order of the providers for this source, see [below](sources.md#source-scrapers). |
 | **Rename** | Opens the preview for [renaming](renaming.md). |
 | **Remove** | Removes the source and all its entries from KMM, after asking you. Your files stay where they are. You remove single movies, TV shows, seasons or episodes in their views, see [Movies](movies.md#remove) and [TV shows](tv-shows.md#remove). |
 
 While a task is running, the row shows its name, the progress and a **Cancel** button. A scan with new episodes or movies is often followed right away by a second task, such as **Technical details of new files**. The name tells you that the scan itself has already finished.
+
+<a id="source-scrapers"></a>
+## Scrapers of a source
+
+Normally the order of the providers from [Settings → Scrapers](settings.md#scraper-order) applies to all sources. **Scrapers** in a source's row opens the same list for this source only. Untick **As in the settings** for a kind, then you can move providers or switch them off. Then click **Save**.
+
+An example: a source with anime TV shows that TVDB numbers differently from your files gets TMDB first for **Metadata**. All other TV show sources stay with TVDB.
 
 ## Language of a source
 

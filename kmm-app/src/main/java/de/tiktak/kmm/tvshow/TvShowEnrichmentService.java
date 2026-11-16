@@ -51,19 +51,21 @@ public class TvShowEnrichmentService {
      * @throws TvShowProblemException if the TV show does not exist or the NFO cannot be written
      */
     public boolean fillMissing(long showId) {
-        return metadataService.changeContent(showId, content -> enrich(content, false));
+        long sourceId = metadataService.findShow(showId).sourceId();
+        return metadataService.changeContent(showId, content -> enrich(content, sourceId, false));
     }
 
     /** Like {@link #fillMissing}, but also refreshes existing ratings from the providers. */
     public boolean refresh(long showId) {
-        return metadataService.changeContent(showId, content -> enrich(content, true));
+        long sourceId = metadataService.findShow(showId).sourceId();
+        return metadataService.changeContent(showId, content -> enrich(content, sourceId, true));
     }
 
-    private TvShowContent enrich(TvShowContent content, boolean refresh) {
+    private TvShowContent enrich(TvShowContent content, long sourceId, boolean refresh) {
         TvShowMetadata metadata = content.metadata();
         TvShowExtras extras = content.extras();
         Set<String> present = extras.ratings().stream().map(TvRating::source).collect(Collectors.toSet());
-        List<Enrichment> found = finder.find(MediaType.TV_SHOW, metadata.title(), metadata.year(),
+        List<Enrichment> found = finder.find(MediaType.TV_SHOW, sourceId, metadata.title(), metadata.year(),
                 uniqueIds(metadata), EnrichmentFinder.contributes(refresh, present, hasEmptyFields(metadata, extras)));
         if (found.isEmpty()) {
             return content;

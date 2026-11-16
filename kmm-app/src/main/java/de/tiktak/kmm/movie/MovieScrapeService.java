@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.plugin.ScrapeLanguage;
+import de.tiktak.kmm.plugin.ScraperKind;
+import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.CollectionReference;
 import de.tiktak.kmm.plugin.api.MediaType;
@@ -34,7 +36,7 @@ public class MovieScrapeService {
 
     private final ScraperRegistry scraperRegistry;
     private final MovieMetadataService metadataService;
-    private final ScrapingProperties properties;
+    private final ScraperPriorityService priorityService;
     private final SettingsService settingsService;
     private final MovieCollectionAssigner collectionAssigner;
 
@@ -83,19 +85,23 @@ public class MovieScrapeService {
      * @throws ScraperProblemException if the provider reports an error
      */
     public MetadataScrapeOutcome scrapeMissingMetadata(long movieId) {
-        MovieMetadata current = metadataService.findDetails(movieId).metadata();
+        MovieDetails details = metadataService.findDetails(movieId);
+        MovieMetadata current = details.metadata();
         if (current.tmdbId() != null) {
             return MetadataScrapeOutcome.ALREADY_IDENTIFIED;
         }
         return inLanguageOf(movieId, () -> {
-            Optional<MetadataScraper> scraper = preferredReadyScraper();
-            if (scraper.isEmpty()) {
+            List<MetadataScraper> scrapers = readyScrapers(details.sourceId());
+            if (scrapers.isEmpty()) {
                 return MetadataScrapeOutcome.NO_SCRAPER;
             }
             Map<String, String> knownIds = current.imdbId() == null ? Map.of() : Map.of(IMDB, current.imdbId());
             ScrapeRequest request = new ScrapeRequest(MediaType.MOVIE, MovieSearchTitle.of(current),
                     MovieSearchTitle.yearOf(current), knownIds);
-            Optional<MetadataResult> scraped = call(scraper.get(), s -> s.scrape(request));
+            Optional<MetadataResult> scraped = Optional.empty();
+            for (int index = 0; index < scrapers.size() && scraped.isEmpty(); index++) {
+                scraped = call(scrapers.get(index), s -> s.scrape(request));
+            }
             if (scraped.isEmpty()) {
                 return MetadataScrapeOutcome.NO_MATCH;
             }
@@ -117,9 +123,11 @@ public class MovieScrapeService {
      *                                 unambiguously
      */
     public boolean refetchTexts(long movieId) {
-        MovieMetadata current = metadataService.findDetails(movieId).metadata();
+        MovieDetails details = metadataService.findDetails(movieId);
+        MovieMetadata current = details.metadata();
         return inLanguageOf(movieId, () -> {
-            MetadataScraper scraper = preferredReadyScraper().orElseThrow(ScraperProblemException::noMetadataScraper);
+            MetadataScraper scraper = readyScrapers(details.sourceId()).stream().findFirst()
+                    .orElseThrow(ScraperProblemException::noMetadataScraper);
             Map<String, String> knownIds = new HashMap<>();
             Optional.ofNullable(current.imdbId()).ifPresent(id -> knownIds.put(IMDB, id));
             Optional.ofNullable(current.tmdbId()).ifPresent(id -> knownIds.put(TMDB, id));
@@ -141,15 +149,12 @@ public class MovieScrapeService {
         return ScrapeLanguage.with(metadataService.scrapeLanguage(movieId), body);
     }
 
-    /** The configured scraper, otherwise the first one that is set up. */
-    private Optional<MetadataScraper> preferredReadyScraper() {
-        List<MetadataScraper> ready = scraperRegistry.metadataScrapersFor(MediaType.MOVIE).stream()
+    /** The movie scrapers that are set up, in the order of the movie's source. */
+    private List<MetadataScraper> readyScrapers(long sourceId) {
+        return priorityService.ordered(ScraperKind.METADATA, MediaType.MOVIE, sourceId,
+                        scraperRegistry.metadataScrapersFor(MediaType.MOVIE)).stream()
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())
                 .toList();
-        return ready.stream()
-                .filter(scraper -> scraper.id().equals(properties.preferredMetadataScraper()))
-                .findFirst()
-                .or(() -> ready.stream().findFirst());
     }
 
     private MetadataScraper scraper(String scraperId) {

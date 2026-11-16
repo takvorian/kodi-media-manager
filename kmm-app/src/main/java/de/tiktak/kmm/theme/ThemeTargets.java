@@ -27,12 +27,12 @@ class ThemeTargets {
         Path directory = CompanionFiles.of(Path.of(movie.filePath()), movie.discFormat(), movie.partCount())
                 .movieDirectory();
         return new ThemeTarget(MediaType.MOVIE, movie.metadata().title(), movie.metadata().originalTitle(),
-                movie.metadata().year(), directory);
+                movie.metadata().year(), directory, movie.sourceId());
     }
 
     ThemeTarget forShow(long showId) {
         TvShowDetails show = tvShowService.findShow(showId);
         return new ThemeTarget(MediaType.TV_SHOW, show.metadata().title(), show.metadata().originalTitle(),
-                show.metadata().year(), Path.of(show.directoryPath()));
+                show.metadata().year(), Path.of(show.directoryPath()), show.sourceId());
     }
 }

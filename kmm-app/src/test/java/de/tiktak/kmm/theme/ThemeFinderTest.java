@@ -21,6 +21,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.plugin.ScraperPriorityTesting;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.MediaType;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
@@ -32,7 +33,7 @@ import de.tiktak.kmm.plugin.api.ThemeScraper;
 class ThemeFinderTest {
 
     private static final ThemeTarget ALF = new ThemeTarget(MediaType.TV_SHOW, "ALF – Der Außerirdische", "ALF", 1986,
-            Path.of("/serien/ALF"));
+            Path.of("/serien/ALF"), null);
 
     @Mock
     private ScraperRegistry scraperRegistry;
@@ -44,7 +45,7 @@ class ThemeFinderTest {
 
     @BeforeEach
     void setUp() {
-        finder = new ThemeFinder(scraperRegistry);
+        finder = new ThemeFinder(scraperRegistry, ScraperPriorityTesting.defaults(scraperRegistry));
         lenient().when(scraper.id()).thenReturn("televisiontunes");
         lenient().when(scraper.displayName()).thenReturn("TelevisionTunes");
         lenient().when(scraper.missingConfiguration()).thenReturn(Optional.empty());
@@ -71,7 +72,7 @@ class ThemeFinderTest {
 
     @Test
     void searchesOnceWhenBothTitlesAreAlike() {
-        ThemeTarget alf = new ThemeTarget(MediaType.TV_SHOW, "ALF", "Alf", null, Path.of("/serien/ALF"));
+        ThemeTarget alf = new ThemeTarget(MediaType.TV_SHOW, "ALF", "Alf", null, Path.of("/serien/ALF"), null);
         when(scraper.findThemes(any())).thenReturn(List.of(theme("Opening", "Alfred J. Kwak")));
 
         ThemeOptions options = finder.find(alf);
@@ -83,6 +84,8 @@ class ThemeFinderTest {
     @Test
     void reportsUnconfiguredAndFailingScrapers() {
         ThemeScraper unconfigured = mock(ThemeScraper.class);
+        when(unconfigured.id()).thenReturn("youtube");
+        when(unconfigured.displayName()).thenReturn("YouTube");
         when(unconfigured.missingConfiguration())
                 .thenReturn(Optional.of(LocalizedText.literal("YouTube: yt-dlp fehlt")));
         when(scraperRegistry.themeScrapersFor(MediaType.TV_SHOW)).thenReturn(List.of(unconfigured, scraper));
@@ -93,8 +96,8 @@ class ThemeFinderTest {
         assertThat(options.candidates()).isEmpty();
         LocalizedText failure = LocalizedText.of("theme.warning").with("provider", "TelevisionTunes")
                 .with("reason", LocalizedText.literal("nicht erreichbar"));
-        assertThat(options.warnings()).containsExactly(LocalizedText.literal("YouTube: yt-dlp fehlt"), failure,
-                failure);
+        assertThat(options.warnings()).containsExactly(failure, failure,
+                LocalizedText.literal("YouTube: yt-dlp fehlt"));
         verify(unconfigured, never()).findThemes(any());
     }
 

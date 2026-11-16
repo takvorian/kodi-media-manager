@@ -47,6 +47,11 @@ const pages: Routes = [
     loadComponent: () => import('./sources/source-list').then((m) => m.SourceList),
   },
   {
+    path: 'sources/:id/scrapers',
+    title: 'pageTitle.sourceScrapers',
+    loadComponent: () => import('./sources/source-scrapers-page').then((m) => m.SourceScrapersPage),
+  },
+  {
     path: 'sources/:id/rename',
     title: 'pageTitle.movieRename',
     loadComponent: () => import('./movies/movie-rename-page').then((m) => m.MovieRenamePage),

@@ -38,14 +38,16 @@ public class MovieTrailerService {
 
     /** Suggestions, best first: preferred image language, then English. */
     public TrailerOptions candidates(long movieId) {
-        MovieMetadata metadata = metadataService.findDetails(movieId).metadata();
+        MovieDetails movie = metadataService.findDetails(movieId);
+        MovieMetadata metadata = movie.metadata();
         Map<String, String> ids = uniqueIds(metadata);
         if (ids.isEmpty()) {
             throw ScraperProblemException.missingIdsForTrailers();
         }
         return ScrapeLanguage.with(metadataService.scrapeLanguage(movieId), () -> trailerFinder.find(
                 new ScrapeRequest(MediaType.MOVIE, metadata.title(), metadata.year(), ids),
-                ScrapeLanguage.preferredImageLanguage(settingsService.current().artworkLanguage())));
+                ScrapeLanguage.preferredImageLanguage(settingsService.current().artworkLanguage()),
+                movie.sourceId()));
     }
 
     /**

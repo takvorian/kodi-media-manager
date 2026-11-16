@@ -65,6 +65,18 @@ The settings have two tabs at the top: **General** with everything described so 
 
 A click on a provider opens its page. There you switch it on or off with **Switched on** and change its settings under **Keys and options**. Then click **Save**.
 
+<a id="scraper-order"></a>
+### Order
+
+Below the overview you set for **Movies** and **TV shows** in which order KMM asks the providers per kind. Move a provider with the arrows, switch it off for this kind with its tick box. Then click **Save**.
+
+- **Metadata:** the first provider identifies new movies and TV shows. If it finds nothing, the next one tries. When fetching again, the first one set up applies.
+- **Artwork:** KMM asks all ticked providers. Within one language the images of the provider further up come first, and the automatic choice takes the first image.
+- **Ratings and details:** if both fill an empty field, the provider further up wins.
+- **Theme music, trailers, movie sets:** in this order.
+
+Without a choice of your own, TMDB comes first for movies and TVDB for TV shows, the others follow by name. Ratings have a fixed order. Single sources can differ, see [Scrapers of a source](sources.md#source-scrapers). A TV show's own episode order determines its provider, see [Episode order](tv-shows.md#episode-order).
+
 <a id="api-keys"></a>
 ### Keys
 

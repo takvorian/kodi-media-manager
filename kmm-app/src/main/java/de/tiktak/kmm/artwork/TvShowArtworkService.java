@@ -73,13 +73,15 @@ public class TvShowArtworkService {
 
     public ArtworkCandidates candidates(long showId, ImageType type, Integer season) {
         requireSupported(type, season);
-        TvShowMetadata metadata = metadataService.findShow(showId).metadata();
+        TvShowDetails show = metadataService.findShow(showId);
+        TvShowMetadata metadata = show.metadata();
         Map<String, String> uniqueIds = uniqueIds(metadata);
         if (uniqueIds.isEmpty()) {
             throw ArtworkProblemException.missingTvIds();
         }
         ArtworkSearch search = ScrapeLanguage.with(metadataService.scrapeLanguage(showId),
-                () -> candidateFinder.findAll(MediaType.TV_SHOW, metadata.title(), metadata.year(), uniqueIds));
+                () -> candidateFinder.findAll(MediaType.TV_SHOW, show.sourceId(), metadata.title(), metadata.year(),
+                        uniqueIds));
         return new ArtworkCandidates(search.candidatesOf(type, season), search.warnings());
     }
 
@@ -152,7 +154,7 @@ public class TvShowArtworkService {
                 }
                 if (search == null) {
                     search = ScrapeLanguage.with(metadataService.scrapeLanguage(showId),
-                            () -> candidateFinder.findAll(MediaType.TV_SHOW, show.metadata().title(),
+                            () -> candidateFinder.findAll(MediaType.TV_SHOW, show.sourceId(), show.metadata().title(),
                                     show.metadata().year(), uniqueIds));
                     warnings.addAll(search.warnings());
                 }

@@ -16,6 +16,8 @@ import org.springframework.stereotype.Component;
 
 import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
+import de.tiktak.kmm.plugin.ScraperKind;
+import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ImageScraper;
 import de.tiktak.kmm.plugin.api.ImageType;
@@ -45,23 +47,30 @@ class ArtworkCandidateFinder {
     private static final Set<ImageType> TEXTLESS_PREFERRED = Set.of(ImageType.FANART);
 
     private final ScraperRegistry scraperRegistry;
+    private final ScraperPriorityService priorityService;
     private final SettingsService settingsService;
 
     /** Matches of an image type for a movie. */
-    ArtworkCandidates find(ImageType type, String title, Integer year, Map<String, String> uniqueIds) {
-        ArtworkSearch search = findAll(MediaType.MOVIE, title, year, uniqueIds);
+    ArtworkCandidates find(ImageType type, long sourceId, String title, Integer year,
+            Map<String, String> uniqueIds) {
+        ArtworkSearch search = findAll(MediaType.MOVIE, sourceId, title, year, uniqueIds);
         return new ArtworkCandidates(search.candidatesOf(type), search.warnings());
     }
 
     /**
+     * Asks the image scrapers switched on for the source.
+     *
+     * @param sourceId the source of the movie or TV show, {@code null} for movie sets
      * @return the matches of all image types, per type in the order of the selection
      */
-    ArtworkSearch findAll(MediaType mediaType, String title, Integer year, Map<String, String> uniqueIds) {
+    ArtworkSearch findAll(MediaType mediaType, Long sourceId, String title, Integer year,
+            Map<String, String> uniqueIds) {
         ScrapeRequest request = new ScrapeRequest(mediaType, title, year, uniqueIds);
         List<ArtworkCandidate> candidates = new ArrayList<>();
         List<LocalizedText> warnings = new ArrayList<>();
         List<ImageScraper> ready = new ArrayList<>();
-        for (ImageScraper scraper : scraperRegistry.imageScrapersFor(mediaType)) {
+        for (ImageScraper scraper : priorityService.ordered(ScraperKind.ARTWORK, mediaType, sourceId,
+                scraperRegistry.imageScrapersFor(mediaType))) {
             scraper.missingConfiguration().ifPresentOrElse(warnings::add, () -> ready.add(scraper));
         }
         try (ExecutorService executor = Executors.newVirtualThreadPerTaskExecutor()) {
@@ -72,7 +81,8 @@ class ArtworkCandidateFinder {
                 collect(ready.get(index), results.get(index), candidates, warnings);
             }
         }
-        return new ArtworkSearch(groupAndSort(candidates), warnings);
+        List<String> ranking = ready.stream().map(ImageScraper::id).toList();
+        return new ArtworkSearch(groupAndSort(candidates, ranking), warnings);
     }
 
     private static List<ArtworkCandidate> query(ImageScraper scraper, ScrapeRequest request) {
@@ -103,22 +113,24 @@ class ArtworkCandidateFinder {
                 .with("reason", reason);
     }
 
-    private Map<ImageType, List<ArtworkCandidate>> groupAndSort(List<ArtworkCandidate> candidates) {
+    private Map<ImageType, List<ArtworkCandidate>> groupAndSort(List<ArtworkCandidate> candidates,
+            List<String> ranking) {
         Map<ImageType, List<ArtworkCandidate>> byType = new EnumMap<>(ImageType.class);
         for (ArtworkCandidate candidate : candidates) {
             byType.computeIfAbsent(candidate.type(), type -> new ArrayList<>()).add(candidate);
         }
-        byType.forEach((type, list) -> list.sort(order(type)));
+        byType.forEach((type, list) -> list.sort(order(type, ranking)));
         return byType;
     }
 
     /**
      * Preferred language and language-neutral images first (the other way round for fanart), then English and
-     * the rest; within each group the most popular.
+     * the rest; within each group by the order of the providers, then the most popular.
      */
-    private Comparator<ArtworkCandidate> order(ImageType type) {
+    private Comparator<ArtworkCandidate> order(ImageType type, List<String> ranking) {
         boolean textlessFirst = TEXTLESS_PREFERRED.contains(type);
         return Comparator.comparingInt((ArtworkCandidate candidate) -> languageRank(candidate, textlessFirst))
+                .thenComparingInt(candidate -> ranking.indexOf(candidate.scraperId()))
                 .thenComparing(candidate -> Objects.requireNonNullElse(candidate.rating(), 0.0),
                         Comparator.reverseOrder());
     }

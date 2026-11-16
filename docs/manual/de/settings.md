@@ -65,6 +65,18 @@ Die Einstellungen haben oben zwei Reiter: **Allgemein** mit allem bisher Beschri
 
 Ein Klick auf einen Anbieter öffnet seine Seite. Dort schaltest du ihn mit **Eingeschaltet** an oder aus und änderst unter **Keys und Optionen** seine Einstellungen. Klicke danach auf **Speichern**.
 
+<a id="scraper-order"></a>
+### Reihenfolge
+
+Unter der Übersicht legst du für **Filme** und **Serien** fest, in welcher Reihenfolge KMM die Anbieter je Art fragt. Mit den Pfeilen verschiebst du einen Anbieter, mit dem Haken schaltest du ihn für diese Art ab. Klicke danach auf **Speichern**.
+
+- **Metadaten:** Der erste Anbieter ordnet neue Filme und Serien zu. Findet er nichts, versucht es der nächste. Beim Neu-Holen gilt der erste, der eingerichtet ist.
+- **Bilder:** KMM fragt alle angehakten Anbieter. Innerhalb einer Sprache stehen die Bilder des vorderen Anbieters zuerst, und die Automatik nimmt das erste Bild.
+- **Bewertungen und Details:** Füllt ein leeres Feld, gewinnt der vordere Anbieter.
+- **Titelmusik, Trailer, Filmsets:** in dieser Reihenfolge.
+
+Ohne eigene Wahl steht bei Filmen TMDB und bei Serien TVDB vorn, die übrigen folgen nach Name. Bei Bewertungen gilt eine feste Reihenfolge. Für einzelne Quellen kannst du abweichen, siehe [Scraper einer Quelle](sources.md#source-scrapers). Eine eigene Episoden-Reihenfolge einer Serie legt ihren Anbieter fest, siehe [Episoden-Reihenfolge](tv-shows.md#episode-order).
+
 <a id="api-keys"></a>
 ### Keys
 

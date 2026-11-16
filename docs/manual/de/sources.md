@@ -31,10 +31,18 @@ Klicke dann auf **Hinzufügen**.
 | **Kodi-Scan** | Lässt alle Kodi-Geräte diese Quelle durchsuchen, siehe [Kodi](kodi.md). |
 | **Gesehen-Status** | Holt Wiedergaben und eigene Bewertungen aus Kodi. |
 | **Technische Angaben** | Liest mit ffprobe aus: **Fehlende auslesen** oder **Alle neu auslesen**. |
+| **Scraper** | Legt die Reihenfolge der Anbieter für diese Quelle fest, siehe [unten](sources.md#source-scrapers). |
 | **Umbenennen** | Öffnet die Vorschau zum [Umbenennen](renaming.md). |
 | **Entfernen** | Entfernt die Quelle und alle ihre Einträge aus KMM, nach einer Rückfrage. Deine Dateien bleiben liegen. Einzelne Filme, Serien, Staffeln oder Episoden entfernst du in deren Ansicht, siehe [Filme](movies.md#remove) und [Serien](tv-shows.md#remove). |
 
 Während eine Aufgabe läuft, zeigt die Zeile ihren Namen, den Fortschritt und einen Knopf **Abbrechen**. Nach einem Scan mit neuen Episoden oder Filmen folgt oft direkt eine zweite Aufgabe, etwa **Technische Angaben neuer Dateien**. Am Namen siehst du, dass der Scan selbst schon fertig ist.
+
+<a id="source-scrapers"></a>
+## Scraper einer Quelle
+
+Normalerweise gilt für alle Quellen die Reihenfolge der Anbieter aus [Einstellungen → Scraper](settings.md#scraper-order). **Scraper** in der Zeile einer Quelle öffnet dieselbe Liste nur für diese Quelle. Nimm bei einer Art den Haken **Wie in den Einstellungen** heraus, dann kannst du die Anbieter verschieben oder abschalten. Klicke danach auf **Speichern**.
+
+Ein Beispiel: Eine Quelle mit Anime-Serien, die TVDB anders zählt als deine Dateien, bekommt bei **Metadaten** TMDB nach vorn. Alle anderen Serien-Quellen bleiben bei TVDB.
 
 ## Sprache einer Quelle
 

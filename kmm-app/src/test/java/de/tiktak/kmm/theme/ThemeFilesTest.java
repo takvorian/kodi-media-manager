@@ -36,7 +36,7 @@ class ThemeFilesTest {
 
     @BeforeEach
     void setUp() {
-        target = new ThemeTarget(MediaType.TV_SHOW, "ALF", null, 1986, directory);
+        target = new ThemeTarget(MediaType.TV_SHOW, "ALF", null, 1986, directory, null);
     }
 
     @Test
@@ -94,7 +94,7 @@ class ThemeFilesTest {
 
         Path notEmpty = Files.createDirectories(directory.resolve("ordner/theme.mp3")).getParent();
         Files.writeString(notEmpty.resolve("theme.mp3/inhalt"), "x");
-        assertThatThrownBy(() -> files.delete(new ThemeTarget(MediaType.MOVIE, "Heat", null, 1995, notEmpty)))
+        assertThatThrownBy(() -> files.delete(new ThemeTarget(MediaType.MOVIE, "Heat", null, 1995, notEmpty, null)))
                 .isInstanceOfSatisfying(ThemeProblemException.class,
                         e -> assertThat(e.getStatusCode()).isEqualTo(HttpStatus.UNPROCESSABLE_CONTENT));
     }

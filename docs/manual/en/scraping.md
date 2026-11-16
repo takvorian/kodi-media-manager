@@ -42,7 +42,7 @@ The language is also stored in the NFO as `<language>`, as in Ember. It also det
 | TelevisionTunes | theme music | no |
 | YouTube | theme music, needs yt-dlp | no |
 
-You enter the keys under [Settings → Scrapers](settings.md#api-keys). KMM skips a provider without a key.
+You enter the keys under [Settings → Scrapers](settings.md#api-keys). KMM skips a provider without a key. In which order KMM asks the providers, and which it does not ask at all, you set there under [Order](settings.md#scraper-order), for single sources also differently.
 
 ## Online search
 

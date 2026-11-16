@@ -14,6 +14,8 @@ import java.util.stream.Stream;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.i18n.LocalizedText;
+import de.tiktak.kmm.plugin.ScraperKind;
+import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
 import de.tiktak.kmm.plugin.api.ScrapeRequest;
 import de.tiktak.kmm.plugin.api.ScraperException;
@@ -29,12 +31,14 @@ import lombok.RequiredArgsConstructor;
 class ThemeFinder {
 
     private final ScraperRegistry scraperRegistry;
+    private final ScraperPriorityService priorityService;
 
     /** Suggestions, matches with the same title first, otherwise in the order of the providers; each source once. */
     ThemeOptions find(ThemeTarget target) {
         List<LocalizedText> warnings = new ArrayList<>();
         Map<String, ThemeOption> options = new LinkedHashMap<>();
-        for (ThemeScraper scraper : scraperRegistry.themeScrapersFor(target.mediaType())) {
+        for (ThemeScraper scraper : priorityService.ordered(ScraperKind.THEME, target.mediaType(),
+                target.sourceId(), scraperRegistry.themeScrapersFor(target.mediaType()))) {
             Optional<LocalizedText> missing = scraper.missingConfiguration();
             if (missing.isPresent()) {
                 warnings.add(missing.get());

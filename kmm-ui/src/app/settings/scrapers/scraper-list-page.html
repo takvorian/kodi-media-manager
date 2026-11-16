@@ -44,3 +44,38 @@
 } @else {
   <p class="loading">{{ 'settings.scrapers.loading' | transloco }}</p>
 }
+
+<mat-card appearance="outlined" class="priorities">
+  <mat-card-header>
+    <mat-card-title>{{ 'settings.scrapers.priority.title' | transloco }}</mat-card-title>
+  </mat-card-header>
+  <mat-card-content>
+    <p class="hint">
+      {{ 'settings.scrapers.priority.hint' | transloco }}
+      <app-help-link chapter="settings" anchor="scraper-order">{{
+        'settings.scrapers.priority.help' | transloco
+      }}</app-help-link>
+    </p>
+    <mat-button-toggle-group
+      class="media-type-toggle"
+      [value]="mediaType()"
+      (change)="mediaType.set($event.value)"
+    >
+      <mat-button-toggle value="MOVIE">{{
+        'settings.scrapers.priority.movies' | transloco
+      }}</mat-button-toggle>
+      <mat-button-toggle value="TV_SHOW">{{
+        'settings.scrapers.priority.tvShows' | transloco
+      }}</mat-button-toggle>
+    </mat-button-toggle-group>
+    @if (priorities.error()) {
+      <p class="error">{{ 'settings.scrapers.priority.loadError' | transloco }}</p>
+    } @else if (priorities.hasValue()) {
+      <app-scraper-priority-editor
+        [priorities]="shown()"
+        [busy]="saving()"
+        (saved)="savePriorities($event)"
+      />
+    }
+  </mat-card-content>
+</mat-card>
