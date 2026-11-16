@@ -20,7 +20,7 @@ public record ScraperInfo(String id, String displayName, Set<MediaType> mediaTyp
         mediaTypes = Set.copyOf(mediaTypes);
     }
 
-    static ScraperInfo from(Scraper scraper) {
+    public static ScraperInfo from(Scraper scraper) {
         return new ScraperInfo(scraper.id(), scraper.displayName(), scraper.supportedMediaTypes(),
                 scraper.missingConfiguration().orElse(null), scraper.attribution().orElse(null));
     }

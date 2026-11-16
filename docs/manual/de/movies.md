@@ -34,6 +34,11 @@ Einige Felder im Detail:
 - **TMDB-ID:** nur Ziffern.
 - **Genres:** mehrere durch Komma trennen.
 
+<a id="own-scraper"></a>
+### Scraper des Films
+
+Unter **Scraper** wählst du für einen einzelnen Film einen anderen Anbieter als den ersten in der Reihenfolge seiner [Quelle](sources.md#source-scrapers). KMM fragt dann, ob es Titel und Inhaltsangabe gleich dort neu holen soll. **Abbrechen** ändert nur den Scraper. Übernimmst du in der [Online-Suche](scraping.md#online-suche) einen Treffer eines anderen Anbieters, merkt sich der Film diesen Anbieter. **Standard der Quelle** setzt die Wahl zurück.
+
 ## Knöpfe der Filmansicht
 
 | Knopf | Was passiert |

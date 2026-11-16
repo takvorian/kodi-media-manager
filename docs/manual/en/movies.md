@@ -34,6 +34,11 @@ Some fields in detail:
 - **TMDB ID:** digits only.
 - **Genres:** separate several with commas.
 
+<a id="own-scraper"></a>
+### Scraper of the movie
+
+Under **Scraper** you choose another provider for a single movie than the first in the order of its [source](sources.md#source-scrapers). KMM then asks whether to fetch the title and plot from there again right away. **Cancel** only changes the scraper. If you take over a match from another provider in the [online search](scraping.md#online-search), the movie keeps that provider. **Default of the source** resets the choice.
+
 ## Buttons in the movie view
 
 | Button | What happens |

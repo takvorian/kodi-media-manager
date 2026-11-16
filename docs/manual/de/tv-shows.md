@@ -38,6 +38,15 @@ Nach der Auswahl fragt KMM, ob es Titel und Inhaltsangaben aller Episoden gleich
 
 Mit einer eigenen Reihenfolge scrapt KMM die Serie immer beim Anbieter dieser Reihenfolge, auch wenn in den Einstellungen ein anderer bevorzugt ist. Die Reihenfolge steht nur in der Datenbank von KMM, nicht in der NFO, denn Kodi kennt dafür kein Feld.
 
+<a id="own-scraper"></a>
+### Scraper der Serie
+
+Normalerweise holt KMM die Daten einer Serie beim ersten Anbieter in der Reihenfolge ihrer [Quelle](sources.md#source-scrapers). Passt bei einer einzelnen Serie keine Zählung dieses Anbieters zu deinen Dateien, wählst du unter **Scraper** in der Serienansicht einen anderen. Ein Beispiel: Die erfundene Serie „Im Nebelwald“ hat bei TVDB zwei Zählweisen, aber deine Dateien folgen der von TMDB. Dann wählst du TMDB.
+
+Nach der Auswahl fragt KMM, ob es die Serie gleich beim neuen Anbieter zuordnen und Titel und Inhaltsangaben der Serie und aller Episoden neu holen soll. **OK** überschreibt die vorhandenen Texte, auch von Hand geänderte. **Abbrechen** ändert nur den Scraper, er gilt ab dem nächsten Scrapen. Findet der Anbieter die Serie nicht eindeutig, meldet KMM das; dann hilft die [Online-Suche](tv-shows.md#online-suche-für-serien).
+
+Eine Episoden-Reihenfolge eines anderen Anbieters entfällt dabei, ihre Nummern gehören zu ihm. Wählst du umgekehrt eine Episoden-Reihenfolge eines anderen Anbieters, wechselt auch der Scraper. **Standard der Quelle** setzt die Wahl zurück. Der Scraper steht wie die Reihenfolge nur in der Datenbank von KMM.
+
 ## Eine Serie oder Staffel scannen
 
 Hast du neue Episoden in den Ordner einer Serie gelegt oder welche gelöscht, musst du nicht die ganze Quelle scannen. **Scannen** oben in der Serienansicht liest nur den Ordner dieser Serie neu ein: Neue Episoden kommen dazu, Episoden ohne Datei werden aus der Bibliothek entfernt, und geänderte NFOs werden übernommen. **Scannen** bei einer Staffel macht dasselbe nur für die Episoden dieser Staffel. In der Serienliste scannst du so mehrere ausgewählte Serien auf einmal.
@@ -70,7 +79,7 @@ Fortschritt und Bericht erscheinen oben in der Serienansicht. Solange eine Staff
 
 ## Online-Suche für Serien
 
-**Online suchen** arbeitet wie bei [Filmen](scraping.md#online-suche). Die Vorgabe ist TVDB. Die übernommenen Angaben landen zuerst im Formular. Beim Speichern ergänzt KMM zusätzlich die Episoden, und zwar nur deren leere Felder. Ein Hinweis über den Knöpfen sagt dir vorher, wie viele Episoden betroffen sind.
+**Online suchen** arbeitet wie bei [Filmen](scraping.md#online-suche). Vorgewählt ist der Scraper der Serie. Übernimmst du einen Treffer eines anderen Anbieters als des Standards der Quelle, merkt sich die Serie diesen Anbieter als ihren [Scraper](tv-shows.md#own-scraper). Die übernommenen Angaben landen zuerst im Formular. Beim Speichern ergänzt KMM zusätzlich die Episoden, und zwar nur deren leere Felder. Ein Hinweis über den Knöpfen sagt dir vorher, wie viele Episoden betroffen sind.
 
 Welche Reihenfolge der Episoden gilt (Ausstrahlung, DVD oder absolut), stellst du unter [Einstellungen](settings.md#serien) ein. Das wirkt nur bei TVDB. Andere Zählweisen, etwa die eines Streamingdienstes, wählst du pro Serie unter [Episoden-Reihenfolge](tv-shows.md#episode-order).
 

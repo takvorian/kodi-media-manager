@@ -12,13 +12,14 @@ import { LocalizedPipe } from '../i18n/localized.pipe';
 import { problemMessage } from '../shared/problem-message';
 import { MovieMetadata } from './movie';
 import { MovieService } from './movie.service';
-import { CollectionReference, ScrapeCandidate, ScraperInfo } from './scraper';
+import { CollectionReference, preferredScraper, ScrapeCandidate, ScraperInfo } from './scraper';
 
 /** Adopted data including the collection and where it comes from. */
 export interface ScrapedProposal {
   readonly metadata: MovieMetadata;
   readonly collection: CollectionReference | null;
   readonly scraperName: string;
+  readonly scraperId: string;
 }
 
 /**
@@ -45,6 +46,8 @@ export class MovieOnlineSearch {
   readonly movieId = input.required<number>();
   readonly title = input.required<string>();
   readonly year = input<number | null>(null);
+  /** The scraper of the movie, preselected. */
+  readonly preferredScraper = input<string | null>(null);
   readonly proposed = output<ScrapedProposal>();
 
   protected readonly scrapers = rxResource({ stream: () => this.movieService.metadataScrapers() });
@@ -61,10 +64,13 @@ export class MovieOnlineSearch {
     initialValue: '',
   });
 
-  /** The chosen scraper, otherwise the first one available. */
+  /** The chosen scraper, otherwise that of the movie. */
   protected readonly selectedScraper = computed<ScraperInfo | undefined>(() => {
     const scrapers = this.scrapers.hasValue() ? this.scrapers.value() : [];
-    return scrapers.find((scraper) => scraper.id === this.chosenScraperId()) ?? scrapers[0];
+    return (
+      scrapers.find((scraper) => scraper.id === this.chosenScraperId()) ??
+      preferredScraper(scrapers, this.preferredScraper())
+    );
   });
 
   protected search(): void {
@@ -88,7 +94,12 @@ export class MovieOnlineSearch {
     }
     this.run(
       this.movieService.proposal(this.movieId(), scraper.id, candidate.providerId),
-      (proposal) => this.proposed.emit({ ...proposal, scraperName: scraper.displayName }),
+      (proposal) =>
+        this.proposed.emit({
+          ...proposal,
+          scraperName: scraper.displayName,
+          scraperId: scraper.id,
+        }),
     );
   }
 

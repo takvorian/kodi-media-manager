@@ -9,9 +9,8 @@ import { TranslocoPipe } from '@jsverse/transloco';
 import { Observable } from 'rxjs';
 
 import { LocalizedPipe } from '../i18n/localized.pipe';
-import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
+import { preferredScraper, ScrapeCandidate, ScraperInfo } from '../movies/scraper';
 import { problemMessage } from '../shared/problem-message';
-import { defaultTvShowScraper } from './tv-scrapers';
 import { TvShowProposal } from './tvshow';
 import { TvShowService } from './tvshow.service';
 
@@ -47,6 +46,8 @@ export class TvShowOnlineSearch {
   readonly showId = input.required<number>();
   readonly title = input.required<string>();
   readonly year = input<number | null>(null);
+  /** The scraper of the TV show, preselected. */
+  readonly preferredScraper = input<string | null>(null);
   readonly proposed = output<TvShowScrapedProposal>();
 
   protected readonly scrapers = rxResource({ stream: () => this.tvShowService.tvShowScrapers() });
@@ -68,7 +69,7 @@ export class TvShowOnlineSearch {
     const scrapers = this.scrapers.hasValue() ? this.scrapers.value() : [];
     return (
       scrapers.find((scraper) => scraper.id === this.chosenScraperId()) ??
-      defaultTvShowScraper(scrapers)
+      preferredScraper(scrapers, this.preferredScraper())
     );
   });
 

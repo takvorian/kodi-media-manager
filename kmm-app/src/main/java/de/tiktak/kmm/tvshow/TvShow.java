@@ -112,6 +112,10 @@ public class TvShow {
     @Column(name = "episode_ordering_name", length = 255)
     private String episodeOrderingName;
 
+    /** Scraper chosen for the TV show; without a value the order of its source applies. */
+    @Column(name = "scraper_id", length = 40)
+    private String scraperId;
+
     @Column(name = "user_rating")
     private Integer userRating;
 
@@ -225,6 +229,31 @@ public class TvShow {
         boolean changed = !Objects.equals(episodeOrdering, stored) || !Objects.equals(episodeOrderingName, name);
         episodeOrdering = stored;
         episodeOrderingName = name;
+        if (ordering != null && scraperId != null && !scraperId.equals(ordering.scraperId())) {
+            scraperId = ordering.scraperId();
+        }
+        return changed;
+    }
+
+    /** @return the scraper chosen for the TV show, empty if the order of its source applies */
+    public Optional<String> ownScraper() {
+        return Optional.ofNullable(scraperId);
+    }
+
+    /**
+     * An episode order of another scraper no longer applies afterwards, since its numbers belong to that scraper.
+     *
+     * @param scraper the chosen scraper, or {@code null} for the order of the source
+     * @return whether anything has changed
+     */
+    boolean changeScraper(String scraper) {
+        boolean changed = !Objects.equals(scraperId, scraper);
+        scraperId = scraper;
+        if (scraper != null && episodeOrdering().filter(ordering -> !ordering.scraperId().equals(scraper))
+                .isPresent()) {
+            changeEpisodeOrdering(null);
+            changed = true;
+        }
         return changed;
     }
 

@@ -105,6 +105,22 @@ public class TvShowMetadataService {
         return true;
     }
 
+    /**
+     * Chooses the scraper of the TV show. It is kept in the database only, like the episode order.
+     *
+     * @param scraperId the scraper, or {@code null} for the order of the source
+     * @return whether anything changed
+     */
+    @Transactional
+    public boolean changeScraper(long showId, String scraperId) {
+        TvShow show = requireShow(showId);
+        if (!show.changeScraper(scraperId)) {
+            return false;
+        }
+        log.info("Scraper of TV show {} set to {}", showId, scraperId);
+        return true;
+    }
+
     /** Enters its own language into a just-created NFO. */
     @Transactional
     public void storeLanguageInNfo(long showId) {

@@ -8,7 +8,13 @@ import { ListSort, SORT_BY_TITLE as TITLE_ORDER, withSort } from '../shared/list
 import { RemovalPlan } from '../shared/removal';
 import { MovieDetails, MovieMetadata, MoviePage, MovieQuery } from './movie';
 import { MovieBatchEdit } from './movie-batch';
-import { CollectionReference, MovieScrapeProposal, ScrapeCandidate, ScraperInfo } from './scraper';
+import {
+  CollectionReference,
+  MovieScrapeProposal,
+  ScrapeCandidate,
+  ScraperChoice,
+  ScraperInfo,
+} from './scraper';
 
 export const MOVIES_URL = '/api/v1/movies';
 export const METADATA_SCRAPERS_URL = '/api/v1/scrapers/metadata';
@@ -58,6 +64,23 @@ export class MovieService {
 
   findMovie(movieId: number): Observable<MovieDetails> {
     return this.http.get<MovieDetails>(`${MOVIES_URL}/${movieId}`);
+  }
+
+  /** The movie's metadata scraper and the ones it can be switched to. */
+  scraperChoice(movieId: number): Observable<ScraperChoice> {
+    return this.http.get<ScraperChoice>(`${MOVIES_URL}/${movieId}/scraper`);
+  }
+
+  /** Chooses the movie's scraper as a job, `null` for the order of its source. */
+  changeScraper(movieId: number, scraperId: string | null, rescrape: boolean): Observable<Job> {
+    return this.http.put<Job>(`${MOVIES_URL}/${movieId}/scraper`, { scraperId, rescrape });
+  }
+
+  /** After a match of the online search was saved: the movie keeps its scraper unless it is the source's. */
+  adoptedFrom(movieId: number, scraperId: string): Observable<ScraperChoice> {
+    return this.http.post<ScraperChoice>(`${MOVIES_URL}/${movieId}/scraper/adopted`, null, {
+      params: { scraper: scraperId },
+    });
   }
 
   metadataScrapers(): Observable<ScraperInfo[]> {

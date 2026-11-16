@@ -2,6 +2,7 @@ import { TestRequest } from '@angular/common/http/testing';
 import { By } from '@angular/platform-browser';
 import { provideI18nTesting } from '../i18n/testing';
 import { LanguageSelect } from '../shared/language-select';
+import { ScraperSelect } from '../shared/scraper-select';
 import { EpisodeOrderSelect } from './episode-order-select';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
@@ -13,7 +14,7 @@ import { of } from 'rxjs';
 
 import { FakeJobEvents, job } from '../jobs/fake-job-events';
 
-import { ScraperInfo } from '../movies/scraper';
+import { ScraperChoice, ScraperInfo } from '../movies/scraper';
 import { NO_THEME, REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
 import { ThemeService } from '../shared/theme';
 import { TvShowDetails, TvShowProposal } from './tvshow';
@@ -166,7 +167,23 @@ describe('TvShowDetail', () => {
     fixture.componentRef.setInput('id', '3');
   });
 
-  afterEach(() => httpTesting.verify());
+  /** The scraper of the entry; requested again after jobs, answered whenever asked. */
+  const SCRAPER_CHOICE: ScraperChoice = {
+    scraperId: null,
+    defaultScraperId: 'tvdb',
+    scrapers: [{ id: 'tvdb', displayName: 'TheTVDB', mediaTypes: [], missingConfiguration: null }],
+  };
+
+  function answerScraperChoice(choice: ScraperChoice = SCRAPER_CHOICE): void {
+    httpTesting
+      .match((request) => /\/scraper(\/adopted)?$/.test(request.url))
+      .forEach((request) => request.flush(choice));
+  }
+
+  afterEach(() => {
+    answerScraperChoice();
+    httpTesting.verify();
+  });
 
   function element(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
@@ -186,6 +203,7 @@ describe('TvShowDetail', () => {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: `${TVSHOWS_URL}/3` }).flush(details);
     httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush(scrapers);
+    answerScraperChoice();
     await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3/artwork`, []);
     await fixture.whenStable();
   }
@@ -538,6 +556,7 @@ describe('TvShowDetail', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(null, { status: 404, statusText: 'Not Found' });
     httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush(scrapers);
+    answerScraperChoice();
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();
@@ -555,6 +574,7 @@ describe('TvShowDetail', () => {
     httpTesting
       .expectOne(`${TVSHOWS_URL}/4`)
       .flush({ ...alf, id: 4, metadata: { ...alf.metadata, tvdbId: null, tmdbId: '4658' } });
+    answerScraperChoice();
     await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/4/artwork`, []);
     await fixture.whenStable();
     expect(element().querySelector('.attribution')).toBeNull();
@@ -583,6 +603,7 @@ describe('TvShowDetail', () => {
     fill.flush({ updated: 2, unchanged: 0, unmatched: 1, failedFiles: ['/x2.nfo'] });
     fixture.detectChanges();
     httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
+    answerScraperChoice();
     httpTesting
       .expectOne({ method: 'POST', url: `/api/v1/tvshows/3/stream-details/after-scrape` })
       .flush({ updated: 4, failures: [] });
@@ -656,6 +677,7 @@ describe('TvShowDetail', () => {
     fixture.detectChanges();
     httpTesting.expectOne(`${TVSHOWS_URL}/3`).flush(alf);
     httpTesting.expectOne(TV_SHOW_SCRAPERS_URL).flush([]);
+    answerScraperChoice({ scraperId: null, defaultScraperId: null, scrapers: [] });
     await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3/artwork`, []);
     await fixture.whenStable();
 
@@ -1043,6 +1065,7 @@ describe('TvShowDetail', () => {
         ...alf,
         language: 'fr-FR',
       });
+      answerScraperChoice();
       await fixture.whenStable();
       fixture.detectChanges();
 
@@ -1079,6 +1102,65 @@ describe('TvShowDetail', () => {
       fixture.detectChanges();
 
       expect(languageSelect().disabled()).toBe(false);
+    });
+  });
+
+  describe('scraper', () => {
+    function scraperSelect(): ScraperSelect {
+      return fixture.debugElement.query(By.directive(ScraperSelect)).componentInstance;
+    }
+
+    it('switches to another scraper, refetches when confirmed and reloads after the job', async () => {
+      await load(alf);
+      expect(scraperSelect().choice()).toEqual(SCRAPER_CHOICE);
+
+      scraperSelect().chosen.emit('tvdb');
+
+      expect(confirmMessages.at(-1)).toContain('„TheTVDB“');
+      const change = httpTesting.expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/scraper` });
+      expect(change.request.body).toEqual({ scraperId: 'tvdb', rescrape: true });
+      const running = job({ id: 'scraper', key: 'tvshows-batch', status: 'RUNNING' });
+      change.flush(running);
+      events.emit(running);
+      fixture.detectChanges();
+      expect(element().querySelector('.scraper-running')).not.toBeNull();
+      expect(scraperSelect().disabled()).toBe(true);
+
+      events.emit(
+        job({
+          id: 'scraper',
+          key: 'tvshows-batch',
+          status: 'SUCCEEDED',
+          result: { changed: 1, unchanged: 0, failed: 0, failures: [] },
+        }),
+      );
+      await flushWhenRequested(fixture, httpTesting, `${TVSHOWS_URL}/3`, alf);
+      answerScraperChoice({ ...SCRAPER_CHOICE, scraperId: 'tvdb' });
+      await fixture.whenStable();
+      fixture.detectChanges();
+
+      expect(scraperSelect().choice()?.scraperId).toBe('tvdb');
+      expect(element().querySelector('.scraper-running')).toBeNull();
+    });
+
+    it('only changes the scraper when not confirmed and asks to save first', async () => {
+      await load(alf);
+      const title = element().querySelector<HTMLInputElement>('[name="title"]')!;
+      title.value = 'Geändert';
+      title.dispatchEvent(new Event('input'));
+      await fixture.whenStable();
+      scraperSelect().chosen.emit(null);
+      httpTesting.expectNone({ method: 'PUT', url: `${TVSHOWS_URL}/3/scraper` });
+
+      title.value = alf.metadata.title;
+      title.dispatchEvent(new Event('input'));
+      fixture.componentInstance['form'].markAsPristine();
+      confirmAnswer = false;
+      scraperSelect().chosen.emit(null);
+
+      expect(
+        httpTesting.expectOne({ method: 'PUT', url: `${TVSHOWS_URL}/3/scraper` }).request.body,
+      ).toEqual({ scraperId: null, rescrape: false });
     });
   });
 
@@ -1125,6 +1207,7 @@ describe('TvShowDetail', () => {
         ...alf,
         episodeOrdering: NETFLIX,
       });
+      answerScraperChoice();
       await fixture.whenStable();
       fixture.detectChanges();
 

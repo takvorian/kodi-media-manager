@@ -75,7 +75,7 @@ Below the overview you set for **Movies** and **TV shows** in which order KMM as
 - **Ratings and details:** if both fill an empty field, the provider further up wins.
 - **Theme music, trailers, movie sets:** in this order.
 
-Without a choice of your own, TMDB comes first for movies and TVDB for TV shows, the others follow by name. Ratings have a fixed order. Single sources can differ, see [Scrapers of a source](sources.md#source-scrapers). A TV show's own episode order determines its provider, see [Episode order](tv-shows.md#episode-order).
+Without a choice of your own, TMDB comes first for movies and TVDB for TV shows, the others follow by name. Ratings have a fixed order. Single sources can differ, see [Scrapers of a source](sources.md#source-scrapers). Single movies and TV shows can have a scraper of their own, see [Scraper of the TV show](tv-shows.md#own-scraper) and [Scraper of the movie](movies.md#own-scraper).
 
 <a id="api-keys"></a>
 ### Keys

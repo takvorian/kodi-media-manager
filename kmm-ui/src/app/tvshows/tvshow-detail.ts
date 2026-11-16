@@ -23,7 +23,7 @@ import {
 } from '../kodi/kodi';
 import { ArtworkSource } from '../movies/artwork';
 import { ArtworkGallery } from '../movies/artwork-gallery';
-import { Attribution, ScraperInfo } from '../movies/scraper';
+import { Attribution, preferredScraper, ScraperInfo } from '../movies/scraper';
 import {
   seasonStreamDetailsJobKey,
   showStreamDetailsSummary,
@@ -42,10 +42,10 @@ import { RemovalPlan, RemovalService, isRemovalJob } from '../shared/removal';
 import { ThemeEditor } from '../shared/theme-editor';
 import { TrailerEditor } from '../shared/trailer-editor';
 import { TvPeople } from './tv-people';
+import { ScraperSelect } from '../shared/scraper-select';
 import { EpisodeOrderSelect } from './episode-order-select';
 import { TvShowRenamePlan, tvRenameConfirmation } from './tv-rename';
 import { TvRenameService } from './tv-rename.service';
-import { defaultTvShowScraper } from './tv-scrapers';
 import {
   EpisodeFillResult,
   EpisodeSummary,
@@ -87,6 +87,7 @@ export interface SeasonWithEpisodes {
     LocalizedPipe,
     LanguageSelect,
     EpisodeOrderSelect,
+    ScraperSelect,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -185,6 +186,20 @@ export class TvShowDetail {
   protected readonly orderingJob = computed(() =>
     this.changingOrdering() ? this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY) : undefined,
   );
+  private readonly changingScraper = signal(false);
+  /** The change of the scraper of this view; the form is reloaded afterwards. */
+  protected readonly scraperJob = computed(() =>
+    this.changingScraper() ? this.jobStore.runningJob(TVSHOW_BATCH_JOB_KEY) : undefined,
+  );
+  protected readonly scraperChoice = rxResource({
+    params: () => this.id(),
+    stream: ({ params }) => this.tvShowService.scraperChoice(params),
+  });
+  /** The scraper of the TV show: its own one, otherwise the one of its source. */
+  protected readonly preferredScraperId = computed(() => {
+    const choice = this.scraperChoice.value();
+    return choice?.scraperId ?? choice?.defaultScraperId ?? null;
+  });
   /** Adopted match whose episode data is completed on the next save. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);
@@ -200,7 +215,7 @@ export class TvShowDetail {
     });
     // The form is reloaded at the end; input made during the run would be lost.
     effect(() => {
-      if (this.scrapeJob() || this.languageJob() || this.orderingJob()) {
+      if (this.scrapeJob() || this.languageJob() || this.orderingJob() || this.scraperJob()) {
         this.form.disable();
       } else {
         this.form.enable();
@@ -211,15 +226,17 @@ export class TvShowDetail {
         filter(
           (job) =>
             job.key === TVSHOW_BATCH_JOB_KEY &&
-            (this.changingLanguage() || this.changingOrdering()),
+            (this.changingLanguage() || this.changingOrdering() || this.changingScraper()),
         ),
         takeUntilDestroyed(),
       )
       .subscribe((job) => {
         this.changingLanguage.set(false);
         this.changingOrdering.set(false);
+        this.changingScraper.set(false);
         this.notify(batchSummary(job));
         this.show.reload();
+        this.scraperChoice.reload();
       });
     this.jobStore.completed
       .pipe(
@@ -423,10 +440,10 @@ export class TvShowDetail {
     );
   }
 
-  /** Asks the preferred TV show scraper which episodes exist without a file. */
+  /** Asks the scraper of the TV show which episodes exist without a file. */
   protected showMissingEpisodes(): void {
     const scraper = this.scrapers.hasValue()
-      ? defaultTvShowScraper(this.scrapers.value())
+      ? preferredScraper(this.scrapers.value(), this.preferredScraperId())
       : undefined;
     if (!scraper) {
       this.notify(this.transloco.translate('tvshows.noScraper'));
@@ -489,6 +506,34 @@ export class TvShowDetail {
     });
   }
 
+  /**
+   * Asks whether the TV show is identified again with the new scraper and its texts are fetched from there right
+   * away; the scraper changes in any case. The files stay as they are.
+   */
+  protected changeScraper(scraperId: string | null): void {
+    if (this.form.dirty) {
+      this.notify(this.transloco.translate('tvshows.saveFirst'));
+      return;
+    }
+    const name = this.scraperChoice
+      .value()
+      ?.scrapers.find((scraper) => scraper.id === scraperId)?.displayName;
+    const change = name
+      ? this.transloco.translate('scraperSelect.changeTo', { name })
+      : this.transloco.translate('scraperSelect.changeToDefault');
+    const rescrape = this.confirm(
+      `${change} ${this.transloco.translate('tvshows.scraperRescrape')}`,
+    );
+    this.changingScraper.set(true);
+    this.tvShowService.changeScraper(this.id(), scraperId, rescrape).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => {
+        this.changingScraper.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
   protected save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -526,6 +571,7 @@ export class TvShowDetail {
         this.saving.set(false);
         this.pendingFill.set(null);
         this.show.reload();
+        this.scraperChoice.reload();
         this.notify(fillSummary(pending.scraperName, result));
         this.probeStreamsAfterScrape();
       },

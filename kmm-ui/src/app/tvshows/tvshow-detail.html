@@ -94,6 +94,7 @@
           [showId]="details.id"
           [title]="details.metadata.title"
           [year]="details.metadata.year"
+          [preferredScraper]="preferredScraperId()"
           (proposed)="adoptProposal($event)"
         />
       </mat-card-content>
@@ -127,15 +128,21 @@
         class="language-select"
         [value]="details.language"
         [defaultLabel]="'tvshows.languageDefault' | transloco"
-        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob()"
+        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
         (chosen)="changeLanguage($event)"
       />
       <app-episode-order-select
         class="ordering-select"
         [showId]="details.id"
         [value]="details.episodeOrdering ?? null"
-        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob()"
+        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
         (chosen)="changeEpisodeOrdering($event)"
+      />
+      <app-scraper-select
+        class="scraper-select"
+        [choice]="scraperChoice.value() ?? null"
+        [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
+        (chosen)="changeScraper($event)"
       />
     </mat-card-content>
   </mat-card>
@@ -480,7 +487,13 @@
   }
 
   @if (
-    scanJob() || kodiJob() || scrapeJob() || seasonStreamsJob() || languageJob() || orderingJob()
+    scanJob() ||
+    kodiJob() ||
+    scrapeJob() ||
+    seasonStreamsJob() ||
+    languageJob() ||
+    orderingJob() ||
+    scraperJob()
   ) {
     <footer class="detail-status">
       @if (scanJob(); as job) {
@@ -493,6 +506,9 @@
       }
       @if (orderingJob()) {
         <p class="hint ordering-running">{{ 'tvshows.ordering.running' | transloco }}</p>
+      }
+      @if (scraperJob()) {
+        <p class="hint scraper-running">{{ 'scraperSelect.running' | transloco }}</p>
       }
       @if (kodiJob(); as job) {
         <p class="hint kodi-progress">

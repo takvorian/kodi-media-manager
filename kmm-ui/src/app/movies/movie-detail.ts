@@ -29,6 +29,7 @@ import { ScrapeReport } from '../sources/scrape-report';
 import { CONFIRM } from '../shared/confirm';
 import { batchSummary } from '../filters/batch';
 import { LanguageSelect, languageChangeQuestion } from '../shared/language-select';
+import { ScraperSelect } from '../shared/scraper-select';
 import { problemMessage } from '../shared/problem-message';
 import { RemovalService } from '../shared/removal';
 import { StreamDetails, StreamDetailsView } from '../shared/stream-details';
@@ -64,6 +65,7 @@ type TranslationParams = Record<string, unknown>;
   imports: [
     HelpLink,
     LanguageSelect,
+    ScraperSelect,
     ReactiveFormsModule,
     RouterLink,
     MatButtonModule,
@@ -128,6 +130,22 @@ export class MovieDetail {
   protected readonly languageJob = computed(() =>
     this.changingLanguage() ? this.jobStore.runningJob(MOVIE_BATCH_JOB_KEY) : undefined,
   );
+  private readonly changingScraper = signal(false);
+  /** The change of the scraper of this view; the form is reloaded afterwards. */
+  protected readonly scraperJob = computed(() =>
+    this.changingScraper() ? this.jobStore.runningJob(MOVIE_BATCH_JOB_KEY) : undefined,
+  );
+  protected readonly scraperChoice = rxResource({
+    params: () => this.id(),
+    stream: ({ params }) => this.movieService.scraperChoice(params),
+  });
+  /** The scraper of the movie: its own one, otherwise the one of its source. */
+  protected readonly preferredScraperId = computed(() => {
+    const choice = this.scraperChoice.value();
+    return choice?.scraperId ?? choice?.defaultScraperId ?? null;
+  });
+  /** Scraper of the result of the online search in the form; it is kept for the movie after saving. */
+  private readonly adoptedScraper = signal<string | null>(null);
   /** Whether the form holds a result of the online search; the technical details are read after saving. */
   private readonly adoptedProposal = signal(false);
   /** Collection of the adopted result; after saving the movie is assigned to its set, if configured. */
@@ -154,7 +172,7 @@ export class MovieDetail {
     });
     // The form is reloaded at the end; input made during the run would be lost.
     effect(() => {
-      if (this.scrapeJob() || this.languageJob()) {
+      if (this.scrapeJob() || this.languageJob() || this.scraperJob()) {
         this.form.disable();
       } else {
         this.form.enable();
@@ -162,13 +180,18 @@ export class MovieDetail {
     });
     this.jobStore.completed
       .pipe(
-        filter((job) => job.key === MOVIE_BATCH_JOB_KEY && this.changingLanguage()),
+        filter(
+          (job) =>
+            job.key === MOVIE_BATCH_JOB_KEY && (this.changingLanguage() || this.changingScraper()),
+        ),
         takeUntilDestroyed(),
       )
       .subscribe((job) => {
         this.changingLanguage.set(false);
+        this.changingScraper.set(false);
         this.notify(batchSummary(job));
         this.movie.reload();
+        this.scraperChoice.reload();
       });
     this.jobStore.completed
       .pipe(
@@ -246,6 +269,34 @@ export class MovieDetail {
     });
   }
 
+  /**
+   * Asks whether the texts of the movie are fetched again from the new scraper right away; the scraper changes in
+   * any case.
+   */
+  protected changeScraper(scraperId: string | null): void {
+    if (this.form.dirty) {
+      this.notifyTranslated('movies.actions.saveFirst');
+      return;
+    }
+    const name = this.scraperChoice
+      .value()
+      ?.scrapers.find((scraper) => scraper.id === scraperId)?.displayName;
+    const change = name
+      ? this.transloco.translate('scraperSelect.changeTo', { name })
+      : this.transloco.translate('scraperSelect.changeToDefault');
+    const rescrape = this.confirm(
+      `${change} ${this.transloco.translate('movies.scraperRescrape')}`,
+    );
+    this.changingScraper.set(true);
+    this.movieService.changeScraper(this.id(), scraperId, rescrape).subscribe({
+      next: (job) => this.jobStore.update(job),
+      error: (error: unknown) => {
+        this.changingScraper.set(false);
+        this.notify(problemMessage(error));
+      },
+    });
+  }
+
   protected save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
@@ -259,6 +310,7 @@ export class MovieDetail {
         this.notifyTranslated('movies.detail.savedTo', { path: details.nfo.path });
         if (this.adoptedProposal()) {
           this.adoptedProposal.set(false);
+          this.rememberAdoptedScraper();
           this.assignCollectionThenProbe(this.adoptedCollection());
           this.adoptedCollection.set(null);
         }
@@ -267,6 +319,19 @@ export class MovieDetail {
         this.saving.set(false);
         this.notify(problemMessage(error));
       },
+    });
+  }
+
+  /** The movie keeps the scraper of the saved match, unless it is the one of its source anyway. */
+  private rememberAdoptedScraper(): void {
+    const scraperId = this.adoptedScraper();
+    this.adoptedScraper.set(null);
+    if (!scraperId) {
+      return;
+    }
+    this.movieService.adoptedFrom(this.id(), scraperId).subscribe({
+      next: (choice) => this.scraperChoice.set(choice),
+      error: (error: unknown) => this.notify(problemMessage(error)),
     });
   }
 
@@ -280,6 +345,7 @@ export class MovieDetail {
     this.form.markAsDirty();
     this.adoptedProposal.set(true);
     this.adoptedCollection.set(proposal.collection);
+    this.adoptedScraper.set(proposal.scraperId);
     this.searchingOnline.set(false);
     this.notifyTranslated('movies.detail.adopted', { scraper: proposal.scraperName });
   }

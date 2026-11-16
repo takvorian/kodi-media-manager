@@ -147,6 +147,7 @@ describe('MovieOnlineSearch', () => {
         metadata: proposal,
         collection: { providerId: '1', name: 'Heat-Reihe' },
         scraperName: 'TMDB',
+        scraperId: 'tmdb',
       },
     ]);
   });

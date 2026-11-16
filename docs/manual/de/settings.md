@@ -75,7 +75,7 @@ Unter der Übersicht legst du für **Filme** und **Serien** fest, in welcher Rei
 - **Bewertungen und Details:** Füllt ein leeres Feld, gewinnt der vordere Anbieter.
 - **Titelmusik, Trailer, Filmsets:** in dieser Reihenfolge.
 
-Ohne eigene Wahl steht bei Filmen TMDB und bei Serien TVDB vorn, die übrigen folgen nach Name. Bei Bewertungen gilt eine feste Reihenfolge. Für einzelne Quellen kannst du abweichen, siehe [Scraper einer Quelle](sources.md#source-scrapers). Eine eigene Episoden-Reihenfolge einer Serie legt ihren Anbieter fest, siehe [Episoden-Reihenfolge](tv-shows.md#episode-order).
+Ohne eigene Wahl steht bei Filmen TMDB und bei Serien TVDB vorn, die übrigen folgen nach Name. Bei Bewertungen gilt eine feste Reihenfolge. Für einzelne Quellen kannst du abweichen, siehe [Scraper einer Quelle](sources.md#source-scrapers). Einzelne Filme und Serien können einen eigenen Scraper haben, siehe [Scraper der Serie](tv-shows.md#own-scraper) und [Scraper des Films](movies.md#own-scraper).
 
 <a id="api-keys"></a>
 ### Keys

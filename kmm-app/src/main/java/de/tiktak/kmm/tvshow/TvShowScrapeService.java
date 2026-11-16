@@ -22,6 +22,8 @@ import de.tiktak.kmm.i18n.LocalizedText;
 import de.tiktak.kmm.nfo.EpisodeNfo;
 import de.tiktak.kmm.nfo.NfoException;
 import de.tiktak.kmm.plugin.ScrapeLanguage;
+import de.tiktak.kmm.plugin.ScraperChoice;
+import de.tiktak.kmm.plugin.ScraperInfo;
 import de.tiktak.kmm.plugin.ScraperKind;
 import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
@@ -92,8 +94,45 @@ public class TvShowScrapeService {
      */
     @Transactional
     public EpisodeFillResult fillFromProvider(long showId, String scraperId, String providerId) {
-        return inLanguageOf(showId, () -> fill(requireShow(showId), scraper(scraperId), providerId, false,
+        TvShow show = requireShow(showId);
+        EpisodeFillResult filled = inLanguageOf(showId, () -> fill(show, scraper(scraperId), providerId, false,
                 EpisodeScope.all()));
+        rememberScraper(show, scraperId);
+        return filled;
+    }
+
+    /**
+     * After taking over a match: the TV show keeps the scraper it came from if that is not the one of its source
+     * anyway, so later scraping uses the same provider.
+     */
+    private void rememberScraper(TvShow show, String scraperId) {
+        boolean fromSource = sourceDefault(show).map(scraper -> scraper.id().equals(scraperId)).orElse(false);
+        metadataService.changeScraper(show.getId(), fromSource ? null : scraperId);
+    }
+
+    /**
+     * The TV show's metadata scraper with the scrapers it can be switched to.
+     */
+    @Transactional(readOnly = true)
+    public ScraperChoice scraperChoice(long showId) {
+        TvShow show = requireShow(showId);
+        return new ScraperChoice(show.ownScraper().orElse(null),
+                sourceDefault(show).map(TvShowScraper::id).orElse(null),
+                orderedScrapers(show).stream().map(ScraperInfo::from).toList());
+    }
+
+    /**
+     * Checks that the scraper exists and is set up before a TV show gets it.
+     *
+     * @throws TvShowProblemException if it is unknown or misses its configuration
+     */
+    void requireScraper(String scraperId) {
+        scraper(scraperId);
+    }
+
+    /** The first scraper set up in the order of the TV show's source. */
+    private Optional<TvShowScraper> sourceDefault(TvShow show) {
+        return orderedScrapers(show).stream().filter(scraper -> scraper.missingConfiguration().isEmpty()).findFirst();
     }
 
     /**
@@ -270,16 +309,27 @@ public class TvShowScrapeService {
     }
 
     /**
-     * The scrapers to try one after the other for automatic scraping: only that of the TV show's own episode order
-     * if it is set up, otherwise those set up in the order of the TV show's source.
+     * The scrapers to try one after the other for automatic scraping: only the one chosen for the TV show, or that
+     * of its own episode order if it is set up; otherwise those set up in the order of the TV show's source.
+     *
+     * @throws TvShowProblemException if the scraper chosen for the TV show is gone or misses its configuration
      */
     private List<TvShowScraper> automaticScrapers(TvShow show) {
+        Optional<String> own = show.ownScraper();
+        if (own.isPresent()) {
+            return List.of(scraper(own.get()));
+        }
         Optional<TvShowScraper> ofOrdering = show.episodeOrdering()
                 .flatMap(ordering -> scraperRegistry.tvShowScraper(ordering.scraperId()))
                 .filter(scraper -> scraper.missingConfiguration().isEmpty());
         return ofOrdering.map(List::of).orElseGet(() -> orderedScrapers(show).stream()
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())
                 .toList());
+    }
+
+    /** The scraper whose numbering the TV show follows: that of its episode order or the one chosen for it. */
+    private static Optional<String> pinnedScraper(TvShow show) {
+        return show.episodeOrdering().map(TvEpisodeOrdering::scraperId).or(show::ownScraper);
     }
 
     /** The TV show scrapers in the order of the TV show's source, without those switched off there. */
@@ -377,9 +427,9 @@ public class TvShowScrapeService {
     private EpisodeThumbs episodeThumbs(Episode episode, TvShow show) {
         List<EpisodeThumbs.Thumb> thumbs = new ArrayList<>();
         List<LocalizedText> warnings = new ArrayList<>();
-        Optional<TvEpisodeOrdering> ordering = show.episodeOrdering();
+        Optional<String> pinned = pinnedScraper(show);
         for (TvShowScraper scraper : orderedScrapers(show)) {
-            if (ordering.isPresent() && !ordering.get().scraperId().equals(scraper.id())) {
+            if (pinned.isPresent() && !pinned.get().equals(scraper.id())) {
                 continue; // its numbers follow another order and would show the stills of other episodes
             }
             Optional<LocalizedText> missing = scraper.missingConfiguration();

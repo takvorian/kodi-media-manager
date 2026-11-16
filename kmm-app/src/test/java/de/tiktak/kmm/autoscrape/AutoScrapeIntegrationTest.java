@@ -36,6 +36,8 @@ import com.sun.net.httpserver.HttpServer;
 
 import de.tiktak.kmm.job.JobController;
 import de.tiktak.kmm.movie.MovieLanguageController;
+import de.tiktak.kmm.movie.MovieScraperController;
+import de.tiktak.kmm.plugin.ScraperPriorityController;
 import de.tiktak.kmm.library.LibraryScanController;
 import de.tiktak.kmm.mediainfo.StreamDetailsService;
 import de.tiktak.kmm.movie.MovieController;
@@ -256,6 +258,47 @@ class AutoScrapeIntegrationTest {
         assertThat(failure.get("args").get("reason").get("key").asString())
                 .isEqualTo("movie.scraper.notIdentified.detail");
         assertThat(failure.get("args").get("reason").get("args").get("title").asString()).isEqualTo("Unbekannt (2001)");
+    }
+
+    @Test
+    void choosesTheScraperOfAMovieAndFollowsTheOrderOfItsSource() throws IOException {
+        createFile("Heat (1995)/Heat (1995).mkv");
+        long sourceId = createSource();
+        awaitJob(post(LibraryScanController.SCAN_PATH, sourceId));
+        long movieId = movieIdOf("Heat (1995)");
+        assertThat(scraperChoice(movieId).get("defaultScraperId").asString()).isEqualTo("tmdb");
+
+        JsonNode changed = changeScraper(movieId, "{\"scraperId\": \"tmdb\", \"rescrape\": false}");
+
+        assertThat(changed.get("changed").asInt()).isEqualTo(1);
+        assertThat(scraperChoice(movieId).get("scraperId").asString()).isEqualTo("tmdb");
+        assertThat(mockMvc.post().uri(MovieScraperController.SCRAPER_PATH + "/adopted?scraper=tmdb", movieId)
+                .with(csrf())).hasStatusOk();
+        assertThat(scraperChoice(movieId).get("scraperId").isNull()).as("TMDB is the source's scraper anyway")
+                .isTrue();
+        assertThat(changeScraper(movieId, "{\"scraperId\": \"gibtsnicht\", \"rescrape\": false}")
+                .get("failed").asInt()).isEqualTo(1);
+
+        assertThat(mockMvc.put().uri(ScraperPriorityController.SOURCE_PATH, sourceId).with(csrf())
+                .contentType("application/json").content("""
+                        [{"kind": "METADATA", "mediaType": "MOVIE", "inherit": false,
+                          "entries": [{"scraperId": "tmdb", "enabled": false}]}]""")).hasStatusOk();
+
+        assertThat(scraperChoice(movieId).get("defaultScraperId").isNull()).isTrue();
+        assertThat(scraperChoice(movieId).get("scrapers")).isEmpty();
+    }
+
+    private JsonNode scraperChoice(long movieId) throws IOException {
+        MvcTestResult result = mockMvc.get().uri(MovieScraperController.SCRAPER_PATH, movieId).exchange();
+        assertThat(result).hasStatusOk();
+        return objectMapper.readTree(result.getResponse().getContentAsByteArray());
+    }
+
+    private JsonNode changeScraper(long movieId, String body) {
+        MvcTestResult started = mockMvc.put().uri(MovieScraperController.SCRAPER_PATH, movieId).with(csrf())
+                .contentType("application/json").content(body).exchange();
+        assertThat(started).hasStatus(202);
+        return awaitJob(objectMapper.readTree(started.getResponse().getContentAsByteArray()).get("id").asString());
     }
 
     private JsonNode changeLanguage(long movieId, String language, boolean refetchTexts) {

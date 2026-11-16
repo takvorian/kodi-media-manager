@@ -106,6 +106,27 @@ public class MovieMetadataService {
         return true;
     }
 
+    /**
+     * Chooses the scraper of the movie. It is kept in the database only.
+     *
+     * @param scraperId the scraper, or {@code null} for the order of the source
+     * @return whether anything changed
+     */
+    @Transactional
+    public boolean changeScraper(long movieId, String scraperId) {
+        if (!require(movieId).changeScraper(scraperId)) {
+            return false;
+        }
+        log.info("Scraper of movie {} set to {}", movieId, scraperId);
+        return true;
+    }
+
+    /** @return the scraper chosen for the movie, empty if the order of its source applies */
+    @Transactional(readOnly = true)
+    public Optional<String> ownScraper(long movieId) {
+        return require(movieId).ownScraper();
+    }
+
     /** Enters an own language into a freshly created NFO. */
     @Transactional
     public void storeLanguageInNfo(long movieId) {

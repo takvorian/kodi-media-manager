@@ -90,7 +90,8 @@ describe('TvShowOnlineSearch', () => {
     await fixture.whenStable();
   }
 
-  it('searches at TheTVDB by default and shows its attribution', async () => {
+  it('searches at the scraper of the TV show by default and shows its attribution', async () => {
+    fixture.componentRef.setInput('preferredScraper', 'tvdb');
     await loadScrapers([tmdb, tvdb]);
 
     expect(searchButton().textContent).toContain('Bei TheTVDB suchen');

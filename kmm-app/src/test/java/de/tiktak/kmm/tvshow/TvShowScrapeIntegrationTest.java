@@ -17,6 +17,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -314,10 +315,72 @@ class TvShowScrapeIntegrationTest {
     }
 
     @Test
+    void switchesTheTvShowToAnotherScraperAndFetchesItsTextsThere() throws IOException {
+        TvShowScraper tvdb = mock(TvShowScraper.class);
+        when(tvdb.id()).thenReturn("tvdb");
+        when(tvdb.displayName()).thenReturn("TheTVDB");
+        when(tvdb.missingConfiguration()).thenReturn(Optional.empty());
+        TvShowScraper tmdb = mock(TvShowScraper.class);
+        when(tmdb.id()).thenReturn("tmdb");
+        when(tmdb.displayName()).thenReturn("TMDB");
+        when(tmdb.missingConfiguration()).thenReturn(Optional.empty());
+        when(tmdb.scrape(any())).thenReturn(Optional.of(TvShowResult.builder().title("Lost")
+                .uniqueIds(Map.of("tmdb", "4607"))
+                .episodes(List.of(EpisodeResult.builder().season(1).episode(3).title("TMDB-Folge 3").build()))
+                .build()));
+        when(tmdb.episodeDetails(any())).thenAnswer(invocation -> invocation.getArgument(0));
+        when(scraperRegistry.tvShowScrapers()).thenReturn(List.of(tmdb, tvdb));
+        when(scraperRegistry.tvShowScraper("tmdb")).thenReturn(Optional.of(tmdb));
+        jdbcClient.sql("UPDATE tv_show SET tvdb_id = '73739', episode_ordering = 'tvdb:alternate', "
+                + "episode_ordering_name = 'Netflix Order'").update();
+
+        JsonNode choice = read(mockMvc.get().uri(TvShowScraperController.SCRAPER_PATH, showId).exchange());
+        assertThat(choice.get("scraperId").isNull()).isTrue();
+        assertThat(choice.get("defaultScraperId").asString()).isEqualTo("tvdb");
+        assertThat(choice.get("scrapers").get(0).get("id").asString()).isEqualTo("tvdb");
+
+        JsonNode changed = changeScraper(Map.of("scraperId", "tmdb", "rescrape", true));
+
+        assertThat(changed.get("changed").asInt()).isEqualTo(1);
+        assertThat(jdbcClient.sql("SELECT scraper_id FROM tv_show").query(String.class).single()).isEqualTo("tmdb");
+        assertThat(jdbcClient.sql("SELECT episode_ordering FROM tv_show").query(String.class).optional()
+                .orElse(null)).as("an order of TVDB no longer fits").isNull();
+        assertThat(Files.readString(library.resolve("Lost/Staffel 1/Lost - S01E03.nfo")))
+                .contains("<title>TMDB-Folge 3</title>");
+
+        Map<String, Object> reset = new HashMap<>();
+        reset.put("scraperId", null);
+        reset.put("rescrape", false);
+        changeScraper(reset);
+
+        assertThat(jdbcClient.sql("SELECT scraper_id FROM tv_show").query(String.class).optional().orElse(null))
+                .isNull();
+    }
+
+    @Test
+    void rejectsAnInvalidScraper() {
+        assertThat(mockMvc.put().uri(TvShowScraperController.SCRAPER_PATH, showId).with(csrf())
+                .contentType(JSON).content("{\"scraperId\": \"-tmdb\", \"rescrape\": false}").exchange())
+                .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    @Test
     void rejectsAnIncompleteEpisodeOrder() {
         assertThat(mockMvc.put().uri(TvShowEpisodeOrderingController.ORDERING_PATH, showId).with(csrf())
                 .contentType(JSON).content("{\"scraperId\": \"tvdb\", \"refetch\": false}").exchange())
                 .hasStatus(HttpStatus.BAD_REQUEST);
+    }
+
+    private JsonNode changeScraper(Map<String, Object> body) {
+        MvcTestResult started = mockMvc.put().uri(TvShowScraperController.SCRAPER_PATH, showId)
+                .with(csrf()).contentType(JSON).content(objectMapper.writeValueAsString(body)).exchange();
+        assertThat(started).hasStatus(HttpStatus.ACCEPTED);
+        String jobId = read(started).get("id").asString();
+        JsonNode job = await().atMost(JOB_TIMEOUT).pollInSameThread().until(() -> read(mockMvc.get()
+                .uri(JobController.BASE_PATH + "/" + jobId).exchange()),
+                node -> !"RUNNING".equals(node.get("status").asString()));
+        assertThat(job.get("status").asString()).as(job.toString()).isEqualTo("SUCCEEDED");
+        return job.get("result");
     }
 
     private JsonNode changeEpisodeOrdering(Map<String, Object> body) {

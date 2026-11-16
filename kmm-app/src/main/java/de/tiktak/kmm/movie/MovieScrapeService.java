@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 import org.springframework.stereotype.Service;
 
 import de.tiktak.kmm.plugin.ScrapeLanguage;
+import de.tiktak.kmm.plugin.ScraperChoice;
+import de.tiktak.kmm.plugin.ScraperInfo;
 import de.tiktak.kmm.plugin.ScraperKind;
 import de.tiktak.kmm.plugin.ScraperPriorityService;
 import de.tiktak.kmm.plugin.ScraperRegistry;
@@ -91,7 +93,7 @@ public class MovieScrapeService {
             return MetadataScrapeOutcome.ALREADY_IDENTIFIED;
         }
         return inLanguageOf(movieId, () -> {
-            List<MetadataScraper> scrapers = readyScrapers(details.sourceId());
+            List<MetadataScraper> scrapers = automaticScrapers(movieId, details.sourceId());
             if (scrapers.isEmpty()) {
                 return MetadataScrapeOutcome.NO_SCRAPER;
             }
@@ -126,7 +128,7 @@ public class MovieScrapeService {
         MovieDetails details = metadataService.findDetails(movieId);
         MovieMetadata current = details.metadata();
         return inLanguageOf(movieId, () -> {
-            MetadataScraper scraper = readyScrapers(details.sourceId()).stream().findFirst()
+            MetadataScraper scraper = automaticScrapers(movieId, details.sourceId()).stream().findFirst()
                     .orElseThrow(ScraperProblemException::noMetadataScraper);
             Map<String, String> knownIds = new HashMap<>();
             Optional.ofNullable(current.imdbId()).ifPresent(id -> knownIds.put(IMDB, id));
@@ -149,12 +151,57 @@ public class MovieScrapeService {
         return ScrapeLanguage.with(metadataService.scrapeLanguage(movieId), body);
     }
 
+    /**
+     * The scrapers to try one after the other: only the one chosen for the movie, otherwise those set up in the
+     * order of the movie's source.
+     *
+     * @throws ScraperProblemException if the scraper chosen for the movie is gone or misses its configuration
+     */
+    private List<MetadataScraper> automaticScrapers(long movieId, long sourceId) {
+        return metadataService.ownScraper(movieId)
+                .map(own -> List.of(scraper(own)))
+                .orElseGet(() -> readyScrapers(sourceId));
+    }
+
     /** The movie scrapers that are set up, in the order of the movie's source. */
     private List<MetadataScraper> readyScrapers(long sourceId) {
-        return priorityService.ordered(ScraperKind.METADATA, MediaType.MOVIE, sourceId,
-                        scraperRegistry.metadataScrapersFor(MediaType.MOVIE)).stream()
+        return orderedScrapers(sourceId).stream()
                 .filter(scraper -> scraper.missingConfiguration().isEmpty())
                 .toList();
+    }
+
+    private List<MetadataScraper> orderedScrapers(long sourceId) {
+        return priorityService.ordered(ScraperKind.METADATA, MediaType.MOVIE, sourceId,
+                scraperRegistry.metadataScrapersFor(MediaType.MOVIE));
+    }
+
+    /** The movie's metadata scraper with the scrapers it can be switched to. */
+    public ScraperChoice scraperChoice(long movieId) {
+        MovieDetails details = metadataService.findDetails(movieId);
+        return new ScraperChoice(metadataService.ownScraper(movieId).orElse(null),
+                readyScrapers(details.sourceId()).stream().findFirst().map(MetadataScraper::id).orElse(null),
+                orderedScrapers(details.sourceId()).stream().map(ScraperInfo::from).toList());
+    }
+
+    /**
+     * Checks that the scraper exists and is set up before a movie gets it.
+     *
+     * @throws ScraperProblemException if it is unknown or misses its configuration
+     */
+    void requireScraper(String scraperId) {
+        scraper(scraperId);
+    }
+
+    /**
+     * After taking over a match: the movie keeps the scraper it came from if that is not the one of its source
+     * anyway, so later scraping uses the same provider.
+     */
+    public void rememberScraper(long movieId, String scraperId) {
+        scraper(scraperId);
+        long sourceId = metadataService.findDetails(movieId).sourceId();
+        boolean fromSource = readyScrapers(sourceId).stream().findFirst()
+                .map(scraper -> scraper.id().equals(scraperId)).orElse(false);
+        metadataService.changeScraper(movieId, fromSource ? null : scraperId);
     }
 
     private MetadataScraper scraper(String scraperId) {

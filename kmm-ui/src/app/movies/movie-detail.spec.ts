@@ -1,6 +1,7 @@
 import { By } from '@angular/platform-browser';
 import { provideI18nTesting } from '../i18n/testing';
 import { LanguageSelect } from '../shared/language-select';
+import { ScraperSelect } from '../shared/scraper-select';
 import { provideHttpClient } from '@angular/common/http';
 import {
   HttpTestingController,
@@ -19,7 +20,7 @@ import { EMPTY_SUPPLEMENT, MovieDetails } from './movie';
 import { MovieDetail } from './movie-detail';
 import { MOVIES_URL } from './movie.service';
 import { MovieRenamePlan } from './movie-rename';
-import { CollectionReference } from './scraper';
+import { CollectionReference, ScraperChoice } from './scraper';
 import { CONFIRM } from '../shared/confirm';
 import { NO_THEME, REMOVAL_PLAN, answerDialogs, flushWhenRequested } from '../shared/testing';
 import { ThemeService } from '../shared/theme';
@@ -114,7 +115,23 @@ describe('MovieDetail', () => {
     fixture.componentRef.setInput('id', '5');
   });
 
-  afterEach(() => httpTesting.verify());
+  /** The scraper of the entry; requested again after jobs, answered whenever asked. */
+  const SCRAPER_CHOICE: ScraperChoice = {
+    scraperId: null,
+    defaultScraperId: 'tmdb',
+    scrapers: [{ id: 'tmdb', displayName: 'TMDB', mediaTypes: [], missingConfiguration: null }],
+  };
+
+  function answerScraperChoice(choice: ScraperChoice = SCRAPER_CHOICE): void {
+    httpTesting
+      .match((request) => /\/scraper(\/adopted)?$/.test(request.url))
+      .forEach((request) => request.flush(choice));
+  }
+
+  afterEach(() => {
+    answerScraperChoice();
+    httpTesting.verify();
+  });
 
   function element(): HTMLElement {
     return fixture.nativeElement as HTMLElement;
@@ -131,6 +148,7 @@ describe('MovieDetail', () => {
   async function load(details: MovieDetails): Promise<void> {
     fixture.detectChanges();
     httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5` }).flush(details);
+    answerScraperChoice();
     // The artwork section loads its data itself when rendered; an empty list is enough here.
     await renderPendingChanges();
     httpTesting.expectOne({ method: 'GET', url: `${MOVIES_URL}/5/artwork` }).flush([]);
@@ -557,6 +575,7 @@ describe('MovieDetail', () => {
     httpTesting
       .expectOne(`${MOVIES_URL}/5`)
       .flush({ title: 'Film nicht gefunden' }, { status: 404, statusText: 'Not Found' });
+    answerScraperChoice();
     await fixture.whenStable();
 
     expect(element().querySelector('.error')).not.toBeNull();
@@ -857,6 +876,23 @@ describe('MovieDetail', () => {
     });
   });
 
+  describe('scraper', () => {
+    function scraperSelect(): ScraperSelect {
+      return fixture.debugElement.query(By.directive(ScraperSelect)).componentInstance;
+    }
+
+    it('switches to another scraper and refetches the texts when confirmed', async () => {
+      await load(heat);
+
+      scraperSelect().chosen.emit('tmdb');
+
+      expect(confirmMessages.at(-1)).toContain('„TMDB“');
+      const change = httpTesting.expectOne({ method: 'PUT', url: `${MOVIES_URL}/5/scraper` });
+      expect(change.request.body).toEqual({ scraperId: 'tmdb', rescrape: true });
+      change.flush(job({ id: 'scraper', key: 'movies-batch', status: 'RUNNING' }));
+    });
+  });
+
   describe('language', () => {
     function languageSelect(): LanguageSelect {
       return fixture.debugElement.query(By.directive(LanguageSelect)).componentInstance;
@@ -894,6 +930,7 @@ describe('MovieDetail', () => {
         ...heat,
         language: 'fr-FR',
       });
+      answerScraperChoice();
       await fixture.whenStable();
       fixture.detectChanges();
 

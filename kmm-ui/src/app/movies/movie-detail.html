@@ -102,6 +102,7 @@
           [movieId]="details.id"
           [title]="details.metadata.title"
           [year]="details.metadata.year"
+          [preferredScraper]="preferredScraperId()"
           (proposed)="adoptProposal($event)"
         />
       </mat-card-content>
@@ -140,8 +141,14 @@
         class="language-select"
         [value]="details.language"
         [defaultLabel]="'movies.language.default' | transloco"
-        [disabled]="!!scrapeJob() || !!languageJob()"
+        [disabled]="!!scrapeJob() || !!languageJob() || !!scraperJob()"
         (chosen)="changeLanguage($event)"
+      />
+      <app-scraper-select
+        class="scraper-select"
+        [choice]="scraperChoice.value() ?? null"
+        [disabled]="!!scrapeJob() || !!languageJob() || !!scraperJob()"
+        (chosen)="changeScraper($event)"
       />
     </mat-card-content>
   </mat-card>
@@ -340,13 +347,16 @@
     </div>
   </form>
 
-  @if (scanJob() || scrapeJob() || languageJob()) {
+  @if (scanJob() || scrapeJob() || languageJob() || scraperJob()) {
     <footer class="detail-status">
       @if (scanJob()) {
         <p class="hint scan-progress">{{ 'movies.detail.scanRunning' | transloco }}</p>
       }
       @if (languageJob()) {
         <p class="hint language-running">{{ 'movies.language.running' | transloco }}</p>
+      }
+      @if (scraperJob()) {
+        <p class="hint scraper-running">{{ 'scraperSelect.running' | transloco }}</p>
       }
       @if (scrapeJob(); as running) {
         <app-scrape-progress [job]="running" />

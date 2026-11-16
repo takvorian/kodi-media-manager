@@ -508,7 +508,8 @@
       "changeTo": "Die Episoden-Reihenfolge wird auf „{name}“ geändert.",
       "changeToDefault": "Die Episoden-Reihenfolge wird auf den Standard aus den Einstellungen geändert.",
       "refetch": "Sollen Titel und Inhaltsangaben aller Episoden jetzt in dieser Zählung neu geholt werden?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung passen.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur die Reihenfolge ändern, sie gilt ab dem nächsten Scrapen."
-    }
+    },
+    "scraperRescrape": "Soll KMM die Serie dort jetzt neu zuordnen und Titel und Inhaltsangaben der Serie und aller Episoden neu holen?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung des Anbieters passen. Eine Episoden-Reihenfolge eines anderen Anbieters entfällt.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur den Scraper ändern, er gilt ab dem nächsten Scrapen."
   },
   "sources": {
     "title": "Quellen",
@@ -1075,7 +1076,8 @@
         "failed": "{title} fehlgeschlagen: {reason}",
         "unknownError": "Unbekannter Fehler"
       }
-    }
+    },
+    "scraperRescrape": "Soll KMM Titel und Inhaltsangabe des Films jetzt dort neu holen?\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur den Scraper ändern, er gilt ab dem nächsten Scrapen."
   },
   "moviesets": {
     "completeAll": "Alle Sets ergänzen",
@@ -1472,7 +1474,8 @@
         "scanJobTitle": "{count, plural, one {# Serie} other {# Serien}} scannen",
         "progress": "Serie {id}",
         "failure": "Serie {id}: {message}",
-        "episodeOrderingJobTitle": "Episoden-Reihenfolge ändern"
+        "episodeOrderingJobTitle": "Episoden-Reihenfolge ändern",
+        "scraperJobTitle": "Scraper ändern"
       },
       "thumbs": {
         "scraperFailed": "{scraper}: {message}"
@@ -1699,6 +1702,9 @@
         },
         "scan": {
           "jobTitle": "{count, plural, one {# Film scannen} other {# Filme scannen}}"
+        },
+        "scraper": {
+          "jobTitle": "Scraper ändern"
         }
       },
       "folderScan": {
@@ -2020,5 +2026,14 @@
         "detail": "„{title}“ hat keine Episoden in Staffel {season}."
       }
     }
+  },
+  "scraperSelect": {
+    "label": "Scraper",
+    "default": "Standard der Quelle ({name})",
+    "defaultNone": "Standard der Quelle (keiner eingerichtet)",
+    "hint": "Von diesem Anbieter holt KMM Titel, Inhalt und Episoden.",
+    "running": "Der Scraper wird geändert …",
+    "changeTo": "Der Scraper wird auf „{name}“ geändert.",
+    "changeToDefault": "Der Scraper wird auf den Standard der Quelle zurückgesetzt."
   }
 }

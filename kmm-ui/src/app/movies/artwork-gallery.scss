@@ -26,7 +26,11 @@
   height: 120px;
   border-radius: 8px;
   overflow: hidden;
-  background: repeating-conic-gradient(var(--mat-sys-surface-container-high) 0% 25%, transparent 0% 50%) 50% / 16px 16px;
+  background: repeating-conic-gradient(
+      var(--mat-sys-surface-container-high) 0% 25%,
+      transparent 0% 50%
+    )
+    50% / 16px 16px;
 
   img {
     max-width: 100%;

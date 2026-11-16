@@ -38,6 +38,15 @@ After you choose, KMM asks whether to fetch the titles and plots of all episodes
 
 With an own order KMM always scrapes the TV show at the provider of that order, even if another one is preferred in the settings. The order is kept in KMM's database only, not in the NFO, because Kodi has no field for it.
 
+<a id="own-scraper"></a>
+### Scraper of the TV show
+
+Normally KMM gets a TV show's data from the first provider in the order of its [source](sources.md#source-scrapers). If no numbering of that provider matches your files for a single TV show, choose another one under **Scraper** in the TV show view. An example: the made-up TV show “In the Misty Forest” has two orders at TVDB, but your files follow TMDB's. Then choose TMDB.
+
+After you choose, KMM asks whether to identify the TV show at the new provider right away and to fetch the titles and plots of the TV show and all its episodes again. **OK** overwrites the existing texts, including manually edited ones. **Cancel** only changes the scraper; it applies from the next scrape on. If the provider does not find the TV show unambiguously, KMM reports it; then the [online search](tv-shows.md#online-search-for-tv-shows) helps.
+
+An episode order of another provider no longer applies, as its numbers belong to that provider. The other way round, choosing an episode order of another provider also changes the scraper. **Default of the source** resets the choice. Like the order, the scraper is kept in KMM's database only.
+
 ## Scanning a TV show or season
 
 If you have added episodes to the folder of a TV show or deleted some, you do not need to scan the whole source. **Scan** at the top of the TV show view reads only the folder of this TV show again: new episodes are added, episodes without a file are removed from the library, and changed NFOs are taken over. **Scan** on a season does the same for the episodes of that season only. In the TV show list you can scan several selected TV shows at once.
@@ -70,7 +79,7 @@ Progress and report appear at the top of the TV show view. While a season or the
 
 ## Online search for TV shows
 
-**Search online** works as it does for [movies](scraping.md#online-search). The default is TVDB. The applied details first go into the form. When you save, KMM also completes the episodes, filling only their empty fields. A note above the buttons tells you beforehand how many episodes are affected.
+**Search online** works as it does for [movies](scraping.md#online-search). The TV show's scraper is preselected. If you take over a match from another provider than the source's default, the TV show keeps that provider as its [scraper](tv-shows.md#own-scraper). The applied details first go into the form. When you save, KMM also completes the episodes, filling only their empty fields. A note above the buttons tells you beforehand how many episodes are affected.
 
 Which episode order applies (aired, DVD or absolute) is set under [Settings](settings.md#tv-shows). This only affects TVDB. Other orders, such as a streaming service's, are chosen per TV show under [Episode order](tv-shows.md#episode-order).
 

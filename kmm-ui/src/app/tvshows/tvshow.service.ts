@@ -6,7 +6,7 @@ import { TvShowFilter, TvShowFilterValues } from '../filters/tvshow-filter';
 import { Job } from '../jobs/job';
 import { ListSort, SORT_BY_TITLE as TITLE_ORDER, withSort } from '../shared/list-sort';
 import { RemovalPlan } from '../shared/removal';
-import { ScrapeCandidate, ScraperInfo } from '../movies/scraper';
+import { ScrapeCandidate, ScraperChoice, ScraperInfo } from '../movies/scraper';
 import {
   EpisodeDetails,
   EpisodeFillResult,
@@ -161,6 +161,16 @@ export class TvShowService {
   /** Saves the metadata; the backend writes them to the tvshow.nfo at the same time. */
   updateShow(showId: number, metadata: TvShowMetadata): Observable<TvShowDetails> {
     return this.http.put<TvShowDetails>(`${TVSHOWS_URL}/${showId}/metadata`, metadata);
+  }
+
+  /** The TV show's metadata scraper and the ones it can be switched to. */
+  scraperChoice(showId: number): Observable<ScraperChoice> {
+    return this.http.get<ScraperChoice>(`${TVSHOWS_URL}/${showId}/scraper`);
+  }
+
+  /** Chooses the TV show's scraper as a job, `null` for the order of its source. */
+  changeScraper(showId: number, scraperId: string | null, rescrape: boolean): Observable<Job> {
+    return this.http.put<Job>(`${TVSHOWS_URL}/${showId}/scraper`, { scraperId, rescrape });
   }
 
   tvShowScrapers(): Observable<ScraperInfo[]> {

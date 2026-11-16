@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 import org.hibernate.Length;
@@ -122,6 +123,10 @@ public class Movie {
 
     @Column(name = "tmdb_id", length = 16)
     private String tmdbId;
+
+    /** Scraper chosen for the movie; without a value the order of its source applies. */
+    @Column(name = "scraper_id", length = 40)
+    private String scraperId;
 
     @ElementCollection
     @CollectionTable(name = "movie_genre", joinColumns = @JoinColumn(name = "movie_id"))
@@ -286,6 +291,21 @@ public class Movie {
     }
 
     /** @return whether the language changed */
+    /** @return the scraper chosen for the movie, empty if the order of its source applies */
+    public Optional<String> ownScraper() {
+        return Optional.ofNullable(scraperId);
+    }
+
+    /**
+     * @param scraper the chosen scraper, or {@code null} for the order of the source
+     * @return whether it has changed
+     */
+    boolean changeScraper(String scraper) {
+        boolean changed = !Objects.equals(scraperId, scraper);
+        scraperId = scraper;
+        return changed;
+    }
+
     boolean changeMetadataLanguage(String language) {
         boolean changed = !Objects.equals(metadataLanguage, language);
         metadataLanguage = language;
