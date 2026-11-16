@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.30 - 2026-11-16
+- Put the standard episode order into the section of the TV show's scraper (e9abb39)
+
 ## v0.29 - 2026-11-16
 - Show providers without alternative episode orders and put the selects side by side (e247b1b)
 
