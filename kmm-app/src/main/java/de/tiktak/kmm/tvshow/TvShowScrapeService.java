@@ -344,46 +344,69 @@ public class TvShowScrapeService {
     }
 
     /**
-     * The episode orders the set-up scrapers know for the TV show, for each scraper at which the TV show has an ID.
+     * The episode orders the TV show can follow. With a scraper chosen for the TV show only those of that scraper;
+     * if the TV show has no ID there yet, it is identified there first. Otherwise those of every set-up scraper at
+     * which the TV show has an ID.
      *
-     * @throws TvShowProblemException if a provider reports an error
+     * @throws TvShowProblemException if a provider reports an error or the chosen scraper does not find the TV show
+     *                                unambiguously
      */
     @Transactional(readOnly = true)
     public List<ScraperEpisodeOrders> episodeOrders(long showId) {
         TvShow show = requireShow(showId);
-        Map<String, String> ids = knownIds(show.metadata());
-        List<ScraperEpisodeOrders> result = new ArrayList<>();
-        for (TvShowScraper scraper : scraperRegistry.tvShowScrapers()) {
-            String providerId = ids.get(scraper.id());
-            if (providerId == null || scraper.missingConfiguration().isPresent()) {
-                continue;
+        return inLanguageOf(showId, () -> {
+            Optional<String> own = show.ownScraper();
+            List<TvShowScraper> scrapers = own.map(id -> List.of(scraper(id))).orElseGet(() -> orderedScrapers(show)
+                    .stream().filter(scraper -> scraper.missingConfiguration().isEmpty()).toList());
+            Map<String, String> ids = knownIds(show.metadata());
+            List<ScraperEpisodeOrders> result = new ArrayList<>();
+            for (TvShowScraper scraper : scrapers) {
+                String providerId = own.isPresent() ? providerIdAt(scraper, show) : ids.get(scraper.id());
+                if (providerId == null) {
+                    continue;
+                }
+                List<EpisodeOrder> orders = call(scraper, s -> s.episodeOrders(providerId));
+                if (!orders.isEmpty()) {
+                    result.add(new ScraperEpisodeOrders(scraper.id(), scraper.displayName(), orders));
+                }
             }
-            List<EpisodeOrder> orders = call(scraper, s -> s.episodeOrders(providerId));
-            if (!orders.isEmpty()) {
-                result.add(new ScraperEpisodeOrders(scraper.id(), scraper.displayName(), orders));
-            }
-        }
-        return result;
+            return result;
+        });
     }
 
     /**
      * Checks that the scraper knows the order for the TV show and returns it with the provider's name.
      *
-     * @throws TvShowProblemException if the scraper or the order is unknown or the provider reports an error
+     * @throws TvShowProblemException if the scraper or the order is unknown, the provider reports an error or does
+     *                                not find the TV show unambiguously
      */
     @Transactional(readOnly = true)
     public TvEpisodeOrdering requireEpisodeOrder(long showId, String scraperId, String orderId) {
         TvShow show = requireShow(showId);
         TvShowScraper scraper = scraper(scraperId);
-        String providerId = knownIds(show.metadata()).get(scraper.id());
-        if (providerId == null) {
-            throw TvShowProblemException.notIdentified(scraper, show.getTitle());
-        }
+        String providerId = inLanguageOf(showId, () -> providerIdAt(scraper, show));
         return call(scraper, s -> s.episodeOrders(providerId)).stream()
                 .filter(order -> order.id().equals(orderId))
                 .findFirst()
                 .map(order -> new TvEpisodeOrdering(scraper.id(), order.id(), order.name()))
                 .orElseThrow(() -> TvShowProblemException.unknownEpisodeOrder(scraper, orderId));
+    }
+
+    /**
+     * The TV show's ID at the scraper; if it has none there yet, the scraper identifies it.
+     *
+     * @throws TvShowProblemException if the scraper does not find the TV show unambiguously
+     */
+    private String providerIdAt(TvShowScraper scraper, TvShow show) {
+        String known = knownIds(show.metadata()).get(scraper.id());
+        if (known != null) {
+            return known;
+        }
+        String found = identify(scraper, show).uniqueIds().get(scraper.id());
+        if (found == null) {
+            throw TvShowProblemException.notIdentified(scraper, show.getTitle());
+        }
+        return found;
     }
 
     /**

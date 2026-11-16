@@ -147,6 +147,34 @@ class TvShowScrapeServiceTest {
     }
 
     @Test
+    void listsOnlyTheEpisodeOrdersOfTheChosenScraperAndIdentifiesTheShowThere() {
+        TvShow show = new TvShow(1, SHOW_DIRECTORY, "Im Nebelwald", 2024);
+        ReflectionTestUtils.setField(show, "id", 7L);
+        ReflectionTestUtils.setField(show, "tvdbId", "327417");
+        show.changeScraper("tmdb");
+        when(showRepository.findById(7L)).thenReturn(Optional.of(show));
+        TvShowScraper tmdb = mock(TvShowScraper.class);
+        when(tmdb.id()).thenReturn("tmdb");
+        when(tmdb.displayName()).thenReturn("TMDB");
+        when(tmdb.missingConfiguration()).thenReturn(Optional.empty());
+        when(tmdb.scrape(any())).thenReturn(Optional.of(TvShowResult.builder().title("Im Nebelwald")
+                .uniqueIds(Map.of("tmdb", "4607")).build()));
+        List<EpisodeOrder> orders = List.of(new EpisodeOrder("aired", "Ausstrahlung"),
+                new EpisodeOrder("5eb730dfca7ec6001f7beb51", "Netflix Order (Digital)"));
+        when(tmdb.episodeOrders("4607")).thenReturn(orders);
+        when(scraperRegistry.tvShowScraper("tmdb")).thenReturn(Optional.of(tmdb));
+        TvShowScrapeService service = new TvShowScrapeService(scraperRegistry, showRepository, episodeRepository,
+                nfoFiles, mock(TvNfoSync.class), new TvShowResultCache(Clock.systemUTC()),
+                mock(TvShowMetadataService.class),
+                ScraperPriorityTesting.defaults(scraperRegistry, "tmdb", "tvdb"), mock(ApplicationEventPublisher.class), Clock.systemUTC());
+
+        assertThat(service.episodeOrders(7)).as("TVDB is not offered although the show has an ID there")
+                .containsExactly(new TvShowScrapeService.ScraperEpisodeOrders("tmdb", "TMDB", orders));
+        assertThat(service.requireEpisodeOrder(7, "tmdb", "5eb730dfca7ec6001f7beb51").name())
+                .isEqualTo("Netflix Order (Digital)");
+    }
+
+    @Test
     void reportsScrapersThatDoNotKnowTheShowWhenLookingForThumbs() {
         TvShow show = new TvShow(1, SHOW_DIRECTORY, "Lost", null);
         ReflectionTestUtils.setField(show, "id", 7L);

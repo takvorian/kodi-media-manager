@@ -32,7 +32,7 @@ Under **Episode order** in the TV show view you choose the order for this TV sho
 - **TVDB** offers e.g. “Aired Order”, “DVD Order”, “Absolute Order” or the order of a streaming service such as “Netflix Order”.
 - **TMDB** offers the aired order and so-called episode groups, e.g. “Netflix Order (Digital)”.
 
-Only providers at which the TV show is already identified are offered. If it is not yet, scrape it first. **Default (settings)** goes back to the order from the [Settings](settings.md#tv-shows).
+If the TV show has a [scraper](tv-shows.md#own-scraper) of its own, KMM offers only that scraper's orders and looks the TV show up there if it is not identified yet. Otherwise only providers at which the TV show is already identified are offered. If it is not yet, scrape it first. **Default (settings)** goes back to the order from the [Settings](settings.md#tv-shows).
 
 After you choose, KMM asks whether to fetch the titles and plots of all episodes in the new order right away. **OK** overwrites the existing texts, including manually edited ones. **Cancel** only changes the order, which then applies from the next scrape on. KMM does not rename the files.
 
