@@ -9,7 +9,6 @@ import {
 } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatIconModule } from '@angular/material/icon';
 import { TranslocoPipe } from '@jsverse/transloco';
 
 import { LocalizedPipe } from '../../i18n/localized.pipe';
@@ -21,7 +20,7 @@ import { PriorityEntry, ScraperPriority, ScraperPriorityChange } from './scraper
  */
 @Component({
   selector: 'app-scraper-priority-editor',
-  imports: [LocalizedPipe, MatButtonModule, MatCheckboxModule, MatIconModule, TranslocoPipe],
+  imports: [LocalizedPipe, MatButtonModule, MatCheckboxModule, TranslocoPipe],
   template: `
     @for (priority of draft(); track priority.kind; let kindIndex = $index) {
       <section class="priority" [attr.data-kind]="priority.kind">
@@ -62,7 +61,7 @@ import { PriorityEntry, ScraperPriority, ScraperPriorityChange } from './scraper
                   "
                   (click)="move(kindIndex, entry, -1)"
                 >
-                  <mat-icon>arrow_upward</mat-icon>
+                  <span aria-hidden="true">↑</span>
                 </button>
                 <button
                   matIconButton
@@ -74,7 +73,7 @@ import { PriorityEntry, ScraperPriority, ScraperPriorityChange } from './scraper
                   "
                   (click)="move(kindIndex, entry, 1)"
                 >
-                  <mat-icon>arrow_downward</mat-icon>
+                  <span aria-hidden="true">↓</span>
                 </button>
               </span>
             </li>
@@ -124,6 +123,7 @@ import { PriorityEntry, ScraperPriority, ScraperPriorityChange } from './scraper
 
     .moves {
       margin-inline-start: auto;
+      font-size: 1.25em;
     }
 
     .actions {
