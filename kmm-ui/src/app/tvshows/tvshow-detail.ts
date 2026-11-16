@@ -200,6 +200,11 @@ export class TvShowDetail {
     const choice = this.scraperChoice.value();
     return choice?.scraperId ?? choice?.defaultScraperId ?? null;
   });
+  /** The scraper of the TV show, whose standard episode order applies without an own one. */
+  protected readonly preferredScraper = computed(() => {
+    const id = this.preferredScraperId();
+    return this.scraperChoice.value()?.scrapers.find((scraper) => scraper.id === id) ?? null;
+  });
   /** Adopted match whose episode data is completed on the next save. */
   protected readonly pendingFill = signal<TvShowScrapedProposal | null>(null);
   protected readonly missingEpisodes = signal<readonly MissingEpisode[] | null>(null);

@@ -2,6 +2,7 @@ import {
   ChangeDetectionStrategy,
   Component,
   computed,
+  effect,
   inject,
   input,
   output,
@@ -9,8 +10,9 @@ import {
 } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatSelect, MatSelectModule } from '@angular/material/select';
-import { TranslocoPipe } from '@jsverse/transloco';
+import { TranslocoPipe, TranslocoService } from '@jsverse/transloco';
 
+import { ScraperInfo } from '../movies/scraper';
 import { problemMessage } from '../shared/problem-message';
 import { ScraperEpisodeOrders, TvEpisodeOrdering } from './tvshow';
 import { TvShowService } from './tvshow.service';
@@ -41,12 +43,20 @@ function keyOf(ordering: Pick<TvEpisodeOrdering, 'scraperId' | 'orderId'>): stri
         (openedChange)="$event && load()"
         (selectionChange)="choose(select, $event.value)"
       >
-        <mat-option value="">{{ 'tvshows.ordering.default' | transloco }}</mat-option>
+        <mat-select-trigger>{{
+          selected() === '' ? defaultLabel() : select.triggerValue
+        }}</mat-select-trigger>
+        @if (!defaultInGroup()) {
+          <mat-option value="">{{ defaultLabel() }}</mat-option>
+        }
         @if (current(); as current) {
           <mat-option [value]="current.key">{{ current.name }}</mat-option>
         }
         @for (group of groups(); track group.scraperId) {
           <mat-optgroup [label]="group.scraperName">
+            @if (group.scraperId === scraper()?.id) {
+              <mat-option value="">{{ 'tvshows.ordering.standard' | transloco }}</mat-option>
+            }
             @for (order of group.orders; track order.id) {
               <mat-option [value]="group.scraperId + ':' + order.id">{{ order.name }}</mat-option>
             } @empty {
@@ -86,17 +96,42 @@ function keyOf(ordering: Pick<TvEpisodeOrdering, 'scraperId' | 'orderId'>): stri
 })
 export class EpisodeOrderSelect {
   private readonly tvShowService = inject(TvShowService);
+  private readonly transloco = inject(TranslocoService);
 
   readonly showId = input.required<number>();
   /** The TV show's own order, `null` for the one from the settings. */
   readonly value = input<TvEpisodeOrdering | null>(null);
   readonly disabled = input(false);
+  /** The scraper that fetches the TV show, `null` while unknown. */
+  readonly scraper = input<Pick<ScraperInfo, 'id' | 'displayName'> | null>(null);
   /** The chosen order, `null` for the one from the settings. */
   readonly chosen = output<TvEpisodeOrdering | null>();
 
   protected readonly groups = signal<readonly ScraperEpisodeOrders[] | null>(null);
   protected readonly loading = signal(false);
   protected readonly failure = signal<string | null>(null);
+
+  /** Names the scraper whose standard order applies, so the choice is clear without opening the list. */
+  protected readonly defaultLabel = computed(() => {
+    const name = this.scraper()?.displayName;
+    return name
+      ? this.transloco.translate('tvshows.ordering.defaultOf', { name })
+      : this.transloco.translate('tvshows.ordering.default');
+  });
+
+  /** The standard order belongs to the section of the TV show's scraper once the list shows it. */
+  protected readonly defaultInGroup = computed(() =>
+    (this.groups() ?? []).some((group) => group.scraperId === this.scraper()?.id),
+  );
+
+  constructor() {
+    // Another scraper knows other orders, so the list is loaded again on the next opening.
+    effect(() => {
+      this.scraper()?.id;
+      this.groups.set(null);
+      this.failure.set(null);
+    });
+  }
 
   protected readonly selected = computed(() => {
     const value = this.value();

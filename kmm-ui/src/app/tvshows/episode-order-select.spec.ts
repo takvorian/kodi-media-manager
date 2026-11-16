@@ -120,7 +120,35 @@ describe('EpisodeOrderSelect', () => {
 
     expect(document.querySelector('.ordering-none')).toBeNull();
     expect(document.querySelector('.ordering-single')?.textContent).toContain(
-      'Nur die Standard-Zählweise',
+      'Keine weitere Zählweise',
     );
+  });
+
+  it('puts the standard order into the section of the scraper and reloads after a change', async () => {
+    fixture.componentRef.setInput('scraper', { id: 'tmdb', displayName: 'TMDB' });
+    fixture.detectChanges();
+    expect(select().triggerValue).toBe('Standard-Zählweise von TMDB');
+    await open();
+    httpTesting
+      .expectOne(`${TVSHOWS_URL}/3/episode-orders`)
+      .flush([{ scraperId: 'tmdb', scraperName: 'TMDB', orders: [] }]);
+    fixture.detectChanges();
+    await fixture.whenStable();
+    expect(optionTexts()).toEqual([
+      'Standard-Zählweise',
+      'Keine weitere Zählweise für diese Serie',
+    ]);
+    expect(select().options.first.group?.label).toBe('TMDB');
+    expect(fixture.nativeElement.querySelector('mat-select-trigger')?.textContent).toContain(
+      'Standard-Zählweise von TMDB',
+    );
+
+    select().close();
+    fixture.componentRef.setInput('scraper', { id: 'tvdb', displayName: 'TheTVDB' });
+    fixture.detectChanges();
+    await open();
+    httpTesting.expectOne(`${TVSHOWS_URL}/3/episode-orders`).flush([]);
+    fixture.detectChanges();
+    expect(optionTexts()[0]).toBe('Standard-Zählweise von TheTVDB');
   });
 });

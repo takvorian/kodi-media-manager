@@ -142,6 +142,7 @@
           class="ordering-select"
           [showId]="details.id"
           [value]="details.episodeOrdering ?? null"
+          [scraper]="preferredScraper()"
           [disabled]="!!scrapeJob() || !!languageJob() || !!orderingJob() || !!scraperJob()"
           (chosen)="changeEpisodeOrdering($event)"
         />

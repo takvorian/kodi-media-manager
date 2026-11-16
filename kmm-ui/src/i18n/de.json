@@ -500,15 +500,17 @@
     },
     "ordering": {
       "label": "Episoden-Reihenfolge",
-      "default": "Standard (Einstellungen)",
+      "default": "Standard-Zählweise des Anbieters",
+      "defaultOf": "Standard-Zählweise von {name}",
+      "standard": "Standard-Zählweise",
       "hint": "Muss zu den Staffel- und Episodennummern der Dateien passen.",
       "loading": "Zählweisen werden geladen …",
       "none": "Die Serie ist noch bei keinem Anbieter zugeordnet. Bitte zuerst scrapen.",
       "running": "Die Episoden-Reihenfolge wird geändert …",
       "changeTo": "Die Episoden-Reihenfolge wird auf „{name}“ geändert.",
-      "changeToDefault": "Die Episoden-Reihenfolge wird auf den Standard aus den Einstellungen geändert.",
+      "changeToDefault": "Die Episoden-Reihenfolge wird auf die Standard-Zählweise des Anbieters geändert.",
       "refetch": "Sollen Titel und Inhaltsangaben aller Episoden jetzt in dieser Zählung neu geholt werden?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung passen.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur die Reihenfolge ändern, sie gilt ab dem nächsten Scrapen.",
-      "single": "Nur die Standard-Zählweise, dieser Anbieter kennt für die Serie keine andere."
+      "single": "Keine weitere Zählweise für diese Serie"
     },
     "scraperRescrape": "Soll KMM die Serie dort jetzt neu zuordnen und Titel und Inhaltsangaben der Serie und aller Episoden neu holen?\n\nDie Dateien bleiben unverändert; ihre Staffel- und Episodennummern müssen zur Zählung des Anbieters passen. Eine Episoden-Reihenfolge eines anderen Anbieters entfällt.\n\nOK: Die vorhandenen Texte werden überschrieben, auch von Hand geänderte.\nAbbrechen: Nur den Scraper ändern, er gilt ab dem nächsten Scrapen."
   },

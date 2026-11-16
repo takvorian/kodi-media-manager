@@ -500,15 +500,17 @@
     },
     "ordering": {
       "label": "Episode order",
-      "default": "Default (settings)",
+      "default": "Standard order of the provider",
+      "defaultOf": "Standard order of {name}",
+      "standard": "Standard order",
       "hint": "Must match the season and episode numbers of the files.",
       "loading": "Loading the orders …",
       "none": "The TV show is not identified at any provider yet. Please scrape it first.",
       "running": "The episode order is being changed …",
       "changeTo": "The episode order is changed to “{name}”.",
-      "changeToDefault": "The episode order is changed to the default from the settings.",
+      "changeToDefault": "The episode order is changed to the standard order of the provider.",
       "refetch": "Fetch the titles and plots of all episodes in this order now?\n\nThe files stay as they are; their season and episode numbers must match the order.\n\nOK: The existing texts are overwritten, including manually edited ones.\nCancel: Only change the order; it applies from the next scrape on.",
-      "single": "Only the standard order; this provider knows no other one for the TV show."
+      "single": "No other order for this TV show"
     },
     "scraperRescrape": "Should KMM identify the TV show there now and fetch the titles and plots of the TV show and all its episodes again?\n\nThe files stay unchanged; their season and episode numbers must match the provider’s numbering. An episode order of another provider no longer applies.\n\nOK: The existing texts are overwritten, including manually edited ones.\nCancel: Only change the scraper; it applies from the next scrape on."
   },
