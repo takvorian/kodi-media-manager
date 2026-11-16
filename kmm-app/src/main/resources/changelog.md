@@ -1,5 +1,9 @@
 # Changelog
 
+## v0.28 - 2026-11-16
+- Offer only the episode orders of the TV show's own scraper (4191ac9)
+- Show the move buttons of the scraper order as arrow characters (6500622)
+
 ## v0.27 - 2026-11-16
 - Choose the scraper per TV show and movie (22f40c0)
 - Choose the order of the scrapers per kind, globally and per source (e499f4c)
