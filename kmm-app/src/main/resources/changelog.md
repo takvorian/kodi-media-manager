@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.29 - 2026-11-16
+- Show providers without alternative episode orders and put the selects side by side (e247b1b)
+
 ## v0.28 - 2026-11-16
 - Offer only the episode orders of the TV show's own scraper (4191ac9)
 - Show the move buttons of the scraper order as arrow characters (6500622)
