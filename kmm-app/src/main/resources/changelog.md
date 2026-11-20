@@ -1,5 +1,8 @@
 # Changelog
 
+## v0.31 - 2026-11-20
+- Switch Docker image and CI to Liberica 25.0.5.1 for the Java2Shell fix (8a07e69)
+
 ## v0.30 - 2026-11-16
 - Put the standard episode order into the section of the TV show's scraper (e9abb39)
 
