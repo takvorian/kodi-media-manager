@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1
 
 # ---- Build ----------------------------------------------------------------
-FROM eclipse-temurin:25-jdk AS build
+FROM bellsoft/liberica-openjdk-debian:25.0.5.1 AS build
 WORKDIR /workspace
 
 COPY .mvn/ .mvn/
@@ -27,7 +27,7 @@ RUN --mount=type=cache,target=/root/.m2 \
     && java -Djarmode=tools -jar kmm-app/target/kmm-app.jar extract --layers --launcher --destination /extracted
 
 # ---- Runtime --------------------------------------------------------------
-FROM eclipse-temurin:25-jre
+FROM bellsoft/liberica-openjre-debian:25.0.5.1
 
 # ffprobe provides the stream details (codecs, resolution, audio tracks).
 RUN apt-get update \

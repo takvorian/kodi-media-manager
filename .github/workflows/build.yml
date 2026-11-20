@@ -18,7 +18,7 @@ jobs:
 
       - uses: actions/setup-java@v5
         with:
-          distribution: temurin
+          distribution: liberica
           java-version: '25'
           cache: maven
 
@@ -70,7 +70,7 @@ jobs:
 
       - uses: actions/setup-java@v5
         with:
-          distribution: temurin
+          distribution: liberica
           java-version: '25'
           cache: maven
 
